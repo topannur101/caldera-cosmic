@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -14,12 +15,29 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            // $table->string('email')->unique();
+            // $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+
+            $table->string('emp_id')->unique();
+            $table->string('photo')->nullable();
+            $table->dateTime('seen_at')->nullable();
+            $table->boolean('is_active');
+
+            $table->index('emp_id');
+
         });
+
+        DB::table('users')->insert([
+            [
+                'name'      => 'System',
+                'emp_id'    => 'SUPERUSER',
+                'password'  => '$2y$10$HR/Et5LBPfAW2frIq/u1zOXTXojDSmJM/cJgKnIawOlCrn/x2Ws3W',
+                'is_active' => 1
+            ],
+        ]);
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

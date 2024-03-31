@@ -4,6 +4,7 @@ use App\Livewire\Forms\LoginForm;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
+use App\Models\Pref;
 
 new #[Layout('layouts.guest')] class extends Component
 {
@@ -20,6 +21,21 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
+        $accountPref = Pref::where('user_id', Auth::user()->id)->where('name', 'account')->first();
+        $accountPref ? $data = json_decode($accountPref->data, true) : $data = '';
+
+        $lang   = isset($data['lang'])      ? $data['lang']     : 'id';
+        $bg     = isset($data['bg'])        ? $data['bg']       : 'auto';
+        $accent = isset($data['accent'])    ? $data['accent']   : 'purple';
+        $mblur  = $data['mblur'] ?? false;
+
+        ($bg == 'auto' && $this->form->bgm == 'dark') ? session(['bg' => 'dark']) : session(['bg' => $bg]);
+
+        session(['mblur'    => $mblur]);
+        session(['lang'     => $lang]);
+        session(['accent'   => $accent]);
+        
+
         $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }
 }; ?>
@@ -29,16 +45,26 @@ new #[Layout('layouts.guest')] class extends Component
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
     <form wire:submit="login">
+        <!-- Theme input -->
+        <input type="hidden" id="bgm" name="bgm" />
+
         <!-- Email Address -->
-        <div>
+        {{-- <div>
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input wire:model="form.email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
+        </div> --}}
+
+        <!-- Email Address -->
+        <div>
+            <x-input-label for="emp_id" :value="__('Nomor karyawan')" />
+            <x-text-input wire:model="form.emp_id" id="emp_id" class="block mt-1 w-full" type="text" name="emp_id" required autofocus autocomplete="emp_id" />
+            <x-input-error :messages="$errors->get('form.emp_id')" class="mt-2" />
         </div>
 
         <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+            <x-input-label for="password" :value="__('Kata sandi')" />
 
             <x-text-input wire:model="form.password" id="password" class="block mt-1 w-full"
                             type="password"
@@ -49,22 +75,32 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <!-- Remember Me -->
-        <div class="block mt-4">
+        {{-- <div class="block mt-4">
             <label for="remember" class="inline-flex items-center">
-                <input wire:model="form.remember" id="remember" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="remember">
-                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Remember me') }}</span>
+                <input wire:model="form.remember" id="remember" type="checkbox" class="rounded dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 text-caldy-600 shadow-sm focus:ring-caldy-500 dark:focus:ring-caldy-600 dark:focus:ring-offset-neutral-800" name="remember">
+                <span class="ms-2 text-sm text-neutral-600 dark:text-neutral-400">{{ __('Ingat aku') }}</span>
             </label>
-        </div>
+        </div> --}}
 
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('password.request') }}" wire:navigate>
+        <div class="flex items-center justify-between mt-4">
+            <div>
+                <a class="underline text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-caldy-500 dark:focus:ring-offset-neutral-800" href="{{ route('register') }}">
+                    {{ __('Daftar') }}</a>
+                @if (Route::has('password.request'))
+                    <span class="mx-1 text-neutral-600 dark:text-neutral-400">•</span>
+                    <a class="underline text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-caldy-500 dark:focus:ring-offset-neutral-800" href="{{ route('password.request') }}" wire:navigate>
+                        {{ __('Lupa kata sandi') }}</a>
+                @endif
+
+            </div>
+            {{-- @if (Route::has('password.request'))
+                <a class="underline text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-caldy-500 dark:focus:ring-offset-neutral-800" href="{{ route('password.request') }}" wire:navigate>
                     {{ __('Forgot your password?') }}
                 </a>
-            @endif
+            @endif --}}
 
             <x-primary-button class="ms-3">
-                {{ __('Log in') }}
+                {{ __('Masuk') }}
             </x-primary-button>
         </div>
     </form>

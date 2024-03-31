@@ -1,3 +1,524 @@
+@import url('../../node_modules/@fortawesome/fontawesome-free/css/all.min.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --color-50: 243 240 249;
+    --color-100: 230 226 244;
+    --color-200: 206 198 235;
+    --color-300: 180 165 225;
+    --color-400: 153 132 214;
+    --color-500: 127 99 204;
+    --color-600: 114 87 195;
+    --color-700: 101 77 184;
+    --color-800: 87 65 174;
+    --color-900: 119 94 150;
+    --color-950: 44 38 92;
+    /* ... */
+  }
+  html body.green {
+    --color-50: 218 235 216;   /* Lightest */
+    --color-100: 194 221 189;
+    --color-200: 169 206 162;
+    --color-300: 145 191 136;
+    --color-400: 120 175 110;
+    --color-500: 96 160 85;     /* Default */
+    --color-600: 86 144 76;
+    --color-700: 76 129 66;
+    --color-800: 65 114 57;
+    --color-900: 54 99 47;
+    --color-950: 31 70 26;     /* Darkest */
+  }
+  html body.pink {
+    --color-50: 255 240 243;    /* Lightest */
+    --color-100: 255 213 221;
+    --color-200: 255 186 200;
+    --color-300: 255 159 178;
+    --color-400: 255 132 156;
+    --color-500: 255 105 134;     /* Default */
+    --color-600: 224 92 118;
+    --color-700: 193 80 103;
+    --color-800: 162 67 87;
+    --color-900: 130 54 71;      /* Darkest */
+    --color-950: 72 30 39;      /* Darkest */
+  }
+  html body.blue {
+    --color-50: 222 235 246;    /* Lightest */
+    --color-100: 189 216 238;
+    --color-200: 157 197 231;
+    --color-300: 124 177 223;
+    --color-400: 92 158 216;
+    --color-500: 59 138 208;     /* Default */
+    --color-600: 51 120 179;
+    --color-700: 44 101 149;
+    --color-800: 36 83 120;
+    --color-900: 29 64 90;      /* Darkest */
+    --color-950: 16 31 54; 
+  }
+  html body.teal {
+    --color-50: 228 243 243;    /* Lightest */
+    --color-100: 187 224 224;
+    --color-200: 146 204 204;
+    --color-300: 104 185 185;
+    --color-400: 63 165 165;
+    --color-500: 22 146 146;     /* Default */
+    --color-600: 19 128 128;
+    --color-700: 16 109 109;
+    --color-800: 13 89 89;
+    --color-900: 10 70 70;      /* Darkest */
+    --color-950: 6 42 42;      /* Darkest */
+  }
+  html body.orange {
+    --color-50: 255 241 216;    /* Lightest */
+    --color-100: 255 217 176;
+    --color-200: 255 193 136;
+    --color-300: 255 169 96;
+    --color-400: 255 145 56;
+    --color-500: 255 121 16;     /* Default */
+    --color-600: 224 106 14;
+    --color-700: 192 91 12;
+    --color-800: 161 77 10;
+    --color-900: 129 62 8;      /* Darkest */
+    --color-950: 72 34 5;      /* Darkest */
+  }
+  html body.grey {
+    --color-50: 242 242 242;    /* Lightest */
+    --color-100: 218 218 218;
+    --color-200: 194 194 194;
+    --color-300: 170 170 170;
+    --color-400: 146 146 146;
+    --color-500: 122 122 122;     /* Default */
+    --color-600: 105 105 105;
+    --color-700: 88 88 88;
+    --color-800: 71 71 71;
+    --color-900: 54 54 54;      /* Darkest */
+    --color-950: 30 30 30;      /* Darkest */
+  }
+  html body.brown {
+    --color-50: 251 244 235;    /* Lightest */
+    --color-100: 237 215 186;
+    --color-200: 223 186 136;
+    --color-300: 209 157 87;
+    --color-400: 195 128 37;
+    --color-500: 181 99 0;     /* Default */
+    --color-600: 158 88 0;
+    --color-700: 135 76 0;
+    --color-800: 113 65 0;
+    --color-900: 90 53 0;      /* Darkest */
+    --color-950: 50 30 0;      /* Darkest */
+  }
+  html body.yellow {
+    --color-50: 255 250 221;    /* Lightest */
+    --color-100: 255 239 184;
+    --color-200: 255 227 147;
+    --color-300: 255 216 110;
+    --color-400: 255 204 73;
+    --color-500: 255 193 36;     /* Default */
+    --color-600: 221 172 31;
+    --color-700: 186 150 27;
+    --color-800: 151 129 22;
+    --color-900: 117 107 18;      /* Darkest */
+    --color-950: 65 59 10;     
+  }
+}
+
+
+
+
+/* latin */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(fonts/figtree-latin-400-normal.woff2) format('woff2'), url(fonts/figtree-latin-400-normal.woff) format('woff'); 
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(fonts/figtree-latin-ext-400-normal.woff2) format('woff2'), url(fonts/figtree-latin-ext-400-normal.woff) format('woff'); 
+  unicode-range: U+0100-02AF,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1E00-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(fonts/figtree-latin-500-normal.woff2) format('woff2'), url(fonts/figtree-latin-500-normal.woff) format('woff'); 
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(fonts/figtree-latin-ext-500-normal.woff2) format('woff2'), url(fonts/figtree-latin-ext-500-normal.woff) format('woff'); 
+  unicode-range: U+0100-02AF,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1E00-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(fonts/figtree-latin-600-normal.woff2) format('woff2'), url(fonts/figtree-latin-600-normal.woff) format('woff'); 
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(fonts/figtree-latin-ext-600-normal.woff2) format('woff2'), url(fonts/figtree-latin-ext-600-normal.woff) format('woff'); 
+  unicode-range: U+0100-02AF,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1E00-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+
+[x-cloak] { display: none !important; }
+
+
+input[type="checkbox"]:checked + label.custom-checkbox {
+    @apply ring-2 ring-caldy-500 ring-offset-2 dark:ring-offset-gray-800;
+}
+
+.cal-radio input:checked+label {
+  @apply opacity-100;
+}
+
+.cal-radio input:checked+label .cal-checked {
+  @apply block;
+}
+
+.cal-radio label i {
+  @apply -mr-px
+}
+
+.btn-group, .spinner-group {
+    display: flex;
+}
+
+.btn-group *:focus, .spinner-group *:focus {
+    z-index: 1;
+}
+
+.btn-group > :first-child, .btn-group > .cal-radio:first-child > label {
+  @apply rounded-l-md
+}
+
+.btn-group > :last-child, .btn-group > .cal-radio:last-child > label {
+  @apply rounded-r-md
+}
+
+.btn-group > button, .btn-group.cal-pill > div, .btn-group > .cal-radio > label {
+  @apply -ml-px
+}
+
+.btn-group > :first-child, .spinner-group button:first-child {
+  @apply rounded-r-none
+}
+
+.btn-group > :last-child, .spinner-group button:last-child {
+  @apply rounded-l-none
+}
+
+/* .btn-group > :last-child, .btn-group .cal-radio:last-child label {
+    margin-left:0px;
+} */
+
+@keyframes pbishort {
+    0% {
+      left: -40%;
+    }
+  
+    75% {
+      left: 120%;
+    }
+  
+    100% {
+      left: 120%;
+    }
+  }
+  
+  @keyframes pbilong {
+    0% {
+      left: -90%;
+    }
+  
+    37.5% {
+      left: -90%;
+    }
+  
+    100% {
+      left: 100%;
+    }
+  }
+  
+  .progress-bar {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    min-height: 2px;
+    z-index:60;
+  }
+  
+  .progress-bar > .short-bar {
+    width: 40%;
+    height: 100%;
+    left: -40%;
+    position: absolute;
+    display: inline-block;
+    -webkit-animation: pbishort 2s ease-in-out infinite;
+    -moz-animation: pbishort 2s ease-in-out infinite;
+    -o-animation: pbishort 2s ease-in-out infinite;
+    animation: pbishort 2s ease-in-out infinite;
+  }
+  
+  .progress-bar > .long-bar {
+    width: 60%;
+    height: 100%;
+    left: -90%;
+    position: absolute;
+    display: inline-block;
+    -webkit-animation: pbilong 2s ease-in-out infinite;
+    -moz-animation: pbilong 2s ease-in-out infinite;
+    -o-animation: pbilong 2s ease-in-out infinite;
+    animation: pbilong 2s ease-in-out infinite;
+  }
+  .table {
+    @apply w-full;
+  }
+
+  .table .reveal {
+    @apply opacity-0 transition-opacity ease-in-out duration-150;
+  }
+
+  .table tr:hover .reveal {
+    @apply opacity-100;
+  }
+
+  .table tr:first-child th {
+    @apply border-b border-neutral-100 dark:border-neutral-700
+  }
+
+  .table tr {
+    @apply rounded-md hover:bg-caldy-500 hover:bg-opacity-10 selection:focus:outline-none focus:ring-2 focus:ring-caldy-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition ease-in-out duration-150;
+  }
+  
+  .table .tr-separator {
+    @apply hover:bg-opacity-0 uppercase text-xs font-bold text-neutral-500;
+  }
+
+  .table tr[tabindex] {
+    @apply cursor-pointer;
+  }
+
+  .table th {
+    @apply text-left;
+  }
+
+ .table th, .table td {
+    @apply px-6 py-3;
+  }
+
+  .table .tr-separator td {
+    @apply bg-neutral-500 bg-opacity-10;
+  }
+
+  .table.table-sm th, .table.table-sm td {
+    @apply p-2;
+  }
+
+  .table.table-sm th:first-child, .table.table-sm td:first-child {
+    @apply pl-4;
+  }
+
+  .table.table-sm th:last-child, .table.table-sm td:last-child {
+    @apply pr-4;
+  }
+
+  .table.table-truncate th, .table.table-truncate td {
+    @apply truncate max-w-xs;
+  }
+
+  .table.table-kpi-overview td a {
+    @apply hover:bg-caldy-500 hover:bg-opacity-20;
+  }
+
+  .table.table-kpi-overview tr td:nth-child(2) {
+    @apply min-w-72;
+  }
+
+  .table.table-kpi-overview tr td:nth-child(3) {
+    @apply min-w-10 p-0;
+  }
+
+  .table.table-kpi-overview tr td:nth-child(n+5):nth-child(-n+16) {
+    @apply min-w-10 p-0;
+  }
+
+  .spinner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    pointer-events: none;
+    width: 48px;
+    margin-left: -24px;
+  }
+
+  .spinner.sm {
+    width: 16px;
+    margin-left: -8px;
+  }
+  
+  .spinner-container {
+    pointer-events: none;
+    position: absolute;
+    width: 100%;
+    padding-bottom: 100%;
+    top: 50%;
+    left: 50%;
+    margin-top: -50%;
+    margin-left: -50%;
+    animation: spinner-linspin 1568.23529647ms linear infinite;
+  }
+  
+  .spinner-rotator {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    animation: spinner-easespin 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+  }
+  
+  .spinner-left {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow: hidden
+  }
+  
+  .spinner-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden
+  }
+  
+  .spinner-left {
+    right: 49%
+  }
+  
+  .spinner-right {
+    left: 49%
+  }
+  
+  .spinner-circle {
+    @apply border-t-caldy-500 border-r-caldy-500 border-l-caldy-500;
+    border-bottom-color: transparent;
+    box-sizing: border-box;
+    position: absolute;
+    width: 200%;
+    height: 100%;
+    border-style: solid;
+    border-radius: 50%;
+    border-width: 4px;
+  }
+
+  .spinner-circle.sm {
+    border-width: 2px;
+  }
+  
+  .spinner-left .spinner-circle {
+    left: 0;
+    right: -100%;
+    border-right-color: transparent;
+    animation: spinner-left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+  }
+  
+  .spinner-right .spinner-circle {
+    left: -100%;
+    right: 0;
+    border-left-color: transparent;
+    animation: right-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+  }
+  
+  @keyframes spinner-linspin {
+    to {
+      transform: rotate(360deg)
+    }
+  }
+  
+  @keyframes spinner-easespin {
+    12.5% {
+      transform: rotate(135deg)
+    }
+    25% {
+      transform: rotate(270deg)
+    }
+    37.5% {
+      transform: rotate(405deg)
+    }
+    50% {
+      transform: rotate(540deg)
+    }
+    62.5% {
+      transform: rotate(675deg)
+    }
+    75% {
+      transform: rotate(810deg)
+    }
+    87.5% {
+      transform: rotate(945deg)
+    }
+    to {
+      transform: rotate(1080deg)
+    }
+  }
+  
+  @keyframes spinner-left-spin {
+    0% {
+      transform: rotate(130deg)
+    }
+    50% {
+      transform: rotate(-5deg)
+    }
+    to {
+      transform: rotate(130deg)
+    }
+  }
+  
+  @keyframes right-spin {
+    0% {
+      transform: rotate(-130deg)
+    }
+    50% {
+      transform: rotate(5deg)
+    }
+    to {
+      transform: rotate(-130deg)
+    }
+  }
+
+  
