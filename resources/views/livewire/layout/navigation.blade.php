@@ -92,7 +92,7 @@ new class extends Component {
                             {{ __('Profile') }}
                         </x-dropdown-link> --}}
                             <x-dropdown-link :href="route('account')" wire:navigate>
-                                {{ __('Akunku') }}
+                                {{ __('Akun') }}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
 
@@ -158,7 +158,7 @@ new class extends Component {
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-neutral-200 dark:border-neutral-600">
             @if (Auth::user())
-                <div class="flex gap-x-3 items-center mx-3">
+                <div class="flex gap-x-2 items-center mx-3">
                     <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                         @if (Auth::user()->photo)
                             <img class="w-full h-full object-cover dark:brightness-75"
@@ -184,7 +184,7 @@ new class extends Component {
                             {{ __('Profile') }}
                         </x-responsive-nav-link> --}}
                     <x-responsive-nav-link :href="route('account')" :active="request()->routeIs('account*')" wire:navigate>
-                        {{ __('Akunku') }}
+                        {{ __('Akun') }}
                     </x-responsive-nav-link>
 
                     <!-- Authentication -->
