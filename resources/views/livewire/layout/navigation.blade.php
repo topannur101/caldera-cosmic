@@ -91,8 +91,8 @@ new class extends Component {
                             {{-- <x-dropdown-link :href="route('profile')" wire:navigate>
                             {{ __('Profile') }}
                         </x-dropdown-link> --}}
-                            <x-dropdown-link :href="route('preferences')" wire:navigate>
-                                {{ __('Preferensi') }}
+                            <x-dropdown-link :href="route('account')" wire:navigate>
+                                {{ __('Akunku') }}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
 
@@ -183,8 +183,8 @@ new class extends Component {
                     {{-- <x-responsive-nav-link :href="route('profile')" wire:navigate>
                             {{ __('Profile') }}
                         </x-responsive-nav-link> --}}
-                    <x-responsive-nav-link :href="route('preferences')" :active="request()->routeIs('preferences*')" wire:navigate>
-                        {{ __('Preferensi') }}
+                    <x-responsive-nav-link :href="route('account')" :active="request()->routeIs('account*')" wire:navigate>
+                        {{ __('Akunku') }}
                     </x-responsive-nav-link>
 
                     <!-- Authentication -->

@@ -1,4 +1,7 @@
 <x-app-layout>
+
+    <x-slot name="title">{{ __('Wawasan') }}</x-slot>
+
    <x-slot name="header">
       <header class="bg-white dark:bg-neutral-800 shadow">
          <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -9,11 +12,10 @@
              </div>                    
          </div> 
      </header>
-
   </x-slot>
 
     <div id="content" class="py-12 max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
-        <x-card-link href="{{ route('insight', ['nav' => 'acm']) }}">
+        <x-card-link href="{{ route('insight.acm') }}" wire:navigate>
             <div class="flex">
                 <div>
                     <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">
@@ -47,7 +49,7 @@
                 </div>
             </div>
         </x-card-link>
-        <x-card-link href="{{ route('insight', ['nav' => 'rtm']) }}">
+        <x-card-link href="{{ route('insight.rtc') }}" wire:navigate>
             <div class="flex">
                 <div>
                     <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">
@@ -81,7 +83,7 @@
                 </div>
             </div>
         </x-card-link>
-        <x-card-link href="{{ route('insight', ['nav' => 'ldc']) }}">
+        <x-card-link href="{{ route('insight.ldc') }}" wire:navigate>
             <div class="flex">
                 <div>
                     <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">

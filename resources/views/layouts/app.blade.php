@@ -6,7 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         @if (isset($title))
-            {{ $title }}
+            <title>{{ $title }}</title>
         @else
             <title>{{ config('app.name', 'Laravel') }}</title>
         @endif 
