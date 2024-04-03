@@ -11,9 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ins_rtm_devices', function (Blueprint $table) {
+        Schema::create('ins_rtc_devices', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->integer('line')->unique();
+            $table->ipAddress('ip_address');
+
+            $table->index('line');
         });
     }
 
@@ -22,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ins_rtm_devices');
+        Schema::dropIfExists('ins_rtc_devices');
     }
 };

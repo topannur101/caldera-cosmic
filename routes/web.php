@@ -59,7 +59,6 @@ Route::middleware('auth')->group(function () {
             Route::view('/manage/mass-circulation', 'inventory.manage.mass-circulation')    ->name('mass-circulation');
             Route::view('/manage/mass-edit',        'inventory.manage.mass-edit')           ->name('mass-edit');
             Route::view('/manage',                  'inventory.manage')                     ->name('index');
-
         });
 
         Route::view('/', 'inventory')->name('inventory');
