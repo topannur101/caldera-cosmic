@@ -8,10 +8,10 @@ Volt::route('/', 'home')->name('home');
 // Insight routes
 Route::prefix('insight')->group(function () {
     Route::name('insight.')->group(function () {
-        Volt::route('/acm',     'insight.acm')      ->name('acm');
-        Volt::route('/rtc',     'insight.rtc')      ->name('rtc');
-        Volt::route('/ldc',     'insight.ldc')      ->name('ldc');
-        Volt::route('/ss/{id}', 'insight.ss')       ->name('ss'); // slideshow
+        Volt::route('/acm',     'insight.acm')                  ->name('acm');
+        Volt::route('/rtc',     'insight.rtc')                  ->name('rtc');
+        Volt::route('/ldc',     'insight.ldc')                  ->name('ldc');
+        Route::view('/ss/{id}', 'livewire.insight.ss.index')    ->name('ss'); // slideshow
     });
     Route::view('/', 'insight')->name('insight');
 });
@@ -26,10 +26,10 @@ Route::middleware('auth')->group(function () {
     // Account routes
     Route::prefix('account')->group(function () {
         Route::name('account.')->group(function () {
-            Volt::route('/general',     'account.general')  ->name('general');
-            Volt::route('/password',    'account.password') ->name('password');
-            Volt::route('/language',    'account.language') ->name('language');
-            Volt::route('/theme',       'account.theme')    ->name('theme');         
+            Volt::route('/general',     'account.general')      ->name('general');
+            Volt::route('/password',    'account.password')     ->name('password');
+            Volt::route('/language',    'account.language')     ->name('language');
+            Volt::route('/theme',       'account.theme')        ->name('theme');         
         });
         Route::view('/', 'account')->name('account');
     });

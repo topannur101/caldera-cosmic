@@ -4,6 +4,12 @@
     "description": "The skeleton application for the Laravel framework.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/laravel-shift/livewire-charts.git"
+        }
+    ],
     "require": {
         "php": "^8.2",
         "aldas/modbus-tcp-client": "^3.5",
@@ -12,7 +18,8 @@
         "laravel/framework": "^11.0",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.4",
-        "livewire/volt": "^1.0"
+        "livewire/volt": "^1.0",
+        "asantibanez/livewire-charts": "dev-l11-compatibility"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

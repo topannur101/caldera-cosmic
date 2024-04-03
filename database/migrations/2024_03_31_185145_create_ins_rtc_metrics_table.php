@@ -16,11 +16,13 @@ return new class extends Migration
             // $table->timestamps();
 
             $table->foreignId('ins_rtc_recipe_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('ins_rtc_device_id')->constrained()->cascadeOnDelete();
             $table->decimal('thick_act_left', 4, 2);
             $table->decimal('thick_act_right', 4, 2);
             $table->datetime('dt_client');
 
             $table->index('ins_rtc_recipe_id');
+            $table->index('ins_rtc_device_id');
         });
     }
 
