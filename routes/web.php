@@ -8,9 +8,10 @@ Volt::route('/', 'home')->name('home');
 // Insight routes
 Route::prefix('insight')->group(function () {
     Route::name('insight.')->group(function () {
-        Volt::route('/acm', 'insight.acm')      ->name('acm');
-        Volt::route('/rtc', 'insight.rtc')      ->name('rtc');
-        Volt::route('/ldc', 'insight.ldc')      ->name('ldc');
+        Volt::route('/acm',     'insight.acm')      ->name('acm');
+        Volt::route('/rtc',     'insight.rtc')      ->name('rtc');
+        Volt::route('/ldc',     'insight.ldc')      ->name('ldc');
+        Volt::route('/ss/{id}', 'insight.ss')       ->name('ss'); // slideshow
     });
     Route::view('/', 'insight')->name('insight');
 });
