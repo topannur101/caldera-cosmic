@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Carbon\Carbon;
+use App\Models\InsRtcDevice;
 use App\Models\InsRtcMetric;
 use Illuminate\Console\Command;
 use ModbusTcpClient\Network\NonBlockingClient;
@@ -24,24 +25,43 @@ class InsRtcRead extends Command
      */
     protected $description = 'Read rubber thickness data from Modbus server installed in HMI';
 
+    function convertToDecimal($value) {
+        $value = (int) $value; // Cast to integer to remove any leading zeros
+        $length = strlen((string) $value);
+    
+        if ($length == 3) {
+            $decimal = substr((string) $value, 0, -2) . '.' . substr((string) $value, -2);
+        } elseif ($length == 2) {
+            $decimal = '0.' . (string) $value;
+        } elseif ($length == 1) {
+            $decimal = '0.0' . (string) $value;
+        } else {
+            $decimal = '0.00';
+        }
+    
+        return $decimal;
+    }
+
     /**
      * Execute the console command.
      */
     public function handle()
     {
          // Nanti ganti dengan semua IP perangkat yang terdaftar di database
-         $addresses = ['172.70.86.12'];
+         $devices = InsRtcDevice::all();
 
          while (true) {
 
             $dt_client = Carbon::now()->format('Y-m-d H:i:s');
-            echo $dt_client;
+            echo $dt_client . PHP_EOL;
 
             // Tarik data MODBUS ke semua perangkat
-            foreach ($addresses as $address) {
+            foreach ($devices as $device) {
              
                 $unitID = 1;
-                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://'.$address.':502', $unitID)
+                $data = [];
+
+                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://'.$device->ip_address.':502', $unitID)
                     ->int16(10, 'thick_act_left')
                     ->int16(20, 'thick_act_right')
                     ->build();
@@ -49,18 +69,21 @@ class InsRtcRead extends Command
                     try {
                         // Tarik data MODBUS
                         $responseContainer = (new NonBlockingClient(['readTimeoutSec' => 1]))->sendRequests($fc3);
-                        echo 'Response from: ' . $address . PHP_EOL;
+                        echo 'Response from: ' . $device->ip_address . ' (Line ' . $device->line . ')' . PHP_EOL;
                         $data = $responseContainer->getData();
                         print_r($data);   
                     } catch (\Throwable $th) {
-                        echo 'Failed to reach ' . $address . PHP_EOL;
+                        echo 'Failed to reach ' . $device->ip_address . ' (Line ' . $device->line . ')' . PHP_EOL;
                     }
 
-                    InsRtcMetric::create([
-                        'thick_act_left'    => $data['thick_act_left'],
-                        'thick_act_right'   => $data['thick_act_right'],
-                        'dt_client'         => $dt_client,
-                    ]);
+                    if ($data) {
+                        InsRtcMetric::create([
+                            'ins_rtc_device_id' => 1,
+                            'thick_act_left'    => $this->convertToDecimal($data['thick_act_left']),
+                            'thick_act_right'   => $this->convertToDecimal($data['thick_act_right']),
+                            'dt_client'         => $dt_client,
+                        ]);
+                    }
             }
             sleep(1);
          }
