@@ -143,36 +143,36 @@ new class extends Component {
 }; ?>
 
 <div class="w-full h-screen p-4">
-    <div wire:poll.20s="updateCharts" class="h-1/2 px-4 py-8">
+    <div wire:poll.5s="updateCharts" class="h-2/6 px-4 py-8">
         <div class="grid grid-cols-6 grid-rows-1 gap-4">
             <div class="col-span-2">
                 <div>
-                    <div class="text-xl uppercase mb-3 mx-1">{{ __('Model') }}</div>
-                    <div class="text-6xl">Nama model semu</div>
+                    <div class="text-6xl uppercase mb-3 mx-1">{{ __('Model') }}</div>
+                    <div class="text-7xl">Nama model semu</div>
                 </div>
             </div>
             <div class="col-start-3">
                 <div>
-                    <div class="text-xl uppercase mb-3 mx-1">{{ __('OG/RS') }}</div>
-                    <div class="text-7xl py-3">000</div>
+                    <div class="text-6xl uppercase mb-3 mx-1">{{ __('OG/RS') }}</div>
+                    <div class="text-9xl font-bold py-3">000</div>
                 </div>
             </div>
             <div class="col-start-4">
                 <div>
-                    <div class="text-xl uppercase mb-3 mx-1">{{ __('Min') }}</div>
-                    <div class="text-7xl py-3">{{ number_format($min, 2) }}</div>
+                    <div class="text-6xl uppercase mb-3 mx-1">{{ __('Min') }}</div>
+                    <div class="text-9xl font-bold py-3">{{ number_format($min, 2) }}</div>
                 </div>
             </div>
             <div class="col-start-5">
                 <div>
-                    <div class="text-xl uppercase mb-3 mx-1">{{ __('Maks') }}</div>
-                    <div class="text-7xl py-3">{{ number_format($max, 2) }}</div>
+                    <div class="text-6xl uppercase mb-3 mx-1">{{ __('Maks') }}</div>
+                    <div class="text-9xl font-bold py-3">{{ number_format($max, 2) }}</div>
                 </div>
             </div>
             <div class="col-start-6">
                 <div>
-                    <div class="text-xl uppercase mb-3 mx-1">{{ __('Line') }}</div>
-                    <x-select wire:model.live="sline" class="text-7xl">
+                    <div class="text-6xl uppercase mb-3 mx-1">{{ __('Line') }}</div>
+                    <x-select wire:model.live="sline" class="text-9xl font-bold">
                         <option value=""></option>
                         @foreach ($lines as $line)
                             <option value="{{ $line }}">{{ $line }}</option>
@@ -182,12 +182,12 @@ new class extends Component {
             </div>
         </div>
     </div>
-    <div wire:key="chart-container" class="h-1/2 grid grid-cols-2 gap-4">
+    <div wire:key="chart-container" class="h-4/6 grid grid-cols-2 gap-4">
         <div
             class="w-full h-full flex flex-col px-8 py-6 bg-white dark:bg-neutral-800 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
-                <div class="text-xl uppercase">{{ __('Kiri') }}</div>
-                <div class="text-7xl">{{ number_format($latest_thick_act_left, 2) }}</div>
+                <div class="text-6xl uppercase">{{ __('Kiri') }}</div>
+                <div class="text-9xl font-bold">{{ number_format($latest_thick_act_left, 2) }}</div>
             </div>
             <div class="flex-1">
                 <livewire:livewire-line-chart wire:key="chart-left"
@@ -198,8 +198,8 @@ new class extends Component {
         <div
             class="w-full h-full flex flex-col px-8 py-6 bg-white dark:bg-neutral-800 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
-                <div class="text-xl uppercase">{{ __('Kanan') }}</div>
-                <div class="text-7xl">{{ number_format($latest_thick_act_right, 2) }}</div>
+                <div class="text-6xl uppercase">{{ __('Kanan') }}</div>
+                <div class="text-9xl font-bold">{{ number_format($latest_thick_act_right, 2) }}</div>
             </div>
             <div class="flex-1">
                 <livewire:livewire-line-chart wire:key="chart-right"
