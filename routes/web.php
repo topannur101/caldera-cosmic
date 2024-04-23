@@ -13,7 +13,7 @@ Route::prefix('insight')->group(function () {
         Volt::route('/ldc',     'insight.ldc')                  ->name('ldc');
         Route::view('/ss/{id}', 'livewire.insight.ss.index')    ->name('ss'); // slideshow
     });
-    Route::view('/', 'insight')->name('insight');
+    Route::view('/', 'livewire.insight.index')->name('insight');
 });
 
 Route::view('kpi', 'kpi')->name('kpi');
