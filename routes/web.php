@@ -9,7 +9,7 @@ Volt::route('/', 'home')->name('home');
 Route::prefix('insight')->group(function () {
     Route::name('insight.')->group(function () {
         Volt::route('/acm',     'insight.acm')                  ->name('acm');
-        Volt::route('/rtc',     'insight.rtc')                  ->name('rtc');
+        Volt::route('/rtc',     'insight.rtc.index')            ->name('rtc');
         Volt::route('/ldc',     'insight.ldc')                  ->name('ldc');
         Route::view('/ss/{id}', 'livewire.insight.ss.index')    ->name('ss'); // slideshow
     });
