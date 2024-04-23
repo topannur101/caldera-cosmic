@@ -1,21 +1,18 @@
 <x-app-layout>
-
     <x-slot name="title">{{ __('Wawasan') }}</x-slot>
-
-   <x-slot name="header">
-      <header class="bg-white dark:bg-neutral-800 shadow">
-         <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-             <div>
-               <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
-                  <div class="inline-block py-6">{{ __('Wawasan') }}</div>
-               </h2>
-             </div>                    
-         </div> 
-     </header>
-  </x-slot>
-
+    <x-slot name="header">
+        <header class="bg-white dark:bg-neutral-800 shadow">
+            <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div>
+                    <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
+                        <div class="inline-block py-6">{{ __('Wawasan') }}</div>
+                    </h2>
+                </div>
+            </div>
+        </header>
+    </x-slot>
     <div id="content" class="py-12 max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
-        <x-card-link href="{{ route('insight.acm') }}" wire:navigate>
+        <x-card-link href="{{ route('insight.acm.index') }}" wire:navigate>
             <div class="flex">
                 <div>
                     <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">
@@ -49,7 +46,7 @@
                 </div>
             </div>
         </x-card-link>
-        <x-card-link href="{{ route('insight.rtc') }}" wire:navigate>
+        <x-card-link href="{{ route('insight.rtc.index') }}" wire:navigate>
             <div class="flex">
                 <div>
                     <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">
@@ -74,7 +71,7 @@
                 <div class="flex grow py-4 px-2 sm:p-6">
                     <div class="grow">
                         <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Rubber thickness monitoring') }}
+                            {{ __('Rubber thickness control') }}
                         </div>
                         <div class="text-sm text-neutral-600 dark:text-neutral-400">
                             {{ __('Sistem monitoring ketebalan rubber yang terletak di proses pembuatan calendar.') }}
@@ -83,7 +80,7 @@
                 </div>
             </div>
         </x-card-link>
-        <x-card-link href="{{ route('insight.ldc') }}" wire:navigate>
+        <x-card-link href="{{ route('insight.ldc.index') }}" wire:navigate>
             <div class="flex">
                 <div>
                     <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">
