@@ -25,7 +25,6 @@ new #[Layout('layouts.app')] class extends Component {
     public $sline;
     public $olines = [];
 
-    public $lineViews = [''];
     public $dateViews = ['raw'];
     public $rangeViews = ['raw'];
     public $filterViews = ['raw', 'summary'];
@@ -49,7 +48,6 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $this->is_date = in_array($this->view, $this->dateViews);
         $this->is_range = in_array($this->view, $this->rangeViews);
-        $this->is_line = in_array($this->view, $this->lineViews);
         $this->is_filter = in_array($this->view, $this->filterViews);
 
         return [
@@ -133,17 +131,17 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div>  
                 <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
-                    <x-link href="{{ route('insight') }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4">{{ __('Rubber thickness control') }}</span>
+                    <x-link href="{{ route('insight') }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Rubber thickness control') }}</span><span class="sm:hidden inline">{{ __('RTC') }}</span></span>
                 </h2>
             </div>
             <div class="space-x-8 -my-px ml-10 flex">
                 <x-nav-link href="{{ route('insight.rtc.index') }}" active="true" wire:navigate>
                     <i class="fa mx-2 fa-fw fa-chart-simple text-sm"></i>
                 </x-nav-link>
-                <x-nav-link href="{{ route('insight.ss', ['id' => 1]) }}">
+                <x-nav-link href="{{ route('insight.rtc.slideshows') }}" wire:navigate>
                     <i class="fa mx-2 fa-fw fa-images text-sm"></i>
                 </x-nav-link>
-                <x-nav-link href="{{ route('insight.rtc.manage.index') }}" :active="request()->routeIs('inventory/manage*')" wire:navigate>
+                <x-nav-link href="{{ route('insight.rtc.manage.index') }}" wire:navigate>
                     <i class="fa mx-2 fa-fw fa-ellipsis-h text-sm"></i>
                 </x-nav-link>
             </div>
