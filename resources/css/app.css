@@ -126,8 +126,6 @@
 }
 
 
-
-
 /* latin */
 @font-face {
   font-family: 'Figtree';
@@ -519,6 +517,10 @@ input[type="checkbox"]:checked + label.custom-checkbox {
     to {
       transform: rotate(-130deg)
     }
+  }
+
+  #nprogress .bar {
+      @apply !bg-caldy-500;
   }
 
   

@@ -41,7 +41,7 @@ new #[Layout('layouts.app')] class extends Component {
 <div class="py-12">
    <div class="max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-600 dark:text-neutral-400">
        <div class="grid grid-cols-1 gap-1 my-8 ">
-           <x-card-link href="{{ route('insight.rtc.manage.authorizations') }}" wire:navigate>
+           <x-card-link href="{{ route('insight.ss', ['id' => 1]) }}" wire:navigate>
                <div class="grow truncate px-8 py-4">
                   <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
                      {{ __('Peragaan') . ' #1' }}

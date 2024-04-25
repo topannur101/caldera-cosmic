@@ -9,23 +9,24 @@ use Illuminate\Console\Command;
 use ModbusTcpClient\Network\NonBlockingClient;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
 
-class InsRtcRead extends Command
+class InsRtcFetch extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:ins-rtc-read';
+    protected $signature = 'app:ins-rtc-fetch';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Read rubber thickness data from Modbus server installed in HMI';
+    protected $description = 'Fetch rubber thickness data from Modbus server installed in HMI';
 
-    function convertToDecimal($value) {
+    function convertToDecimal($value) 
+    {
         $value = (int) $value; // Cast to integer to remove any leading zeros
         $length = strlen((string) $value);
     
@@ -42,6 +43,16 @@ class InsRtcRead extends Command
         return $decimal;
     }
 
+    function saveMetric($device_id, $thick_act_left, $thick_act_right, $dt_client) 
+    {
+        InsRtcMetric::create([
+            'ins_rtc_device_id' => $device_id,
+            'thick_act_left'    => $this->convertToDecimal($thick_act_left),
+            'thick_act_right'   => $this->convertToDecimal($thick_act_right),
+            'dt_client'         => $dt_client,
+        ]);
+    }
+
     /**
      * Execute the console command.
      */
@@ -49,6 +60,8 @@ class InsRtcRead extends Command
     {
          // Nanti ganti dengan semua IP perangkat yang terdaftar di database
          $devices = InsRtcDevice::all();
+         $zeroCounters  = array_fill_keys($devices->pluck('id')->toArray(), 0);
+         $maxZeros      = 5;
 
          while (true) {
 
@@ -61,7 +74,7 @@ class InsRtcRead extends Command
                 $unitID = 1;
                 $data = [];
 
-                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://'.$device->ip_address.':502', $unitID)
+                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://'.$device->ip_address.':503', $unitID)
                     ->int16(10, 'thick_act_left')
                     ->int16(20, 'thick_act_right')
                     ->build();
@@ -76,13 +89,23 @@ class InsRtcRead extends Command
                         echo 'Failed to reach ' . $device->ip_address . ' (Line ' . $device->line . ')' . PHP_EOL;
                     }
 
-                    if ($data) {
-                        InsRtcMetric::create([
-                            'ins_rtc_device_id' => 1,
-                            'thick_act_left'    => $this->convertToDecimal($data['thick_act_left']),
-                            'thick_act_right'   => $this->convertToDecimal($data['thick_act_right']),
-                            'dt_client'         => $dt_client,
-                        ]);
+                    if (isset($data['thick_act_left']) && isset($data['thick_act_right'])) {
+                        if ( $data['thick_act_left'] > 0 || $data['thick_act_right'] > 0 ) {
+                            // save data
+                            $this->saveMetric($device->id, $data['thick_act_left'], $data['thick_act_right'], $dt_client);
+                            $zeroCounters[$device->id] = 0;
+                            echo 'Data is saved. Counter for device id ' . $device->id . ' has been reset' . PHP_EOL;
+                        } else {
+                            if($zeroCounters[$device->id] < $maxZeros) {
+                                $zeroCounters[$device->id]++;
+                                echo 'WARNING: Zero counter for device id ' . $device->id . ' is ' . $zeroCounters[$device->id] . PHP_EOL;    
+                                // save the data (zero value)
+                                $this->saveMetric($device->id, $data['thick_act_left'], $data['thick_act_right'], $dt_client);
+                                echo 'Data is saved. Even though they\'re both zeros' . PHP_EOL;
+                            } else {
+                                echo 'WARNING: Data is not saved.' . PHP_EOL;
+                            }
+                        }
                     }
             }
             sleep(1);

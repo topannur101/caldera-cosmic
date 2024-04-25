@@ -98,11 +98,18 @@ new #[Layout('layouts.app')] class extends Component {
 
             // Create CSV file using league/csv
             $csv = Writer::createFromString('');
-            $csv->insertOne([__('Waktu alat'), __('Line'), __('Tebal kiri'), __('Tebal kanan')]); // Add headers
+            $csv->insertOne([
+                __('Line'), __('Waktu'), 
+                __('Tebal kiri'), __('Tebal kanan')
+            ]); 
 
             foreach ($items as $item) {
-                $csv->insertOne([$item->dt_client, $item->line, $item->thick_act_left, $item->thick_act_right]); // Add data rows
+                $csv->insertOne([
+                    $item->ins_rtc_device->line, $item->dt_client, 
+                    $item->thick_act_left, $item->thick_act_right
+                ]); // Add data rows
             }
+            
 
             // Generate CSV file and return as a download
             $fileName = __('Wawasan_RTC') . '_' . date('Y-m-d_Hs') . '.csv';
@@ -148,7 +155,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     </header>
 </x-slot>
-<div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
+<div id="content" class="py-12 max-w-4xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
     <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row">
         <div>
             <div class="w-full sm:w-44 md:w-64 px-3 sm:px-0 mb-5">

@@ -21,16 +21,24 @@ new #[Layout('layouts.app')] class extends Component {
         ->join('ins_rtc_devices', 'ins_rtc_metrics.ins_rtc_device_id', '=', 'ins_rtc_devices.id')
         ->select('line')
         ->selectRaw('MAX(dt_client) as dt_client')
-        ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(thick_act_left ORDER BY dt_client DESC), ",", 1) as thick_act_left')
-        ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(thick_act_right ORDER BY dt_client DESC), ",", 1) as thick_act_right')
-        ->where('dt_client', '>=', Carbon::now()->subDays(90))
-        ->groupBy('line');
+        // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(thick_act_left ORDER BY dt_client DESC), ",", 1) as thick_act_left')
+        // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(thick_act_right ORDER BY dt_client DESC), ",", 1) as thick_act_right')
+        ->where('dt_client', '>=', Carbon::now()->subDays(90));
 
+        if($this->fline) {
+            $rows->where('line', $this->fline);
+        }
+        $rows->groupBy('line');
         $rows = $rows->paginate($this->perPage);
 
         return [
             'rows' => $rows,
         ];
+    }
+
+    public function loadMore()
+    {
+        $this->perPage += 10;
     }
 };
 
@@ -54,20 +62,19 @@ new #[Layout('layouts.app')] class extends Component {
             <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
                 <tr class="uppercase text-xs">
                     <th>{{ __('Line') }}</th>
-                    <th>{{ __('Kiri') }}</th>
-                    <th>{{ __('Kanan') }}</th>
-                    <th>{{ __('Terakhir mengirim') }}</th>
+                    {{-- <th>{{ __('Kiri') }}</th>
+                    <th>{{ __('Kanan') }}</th> --}}
+                    <th>{{ __('Data terakhir') }}</th>
                     <th>{{ __('Status') }}</th>
                 </tr>
                 @foreach ($rows as $row)
                     <tr>
                         <td>{{ $row->line }}</td>
-                        <td>{{ $row->thick_act_left}}</td>
-                        <td>{{ $row->thick_act_right}}</td>
                         <td>{{ $row->dt_client }}</td>
                         <td>
-                            @if (Carbon::now()->diffInMinutes($row->dt_client) > 30)
+                            @if ((Carbon::now()->diffInMinutes($row->dt_client) > 30) && (Carbon::now()->diffInMinutes($row->dt_client) < 0 ))
                                 <div class="flex text-xs gap-x-2 items-center text-red-500">
+                                    
                                     <i class="fa fa-2xs fa-circle"></i>
                                     <span>{{ __('OFFLINE') }}</span>
                                 </div>
@@ -78,8 +85,6 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
                             @endif
                         </td>
-
-
                     </tr>
                 @endforeach
             </table>
