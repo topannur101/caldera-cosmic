@@ -74,7 +74,7 @@ new #[Layout('layouts.app')] class extends Component {
         if ($this->device_id) {
             $x->where('device_id', $this->device_id);
          }
-         $numeratorAccuracy = $x->whereBetween('thick_act_left', [0, 10])->whereBetween('thick_act_right', [0, 10])->get()->count();
+         $numeratorAccuracy = $x->whereBetween('act_left', [0, 10])->whereBetween('act_right', [0, 10])->get()->count();
 
          
         $y = InsRtcMetric::whereBetween('dt_client', [$start, $end]);
@@ -188,14 +188,18 @@ new #[Layout('layouts.app')] class extends Component {
                     <th>{{ __('ID Resep') }}</th>
                     <th>{{ __('Kiri') }}</th>
                     <th>{{ __('Kanan') }}</th>
+                    <th>{{ __('Tengah') }}</th>
+                    <th>{{ __('Koreksi?') }}</th>
                 </tr>
                 @foreach ($metrics as $metric)
                     <tr>
                         <td>{{ $metric->ins_rtc_device->line }}</td>
                         <td>{{ $metric->dt_client }}</td>
                         <td>{{ $metric->ins_recipe_id }}</td>
-                        <td>{{ $metric->thick_act_left }}</td>
-                        <td>{{ $metric->thick_act_right }}</td>
+                        <td>{{ $metric->act_left }}</td>
+                        <td>{{ $metric->act_right }}</td>
+                        <td>{{ $metric->ins_rtc_recipe->std_mid }}</td>
+                        <td>{{ ((bool) $metric->is_correcting) ? '○' : '' }}</td>
                     </tr>
                 @endforeach
             </table>

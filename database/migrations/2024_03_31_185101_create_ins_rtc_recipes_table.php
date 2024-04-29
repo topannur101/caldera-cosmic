@@ -17,11 +17,9 @@ return new class extends Migration
 
             $table->string('name')->unique();
             $table->string('og_rs');
-            $table->decimal('thick_std_min', 4, 2);
-            $table->decimal('thick_std_max', 4, 2);
-            $table->decimal('thick_sl_min', 4, 2);
-            $table->decimal('thick_sl_max', 4, 2);
-            $table->decimal('scale', 5, 4);
+            $table->decimal('std_min', 4, 2);
+            $table->decimal('std_max', 4, 2);
+            $table->decimal('std_mid', 4, 2);
 
             $table->index('name');
         });

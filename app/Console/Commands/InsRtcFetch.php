@@ -5,8 +5,10 @@ namespace App\Console\Commands;
 use Carbon\Carbon;
 use App\Models\InsRtcDevice;
 use App\Models\InsRtcMetric;
+use App\Models\InsRtcRecipe;
 use Illuminate\Console\Command;
 use ModbusTcpClient\Network\NonBlockingClient;
+use ModbusTcpClient\Composer\Read\ReadCoilsBuilder;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
 
 class InsRtcFetch extends Command
@@ -47,14 +49,18 @@ class InsRtcFetch extends Command
 
     protected $prevThickAct = [];
 
-    function saveMetric($device_id, $thick_act_left, $thick_act_right, $dt_client): void
+    function saveMetric($device_id, $act_left, $act_right, $recipe_id, $is_correcting, $dt_client): void
     {
-        $thickAct = $thick_act_left . $thick_act_right;
+        $thickAct = $act_left . $act_right;
         if (!isset($this->prevThickAct[$device_id]) || $thickAct !== $this->prevThickAct[$device_id]) {
+            $x = InsRtcRecipe::find($recipe_id) ? $recipe_id : null;
+
             InsRtcMetric::create([
                 'ins_rtc_device_id' => $device_id,
-                'thick_act_left'    => $this->convertToDecimal($thick_act_left),
-                'thick_act_right'   => $this->convertToDecimal($thick_act_right),
+                'ins_rtc_recipe_id' => $x,
+                'act_left'    => $this->convertToDecimal($act_left),
+                'act_right'   => $this->convertToDecimal($act_right),
+                'is_correcting'     => (bool) $is_correcting,
                 'dt_client'         => $dt_client,
             ]);
             $this->prevThickAct[$device_id] = $thickAct;
@@ -78,31 +84,38 @@ class InsRtcFetch extends Command
             // Tarik data MODBUS ke semua perangkat
             foreach ($devices as $device) {
                 $unitID = 1;
-                $data = [];
-                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://'.$device->ip_address.':503', $unitID)
-                    ->int16(0, 'thick_act_left')
-                    ->int16(1, 'thick_act_right')
-                    ->int16(2, 'standard_middle')
-                    ->int16(3, 'recipe_id')
-                    // ->int16(4, 'is_correcting')
+                $data_fc3 = [];
 
+                $fc2 = ReadCoilsBuilder::newReadInputDiscretes('tcp://'.$device->ip_address.':503', $unitID)
+                    ->coil(0, 'is_correcting')
+                    ->coil(1, 'is_holding')
+                    ->build();
+                
+                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://'.$device->ip_address.':503', $unitID)
+                    ->int16(0, 'act_left')
+                    ->int16(1, 'act_right')
+                    ->int16(2, 'std_mid')
+                    ->int16(3, 'recipe_id')
                     ->build();
     
                 try {
                     // Tarik data MODBUS
-                    $responseContainer = (new NonBlockingClient(['readTimeoutSec' => 1]))->sendRequests($fc3);
+                    $response_fc2 = (new NonBlockingClient(['readTimeoutSec' => 1]))->sendRequests($fc2);
+                    $response_fc3 = (new NonBlockingClient(['readTimeoutSec' => 1]))->sendRequests($fc3);
                     echo 'Response from: ' . $device->ip_address . ' (Line ' . $device->line . ')';
-                    $data = $responseContainer->getData();
-                    print_r($data);
-                    echo ' --- Left: ' . $data['thick_act_left'] . ' Right: ' . $data['thick_act_right'] . PHP_EOL;   
+                    $data_fc2 = $response_fc2->getData();
+                    $data_fc3 = $response_fc3->getData();
+                    // print_r($data_fc2);
+                    // print_r($data_fc3);
+                    echo ' --- is_correcting: ' . $data_fc2['is_correcting'] . ' act_left: ' . $data_fc3['act_left'] . ' act_right: ' . $data_fc3['act_right'] . ' std_mid: ' . $data_fc3['std_mid'] . ' recipe_id: ' . $data_fc3['recipe_id'] . PHP_EOL;   
                 } catch (\Throwable $th) {
                     echo PHP_EOL . 'Exception: ' . $th->getMessage();
                 }
 
-                if (isset($data['thick_act_left']) && isset($data['thick_act_right'])) {
-                    if ( $data['thick_act_left'] > 0 || $data['thick_act_right'] > 0 ) {
+                if (isset($data_fc3['act_left']) && isset($data_fc3['act_right'])) {
+                    if ( $data_fc3['act_left'] > 0 || $data_fc3['act_right'] > 0 ) {
                         // save data
-                        $this->saveMetric($device->id, $data['thick_act_left'], $data['thick_act_right'], $dt_client);
+                        $this->saveMetric($device->id, $data_fc3['act_left'], $data_fc3['act_right'], $data_fc3['recipe_id'], $data_fc2['is_correcting'], $dt_client);
                         $zeroCounters[$device->id] = 0;
                         echo 'Zero counter: 0 (Reset)' . PHP_EOL;
                     } else {
@@ -110,7 +123,7 @@ class InsRtcFetch extends Command
                             $zeroCounters[$device->id]++;
                             echo 'Zero counter:' . $zeroCounters[$device->id] . PHP_EOL;    
                             // save the data (zero value)
-                            $this->saveMetric($device->id, $data['thick_act_left'], $data['thick_act_right'], $dt_client);
+                            $this->saveMetric($device->id, $data_fc3['act_left'], $data_fc3['act_right'], $data_fc3['recipe_id'], $data_fc2['is_correcting'],  $dt_client);
                         } else {
                             echo 'Zero data is ignored.' . PHP_EOL;
                         }

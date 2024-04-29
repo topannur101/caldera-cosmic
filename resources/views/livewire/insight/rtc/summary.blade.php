@@ -21,8 +21,8 @@ new #[Layout('layouts.app')] class extends Component {
         ->join('ins_rtc_devices', 'ins_rtc_metrics.ins_rtc_device_id', '=', 'ins_rtc_devices.id')
         ->select('line')
         ->selectRaw('MAX(dt_client) as dt_client')
-        // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(thick_act_left ORDER BY dt_client DESC), ",", 1) as thick_act_left')
-        // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(thick_act_right ORDER BY dt_client DESC), ",", 1) as thick_act_right')
+        // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(act_left ORDER BY dt_client DESC), ",", 1) as act_left')
+        // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(act_right ORDER BY dt_client DESC), ",", 1) as act_right')
         ->where('dt_client', '>=', Carbon::now()->subDays(90));
 
         if($this->fline) {

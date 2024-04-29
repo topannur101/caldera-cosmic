@@ -17,6 +17,7 @@ class InsRtcMetric extends Model
         'ins_rtc_device_id',
         'thick_act_left',
         'thick_act_right',
+        'is_correcting',
         'dt_client',
     ];
 
@@ -27,5 +28,10 @@ class InsRtcMetric extends Model
     public function ins_rtc_device(): BelongsTo
     {
         return $this->belongsTo(InsRtcDevice::class);
+    }
+
+    public function ins_rtc_recipe(): BelongsTo
+    {
+        return $this->belongsTo(InsRtcRecipe::class);
     }
 }
