@@ -195,11 +195,11 @@ new #[Layout('layouts.app')] class extends Component {
                     <tr>
                         <td>{{ $metric->ins_rtc_device->line }}</td>
                         <td>{{ $metric->dt_client }}</td>
-                        <td>{{ $metric->ins_recipe_id }}</td>
+                        <td>{{ $metric->ins_rtc_recipe_id }}</td>
                         <td>{{ $metric->act_left }}</td>
                         <td>{{ $metric->act_right }}</td>
-                        <td>{{ $metric->ins_rtc_recipe->std_mid }}</td>
-                        <td>{{ ((bool) $metric->is_correcting) ? '○' : '' }}</td>
+                        <td>{{ $metric->ins_rtc_recipe->std_mid ??  ''}}</td>
+                        <td>{{ ((bool) $metric->is_correcting) ? '•' : '' }}</td>
                     </tr>
                 @endforeach
             </table>

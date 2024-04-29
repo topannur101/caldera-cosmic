@@ -58,8 +58,8 @@ class InsRtcFetch extends Command
             InsRtcMetric::create([
                 'ins_rtc_device_id' => $device_id,
                 'ins_rtc_recipe_id' => $x,
-                'act_left'    => $this->convertToDecimal($act_left),
-                'act_right'   => $this->convertToDecimal($act_right),
+                'act_left'          => $this->convertToDecimal($act_left),
+                'act_right'         => $this->convertToDecimal($act_right),
                 'is_correcting'     => (bool) $is_correcting,
                 'dt_client'         => $dt_client,
             ]);
@@ -105,8 +105,8 @@ class InsRtcFetch extends Command
                     echo 'Response from: ' . $device->ip_address . ' (Line ' . $device->line . ')';
                     $data_fc2 = $response_fc2->getData();
                     $data_fc3 = $response_fc3->getData();
-                    // print_r($data_fc2);
-                    // print_r($data_fc3);
+                    print_r($data_fc2);
+                    print_r($data_fc3);
                     echo ' --- is_correcting: ' . $data_fc2['is_correcting'] . ' act_left: ' . $data_fc3['act_left'] . ' act_right: ' . $data_fc3['act_right'] . ' std_mid: ' . $data_fc3['std_mid'] . ' recipe_id: ' . $data_fc3['recipe_id'] . PHP_EOL;   
                 } catch (\Throwable $th) {
                     echo PHP_EOL . 'Exception: ' . $th->getMessage();
