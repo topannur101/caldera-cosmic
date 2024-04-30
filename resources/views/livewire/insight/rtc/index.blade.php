@@ -99,14 +99,24 @@ new #[Layout('layouts.app')] class extends Component {
             // Create CSV file using league/csv
             $csv = Writer::createFromString('');
             $csv->insertOne([
-                __('Line'), __('Waktu'), 
-                __('Tebal kiri'), __('Tebal kanan')
+                __('Line'), 
+                __('Waktu'), 
+                __('ID Resep'),
+                __('Tebal kiri'), 
+                __('Tebal kanan'),
+                __('Standar tengah'),
+                __('Koreksi?'),
             ]); 
 
             foreach ($items as $item) {
                 $csv->insertOne([
-                    $item->ins_rtc_device->line, $item->dt_client, 
-                    $item->thick_act_left, $item->thick_act_right
+                    $item->ins_rtc_device->line, 
+                    $item->dt_client, 
+                    $item->ins_rtc_recipe->id,
+                    $item->act_left, 
+                    $item->act_right,
+                    $item->ins_rtc_recipe->std_mid,
+                    $item->is_correcting
                 ]); // Add data rows
             }
             
