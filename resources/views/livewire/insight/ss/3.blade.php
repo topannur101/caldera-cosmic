@@ -11,6 +11,7 @@ new class extends Component {
 
     public function mount(): void
     {
+        $this->sline = 1;
         $this->lines = InsRtcDevice::all()->pluck('line');
     }
 
@@ -86,7 +87,6 @@ new class extends Component {
                 <div id="chart-right"></div>
             </div>
         </div>
-
     </div>
 </div>
 
