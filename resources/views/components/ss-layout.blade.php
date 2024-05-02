@@ -12,8 +12,8 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans text-neutral-800 dark:text-neutral-200">
-    <div class="min-h-screen bg-neutral-100 dark:bg-neutral-900">
+<body class="font-sans text-neutral-600 dark:text-neutral-200">
+    <div class="min-h-screen bg-neutral-200 dark:bg-neutral-900">
         {{ $slot }}
     </div>
     @livewireScripts

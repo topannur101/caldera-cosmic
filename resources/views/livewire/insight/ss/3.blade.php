@@ -1,28 +1,18 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\Attributes\Url;
 use App\Models\InsRtcDevice;
 
 new class extends Component {
-
     #[Url]
-    public $sline;
-    public $lines;
+    public $device_id;
+    public $devices = [];
 
     public function mount(): void
     {
-        $this->sline = 1;
-        $this->lines = InsRtcDevice::all()->pluck('line');
+        $this->devices = InsRtcDevice::all();
     }
-
-    public function with(): array
-    {
-        $device = InsRtcDevice::where('line', $this->sline)->first();
-        return [
-            'device_id' => $device->id ?? 1,
-        ];
-    }
-
 }; ?>
 
 <div class="w-full h-screen p-4">
@@ -30,47 +20,47 @@ new class extends Component {
         <div class="grid grid-cols-6 grid-rows-1 gap-4">
             <div class="col-span-2">
                 <div>
-                    <div class="text-4xl uppercase mb-3 mx-1">{{ __('Model') }}</div>
+                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Model') }}</div>
                     <div class="text-6xl" id="recipe-name"></div>
                 </div>
             </div>
             <div class="col-start-3">
                 <div>
-                    <div class="text-4xl uppercase mb-3 mx-1">{{ __('OG/RS') }}</div>
-                    <div class="text-8xl font-bold py-3" id="recipe-og-rs"></div>
+                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('OG/RS') }}</div>
+                    <div class="text-7xl font-bold py-3" id="recipe-og-rs"></div>
                 </div>
             </div>
             <div class="col-start-4">
                 <div>
-                    <div class="text-4xl uppercase mb-3 mx-1">{{ __('Min') }}</div>
-                    <div class="text-8xl font-bold py-3" id="recipe-std-min"></div>
+                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Min') }}</div>
+                    <div class="text-7xl font-bold py-3" id="recipe-std-min"></div>
                 </div>
             </div>
             <div class="col-start-5">
                 <div>
-                    <div class="text-4xl uppercase mb-3 mx-1">{{ __('Maks') }}</div>
-                    <div class="text-8xl font-bold py-3" id="recipe-std-max"></div>
+                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Maks') }}</div>
+                    <div class="text-7xl font-bold py-3" id="recipe-std-max"></div>
                 </div>
             </div>
             <div class="col-start-6">
                 <div>
-                    <div class="text-4xl uppercase mb-3 mx-1">{{ __('Line') }}</div>
-                    <x-select wire:model.live="sline" class="text-8xl font-bold">
+                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Line') }}</div>
+                    <x-select wire:model.live="device_id" class="text-7xl font-bold">
                         <option value=""></option>
-                        @foreach ($lines as $line)
-                            <option value="{{ $line }}">{{ $line }}</option>
+                        @foreach ($devices as $device)
+                            <option value="{{ $device->id }}">{{ $device->line }}</option>
                         @endforeach
                     </x-select>
                 </div>
             </div>
         </div>
     </div>
-    <div x-data="{ act_left: 0, act_right: 0}" wire:key="chart-container" class="h-4/6 grid grid-cols-2 gap-4">
+    <div x-data="{ act_left: 0, act_right: 0 }" wire:key="chart-container" class="h-4/6 grid grid-cols-2 gap-4">
         <div
             class="w-full h-full flex flex-col px-8 py-6 bg-white text-neutral-600 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
-                <div class="text-6xl uppercase">{{ __('Kiri') }}</div>
-                <div class="text-8xl font-bold" id="act-left"></div>
+                <div class="text-4xl text-neutral-400 uppercase">{{ __('Kiri') }}</div>
+                <div class="text-7xl font-bold" id="act-left"></div>
             </div>
             <div class="flex-1">
                 <div id="chart-left"></div>
@@ -80,8 +70,8 @@ new class extends Component {
         <div
             class="w-full h-full flex flex-col px-8 py-6 bg-white text-neutral-600 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
-                <div class="text-6xl uppercase">{{ __('Kanan') }}</div>
-                <div class="text-8xl font-bold" id="act-right"></div>
+                <div class="text-4xl text-neutral-400 uppercase">{{ __('Kanan') }}</div>
+                <div class="text-7xl font-bold" id="act-right"></div>
             </div>
             <div class="flex-1">
                 <div id="chart-right"></div>
@@ -98,28 +88,33 @@ new class extends Component {
                 toolbar: {
                     show: false
                 },
-                height: 350,
                 animations: {
-                    enabled: true,
-                    easing: 'linear',
-                    dynamicAnimation: {
-                        speed: 1000
-                    }
+                    enabled: false,
                 }
             },
             dataLabels: {
                 enabled: false
             },
             series: [{
-                name: 'Left',
+                name: '{{ __("Sensor") }}',
                 type: 'area',
                 data: [],
                 color: '#b4a5e1'
-            },{
-                name: 'Middle',
+            }, {
+                name: '{{ __("Minimum") }}',
                 type: 'line',
                 data: [],
-                color: '#60a055'
+                color: '#169292'
+            }, {
+                name: '{{ __("Maksimum") }}',
+                type: 'line',
+                data: [],
+                color: '#169292'
+            }, {
+                name: '{{ __("Tengah") }}',
+                type: 'line',
+                data: [],
+                color: '#169292'
             }],
             xaxis: {
                 type: 'datetime',
@@ -132,8 +127,8 @@ new class extends Component {
             },
             stroke: {
                 curve: 'smooth',
-                width: [0, 3],
-                dashArray: [0, 6]
+                width: [0, 1, 1, 1],
+                dashArray: [0, 0, 0, 10]
             },
         };
 
@@ -143,28 +138,33 @@ new class extends Component {
                 toolbar: {
                     show: false
                 },
-                height: 350,
                 animations: {
-                    enabled: true,
-                    easing: 'linear',
-                    dynamicAnimation: {
-                        speed: 1000
-                    }
+                    enabled: false,
                 }
             },
             dataLabels: {
                 enabled: false
             },
             series: [{
-                name: 'Right',
+                name: '{{ __("Sensor") }}',
                 type: 'area',
                 data: [],
                 color: '#b4a5e1'
-            },{
-                name: 'Middle',
+            }, {
+                name: '{{ __("Minimum") }}',
                 type: 'line',
                 data: [],
-                color: '#60a055'
+                color: '#169292'
+            }, {
+                name: '{{ __("Maksimum") }}',
+                type: 'line',
+                data: [],
+                color: '#169292'
+            }, {
+                name: '{{ __("Tengah") }}',
+                type: 'line',
+                data: [],
+                color: '#169292'
             }],
             xaxis: {
                 type: 'datetime',
@@ -177,118 +177,164 @@ new class extends Component {
             },
             stroke: {
                 curve: 'smooth',
-                width: [0, 3],
-                dashArray: [0, 6]
+                width: [0, 1, 1, 1],
+                dashArray: [0, 0, 0, 10]
             },
         };
 
         let leftChart = new ApexCharts(document.querySelector("#chart-left"), oLeft);
         let rightChart = new ApexCharts(document.querySelector("#chart-right"), oRight);
-        let recipeUrl, recipeId, recipeStdMid;
+        let metricUrl, deviceId, recipeUrl, recipeId, recipeStdMin, recipeStdMax, recipeStdMid;
 
-        const recipeName      = document.getElementById("recipe-name");
-        const recipeOgRs      = document.getElementById("recipe-og-rs");
-        const recipeStdMin    = document.getElementById("recipe-std-min");
-        const recipeStdMax    = document.getElementById("recipe-std-max");
-        const actLeft   = document.getElementById("act-left");
-        const actRight  = document.getElementById("act-right");
+        recipeId = 0
 
-        recipeName.textContent      = '???'
-        recipeOgRs.textContent      = '???'
-        recipeStdMin.textContent    = 0
-        recipeStdMax.textContent    = 0
-        actLeft.textContent         = 0
-        actRight.textContent        = 0
+        const elRecipeName = document.getElementById("recipe-name");
+        const elRecipeOgRs = document.getElementById("recipe-og-rs");
+        const elRecipeStdMin = document.getElementById("recipe-std-min");
+        const elRecipeStdMax = document.getElementById("recipe-std-max");
+        const elActLeft = document.getElementById("act-left");
+        const elActRight = document.getElementById("act-right");
+
+        elActLeft.textContent = 0
+        elActRight.textContent = 0
 
         leftChart.render();
         rightChart.render();
 
-        const leftPts   = oLeft.series[0].data;
-        const leftMid   = oLeft.series[1].data;
-        const rightPts  = oRight.series[0].data;
-        const rightMid  = oRight.series[1].data;
+        const leftPts = oLeft.series[0].data;
+        const leftMin = oLeft.series[1].data;
+        const leftMax = oLeft.series[2].data;
+        const leftMid = oLeft.series[3].data;
+        const rightPts = oRight.series[0].data;
+        const rightMin = oRight.series[1].data;
+        const rightMax = oRight.series[2].data;
+        const rightMid = oRight.series[3].data;
 
         setInterval(function() {
-            // Generate or fetch new data point
-            axios.get('{{ route("insight.rtc.metric", ["device_id" => $device_id]) }}')
-                .then(response => {
 
-                    if (recipeId !== response.data.data.recipe_id) {
+            deviceId = parseInt($wire.device_id)
 
-                        recipeUrl = '{{ route("insight.rtc.recipe", ["recipe_id" => "__recipeId__"]) }}'
-                        recipeId = response.data.data.recipe_id
-                        recipeUrl = recipeUrl.replace('__recipeId__', recipeId)
+            if (deviceId > 0) {
+                metricUrl = '{{ route('insight.rtc.metric', ['device_id' => '__deviceId__']) }}';
+                metricUrl = metricUrl.replace('__deviceId__', deviceId)
 
-                        axios.get(recipeUrl)
-                        .then(response => {
-                            recipeName.textContent      = response.data.data.name
-                            recipeOgRs.textContent      = response.data.data.og_rs
-                            recipeStdMin.textContent    = response.data.data.std_min
-                            recipeStdMax.textContent    = response.data.data.std_max
-                        })
-                        .catch(error => {
-                            console.error('Error fetching recipe:', error);
+                axios.get(metricUrl)
+                    .then(response => {
+
+                        if (recipeId !== (parseInt(response.data.data.recipe_id))) {
+                            recipeId = parseInt(response.data.data.recipe_id)
+                            recipeUrl = '{{ route('insight.rtc.recipe', ['recipe_id' => '__recipeId__']) }}'
+                            recipeUrl = recipeUrl.replace('__recipeId__', recipeId)
+
+                            if (recipeId > 0) {
+                                axios.get(recipeUrl)
+                                    .then(response => {
+                                        elRecipeName.textContent = response.data.data.name
+                                        elRecipeOgRs.textContent = response.data.data.og_rs
+                                        elRecipeStdMin.textContent = response.data.data.std_min
+                                        elRecipeStdMax.textContent = response.data.data.std_max
+                                        recipeStdMin = parseFloat(response.data.data.std_min)
+                                        recipeStdMax = parseFloat(response.data.data.std_max)
+                                        recipeStdMid = parseFloat(response.data.data.std_mid)
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching recipe:', error);
+                                    });
+                            } else {
+                                elRecipeName.textContent = '{{ __("Resep tidak diketahui") }}'
+                                elRecipeOgRs.textContent = '???'
+                                recipeStdMin.textContent = 0
+                                recipeStdMax.textContent = 0
+                            }
+                        } 
+                        elActLeft.textContent = response.data.data.act_left
+                        elActRight.textContent = response.data.data.act_right
+
+                        let x = new Date(response.data.data.dt_client).getTime();
+                        let y = 0;
+
+                        y = parseFloat(response.data.data.act_left);
+                        leftPts.push({
+                            x,
+                            y
                         });
-                    }
 
-                    actLeft.textContent         = response.data.data.act_left
-                    actRight.textContent        = response.data.data.act_right
+                        y = recipeStdMin;
+                        leftMin.push({
+                            x,
+                            y
+                        });
 
-                    let x = new Date(response.data.data.dt_client).getTime();
-                    let y = 0;
+                        y = recipeStdMax;
+                        leftMax.push({
+                            x,
+                            y
+                        });
 
-                    y = parseFloat(response.data.data.act_left);
-                    leftPts.push({ x, y });
+                        y = recipeStdMid;
+                        leftMid.push({
+                            x,
+                            y
+                        });
 
-                    y = recipeStdMid;
-                    leftMid.push({x, y});
+                        leftChart.updateSeries([{
+                            name: '{{ __("Sensor") }}',
+                            data: leftPts
+                        }, {
+                            name: '{{ __("Minimum") }}',
+                            data: leftMin
+                        }, {
+                            name: '{{ __("Maksimum") }}',
+                            data: leftMax
+                        }, {
+                            name: '{{ __("Tengah") }}',
+                            data: leftMid
+                        }]);
 
-                    leftChart.updateSeries([{
-                        name: 'Left',
-                        data: leftPts
-                    },{
-                        name: 'Middle',
-                        data: leftMid
-                    }]);
+                        y = parseFloat(response.data.data.act_right);
+                        rightPts.push({
+                            x,
+                            y
+                        });
 
-                    y = parseFloat(response.data.data.act_right);
-                    rightPts.push({ x, y });
+                        y = recipeStdMin;
+                        rightMin.push({
+                            x,
+                            y
+                        });
 
-                    y = recipeStdMid;
-                    rightMid.push({ x, y});
-                    
-                    rightChart.updateSeries([{
-                        name: 'Right',
-                        data: rightPts
-                    },{
-                        name: 'Middle',
-                        data: rightMid
-                    }]);
-                })
-                .catch(error => {
-                    console.error('Error fetching metric:', error);
-                });
-            // Run simulation
-            // let x   = new Date().getTime();
-            // let y = 3.5;
+                        y = recipeStdMax;
+                        rightMax.push({
+                            x,
+                            y
+                        });
 
-            // // y   = parseFloat(response.data.data.act_left);
-            // leftPts.push({x, y});
-            // y = 2.0;
-            // leftMid.push({x, y});
-            // leftChart.updateSeries([{
-            //     name: 'Left',
-            //     data: leftPts
-            // },{
-            //     name: 'Middle',
-            //     data: leftMid
-            // }]);
+                        y = recipeStdMid;
+                        rightMid.push({
+                            x,
+                            y
+                        });
 
-            // rightPts.push({x, y});
-            // rightChart.updateSeries([{
-            //     data: rightPts
-            // }]);
-
+                        rightChart.updateSeries([{
+                            name: '{{ __("Sensor") }}',
+                            data: rightPts
+                        }, {
+                            name: '{{ __("Minimum") }}',
+                            data: rightMin
+                        }, {
+                            name: '{{ __("Maksimum") }}',
+                            data: rightMax
+                        }, {
+                            name: '{{ __("Tengah") }}',
+                            data: rightMid
+                        }]);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching metric:', error);
+                    });
+            } else {
+                recipeId = 0
+            }
         }, 1000);
     </script>
 @endscript
