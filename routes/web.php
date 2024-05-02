@@ -2,8 +2,10 @@
 
 use Livewire\Volt\Volt;
 use App\Models\InsRtcMetric;
+use App\Models\InsRtcRecipe;
 use Illuminate\Support\Facades\Route;
 use App\Http\Resources\InsRtcMetricResource;
+use App\Http\Resources\InsRtcRecipeResource;
 
 Volt::route('/', 'home')->name('home');
 
@@ -22,10 +24,13 @@ Route::prefix('insight')->group(function () {
         Volt::route('/rtc/manage',                  'insight.rtc.manage.index')             ->name('manage.index');
         Volt::route('/rtc/slideshows',              'insight.rtc.slideshows')               ->name('slideshows');
         Volt::route('/rtc',                         'insight.rtc.index')                    ->name('index');
-        Route::get('/rtc/latest/{device_id}', function (string $device_id) {
+        Route::get('/rtc/metric/{device_id}', function (string $device_id) {
             $metric = InsRtcMetric::where('ins_rtc_device_id', $device_id)->latest('dt_client')->first();
             return $metric ? new InsRtcMetricResource($metric) : abort('404');
-        })->name('latest');
+        })->name('metric');
+        Route::get('/rtc/recipe/{recipe_id}', function (string $recipe_id) {
+            return new InsRtcRecipeResource(InsRtcRecipe::findOrFail($recipe_id));
+        })->name('recipe');
     });
     Route::view('/', 'livewire.insight.index')->name('insight');
 });
