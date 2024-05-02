@@ -190,9 +190,15 @@ new class extends Component {
         const recipeOgRs      = document.getElementById("recipe-og-rs");
         const recipeStdMin    = document.getElementById("recipe-std-min");
         const recipeStdMax    = document.getElementById("recipe-std-max");
-
         const actLeft   = document.getElementById("act-left");
         const actRight  = document.getElementById("act-right");
+
+        recipeName.textContent      = '???'
+        recipeOgRs.textContent      = '???'
+        recipeStdMin.textContent    = 0
+        recipeStdMax.textContent    = 0
+        actLeft.textContent         = 0
+        actRight.textContent        = 0
 
         leftChart.render();
         rightChart.render();
