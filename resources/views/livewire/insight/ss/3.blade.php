@@ -334,6 +334,32 @@ new class extends Component {
                     });
             } else {
                 recipeId = 0
+                leftChart.updateSeries([{
+                    name: '{{ __("Sensor") }}',
+                    data: []
+                }, {
+                    name: '{{ __("Minimum") }}',
+                    data: []
+                }, {
+                    name: '{{ __("Maksimum") }}',
+                    data: []
+                }, {
+                    name: '{{ __("Tengah") }}',
+                    data: []
+                }]);
+                rightChart.updateSeries([{
+                    name: '{{ __("Sensor") }}',
+                    data: []
+                }, {
+                    name: '{{ __("Minimum") }}',
+                    data: []
+                }, {
+                    name: '{{ __("Maksimum") }}',
+                    data: []
+                }, {
+                    name: '{{ __("Tengah") }}',
+                    data: []
+                }]);
             }
         }, 1000);
     </script>
