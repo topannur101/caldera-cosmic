@@ -8,7 +8,7 @@
         @if (isset($title))
             <title>{{ $title }}</title>
         @else
-            <title>{{ config('app.name', 'Laravel') }}</title>
+            <title>Caldera Cosmic</title>
         @endif 
 
         <!-- Scripts -->
