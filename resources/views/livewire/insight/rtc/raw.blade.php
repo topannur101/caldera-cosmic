@@ -55,7 +55,7 @@ new #[Layout('layouts.app')] class extends Component {
          if ($this->device_id) {
             $v->where('device_id', $this->device_id);
          }
-         $denominatorIntegrity = $v->groupBy('date_device_id')->get()->count() * 8;
+         $denominatorIntegrity = $v->groupBy('date_device_id')->get()->count() * 24;
 
         // hitung tanggal
         $w = DB::table('ins_rtc_metrics')
@@ -186,20 +186,22 @@ new #[Layout('layouts.app')] class extends Component {
                     <th>{{ __('Line') }}</th>
                     <th>{{ __('Waktu') }}</th>
                     <th>{{ __('ID Resep') }}</th>
+                    <th>{{ __('Koreksi') }}</th>
+                    <th>{{ __('Tindakan') }}</th>
                     <th>{{ __('Kiri') }}</th>
                     <th>{{ __('Kanan') }}</th>
                     <th>{{ __('Tengah') }}</th>
-                    <th>{{ __('Koreksi?') }}</th>
                 </tr>
                 @foreach ($metrics as $metric)
                     <tr>
                         <td>{{ $metric->ins_rtc_device->line }}</td>
                         <td>{{ $metric->dt_client }}</td>
                         <td>{{ $metric->ins_rtc_recipe_id }}</td>
+                        <td class="text-xs">{{ ((bool) $metric->is_correcting) ? 'ON' : 'OFF' }}</td>
+                        <td>?</td>
                         <td>{{ $metric->act_left }}</td>
                         <td>{{ $metric->act_right }}</td>
                         <td>{{ $metric->ins_rtc_recipe->std_mid ??  ''}}</td>
-                        <td>{{ ((bool) $metric->is_correcting) ? '•' : '' }}</td>
                     </tr>
                 @endforeach
             </table>

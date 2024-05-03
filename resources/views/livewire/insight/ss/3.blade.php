@@ -118,7 +118,10 @@ new class extends Component {
             }],
             xaxis: {
                 type: 'datetime',
-                range: 60000
+                range: 60000,
+                labels: {
+                    datetimeUTC: false,
+                }
             },
             yaxis: {
                 min: 1,
@@ -168,7 +171,10 @@ new class extends Component {
             }],
             xaxis: {
                 type: 'datetime',
-                range: 60000
+                range: 60000,
+                labels: {
+                    datetimeUTC: false,
+                }
             },
             yaxis: {
                 min: 1,

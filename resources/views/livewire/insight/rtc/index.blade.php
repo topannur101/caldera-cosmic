@@ -102,10 +102,10 @@ new #[Layout('layouts.app')] class extends Component {
                 __('Line'), 
                 __('Waktu'), 
                 __('ID Resep'),
+                __('Koreksi'),
                 __('Tebal kiri'), 
                 __('Tebal kanan'),
                 __('Standar tengah'),
-                __('Koreksi?'),
             ]); 
 
             foreach ($items as $item) {
@@ -113,10 +113,10 @@ new #[Layout('layouts.app')] class extends Component {
                     $item->ins_rtc_device->line, 
                     $item->dt_client, 
                     $item->ins_rtc_recipe->id,
+                    $item->is_correcting ? 'ON' : 'OFF',
                     $item->act_left, 
                     $item->act_right,
                     $item->ins_rtc_recipe->std_mid,
-                    $item->is_correcting
                 ]); // Add data rows
             }
             
@@ -165,7 +165,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     </header>
 </x-slot>
-<div id="content" class="py-12 max-w-4xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
+<div id="content" class="py-12 max-w-5xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
     <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row">
         <div>
             <div class="w-full sm:w-44 md:w-64 px-3 sm:px-0 mb-5">
