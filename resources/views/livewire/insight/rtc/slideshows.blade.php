@@ -15,13 +15,13 @@ new #[Layout('layouts.app')] class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('Peragaan') . ' — ' . __('Rubber thickness control') }}</x-slot>
+<x-slot name="title">{{ __('Peragaan') . ' — ' . __('Rubber Thickness Control') }}</x-slot>
 <x-slot name="header">
     <header class="bg-white dark:bg-neutral-800 shadow">
         <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div>  
                 <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
-                    <x-link href="{{ route('insight') }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Rubber thickness control') }}</span><span class="sm:hidden inline">{{ __('RTC') }}</span>
+                    <x-link href="{{ route('insight') }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Rubber Thickness Control') }}</span><span class="sm:hidden inline">{{ __('RTC') }}</span>
                 </h2>
             </div>
             <div class="space-x-8 -my-px ml-10 flex">

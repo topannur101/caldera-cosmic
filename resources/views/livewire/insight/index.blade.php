@@ -37,7 +37,7 @@
                 <div class="flex grow py-4 px-2 sm:p-6">
                     <div class="grow">
                         <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Assembly conveyor monitoring') }}
+                            {{ __('Assembly Conveyor Monitoring') }}
                         </div>
                         <div class="text-sm text-neutral-600 dark:text-neutral-400">
                             {{ __('Sistem monitoring kecepatan konveyor yang terletak di proses assembly.') }}
@@ -71,7 +71,7 @@
                 <div class="flex grow py-4 px-2 sm:p-6">
                     <div class="grow">
                         <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Rubber thickness control') }}
+                            {{ __('Rubber Thickness Control') }}
                         </div>
                         <div class="text-sm text-neutral-600 dark:text-neutral-400">
                             {{ __('Sistem monitoring ketebalan rubber yang terletak di proses pembuatan calendar.') }}

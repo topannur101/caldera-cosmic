@@ -59,7 +59,6 @@ class InvItemPolicy
         return in_array('item-create', $actions)
         ? Response::allow()
         : Response::deny( __('Kamu tak memiliki wewenang untuk membuat atau memperbarui barang di') . ' ' . $invItem->inv_area->name) ;
-
     }
 
     public function eval(User $user, InvItem $invItem): bool
