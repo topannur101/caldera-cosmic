@@ -332,7 +332,7 @@ input[type="checkbox"]:checked + label.custom-checkbox {
   }
 
   .table th {
-    @apply text-left;
+    @apply text-left uppercase text-sm;
   }
 
  .table th, .table td {

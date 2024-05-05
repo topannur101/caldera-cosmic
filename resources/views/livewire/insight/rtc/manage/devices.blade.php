@@ -97,7 +97,7 @@ new #[Layout('layouts.app')] class extends Component {
                         @can('manage', $device)
                             <x-modal :name="'edit-device-' . $device->id">
                                 <livewire:insight.rtc.manage.devices-form wire:key="device-lw-{{ $device->id . $loop->index }}"
-                                    :device="$device" lazy />
+                                    :$device lazy />
                             </x-modal>
                         @endcan
                     @endforeach

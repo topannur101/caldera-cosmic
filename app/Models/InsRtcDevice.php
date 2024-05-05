@@ -10,6 +10,11 @@ class InsRtcDevice extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'line',
+        'ip_address'
+    ];
+
     public function ins_rtc_metrics(): HasMany
     {
         return $this->hasMany(InsRtcMetric::class);

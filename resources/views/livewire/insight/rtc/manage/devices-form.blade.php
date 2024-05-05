@@ -4,10 +4,11 @@ use Livewire\Volt\Component;
 
 use App\Models\InsRtcDevice;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Gate;
 
 new class extends Component {
 
-    public InsRtcDevice $ins_rtc_device;
+    public InsRtcDevice $device;
 
     public $id;
     public $line;
@@ -26,30 +27,43 @@ new class extends Component {
         ];
     }
 
-    public function mount(InsRtcDevice $ins_rtc_device)
+    public function mount(InsRtcDevice $device)
     {
         // edit mode
-        if ($ins_rtc_device->id) 
+        if ($device->id) 
         {
             $this->fill(
-                $ins_rtc_device->only('line', 'ip_address')
+                $device->only('line', 'ip_address')
             );
+        } 
+            else 
+        {
+            $this->device = new InsRtcDevice();
         }
         
     }
 
     public function save()
     {
-        Gate::authorize('updateOrCreate', $this->ins_rtc_device);
+        Gate::authorize('manage', $this->device);
         $validated = $this->validate();
-        if ($this->ins_rtc_device->id ?? false) {
-            $this->ins_rtc_device->update($validated);
+        if ($this->device->id ?? false) {
+            $this->device->update($validated);
             $msg = __('Perangkat diperbarui');
         } else {
-            $this->ins_rtc_device->save();
+            InsRtcDevice::create($validated);
             $msg = __('Perangkat didaftarkan');
         }
         $this->js('notyf.success("'.$msg.'")'); 
+        $this->dispatch('updated');
+        $this->js('window.dispatchEvent(escKey)'); 
+    }
+
+    public function delete()
+    {
+        Gate::authorize('manage', $this->device);
+        $this->device->delete();
+        $this->js('notyf.success("'. __('Perangkat dihapus') .'")'); 
         $this->dispatch('updated');
         $this->js('window.dispatchEvent(escKey)'); 
     }
@@ -65,10 +79,12 @@ new class extends Component {
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
-        <div class="mt-6">
-            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('ID') }}</label>
-            <div class="px-3">{{ __('23') }}</div>
-        </div>
+        @if ($device->id ?? false)
+            <div class="mt-6">
+                <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('ID') }}</label>
+                <div class="px-3">{{ $device->id }}</div>
+            </div>
+        @endif
         <div class="mt-6">
             <label for="device-line"
                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
@@ -85,11 +101,16 @@ new class extends Component {
                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
             @enderror
         </div>
-        <div class="mt-6 flex">
+        <div class="mt-6 flex justify-between">
             <x-secondary-button type="submit">
                 <i class="fa fa-save mr-2"></i>
                 {{ __('Simpan') }}
             </x-secondary-button>
+            @if ($device->id ?? false)
+                <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete" wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
+                    {{ __('Hapus') }}
+                </x-text-button>
+            @endif
         </div>
     </form>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target="delete"></x-spinner-bg>

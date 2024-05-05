@@ -63,7 +63,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     </header>
 </x-slot>
-<div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="py-12 max-w-5xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
       <div class="flex justify-between px-6 sm:px-0">
          <div class="w-40">
