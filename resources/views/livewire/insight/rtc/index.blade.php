@@ -103,18 +103,42 @@ new #[Layout('layouts.app')] class extends Component {
                 __('Waktu'), 
                 __('ID Resep'),
                 __('Koreksi'),
+                __('Tindakan kiri'), 
                 __('Tebal kiri'), 
+                __('Tindakan kanan'),
                 __('Tebal kanan'),
                 __('Standar tengah'),
             ]); 
 
             foreach ($items as $item) {
+                $action_left = '';
+                switch ($item->action_left) {
+                    case 'thin':
+                        $action_left = __('Tipis');
+                        break;
+                    case 'thick':
+                    $action_left = __('Tebal');
+                    break;
+                }
+
+                $action_right = '';
+                switch ($item->action_right) {
+                    case 'thin':
+                        $action_right = __('Tipis');
+                        break;
+                    case 'thick':
+                        $action_right = __('Tebal');
+                        break;
+                }
+
                 $csv->insertOne([
                     $item->ins_rtc_device->line, 
                     $item->dt_client, 
                     $item->ins_rtc_recipe->id,
                     $item->is_correcting ? 'ON' : 'OFF',
+                    $action_left, 
                     $item->sensor_left, 
+                    $action_right,
                     $item->sensor_right,
                     $item->ins_rtc_recipe->std_mid,
                 ]); // Add data rows
