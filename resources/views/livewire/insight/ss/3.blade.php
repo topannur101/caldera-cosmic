@@ -16,7 +16,8 @@ new class extends Component {
 }; ?>
 
 <div class="w-full h-screen p-4">
-    <div class="h-2/6 px-4 py-8">
+    <div class="h-2/6 p-4">
+        <x-link wire:navigate class="uppercase mb-8 inline-block text-sm" href="{{ route('insight.rtc.slideshows')}}"><i class="fa fa-chevron-left mr-2"></i>{{ __('Kembali') }}</x-link>
         <div class="grid grid-cols-6 grid-rows-1 gap-4">
             <div class="col-span-2">
                 <div>
@@ -368,6 +369,6 @@ new class extends Component {
                     data: []
                 }]);
             }
-        }, 1000);
+        }, 2000);
     </script>
 @endscript

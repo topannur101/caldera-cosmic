@@ -169,4 +169,9 @@ class User extends Authenticatable
     {
         return $this->id === 1 ? InvArea::all()->pluck('id')->toArray() : $this->kpi_areas->pluck('id')->toArray();
     }
+
+    public function ins_rtc_auths(): HasMany
+    {
+        return $this->hasMany(InsRtcAuth::class);
+    }
 }

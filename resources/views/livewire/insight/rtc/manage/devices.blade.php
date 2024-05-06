@@ -65,12 +65,15 @@ new #[Layout('layouts.app')] class extends Component {
                 <x-text-input-search wire:model.live="q" id="inv-q"
                     placeholder="{{ __('CARI') }}"></x-text-input-search>
             </div>
+            @can('manage', InsRtcDevice::class)
                 <x-secondary-button type="button" class="my-auto" x-data=""
                     x-on:click.prevent="$dispatch('open-modal', 'create-device')">{{ __('Buat') }}</x-secondary-button>
+            @endcan
         </div>
         <x-modal name="create-device">
             <livewire:insight.rtc.manage.devices-form lazy wire:key="create-device" />
         </x-modal>
+
         <div class="w-full mt-5">
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
                 <table wire:key="devices-table" class="table">

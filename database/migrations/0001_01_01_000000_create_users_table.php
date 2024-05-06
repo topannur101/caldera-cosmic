@@ -37,6 +37,12 @@ return new class extends Migration
                 'password'  => '$2y$10$HR/Et5LBPfAW2frIq/u1zOXTXojDSmJM/cJgKnIawOlCrn/x2Ws3W',
                 'is_active' => 1
             ],
+            [
+                'name'      => 'Andi Permana',
+                'emp_id'    => 'TT17110594',
+                'password'  => '$2y$10$HR/Et5LBPfAW2frIq/u1zOXTXojDSmJM/cJgKnIawOlCrn/x2Ws3W',
+                'is_active' => 1
+            ],
         ]);
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

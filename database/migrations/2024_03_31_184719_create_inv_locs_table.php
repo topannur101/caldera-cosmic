@@ -14,6 +14,12 @@ return new class extends Migration
         Schema::create('inv_locs', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->string('name');
+            $table->foreignId('inv_area_id')->constrained()->cascadeOnDelete();
+
+            $table->unique(['name','inv_area_id']);
+            $table->index('inv_area_id');
         });
     }
 

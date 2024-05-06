@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -14,7 +15,17 @@ return new class extends Migration
         Schema::create('inv_currs', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->string('name')->unique();
+            $table->decimal('rate');
         });
+
+        DB::table('inv_currs')->insert([
+            [
+                'name' => 'USD',
+                'rate' => 1
+            ]
+        ]);
     }
 
     /**

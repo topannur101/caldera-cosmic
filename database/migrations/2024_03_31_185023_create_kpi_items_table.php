@@ -14,6 +14,14 @@ return new class extends Migration
         Schema::create('kpi_items', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->foreignId('kpi_area_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->smallInteger('year')->unsigned(); // max 32767
+            $table->string('unit');
+            $table->string('group')->nullable();
+            $table->tinyInteger('order')->unsigned()->default(0); // max 100
+
         });
     }
 

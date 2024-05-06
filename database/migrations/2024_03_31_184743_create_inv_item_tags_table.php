@@ -14,6 +14,13 @@ return new class extends Migration
         Schema::create('inv_item_tags', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->foreignId('inv_item_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('inv_tag_id')->constrained()->cascadeOnDelete();
+
+            $table->unique(['inv_item_id','inv_tag_id']);
+            $table->index('inv_item_id');
+            $table->index('inv_tag_id');
         });
     }
 

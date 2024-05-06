@@ -14,6 +14,12 @@ return new class extends Migration
         Schema::create('ins_acm_metrics', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->unsignedInteger('rate_min');
+            $table->unsignedInteger('rate_max');
+            $table->unsignedInteger('rate_act');
+            $table->datetime('dt_client');
+            $table->string('line');
         });
     }
 

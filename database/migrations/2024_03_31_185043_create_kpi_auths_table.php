@@ -14,6 +14,14 @@ return new class extends Migration
         Schema::create('kpi_auths', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('kpi_area_id')->constrained()->cascadeOnDelete();
+            $table->json('actions');
+
+            $table->unique(['user_id','kpi_area_id']);
+            $table->index('user_id');
+            $table->index('kpi_area_id');
         });
     }
 

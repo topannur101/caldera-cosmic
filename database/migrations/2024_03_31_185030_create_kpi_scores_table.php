@@ -14,6 +14,15 @@ return new class extends Migration
         Schema::create('kpi_scores', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->foreignId('user_id')->constrained();
+            $table->foreignId('kpi_item_id')->constrained()->cascadeOnDelete();
+            $table->tinyInteger('month')->unsigned(); // max 255
+            $table->decimal('target')->nullable();
+            $table->decimal('actual')->nullable();
+            $table->boolean('is_submitted')->default(0);
+
+            $table->unique(['kpi_item_id','month']);
         });
     }
 

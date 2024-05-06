@@ -141,7 +141,7 @@ new #[Layout('layouts.app')] class extends Component {
            </x-secondary-button>
            <div>
                @if($auth_id)
-               <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete">
+               <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete" wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?')}}">
                    {{ __('Cabut') }}
                </x-text-button>
                @endif

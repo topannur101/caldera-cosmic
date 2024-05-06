@@ -32,12 +32,14 @@ new #[Layout('layouts.app')] class extends Component {};
 </x-slot>
 <div class="py-12">
     <div class="max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-600 dark:text-neutral-400">
+        <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-8">
+            {{ __('Kelola') }}</h1>
         <div class="grid grid-cols-1 gap-1 my-8 ">
             <x-card-link href="{{ route('insight.rtc.manage.authorizations') }}" wire:navigate>
-                <div class="flex">
+                <div class="flex px-8">
                     <div>
-                        <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-user-lock"></i></div>
+                        <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
+                            <div class="m-auto"><i class="fa fa-fw fa-user-lock"></i></div>
                         </div>
                     </div>
                     <div class="grow truncate py-4">
@@ -51,10 +53,10 @@ new #[Layout('layouts.app')] class extends Component {};
                 </div>
             </x-card-link>
             <x-card-link href="{{ route('insight.rtc.manage.devices') }}" wire:navigate>
-                <div class="flex">
+                <div class="flex px-8">
                     <div>
-                        <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-microchip"></i></div>
+                        <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
+                            <div class="m-auto"><i class="fa fa-fw fa-microchip"></i></div>
                         </div>
                     </div>
                     <div class="grow truncate py-4">
@@ -68,10 +70,10 @@ new #[Layout('layouts.app')] class extends Component {};
                 </div>
             </x-card-link>
             <x-card-link href="{{ route('insight.rtc.manage.recipes') }}" wire:navigate>
-                <div class="flex">
+                <div class="flex px-8">
                     <div>
-                        <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-flask"></i></div>
+                        <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
+                            <div class="m-auto"><i class="fa fa-fw fa-flask"></i></div>
                         </div>
                     </div>
                     <div class="grow truncate py-4">

@@ -190,7 +190,7 @@ new #[Layout('layouts.app')] class extends Component {
     </header>
 </x-slot>
 <div id="content" class="py-12 max-w-5xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
-    <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row">
+    <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row overflow-auto">
         <div>
             <div class="w-full sm:w-44 md:w-64 px-3 sm:px-0 mb-5">
                 <div class="btn-group h-10 w-full">

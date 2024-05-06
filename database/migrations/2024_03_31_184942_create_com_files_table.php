@@ -14,6 +14,13 @@ return new class extends Migration
         Schema::create('com_files', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->foreignId('com_item_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('client_name');
+            $table->boolean('is_image');
+            $table->integer('size');
+            $table->string('ext');
         });
     }
 

@@ -126,7 +126,7 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         @endif
     @else
-        <div wire:key="raw-stats" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto mb-4">
+        <div wire:key="raw-stats" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-4">
             <div class="flex justify-between p-4 align-middle">
                 <div class="flex gap-6">
                     <div>
@@ -183,7 +183,7 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             </x-modal>
         </div>
-        <div wire:key="raw-metrics" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto">
+        <div wire:key="raw-metrics" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full overflow-auto">
             <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
                 <tr class="uppercase text-xs">
                     <th>{{ __('Line') }}</th>

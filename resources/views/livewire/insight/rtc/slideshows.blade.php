@@ -40,6 +40,8 @@ new #[Layout('layouts.app')] class extends Component {
 </x-slot>
 <div class="py-12">
    <div class="max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-600 dark:text-neutral-400">
+    <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-8">
+        {{ __('Peragaan') }}</h1>
        <div class="grid grid-cols-1 gap-1 my-8 ">
            <x-card-link href="{{ route('insight.ss', ['id' => 3]) }}" wire:navigate>
                <div class="grow truncate px-8 py-4">
