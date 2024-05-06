@@ -55,7 +55,7 @@ new #[Layout('layouts.app')] class extends Component {
         if ($this->device_id) {
             $v->where('device_id', $this->device_id);
         }
-        $denominatorIntegrity = $v->groupBy('date_device_id')->get()->count() * 24;
+        $denominatorIntegrity = $v->groupBy('date_device_id')->get()->count() * 21;
 
         // hitung tanggal
         $w = DB::table('ins_rtc_metrics')
@@ -169,7 +169,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </p>
                     <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
                             class="font-bold">{{ __('Integritas:') . ' ' }}</span>
-                        {{ __('Mengindikasikan persentase data yang hadir di tiap jamnya. Contoh: Jika ada data setiap jam selama 8 jam dalam 1 hari, maka integritas bernilai 100%. Jika hanya ada data selama 4 jam selama 8 jam dalam 1 hari, maka integritas bernilai 50%') }}
+                        {{ __('Mengindikasikan persentase data yang hadir di tiap jamnya. Contoh: Jika ada data setiap jam selama 21 jam dalam 1 hari, maka integritas bernilai 100%. Jika hanya ada data selama 10.5 jam selama 21 jam dalam 1 hari, maka integritas bernilai 50%') }}
                     </p>
                     <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
                             class="font-bold">{{ __('Akurasi:') . ' ' }}</span>

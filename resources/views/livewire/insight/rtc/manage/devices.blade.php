@@ -20,7 +20,7 @@ new #[Layout('layouts.app')] class extends Component {
     #[On('updated')]
     public function with(): array
     {
-      $q = trim($this->q);
+        $q = trim($this->q);
         $devices = InsRtcDevice::where(function (Builder $query) use ($q) {
             $query->orWhere('line', 'LIKE', '%' . $q . '%')->orWhere('ip_address', 'LIKE', '%' . $q . '%');
         })
@@ -60,19 +60,17 @@ new #[Layout('layouts.app')] class extends Component {
 </x-slot>
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
-      <div class="flex justify-between px-6 sm:px-0">
-         <div class="w-40">
-            <x-text-input-search wire:model.live="q" id="inv-q"
-                placeholder="{{ __('CARI') }}"></x-text-input-search>
+        <div class="flex justify-between px-6 sm:px-0">
+            <div class="w-40">
+                <x-text-input-search wire:model.live="q" id="inv-q"
+                    placeholder="{{ __('CARI') }}"></x-text-input-search>
+            </div>
+                <x-secondary-button type="button" class="my-auto" x-data=""
+                    x-on:click.prevent="$dispatch('open-modal', 'create-device')">{{ __('Buat') }}</x-secondary-button>
         </div>
-         <x-secondary-button type="button" class="my-auto" x-data=""
-         x-on:click.prevent="$dispatch('open-modal', 'create-device')">{{ __('Buat') }}</x-secondary-button>  
-
- 
-      </div>
-      <x-modal name="create-device">
-         <livewire:insight.rtc.manage.devices-form lazy wire:key="create-device" />
-     </x-modal>
+        <x-modal name="create-device">
+            <livewire:insight.rtc.manage.devices-form lazy wire:key="create-device" />
+        </x-modal>
         <div class="w-full mt-5">
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
                 <table wire:key="devices-table" class="table">
@@ -96,8 +94,8 @@ new #[Layout('layouts.app')] class extends Component {
                         </tr>
                         @can('manage', $device)
                             <x-modal :name="'edit-device-' . $device->id">
-                                <livewire:insight.rtc.manage.devices-form wire:key="device-lw-{{ $device->id . $loop->index }}"
-                                    :$device lazy />
+                                <livewire:insight.rtc.manage.devices-form
+                                    wire:key="device-lw-{{ $device->id . $loop->index }}" :$device lazy />
                             </x-modal>
                         @endcan
                     @endforeach

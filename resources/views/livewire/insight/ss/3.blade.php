@@ -235,8 +235,9 @@ new class extends Component {
                             if (recipeId > 0) {
                                 axios.get(recipeUrl)
                                     .then(response => {
+                                        const ogRsValue = response.data.data.og_rs.toString().padStart(3, '0');
                                         elRecipeName.textContent = response.data.data.name
-                                        elRecipeOgRs.textContent = response.data.data.og_rs
+                                        elRecipeOgRs.textContent = ogRsValue
                                         elRecipeStdMin.textContent = response.data.data.std_min
                                         elRecipeStdMax.textContent = response.data.data.std_max
                                         recipeStdMin = parseFloat(response.data.data.std_min)
