@@ -18,9 +18,10 @@ return new class extends Migration
             $table->foreignId('ins_rtc_recipe_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('ins_rtc_device_id')->constrained()->cascadeOnDelete();
             $table->boolean('is_correcting');
-            $table->enum('action', ['thick','thin'])->nullable();   
-            $table->decimal('act_left', 4, 2);
-            $table->decimal('act_right', 4, 2);
+            $table->enum('action_left', ['thick','thin'])->nullable();   
+            $table->enum('action_right', ['thick','thin'])->nullable();   
+            $table->decimal('sensor_left', 4, 2);
+            $table->decimal('sensor_right', 4, 2);
 
             $table->datetime('dt_client');
 

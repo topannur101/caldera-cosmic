@@ -114,8 +114,8 @@ new #[Layout('layouts.app')] class extends Component {
                     $item->dt_client, 
                     $item->ins_rtc_recipe->id,
                     $item->is_correcting ? 'ON' : 'OFF',
-                    $item->act_left, 
-                    $item->act_right,
+                    $item->sensor_left, 
+                    $item->sensor_right,
                     $item->ins_rtc_recipe->std_mid,
                 ]); // Add data rows
             }

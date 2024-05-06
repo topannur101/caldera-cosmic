@@ -55,7 +55,7 @@ new class extends Component {
             </div>
         </div>
     </div>
-    <div x-data="{ act_left: 0, act_right: 0 }" wire:key="chart-container" class="h-4/6 grid grid-cols-2 gap-4">
+    <div x-data="{ sensor_left: 0, sensor_right: 0 }" wire:key="chart-container" class="h-4/6 grid grid-cols-2 gap-4">
         <div
             class="w-full h-full flex flex-col px-8 py-6 bg-white text-neutral-600 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
@@ -253,13 +253,13 @@ new class extends Component {
                                 recipeStdMax.textContent = 0
                             }
                         } 
-                        elActLeft.textContent = response.data.data.act_left
-                        elActRight.textContent = response.data.data.act_right
+                        elActLeft.textContent = response.data.data.sensor_left
+                        elActRight.textContent = response.data.data.sensor_right
 
                         let x = new Date(response.data.data.dt_client).getTime();
                         let y = 0;
 
-                        y = parseFloat(response.data.data.act_left);
+                        y = parseFloat(response.data.data.sensor_left);
                         leftPts.push({
                             x,
                             y
@@ -297,7 +297,7 @@ new class extends Component {
                             data: leftMid
                         }]);
 
-                        y = parseFloat(response.data.data.act_right);
+                        y = parseFloat(response.data.data.sensor_right);
                         rightPts.push({
                             x,
                             y

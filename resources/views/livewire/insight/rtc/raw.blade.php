@@ -29,8 +29,8 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function with(): array
     {
-        $start    = Carbon::parse($this->start_at);
-        $end      = Carbon::parse($this->end_at)->addDay();
+        $start = Carbon::parse($this->start_at);
+        $end = Carbon::parse($this->end_at)->addDay();
 
         $metrics = InsRtcMetric::whereBetween('dt_client', [$start, $end]);
         if ($this->device_id) {
@@ -43,28 +43,28 @@ new #[Layout('layouts.app')] class extends Component {
         $u = DB::table('ins_rtc_metrics')
             ->select(DB::raw('CONCAT(DATE(dt_client), LPAD(HOUR(dt_client), 2, "0"), ins_rtc_device_id) as date_hour_device_id'))
             ->whereBetween('dt_client', [$start, $end]);
-         if ($this->device_id) {
+        if ($this->device_id) {
             $u->where('device_id', $this->device_id);
-         }
-         $numeratorIntegrity = $u->groupBy('date_hour_device_id')->get()->count();
+        }
+        $numeratorIntegrity = $u->groupBy('date_hour_device_id')->get()->count();
 
         // hitung tanggal, line
         $v = DB::table('ins_rtc_metrics')
-                ->select(DB::raw('CONCAT(DATE(dt_client), ins_rtc_device_id) as date_device_id'))
-                ->whereBetween('dt_client', [$start, $end]);
-         if ($this->device_id) {
+            ->select(DB::raw('CONCAT(DATE(dt_client), ins_rtc_device_id) as date_device_id'))
+            ->whereBetween('dt_client', [$start, $end]);
+        if ($this->device_id) {
             $v->where('device_id', $this->device_id);
-         }
-         $denominatorIntegrity = $v->groupBy('date_device_id')->get()->count() * 24;
+        }
+        $denominatorIntegrity = $v->groupBy('date_device_id')->get()->count() * 24;
 
         // hitung tanggal
         $w = DB::table('ins_rtc_metrics')
             ->select(DB::raw('DATE(dt_client) as date'))
             ->whereBetween('dt_client', [$start, $end]);
-         if ($this->device_id) {
+        if ($this->device_id) {
             $w->where('device_id', $this->device_id);
-         }
-         $this->days = $w->groupBy('date')->get()->count();
+        }
+        $this->days = $w->groupBy('date')->get()->count();
 
         if ($denominatorIntegrity > 0) {
             $this->integrity = (int) (($numeratorIntegrity / $denominatorIntegrity) * 100);
@@ -73,15 +73,18 @@ new #[Layout('layouts.app')] class extends Component {
         $x = InsRtcMetric::whereBetween('dt_client', [$start, $end]);
         if ($this->device_id) {
             $x->where('device_id', $this->device_id);
-         }
-         $numeratorAccuracy = $x->whereBetween('act_left', [0, 10])->whereBetween('act_right', [0, 10])->get()->count();
+        }
+        $numeratorAccuracy = $x
+            ->whereBetween('sensor_left', [0, 10])
+            ->whereBetween('sensor_right', [0, 10])
+            ->get()
+            ->count();
 
-         
         $y = InsRtcMetric::whereBetween('dt_client', [$start, $end]);
         if ($this->device_id) {
             $y->where('device_id', $this->device_id);
-         }
-          $denominatorAccuracy = $y->get()->count();
+        }
+        $denominatorAccuracy = $y->get()->count();
 
         if ($denominatorAccuracy > 0) {
             $this->accuracy = (int) (($numeratorAccuracy / $denominatorAccuracy) * 100);
@@ -187,8 +190,11 @@ new #[Layout('layouts.app')] class extends Component {
                     <th>{{ __('Waktu') }}</th>
                     <th>{{ __('ID Resep') }}</th>
                     <th>{{ __('Koreksi') }}</th>
-                    <th>{{ __('Tindakan') }}</th>
+
+                    <th></th>
                     <th>{{ __('Kiri') }}</th>
+
+                    <th></th>
                     <th>{{ __('Kanan') }}</th>
                     <th>{{ __('Tengah') }}</th>
                 </tr>
@@ -198,10 +204,33 @@ new #[Layout('layouts.app')] class extends Component {
                         <td>{{ $metric->dt_client }}</td>
                         <td>{{ $metric->ins_rtc_recipe_id }}</td>
                         <td class="text-xs">{{ ((bool) $metric->is_correcting) ? 'ON' : 'OFF' }}</td>
-                        <td>?</td>
-                        <td>{{ $metric->act_left }}</td>
-                        <td>{{ $metric->act_right }}</td>
-                        <td>{{ $metric->ins_rtc_recipe->std_mid ??  ''}}</td>
+
+                        <td>
+                            @switch($metric->action_left)
+                                @case('thin')
+                                    <i class="fa fa-caret-down"></i>
+                                @break
+
+                                @case('thick')
+                                    <i class="fa fa-caret-up"></i>
+                                @break
+                            @endswitch
+                        </td>
+                        <td>{{ $metric->sensor_left }}</td>
+
+                        <td>
+                            @switch($metric->action_right)
+                                @case('thin')
+                                    <i class="fa fa-caret-down"></i>
+                                @break
+
+                                @case('thick')
+                                    <i class="fa fa-caret-up"></i>
+                                @break
+                            @endswitch
+                        </td>
+                        <td>{{ $metric->sensor_right }}</td>
+                        <td>{{ $metric->ins_rtc_recipe->std_mid ?? '' }}</td>
                     </tr>
                 @endforeach
             </table>

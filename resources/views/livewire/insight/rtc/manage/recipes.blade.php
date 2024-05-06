@@ -27,9 +27,12 @@ new #[Layout('layouts.app')] class extends Component {
             ->orWhere('og_rs', 'LIKE', '%' . $q . '%')
             ->orWhere('std_min', 'LIKE', '%' . $q . '%')
             ->orWhere('std_max', 'LIKE', '%' . $q . '%')
-            ->orWhere('std_mid', 'LIKE', '%' . $q . '%');
+            ->orWhere('std_mid', 'LIKE', '%' . $q . '%')
+            ->orWhere('scale', 'LIKE', '%' . $q . '%')
+            ->orWhere('pfc_min', 'LIKE', '%' . $q . '%')
+            ->orWhere('pfc_max', 'LIKE', '%' . $q . '%');
         })
-            ->orderBy('name')
+            ->orderBy('id')
             ->paginate($this->perPage);
 
         return [
@@ -88,6 +91,9 @@ new #[Layout('layouts.app')] class extends Component {
                         <th>{{ __('Min') }}</th>
                         <th>{{ __('Maks') }}</th>
                         <th>{{ __('Tengah') }}</th>
+                        <th>{{ __('Skala') }}</th>
+                        <th>{{ __('Min (PFC)') }}</th>
+                        <th>{{ __('Maks (PFC)') }}</th>
                     </tr>
                     @foreach ($recipes as $recipe)
                         <tr wire:key="recipe-tr-{{ $recipe->id . $loop->index }}" tabindex="0"
@@ -109,6 +115,15 @@ new #[Layout('layouts.app')] class extends Component {
                             </td>
                             <td>
                                 {{ $recipe->std_mid }}
+                            </td>
+                            <td>
+                                {{ $recipe->scale }}
+                            </td>
+                            <td>
+                                {{ $recipe->pfc_min }}
+                            </td>
+                            <td>
+                                {{ $recipe->pfc_max }}
                             </td>
                         </tr>
                         @can('manage', $recipe)

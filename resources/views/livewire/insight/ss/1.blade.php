@@ -18,8 +18,8 @@ new class extends Component {
     public $dataLeft;
     public $dataRight;
 
-    public $latest_thick_act_left;
-    public $latest_thick_act_right;
+    public $latest_thick_sensor_left;
+    public $latest_thick_sensor_right;
 
     public $lines;
 
@@ -51,11 +51,11 @@ new class extends Component {
         if ($metrics->count()) {
             foreach ($metrics as $metric) {
                 $dt = $metric->dt_client;
-                $dataLeft['thick_act'][$dt->toIso8601String()] = $metric->thick_act_left;
+                $dataLeft['thick_act'][$dt->toIso8601String()] = $metric->thick_sensor_left;
                 $dataLeft['thick_std_min'][$dt->toIso8601String()] = $this->min;
                 $dataLeft['thick_std_max'][$dt->toIso8601String()] = $this->max;
 
-                $dataRight['thick_act'][$dt->toIso8601String()] = $metric->thick_act_right;
+                $dataRight['thick_act'][$dt->toIso8601String()] = $metric->thick_sensor_right;
                 $dataRight['thick_std_min'][$dt->toIso8601String()] = $this->min;
                 $dataRight['thick_std_max'][$dt->toIso8601String()] = $this->max;
 
@@ -71,8 +71,8 @@ new class extends Component {
             $dataRight['thick_std_max'][$dt->toIso8601String()] = $this->max;
         }
         
-        $this->latest_thick_act_left = end($dataLeft["thick_act"]);
-        $this->latest_thick_act_right = end($dataRight["thick_act"]);
+        $this->latest_thick_sensor_left = end($dataLeft["thick_act"]);
+        $this->latest_thick_sensor_right = end($dataRight["thick_act"]);
 
         $this->dataLeft = $dataLeft;
         $this->dataRight = $dataRight;        
@@ -187,7 +187,7 @@ new class extends Component {
             class="w-full h-full flex flex-col px-8 py-6 bg-white dark:bg-neutral-800 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
                 <div class="text-6xl uppercase">{{ __('Kiri') }}</div>
-                <div class="text-9xl font-bold">{{ number_format($latest_thick_act_left, 2) }}</div>
+                <div class="text-9xl font-bold">{{ number_format($latest_thick_sensor_left, 2) }}</div>
             </div>
             <div class="flex-1">
                 <livewire:livewire-line-chart wire:key="chart-left"
@@ -199,7 +199,7 @@ new class extends Component {
             class="w-full h-full flex flex-col px-8 py-6 bg-white dark:bg-neutral-800 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
                 <div class="text-6xl uppercase">{{ __('Kanan') }}</div>
-                <div class="text-9xl font-bold">{{ number_format($latest_thick_act_right, 2) }}</div>
+                <div class="text-9xl font-bold">{{ number_format($latest_thick_sensor_right, 2) }}</div>
             </div>
             <div class="flex-1">
                 <livewire:livewire-line-chart wire:key="chart-right"

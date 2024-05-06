@@ -45,23 +45,44 @@ class InsRtcFetch extends Command
         return $decimal;
     }
 
-    protected $prevThickAct = [];
+    protected $prevSensor = [];
 
     function saveMetric($metric): void
     {
-        $thickAct = $metric['act_left'] . $metric['act_right'];
-        if (!isset($this->prevThickAct[$metric['device_id']]) || $thickAct !== $this->prevThickAct[$metric['device_id']]) {
+        $sensor = $metric['sensor_left'] . $metric['sensor_right'];
+        if (!isset($this->prevSensor[$metric['device_id']]) || $sensor !== $this->prevSensor[$metric['device_id']]) {
             $x = InsRtcRecipe::find($metric['recipe_id']) ? $metric['recipe_id'] : null;
+
+            $action_left = null;
+            if ($metric['push_thin_left'] > 0 && $metric['push_thick_left'] == 0) {
+                $action_left = 'thin';
+            } elseif ($metric['push_thin_left'] == 0 && $metric['push_thick_left'] > 0) {
+                $action_left = 'thick';
+            }
+
+            echo 'action_left' . $action_left . PHP_EOL;
+
+
+            $action_right = null;
+            if ($metric['push_thin_right'] > 0 && $metric['push_thick_right'] == 0) {
+                $action_right = 'thin';
+            } elseif ($metric['push_thin_right'] == 0 && $metric['push_thick_right'] > 0) {
+                $action_right = 'thick';
+            }
+
+            echo 'action_right' . $action_right . PHP_EOL;
 
             InsRtcMetric::create([
                 'ins_rtc_device_id' => $metric['device_id'],
                 'ins_rtc_recipe_id' => $x,
-                'act_left' => $this->convertToDecimal($metric['act_left']),
-                'act_right' => $this->convertToDecimal($metric['act_right']),
+                'sensor_left' => $this->convertToDecimal($metric['sensor_left']),
+                'sensor_right' => $this->convertToDecimal($metric['sensor_right']),
+                'action_left' => $action_left,
+                'action_right' => $action_right,
                 'is_correcting' => (bool) $metric['is_correcting'],
                 'dt_client' => $metric['dt_client'],
             ]);
-            $this->prevThickAct[$metric['device_id']] = $thickAct;
+            $this->prevSensor[$metric['device_id']] = $sensor;
             echo 'Data is saved' . PHP_EOL;
         } else {
             echo 'Consecutive data is not saved' . PHP_EOL;
@@ -88,8 +109,8 @@ class InsRtcFetch extends Command
                     ->build();
 
                 $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://' . $device->ip_address . ':503', $unitID)
-                    ->int16(0, 'act_left')
-                    ->int16(1, 'act_right')
+                    ->int16(0, 'sensor_left')
+                    ->int16(1, 'sensor_right')
                     // something missing here
                     ->int16(3, 'recipe_id')
                     ->int16(4, 'push_thin_left')
@@ -108,8 +129,8 @@ class InsRtcFetch extends Command
 
                     $metric = [
                         'device_id'         => $device->id,
-                        'act_left'          => $dataFc3['act_left'],
-                        'act_right'         => $dataFc3['act_right'],
+                        'sensor_left'          => $dataFc3['sensor_left'],
+                        'sensor_right'         => $dataFc3['sensor_right'],
                         'recipe_id'         => $dataFc3['recipe_id'],
                         'is_correcting'     => $dataFc2['is_correcting'],
                         'push_thin_left'    => $dataFc3['push_thin_left'],
@@ -121,7 +142,7 @@ class InsRtcFetch extends Command
 
                     print_r($metric);
 
-                    if ($metric['act_left'] > 0 || $metric['act_right'] > 0) {
+                    if ($metric['sensor_left'] > 0 || $metric['sensor_right'] > 0) {
                         // save data
                         $this->saveMetric($metric);
                         $zeroCounters[$device->id] = 0;

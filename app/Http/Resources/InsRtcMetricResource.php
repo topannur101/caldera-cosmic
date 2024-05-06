@@ -19,8 +19,8 @@ class InsRtcMetricResource extends JsonResource
             'line'          => $this->ins_rtc_device->line,
             'dt_client'     => $this->dt_client,
             'recipe_id'     => $this->ins_rtc_recipe_id,
-            'act_left'      => $this->act_left,
-            'act_right'     => $this->act_right,
+            'sensor_left'      => $this->sensor_left,
+            'sensor_right'     => $this->sensor_right,
             'std_mid'       => $this->ins_rtc_recipe->std_mid ?? 0,
             'is_correcting' => $this->is_correcting,
         ];
