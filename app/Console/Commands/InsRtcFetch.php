@@ -60,8 +60,6 @@ class InsRtcFetch extends Command
                 $action_left = 'thick';
             }
 
-            echo 'action_left' . $action_left . PHP_EOL;
-
 
             $action_right = null;
             if ($metric['push_thin_right'] > 0 && $metric['push_thick_right'] == 0) {
@@ -69,8 +67,6 @@ class InsRtcFetch extends Command
             } elseif ($metric['push_thin_right'] == 0 && $metric['push_thick_right'] > 0) {
                 $action_right = 'thick';
             }
-
-            echo 'action_right' . $action_right . PHP_EOL;
 
             InsRtcMetric::create([
                 'ins_rtc_device_id' => $metric['device_id'],
@@ -117,7 +113,14 @@ class InsRtcFetch extends Command
                     ->int16(5, 'push_thick_left')
                     ->int16(6, 'push_thin_right')
                     ->int16(7, 'push_thick_right')
+                    // ->int16(10, 'second')
+                    ->int16(11, 'minute')
+                    // ->int16(12, 'hour')
+                    // ->int16(13, 'day')
+                    // ->int16(14, 'month')
+                    // ->int16(15, 'year')
                     ->build();
+
 
                 try {
                     // Tarik data MODBUS
@@ -126,21 +129,28 @@ class InsRtcFetch extends Command
                     echo 'Response from: ' . $device->ip_address . ' (Line ' . $device->line . ')';
                     $dataFc2 = $responseFc2->getData();
                     $dataFc3 = $responseFc3->getData();
+                    print_r($dataFc3);
 
                     $metric = [
                         'device_id'         => $device->id,
-                        'sensor_left'          => $dataFc3['sensor_left'],
-                        'sensor_right'         => $dataFc3['sensor_right'],
+                        'sensor_left'       => $dataFc3['sensor_left'],
+                        'sensor_right'      => $dataFc3['sensor_right'],
                         'recipe_id'         => $dataFc3['recipe_id'],
                         'is_correcting'     => $dataFc2['is_correcting'],
                         'push_thin_left'    => $dataFc3['push_thin_left'],
                         'push_thick_left'   => $dataFc3['push_thick_left'],
                         'push_thin_right'   => $dataFc3['push_thin_right'],
                         'push_thick_right'  => $dataFc3['push_thick_right'],
+                        // 'second'            => $dataFc3['second'],
+                        // 'minute'            => $dataFc3['minute'],
+                        // 'hour'              => $dataFc3['hour'],
+                        // 'day'               => $dataFc3['day'],
+                        // 'month'             => $dataFc3['month'],
+                        // 'year'              => $dataFc3['year'],
                         'dt_client'         => $dt_client,
                     ];
 
-                    print_r($metric);
+                    // print_r($metric);
 
                     if ($metric['sensor_left'] > 0 || $metric['sensor_right'] > 0) {
                         // save data
