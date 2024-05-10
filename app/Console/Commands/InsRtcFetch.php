@@ -45,6 +45,17 @@ class InsRtcFetch extends Command
         return $decimal;
     }
 
+    function action($pushThin, $pushThick)
+    {
+        $action = null;
+        if ($pushThin > 0 && $pushThick == 0) {
+            $action = 'thin';
+        } elseif ($pushThin == 0 && $pushThick > 0) {
+            $action = 'thick';
+        }
+        return $action;
+    }
+
     protected $prevSensor = [];
     protected $prevDtClient;
     protected $batchTimeout = 60;
@@ -70,17 +81,13 @@ class InsRtcFetch extends Command
                 }
             }
 
-            if ($metric['push_thin_left'] > 0 && $metric['push_thick_left'] == 0) {
-                $action_left = 'thin';
-            } elseif ($metric['push_thin_left'] == 0 && $metric['push_thick_left'] > 0) {
-                $action_left = 'thick';
-            }
-
-
-            if ($metric['push_thin_right'] > 0 && $metric['push_thick_right'] == 0) {
-                $action_right = 'thin';
-            } elseif ($metric['push_thin_right'] == 0 && $metric['push_thick_right'] > 0) {
-                $action_right = 'thick';
+            $action_left = null;
+            $action_right = null;
+            $dtCorrect = $metric['year'].'-'.$metric['month'].'-'.$metric['day'].''.$metric['hour'].':'.$metric['minute'].':'.$metric['second'];
+            if ($dtCorrect !== $this->prevDtCorrect) {
+                $action_left = $this->action($metric['push_thin_left'], $metric['push_thick_left']);
+                $action_right = $this->action($metric['push_thin_right'], $metric['push_thick_right']);
+                $this->prevDtCorrect = $dtCorrect;
             }
 
             InsRtcMetric::create([

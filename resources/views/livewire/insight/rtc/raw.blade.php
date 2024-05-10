@@ -201,6 +201,7 @@ new #[Layout('layouts.app')] class extends Component {
                     @foreach ($metrics as $metric)
                         <tr>
                             <td>{{ $metric->ins_rtc_device->line }}</td>
+                            <td>{{ $metric->batch_id }}
                             <td>{{ $metric->dt_client }}</td>
                             <td class="text-xs">{{ ((bool) $metric->is_correcting) ? 'ON' : 'OFF' }}</td>
     
