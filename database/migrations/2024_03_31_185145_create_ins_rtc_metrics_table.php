@@ -22,6 +22,7 @@ return new class extends Migration
             $table->enum('action_right', ['thick','thin'])->nullable();   
             $table->decimal('sensor_left', 4, 2);
             $table->decimal('sensor_right', 4, 2);
+            $table->unsignedBigInteger('batch_id');
 
             $table->datetime('dt_client');
 

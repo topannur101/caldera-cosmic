@@ -188,8 +188,9 @@ new #[Layout('layouts.app')] class extends Component {
                 <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
                         <th>{{ __('Line') }}</th>
+                        <th>{{ __('BID') }}</th>
                         <th>{{ __('Waktu') }}</th>
-                        <th>{{ __('Koreksi') }}</th>
+                        <th>{{ __('AC') }}</th>
                         <th></th>
                         <th>{{ __('Kiri') }}</th>
                         <th></th>

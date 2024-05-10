@@ -46,6 +46,9 @@ class InsRtcFetch extends Command
     }
 
     protected $prevSensor = [];
+    protected $prevDtClient;
+    protected $batchTimeout = 60;
+    protected $prevDtCorrect;
 
     function saveMetric($metric): void
     {
@@ -54,6 +57,19 @@ class InsRtcFetch extends Command
             $x = InsRtcRecipe::find($metric['recipe_id']) ? $metric['recipe_id'] : null;
 
             $action_left = null;
+            $action_right = null;
+            $batchId = InsRtcMetric::max('batch_id') ?? 1;
+
+            if($this->prevDtClient instanceof Carbon) {
+                $dtClient = Carbon::parse($metric['dt_client']);
+                $diffInSeconds = $this->prevDtClient->diffInSeconds($dtClient);
+                echo $diffInSeconds . PHP_EOL;
+
+                if ($diffInSeconds > $this->batchTimeout) {
+                    $batchId = $batchId + 1;
+                }
+            }
+
             if ($metric['push_thin_left'] > 0 && $metric['push_thick_left'] == 0) {
                 $action_left = 'thin';
             } elseif ($metric['push_thin_left'] == 0 && $metric['push_thick_left'] > 0) {
@@ -61,7 +77,6 @@ class InsRtcFetch extends Command
             }
 
 
-            $action_right = null;
             if ($metric['push_thin_right'] > 0 && $metric['push_thick_right'] == 0) {
                 $action_right = 'thin';
             } elseif ($metric['push_thin_right'] == 0 && $metric['push_thick_right'] > 0) {
@@ -76,9 +91,11 @@ class InsRtcFetch extends Command
                 'action_left' => $action_left,
                 'action_right' => $action_right,
                 'is_correcting' => (bool) $metric['is_correcting'],
+                'batch_id' => $batchId,
                 'dt_client' => $metric['dt_client'],
             ]);
             $this->prevSensor[$metric['device_id']] = $sensor;
+            $this->prevDtClient = Carbon::parse($metric['dt_client']);
             echo 'Data is saved' . PHP_EOL;
         } else {
             echo 'Consecutive data is not saved' . PHP_EOL;
@@ -114,7 +131,7 @@ class InsRtcFetch extends Command
                     ->int16(6, 'push_thin_right')
                     ->int16(7, 'push_thick_right')
                     // ->int16(10, 'second')
-                    ->int16(11, 'minute')
+                    // ->int16(11, 'minute')
                     // ->int16(12, 'hour')
                     // ->int16(13, 'day')
                     // ->int16(14, 'month')
