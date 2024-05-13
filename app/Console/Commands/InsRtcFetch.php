@@ -7,6 +7,7 @@ use App\Models\InsRtcDevice;
 use App\Models\InsRtcMetric;
 use App\Models\InsRtcRecipe;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use ModbusTcpClient\Network\NonBlockingClient;
 use ModbusTcpClient\Composer\Read\ReadCoilsBuilder;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
@@ -56,56 +57,93 @@ class InsRtcFetch extends Command
         return $action;
     }
 
-    protected $prevSensor = [];
-    protected $prevDtClient;
-    protected $batchTimeout = 60;
-    protected $prevDtCorrect;
+    protected $sensor_prev      = [];
+    protected $zero_metrics     = [];
+    protected $batch_id_prev    = [];
+    protected $batch_timeout    = 60;
+    // Latest dt_client
+    protected $dt_prev          = [];
+    // System time (HMI) previous triggered correction
+    protected $st_cl_prev       = [];
+    protected $st_cr_prev       = [];
 
     function saveMetric($metric): void
     {
         $sensor = $metric['sensor_left'] . $metric['sensor_right'];
-        if (!isset($this->prevSensor[$metric['device_id']]) || $sensor !== $this->prevSensor[$metric['device_id']]) {
-            $x = InsRtcRecipe::find($metric['recipe_id']) ? $metric['recipe_id'] : null;
+        // Save to database if new value deteced
+        if ($sensor !== $this->sensor_prev[$metric['device_id']]) {
+            $recipe_id = InsRtcRecipe::find($metric['recipe_id']) ? $metric['recipe_id'] : null;
 
-            $action_left = null;
-            $action_right = null;
-            $batchId = InsRtcMetric::max('batch_id') ?? 1;
-
-            if($this->prevDtClient instanceof Carbon) {
-                $dtClient = Carbon::parse($metric['dt_client']);
-                $diffInSeconds = $this->prevDtClient->diffInSeconds($dtClient);
-                echo $diffInSeconds . PHP_EOL;
-
-                if ($diffInSeconds > $this->batchTimeout) {
-                    $batchId = $batchId + 1;
-                }
+            if (!$this->batch_id_prev[$metric['device_id']]) {
+                $max_batch_id = InsRtcMetric::max('batch_id');
+                $this->batch_id_prev[$metric['device_id']] = $max_batch_id ? $max_batch_id + 1 : 1;
             }
 
             $action_left = null;
             $action_right = null;
-            $dtCorrect = $metric['year'].'-'.$metric['month'].'-'.$metric['day'].''.$metric['hour'].':'.$metric['minute'].':'.$metric['second'];
-            if ($dtCorrect !== $this->prevDtCorrect) {
+
+            $st_cl = $metric['st_correct_left'];
+            $st_cr = $metric['st_correct_right'];
+
+            // Save 'thin' or 'thick' action if there's new correction system time
+            if ($st_cl !== $this->st_cl_prev[$metric['device_id']]) {
                 $action_left = $this->action($metric['push_thin_left'], $metric['push_thick_left']);
+                $this->st_cl_prev[$metric['device_id']] = $st_cl;
+            }
+
+            if ($st_cr !== $this->st_cr_prev[$metric['device_id']]) {
                 $action_right = $this->action($metric['push_thin_right'], $metric['push_thick_right']);
-                $this->prevDtCorrect = $dtCorrect;
+                $this->st_cr_prev[$metric['device_id']] = $st_cr;
             }
 
             InsRtcMetric::create([
-                'ins_rtc_device_id' => $metric['device_id'],
-                'ins_rtc_recipe_id' => $x,
-                'sensor_left' => $this->convertToDecimal($metric['sensor_left']),
-                'sensor_right' => $this->convertToDecimal($metric['sensor_right']),
-                'action_left' => $action_left,
-                'action_right' => $action_right,
-                'is_correcting' => (bool) $metric['is_correcting'],
-                'batch_id' => $batchId,
-                'dt_client' => $metric['dt_client'],
+                'ins_rtc_device_id'     => $metric['device_id'],
+                'ins_rtc_recipe_id'     => $recipe_id,
+                'sensor_left'           => $this->convertToDecimal($metric['sensor_left']),
+                'sensor_right'          => $this->convertToDecimal($metric['sensor_right']),
+                'action_left'           => $action_left,
+                'action_right'          => $action_right,
+                'is_correcting'         => (bool) $metric['is_correcting'],
+                'batch_id'              => $this->batch_id_prev[$metric['device_id']],
+                'dt_client'             => $metric['dt_client'],
             ]);
-            $this->prevSensor[$metric['device_id']] = $sensor;
-            $this->prevDtClient = Carbon::parse($metric['dt_client']);
+            $this->sensor_prev[$metric['device_id']]    = $sensor;
+            $this->zero_metrics[$metric['device_id']]   = collect([]);
             echo 'Data is saved' . PHP_EOL;
         } else {
-            echo 'Consecutive data is not saved' . PHP_EOL;
+            if (!$metric['sensor_left'] && !$metric['sensor_right']) {
+                
+                $this->zero_metrics[$metric['device_id']] = collect([$metric]);
+                $collection = $this->zero_metrics[$metric['device_id']];
+
+                $maxDtClient = $collection->max(function ($item) {
+                    return $item['dt_client'];
+                });
+                $minDtClient = $collection->min(function ($item) {
+                    return $item['dt_client'];
+                });
+
+                // Convert to Carbon instances if not already
+                $maxDtClient = Carbon::parse($maxDtClient);
+                $minDtClient = Carbon::parse($minDtClient);
+
+                // Calculate the difference in seconds
+                $differenceInSeconds = $maxDtClient->diffInSeconds($minDtClient);
+
+                // Check if the difference is greater than 60 seconds
+                if ($differenceInSeconds > 60) {
+                    $max_batch_id = InsRtcMetric::max('batch_id');
+                    $this->batch_id_prev[$metric['device_id']] = $max_batch_id ? $max_batch_id + 1 : 1;
+                    $this->zero_metrics[$metric['device_id']]  = collect([]);
+                    echo 'Consecutive data (zero) is not saved. New batch detected.' . PHP_EOL;
+                } else {
+                    echo 'Consecutive data (zero) is not saved' . PHP_EOL;
+                }
+
+            } else {
+                echo 'Consecutive data is not saved' . PHP_EOL;
+            }
+            
         }
     }
 
@@ -113,22 +151,29 @@ class InsRtcFetch extends Command
     {
         // Nanti ganti dengan semua IP perangkat yang terdaftar di database
         $devices = InsRtcDevice::all();
-        $zeroCounters = array_fill_keys($devices->pluck('id')->toArray(), 0);
-        $maxZeros = 5;
+
+        // Initialize variables
+        foreach($devices as $device) {
+            $this->sensor_prev[$device->id]     = null;
+            $this->zero_metrics[$device->id]    = collect([]);
+            $this->batch_id_prev[$device->id]   = null;
+            $this->st_cl_prev[$device->id]      = null;
+            $this->st_cr_prev[$device->id]      = null;
+        }
 
         while (true) {
-            $dt_client = Carbon::now()->format('Y-m-d H:i:s');
+            $dt_now = Carbon::now()->format('Y-m-d H:i:s');
 
             // Tarik data MODBUS ke semua perangkat
             foreach ($devices as $device) {
-                $unitID = 1;
+                $unit_id = 1;
 
-                $fc2 = ReadCoilsBuilder::newReadInputDiscretes('tcp://' . $device->ip_address . ':503', $unitID)
+                $fc2 = ReadCoilsBuilder::newReadInputDiscretes('tcp://' . $device->ip_address . ':503', $unit_id)
                     ->coil(0, 'is_correcting')
                     // ->coil(1, 'is_holding')
                     ->build();
 
-                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://' . $device->ip_address . ':503', $unitID)
+                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://' . $device->ip_address . ':503', $unit_id)
                     ->int16(0, 'sensor_left')
                     ->int16(1, 'sensor_right')
                     // something missing here
@@ -137,63 +182,39 @@ class InsRtcFetch extends Command
                     ->int16(5, 'push_thick_left')
                     ->int16(6, 'push_thin_right')
                     ->int16(7, 'push_thick_right')
-                    // ->int16(10, 'second')
-                    // ->int16(11, 'minute')
-                    // ->int16(12, 'hour')
-                    // ->int16(13, 'day')
-                    // ->int16(14, 'month')
-                    // ->int16(15, 'year')
+                    ->int16(8, 'st_correct_left')
+                    ->int16(9, 'st_correct_right')
                     ->build();
-
 
                 try {
                     // Tarik data MODBUS
-                    $responseFc2 = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc2);
-                    $responseFc3 = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc3);
+                    $fc2_resposne = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc2);
+                    $fc3_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc3);
                     echo 'Response from: ' . $device->ip_address . ' (Line ' . $device->line . ')';
-                    $dataFc2 = $responseFc2->getData();
-                    $dataFc3 = $responseFc3->getData();
-                    print_r($dataFc3);
+                    $fc2_data = $fc2_resposne->getData();
+                    $fc3_data = $fc3_response->getData();
+                    print_r($fc3_data);
 
                     $metric = [
                         'device_id'         => $device->id,
-                        'sensor_left'       => $dataFc3['sensor_left'],
-                        'sensor_right'      => $dataFc3['sensor_right'],
-                        'recipe_id'         => $dataFc3['recipe_id'],
-                        'is_correcting'     => $dataFc2['is_correcting'],
-                        'push_thin_left'    => $dataFc3['push_thin_left'],
-                        'push_thick_left'   => $dataFc3['push_thick_left'],
-                        'push_thin_right'   => $dataFc3['push_thin_right'],
-                        'push_thick_right'  => $dataFc3['push_thick_right'],
-                        // 'second'            => $dataFc3['second'],
-                        // 'minute'            => $dataFc3['minute'],
-                        // 'hour'              => $dataFc3['hour'],
-                        // 'day'               => $dataFc3['day'],
-                        // 'month'             => $dataFc3['month'],
-                        // 'year'              => $dataFc3['year'],
-                        'dt_client'         => $dt_client,
+                        'sensor_left'       => $fc3_data['sensor_left'],
+                        'sensor_right'      => $fc3_data['sensor_right'],
+                        'recipe_id'         => $fc3_data['recipe_id'],
+                        'is_correcting'     => $fc2_data['is_correcting'],
+                        'push_thin_left'    => $fc3_data['push_thin_left'],
+                        'push_thick_left'   => $fc3_data['push_thick_left'],
+                        'push_thin_right'   => $fc3_data['push_thin_right'],
+                        'push_thick_right'  => $fc3_data['push_thick_right'],
+                        'st_correct_left'   => $fc3_data['st_correct_left'],
+                        'st_correct_right'  => $fc3_data['st_correct_right'],
+                        'dt_client'         => $dt_now,
                     ];
 
                     // print_r($metric);
-
-                    if ($metric['sensor_left'] > 0 || $metric['sensor_right'] > 0) {
-                        // save data
-                        $this->saveMetric($metric);
-                        $zeroCounters[$device->id] = 0;
-                        echo 'Zero counter: 0 (Reset)' . PHP_EOL;
-                    } else {
-                        if ($zeroCounters[$device->id] < $maxZeros) {
-                            $zeroCounters[$device->id]++;
-                            echo 'Zero counter:' . $zeroCounters[$device->id] . PHP_EOL;
-                            // save the data (zero value)
-                            $this->saveMetric($metric);
-                        } else {
-                            echo 'Zero data is ignored.' . PHP_EOL;
-                        }
-                    }
+                    $this->saveMetric($metric);
 
                 } catch (\Throwable $th) {
-                    echo PHP_EOL . 'Exception: ' . $th->getMessage();
+                    echo PHP_EOL . 'Exception: ' . $th;
                 }
             }
             sleep(1);

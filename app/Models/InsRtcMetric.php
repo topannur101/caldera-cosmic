@@ -15,6 +15,7 @@ class InsRtcMetric extends Model
     protected $fillable = [
         'ins_rtc_recipe_id',
         'ins_rtc_device_id',
+        'batch_id',
         'sensor_left',
         'sensor_right',
         'action_left',
