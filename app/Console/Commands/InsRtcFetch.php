@@ -79,6 +79,26 @@ class InsRtcFetch extends Command
                 $this->batch_id_prev[$metric['device_id']] = $max_batch_id ? $max_batch_id + 1 : 1;
             }
 
+            $collection = collect($this->zero_metrics[$metric['device_id']]);
+
+            $maxDtClient = $collection->max(function ($item) {
+                return $item['dt_client'];
+            });
+            $minDtClient = $collection->min(function ($item) {
+                return $item['dt_client'];
+            });
+
+            // Convert to Carbon instances if not already
+            $maxDtClient = Carbon::parse($maxDtClient);
+            $minDtClient = Carbon::parse($minDtClient);
+
+            // Calculate the difference in seconds
+            $differenceInSeconds = $minDtClient->diffInSeconds($maxDtClient);
+
+            if ($differenceInSeconds > $this->batch_timeout) {
+                $this->batch_id_prev[$metric['device_id']] = $this->batch_id_prev[$metric['device_id']] + 1;
+            }
+
             $action_left = null;
             $action_right = null;
 
@@ -108,37 +128,13 @@ class InsRtcFetch extends Command
                 'dt_client'             => $metric['dt_client'],
             ]);
             $this->sensor_prev[$metric['device_id']]    = $sensor;
-            $this->zero_metrics[$metric['device_id']]   = collect([]);
+            $this->zero_metrics[$metric['device_id']]   = [];
             echo 'Data is saved' . PHP_EOL;
         } else {
             if (!$metric['sensor_left'] && !$metric['sensor_right']) {
                 
-                $this->zero_metrics[$metric['device_id']] = collect([$metric]);
-                $collection = $this->zero_metrics[$metric['device_id']];
-
-                $maxDtClient = $collection->max(function ($item) {
-                    return $item['dt_client'];
-                });
-                $minDtClient = $collection->min(function ($item) {
-                    return $item['dt_client'];
-                });
-
-                // Convert to Carbon instances if not already
-                $maxDtClient = Carbon::parse($maxDtClient);
-                $minDtClient = Carbon::parse($minDtClient);
-
-                // Calculate the difference in seconds
-                $differenceInSeconds = $maxDtClient->diffInSeconds($minDtClient);
-
-                // Check if the difference is greater than 60 seconds
-                if ($differenceInSeconds > 60) {
-                    $max_batch_id = InsRtcMetric::max('batch_id');
-                    $this->batch_id_prev[$metric['device_id']] = $max_batch_id ? $max_batch_id + 1 : 1;
-                    $this->zero_metrics[$metric['device_id']]  = collect([]);
-                    echo 'Consecutive data (zero) is not saved. New batch detected.' . PHP_EOL;
-                } else {
-                    echo 'Consecutive data (zero) is not saved' . PHP_EOL;
-                }
+                $this->zero_metrics[$metric['device_id']][] = $metric;
+                echo 'Consecutive data (zero) is not saved' . PHP_EOL;
 
             } else {
                 echo 'Consecutive data is not saved' . PHP_EOL;
@@ -155,7 +151,7 @@ class InsRtcFetch extends Command
         // Initialize variables
         foreach($devices as $device) {
             $this->sensor_prev[$device->id]     = null;
-            $this->zero_metrics[$device->id]    = collect([]);
+            $this->zero_metrics[$device->id]    = null;
             $this->batch_id_prev[$device->id]   = null;
             $this->st_cl_prev[$device->id]      = null;
             $this->st_cr_prev[$device->id]      = null;

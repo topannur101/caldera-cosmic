@@ -103,7 +103,7 @@ new #[Layout('layouts.app')] class extends Component {
 
 ?>
 
-<div class="overflow-auto w-full">
+<div wire:poll class="overflow-auto w-full">
     <div>
         <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
             {{ __('Data mentah') }}</h1>
