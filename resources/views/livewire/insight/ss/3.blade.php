@@ -22,25 +22,25 @@ new class extends Component {
             <div class="col-span-2">
                 <div>
                     <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Model') }}</div>
-                    <div class="text-6xl" id="recipe-name"></div>
+                    <div class="text-6xl" id="recipe-name">???</div>
                 </div>
             </div>
             <div class="col-start-3">
                 <div>
                     <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('OG/RS') }}</div>
-                    <div class="text-7xl font-bold py-3" id="recipe-og-rs"></div>
+                    <div class="text-7xl font-bold py-3" id="recipe-og-rs">000</div>
                 </div>
             </div>
             <div class="col-start-4">
                 <div>
                     <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Min') }}</div>
-                    <div class="text-7xl font-bold py-3" id="recipe-std-min"></div>
+                    <div class="text-7xl font-bold py-3" id="recipe-std-min">0.00</div>
                 </div>
             </div>
             <div class="col-start-5">
                 <div>
                     <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Maks') }}</div>
-                    <div class="text-7xl font-bold py-3" id="recipe-std-max"></div>
+                    <div class="text-7xl font-bold py-3" id="recipe-std-max">0.00</div>
                 </div>
             </div>
             <div class="col-start-6">
@@ -222,9 +222,9 @@ new class extends Component {
             deviceId = parseInt($wire.device_id)
 
             if (deviceId > 0) {
+
                 metricUrl = '{{ route('insight.rtc.metric', ['device_id' => '__deviceId__']) }}';
                 metricUrl = metricUrl.replace('__deviceId__', deviceId)
-
                 axios.get(metricUrl)
                     .then(response => {
 

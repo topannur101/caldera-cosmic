@@ -26,10 +26,10 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
             <div class="space-x-8 -my-px ml-10 flex">
                 <x-nav-link href="{{ route('insight.rtc.index') }}" wire:navigate>
-                    <i class="fa mx-2 fa-fw fa-chart-simple text-sm"></i>
+                    <i class="fa mx-2 fa-fw fa-heart-pulse text-sm"></i>
                 </x-nav-link>
                 <x-nav-link href="{{ route('insight.rtc.slideshows') }}" wire:navigate active="true">
-                    <i class="fa mx-2 fa-fw fa-images text-sm"></i>
+                    <i class="fa mx-2 fa-fw fa-chart-line text-sm"></i>
                 </x-nav-link>
                 <x-nav-link href="{{ route('insight.rtc.manage.index') }}" :active="request()->routeIs('inventory/manage*')" wire:navigate>
                     <i class="fa mx-2 fa-fw fa-ellipsis-h text-sm"></i>

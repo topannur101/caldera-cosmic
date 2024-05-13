@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Carbon\Carbon;
+use App\Models\InsRtcSheet;
 use App\Models\InsRtcDevice;
 use App\Models\InsRtcMetric;
 use App\Models\InsRtcRecipe;
@@ -59,8 +60,8 @@ class InsRtcFetch extends Command
 
     protected $sensor_prev      = [];
     protected $zero_metrics     = [];
-    protected $batch_id_prev    = [];
-    protected $batch_timeout    = 60;
+    protected $sheet_id_prev    = [];
+    protected $sheet_timeout    = 60;
     // Latest dt_client
     protected $dt_prev          = [];
     // System time (HMI) previous triggered correction
@@ -69,15 +70,9 @@ class InsRtcFetch extends Command
 
     function saveMetric($metric): void
     {
-        $sensor = $metric['sensor_left'] . $metric['sensor_right'];
+        $sensor = $metric['sensor_left'] . $metric['st_correct_left'] . $metric['sensor_right'] . $metric['st_correct_right'];
         // Save to database if new value deteced
         if ($sensor !== $this->sensor_prev[$metric['device_id']]) {
-            $recipe_id = InsRtcRecipe::find($metric['recipe_id']) ? $metric['recipe_id'] : null;
-
-            if (!$this->batch_id_prev[$metric['device_id']]) {
-                $max_batch_id = InsRtcMetric::max('batch_id');
-                $this->batch_id_prev[$metric['device_id']] = $max_batch_id ? $max_batch_id + 1 : 1;
-            }
 
             $collection = collect($this->zero_metrics[$metric['device_id']]);
 
@@ -95,8 +90,12 @@ class InsRtcFetch extends Command
             // Calculate the difference in seconds
             $differenceInSeconds = $minDtClient->diffInSeconds($maxDtClient);
 
-            if ($differenceInSeconds > $this->batch_timeout) {
-                $this->batch_id_prev[$metric['device_id']] = $this->batch_id_prev[$metric['device_id']] + 1;
+            if ($differenceInSeconds > $this->sheet_timeout || !$this->sheet_id_prev[$metric['device_id']]) {
+                $sheet = InsRtcSheet::create([
+                    'ins_rtc_recipe_id' => $metric['recipe_id'],
+                    'ins_rtc_device_id' => $metric['device_id']
+                ]);
+                $this->sheet_id_prev[$metric['device_id']] = $sheet->id;
             }
 
             $action_left = null;
@@ -117,14 +116,13 @@ class InsRtcFetch extends Command
             }
 
             InsRtcMetric::create([
-                'ins_rtc_device_id'     => $metric['device_id'],
-                'ins_rtc_recipe_id'     => $recipe_id,
+                'ins_rtc_sheet_id'      => $this->sheet_id_prev[$metric['device_id']],
                 'sensor_left'           => $this->convertToDecimal($metric['sensor_left']),
                 'sensor_right'          => $this->convertToDecimal($metric['sensor_right']),
                 'action_left'           => $action_left,
                 'action_right'          => $action_right,
                 'is_correcting'         => (bool) $metric['is_correcting'],
-                'batch_id'              => $this->batch_id_prev[$metric['device_id']],
+                'sheet_id'              => $this->sheet_id_prev[$metric['device_id']],
                 'dt_client'             => $metric['dt_client'],
             ]);
             $this->sensor_prev[$metric['device_id']]    = $sensor;
@@ -152,7 +150,7 @@ class InsRtcFetch extends Command
         foreach($devices as $device) {
             $this->sensor_prev[$device->id]     = null;
             $this->zero_metrics[$device->id]    = null;
-            $this->batch_id_prev[$device->id]   = null;
+            $this->sheet_id_prev[$device->id]   = null;
             $this->st_cl_prev[$device->id]      = null;
             $this->st_cr_prev[$device->id]      = null;
         }
@@ -189,7 +187,7 @@ class InsRtcFetch extends Command
                     echo 'Response from: ' . $device->ip_address . ' (Line ' . $device->line . ')';
                     $fc2_data = $fc2_resposne->getData();
                     $fc3_data = $fc3_response->getData();
-                    print_r($fc3_data);
+                    // print_r($fc3_data);
 
                     $metric = [
                         'device_id'         => $device->id,
@@ -206,11 +204,11 @@ class InsRtcFetch extends Command
                         'dt_client'         => $dt_now,
                     ];
 
-                    // print_r($metric);
+                    print_r($metric);
                     $this->saveMetric($metric);
 
                 } catch (\Throwable $th) {
-                    echo PHP_EOL . 'Exception: ' . $th;
+                    echo PHP_EOL . 'Exception: ' . $th->getMessage();
                 }
             }
             sleep(1);

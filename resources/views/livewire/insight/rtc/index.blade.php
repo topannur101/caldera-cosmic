@@ -27,7 +27,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public $dateViews = ['raw'];
     public $rangeViews = ['raw'];
-    public $filterViews = ['raw', 'summary'];
+    public $filterViews = ['raw', 'daily', 'sheets'];
 
     public $dataIntegrity = 0;
     public $dataAccuracy = 0;
@@ -41,7 +41,14 @@ new #[Layout('layouts.app')] class extends Component {
     public function mount()
     {
         $this->setToday();
-        $this->olines = InsRtcMetric::join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_metrics.ins_rtc_device_id')->select('ins_rtc_devices.line')->distinct()->orderBy('ins_rtc_devices.line')->get()->pluck('line')->toArray();
+        $this->olines = InsRtcMetric::join('ins_rtc_sheets', 'ins_rtc_sheets.id', '=', 'ins_rtc_metrics.ins_rtc_sheet_id')
+            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_sheets.ins_rtc_device_id')
+            ->select('ins_rtc_devices.line')
+            ->distinct()
+            ->orderBy('ins_rtc_devices.line')
+            ->get()
+            ->pluck('line')
+            ->toArray();
     }
 
     public function with(): array
@@ -100,15 +107,17 @@ new #[Layout('layouts.app')] class extends Component {
             $csv = Writer::createFromString('');
             $csv->insertOne([
                 __('Line'), 
-                __('ID Batch'),
-                __('Waktu'), 
+                __('ID Lembar'),
                 __('ID Resep'),
-                __('Koreksi'),
-                __('Tindakan kiri'), 
-                __('Tebal kiri'), 
-                __('Tindakan kanan'),
-                __('Tebal kanan'),
+                __('Nama resep'),
                 __('Standar tengah'),
+                __('Koreksi Oto.'),
+                __('Kiri tindakan'), 
+                __('Kiri terukur'), 
+                __('Kanan tindakan'),
+                __('Kanan terukur'),
+                __('Waktu'), 
+
             ]); 
 
             foreach ($items as $item) {
@@ -133,16 +142,17 @@ new #[Layout('layouts.app')] class extends Component {
                 }
 
                 $csv->insertOne([
-                    $item->ins_rtc_device->line, 
-                    $item->batch_id,
-                    $item->dt_client, 
-                    $item->ins_rtc_recipe->id,
+                    $item->ins_rtc_sheet->ins_rtc_device->line, 
+                    $item->ins_rtc_sheet_id,
+                    $item->ins_rtc_sheet->ins_rtc_recipe->id,
+                    $item->ins_rtc_sheet->ins_rtc_recipe->name,
+                    $item->ins_rtc_sheet->ins_rtc_recipe->std_mid,
                     $item->is_correcting ? 'ON' : 'OFF',
                     $action_left, 
                     $item->sensor_left, 
                     $action_right,
                     $item->sensor_right,
-                    $item->ins_rtc_recipe->std_mid,
+                    $item->dt_client, 
                 ]); // Add data rows
             }
             
@@ -179,10 +189,10 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
             <div class="space-x-8 -my-px ml-10 flex">
                 <x-nav-link href="{{ route('insight.rtc.index') }}" active="true" wire:navigate>
-                    <i class="fa mx-2 fa-fw fa-chart-simple text-sm"></i>
+                    <i class="fa mx-2 fa-fw fa-heart-pulse text-sm"></i>
                 </x-nav-link>
                 <x-nav-link href="{{ route('insight.rtc.slideshows') }}" wire:navigate>
-                    <i class="fa mx-2 fa-fw fa-images text-sm"></i>
+                    <i class="fa mx-2 fa-fw fa-chart-line text-sm"></i>
                 </x-nav-link>
                 <x-nav-link href="{{ route('insight.rtc.manage.index') }}" wire:navigate>
                     <i class="fa mx-2 fa-fw fa-ellipsis-h text-sm"></i>
@@ -196,9 +206,14 @@ new #[Layout('layouts.app')] class extends Component {
         <div>
             <div class="w-full sm:w-44 md:w-64 px-3 sm:px-0 mb-5">
                 <div class="btn-group h-10 w-full">
-                    <x-radio-button wire:model.live="view" grow value="summary" name="view" id="view-summary">
+                    <x-radio-button wire:model.live="view" grow value="daily" name="view" id="view-daily">
                         <div class="text-center my-auto">
-                            <i class="fa fa-fw fa-display text-center m-auto"></i>
+                            <i class="fa fa-fw fa-calendar-day text-center m-auto"></i>
+                        </div>
+                    </x-radio-button>
+                    <x-radio-button wire:model.live="view" grow value="sheets" name="view" id="view-sheets">
+                        <div class="text-center my-auto">
+                            <i class="fa fa-fw fa-sheet-plastic text-center m-auto"></i>
                         </div>
                     </x-radio-button>
                     <x-radio-button wire:model.live="view" grow value="raw" name="view" id="view-raw">
@@ -292,8 +307,12 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         @switch($view)
-            @case('summary')
-                <livewire:insight.rtc.summary :$fline />
+            @case('daily')
+                <livewire:insight.rtc.daily :$fline />
+            @break
+
+            @case('sheets')
+                <livewire:insight.rtc.sheets :$fline />
             @break
 
             @case('raw')

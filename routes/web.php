@@ -25,8 +25,11 @@ Route::prefix('insight')->group(function () {
         Volt::route('/rtc/slideshows',              'insight.rtc.slideshows')               ->name('slideshows');
         Volt::route('/rtc',                         'insight.rtc.index')                    ->name('index');
         Route::get('/rtc/metric/{device_id}', function (string $device_id) {
-            $metric = InsRtcMetric::where('ins_rtc_device_id', $device_id)->latest('dt_client')->first();
-            return $metric ? new InsRtcMetricResource($metric) : abort('404');
+            $metric = InsRtcMetric::join('ins_rtc_sheets', 'ins_rtc_sheets.id', '=', 'ins_rtc_metrics.ins_rtc_sheet_id')
+                ->where('ins_rtc_sheets.ins_rtc_device_id', $device_id)
+                ->latest('dt_client')
+                ->first();
+            return $metric ? new InsRtcMetricResource($metric) : abort(404);
         })->name('metric');
         Route::get('/rtc/recipe/{recipe_id}', function (string $recipe_id) {
             return new InsRtcRecipeResource(InsRtcRecipe::findOrFail($recipe_id));

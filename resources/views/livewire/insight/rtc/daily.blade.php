@@ -18,17 +18,20 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         $rows = DB::table('ins_rtc_metrics')
-        ->join('ins_rtc_devices', 'ins_rtc_metrics.ins_rtc_device_id', '=', 'ins_rtc_devices.id')
-        ->select('line')
-        ->selectRaw('MAX(dt_client) as dt_client')
-        // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(sensor_left ORDER BY dt_client DESC), ",", 1) as sensor_left')
-        // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(sensor_right ORDER BY dt_client DESC), ",", 1) as sensor_right')
-        ->where('dt_client', '>=', Carbon::now()->subDays(90));
+            ->join('ins_rtc_sheets', 'ins_rtc_sheets.id', '=', 'ins_rtc_metrics.ins_rtc_sheet_id')
+            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_sheets.ins_rtc_device_id')
+            ->select('ins_rtc_devices.line')
+            ->selectRaw('MAX(ins_rtc_metrics.dt_client) as dt_client')
+            // Uncomment and adjust the following lines if needed:
+            // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(ins_rtc_metrics.sensor_left ORDER BY ins_rtc_metrics.dt_client DESC), ",", 1) as sensor_left')
+            // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(ins_rtc_metrics.sensor_right ORDER BY ins_rtc_metrics.dt_client DESC), ",", 1) as sensor_right')
+            ->where('ins_rtc_metrics.dt_client', '>=', Carbon::now()->subDays(90));
 
-        if($this->fline) {
-            $rows->where('line', $this->fline);
+        if ($this->fline) {
+            $rows->where('ins_rtc_devices.line', $this->fline);
         }
-        $rows->groupBy('line');
+
+        $rows->groupBy('ins_rtc_devices.line');
         $rows = $rows->paginate($this->perPage);
 
         return [
@@ -46,7 +49,7 @@ new #[Layout('layouts.app')] class extends Component {
 
 <div wire:poll class="w-full">
     <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
-        {{ __('Ringkasan') }}</h1>
+        {{ __('Ringkasan harian') }}</h1>
 
     @if (!$rows->count())
 

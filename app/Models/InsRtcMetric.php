@@ -13,14 +13,12 @@ class InsRtcMetric extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'ins_rtc_recipe_id',
-        'ins_rtc_device_id',
-        'batch_id',
-        'sensor_left',
-        'sensor_right',
+        'ins_rtc_sheet_id',
+        'is_correcting',
         'action_left',
         'action_right',
-        'is_correcting',
+        'sensor_left',
+        'sensor_right',
         'dt_client',
     ];
 
@@ -28,13 +26,9 @@ class InsRtcMetric extends Model
         'dt_client' => 'datetime',
     ];
 
-    public function ins_rtc_device(): BelongsTo
+    public function ins_rtc_sheet(): BelongsTo
     {
-        return $this->belongsTo(InsRtcDevice::class);
+        return $this->belongsTo(InsRtcSheet::class);
     }
 
-    public function ins_rtc_recipe(): BelongsTo
-    {
-        return $this->belongsTo(InsRtcRecipe::class);
-    }
 }
