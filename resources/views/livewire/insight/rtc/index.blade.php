@@ -100,6 +100,7 @@ new #[Layout('layouts.app')] class extends Component {
             $csv = Writer::createFromString('');
             $csv->insertOne([
                 __('Line'), 
+                __('ID Batch'),
                 __('Waktu'), 
                 __('ID Resep'),
                 __('Koreksi'),
@@ -133,6 +134,7 @@ new #[Layout('layouts.app')] class extends Component {
 
                 $csv->insertOne([
                     $item->ins_rtc_device->line, 
+                    $item->batch_id,
                     $item->dt_client, 
                     $item->ins_rtc_recipe->id,
                     $item->is_correcting ? 'ON' : 'OFF',
