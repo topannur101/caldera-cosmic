@@ -62,6 +62,8 @@ class InsRtcFetch extends Command
     protected $zero_metrics     = [];
     protected $clump_id_prev    = [];
     protected $clump_timeout    = 120; // original 60
+    protected $recipe_id_prev   = [];
+    protected $recipe_timeout   = 5;
     // Latest dt_client
     protected $dt_prev          = [];
     // System time (HMI) previous triggered correction
@@ -96,6 +98,16 @@ class InsRtcFetch extends Command
                     'ins_rtc_device_id' => $metric['device_id']
                 ]);
                 $this->clump_id_prev[$metric['device_id']] = $clump->id;
+                $this->recipe_id_prev[$metric['device_id']] = $metric['recipe_id'];
+            }
+
+            if (($this->recipe_id_prev[$metric['device_id']] !== $metric['recipe_id']) && $this->clump_id_prev[$metric['device_id']]) {
+                $clump = InsRtcClump::find($this->clump_id_prev[$metric['device_id']]);
+                if ($clump) {
+                    $clump->update([
+                        'ins_rtc_recipe_id' => $metric['recipe_id']
+                    ]);
+                }
             }
 
             $action_left = null;
@@ -151,6 +163,7 @@ class InsRtcFetch extends Command
             $this->sensor_prev[$device->id]     = null;
             $this->zero_metrics[$device->id]    = null;
             $this->clump_id_prev[$device->id]   = null;
+            $this->recipe_id_prev[$device->id]  = null;
             $this->st_cl_prev[$device->id]      = null;
             $this->st_cr_prev[$device->id]      = null;
         }

@@ -17,14 +17,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function with(): array
     {
-        $rows = DB::table('ins_rtc_metrics')
-            ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
-            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
-            ->select('ins_rtc_devices.line')
-            ->selectRaw('COUNT(DISTINCT ins_rtc_clumps.id) as clump_qty')
-            ->selectRaw('MAX(ins_rtc_metrics.dt_client) as dt_client')
-            ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client))) as average_duration')
-            ->where('ins_rtc_metrics.dt_client', '>=', Carbon::now()->subDays(90));
+        $rows = DB::table('ins_rtc_devices');
 
         if ($this->fline) {
             $rows->where('ins_rtc_devices.line', $this->fline);
@@ -73,23 +66,10 @@ new #[Layout('layouts.app')] class extends Component {
                 @foreach ($rows as $row)
                     <tr>
                         <td>{{ $row->line }}</td>
-                        <td>
-                            @if ((Carbon::now()->diffInMinutes($row->dt_client) > 30) && (Carbon::now()->diffInMinutes($row->dt_client) < 0 ))
-                                <div class="flex text-xs gap-x-2 items-center text-red-500">
-                                    
-                                    <i class="fa fa-2xs fa-circle"></i>
-                                    <span>{{ __('OFFLINE') }}</span>
-                                </div>
-                            @else
-                                <div class="flex text-xs gap-x-2 items-center text-green-500">
-                                    <i class="fa fa-2xs fa-circle"></i>
-                                    <span>{{ __('ONLINE') }}</span>
-                                </div>
-                            @endif
-                        </td>
-                        <td>{{ $row->clump_qty }}</td>
-                        <td>{{ $row->average_duration }}</td>
-                        <td>{{ $row->dt_client }}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
 
                     </tr>
                 @endforeach
