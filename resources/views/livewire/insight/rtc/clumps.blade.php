@@ -18,12 +18,12 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         $rows = DB::table('ins_rtc_metrics')
-            ->join('ins_rtc_sheets', 'ins_rtc_sheets.id', '=', 'ins_rtc_metrics.ins_rtc_sheet_id')
-            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_sheets.ins_rtc_device_id')
-            ->join('ins_rtc_recipes', 'ins_rtc_recipes.id', '=', 'ins_rtc_sheets.ins_rtc_recipe_id')  // Join with ins_rtc_recipes
+            ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
+            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
+            ->join('ins_rtc_recipes', 'ins_rtc_recipes.id', '=', 'ins_rtc_clumps.ins_rtc_recipe_id')  // Join with ins_rtc_recipes
             ->select(
                 'ins_rtc_devices.line',
-                'ins_rtc_sheets.id as sheet_id',  // renamed to avoid ambiguity
+                'ins_rtc_clumps.id as clump_id',  // renamed to avoid ambiguity
                 'ins_rtc_recipes.name as recipe_name',
                 'ins_rtc_recipes.id as recipe_id'
             )
@@ -39,7 +39,7 @@ new #[Layout('layouts.app')] class extends Component {
             $rows->where('ins_rtc_devices.line', $this->fline);
         }
 
-        $rows->groupBy('ins_rtc_devices.line', 'ins_rtc_sheets.id', 'ins_rtc_recipes.id')
+        $rows->groupBy('ins_rtc_devices.line', 'ins_rtc_clumps.id', 'ins_rtc_recipes.id')
             ->orderBy('end_time', 'desc');  // Ordering by the latest dt_client
         $rows = $rows->paginate($this->perPage);
 
@@ -58,7 +58,7 @@ new #[Layout('layouts.app')] class extends Component {
 
 <div wire:poll class="w-full">
     <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
-        {{ __('Ringkasan lembaran') }}</h1>
+        {{ __('Ringkasan Gilingan') }}</h1>
 
     @if (!$rows->count())
 
@@ -73,7 +73,7 @@ new #[Layout('layouts.app')] class extends Component {
         <div wire:key="line-all-rows" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto">
             <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
                 <tr class="uppercase text-xs">
-                    <th>{{ __('SID') }}</th>
+                    <th>{{ __('IDG') }}</th>
                     <th>{{ __('Line') }}</th>
                     <th colspan="2">{{ __('Resep') }}</th>
                     <th>{{ __('Detik') }}</th>
@@ -81,7 +81,7 @@ new #[Layout('layouts.app')] class extends Component {
                 </tr>
                 @foreach ($rows as $row)
                     <tr>
-                        <td>{{ $row->sheet_id }}</td>
+                        <td>{{ $row->clump_id }}</td>
                         <td>{{ $row->line }}</td>
                         <td>{{ $row->recipe_id }}</td>
                         <td>{{ $row->recipe_name }}</td>

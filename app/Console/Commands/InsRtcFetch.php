@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Carbon\Carbon;
-use App\Models\InsRtcSheet;
+use App\Models\InsRtcClump;
 use App\Models\InsRtcDevice;
 use App\Models\InsRtcMetric;
 use App\Models\InsRtcRecipe;
@@ -60,8 +60,8 @@ class InsRtcFetch extends Command
 
     protected $sensor_prev      = [];
     protected $zero_metrics     = [];
-    protected $sheet_id_prev    = [];
-    protected $sheet_timeout    = 60;
+    protected $clump_id_prev    = [];
+    protected $clump_timeout    = 120; // original 60
     // Latest dt_client
     protected $dt_prev          = [];
     // System time (HMI) previous triggered correction
@@ -90,12 +90,12 @@ class InsRtcFetch extends Command
             // Calculate the difference in seconds
             $differenceInSeconds = $minDtClient->diffInSeconds($maxDtClient);
 
-            if ($differenceInSeconds > $this->sheet_timeout || !$this->sheet_id_prev[$metric['device_id']]) {
-                $sheet = InsRtcSheet::create([
+            if ($differenceInSeconds > $this->clump_timeout || !$this->clump_id_prev[$metric['device_id']]) {
+                $clump = InsRtcClump::create([
                     'ins_rtc_recipe_id' => $metric['recipe_id'],
                     'ins_rtc_device_id' => $metric['device_id']
                 ]);
-                $this->sheet_id_prev[$metric['device_id']] = $sheet->id;
+                $this->clump_id_prev[$metric['device_id']] = $clump->id;
             }
 
             $action_left = null;
@@ -116,13 +116,13 @@ class InsRtcFetch extends Command
             }
 
             InsRtcMetric::create([
-                'ins_rtc_sheet_id'      => $this->sheet_id_prev[$metric['device_id']],
+                'ins_rtc_clump_id'      => $this->clump_id_prev[$metric['device_id']],
                 'sensor_left'           => $this->convertToDecimal($metric['sensor_left']),
                 'sensor_right'          => $this->convertToDecimal($metric['sensor_right']),
                 'action_left'           => $action_left,
                 'action_right'          => $action_right,
                 'is_correcting'         => (bool) $metric['is_correcting'],
-                'sheet_id'              => $this->sheet_id_prev[$metric['device_id']],
+                'clump_id'              => $this->clump_id_prev[$metric['device_id']],
                 'dt_client'             => $metric['dt_client'],
             ]);
             $this->sensor_prev[$metric['device_id']]    = $sensor;
@@ -150,7 +150,7 @@ class InsRtcFetch extends Command
         foreach($devices as $device) {
             $this->sensor_prev[$device->id]     = null;
             $this->zero_metrics[$device->id]    = null;
-            $this->sheet_id_prev[$device->id]   = null;
+            $this->clump_id_prev[$device->id]   = null;
             $this->st_cl_prev[$device->id]      = null;
             $this->st_cr_prev[$device->id]      = null;
         }

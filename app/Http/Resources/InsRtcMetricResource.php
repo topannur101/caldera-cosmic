@@ -16,13 +16,13 @@ class InsRtcMetricResource extends JsonResource
     {
         return [
             'id'            => $this->id,
-            'recipe_id'     => $this->ins_rtc_sheet->ins_rtc_recipe_id,
-            'line'          => $this->ins_rtc_sheet->ins_rtc_device->line,
+            'recipe_id'     => $this->ins_rtc_clump->ins_rtc_recipe_id,
+            'line'          => $this->ins_rtc_clump->ins_rtc_device->line,
             'dt_client'     => $this->dt_client,
 
             'sensor_left'   => $this->sensor_left,
             'sensor_right'  => $this->sensor_right,
-            'std_mid'       => $this->ins_rtc_sheet->ins_rtc_recipe->std_mid ?? 0,
+            'std_mid'       => $this->ins_rtc_clump->ins_rtc_recipe->std_mid ?? 0,
             'is_correcting' => $this->is_correcting,
         ];
     }

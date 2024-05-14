@@ -46,7 +46,7 @@ new #[Layout('layouts.app')] class extends Component {
            <x-card-link href="{{ route('insight.ss', ['id' => 3]) }}" wire:navigate>
                <div class="grow truncate px-8 py-4">
                   <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                     {{ __('Peragaan Line') }}
+                     {{ __('Bagan Line (waktu nyata)') }}
                   </div>
                   <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
                      {{ __('Tampilkan bagan garis berdasarkan line') }}

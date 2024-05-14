@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('ins_rtc_metrics', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('ins_rtc_sheet_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('ins_rtc_clump_id')->constrained()->cascadeOnDelete();
             $table->boolean('is_correcting');
             $table->enum('action_left', ['thick','thin'])->nullable();   
             $table->enum('action_right', ['thick','thin'])->nullable();   
@@ -23,7 +23,7 @@ return new class extends Migration
 
             $table->datetime('dt_client');
 
-            $table->index('ins_rtc_sheet_id');
+            $table->index('ins_rtc_clump_id');
         });
     }
 

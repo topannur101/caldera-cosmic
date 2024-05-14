@@ -27,7 +27,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public $dateViews = ['raw'];
     public $rangeViews = ['raw'];
-    public $filterViews = ['raw', 'daily', 'sheets'];
+    public $filterViews = ['raw', 'daily', 'clumps'];
 
     public $dataIntegrity = 0;
     public $dataAccuracy = 0;
@@ -41,8 +41,8 @@ new #[Layout('layouts.app')] class extends Component {
     public function mount()
     {
         $this->setToday();
-        $this->olines = InsRtcMetric::join('ins_rtc_sheets', 'ins_rtc_sheets.id', '=', 'ins_rtc_metrics.ins_rtc_sheet_id')
-            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_sheets.ins_rtc_device_id')
+        $this->olines = InsRtcMetric::join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
+            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
             ->select('ins_rtc_devices.line')
             ->distinct()
             ->orderBy('ins_rtc_devices.line')
@@ -107,7 +107,7 @@ new #[Layout('layouts.app')] class extends Component {
             $csv = Writer::createFromString('');
             $csv->insertOne([
                 __('Line'), 
-                __('ID Lembar'),
+                __('ID Gilingan'),
                 __('ID Resep'),
                 __('Nama resep'),
                 __('Standar tengah'),
@@ -117,7 +117,6 @@ new #[Layout('layouts.app')] class extends Component {
                 __('Kanan tindakan'),
                 __('Kanan terukur'),
                 __('Waktu'), 
-
             ]); 
 
             foreach ($items as $item) {
@@ -142,11 +141,11 @@ new #[Layout('layouts.app')] class extends Component {
                 }
 
                 $csv->insertOne([
-                    $item->ins_rtc_sheet->ins_rtc_device->line, 
-                    $item->ins_rtc_sheet_id,
-                    $item->ins_rtc_sheet->ins_rtc_recipe->id,
-                    $item->ins_rtc_sheet->ins_rtc_recipe->name,
-                    $item->ins_rtc_sheet->ins_rtc_recipe->std_mid,
+                    $item->ins_rtc_clump->ins_rtc_device->line, 
+                    $item->ins_rtc_clump_id,
+                    $item->ins_rtc_clump->ins_rtc_recipe->id,
+                    $item->ins_rtc_clump->ins_rtc_recipe->name,
+                    $item->ins_rtc_clump->ins_rtc_recipe->std_mid,
                     $item->is_correcting ? 'ON' : 'OFF',
                     $action_left, 
                     $item->sensor_left, 
@@ -211,9 +210,9 @@ new #[Layout('layouts.app')] class extends Component {
                             <i class="fa fa-fw fa-calendar-day text-center m-auto"></i>
                         </div>
                     </x-radio-button>
-                    <x-radio-button wire:model.live="view" grow value="sheets" name="view" id="view-sheets">
+                    <x-radio-button wire:model.live="view" grow value="clumps" name="view" id="view-clumps">
                         <div class="text-center my-auto">
-                            <i class="fa fa-fw fa-sheet-plastic text-center m-auto"></i>
+                            <i class="fa fa-fw fa-toilet-paper text-center m-auto"></i>
                         </div>
                     </x-radio-button>
                     <x-radio-button wire:model.live="view" grow value="raw" name="view" id="view-raw">
@@ -311,8 +310,8 @@ new #[Layout('layouts.app')] class extends Component {
                 <livewire:insight.rtc.daily :$fline />
             @break
 
-            @case('sheets')
-                <livewire:insight.rtc.sheets :$fline />
+            @case('clumps')
+                <livewire:insight.rtc.clumps :$fline />
             @break
 
             @case('raw')

@@ -25,8 +25,8 @@ Route::prefix('insight')->group(function () {
         Volt::route('/rtc/slideshows',              'insight.rtc.slideshows')               ->name('slideshows');
         Volt::route('/rtc',                         'insight.rtc.index')                    ->name('index');
         Route::get('/rtc/metric/{device_id}', function (string $device_id) {
-            $metric = InsRtcMetric::join('ins_rtc_sheets', 'ins_rtc_sheets.id', '=', 'ins_rtc_metrics.ins_rtc_sheet_id')
-                ->where('ins_rtc_sheets.ins_rtc_device_id', $device_id)
+            $metric = InsRtcMetric::join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
+                ->where('ins_rtc_clumps.ins_rtc_device_id', $device_id)
                 ->latest('dt_client')
                 ->first();
             return $metric ? new InsRtcMetricResource($metric) : abort(404);

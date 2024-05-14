@@ -13,7 +13,7 @@ class InsRtcMetric extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'ins_rtc_sheet_id',
+        'ins_rtc_clump_id',
         'is_correcting',
         'action_left',
         'action_right',
@@ -26,9 +26,9 @@ class InsRtcMetric extends Model
         'dt_client' => 'datetime',
     ];
 
-    public function ins_rtc_sheet(): BelongsTo
+    public function ins_rtc_clump(): BelongsTo
     {
-        return $this->belongsTo(InsRtcSheet::class);
+        return $this->belongsTo(InsRtcClump::class);
     }
 
 }

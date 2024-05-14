@@ -18,35 +18,35 @@ new class extends Component {
 <div class="w-full h-screen p-4">
     <div class="h-2/6 p-4">
         <x-link wire:navigate class="uppercase mb-8 inline-block text-sm" href="{{ route('insight.rtc.slideshows')}}"><i class="fa fa-chevron-left mr-2"></i>{{ __('Kembali') }}</x-link>
-        <div class="grid grid-cols-6 grid-rows-1 gap-4">
-            <div class="col-span-2">
+        <div class="flex w-full justify-between">
+            <div>
                 <div>
                     <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Model') }}</div>
-                    <div class="text-6xl" id="recipe-name">???</div>
+                    <div class="text-6xl font-bold py-3" id="recipe-name">???</div>
                 </div>
             </div>
-            <div class="col-start-3">
+            <div class="px-4">
                 <div>
                     <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('OG/RS') }}</div>
-                    <div class="text-7xl font-bold py-3" id="recipe-og-rs">000</div>
+                    <div class="text-6xl font-bold py-3" id="recipe-og-rs">000</div>
                 </div>
             </div>
-            <div class="col-start-4">
+            <div class="px-4">
                 <div>
                     <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Min') }}</div>
-                    <div class="text-7xl font-bold py-3" id="recipe-std-min">0.00</div>
+                    <div class="text-6xl font-bold py-3" id="recipe-std-min">0.00</div>
                 </div>
             </div>
-            <div class="col-start-5">
+            <div class="px-4">
                 <div>
                     <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Maks') }}</div>
-                    <div class="text-7xl font-bold py-3" id="recipe-std-max">0.00</div>
+                    <div class="text-6xl font-bold py-3" id="recipe-std-max">0.00</div>
                 </div>
             </div>
-            <div class="col-start-6">
+            <div class="pl-4 w-40">
                 <div>
                     <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Line') }}</div>
-                    <x-select wire:model.live="device_id" class="text-7xl font-bold">
+                    <x-select wire:model.live="device_id" class="text-6xl font-bold">
                         <option value=""></option>
                         @foreach ($devices as $device)
                             <option value="{{ $device->id }}">{{ $device->line }}</option>
@@ -61,7 +61,7 @@ new class extends Component {
             class="w-full h-full flex flex-col px-8 py-6 bg-white text-neutral-600 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
                 <div class="text-4xl text-neutral-400 uppercase">{{ __('Kiri') }}</div>
-                <div class="text-7xl font-bold" id="act-left"></div>
+                <div class="text-6xl font-bold" id="act-left"></div>
             </div>
             <div class="flex-1">
                 <div id="chart-left"></div>
@@ -72,7 +72,7 @@ new class extends Component {
             class="w-full h-full flex flex-col px-8 py-6 bg-white text-neutral-600 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
                 <div class="text-4xl text-neutral-400 uppercase">{{ __('Kanan') }}</div>
-                <div class="text-7xl font-bold" id="act-right"></div>
+                <div class="text-6xl font-bold" id="act-right"></div>
             </div>
             <div class="flex-1">
                 <div id="chart-right"></div>
@@ -94,60 +94,15 @@ new class extends Component {
                 }
             },
             dataLabels: {
-                enabled: false
-            },
-            series: [{
-                name: '{{ __("Sensor") }}',
-                type: 'area',
-                data: [],
-                color: '#b4a5e1'
-            }, {
-                name: '{{ __("Minimum") }}',
-                type: 'line',
-                data: [],
-                color: '#169292'
-            }, {
-                name: '{{ __("Maksimum") }}',
-                type: 'line',
-                data: [],
-                color: '#169292'
-            }, {
-                name: '{{ __("Tengah") }}',
-                type: 'line',
-                data: [],
-                color: '#169292'
-            }],
-            xaxis: {
-                type: 'datetime',
-                range: 60000,
-                labels: {
-                    datetimeUTC: false,
-                }
-            },
-            yaxis: {
-                min: 1,
-                max: 6
-
-            },
-            stroke: {
-                curve: 'smooth',
-                width: [0, 1, 1, 1],
-                dashArray: [0, 0, 0, 10]
-            },
-        };
-
-        let oRight = {
-            chart: {
-                type: 'line',
-                toolbar: {
-                    show: false
+                enabled: true,
+                enabledOnSeries: [0],
+                style: {
+                    fontSize: '20px',
+                    colors: ['#7F63CC'],
                 },
-                animations: {
-                    enabled: false,
+                background: {
+                    enabled: false
                 }
-            },
-            dataLabels: {
-                enabled: false
             },
             series: [{
                 name: '{{ __("Sensor") }}',
@@ -188,6 +143,8 @@ new class extends Component {
                 dashArray: [0, 0, 0, 10]
             },
         };
+
+        let oRight = oLeft;
 
         let leftChart = new ApexCharts(document.querySelector("#chart-left"), oLeft);
         let rightChart = new ApexCharts(document.querySelector("#chart-right"), oRight);

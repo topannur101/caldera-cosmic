@@ -41,13 +41,13 @@ new #[Layout('layouts.app')] class extends Component {
         // Statistics
         // hitung tanggal, jam, line
         $u = DB::table('ins_rtc_metrics')
-            ->join('ins_rtc_sheets', 'ins_rtc_sheets.id', '=', 'ins_rtc_metrics.ins_rtc_sheet_id')  // Join with ins_rtc_sheets
-            ->select(DB::raw('CONCAT(DATE(dt_client), LPAD(HOUR(dt_client), 2, "0"), ins_rtc_sheets.ins_rtc_device_id) as date_hour_device_id'))  // Adjusted for correct path to ins_rtc_device_id
+            ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')  // Join with ins_rtc_clumps
+            ->select(DB::raw('CONCAT(DATE(dt_client), LPAD(HOUR(dt_client), 2, "0"), ins_rtc_clumps.ins_rtc_device_id) as date_hour_device_id'))  // Adjusted for correct path to ins_rtc_device_id
             ->whereBetween('dt_client', [$start, $end]);
 
         if ($this->device_id) {
             // Make sure to use the correct column from the correct table for the device ID
-            $u->where('ins_rtc_sheets.ins_rtc_device_id', $this->device_id);
+            $u->where('ins_rtc_clumps.ins_rtc_device_id', $this->device_id);
         }
 
         $numeratorIntegrity = $u->groupBy('date_hour_device_id')->get()->count();
@@ -55,12 +55,12 @@ new #[Layout('layouts.app')] class extends Component {
 
         // hitung tanggal, line
         $v = DB::table('ins_rtc_metrics')
-            ->join('ins_rtc_sheets', 'ins_rtc_sheets.id', '=', 'ins_rtc_metrics.ins_rtc_sheet_id')  // Join with ins_rtc_sheets
-            ->select(DB::raw('CONCAT(DATE(dt_client), ins_rtc_sheets.ins_rtc_device_id) as date_device_id'))  // Use correct reference to ins_rtc_device_id
+            ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')  // Join with ins_rtc_clumps
+            ->select(DB::raw('CONCAT(DATE(dt_client), ins_rtc_clumps.ins_rtc_device_id) as date_device_id'))  // Use correct reference to ins_rtc_device_id
             ->whereBetween('dt_client', [$start, $end]);
 
         if ($this->device_id) {
-            $v->where('ins_rtc_sheets.ins_rtc_device_id', $this->device_id);  // Adjusted to correct column
+            $v->where('ins_rtc_clumps.ins_rtc_device_id', $this->device_id);  // Adjusted to correct column
         }
 
         $denominatorIntegrity = $v->groupBy('date_device_id')->get()->count() * 21;
@@ -115,7 +115,7 @@ new #[Layout('layouts.app')] class extends Component {
 <div wire:poll class="overflow-auto w-full">
     <div>
         <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
-            {{ __('Data mentah') }}</h1>
+            {{ __('Data Mentah') }}</h1>
         @if (!$metrics->count())
             @if (!$start_at || !$end_at)
                 <div wire:key="no-range" class="py-20">
@@ -197,10 +197,10 @@ new #[Layout('layouts.app')] class extends Component {
                 <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
                         <th>{{ __('Line') }}</th>
-                        <th>{{ __('SID') }}</th>
+                        <th>{{ __('IDG') }}</th>
                         <th colspan="2">{{ __('Resep') }}</th>
                         <th>{{ __('Tengah') }}</th>
-                        <th>{{ __('ACR') }}</th>
+                        <th>{{ __('KO') }}</th>
                         <th></th>
                         <th>{{ __('Kiri') }}</th>
                         <th></th>
@@ -210,11 +210,11 @@ new #[Layout('layouts.app')] class extends Component {
                     </tr>
                     @foreach ($metrics as $metric)
                         <tr>
-                            <td>{{ $metric->ins_rtc_sheet->ins_rtc_device->line }}</td>
-                            <td>{{ $metric->ins_rtc_sheet_id }}
-                            <td>{{ $metric->ins_rtc_sheet->ins_rtc_recipe_id }}</td>
-                            <td>{{ $metric->ins_rtc_sheet->ins_rtc_recipe->name }}</td>
-                            <td>{{ $metric->ins_rtc_sheet->ins_rtc_recipe->std_mid ?? '' }}</td>
+                            <td>{{ $metric->ins_rtc_clump->ins_rtc_device->line }}</td>
+                            <td>{{ $metric->ins_rtc_clump_id }}
+                            <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe_id }}</td>
+                            <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe->name }}</td>
+                            <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '' }}</td>
                             <td class="text-xs">{{ ((bool) $metric->is_correcting) ? 'ON' : 'OFF' }}</td>
     
                             <td>

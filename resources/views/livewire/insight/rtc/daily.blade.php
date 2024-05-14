@@ -18,13 +18,12 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         $rows = DB::table('ins_rtc_metrics')
-            ->join('ins_rtc_sheets', 'ins_rtc_sheets.id', '=', 'ins_rtc_metrics.ins_rtc_sheet_id')
-            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_sheets.ins_rtc_device_id')
+            ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
+            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
             ->select('ins_rtc_devices.line')
+            ->selectRaw('COUNT(DISTINCT ins_rtc_clumps.id) as clump_qty')
             ->selectRaw('MAX(ins_rtc_metrics.dt_client) as dt_client')
-            // Uncomment and adjust the following lines if needed:
-            // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(ins_rtc_metrics.sensor_left ORDER BY ins_rtc_metrics.dt_client DESC), ",", 1) as sensor_left')
-            // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(ins_rtc_metrics.sensor_right ORDER BY ins_rtc_metrics.dt_client DESC), ",", 1) as sensor_right')
+            ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client))) as average_duration')
             ->where('ins_rtc_metrics.dt_client', '>=', Carbon::now()->subDays(90));
 
         if ($this->fline) {
@@ -37,6 +36,7 @@ new #[Layout('layouts.app')] class extends Component {
         return [
             'rows' => $rows,
         ];
+
     }
 
     public function loadMore()
@@ -49,7 +49,7 @@ new #[Layout('layouts.app')] class extends Component {
 
 <div wire:poll class="w-full">
     <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
-        {{ __('Ringkasan harian') }}</h1>
+        {{ __('Ringkasan Harian') }}</h1>
 
     @if (!$rows->count())
 
@@ -65,15 +65,14 @@ new #[Layout('layouts.app')] class extends Component {
             <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
                 <tr class="uppercase text-xs">
                     <th>{{ __('Line') }}</th>
-                    {{-- <th>{{ __('Kiri') }}</th>
-                    <th>{{ __('Kanan') }}</th> --}}
-                    <th>{{ __('Data terakhir') }}</th>
                     <th>{{ __('Status') }}</th>
+                    <th>{{ __('Qty gilingan') }}</th>
+                    <th>{{ __('Rerata waktu gilingan') }}</th>
+                    <th>{{ __('Data terakhir') }}</th>
                 </tr>
                 @foreach ($rows as $row)
                     <tr>
                         <td>{{ $row->line }}</td>
-                        <td>{{ $row->dt_client }}</td>
                         <td>
                             @if ((Carbon::now()->diffInMinutes($row->dt_client) > 30) && (Carbon::now()->diffInMinutes($row->dt_client) < 0 ))
                                 <div class="flex text-xs gap-x-2 items-center text-red-500">
@@ -88,6 +87,10 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
                             @endif
                         </td>
+                        <td>{{ $row->clump_qty }}</td>
+                        <td>{{ $row->average_duration }}</td>
+                        <td>{{ $row->dt_client }}</td>
+
                     </tr>
                 @endforeach
             </table>
