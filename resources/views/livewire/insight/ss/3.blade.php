@@ -17,11 +17,11 @@ new class extends Component {
 
 <div class="w-full h-screen p-4">
     <div class="h-2/6 p-4">
-        <x-link wire:navigate class="uppercase mb-8 inline-block text-sm" href="{{ route('insight.rtc.slideshows')}}"><i class="fa fa-chevron-left mr-2"></i>{{ __('Kembali') }}</x-link>
         <div class="flex w-full justify-between">
             <div>
                 <div>
-                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Model') }}</div>
+                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1"><x-link wire:navigate class="mr-3 inline-block" href="{{ route('insight.rtc.slideshows')}}"><i class="fa fa-chevron-left mr-2"></i></x-link>
+                        {{ __('Model') }}</div>
                     <div class="text-6xl font-bold py-3" id="recipe-name">???</div>
                 </div>
             </div>
@@ -83,7 +83,7 @@ new class extends Component {
 
 @script
     <script>
-        let oLeft = {
+        let oLeft   = {
             chart: {
                 type: 'line',
                 toolbar: {
@@ -129,6 +129,7 @@ new class extends Component {
                 type: 'datetime',
                 range: 60000,
                 labels: {
+                    show: false,
                     datetimeUTC: false,
                 }
             },
@@ -143,8 +144,67 @@ new class extends Component {
                 dashArray: [0, 0, 0, 10]
             },
         };
+        let oRight  = {
+            chart: {
+                type: 'line',
+                toolbar: {
+                    show: false
+                },
+                animations: {
+                    enabled: false,
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                enabledOnSeries: [0],
+                style: {
+                    fontSize: '20px',
+                    colors: ['#7F63CC'],
+                },
+                background: {
+                    enabled: false
+                }
+            },
+            series: [{
+                name: '{{ __("Sensor") }}',
+                type: 'area',
+                data: [],
+                color: '#b4a5e1'
+            }, {
+                name: '{{ __("Minimum") }}',
+                type: 'line',
+                data: [],
+                color: '#169292'
+            }, {
+                name: '{{ __("Maksimum") }}',
+                type: 'line',
+                data: [],
+                color: '#169292'
+            }, {
+                name: '{{ __("Tengah") }}',
+                type: 'line',
+                data: [],
+                color: '#169292'
+            }],
+            xaxis: {
+                type: 'datetime',
+                range: 60000,
+                labels: {
+                    show: false,
+                    datetimeUTC: false,
+                }
+            },
+            yaxis: {
+                min: 1,
+                max: 6
 
-        let oRight = oLeft;
+            },
+            stroke: {
+                curve: 'smooth',
+                width: [0, 1, 1, 1],
+                dashArray: [0, 0, 0, 10]
+            },
+        };
 
         let leftChart = new ApexCharts(document.querySelector("#chart-left"), oLeft);
         let rightChart = new ApexCharts(document.querySelector("#chart-right"), oRight);
