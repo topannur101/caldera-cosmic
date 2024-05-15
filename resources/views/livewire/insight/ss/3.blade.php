@@ -18,11 +18,11 @@ new class extends Component {
 <div class="w-full h-screen p-4">
     <div class="h-2/6 p-4">
         <div class="flex w-full justify-between">
-            <div>
+            <div class="truncate">
                 <div>
-                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1"><x-link wire:navigate class="mr-3 inline-block" href="{{ route('insight.rtc.slideshows')}}"><i class="fa fa-chevron-left mr-2"></i></x-link>
+                    <div class="text-4xl truncate text-neutral-400 uppercase mb-3 mx-1"><x-link wire:navigate class="mr-3 inline-block" href="{{ route('insight.rtc.slideshows')}}"><i class="fa fa-chevron-left mr-2"></i></x-link>
                         {{ __('Model') }}</div>
-                    <div class="text-6xl font-bold py-3" id="recipe-name">???</div>
+                    <div class="text-6xl truncate font-bold py-3" id="recipe-name">???</div>
                 </div>
             </div>
             <div class="px-4">

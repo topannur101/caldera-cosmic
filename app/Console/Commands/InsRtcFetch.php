@@ -61,7 +61,7 @@ class InsRtcFetch extends Command
     protected $sensor_prev      = [];
     protected $zero_metrics     = [];
     protected $clump_id_prev    = [];
-    protected $clump_timeout    = 120; // original 60
+    protected $clump_timeout    = 90; // original 60
     protected $recipe_id_prev   = [];
     protected $recipe_timeout   = 5;
     // Latest dt_client
