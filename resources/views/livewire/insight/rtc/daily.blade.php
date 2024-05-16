@@ -18,33 +18,55 @@ new #[Layout('layouts.app')] class extends Component {
 
     #[Reactive]
     public $fline;
-    public $perPage = 20;
 
     public function with(): array
     {
+        // Define the date range
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->start_at)->addDay();
 
-        $devices = InsRtcDevice::whereHas('ins_rtc_metrics', function (Builder $query) use ($start, $end) {
-            $query->whereBetween('dt_client', [$start, $end]);
-        })->orderBy('line');
+        // Initialize the query builder for devices
+        $devicesQuery = InsRtcDevice::query();
 
         if ($this->fline) {
-            $devices->where('line', $this->fline);
+            $devicesQuery->where('line', $this->fline);
         }
-        $devices = $devices->paginate($this->perPage);
+
+        // Fetch devices with their metrics in one go
+        $devices = $devicesQuery->with(['ins_rtc_clumps', 'ins_rtc_clumps.ins_rtc_metrics' => function ($query) use ($start, $end) {
+            $query->whereBetween('dt_client', [$start, $end]);
+        }])
+        ->get()
+        ->map(function ($device) use ($start, $end) {
+            $total_time = DB::table('ins_rtc_metrics')
+                ->join('ins_rtc_clumps', 'ins_rtc_metrics.ins_rtc_clump_id', '=', 'ins_rtc_clumps.id')
+                ->where('ins_rtc_clumps.ins_rtc_device_id', $device->id)
+                ->whereBetween('ins_rtc_metrics.dt_client', [$start, $end])
+                ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as total_time')
+                ->value('total_time');
+            
+            $device->total_time = $total_time ? $total_time : 0;
+
+            $device->durations = DB::table('ins_rtc_metrics')
+                ->join('ins_rtc_clumps', 'ins_rtc_metrics.ins_rtc_clump_id', '=', 'ins_rtc_clumps.id')
+                ->where('ins_rtc_clumps.ins_rtc_device_id', $device->id)
+                ->whereBetween('ins_rtc_metrics.dt_client', [$start, $end])
+                ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as duration')
+                ->groupBy('ins_rtc_clumps.id')
+                ->pluck('duration')
+                ->toArray();
+
+            $device->active_time = array_sum($device->durations);
+            $device->passive_time = $device->total_time - $device->active_time;
+            $device->avg_clump_duration = empty($device->durations) ? 0 : (int) (array_sum($device->durations) / count($device->durations));
+
+            return $device;
+        });
 
         return [
-            'devices' => $devices,
-            'start' => $start,
-            'end' => $end,
+            'devices' => $devices
         ];
 
-    }
-
-    public function loadMore()
-    {
-        $this->perPage += 10;
     }
 };
 
@@ -78,34 +100,13 @@ new #[Layout('layouts.app')] class extends Component {
                     <tr>
                         <td>{{ $device->line }}</td>
                         <td>{{ $device->ins_rtc_clumps->count() }}</td>
-                        <td>{{ Carbon::createFromTimestampUTC($device->avg_clump_duration())->format('i:s') }}</td>
-                        <td>{{ Carbon::createFromTimestampUTC($device->total_time())->format('H:i:s') }}</td>
-                        <td>{{ Carbon::createFromTimestampUTC($device->active_time())->format('H:i:s') }}</td>
-                        <td>{{ Carbon::createFromTimestampUTC($device->passive_time())->format('H:i:s') }}</td>
+                        <td>{{ Carbon::createFromTimestampUTC($device->avg_clump_duration)->format('i:s') }}</td>
+                        <td>{{ Carbon::createFromTimestampUTC($device->total_time)->format('H:i:s') }}</td>
+                        <td>{{ Carbon::createFromTimestampUTC($device->active_time)->format('H:i:s') }}</td>
+                        <td>{{ Carbon::createFromTimestampUTC($device->passive_time)->format('H:i:s') }}</td>
                     </tr>
                 @endforeach
             </table>
-        </div>
-        <div class="flex items-center relative h-16">
-            @if (!$devices->isEmpty())
-                @if ($devices->hasMorePages())
-                    <div wire:key="more" x-data="{
-                        observe() {
-                            const observer = new IntersectionObserver((devices) => {
-                                devices.forEach(device => {
-                                    if (device.isIntersecting) {
-                                        @this.loadMore()
-                                    }
-                                })
-                            })
-                            observer.observe(this.$el)
-                        }
-                    }" x-init="observe"></div>
-                    <x-spinner class="sm" />
-                @else
-                    <div class="mx-auto">{{ __('Tidak ada lagi') }}</div>
-                @endif
-            @endif
         </div>
     @endif
 </div>
