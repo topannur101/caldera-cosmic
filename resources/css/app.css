@@ -347,14 +347,6 @@ input[type="checkbox"]:checked + label.custom-checkbox {
     @apply p-2;
   }
 
-  .table.table-sm th:first-child, .table.table-sm td:first-child {
-    @apply pl-4;
-  }
-
-  .table.table-sm th:last-child, .table.table-sm td:last-child {
-    @apply pr-4;
-  }
-
   .table.table-truncate th, .table.table-truncate td {
     @apply truncate max-w-xs;
   }

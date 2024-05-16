@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Response;
 
 new #[Layout('layouts.app')] class extends Component {
     #[Url]
-    public $view = 'summary';
+    public $view = 'daily';
 
     #[Url]
     public $start_at;

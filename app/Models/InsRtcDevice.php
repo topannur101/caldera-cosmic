@@ -40,4 +40,5 @@ class InsRtcDevice extends Model
 
         return false;
     }
+    
 }
