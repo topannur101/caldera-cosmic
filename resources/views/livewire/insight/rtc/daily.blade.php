@@ -50,7 +50,7 @@ new #[Layout('layouts.app')] class extends Component {
 
 ?>
 
-<div wire:poll class="w-full">
+<div class="w-full">
     <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
         {{ __('Ringkasan Harian') }}</h1>
 
@@ -78,10 +78,10 @@ new #[Layout('layouts.app')] class extends Component {
                     <tr>
                         <td>{{ $device->line }}</td>
                         <td>{{ $device->ins_rtc_clumps->count() }}</td>
-                        <td>{{ $device->avg_clump_duration() }}</td>
-                        <td>{{ $device->total_time() }}</td>
-                        <td>{{ $device->active_time() }}</td>
-                        <td>{{ $device->passive_time() }}</td>
+                        <td>{{ Carbon::createFromTimestampUTC($device->avg_clump_duration())->format('i:s') }}</td>
+                        <td>{{ Carbon::createFromTimestampUTC($device->total_time())->format('H:i:s') }}</td>
+                        <td>{{ Carbon::createFromTimestampUTC($device->active_time())->format('H:i:s') }}</td>
+                        <td>{{ Carbon::createFromTimestampUTC($device->passive_time())->format('H:i:s') }}</td>
                     </tr>
                 @endforeach
             </table>
