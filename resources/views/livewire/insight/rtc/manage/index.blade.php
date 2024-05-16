@@ -21,7 +21,7 @@ new #[Layout('layouts.app')] class extends Component {};
                     <i class="fa mx-2 fa-fw fa-heart-pulse text-sm"></i>
                 </x-nav-link>
                 <x-nav-link href="{{ route('insight.rtc.slideshows') }}" wire:navigate>
-                    <i class="fa mx-2 fa-fw fa-chart-line text-sm"></i>
+                    <i class="fa mx-2 fa-fw fa-tv text-sm"></i>
                 </x-nav-link>
                 <x-nav-link href="{{ route('insight.rtc.manage.index') }}" active="true" wire:navigate>
                     <i class="fa mx-2 fa-fw fa-ellipsis-h text-sm"></i>

@@ -199,12 +199,12 @@ new #[Layout('layouts.app')] class extends Component {
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('IDG') }}</th>
                         <th colspan="2">{{ __('Resep') }}</th>
-                        <th>{{ __('Tengah') }}</th>
+                        <th>{{ __('ST') }}</th>
                         <th>{{ __('KO') }}</th>
                         <th></th>
-                        <th>{{ __('Kiri') }}</th>
+                        <th>{{ __('Ki') }}</th>
                         <th></th>
-                        <th>{{ __('Kanan') }}</th>
+                        <th>{{ __('Ka') }}</th>
                         <th>{{ __('Waktu') }}</th>
 
                     </tr>
