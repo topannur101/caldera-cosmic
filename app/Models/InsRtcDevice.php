@@ -43,12 +43,11 @@ class InsRtcDevice extends Model
 
     public function total_time(): int
     {
-        $metrics = $this->ins_rtc_metrics()->get();
+        $min = $this->ins_rtc_metrics()->min('dt_client');
+        $max = $this->ins_rtc_metrics()->max('dt_client');
 
-        if(!$metrics->isEmpty()) {
-            $min = Carbon::parse($metrics->min('dt_client'));
-            $max = Carbon::parse($metrics->max('dt_client'));
-            return $min->diffInSeconds($max);
+        if ($min && $max) {
+            return Carbon::parse($min)->diffInSeconds(Carbon::parse($max));
         }
 
         return 0;
@@ -57,15 +56,16 @@ class InsRtcDevice extends Model
     public function durations(): array
     {
         $durations = [];
-        $clumps = $this->ins_rtc_clumps()->get();
-        
+        $clumps = $this->ins_rtc_clumps()->with(['ins_rtc_metrics' => function($query) {
+            $query->selectRaw('MIN(dt_client) as min_dt, MAX(dt_client) as max_dt, ins_rtc_clump_id')
+                  ->groupBy('ins_rtc_clump_id');
+        }])->get();
+
         foreach ($clumps as $clump) {
-            $metrics = $clump->ins_rtc_metrics()->get();
-    
-            if (!$metrics->isEmpty()) {
-                $min = Carbon::parse($metrics->min('dt_client'));
-                $max = Carbon::parse($metrics->max('dt_client'));
-    
+            if ($clump->ins_rtc_metrics->isNotEmpty()) {
+                $min = Carbon::parse($clump->ins_rtc_metrics->first()->min_dt);
+                $max = Carbon::parse($clump->ins_rtc_metrics->first()->max_dt);
+
                 $durations[] = $min->diffInSeconds($max);
             }
         }
@@ -86,15 +86,13 @@ class InsRtcDevice extends Model
     public function avg_clump_duration(): int
     {
         $durations = $this->durations();
-    
-        // Check if the array is not empty to avoid division by zero
+
         if (empty($durations)) {
             return 0;
         }
-    
-        // Calculate the average duration
+
         $average = array_sum($durations) / count($durations);
-    
+
         return (int) $average;
     }
 }
