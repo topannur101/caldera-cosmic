@@ -29,7 +29,7 @@ new #[Layout('layouts.app')] class extends Component {
         $shifts = [
             1 => [$start->copy()->addHours(6), $start->copy()->addHours(14)],
             2 => [$start->copy()->addHours(14), $start->copy()->addHours(22)],
-            3 => [$start->copy()->addHours(22), $end->copy()->addHours(6)],
+            3 => [$start->copy()->addHours(22), $start->copy()->addHours(30)],
         ];
 
         // Initialize the query builder for devices
@@ -44,26 +44,26 @@ new #[Layout('layouts.app')] class extends Component {
             $device->shifts = collect();
 
             foreach ($shifts as $shift => [$shiftStart, $shiftEnd]) {
-                if ($shift === 3) {
-                    // Adjust for shift 3 crossing midnight
-                    $shiftMetricsQuery = DB::table('ins_rtc_metrics')
-                        ->join('ins_rtc_clumps', 'ins_rtc_metrics.ins_rtc_clump_id', '=', 'ins_rtc_clumps.id')
-                        ->where('ins_rtc_clumps.ins_rtc_device_id', $device->id)
-                        ->where(function ($query) use ($shiftStart, $shiftEnd) {
-                            $query->whereBetween('ins_rtc_metrics.dt_client', [$shiftStart, $shiftStart->copy()->endOfDay()])->orWhereBetween('ins_rtc_metrics.dt_client', [$shiftEnd->copy()->startOfDay(), $shiftEnd]);
-                        });
-                } else {
-                    $shiftMetricsQuery = DB::table('ins_rtc_metrics')
-                        ->join('ins_rtc_clumps', 'ins_rtc_metrics.ins_rtc_clump_id', '=', 'ins_rtc_clumps.id')
-                        ->where('ins_rtc_clumps.ins_rtc_device_id', $device->id)
-                        ->whereBetween('ins_rtc_metrics.dt_client', [$shiftStart, $shiftEnd]);
-                }
+                // Query to get total_time and clump_count
+                $metrics = DB::table('ins_rtc_metrics')
+                    ->join('ins_rtc_clumps', 'ins_rtc_metrics.ins_rtc_clump_id', '=', 'ins_rtc_clumps.id')
+                    ->where('ins_rtc_clumps.ins_rtc_device_id', $device->id)
+                    ->whereBetween('ins_rtc_metrics.dt_client', [$shiftStart, $shiftEnd])
+                    ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as total_time, COUNT(DISTINCT ins_rtc_clumps.id) as clump_count')
+                    ->first();
 
-                $total_time = $shiftMetricsQuery->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as total_time')->value('total_time');
+                $total_time = $metrics->total_time;
+                $clump_count = $metrics->clump_count;
 
-                $durations = $shiftMetricsQuery->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as duration')->groupBy('ins_rtc_clumps.id')->pluck('duration')->toArray();
-
-                $clump_count = $shiftMetricsQuery->select('ins_rtc_clumps.id')->distinct()->count();
+                // Query to get durations
+                $durations = DB::table('ins_rtc_metrics')
+                    ->join('ins_rtc_clumps', 'ins_rtc_metrics.ins_rtc_clump_id', '=', 'ins_rtc_clumps.id')
+                    ->where('ins_rtc_clumps.ins_rtc_device_id', $device->id)
+                    ->whereBetween('ins_rtc_metrics.dt_client', [$shiftStart, $shiftEnd])
+                    ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as duration')
+                    ->groupBy('ins_rtc_clumps.id')
+                    ->pluck('duration')
+                    ->toArray();
 
                 $device->shifts[$shift] = [
                     'clump_count' => $clump_count,
