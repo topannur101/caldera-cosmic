@@ -8,9 +8,13 @@ use Carbon\Carbon;
 use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use App\Models\InsRtcDevice;
+use Illuminate\Database\Eloquent\Builder;
 
 new #[Layout('layouts.app')] class extends Component {
     use WithPagination;
+
+    #[Reactive]
+    public $start_at;
 
     #[Reactive]
     public $fline;
@@ -18,7 +22,12 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function with(): array
     {
-        $devices = InsRtcDevice::orderBy('line');
+        $start = Carbon::parse($this->start_at);
+        $end = Carbon::parse($this->start_at)->addDay();
+
+        $devices = InsRtcDevice::whereHas('ins_rtc_metrics', function (Builder $query) use ($start, $end) {
+            $query->whereBetween('dt_client', [$start, $end]);
+        })->orderBy('line');
 
         if ($this->fline) {
             $devices->where('line', $this->fline);
@@ -27,6 +36,8 @@ new #[Layout('layouts.app')] class extends Component {
 
         return [
             'devices' => $devices,
+            'start' => $start,
+            'end' => $end,
         ];
 
     }
@@ -57,31 +68,20 @@ new #[Layout('layouts.app')] class extends Component {
             <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
                 <tr class="uppercase text-xs">
                     <th>{{ __('Line') }}</th>
-                    <th>{{ __('Status') }}</th>
-                    <th>{{ __('Qty gilingan') }}</th>
-                    <th>{{ __('Rerata waktu gilingan') }}</th>
-                    <th>{{ __('Data terakhir') }}</th>
+                    <th>{{ __('Gilingan') }}</th>
+                    <th>{{ __('Rerata') }}</th>
+                    <th>{{ __('W. Total') }}</th>
+                    <th>{{ __('W. Aktif') }}</th>
+                    <th>{{ __('W. Pasif') }}</th>
                 </tr>
                 @foreach ($devices as $device)
                     <tr>
                         <td>{{ $device->line }}</td>
-                        <td>@if( $device->is_online() )
-                            <div class="flex text-xs gap-x-2 items-center text-green-500">
-                                <i class="fa fa-2xs fa-circle"></i>
-                                <span>{{ __('ONLINE') }}</span>
-                            </div>
-                            @else
-                            <div class="flex text-xs gap-x-2 items-center text-red-500">
-                                    
-                                <i class="fa fa-2xs fa-circle"></i>
-                                <span>{{ __('OFFLINE') }}</span>
-                            </div>
-
-                        @endif</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-
+                        <td>{{ $device->ins_rtc_clumps->count() }}</td>
+                        <td>{{ $device->avg_clump_duration() }}</td>
+                        <td>{{ $device->total_time() }}</td>
+                        <td>{{ $device->active_time() }}</td>
+                        <td>{{ $device->passive_time() }}</td>
                     </tr>
                 @endforeach
             </table>

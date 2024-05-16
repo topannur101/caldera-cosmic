@@ -76,7 +76,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <th>{{ __('IDG') }}</th>
                     <th>{{ __('Line') }}</th>
                     <th colspan="2">{{ __('Resep') }}</th>
-                    <th>{{ __('Detik') }}</th>
+                    <th>{{ __('Durasi (det)') }}</th>
                     <th>{{ __('Waktu mulai') }}</th>
                 </tr>
                 @foreach ($rows as $row)
