@@ -21,7 +21,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         $start = Carbon::parse($this->start_at)->addHours(6);
-        $end = $start->copy()->addHours(30);
+        $end = $start->copy()->addHours(24);
         
         $rows = DB::table('ins_rtc_metrics')
             ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
@@ -36,6 +36,11 @@ new #[Layout('layouts.app')] class extends Component {
             ->selectRaw('MIN(ins_rtc_metrics.dt_client) as start_time')
             ->selectRaw('MAX(ins_rtc_metrics.dt_client) as end_time')
             ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as duration_seconds')
+            ->selectRaw('CASE
+                WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 6 AND 13 THEN "1"
+                WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 14 AND 21 THEN "2"
+                ELSE "3"
+            END AS shift')
             ->whereBetween('ins_rtc_metrics.dt_client', [$start, $end]);
 
         if ($this->fline) {
@@ -43,7 +48,7 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         $rows->groupBy('ins_rtc_devices.line', 'ins_rtc_clumps.id', 'ins_rtc_recipes.id')
-            ->orderBy('end_time', 'desc');  // Ordering by the latest dt_client
+            ->orderBy('end_time', 'desc');
         $rows = $rows->paginate($this->perPage);
 
         return [
@@ -78,6 +83,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <tr class="uppercase text-xs">
                     <th>{{ __('IDG') }}</th>
                     <th>{{ __('Line') }}</th>
+                    <th>{{ __('Shift') }}</th>
                     <th colspan="2">{{ __('Resep') }}</th>
                     <th>{{ __('Durasi') }}</th>
                     <th>{{ __('Waktu mulai') }}</th>
@@ -86,6 +92,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <tr>
                         <td>{{ $row->clump_id }}</td>
                         <td>{{ $row->line }}</td>
+                        <td>{{ $row->shift }}</td>
                         <td>{{ $row->recipe_id }}</td>
                         <td>{{ $row->recipe_name }}</td>
                         <td>{{ Carbon::createFromTimestampUTC($row->duration_seconds)->format('i:s') }}</td>
