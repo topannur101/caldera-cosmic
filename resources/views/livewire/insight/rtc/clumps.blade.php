@@ -22,14 +22,13 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $start = Carbon::parse($this->start_at)->addHours(6);
         $end = $start->copy()->addHours(24);
-        
         $rows = DB::table('ins_rtc_metrics')
             ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
             ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
-            ->join('ins_rtc_recipes', 'ins_rtc_recipes.id', '=', 'ins_rtc_clumps.ins_rtc_recipe_id')  // Join with ins_rtc_recipes
+            ->join('ins_rtc_recipes', 'ins_rtc_recipes.id', '=', 'ins_rtc_clumps.ins_rtc_recipe_id')
             ->select(
                 'ins_rtc_devices.line',
-                'ins_rtc_clumps.id as clump_id',  // renamed to avoid ambiguity
+                'ins_rtc_clumps.id as clump_id',
                 'ins_rtc_recipes.name as recipe_name',
                 'ins_rtc_recipes.id as recipe_id',
                 'ins_rtc_recipes.std_mid as std_mid'
@@ -37,15 +36,11 @@ new #[Layout('layouts.app')] class extends Component {
             ->selectRaw('MIN(ins_rtc_metrics.dt_client) as start_time')
             ->selectRaw('MAX(ins_rtc_metrics.dt_client) as end_time')
             ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as duration_seconds')
-            ->selectRaw('CASE
-                WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 6 AND 13 THEN "1"
-                WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 14 AND 21 THEN "2"
-                ELSE "3"
-            END AS shift')
-            ->selectRaw('ROUND(AVG(ins_rtc_metrics.sensor_left), 2) as sensor_left_avg')
-            ->selectRaw('ROUND(AVG(ins_rtc_metrics.sensor_right), 2) as sensor_right_avg')
-            ->selectRaw('ROUND((AVG(ins_rtc_metrics.sensor_left) - ins_rtc_recipes.std_mid) / ins_rtc_recipes.std_mid * 100, 0) as sd_left')
-            ->selectRaw('ROUND((AVG(ins_rtc_metrics.sensor_right) - ins_rtc_recipes.std_mid) / ins_rtc_recipes.std_mid * 100, 0) as sd_right')
+            ->selectRaw('CASE WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 6 AND 13 THEN "1" WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 14 AND 21 THEN "2" ELSE "3" END AS shift')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END) - ins_rtc_recipes.std_mid), 2) as dn_left')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END) - ins_rtc_recipes.std_mid), 2) as dn_right')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END) - ins_rtc_recipes.std_mid) / ins_rtc_recipes.std_mid * 100, 0) as dp_left')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END) - ins_rtc_recipes.std_mid) / ins_rtc_recipes.std_mid * 100, 0) as dp_right')
             ->whereBetween('ins_rtc_metrics.dt_client', [$start, $end]);
 
         if ($this->fline) {
@@ -54,6 +49,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         $rows->groupBy('ins_rtc_devices.line', 'ins_rtc_clumps.id', 'ins_rtc_recipes.id')
             ->orderBy('end_time', 'desc');
+
         $rows = $rows->paginate($this->perPage);
 
         return [
@@ -90,9 +86,9 @@ new #[Layout('layouts.app')] class extends Component {
                     <th>{{ __('Line') }}</th>
                     <th>{{ __('Shift') }}</th>
                     <th colspan="2">{{ __('Resep') }}</th>
-                    <th>{{ __('ST') }}</th>
-                    <th colspan="2">{{ __('Rerata Ki') }}</th>
-                    <th colspan="2">{{ __('Rerata Ka') }}</th>
+                    <th>{{ __('STD') }}</th>
+                    <th>{{ __('Dev L') }}</th>
+                    <th>{{ __('Dev R') }}</th>
                     <th>{{ __('Durasi') }}</th>
                     <th>{{ __('Waktu mulai') }}</th>
                 </tr>
@@ -104,10 +100,8 @@ new #[Layout('layouts.app')] class extends Component {
                         <td>{{ $row->recipe_id }}</td>
                         <td>{{ $row->recipe_name }}</td>
                         <td>{{ $row->std_mid }}</td>
-                        <td class="text-right">{{ $row->sd_left . ' %' }}</td>
-                        <td>{{ $row->sensor_left_avg }}</td>
-                        <td class="text-right">{{ $row->sd_right . ' %' }}</td>
-                        <td>{{ $row->sensor_right_avg }}</td>
+                        <td>{{ $row->dn_left . ' ('. $row->dp_left . '%)'}}</td>
+                        <td>{{ $row->dn_right . ' ('. $row->dp_right . '%)'}}</td>
                         <td>{{ Carbon::createFromTimestampUTC($row->duration_seconds)->format('i:s') }}</td>
                         <td>{{ $row->start_time }}</td>
                     </tr>
