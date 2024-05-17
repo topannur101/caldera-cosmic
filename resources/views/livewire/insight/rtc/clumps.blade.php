@@ -88,7 +88,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <th>{{ __('IDG') }}</th>
                     <th>{{ __('L') }}</th>
                     <th>{{ __('S') }}</th>
-                    <th colspan="2">{{ __('Resep') }}</th>
+                    <th>{{ __('Resep') }}</th>
                     <th>{{ __('STD') }}</th>
                     <th>{{ __('KO') }}</th>
                     <th>{{ __('AVG | Dev L') }}</th>
@@ -101,8 +101,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <td>{{ $row->clump_id }}</td>
                         <td>{{ $row->line }}</td>
                         <td>{{ $row->shift }}</td>
-                        <td>{{ $row->recipe_id }}</td>
-                        <td>{{ $row->recipe_name }}</td>
+                        <td>{{ $row->recipe_id . '. ' . $row->recipe_name }}</td>
                         <td>{{ $row->std_mid }}</td>
                         <td class="text-xs">{{ ($row->correcting_rate > 0.8) ? 'ON' : 'OFF' }}</td>
                         </td>
