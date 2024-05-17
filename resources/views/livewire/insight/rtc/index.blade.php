@@ -95,82 +95,87 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function download()
     {
-        if ($this->view == 'raw') {
-            $start = Carbon::parse($this->start_at);
-            $end = Carbon::parse($this->end_at)->addDay();
+        switch ($this->view) {
+            case 'raw':
+                $start = Carbon::parse($this->start_at);
+                $end = Carbon::parse($this->end_at)->addDay();
 
-            $metrics = InsRtcMetric::whereBetween('dt_client', [$start, $end])->orderBy('dt_client', 'DESC');
+                $metrics = InsRtcMetric::whereBetween('dt_client', [$start, $end])->orderBy('dt_client', 'DESC');
 
-            $items = $metrics->get();
+                $items = $metrics->get();
 
-            // Create CSV file using league/csv
-            $csv = Writer::createFromString('');
-            $csv->insertOne([
-                __('Line'), 
-                __('ID Gilingan'),
-                __('ID Resep'),
-                __('Nama resep'),
-                __('Standar tengah'),
-                __('Koreksi Oto.'),
-                __('Kiri tindakan'), 
-                __('Kiri terukur'), 
-                __('Kanan tindakan'),
-                __('Kanan terukur'),
-                __('Waktu'), 
-            ]); 
-
-            foreach ($items as $item) {
-                $action_left = '';
-                switch ($item->action_left) {
-                    case 'thin':
-                        $action_left = __('Tipis');
-                        break;
-                    case 'thick':
-                    $action_left = __('Tebal');
-                    break;
-                }
-
-                $action_right = '';
-                switch ($item->action_right) {
-                    case 'thin':
-                        $action_right = __('Tipis');
-                        break;
-                    case 'thick':
-                        $action_right = __('Tebal');
-                        break;
-                }
-
+                // Create CSV file using league/csv
+                $csv = Writer::createFromString('');
                 $csv->insertOne([
-                    $item->ins_rtc_clump->ins_rtc_device->line, 
-                    $item->ins_rtc_clump_id,
-                    $item->ins_rtc_clump->ins_rtc_recipe->id,
-                    $item->ins_rtc_clump->ins_rtc_recipe->name,
-                    $item->ins_rtc_clump->ins_rtc_recipe->std_mid,
-                    $item->is_correcting ? 'ON' : 'OFF',
-                    $action_left, 
-                    $item->sensor_left, 
-                    $action_right,
-                    $item->sensor_right,
-                    $item->dt_client, 
-                ]); // Add data rows
-            }
+                    __('Line'), 
+                    __('ID Gilingan'),
+                    __('ID Resep'),
+                    __('Nama resep'),
+                    __('Standar tengah'),
+                    __('Koreksi Oto.'),
+                    __('Kiri tindakan'), 
+                    __('Kiri terukur'), 
+                    __('Kanan tindakan'),
+                    __('Kanan terukur'),
+                    __('Waktu'), 
+                ]); 
+
+                foreach ($items as $item) {
+                    $action_left = '';
+                    switch ($item->action_left) {
+                        case 'thin':
+                            $action_left = __('Tipis');
+                            break;
+                        case 'thick':
+                        $action_left = __('Tebal');
+                        break;
+                    }
+
+                    $action_right = '';
+                    switch ($item->action_right) {
+                        case 'thin':
+                            $action_right = __('Tipis');
+                            break;
+                        case 'thick':
+                            $action_right = __('Tebal');
+                            break;
+                    }
+
+                    $csv->insertOne([
+                        $item->ins_rtc_clump->ins_rtc_device->line, 
+                        $item->ins_rtc_clump_id,
+                        $item->ins_rtc_clump->ins_rtc_recipe->id,
+                        $item->ins_rtc_clump->ins_rtc_recipe->name,
+                        $item->ins_rtc_clump->ins_rtc_recipe->std_mid,
+                        $item->is_correcting ? 'ON' : 'OFF',
+                        $action_left, 
+                        $item->sensor_left, 
+                        $action_right,
+                        $item->sensor_right,
+                        $item->dt_client, 
+                    ]); // Add data rows
+                }
+                
+
+                // Generate CSV file and return as a download
+                $fileName = __('Wawasan_RTC') . '_' . date('Y-m-d_Hs') . '.csv';
+                $this->js('window.dispatchEvent(escKey)');
+                $this->js('notyf.success("' . __('Pengunduhan dimulai...') . '")');
+
+                return Response::stream(
+                    function () use ($csv) {
+                        echo $csv->toString();
+                    },
+                    200,
+                    [
+                        'Content-Type' => 'text/csv',
+                        'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                    ],
+                );
+                break;
+            case 'clumps':
             
-
-            // Generate CSV file and return as a download
-            $fileName = __('Wawasan_RTC') . '_' . date('Y-m-d_Hs') . '.csv';
-            $this->js('window.dispatchEvent(escKey)');
-            $this->js('notyf.success("' . __('Pengunduhan dimulai...') . '")');
-
-            return Response::stream(
-                function () use ($csv) {
-                    echo $csv->toString();
-                },
-                200,
-                [
-                    'Content-Type' => 'text/csv',
-                    'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-                ],
-            );
+                break;
         }
     }
 };
