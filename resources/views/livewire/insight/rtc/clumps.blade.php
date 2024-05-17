@@ -12,11 +12,17 @@ new #[Layout('layouts.app')] class extends Component {
     use WithPagination;
 
     #[Reactive]
+    public $start_at;
+
+    #[Reactive]
     public $fline;
     public $perPage = 20;
 
     public function with(): array
     {
+        $start = Carbon::parse($this->start_at)->addHours(6);
+        $end = $start->copy()->addHours(30);
+        
         $rows = DB::table('ins_rtc_metrics')
             ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
             ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
@@ -30,10 +36,7 @@ new #[Layout('layouts.app')] class extends Component {
             ->selectRaw('MIN(ins_rtc_metrics.dt_client) as start_time')
             ->selectRaw('MAX(ins_rtc_metrics.dt_client) as end_time')
             ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as duration_seconds')
-            // Uncomment and adjust the following lines if needed:
-            // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(ins_rtc_metrics.sensor_left ORDER BY ins_rtc_metrics.dt_client DESC), ",", 1) as sensor_left')
-            // ->selectRaw('SUBSTRING_INDEX(GROUP_CONCAT(ins_rtc_metrics.sensor_right ORDER BY ins_rtc_metrics.dt_client DESC), ",", 1) as sensor_right')
-            ->where('ins_rtc_metrics.dt_client', '>=', Carbon::now()->subDays(90));
+            ->whereBetween('ins_rtc_metrics.dt_client', [$start, $end]);
 
         if ($this->fline) {
             $rows->where('ins_rtc_devices.line', $this->fline);
@@ -76,7 +79,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <th>{{ __('IDG') }}</th>
                     <th>{{ __('Line') }}</th>
                     <th colspan="2">{{ __('Resep') }}</th>
-                    <th>{{ __('Durasi (det)') }}</th>
+                    <th>{{ __('Durasi') }}</th>
                     <th>{{ __('Waktu mulai') }}</th>
                 </tr>
                 @foreach ($rows as $row)
@@ -85,7 +88,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <td>{{ $row->line }}</td>
                         <td>{{ $row->recipe_id }}</td>
                         <td>{{ $row->recipe_name }}</td>
-                        <td>{{ $row->duration_seconds }}</td>
+                        <td>{{ Carbon::createFromTimestampUTC($row->duration_seconds)->format('i:s') }}</td>
                         <td>{{ $row->start_time }}</td>
                     </tr>
                 @endforeach

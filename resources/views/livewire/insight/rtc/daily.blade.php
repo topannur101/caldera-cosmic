@@ -107,7 +107,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('Shift') }}</th>
                         <th>{{ __('Gilingan') }}</th>
-                        <th>{{ __('Rerata') }}</th>
+                        <th>{{ __('RDG') }}</th>
                         <th>{{ __('W. Total') }}</th>
                         <th>{{ __('W. Aktif') }}</th>
                         <th>{{ __('W. Pasif') }}</th>

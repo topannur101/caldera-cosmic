@@ -25,7 +25,7 @@ new #[Layout('layouts.app')] class extends Component {
     public $sline;
     public $olines = [];
 
-    public $dateViews = ['raw', 'daily'];
+    public $dateViews = ['raw', 'daily', 'clumps'];
     public $rangeViews = ['raw'];
     public $filterViews = ['raw', 'daily', 'clumps'];
 
@@ -311,7 +311,7 @@ new #[Layout('layouts.app')] class extends Component {
             @break
 
             @case('clumps')
-                <livewire:insight.rtc.clumps :$fline />
+                <livewire:insight.rtc.clumps :$start_at :$fline />
             @break
 
             @case('raw')

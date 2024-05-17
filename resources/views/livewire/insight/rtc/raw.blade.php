@@ -22,7 +22,6 @@ new #[Layout('layouts.app')] class extends Component {
     public $device_id;
 
     public $integrity = 0;
-    public $accuracy = 0;
     public $days = 0;
 
     public $perPage = 20;
@@ -83,21 +82,6 @@ new #[Layout('layouts.app')] class extends Component {
         if ($this->device_id) {
             $x->where('device_id', $this->device_id);
         }
-        $numeratorAccuracy = $x
-            ->whereBetween('sensor_left', [0, 10])
-            ->whereBetween('sensor_right', [0, 10])
-            ->get()
-            ->count();
-
-        $y = InsRtcMetric::whereBetween('dt_client', [$start, $end]);
-        if ($this->device_id) {
-            $y->where('device_id', $this->device_id);
-        }
-        $denominatorAccuracy = $y->get()->count();
-
-        if ($denominatorAccuracy > 0) {
-            $this->accuracy = (int) (($numeratorAccuracy / $denominatorAccuracy) * 100);
-        }
 
         return [
             'metrics' => $metrics,
@@ -155,14 +139,6 @@ new #[Layout('layouts.app')] class extends Component {
                                 {{ $integrity . '% ' }}
                             </div>
                         </div>
-                        <div>
-                            <div class="uppercase text-xs mb-1">
-                                {{ __('Akurasi') }}
-                            </div>
-                            <div>
-                                {{ $accuracy . '% ' }}
-                            </div>
-                        </div>
                     </div>
                     <x-text-button type="button" class="my-auto" x-data=""
                         x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i
@@ -180,10 +156,6 @@ new #[Layout('layouts.app')] class extends Component {
                         <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
                                 class="font-bold">{{ __('Integritas:') . ' ' }}</span>
                             {{ __('Mengindikasikan persentase data yang hadir di tiap jamnya. Contoh: Jika ada data setiap jam selama 21 jam dalam 1 hari, maka integritas bernilai 100%. Jika hanya ada data selama 10.5 jam selama 21 jam dalam 1 hari, maka integritas bernilai 50%') }}
-                        </p>
-                        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
-                                class="font-bold">{{ __('Akurasi:') . ' ' }}</span>
-                            {{ __('Mengindikasikan persentase data Laju yang logis. Rentang Laju yang dianggap logis ialah 0-10 pasang/detik.') }}
                         </p>
                         <div class="mt-6 flex justify-end">
                             <x-secondary-button type="button" x-on:click="$dispatch('close')">
