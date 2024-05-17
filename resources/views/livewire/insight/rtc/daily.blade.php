@@ -44,17 +44,6 @@ new #[Layout('layouts.app')] class extends Component {
             $device->shifts = collect();
 
             foreach ($shifts as $shift => [$shiftStart, $shiftEnd]) {
-                // Query to get total_time and clump_count
-                $metrics = DB::table('ins_rtc_metrics')
-                    ->join('ins_rtc_clumps', 'ins_rtc_metrics.ins_rtc_clump_id', '=', 'ins_rtc_clumps.id')
-                    ->where('ins_rtc_clumps.ins_rtc_device_id', $device->id)
-                    ->whereBetween('ins_rtc_metrics.dt_client', [$shiftStart, $shiftEnd])
-                    ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as total_time, COUNT(DISTINCT ins_rtc_clumps.id) as clump_count')
-                    ->first();
-
-                $total_time = $metrics->total_time;
-                $clump_count = $metrics->clump_count;
-
                 // Query to get durations
                 $durations = DB::table('ins_rtc_metrics')
                     ->join('ins_rtc_clumps', 'ins_rtc_metrics.ins_rtc_clump_id', '=', 'ins_rtc_clumps.id')
@@ -66,11 +55,10 @@ new #[Layout('layouts.app')] class extends Component {
                     ->toArray();
 
                 $device->shifts[$shift] = [
-                    'clump_count' => $clump_count,
-                    'total_time' => $total_time ? $total_time : 0,
+                    'clump_count' => count($durations),
                     'durations' => $durations,
                     'active_time' => array_sum($durations),
-                    'passive_time' => $total_time ? $total_time - array_sum($durations) : 0,
+                    'passive_time' => 28800 - array_sum($durations),
                     'avg_clump_duration' => empty($durations) ? 0 : (int) (array_sum($durations) / count($durations)),
                 ];
             }
@@ -108,7 +96,6 @@ new #[Layout('layouts.app')] class extends Component {
                         <th>{{ __('Shift') }}</th>
                         <th>{{ __('Gilingan') }}</th>
                         <th>{{ __('RDG') }}</th>
-                        <th>{{ __('W. Total') }}</th>
                         <th>{{ __('W. Aktif') }}</th>
                         <th>{{ __('W. Pasif') }}</th>
                     </tr>
@@ -123,7 +110,6 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td>{{ $shift }}</td>
                                 <td>{{ $data['clump_count'] }}</td>
                                 <td>{{ Carbon::createFromTimestampUTC($data['avg_clump_duration'])->format('i:s') }}</td>
-                                <td>{{ Carbon::createFromTimestampUTC($data['total_time'])->format('H:i:s') }}</td>
                                 <td>{{ Carbon::createFromTimestampUTC($data['active_time'])->format('H:i:s') }}</td>
                                 <td>{{ Carbon::createFromTimestampUTC($data['passive_time'])->format('H:i:s') }}</td>
                             </tr>
