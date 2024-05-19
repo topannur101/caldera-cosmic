@@ -34,8 +34,8 @@ new #[Layout('layouts.guest')] class extends Component
         session(['mblur'    => $mblur]);
         session(['lang'     => $lang]);
         session(['accent'   => $accent]);
-        
 
+        // navigate: false to reload page
         $this->redirectIntended(default: route('home', absolute: false), navigate: true);
     }
 }; ?>

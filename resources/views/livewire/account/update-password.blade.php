@@ -34,46 +34,48 @@ new class extends Component
 
         $this->reset('current_password', 'password', 'password_confirmation');
 
-        $this->dispatch('password-updated');
+        $this->js('window.dispatchEvent(escKey)');
+        $this->js('notyf.success("' . __('Kata sandi diperbarui') . '")');
+        // $this->dispatch('password-updated');
     }
 }; ?>
 
 <section>
     <header>
         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            {{ __('Update Password') }}
+            {{ __('Perbarui kata sandi') }}
         </h2>
 
         <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
+            {{ __('Pastikan akunmu menggunakan kata sandi yang panjang dan acak agar tetap aman.') }}
         </p>
     </header>
 
     <form wire:submit="updatePassword" class="mt-6 space-y-6">
         <div>
-            <x-input-label for="update_password_current_password" :value="__('Current Password')" />
+            <x-input-label for="update_password_current_password" :value="__('Kata sandi sekarang')" />
             <x-text-input wire:model="current_password" id="update_password_current_password" name="current_password" type="password" class="mt-1 block w-full" autocomplete="current-password" />
             <x-input-error :messages="$errors->get('current_password')" class="mt-2" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password" :value="__('New Password')" />
+            <x-input-label for="update_password_password" :value="__('Kata sandi baru')" />
             <x-text-input wire:model="password" id="update_password_password" name="password" type="password" class="mt-1 block w-full" autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
+            <x-input-label for="update_password_password_confirmation" :value="__('Konfirmasi kata sandi')" />
             <x-text-input wire:model="password_confirmation" id="update_password_password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full" autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
-
+            <x-primary-button>{{ __('Simpan') }}</x-primary-button>
+{{-- 
             <x-action-message class="me-3" on="password-updated">
-                {{ __('Saved.') }}
-            </x-action-message>
+                {{ __('Tersimpan.') }}
+            </x-action-message> --}}
         </div>
     </form>
 </section>

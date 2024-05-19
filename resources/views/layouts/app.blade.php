@@ -14,7 +14,7 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans {{ session('bg').' '.session('accent') }} antialiased">
         <div class="min-h-screen bg-neutral-100 dark:bg-neutral-900">
             <livewire:layout.navigation />
 

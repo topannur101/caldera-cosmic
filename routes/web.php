@@ -51,9 +51,10 @@ Route::middleware('auth')->group(function () {
             Volt::route('/general',     'account.general')      ->name('general');
             Volt::route('/password',    'account.password')     ->name('password');
             Volt::route('/language',    'account.language')     ->name('language');
-            Volt::route('/theme',       'account.theme')        ->name('theme');         
+            Volt::route('/theme',       'account.theme')        ->name('theme');
+            Volt::route('/edit',        'account.edit')         ->name('edit');
         });
-        Route::view('/', 'account')->name('account');
+        Volt::route('/', 'account.index')->name('account');
     });
 
     // Inventory routes

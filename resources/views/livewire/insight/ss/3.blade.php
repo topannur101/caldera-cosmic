@@ -20,32 +20,32 @@ new class extends Component {
         <div class="flex w-full justify-between">
             <div class="truncate">
                 <div>
-                    <div class="text-4xl truncate text-neutral-400 uppercase mb-3 mx-1"><x-link wire:navigate class="mr-3 inline-block" href="{{ route('insight.rtc.slideshows')}}"><i class="fa fa-chevron-left mr-2"></i></x-link>
+                    <div class="text-4xl text-neutral-400 uppercase m-1"><x-link class="inline-block" href="{{ route('insight.rtc.slideshows')}}"><i class="fa fa-fw fa-chevron-left"></i></x-link>
                         {{ __('Model') }}</div>
                     <div class="text-6xl truncate font-bold py-3" id="recipe-name">???</div>
                 </div>
             </div>
             <div class="px-4">
                 <div>
-                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('OG/RS') }}</div>
+                    <div class="text-4xl text-neutral-400 uppercase m-1">{{ __('OG/RS') }}</div>
                     <div class="text-6xl font-bold py-3" id="recipe-og-rs">000</div>
                 </div>
             </div>
             <div class="px-4">
                 <div>
-                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Min') }}</div>
+                    <div class="text-4xl text-neutral-400 uppercase m-1">{{ __('Min') }}</div>
                     <div class="text-6xl font-bold py-3" id="recipe-std-min">0.00</div>
                 </div>
             </div>
             <div class="px-4">
                 <div>
-                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Maks') }}</div>
+                    <div class="text-4xl text-neutral-400 uppercase m-1">{{ __('Maks') }}</div>
                     <div class="text-6xl font-bold py-3" id="recipe-std-max">0.00</div>
                 </div>
             </div>
             <div class="pl-4 w-40">
                 <div>
-                    <div class="text-4xl text-neutral-400 uppercase mb-3 mx-1">{{ __('Line') }}</div>
+                    <div class="text-4xl text-neutral-400 uppercase m-1">{{ __('Line') }}</div>
                     <x-select wire:model.live="device_id" class="text-6xl font-bold">
                         <option value=""></option>
                         @foreach ($devices as $device)
