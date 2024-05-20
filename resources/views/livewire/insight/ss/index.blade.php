@@ -9,6 +9,9 @@
         @case(3)
         <livewire:insight.ss.3 />
         @break
+        @case(4)
+        <livewire:insight.ss.4 />
+        @break
     @break
     @endswitch
 </x-ss-layout>
