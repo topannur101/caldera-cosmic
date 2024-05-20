@@ -30,7 +30,7 @@ new class extends Component
         </h2>
 
         <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
+            {{ __('Setelah akunmu dihapus, segala sumberdaya dan data yang terkait akan dihapus permanen. Sebelum menghapus akunmu, harap unduh data atau informasi yang ingin dijaga.')}}
         </p>
     </header>
 
@@ -47,11 +47,11 @@ new class extends Component
             </h2>
 
             <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
+                {{ __('Setelah akunmu dihapus, segala sumberdaya dan data yang terkait akan dihapus permanen. Harap masukkan sandimu untuk mengkonfirmasi penghapusan akunmu.')}}
             </p>
 
             <div class="mt-6">
-                <x-input-label for="password" value="{{ __('Password') }}" class="sr-only" />
+                <x-input-label for="password" value="{{ __('Sandi') }}" class="sr-only" />
 
                 <x-text-input
                     wire:model="password"
@@ -59,7 +59,7 @@ new class extends Component
                     name="password"
                     type="password"
                     class="mt-1 block w-3/4"
-                    placeholder="{{ __('Password') }}"
+                    placeholder="{{ __('Sandi') }}"
                 />
 
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />

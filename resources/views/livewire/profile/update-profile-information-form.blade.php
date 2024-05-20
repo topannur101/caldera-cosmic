@@ -65,7 +65,7 @@ new class extends Component
 <section>
     <header>
         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            {{ __('Profile Information') }}
+            {{ __('Info Profil') }}
         </h2>
 
         <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
@@ -88,10 +88,10 @@ new class extends Component
             @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
                 <div>
                     <p class="text-sm mt-2 text-neutral-800 dark:text-neutral-200">
-                        {{ __('Your email address is unverified.') }}
+                        {{ __('Alamat emailmu belum terverifikasi.') }}
 
                         <button wire:click.prevent="sendVerification" class="underline text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-caldy-500 dark:focus:ring-offset-neutral-800">
-                            {{ __('Click here to re-send the verification email.') }}
+                            {{ __('Klik di sini untuk mengirim ulang email verifikasi.') }}
                         </button>
                     </p>
 
@@ -105,10 +105,10 @@ new class extends Component
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button>{{ __('Simpan') }}</x-primary-button>
 
             <x-action-message class="me-3" on="profile-updated">
-                {{ __('Saved.') }}
+                {{ __('Tersimpan.') }}
             </x-action-message>
         </div>
     </form>

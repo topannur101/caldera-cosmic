@@ -42,10 +42,11 @@ new class extends Component
 
         App::setLocale($validated['lang']);
         session()->put('lang', $validated['lang']);
+
         $pref->update(['data' => json_encode($existingData)]);
 
         $this->js('window.dispatchEvent(escKey)');
-        $this->js('notyf.success("' . __('Bahasa diperbarui') . '")');
+        $this->redirectIntended(default: route('account', absolute: false), navigate: false);
         // $this->dispatch('password-updated');
     }
 }; ?>
@@ -57,7 +58,7 @@ new class extends Component
         </h2>
     </header>
 
-    <form wire:submit="updateLang" class="mt-6">
+    <form wire:submit="updateLang" class="mt-6 text-neutral-600 dark:text-neutral-400">
         <div class="mb-6">
             <x-radio wire:model="lang" id="lang-id" name="lang" value="id">Bahasa Indonesia</x-radio>
             <x-radio wire:model="lang" id="lang-en" name="lang" value="en">English (US)</x-radio>

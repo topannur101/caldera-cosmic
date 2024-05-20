@@ -8,4 +8,4 @@ use Illuminate\Support\Facades\Schedule;
 //     $this->comment(Inspiring::quote());
 // })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command('app:ins-rtc-read')->everySecond();
+// Schedule::command('app:ins-rtc-read')->everySecond();

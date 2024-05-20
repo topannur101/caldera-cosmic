@@ -37,22 +37,22 @@ new #[Layout('layouts.guest')] class extends Component
 
 <div>
     <div class="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
+        {{ __('Terima kasih sudah mendaftar! Sebelum mulai, apakah alamat email kamu dengan mengklik tautan yang baru saja dikirim cocok? Jika tidak menerima emailnya, bisa dikirimkan ulang.') }}
     </div>
 
     @if (session('status') == 'verification-link-sent')
         <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+            {{ __('Sebuah tautan verifikasi baru telah dikirim ke alamat email yang kamu berikan saat pendaftaran.') }}
         </div>
     @endif
 
     <div class="mt-4 flex items-center justify-between">
         <x-primary-button wire:click="sendVerification">
-            {{ __('Resend Verification Email') }}
+            {{ __('Kirim Ulang Email Verifikasi') }}
         </x-primary-button>
 
         <button wire:click="logout" type="submit" class="underline text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-caldy-500 dark:focus:ring-offset-neutral-800">
-            {{ __('Log Out') }}
+            {{ __('Keluar') }}
         </button>
     </div>
 </div>
