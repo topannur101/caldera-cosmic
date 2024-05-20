@@ -51,7 +51,7 @@ $maxWidth = [
 >
     <div
         x-show="show"
-        class="fixed inset-0 transform transition-all"
+        class="fixed {{ session('mblur') ? 'backdrop-blur' : ''}} inset-0 transform transition-all"
         x-on:click="show = false"
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0"

@@ -511,7 +511,7 @@ input[type="checkbox"]:checked + label.custom-checkbox {
     }
   }
 
-  #nprogress .bar {
+  .nprogress-custom-parent #nprogress .bar {
       @apply !bg-caldy-500;
   }
 

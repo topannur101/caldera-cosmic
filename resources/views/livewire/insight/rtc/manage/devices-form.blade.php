@@ -101,16 +101,18 @@ new class extends Component {
                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
             @enderror
         </div>
-        <div class="mt-6 flex justify-between">
+        <div class="mt-6 flex justify-between items-end">
             <x-secondary-button type="submit">
                 <i class="fa fa-save mr-2"></i>
                 {{ __('Simpan') }}
             </x-secondary-button>
-            @if ($device->id ?? false)
+            <div>
+                @if ($device->id ?? false)
                 <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete" wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
                     {{ __('Hapus') }}
                 </x-text-button>
             @endif
+            </div>
         </div>
     </form>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target="delete"></x-spinner-bg>

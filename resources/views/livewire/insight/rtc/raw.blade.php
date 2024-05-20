@@ -170,7 +170,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <tr class="uppercase text-xs">
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('IDG') }}</th>
-                        <th colspan="2">{{ __('Resep') }}</th>
+                        <th>{{ __('Resep') }}</th>
                         <th>{{ __('ST') }}</th>
                         <th>{{ __('KO') }}</th>
                         <th></th>
@@ -184,8 +184,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <tr>
                             <td>{{ $metric->ins_rtc_clump->ins_rtc_device->line }}</td>
                             <td>{{ $metric->ins_rtc_clump_id }}
-                            <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe_id }}</td>
-                            <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe->name }}</td>
+                            <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe_id . '. ' . $metric->ins_rtc_clump->ins_rtc_recipe->name }}</td>
                             <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '' }}</td>
                             <td class="text-xs">{{ ((bool) $metric->is_correcting) ? 'ON' : 'OFF' }}</td>
     

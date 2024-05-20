@@ -26,7 +26,7 @@ new class extends Component
             //     'password' => ['required', 'string', Password::defaults(), 'confirmed'],
             // ]);
             $validated = $this->validate([
-                'lang' => ['required', Rule::in(['id', 'en'])]
+                'lang' => ['required', Rule::in(['id', 'en', 'vi', 'ko'])]
         ]);
         } catch (ValidationException $e) {
             $this->reset('current_lang', 'lang');
@@ -62,6 +62,8 @@ new class extends Component
         <div class="mb-6">
             <x-radio wire:model="lang" id="lang-id" name="lang" value="id">Bahasa Indonesia</x-radio>
             <x-radio wire:model="lang" id="lang-en" name="lang" value="en">English (US)</x-radio>
+            <x-radio wire:model="lang" id="lang-vi" name="lang" value="vi">Tiếng Việt</x-radio>
+            <x-radio wire:model="lang" id="lang-ko" name="lang" value="ko">한국</x-radio>
         </div>
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Simpan') }}</x-primary-button>

@@ -23,18 +23,13 @@ def create_en_json(translation_strings, output_path):
         json.dump(translations, json_file, ensure_ascii=False, indent=4)
 
 # Define directories and output file
-views_directory = 'resources/views'
-app_directory = 'app'
+views_directory = 'resources/translate'
 output_file = 'en.json'
 
 # Extract translation strings from both directories
 blade_strings = scan_directory(views_directory, '.blade.php')
-php_strings = scan_directory(app_directory, '.php')
-
-# Combine all unique translation strings
-all_strings = blade_strings.union(php_strings)
 
 # Create en.json file
-create_en_json(all_strings, output_file)
+create_en_json(blade_strings, output_file)
 
-print(f"en.json file created with {len(all_strings)} translation strings.")
+print(f"en.json file created with {len(blade_strings)} translation strings.")
