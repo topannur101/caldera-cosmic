@@ -83,7 +83,7 @@ new #[Layout('layouts.app')] class extends Component
                </x-card-button>
                <x-modal name="change-language">
                 <div class="p-6">
-                    <livewire:account.update-language />
+                    <livewire:account.update-lang />
                 </div>
                </x-modal>
                <x-card-link wire:navigate href="{{ route('account.theme') }}">
