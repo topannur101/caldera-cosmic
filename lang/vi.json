@@ -33,7 +33,7 @@
    "Sirkulasi tak bisa disetujui karena qty barang akan menjadi negatif.": "Lưu thông không thể được phê duyệt vì số lượng mặt hàng sẽ trở nên âm.",
    "Alamat IP": "Địa chỉ IP",
    "Selamat datang!": "Chào mừng!",
-   "Wawasan": "Thông tin chi tiết",
+   "Wawasan": "Thiết bị",
    "Tamu": "Khách",
    "Bagan garis waktu nyata": "Biểu đồ đường thời gian thực",
    "Klik di sini untuk mengirim ulang email verifikasi.": "Nhấn vào đây để gửi lại email xác minh.",
@@ -84,7 +84,7 @@
    "Utama": "Chính",
    "Sirkulasi ditolak.": "Lưu thông bị từ chối.",
    "Data Mentah": "Dữ liệu thô",
-   "Wawasan_RTC": "Thông tin chi tiết RTC",
+   "Wawasan_RTC": "Thiết bị_RTC",
    "Setelah akunmu dihapus, segala sumberdaya dan data yang terkait akan dihapus permanen. Harap masukkan sandimu untuk mengkonfirmasi penghapusan akunmu.": "Khi tài khoản của bạn bị xóa, tất cả các tài nguyên và dữ liệu liên quan sẽ bị xóa vĩnh viễn. Vui lòng nhập mật khẩu của bạn để xác nhận bạn muốn xóa tài khoản vĩnh viễn.",
    "Tak ada perangkat ditemukan": "Không tìm thấy thiết bị nào",
    "Kamu tak memiliki wewenang untuk melihat laporan KPI": "Bạn không được phép xem báo cáo KPI",
@@ -105,7 +105,7 @@
    "Masuk": "Đăng nhập",
    "Are you sure you want to delete your account?": "Bạn có chắc chắn muốn xóa tài khoản của mình không?",
    "Tebal": "Dày",
-   "Raih cakrawala trong thời gian thực": "Giành được thông tin chi tiết trong thời gian thực",
+   "Raih cakrawala dalam waktu nyata": "Giành được thông tin chi tiết trong thời gian thực",
    "Tentukan rentang tanggal": "Chỉ định khoảng thời gian",
    "Integritas:": "Tính toàn vẹn:",
    "Model": "Mẫu",
@@ -233,5 +233,6 @@
    "Lainnya": "Khác",
    "Cerah": "Sáng",
    "Latar": "Nền",
-   "Pink lembut": "Hồng mềm"
+   "Pink lembut": "Hồng mềm",
+   "Kontak dukungan": "Liên hệ hỗ trợ"
 }
