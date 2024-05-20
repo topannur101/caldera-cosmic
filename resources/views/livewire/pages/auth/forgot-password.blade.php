@@ -37,14 +37,14 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
-    <div class="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
-        {{ __('Lupa sandimu? Tak masalah. Beri tahu alamat emailmu dan tautan untuk membuat kata sandi baru akan dikirimkan.') }}
+    <div class="text-center text-neutral-600 dark:text-neutral-400">
+        {{ __('Hubungi penanggung jawab Caldera untuk mengatur ulang kata sandi.') }}
     </div>
 
     <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    {{-- <x-auth-session-status class="mb-4" :status="session('status')" /> --}}
 
-    <form wire:submit="sendPasswordResetLink">
+    {{-- <form wire:submit="sendPasswordResetLink">
         <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('Email')" />
@@ -57,5 +57,5 @@ new #[Layout('layouts.guest')] class extends Component
                 {{ __('Kirim Tautan Atur Ulang Sandi') }}
             </x-primary-button>
         </div>
-    </form>
+    </form> --}}
 </div>
