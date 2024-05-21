@@ -82,310 +82,296 @@ new class extends Component {
 </div>
 
 @script
-    <script>
-        let oLeft   = {
-            chart: {
-                type: 'line',
-                toolbar: {
-                    show: false
-                },
-                animations: {
-                    enabled: false,
-                }
+<script>
+    let oLeft = {
+        chart: {
+            type: 'line',
+            toolbar: {
+                show: false
             },
-            dataLabels: {
-                enabled: true,
-                enabledOnSeries: [0],
-                style: {
-                    fontSize: '20px',
-                    colors: ['#7F63CC'],
-                },
-                background: {
-                    enabled: false
-                }
-            },
-            series: [{
-                name: '{{ __("Sensor") }}',
-                type: 'area',
-                data: [],
-                color: '#b4a5e1'
-            }, {
-                name: '{{ __("Minimum") }}',
-                type: 'line',
-                data: [],
-                color: '#169292'
-            }, {
-                name: '{{ __("Maksimum") }}',
-                type: 'line',
-                data: [],
-                color: '#169292'
-            }, {
-                name: '{{ __("Tengah") }}',
-                type: 'line',
-                data: [],
-                color: '#169292'
-            }],
-            xaxis: {
-                type: 'datetime',
-                range: 60000,
-                labels: {
-                    show: false,
-                    datetimeUTC: false,
-                }
-            },
-            yaxis: {
-                min: 1,
-                max: 6
-
-            },
-            stroke: {
-                curve: 'smooth',
-                width: [0, 1, 1, 1],
-                dashArray: [0, 0, 0, 10]
-            },
-        };
-        let oRight  = {
-            chart: {
-                type: 'line',
-                toolbar: {
-                    show: false
-                },
-                animations: {
-                    enabled: false,
-                }
-            },
-            dataLabels: {
-                enabled: true,
-                enabledOnSeries: [0],
-                style: {
-                    fontSize: '20px',
-                    colors: ['#7F63CC'],
-                },
-                background: {
-                    enabled: false
-                }
-            },
-            series: [{
-                name: '{{ __("Sensor") }}',
-                type: 'area',
-                data: [],
-                color: '#b4a5e1'
-            }, {
-                name: '{{ __("Minimum") }}',
-                type: 'line',
-                data: [],
-                color: '#169292'
-            }, {
-                name: '{{ __("Maksimum") }}',
-                type: 'line',
-                data: [],
-                color: '#169292'
-            }, {
-                name: '{{ __("Tengah") }}',
-                type: 'line',
-                data: [],
-                color: '#169292'
-            }],
-            xaxis: {
-                type: 'datetime',
-                range: 60000,
-                labels: {
-                    show: false,
-                    datetimeUTC: false,
-                }
-            },
-            yaxis: {
-                min: 1,
-                max: 6
-
-            },
-            stroke: {
-                curve: 'smooth',
-                width: [0, 1, 1, 1],
-                dashArray: [0, 0, 0, 10]
-            },
-        };
-
-        let leftChart = new ApexCharts(document.querySelector("#chart-left"), oLeft);
-        let rightChart = new ApexCharts(document.querySelector("#chart-right"), oRight);
-        let metricUrl, deviceId, recipeUrl, recipeId, recipeStdMin, recipeStdMax, recipeStdMid;
-
-        recipeId = 0
-
-        const elRecipeName = document.getElementById("recipe-name");
-        const elRecipeOgRs = document.getElementById("recipe-og-rs");
-        const elRecipeStdMin = document.getElementById("recipe-std-min");
-        const elRecipeStdMax = document.getElementById("recipe-std-max");
-        const elActLeft = document.getElementById("act-left");
-        const elActRight = document.getElementById("act-right");
-
-        elActLeft.textContent = 0
-        elActRight.textContent = 0
-
-        leftChart.render();
-        rightChart.render();
-
-        const leftPts = oLeft.series[0].data;
-        const leftMin = oLeft.series[1].data;
-        const leftMax = oLeft.series[2].data;
-        const leftMid = oLeft.series[3].data;
-        const rightPts = oRight.series[0].data;
-        const rightMin = oRight.series[1].data;
-        const rightMax = oRight.series[2].data;
-        const rightMid = oRight.series[3].data;
-
-        setInterval(function() {
-
-            deviceId = parseInt($wire.device_id)
-
-            if (deviceId > 0) {
-
-                metricUrl = '{{ route('insight.rtc.metric', ['device_id' => '__deviceId__']) }}';
-                metricUrl = metricUrl.replace('__deviceId__', deviceId)
-                axios.get(metricUrl)
-                    .then(response => {
-
-                        if (recipeId !== (parseInt(response.data.data.recipe_id))) {
-                            recipeId = parseInt(response.data.data.recipe_id)
-                            recipeUrl = '{{ route('insight.rtc.recipe', ['recipe_id' => '__recipeId__']) }}'
-                            recipeUrl = recipeUrl.replace('__recipeId__', recipeId)
-
-                            if (recipeId > 0) {
-                                axios.get(recipeUrl)
-                                    .then(response => {
-                                        const ogRsValue = response.data.data.og_rs.toString().padStart(3, '0');
-                                        elRecipeName.textContent = response.data.data.name
-                                        elRecipeOgRs.textContent = ogRsValue
-                                        elRecipeStdMin.textContent = response.data.data.std_min
-                                        elRecipeStdMax.textContent = response.data.data.std_max
-                                        recipeStdMin = parseFloat(response.data.data.std_min)
-                                        recipeStdMax = parseFloat(response.data.data.std_max)
-                                        recipeStdMid = parseFloat(response.data.data.std_mid)
-                                    })
-                                    .catch(error => {
-                                        console.error('Error fetching recipe:', error);
-                                    });
-                            } else {
-                                elRecipeName.textContent = '{{ __("Resep tidak diketahui") }}'
-                                elRecipeOgRs.textContent = '???'
-                                recipeStdMin.textContent = 0
-                                recipeStdMax.textContent = 0
-                            }
-                        } 
-                        elActLeft.textContent = response.data.data.sensor_left
-                        elActRight.textContent = response.data.data.sensor_right
-
-                        let x = new Date(response.data.data.dt_client).getTime();
-                        let y = 0;
-
-                        y = parseFloat(response.data.data.sensor_left);
-                        leftPts.push({
-                            x,
-                            y
-                        });
-
-                        y = recipeStdMin;
-                        leftMin.push({
-                            x,
-                            y
-                        });
-
-                        y = recipeStdMax;
-                        leftMax.push({
-                            x,
-                            y
-                        });
-
-                        y = recipeStdMid;
-                        leftMid.push({
-                            x,
-                            y
-                        });
-
-                        leftChart.updateSeries([{
-                            name: '{{ __("Sensor") }}',
-                            data: leftPts
-                        }, {
-                            name: '{{ __("Minimum") }}',
-                            data: leftMin
-                        }, {
-                            name: '{{ __("Maksimum") }}',
-                            data: leftMax
-                        }, {
-                            name: '{{ __("Tengah") }}',
-                            data: leftMid
-                        }]);
-
-                        y = parseFloat(response.data.data.sensor_right);
-                        rightPts.push({
-                            x,
-                            y
-                        });
-
-                        y = recipeStdMin;
-                        rightMin.push({
-                            x,
-                            y
-                        });
-
-                        y = recipeStdMax;
-                        rightMax.push({
-                            x,
-                            y
-                        });
-
-                        y = recipeStdMid;
-                        rightMid.push({
-                            x,
-                            y
-                        });
-
-                        rightChart.updateSeries([{
-                            name: '{{ __("Sensor") }}',
-                            data: rightPts
-                        }, {
-                            name: '{{ __("Minimum") }}',
-                            data: rightMin
-                        }, {
-                            name: '{{ __("Maksimum") }}',
-                            data: rightMax
-                        }, {
-                            name: '{{ __("Tengah") }}',
-                            data: rightMid
-                        }]);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching metric:', error);
-                    });
-            } else {
-                recipeId = 0
-                leftChart.updateSeries([{
-                    name: '{{ __("Sensor") }}',
-                    data: []
-                }, {
-                    name: '{{ __("Minimum") }}',
-                    data: []
-                }, {
-                    name: '{{ __("Maksimum") }}',
-                    data: []
-                }, {
-                    name: '{{ __("Tengah") }}',
-                    data: []
-                }]);
-                rightChart.updateSeries([{
-                    name: '{{ __("Sensor") }}',
-                    data: []
-                }, {
-                    name: '{{ __("Minimum") }}',
-                    data: []
-                }, {
-                    name: '{{ __("Maksimum") }}',
-                    data: []
-                }, {
-                    name: '{{ __("Tengah") }}',
-                    data: []
-                }]);
+            animations: {
+                enabled: false,
             }
-        }, 2000);
-    </script>
+        },
+        dataLabels: {
+            enabled: true,
+            enabledOnSeries: [0],
+            style: {
+                fontSize: '20px',
+                colors: ['#7F63CC'],
+            },
+            background: {
+                enabled: false
+            }
+        },
+        series: [{
+            name: '{{ __("Sensor") }}',
+            type: 'area',
+            data: [],
+            color: '#b4a5e1'
+        }, {
+            name: '{{ __("Minimum") }}',
+            type: 'line',
+            data: [],
+            color: '#169292'
+        }, {
+            name: '{{ __("Maksimum") }}',
+            type: 'line',
+            data: [],
+            color: '#169292'
+        }, {
+            name: '{{ __("Tengah") }}',
+            type: 'line',
+            data: [],
+            color: '#169292'
+        }],
+        xaxis: {
+            type: 'datetime',
+            range: 60000,
+            labels: {
+                show: false,
+                datetimeUTC: false,
+            }
+        },
+        yaxis: {
+            min: 1,
+            max: 6
+
+        },
+        stroke: {
+            curve: 'smooth',
+            width: [0, 1, 1, 1],
+            dashArray: [0, 0, 0, 10]
+        },
+    };
+
+    let oRight = {
+        chart: {
+            type: 'line',
+            toolbar: {
+                show: false
+            },
+            animations: {
+                enabled: false,
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            enabledOnSeries: [0],
+            style: {
+                fontSize: '20px',
+                colors: ['#7F63CC'],
+            },
+            background: {
+                enabled: false
+            }
+        },
+        series: [{
+            name: '{{ __("Sensor") }}',
+            type: 'area',
+            data: [],
+            color: '#b4a5e1'
+        }, {
+            name: '{{ __("Minimum") }}',
+            type: 'line',
+            data: [],
+            color: '#169292'
+        }, {
+            name: '{{ __("Maksimum") }}',
+            type: 'line',
+            data: [],
+            color: '#169292'
+        }, {
+            name: '{{ __("Tengah") }}',
+            type: 'line',
+            data: [],
+            color: '#169292'
+        }],
+        xaxis: {
+            type: 'datetime',
+            range: 60000,
+            labels: {
+                show: false,
+                datetimeUTC: false,
+            }
+        },
+        yaxis: {
+            min: 1,
+            max: 6
+
+        },
+        stroke: {
+            curve: 'smooth',
+            width: [0, 1, 1, 1],
+            dashArray: [0, 0, 0, 10]
+        },
+    };
+
+    let leftChart = new ApexCharts(document.querySelector("#chart-left"), oLeft);
+    let rightChart = new ApexCharts(document.querySelector("#chart-right"), oRight);
+    let metricUrl, deviceId, recipeUrl, recipeId, recipeStdMin, recipeStdMax, recipeStdMid;
+
+    recipeId = 0;
+
+    const elRecipeName = document.getElementById("recipe-name");
+    const elRecipeOgRs = document.getElementById("recipe-og-rs");
+    const elRecipeStdMin = document.getElementById("recipe-std-min");
+    const elRecipeStdMax = document.getElementById("recipe-std-max");
+    const elActLeft = document.getElementById("act-left");
+    const elActRight = document.getElementById("act-right");
+
+    elActLeft.textContent = 0;
+    elActRight.textContent = 0;
+
+    leftChart.render();
+    rightChart.render();
+
+    const leftPts = oLeft.series[0].data;
+    const leftMin = oLeft.series[1].data;
+    const leftMax = oLeft.series[2].data;
+    const leftMid = oLeft.series[3].data;
+    const rightPts = oRight.series[0].data;
+    const rightMin = oRight.series[1].data;
+    const rightMax = oRight.series[2].data;
+    const rightMid = oRight.series[3].data;
+
+    const maxDataPoints = 100;  // Define the maximum number of data points to keep
+
+    function updateSeriesData(seriesData, x, y) {
+        if (seriesData.length >= maxDataPoints) {
+            seriesData.shift();
+        }
+        seriesData.push({ x, y });
+    }
+
+    setInterval(function() {
+
+        deviceId = parseInt($wire.device_id);
+
+        if (deviceId > 0) {
+
+            metricUrl = '{{ route('insight.rtc.metric', ['device_id' => '__deviceId__']) }}';
+            metricUrl = metricUrl.replace('__deviceId__', deviceId);
+            axios.get(metricUrl)
+                .then(response => {
+
+                    if (recipeId !== (parseInt(response.data.data.recipe_id))) {
+                        recipeId = parseInt(response.data.data.recipe_id);
+                        recipeUrl = '{{ route('insight.rtc.recipe', ['recipe_id' => '__recipeId__']) }}';
+                        recipeUrl = recipeUrl.replace('__recipeId__', recipeId);
+
+                        if (recipeId > 0) {
+                            axios.get(recipeUrl)
+                                .then(response => {
+                                    const ogRsValue = response.data.data.og_rs.toString().padStart(3, '0');
+                                    elRecipeName.textContent = response.data.data.name;
+                                    elRecipeOgRs.textContent = ogRsValue;
+                                    elRecipeStdMin.textContent = response.data.data.std_min;
+                                    elRecipeStdMax.textContent = response.data.data.std_max;
+                                    recipeStdMin = parseFloat(response.data.data.std_min);
+                                    recipeStdMax = parseFloat(response.data.data.std_max);
+                                    recipeStdMid = parseFloat(response.data.data.std_mid);
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching recipe:', error);
+                                });
+                        } else {
+                            elRecipeName.textContent = '{{ __("Resep tidak diketahui") }}';
+                            elRecipeOgRs.textContent = '???';
+                            recipeStdMin.textContent = 0;
+                            recipeStdMax.textContent = 0;
+                        }
+                    } 
+                    elActLeft.textContent = response.data.data.sensor_left;
+                    elActRight.textContent = response.data.data.sensor_right;
+
+                    let x = new Date(response.data.data.dt_client).getTime();
+                    let y = 0;
+
+                    y = parseFloat(response.data.data.sensor_left);
+                    updateSeriesData(leftPts, x, y);
+
+                    y = recipeStdMin;
+                    updateSeriesData(leftMin, x, y);
+
+                    y = recipeStdMax;
+                    updateSeriesData(leftMax, x, y);
+
+                    y = recipeStdMid;
+                    updateSeriesData(leftMid, x, y);
+
+                    leftChart.updateSeries([{
+                        name: '{{ __("Sensor") }}',
+                        data: leftPts
+                    }, {
+                        name: '{{ __("Minimum") }}',
+                        data: leftMin
+                    }, {
+                        name: '{{ __("Maksimum") }}',
+                        data: leftMax
+                    }, {
+                        name: '{{ __("Tengah") }}',
+                        data: leftMid
+                    }]);
+
+                    y = parseFloat(response.data.data.sensor_right);
+                    updateSeriesData(rightPts, x, y);
+
+                    y = recipeStdMin;
+                    updateSeriesData(rightMin, x, y);
+
+                    y = recipeStdMax;
+                    updateSeriesData(rightMax, x, y);
+
+                    y = recipeStdMid;
+                    updateSeriesData(rightMid, x, y);
+
+                    rightChart.updateSeries([{
+                        name: '{{ __("Sensor") }}',
+                        data: rightPts
+                    }, {
+                        name: '{{ __("Minimum") }}',
+                        data: rightMin
+                    }, {
+                        name: '{{ __("Maksimum") }}',
+                        data: rightMax
+                    }, {
+                        name: '{{ __("Tengah") }}',
+                        data: rightMid
+                    }]);
+                })
+                .catch(error => {
+                    console.error('Error fetching metric:', error);
+                });
+        } else {
+            recipeId = 0;
+            leftChart.updateSeries([{
+                name: '{{ __("Sensor") }}',
+                data: []
+            }, {
+                name: '{{ __("Minimum") }}',
+                data: []
+            }, {
+                name: '{{ __("Maksimum") }}',
+                data: []
+            }, {
+                name: '{{ __("Tengah") }}',
+                data: []
+            }]);
+            rightChart.updateSeries([{
+                name: '{{ __("Sensor") }}',
+                data: []
+            }, {
+                name: '{{ __("Minimum") }}',
+                data: []
+            }, {
+                name: '{{ __("Maksimum") }}',
+                data: []
+            }, {
+                name: '{{ __("Tengah") }}',
+                data: []
+            }]);
+        }
+    }, 2000);
+</script>
 @endscript

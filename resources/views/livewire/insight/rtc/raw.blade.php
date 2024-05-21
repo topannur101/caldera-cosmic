@@ -120,104 +120,108 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             @endif
         @else
-            <div wire:key="raw-stats" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-4">
-                <div class="flex justify-between p-4 align-middle">
-                    <div class="flex gap-6">
-                        <div>
-                            <div class="uppercase text-xs mb-1">
-                                {{ __('Hari ') }}
+            <div wire:key="raw-stats" class="p-0 sm:p-1">
+                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-4">
+                    <div class="flex justify-between p-4 align-middle">
+                        <div class="flex gap-6">
+                            <div>
+                                <div class="uppercase text-xs mb-1">
+                                    {{ __('Hari ') }}
+                                </div>
+                                <div>
+                                    {{ $days }}
+                                </div>
                             </div>
                             <div>
-                                {{ $days }}
+                                <div class="uppercase text-xs mb-1">
+                                    {{ __('Integritas') }}
+                                </div>
+                                <div>
+                                    {{ $integrity . '% ' }}
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <div class="uppercase text-xs mb-1">
-                                {{ __('Integritas') }}
-                            </div>
-                            <div>
-                                {{ $integrity . '% ' }}
-                            </div>
-                        </div>
+                        <x-text-button type="button" class="my-auto" x-data=""
+                            x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i
+                                class="far fa-question-circle"></i></x-text-button>
                     </div>
-                    <x-text-button type="button" class="my-auto" x-data=""
-                        x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i
-                            class="far fa-question-circle"></i></x-text-button>
+                    <x-modal name="raw-stats-info">
+                        <div class="p-6">
+                            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                                {{ __('Statistik data mentah') }}
+                            </h2>
+                            <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
+                                    class="font-bold">{{ __('Hari:') . ' ' }}</span>
+                                {{ __('Jumlah hari yang mengandung data. Digunakan sebagai referensi berapa hari kerja pada rentang tanggal yang ditentukan.') }}
+                            </p>
+                            <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
+                                    class="font-bold">{{ __('Integritas:') . ' ' }}</span>
+                                {{ __('Mengindikasikan persentase data yang hadir di tiap jamnya. Contoh: Jika ada data setiap jam selama 21 jam dalam 1 hari, maka integritas bernilai 100%. Jika hanya ada data selama 10.5 jam selama 21 jam dalam 1 hari, maka integritas bernilai 50%') }}
+                            </p>
+                            <div class="mt-6 flex justify-end">
+                                <x-secondary-button type="button" x-on:click="$dispatch('close')">
+                                    {{ __('Paham') }}
+                                </x-secondary-button>
+                            </div>
+                        </div>
+                    </x-modal>
                 </div>
-                <x-modal name="raw-stats-info">
-                    <div class="p-6">
-                        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Statistik data mentah') }}
-                        </h2>
-                        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
-                                class="font-bold">{{ __('Hari:') . ' ' }}</span>
-                            {{ __('Jumlah hari yang mengandung data. Digunakan sebagai referensi berapa hari kerja pada rentang tanggal yang ditentukan.') }}
-                        </p>
-                        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
-                                class="font-bold">{{ __('Integritas:') . ' ' }}</span>
-                            {{ __('Mengindikasikan persentase data yang hadir di tiap jamnya. Contoh: Jika ada data setiap jam selama 21 jam dalam 1 hari, maka integritas bernilai 100%. Jika hanya ada data selama 10.5 jam selama 21 jam dalam 1 hari, maka integritas bernilai 50%') }}
-                        </p>
-                        <div class="mt-6 flex justify-end">
-                            <x-secondary-button type="button" x-on:click="$dispatch('close')">
-                                {{ __('Paham') }}
-                            </x-secondary-button>
-                        </div>
-                    </div>
-                </x-modal>
             </div>
-            <div wire:key="raw-metrics" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full overflow-auto">
-                <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
-                    <tr class="uppercase text-xs">
-                        <th>{{ __('Line') }}</th>
-                        <th>{{ __('IDG') }}</th>
-                        <th>{{ __('Resep') }}</th>
-                        <th>{{ __('Std') }}</th>
-                        <th>{{ __('Oto') }}</th>
-                        <th></th>
-                        <th>{{ __('Ki') }}</th>
-                        <th></th>
-                        <th>{{ __('Ka') }}</th>
-                        <th>{{ __('Waktu') }}</th>
-
-                    </tr>
-                    @foreach ($metrics as $metric)
-                        <tr>
-                            <td>{{ $metric->ins_rtc_clump->ins_rtc_device->line }}</td>
-                            <td>{{ $metric->ins_rtc_clump_id }}
-                            <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe_id . '. ' . $metric->ins_rtc_clump->ins_rtc_recipe->name }}</td>
-                            <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '' }}</td>
-                            <td class="text-xs">{{ ((bool) $metric->is_correcting) ? 'ON' : 'OFF' }}</td>
+            <div wire:key="raw-metrics" class="p-0 sm:p-1 overflow-auto">
+                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
+                    <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                        <tr class="uppercase text-xs">
+                            <th>{{ __('Line') }}</th>
+                            <th>{{ __('IDG') }}</th>
+                            <th>{{ __('Resep') }}</th>
+                            <th>{{ __('Std') }}</th>
+                            <th>{{ __('Oto') }}</th>
+                            <th></th>
+                            <th>{{ __('Ki') }}</th>
+                            <th></th>
+                            <th>{{ __('Ka') }}</th>
+                            <th>{{ __('Waktu') }}</th>
     
-                            <td>
-                                @switch($metric->action_left)
-                                    @case('thin')
-                                        <i class="fa fa-caret-down"></i>
-                                    @break
-    
-                                    @case('thick')
-                                        <i class="fa fa-caret-up"></i>
-                                    @break
-                                @endswitch
-                            </td>
-                            <td>{{ $metric->sensor_left }}</td>
-    
-                            <td>
-                                @switch($metric->action_right)
-                                    @case('thin')
-                                        <i class="fa fa-caret-down"></i>
-                                    @break
-    
-                                    @case('thick')
-                                        <i class="fa fa-caret-up"></i>
-                                    @break
-                                @endswitch
-                            </td>
-                            <td>{{ $metric->sensor_right }}</td>
-                            <td>{{ $metric->dt_client }}</td>
-
                         </tr>
-                    @endforeach
-                </table>
+                        @foreach ($metrics as $metric)
+                            <tr>
+                                <td>{{ $metric->ins_rtc_clump->ins_rtc_device->line }}</td>
+                                <td>{{ $metric->ins_rtc_clump_id }}
+                                <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe_id . '. ' . $metric->ins_rtc_clump->ins_rtc_recipe->name }}</td>
+                                <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '' }}</td>
+                                <td class="text-xs">{{ ((bool) $metric->is_correcting) ? 'ON' : 'OFF' }}</td>
+        
+                                <td>
+                                    @switch($metric->action_left)
+                                        @case('thin')
+                                            <i class="fa fa-caret-down"></i>
+                                        @break
+        
+                                        @case('thick')
+                                            <i class="fa fa-caret-up"></i>
+                                        @break
+                                    @endswitch
+                                </td>
+                                <td>{{ $metric->sensor_left }}</td>
+        
+                                <td>
+                                    @switch($metric->action_right)
+                                        @case('thin')
+                                            <i class="fa fa-caret-down"></i>
+                                        @break
+        
+                                        @case('thick')
+                                            <i class="fa fa-caret-up"></i>
+                                        @break
+                                    @endswitch
+                                </td>
+                                <td>{{ $metric->sensor_right }}</td>
+                                <td>{{ $metric->dt_client }}</td>
+    
+                            </tr>
+                        @endforeach
+                    </table>
+                </div>
             </div>
             <div class="flex items-center relative h-16">
                 @if (!$metrics->isEmpty())

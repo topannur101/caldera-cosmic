@@ -22,13 +22,13 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $start = Carbon::parse($this->start_at)->addHours(6);
         $end = $start->copy()->addHours(24);
-        $rows = DB::table('ins_rtc_metrics')
+        $clumps = DB::table('ins_rtc_metrics')
             ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
             ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
             ->join('ins_rtc_recipes', 'ins_rtc_recipes.id', '=', 'ins_rtc_clumps.ins_rtc_recipe_id')
             ->select(
                 'ins_rtc_devices.line',
-                'ins_rtc_clumps.id as clump_id',
+                'ins_rtc_clumps.id as id',
                 'ins_rtc_recipes.name as recipe_name',
                 'ins_rtc_recipes.id as recipe_id',
                 'ins_rtc_recipes.std_mid as std_mid'
@@ -47,16 +47,16 @@ new #[Layout('layouts.app')] class extends Component {
             ->whereBetween('ins_rtc_metrics.dt_client', [$start, $end]);
 
         if ($this->fline) {
-            $rows->where('ins_rtc_devices.line', $this->fline);
+            $clumps->where('ins_rtc_devices.line', $this->fline);
         }
 
-        $rows->groupBy('ins_rtc_devices.line', 'ins_rtc_clumps.id', 'ins_rtc_recipes.id')
+        $clumps->groupBy('ins_rtc_devices.line', 'ins_rtc_clumps.id', 'ins_rtc_recipes.id')
             ->orderBy('end_time', 'desc');
 
-        $rows = $rows->paginate($this->perPage);
+        $clumps = $clumps->paginate($this->perPage);
 
         return [
-            'rows' => $rows,
+            'clumps' => $clumps,
         ];
     }
 
@@ -68,11 +68,11 @@ new #[Layout('layouts.app')] class extends Component {
 
 ?>
 
-<div wire:poll class="w-full">
+<div wire:poll class="overflow-auto w-full">
     <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
         {{ __('Ringkasan Gilingan') }}</h1>
 
-    @if (!$rows->count())
+    @if (!$clumps->count())
 
         <div wire:key="no-match" class="py-20">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -82,45 +82,51 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
     @else
-        <div wire:key="line-all-rows" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto">
-            <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
-                <tr class="uppercase text-xs">
-                    <th>{{ __('IDG') }}</th>
-                    <th>{{ __('L') }}</th>
-                    <th>{{ __('S') }}</th>
-                    <th>{{ __('Resep') }}</th>
-                    <th>{{ __('Std') }}</th>
-                    <th>{{ __('Oto') }}</th>
-                    <th>{{ __('Rerata | Deviasi Ki') }}</th>
-                    <th>{{ __('Rerata | Deviasi Ka') }}</th>
-                    <th>{{ __('Durasi') }}</th>
-                    <th>{{ __('Waktu mulai') }}</th>
-                </tr>
-                @foreach ($rows as $row)
-                    <tr>
-                        <td>{{ $row->clump_id }}</td>
-                        <td>{{ $row->line }}</td>
-                        <td>{{ $row->shift }}</td>
-                        <td>{{ $row->recipe_id . '. ' . $row->recipe_name }}</td>
-                        <td>{{ $row->std_mid }}</td>
-                        <td class="text-xs">{{ ($row->correcting_rate > 0.8) ? 'ON' : 'OFF' }}</td>
-                        </td>
-                        <td>{{ $row->avg_left . ' | ' . $row->dn_left . ' ('. $row->dp_left . '%)'}}</td>
-                        <td>{{ $row->avg_left . ' | ' . $row->dn_right . ' ('. $row->dp_right . '%)'}}</td>
-                        <td>{{ Carbon::createFromTimestampUTC($row->duration_seconds)->format('i:s') }}</td>
-                        <td>{{ $row->start_time }}</td>
+        <div wire:key="line-all-clumps" class="p-0 sm:p-1 overflow-auto">
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
+                <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                    <tr class="uppercase text-xs">
+                        <th>{{ __('IDG') }}</th>
+                        <th>{{ __('L') }}</th>
+                        <th>{{ __('S') }}</th>
+                        <th>{{ __('Resep') }}</th>
+                        <th>{{ __('Std') }}</th>
+                        <th>{{ __('Oto') }}</th>
+                        <th>{{ __('Rerata | Dev Ki') }}</th>
+                        <th>{{ __('Rerata | Dev Ka') }}</th>
+                        <th>{{ __('Durasi') }}</th>
+                        <th>{{ __('Mulai') }}</th>
                     </tr>
-                @endforeach
-            </table>
+                    @foreach ($clumps as $clump)
+                        <tr wire:key="clump-tr-{{ $clump->id . $loop->index }}" tabindex="0"
+                            x-on:click="$dispatch('open-modal', 'show-clump-{{ $clump->id }}')">
+                            <td>{{ $clump->id }}</td>
+                            <td>{{ $clump->line }}</td>
+                            <td>{{ $clump->shift }}</td>
+                            <td>{{ $clump->recipe_id . '. ' . $clump->recipe_name }}</td>
+                            <td>{{ $clump->std_mid }}</td>
+                            <td class="text-xs">{{ ($clump->correcting_rate > 0.8) ? 'ON' : 'OFF' }}</td>
+                            <td>{{ $clump->avg_left . ' | ' . $clump->dn_left . ' ('. $clump->dp_left . '%)'}}</td>
+                            <td>{{ $clump->avg_left . ' | ' . $clump->dn_right . ' ('. $clump->dp_right . '%)'}}</td>
+                            <td>{{ Carbon::createFromTimestampUTC($clump->duration_seconds)->format('i:s') }}</td>
+                            <td>{{ $clump->start_time }}</td>
+                            <x-modal :name="'show-clump-' . $clump->id" maxWidth="xl">
+                                <livewire:insight.rtc.clump-show wire:key="clump-lw-{{ $clump->id . $loop->index }}"
+                                    :id="$clump->id" lazy />
+                            </x-modal>
+                        </tr>
+                    @endforeach
+                </table>
+            </div>
         </div>
         <div class="flex items-center relative h-16">
-            @if (!$rows->isEmpty())
-                @if ($rows->hasMorePages())
+            @if (!$clumps->isEmpty())
+                @if ($clumps->hasMorePages())
                     <div wire:key="more" x-data="{
                         observe() {
-                            const observer = new IntersectionObserver((rows) => {
-                                rows.forEach(row => {
-                                    if (row.isIntersecting) {
+                            const observer = new IntersectionObserver((clumps) => {
+                                clumps.forEach(clump => {
+                                    if (clump.isIntersecting) {
                                         @this.loadMore()
                                     }
                                 })

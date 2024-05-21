@@ -16,9 +16,6 @@ new #[Layout('layouts.app')] class extends Component {
     #[Reactive]
     public $start_at;
 
-    #[Reactive]
-    public $fline;
-
     public function with(): array
     {
         // Define the date range for the entire day
@@ -32,15 +29,8 @@ new #[Layout('layouts.app')] class extends Component {
             3 => [$start->copy()->addHours(22), $start->copy()->addHours(30)],
         ];
 
-        // Initialize the query builder for devices
-        $devicesQuery = InsRtcDevice::query();
-
-        if ($this->fline) {
-            $devicesQuery->where('line', $this->fline);
-        }
-
         // Fetch devices with their metrics in one go
-        $devices = $devicesQuery->get()->map(function ($device) use ($shifts) {
+        $devices = InsRtcDevice::get()->map(function ($device) use ($shifts) {
             $device->shifts = collect();
 
             foreach ($shifts as $shift => [$shiftStart, $shiftEnd]) {
@@ -74,7 +64,7 @@ new #[Layout('layouts.app')] class extends Component {
 
 ?>
 
-<div class="w-full">
+<div class="w-full overflow-auto">
     <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
         {{ __('Ringkasan Harian') }}</h1>
 
@@ -88,35 +78,37 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
     @else
-        <div wire:key="line-all-devices" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto">
-            <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
-                <thead>
-                    <tr class="uppercase text-xs">
-                        <th>{{ __('Line') }}</th>
-                        <th>{{ __('Shift') }}</th>
-                        <th>{{ __('Gilingan') }}</th>
-                        <th>{{ __('RDG') }}</th>
-                        <th>{{ __('W. Aktif') }}</th>
-                        <th>{{ __('W. Pasif') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($devices as $device)
-                        @foreach ($device->shifts as $shift => $data)
-                            <tr>
-                                @if ($loop->first)
-                                    <td rowspan="3">{{ $device->line }}</td>
-                                @endif
-                                <td>{{ $shift }}</td>
-                                <td>{{ $data['clump_count'] }}</td>
-                                <td>{{ Carbon::createFromTimestampUTC($data['avg_clump_duration'])->format('i:s') }}</td>
-                                <td>{{ Carbon::createFromTimestampUTC($data['active_time'])->format('H:i:s') }}</td>
-                                <td>{{ Carbon::createFromTimestampUTC($data['passive_time'])->format('H:i:s') }}</td>
-                            </tr>
+        <div wire:key="line-all-devices"  class="p-0 sm:p-1 overflow-auto">
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
+                <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                    <thead>
+                        <tr class="uppercase text-xs">
+                            <th>{{ __('Line') }}</th>
+                            <th>{{ __('Shift') }}</th>
+                            <th>{{ __('Gilingan') }}</th>
+                            <th>{{ __('RDG') }}</th>
+                            <th>{{ __('W. Aktif') }}</th>
+                            <th>{{ __('W. Pasif') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($devices as $device)
+                            @foreach ($device->shifts as $shift => $data)
+                                <tr>
+                                    @if ($loop->first)
+                                        <td rowspan="3">{{ $device->line }}</td>
+                                    @endif
+                                    <td>{{ $shift }}</td>
+                                    <td>{{ $data['clump_count'] }}</td>
+                                    <td>{{ Carbon::createFromTimestampUTC($data['avg_clump_duration'])->format('i:s') }}</td>
+                                    <td>{{ Carbon::createFromTimestampUTC($data['active_time'])->format('H:i:s') }}</td>
+                                    <td>{{ Carbon::createFromTimestampUTC($data['passive_time'])->format('H:i:s') }}</td>
+                                </tr>
+                            @endforeach
                         @endforeach
-                    @endforeach
-                </tbody>
-            </table>
+                    </tbody>
+                </table>  
+            </div>
         </div>
     @endif
 </div>

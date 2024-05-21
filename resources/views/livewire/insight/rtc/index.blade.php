@@ -27,7 +27,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public $dateViews = ['raw', 'daily', 'clumps'];
     public $rangeViews = ['raw'];
-    public $filterViews = ['raw', 'daily', 'clumps'];
+    public $filterViews = ['raw', 'clumps'];
 
     public $dataIntegrity = 0;
     public $dataAccuracy = 0;
