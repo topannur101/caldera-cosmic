@@ -2,7 +2,6 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
-use Livewire\WithPagination;
 
 use Carbon\Carbon;
 use Livewire\Attributes\Reactive;
@@ -11,7 +10,6 @@ use App\Models\InsRtcDevice;
 use Illuminate\Database\Eloquent\Builder;
 
 new #[Layout('layouts.app')] class extends Component {
-    use WithPagination;
 
     #[Reactive]
     public $start_at;

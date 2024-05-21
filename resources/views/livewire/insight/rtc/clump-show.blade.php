@@ -90,6 +90,7 @@ new class extends Component {
                     {
                     y: " . $this->recipe->std_min . ",
                     y2: " . $this->recipe->std_max . ",
+                    borderColor: '#654db8',
                     fillColor: '#9984d6',
                     label: {
                         text: '" . __('Standar') . "'

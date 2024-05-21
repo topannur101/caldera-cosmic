@@ -233,5 +233,11 @@
    "Cerah": "Light",
    "Latar": "Background",
    "Pink lembut": "Soft pink",
-   "Kontak dukungan": "Contact support"
+   "Kontak dukungan": "Contact support",
+   "Ringkasan harian waktu nyata": "Real-time daily summary",
+   "Tampilkan ringkasan harian pada satu line produksi": "Show daily summary of a production line",
+   "Ringkasan gilingan waktu nyata" : "Real-time batch summary",
+   "Tampilkan ringkasan gilingan pada satu line produksi": "Show batch summary of a production line",
+   "Data mentah waktu nyata": "Real-time raw data",
+   "Tampilkan riwayat data mentah pada satu line produksi": "Show raw data history of a production line"
 }

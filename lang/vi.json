@@ -233,5 +233,11 @@
    "Cerah": "Sáng",
    "Latar": "Nền",
    "Pink lembut": "Hồng mềm",
-   "Kontak dukungan": "Liên hệ hỗ trợ"
+   "Kontak dukungan": "Liên hệ hỗ trợ",
+   "Ringkasan harian waktu nyata": "Tóm tắt hàng ngày thời gian thực",
+   "Tampilkan ringkasan harian pada satu line produksi": "Hiển thị tóm tắt hàng ngày của một dây chuyền sản xuất",
+   "Ringkasan gilingan waktu nyata": "Tóm tắt lô hàng thời gian thực",
+   "Tampilkan ringkasan gilingan pada satu line produksi": "Hiển thị tóm tắt lô hàng của một dây chuyền sản xuất",
+   "Data mentah waktu nyata": "Dữ liệu thô thời gian thực",
+   "Tampilkan riwayat data mentah pada satu line produksi": "Hiển thị lịch sử dữ liệu thô của một dây chuyền sản xuất"
 }

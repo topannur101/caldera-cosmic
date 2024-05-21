@@ -347,6 +347,14 @@ input[type="checkbox"]:checked + label.custom-checkbox {
     @apply p-2;
   }
 
+  .table.table-xl th, .table.table-xl td {
+    @apply px-4 py-6 text-4xl;
+  }
+
+  .table.table-2xl th, .table.table-2xl td {
+    @apply px-6 py-8 text-6xl;
+  }
+
   .table.table-truncate th, .table.table-truncate td {
     @apply truncate max-w-xs;
   }

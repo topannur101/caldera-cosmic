@@ -19,9 +19,6 @@ new #[Layout('layouts.app')] class extends Component {
     public $fline;
     public $perPage = 20;
 
-    #[Url]
-    public $id;
-
     public function with(): array
     {
         $start = Carbon::parse($this->start_at)->addHours(6);

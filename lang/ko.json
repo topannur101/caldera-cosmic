@@ -233,5 +233,11 @@
    "Cerah": "밝은",
    "Latar": "배경",
    "Pink lembut": "부드러운 핑크색",
-   "Kontak dukungan": "고객 지원"
+   "Kontak dukungan": "고객 지원",
+   "Ringkasan harian waktu nyata": "실시간 일일 요약",   
+   "Tampilkan ringkasan harian pada satu line produksi": "한 생산 라인의 일일 요약 표시",
+    "Ringkasan gilingan waktu nyata": "실시간 배치 요약",
+    "Tampilkan ringkasan gilingan pada satu line produksi": "한 생산 라인의 배치 요약 표시",
+    "Data mentah waktu nyata": "실시간 원시 데이터",
+    "Tampilkan riwayat data mentah pada satu line produksi": "한 생산 라인의 원시 데이터 기록 표시"
 }
