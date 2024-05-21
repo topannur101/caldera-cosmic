@@ -65,6 +65,57 @@ new #[Layout('layouts.app')] class extends Component {};
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
+                            <div class="m-auto"><i class="fa fa-fw fa-calendar-day"></i></div>
+                        </div>
+                    </div>
+                    <div class="grow truncate py-4">
+                        <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                            {{ __('Ringkasan harian waktu nyata') }}
+                        </div>
+                        <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Tampilkan ringkasan harian pada satu line produksi') }}
+                        </div>
+                    </div>
+                </div>
+            </x-card-link>
+            <x-card-link href="{{ route('insight.ss', ['id' => 5]) }}" wire:navigate>
+                <div class="flex px-8">
+                    <div>
+                        <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
+                            <div class="m-auto"><i class="fa fa-fw fa-toilet-paper"></i></div>
+                        </div>
+                    </div>
+                    <div class="grow truncate py-4">
+                        <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                            {{ __('Ringkasan gilingan waktu nyata') }}
+                        </div>
+                        <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Tampilkan ringkasan gilingan pada satu line produksi') }}
+                        </div>
+                    </div>
+                </div>
+            </x-card-link>
+            <x-card-link href="{{ route('insight.ss', ['id' => 6]) }}" wire:navigate>
+                <div class="flex px-8">
+                    <div>
+                        <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
+                            <div class="m-auto"><i class="fa fa-fw fa-table"></i></div>
+                        </div>
+                    </div>
+                    <div class="grow truncate py-4">
+                        <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                            {{ __('Data mentah waktu nyata') }}
+                        </div>
+                        <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Tampilkan riwayat data mentah pada satu line produksi') }}
+                        </div>
+                    </div>
+                </div>
+            </x-card-link>
+            <x-card-link href="{{ route('insight.ss', ['id' => 7]) }}" wire:navigate>
+                <div class="flex px-8">
+                    <div>
+                        <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
                             <div class="m-auto"><i class="fa fa-fw fa-image"></i></div>
                         </div>
                     </div>
