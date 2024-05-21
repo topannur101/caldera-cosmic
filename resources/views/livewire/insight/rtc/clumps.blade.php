@@ -6,6 +6,7 @@ use Livewire\WithPagination;
 
 use Carbon\Carbon;
 use Livewire\Attributes\Reactive;
+use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\DB;
 
 new #[Layout('layouts.app')] class extends Component {
@@ -17,6 +18,9 @@ new #[Layout('layouts.app')] class extends Component {
     #[Reactive]
     public $fline;
     public $perPage = 20;
+
+    #[Url]
+    public $id;
 
     public function with(): array
     {
@@ -68,12 +72,11 @@ new #[Layout('layouts.app')] class extends Component {
 
 ?>
 
-<div wire:poll class="overflow-auto w-full">
+<div class="overflow-auto w-full">
     <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
         {{ __('Ringkasan Gilingan') }}</h1>
 
     @if (!$clumps->count())
-
         <div wire:key="no-match" class="py-20">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
                 <i class="fa fa-ghost"></i>
@@ -82,7 +85,7 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
     @else
-        <div wire:key="line-all-clumps" class="p-0 sm:p-1 overflow-auto">
+        <div wire:key="clumps-table" class="p-0 sm:p-1 overflow-auto">
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                 <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
@@ -99,7 +102,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </tr>
                     @foreach ($clumps as $clump)
                         <tr wire:key="clump-tr-{{ $clump->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'show-clump-{{ $clump->id }}')">
+                            x-on:click="$dispatch('open-modal', 'clump-show'); $dispatch('clump-show', { id: '{{ $clump->id }}'} )">
                             <td>{{ $clump->id }}</td>
                             <td>{{ $clump->line }}</td>
                             <td>{{ $clump->shift }}</td>
@@ -110,15 +113,17 @@ new #[Layout('layouts.app')] class extends Component {
                             <td>{{ $clump->avg_left . ' | ' . $clump->dn_right . ' ('. $clump->dp_right . '%)'}}</td>
                             <td>{{ Carbon::createFromTimestampUTC($clump->duration_seconds)->format('i:s') }}</td>
                             <td>{{ $clump->start_time }}</td>
-                            <x-modal :name="'show-clump-' . $clump->id" maxWidth="xl">
-                                <livewire:insight.rtc.clump-show wire:key="clump-lw-{{ $clump->id . $loop->index }}"
-                                    :id="$clump->id" lazy />
-                            </x-modal>
                         </tr>
                     @endforeach
                 </table>
             </div>
         </div>
+        <div wire:key="clump-show">
+            <x-modal name="clump-show" maxWidth="2xl">
+                <livewire:insight.rtc.clump-show />
+            </x-modal>
+        </div>
+
         <div class="flex items-center relative h-16">
             @if (!$clumps->isEmpty())
                 @if ($clumps->hasMorePages())
