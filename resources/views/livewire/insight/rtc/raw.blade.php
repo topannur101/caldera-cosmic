@@ -171,8 +171,8 @@ new #[Layout('layouts.app')] class extends Component {
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('IDG') }}</th>
                         <th>{{ __('Resep') }}</th>
-                        <th>{{ __('ST') }}</th>
-                        <th>{{ __('KO') }}</th>
+                        <th>{{ __('Std') }}</th>
+                        <th>{{ __('Oto') }}</th>
                         <th></th>
                         <th>{{ __('Ki') }}</th>
                         <th></th>

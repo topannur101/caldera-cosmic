@@ -24,10 +24,10 @@ new #[Layout('layouts.app')] class extends Component {
         $end = $start->copy()->addHours(24);
         $rows = DB::table('ins_rtc_metrics')
             ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
-            ->join('ins_rtc_Deviasiices', 'ins_rtc_Deviasiices.id', '=', 'ins_rtc_clumps.ins_rtc_Deviasiice_id')
+            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
             ->join('ins_rtc_recipes', 'ins_rtc_recipes.id', '=', 'ins_rtc_clumps.ins_rtc_recipe_id')
             ->select(
-                'ins_rtc_Deviasiices.line',
+                'ins_rtc_devices.line',
                 'ins_rtc_clumps.id as clump_id',
                 'ins_rtc_recipes.name as recipe_name',
                 'ins_rtc_recipes.id as recipe_id',
@@ -37,20 +37,20 @@ new #[Layout('layouts.app')] class extends Component {
             ->selectRaw('MAX(ins_rtc_metrics.dt_client) as end_time')
             ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as duration_seconds')
             ->selectRaw('CASE WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 6 AND 13 THEN "1" WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 14 AND 21 THEN "2" ELSE "3" END AS shift')
-            ->selectRaw('ROUND((Rerata(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END)), 2) as Rerata_left')
-            ->selectRaw('ROUND((Rerata(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END)), 2) as Rerata_right')
-            ->selectRaw('ROUND((Rerata(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END) - ins_rtc_recipes.std_mid), 2) as dn_left')
-            ->selectRaw('ROUND((Rerata(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END) - ins_rtc_recipes.std_mid), 2) as dn_right')
-            ->selectRaw('ROUND((Rerata(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END) - ins_rtc_recipes.std_mid) / ins_rtc_recipes.std_mid * 100, 0) as dp_left')
-            ->selectRaw('ROUND((Rerata(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END) - ins_rtc_recipes.std_mid) / ins_rtc_recipes.std_mid * 100, 0) as dp_right')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END)), 2) as avg_left')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END)), 2) as avg_right')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END) - ins_rtc_recipes.std_mid), 2) as dn_left')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END) - ins_rtc_recipes.std_mid), 2) as dn_right')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END) - ins_rtc_recipes.std_mid) / ins_rtc_recipes.std_mid * 100, 0) as dp_left')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END) - ins_rtc_recipes.std_mid) / ins_rtc_recipes.std_mid * 100, 0) as dp_right')
             ->selectRaw('ROUND(SUM(CASE WHEN ins_rtc_metrics.is_correcting = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as correcting_rate')
             ->whereBetween('ins_rtc_metrics.dt_client', [$start, $end]);
 
         if ($this->fline) {
-            $rows->where('ins_rtc_Deviasiices.line', $this->fline);
+            $rows->where('ins_rtc_devices.line', $this->fline);
         }
 
-        $rows->groupBy('ins_rtc_Deviasiices.line', 'ins_rtc_clumps.id', 'ins_rtc_recipes.id')
+        $rows->groupBy('ins_rtc_devices.line', 'ins_rtc_clumps.id', 'ins_rtc_recipes.id')
             ->orderBy('end_time', 'desc');
 
         $rows = $rows->paginate($this->perPage);
@@ -105,8 +105,8 @@ new #[Layout('layouts.app')] class extends Component {
                         <td>{{ $row->std_mid }}</td>
                         <td class="text-xs">{{ ($row->correcting_rate > 0.8) ? 'ON' : 'OFF' }}</td>
                         </td>
-                        <td>{{ $row->Rerata_left . ' | ' . $row->dn_left . ' ('. $row->dp_left . '%)'}}</td>
-                        <td>{{ $row->Rerata_left . ' | ' . $row->dn_right . ' ('. $row->dp_right . '%)'}}</td>
+                        <td>{{ $row->avg_left . ' | ' . $row->dn_left . ' ('. $row->dp_left . '%)'}}</td>
+                        <td>{{ $row->avg_left . ' | ' . $row->dn_right . ' ('. $row->dp_right . '%)'}}</td>
                         <td>{{ Carbon::createFromTimestampUTC($row->duration_seconds)->format('i:s') }}</td>
                         <td>{{ $row->start_time }}</td>
                     </tr>
