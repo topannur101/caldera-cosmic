@@ -156,8 +156,8 @@ new #[Layout('layouts.app')] class extends Component {
                             <td>{{ $clump->recipe_id . '. ' . $clump->recipe_name }}</td>
                             <td>{{ $clump->std_mid }}</td>
                             <td>{{ ($clump->correcting_rate > 0.8) ? 'ON' : 'OFF' }}</td>
-                            <td>{{ $clump->avg_left ? ($clump->avg_left . ' | ' . $clump->dn_left . ' ('. $clump->dp_left . '%)') : __('Nihil') }}</td>
-                            <td>{{ $clump->avg_right ? ($clump->avg_right . ' | ' . $clump->dn_right . ' ('. $clump->dp_right . '%)') : __('Nihil') }}</td>
+                            <td>{{ $clump->avg_left ? ($clump->avg_left . ' | ' . $clump->dn_left . ' ('. $clump->dp_left . '%)') : __('Tak ada data') }}</td>
+                            <td>{{ $clump->avg_right ? ($clump->avg_right . ' | ' . $clump->dn_right . ' ('. $clump->dp_right . '%)') : __('Tak ada data') }}</td>
                             <td>{{ Carbon::createFromTimestampUTC($clump->duration_seconds)->format('i:s') }}</td>
                             <td>{{ $clump->start_time }}</td>
                         </tr>

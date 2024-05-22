@@ -72,6 +72,11 @@ new class extends Component {
                 },
                 animations: {
                     enabled: true,
+                    easing: 'easeout',
+                    speed: 400,
+                    animateGradually: {
+                        enabled: false,
+                  },
                 }
             },
             series: [{
@@ -141,14 +146,14 @@ new class extends Component {
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4">
       <div>
-         <div class="font-bold">{{ __('Info gilingan') . ' [' . $id . ']' }}</div>
+         <h3 class="text-lg mb-2 font-medium text-neutral-900 dark:text-neutral-100">{{ __('Info gilingan') . ' [' . $id . ']' }}</h3>
+         <div>{{ __('Line') . ': ' . ($clump->ins_rtc_device->line ?? '') }}</div>
          <div>{{ __('Awal') . ': ' . $start_at }}</div>
          <div>{{ __('Akhir') . ': ' . $end_at }}</div>
          <div>{{ __('Durasi') . ': ' . ($duration ? $duration->format('i:s') : '') }}</div>
-         <div>{{ __('Line') . ': ' . ($clump->ins_rtc_device->line ?? '') }}</div>
       </div>
       <div>
-         <div class="font-bold">{{ __('Info resep') . ' [' . ($recipe->id ?? '') . ']' }}</div>
+         <h3 class="text-lg mb-2 font-medium text-neutral-900 dark:text-neutral-100">{{ __('Info resep') . ' [' . ($recipe->id ?? '') . ']' }}</h3>
          <div>{{ $recipe->name ?? '' }}</div>
          <div>{{ __('Standar tengah') . ': ' . ($recipe->std_mid ?? '') }}</div>
          <div>{{ __('Standar') . ': ' . ($recipe->std_min ?? '') . ' — ' . ($recipe->std_max ?? '') }}</div>
