@@ -35,6 +35,20 @@ new class extends Component {
             $this->duration = Carbon::createFromTimestampUTC($this->start_at->diffInSeconds($this->end_at));
             $this->recipe   = $this->clump->ins_rtc_recipe;
 
+            // Get all non-zero values from sensor_left and sensor_right
+            $nonZeroValues = $this->metrics->flatMap(function ($item) {
+               return [
+                  $item->sensor_left > 0 ? $item->sensor_left : null,
+                  $item->sensor_right > 0 ? $item->sensor_right : null,
+               ];
+            })->filter();
+
+            // Get the minimum non-zero value
+            $minSensor = floor($nonZeroValues->min()) ;
+
+            // Get the maximum value
+            $maxSensor = ceil($nonZeroValues->max()) ;
+
             // Prepare the data for the JavaScript
             $kiriData = $this->metrics->map(function($metric) {
                 return [$metric->dt_client, $metric->sensor_left];
@@ -76,8 +90,8 @@ new class extends Component {
                 }
             },
             yaxis: {
-                min: 1,
-                max: 6
+                min: " . $minSensor . ",
+                max: " . $maxSensor . "
 
             },
             stroke: {

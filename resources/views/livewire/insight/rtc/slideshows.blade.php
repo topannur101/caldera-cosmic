@@ -112,7 +112,7 @@ new #[Layout('layouts.app')] class extends Component {};
                     </div>
                 </div>
             </x-card-link>
-            <x-card-link href="{{ route('insight.ss', ['id' => 7]) }}" wire:navigate>
+            <x-card-link href="{{ route('insight.ss', ['id' => 2]) }}" wire:navigate>
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
