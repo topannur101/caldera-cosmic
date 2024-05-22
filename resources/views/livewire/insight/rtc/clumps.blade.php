@@ -43,55 +43,55 @@ new #[Layout('layouts.app')] class extends Component {
             // Assign Shift 1, 2, 3
             ->selectRaw('CASE WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 6 AND 13 THEN "1" WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 14 AND 21 THEN "2" ELSE "3" END AS shift')
             
-// Calculate mean (avg_left and avg_right)
-->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END)), 2) as avg_left')
-->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END)), 2) as avg_right')
+            // Calculate mean (avg_left and avg_right)
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END)), 2) as avg_left')
+            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END)), 2) as avg_right')
 
-// Calculate deviation number (dn_left and dn_right)
-->selectRaw('ROUND(
-    SQRT(
-        AVG(
-            POWER(
-                CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left - 
-                (SELECT AVG(sensor_left) FROM ins_rtc_metrics WHERE sensor_left <> 0) END,
-                2
-            )
-        )
-    ), 2) as dn_left')
+            // Calculate deviation number (dn_left and dn_right)
+            ->selectRaw('ROUND(
+                SQRT(
+                    AVG(
+                        POWER(
+                            CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left - 
+                            (SELECT AVG(sensor_left) FROM ins_rtc_metrics WHERE sensor_left <> 0) END,
+                            2
+                        )
+                    )
+                ), 2) as dn_left')
 
-->selectRaw('ROUND(
-    SQRT(
-        AVG(
-            POWER(
-                CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right - 
-                (SELECT AVG(sensor_right) FROM ins_rtc_metrics WHERE sensor_right <> 0) END,
-                2
-            )
-        )
-    ), 2) as dn_right')
+            ->selectRaw('ROUND(
+                SQRT(
+                    AVG(
+                        POWER(
+                            CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right - 
+                            (SELECT AVG(sensor_right) FROM ins_rtc_metrics WHERE sensor_right <> 0) END,
+                            2
+                        )
+                    )
+                ), 2) as dn_right')
 
-// Calculate deviation percent (dp_left and dp_right)
-->selectRaw('ROUND(
-    SQRT(
-        AVG(
-            POWER(
-                CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left - 
-                (SELECT AVG(sensor_left) FROM ins_rtc_metrics WHERE sensor_left <> 0) END,
-                2
-            )
-        )
-    ) / ins_rtc_recipes.std_mid * 100, 2) as dp_left')
+            // Calculate deviation percent (dp_left and dp_right)
+            ->selectRaw('ROUND(
+                SQRT(
+                    AVG(
+                        POWER(
+                            CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left - 
+                            (SELECT AVG(sensor_left) FROM ins_rtc_metrics WHERE sensor_left <> 0) END,
+                            2
+                        )
+                    )
+                ) / ins_rtc_recipes.std_mid * 100, 1) as dp_left')
 
-->selectRaw('ROUND(
-    SQRT(
-        AVG(
-            POWER(
-                CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right - 
-                (SELECT AVG(sensor_right) FROM ins_rtc_metrics WHERE sensor_right <> 0) END,
-                2
-            )
-        )
-    ) / ins_rtc_recipes.std_mid * 100, 2) as dp_right')
+            ->selectRaw('ROUND(
+                SQRT(
+                    AVG(
+                        POWER(
+                            CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right - 
+                            (SELECT AVG(sensor_right) FROM ins_rtc_metrics WHERE sensor_right <> 0) END,
+                            2
+                        )
+                    )
+                ) / ins_rtc_recipes.std_mid * 100, 1) as dp_right')
 
             // Untuk menghitung presentase trigger nyala brp kali dalam %
             ->selectRaw('ROUND(SUM(CASE WHEN ins_rtc_metrics.is_correcting = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as correcting_rate')
@@ -134,7 +134,7 @@ new #[Layout('layouts.app')] class extends Component {
     @else
         <div wire:key="clumps-table" class="p-0 sm:p-1 overflow-auto">
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
-                <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
                         <th>{{ __('IDG') }}</th>
                         <th>{{ __('L') }}</th>
@@ -155,9 +155,9 @@ new #[Layout('layouts.app')] class extends Component {
                             <td>{{ $clump->shift }}</td>
                             <td>{{ $clump->recipe_id . '. ' . $clump->recipe_name }}</td>
                             <td>{{ $clump->std_mid }}</td>
-                            <td class="text-xs">{{ ($clump->correcting_rate > 0.8) ? 'ON' : 'OFF' }}</td>
-                            <td>{{ $clump->avg_left . ' | ' . $clump->dn_left . ' ('. $clump->dp_left . '%)'}}</td>
-                            <td>{{ $clump->avg_left . ' | ' . $clump->dn_right . ' ('. $clump->dp_right . '%)'}}</td>
+                            <td>{{ ($clump->correcting_rate > 0.8) ? 'ON' : 'OFF' }}</td>
+                            <td>{{ $clump->avg_left ? ($clump->avg_left . ' | ' . $clump->dn_left . ' ('. $clump->dp_left . '%)') : __('Nihil') }}</td>
+                            <td>{{ $clump->avg_right ? ($clump->avg_right . ' | ' . $clump->dn_right . ' ('. $clump->dp_right . '%)') : __('Nihil') }}</td>
                             <td>{{ Carbon::createFromTimestampUTC($clump->duration_seconds)->format('i:s') }}</td>
                             <td>{{ $clump->start_time }}</td>
                         </tr>

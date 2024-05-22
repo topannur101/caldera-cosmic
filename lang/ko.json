@@ -246,5 +246,6 @@
     "Awal": "시작 시간", 
     "Akhir": "종료 시간", 
     "Info gilingan": "배치 정보", 
-    "Info resep": "레시피 정보"
+    "Info resep": "레시피 정보",
+    "Tak ada data": "데이터 없음"
 }
