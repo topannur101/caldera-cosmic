@@ -3,6 +3,7 @@
    "Sistem pencatatan hasil pemeriksaan kulit yang terletak di mesin nesting OKC.": "Leather inspection result recording system located on the OKC nesting machine.",
    "Pendataan kulit OKC": "OKC Leather Data Collection",
    "Rerata | Dev Ka": "Avg | Dev R",
+   "Rerata" : "Avg",
    "Wewenang dicabut": "Authorization revoked",
    "Resep tidak diketahui": "Recipe unknown",
    "Min (PFC)": "Min (PFC)",
@@ -92,6 +93,7 @@
    "Perbarui kata sandi": "Update password",
    "Perangkat diperbarui": "Device updated",
    "Standar tengah": "Standard middle",
+   "Standar": "Standard",
    "Ubah kata sandi": "Change password",
    "Tipis": "Thin",
    "ST": "MS",
@@ -239,5 +241,10 @@
    "Ringkasan gilingan waktu nyata" : "Real-time batch summary",
    "Tampilkan ringkasan gilingan pada satu line produksi": "Show batch summary of a production line",
    "Data mentah waktu nyata": "Real-time raw data",
-   "Tampilkan riwayat data mentah pada satu line produksi": "Show raw data history of a production line"
+   "Tampilkan riwayat data mentah pada satu line produksi": "Show raw data history of a production line",
+   "Rincian Gilingan": "Batch details",
+   "Awal": "Start at",
+   "Akhir": "End at",
+   "Info gilingan": "Batch info",
+   "Info resep": "Recipe info"
 }

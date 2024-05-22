@@ -3,6 +3,7 @@
    "Sistem pencatatan hasil pemeriksaan kulit yang terletak di mesin nesting OKC.": "Hệ thống ghi nhận kết quả kiểm tra da nằm ở máy làm tổ OKC.",
    "Pendataan kulit OKC": "Thu thập dữ liệu da OKC",
    "Rerata | Dev Ka": "Trung bình | Lệch bên phải",
+   "Rerata": "Trung bình",
    "Wewenang dicabut": "Quyền bị thu hồi",
    "Resep tidak diketahui": "Công thức không rõ",
    "Min (PFC)": "Tối thiểu (PFC)",
@@ -92,6 +93,7 @@
    "Perbarui kata sandi": "Cập nhật mật khẩu",
    "Perangkat diperbarui": "Thiết bị đã được cập nhật",
    "Standar tengah": "Tiêu chuẩn giữa",
+   "Standar": "Tiêu chuẩn",
    "Ubah kata sandi": "Thay đổi mật khẩu",
    "Tipis": "Mỏng",
    "ST": "ST",
@@ -239,5 +241,10 @@
    "Ringkasan gilingan waktu nyata": "Tóm tắt lô hàng thời gian thực",
    "Tampilkan ringkasan gilingan pada satu line produksi": "Hiển thị tóm tắt lô hàng của một dây chuyền sản xuất",
    "Data mentah waktu nyata": "Dữ liệu thô thời gian thực",
-   "Tampilkan riwayat data mentah pada satu line produksi": "Hiển thị lịch sử dữ liệu thô của một dây chuyền sản xuất"
+   "Tampilkan riwayat data mentah pada satu line produksi": "Hiển thị lịch sử dữ liệu thô của một dây chuyền sản xuất",
+   "Rincian Gilingan": "Chi tiết lô", 
+   "Awal": "Bắt đầu lúc", 
+   "Akhir": "Kết thúc lúc", 
+   "Info gilingan": "Thông tin lô", 
+   "Info resep": "Thông tin công thức"
 }

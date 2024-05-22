@@ -372,6 +372,6 @@ new class extends Component {
                 data: []
             }]);
         }
-    }, 2000);
+    }, 3000);
 </script>
 @endscript

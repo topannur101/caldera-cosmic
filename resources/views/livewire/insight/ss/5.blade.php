@@ -64,7 +64,7 @@ new class extends Component {
 
 ?>
 
-<div wire:poll.10s class="w-full h-screen p-4">
+<div wire:poll.30s class="w-full h-screen p-4">
     <div class="p-4">
         <div class="flex w-full justify-between items-center">
             <div class="truncate">

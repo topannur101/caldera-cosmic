@@ -3,6 +3,7 @@
    "Sistem pencatatan hasil pemeriksaan kulit yang terletak di mesin nesting OKC.": "OKC 네스팅 기계에 위치한 가죽 검사 결과 기록 시스템입니다.",
    "Pendataan kulit OKC": "OKC 가죽 데이터 수집",
    "Rerata | Dev Ka": "평균 | 오른쪽 편차",
+   "Rerata": "평균",
    "Wewenang dicabut": "권한이 취소되었습니다",
    "Resep tidak diketahui": "레시피를 알 수 없습니다",
    "Min (PFC)": "최소 (PFC)",
@@ -92,6 +93,7 @@
    "Perbarui kata sandi": "비밀번호 업데이트",
    "Perangkat diperbarui": "장치가 업데이트되었습니다",
    "Standar tengah": "표준 중간",
+   "Standar": "표준",
    "Ubah kata sandi": "비밀번호 변경",
    "Tipis": "얇음",
    "ST": "MS",
@@ -239,5 +241,10 @@
     "Ringkasan gilingan waktu nyata": "실시간 배치 요약",
     "Tampilkan ringkasan gilingan pada satu line produksi": "한 생산 라인의 배치 요약 표시",
     "Data mentah waktu nyata": "실시간 원시 데이터",
-    "Tampilkan riwayat data mentah pada satu line produksi": "한 생산 라인의 원시 데이터 기록 표시"
+    "Tampilkan riwayat data mentah pada satu line produksi": "한 생산 라인의 원시 데이터 기록 표시",
+    "Rincian Gilingan": "배치 세부 정보", 
+    "Awal": "시작 시간", 
+    "Akhir": "종료 시간", 
+    "Info gilingan": "배치 정보", 
+    "Info resep": "레시피 정보"
 }

@@ -67,7 +67,7 @@ new class extends Component {
             }, {
                 name: '" . __('Kanan') . "',
                 data: " . $kananDataJs . ",
-                color: '#00F5D4'
+                color: '#E27883'
             }],
             xaxis: {
                 type: 'datetime',
@@ -88,10 +88,10 @@ new class extends Component {
             annotations: {
                 yaxis: [
                     {
-                    y: " . $this->recipe->std_min . ",
-                    y2: " . $this->recipe->std_max . ",
+                    y: " . $this->recipe->std_min - 0.05 . ",
+                    y2: " . $this->recipe->std_max + 0.05 . ",
                     borderColor: '#654db8',
-                    fillColor: '#9984d6',
+                    fillColor: '#654db8',
                     label: {
                         text: '" . __('Standar') . "'
                     }
@@ -119,29 +119,28 @@ new class extends Component {
 <div class="p-6">
     <div class="flex justify-between items-start">
         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            {{ __('Rincian gilingan') }}
+            {{ __('Rincian Gilingan') }}
         </h2>
         <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
     </div>
-    <div class="h-80" id="chart-container" wire:key="chart-container" wire:ignore>
+    <div class="h-80 bg-white rounded overflow-hidden my-8" id="chart-container" wire:key="chart-container" wire:ignore>
     </div>
-    <div class="font-bold">Batch info</div>
-    <div>Batch id: {{ $id }}</div>
-    <div>Batch start at: {{ $start_at }}</div>
-    <div>Batch start at: {{ $end_at }}</div>
-    <div>Batch duration: {{ $duration ? $duration->format('i:s') : '' }}</div>
-    <div class="font-bold">Recipe info</div>
-    <div>Recipe id: {{ $recipe->id ?? '' }}</div>
-    <div>Recipe name: {{ $recipe->name ?? '' }}</div>
-    <div>Standard mid: {{ $recipe->std_mid ?? '' }}</div>
-    <div>Standard min: {{ $recipe->std_min ?? '' }}</div>
-    <div>Standard max: {{ $recipe->std_max ?? '' }}</div>
-    <div>PFC min: {{ $recipe->pfc_min ?? '' }}</div>
-    <div>PFC max: {{ $recipe->pfc_max ?? '' }}</div>
-    <div class="font-bold">Device info</div>
-    <div>Device id: {{ $clump->ins_rtc_device_id ?? '' }}</div>
-    <div>Device line: {{ $clump->ins_rtc_device->line ?? '' }}</div>
-
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4">
+      <div>
+         <div class="font-bold">{{ __('Info gilingan') . ' [' . $id . ']' }}</div>
+         <div>{{ __('Awal') . ': ' . $start_at }}</div>
+         <div>{{ __('Akhir') . ': ' . $end_at }}</div>
+         <div>{{ __('Durasi') . ': ' . ($duration ? $duration->format('i:s') : '') }}</div>
+         <div>{{ __('Line') . ': ' . ($clump->ins_rtc_device->line ?? '') }}</div>
+      </div>
+      <div>
+         <div class="font-bold">{{ __('Info resep') . ' [' . ($recipe->id ?? '') . ']' }}</div>
+         <div>{{ $recipe->name ?? '' }}</div>
+         <div>{{ __('Standar tengah') . ': ' . ($recipe->std_mid ?? '') }}</div>
+         <div>{{ __('Standar') . ': ' . ($recipe->std_min ?? '') . ' — ' . ($recipe->std_max ?? '') }}</div>
+         <div>{{ __('PFC') . ': ' . ($recipe->pfc_min ?? '') . ' — ' . ($recipe->pfc_max ?? '') }}</div>
+      </div>
+    </div>
     <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
 </div>
