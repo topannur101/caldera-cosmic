@@ -248,5 +248,11 @@
    "Tak ada data": "No data",
    "Terjadi kesalahan pada server": "An error occurred on the server",
    "Perbarui": "Update",
-   "Tidak ditemukan": "Not found"
+   "Tidak ditemukan": "Not found",
+   "Perangkat baru": "New device",
+   "Wewenang baru": "New authorization",
+   "Perangkat ": "Device",
+   "Resep dibuat": "Recipe created",
+   "Resep baru": "New recipe",
+   "Kamu tak memiliki wewenang untuk membuat atau memperbarui resep RTC": "You're not authorized to create or update RTC recipe"
 }

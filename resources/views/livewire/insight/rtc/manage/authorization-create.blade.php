@@ -73,7 +73,7 @@ new #[Layout('layouts.app')] class extends Component {
     <form wire:submit="save" class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Wewenang') }}
+                {{ __('Wewenang baru') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
@@ -103,7 +103,7 @@ new #[Layout('layouts.app')] class extends Component {
             <x-checkbox id="new-recipe-manage" wire:model="actions"
                 value="recipe-manage">{{ __('Kelola resep ') }}</x-checkbox>
         </div>
-        <div class="mt-6 flex justify-between items-end">
+        <div class="mt-6 flex justify-end items-end">
             <x-primary-button type="submit">
                 {{ __('Buat') }}
             </x-primary-button>

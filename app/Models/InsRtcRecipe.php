@@ -15,5 +15,8 @@ class InsRtcRecipe extends Model
         'std_min',
         'std_max',
         'std_mid',
+        'scale',
+        'pfc_min',
+        'pfc_max',
     ];
 }

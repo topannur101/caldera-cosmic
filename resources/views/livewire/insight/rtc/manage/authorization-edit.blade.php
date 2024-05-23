@@ -11,20 +11,19 @@ use Livewire\Attributes\Renderless;
 use Illuminate\Support\Facades\Gate;
 
 new #[Layout('layouts.app')] class extends Component {
-    public int      $id;
-    public string   $user_name;
-    public string   $user_emp_id;
-    public string   $user_photo;
-    public array    $actions;
+    public int $id;
+    public string $user_name;
+    public string $user_emp_id;
+    public string $user_photo;
+    public array $actions;
 
     public function rules()
     {
         return [
-            'actions'   => ['array'],
-            'actions.*' => ['string']
+            'actions' => ['array'],
+            'actions.*' => ['string'],
         ];
     }
-
 
     #[On('authorization-edit')]
     public function loadAuth(int $id)
@@ -65,7 +64,6 @@ new #[Layout('layouts.app')] class extends Component {
             $this->handleNotFound();
             $this->customReset();
         }
-
     }
 
     public function delete()
@@ -87,7 +85,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function customReset()
     {
-        $this->reset(['id', 'user_name', 'user_emp_id', 'user_photo',  'user_photo', 'actions']);
+        $this->reset(['id', 'user_name', 'user_emp_id', 'user_photo', 'user_photo', 'actions']);
     }
 
     public function handleNotFound()
@@ -142,15 +140,15 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         @can('superuser')
             <div class="mt-6 flex justify-between items-end">
+                <div>
+                    <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete"
+                        wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
+                        {{ __('Cabut') }}
+                    </x-text-button>
+                </div>
                 <x-primary-button type="submit">
                     {{ __('Perbarui') }}
                 </x-primary-button>
-                <div>
-                <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete"
-                    wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
-                    {{ __('Cabut') }}
-                </x-text-button>
-                </div>
             </div>
         @endcan
     </form>

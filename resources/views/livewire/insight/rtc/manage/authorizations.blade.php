@@ -68,7 +68,6 @@ new #[Layout('layouts.app')] class extends Component {
                             x-on:click.prevent="$dispatch('open-modal', 'authorization-create');">{{ __('Beri wewenang') }}</x-secondary-button>
                     @endcan
                 </div>
-
             </div>
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg mt-5">
                 <div class="flex items-center justify-between px-6 py-3">
@@ -77,6 +76,16 @@ new #[Layout('layouts.app')] class extends Component {
                         <x-text-input-search wire:model.live="q" id="inv-q"
                             placeholder="{{ __('CARI') }}"></x-text-input-search>
                     </div>
+                </div>
+                <div wire:key="authorization-create">
+                    <x-modal name="authorization-create">
+                        <livewire:insight.rtc.manage.authorization-create  />
+                    </x-modal>
+                </div>
+                <div wire:key="authorization-edit">
+                    <x-modal name="authorization-edit">
+                        <livewire:insight.rtc.manage.authorization-edit  />
+                    </x-modal>
                 </div>
                 <hr class="border-neutral-200 dark:border-neutral-700" />
                 <table wire:key="auths-table" class="table">
@@ -147,15 +156,5 @@ new #[Layout('layouts.app')] class extends Component {
                 @endif
             @endif
         </div>
-    </div>
-    <div wire:key="authorization-create">
-        <x-modal name="authorization-create">
-            <livewire:insight.rtc.manage.authorization-create  />
-        </x-modal>
-    </div>
-    <div wire:key="authorization-edit">
-        <x-modal name="authorization-edit">
-            <livewire:insight.rtc.manage.authorization-edit  />
-        </x-modal>
     </div>
 </div>

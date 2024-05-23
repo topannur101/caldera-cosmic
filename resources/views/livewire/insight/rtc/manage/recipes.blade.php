@@ -20,17 +20,17 @@ new #[Layout('layouts.app')] class extends Component {
     #[On('updated')]
     public function with(): array
     {
-      $q = trim($this->q);
+        $q = trim($this->q);
         $recipes = InsRtcRecipe::where(function (Builder $query) use ($q) {
             $query
-            ->orWhere('name', 'LIKE', '%' . $q . '%')
-            ->orWhere('og_rs', 'LIKE', '%' . $q . '%')
-            ->orWhere('std_min', 'LIKE', '%' . $q . '%')
-            ->orWhere('std_max', 'LIKE', '%' . $q . '%')
-            ->orWhere('std_mid', 'LIKE', '%' . $q . '%')
-            ->orWhere('scale', 'LIKE', '%' . $q . '%')
-            ->orWhere('pfc_min', 'LIKE', '%' . $q . '%')
-            ->orWhere('pfc_max', 'LIKE', '%' . $q . '%');
+                ->orWhere('name', 'LIKE', '%' . $q . '%')
+                ->orWhere('og_rs', 'LIKE', '%' . $q . '%')
+                ->orWhere('std_min', 'LIKE', '%' . $q . '%')
+                ->orWhere('std_max', 'LIKE', '%' . $q . '%')
+                ->orWhere('std_mid', 'LIKE', '%' . $q . '%')
+                ->orWhere('scale', 'LIKE', '%' . $q . '%')
+                ->orWhere('pfc_min', 'LIKE', '%' . $q . '%')
+                ->orWhere('pfc_max', 'LIKE', '%' . $q . '%');
         })
             ->orderBy('id')
             ->paginate($this->perPage);
@@ -68,19 +68,30 @@ new #[Layout('layouts.app')] class extends Component {
 </x-slot>
 <div id="content" class="py-12 max-w-5xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
-      <div class="flex justify-between px-6 sm:px-0">
-         <div class="w-40">
-            <x-text-input-search wire:model.live="q" id="inv-q"
-                placeholder="{{ __('CARI') }}"></x-text-input-search>
-        </div>
-         <x-secondary-button type="button" class="my-auto" x-data=""
-         x-on:click.prevent="$dispatch('open-modal', 'create-recipe')">{{ __('Buat') }}</x-secondary-button>  
+        <div class="flex justify-between px-6 sm:px-0">
+            <div class="w-40">
+                <x-text-input-search wire:model.live="q" id="inv-q"
+                    placeholder="{{ __('CARI') }}"></x-text-input-search>
+            </div>
+            @can('manage', InsRtcRecipe::class)
+                <x-secondary-button type="button" class="my-auto" x-data=""
+                    x-on:click.prevent="$dispatch('open-modal', 'recipe-create')">{{ __('Buat') }}</x-secondary-button>
+            @endcan
 
- 
-      </div>
-      <x-modal name="create-recipe">
-         <livewire:insight.rtc.manage.recipes-form lazy wire:key="create-recipe" />
-     </x-modal>
+
+        </div>
+        <div wire:key="recipe-create">
+            <x-modal name="recipe-create">
+                <livewire:insight.rtc.manage.recipe-create />
+            </x-modal>
+        </div>
+        <div wire:key="recipe-edit">
+            @can('manage', InsRtcRecipe::class)
+                <x-modal name="recipe-edit">
+                    <livewire:insight.rtc.manage.recipe-edit wire:key="recipe-edit" />
+                </x-modal>
+            @endcan
+        </div>
         <div class="w-full mt-5">
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
                 <table wire:key="recipes-table" class="table">
@@ -97,7 +108,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </tr>
                     @foreach ($recipes as $recipe)
                         <tr wire:key="recipe-tr-{{ $recipe->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'edit-recipe-{{ $recipe->id }}')">
+                            x-on:click="$dispatch('open-modal', 'recipe-edit'); $dispatch('recipe-edit', { id: {{ $recipe->id }} })">
                             <td>
                                 {{ $recipe->id }}
                             </td>
@@ -126,12 +137,6 @@ new #[Layout('layouts.app')] class extends Component {
                                 {{ $recipe->pfc_max }}
                             </td>
                         </tr>
-                        @can('manage', $recipe)
-                            <x-modal :name="'edit-recipe-' . $recipe->id">
-                                <livewire:insight.rtc.manage.recipes-form wire:key="recipe-lw-{{ $recipe->id . $loop->index }}"
-                                    :recipe="$recipe" lazy />
-                            </x-modal>
-                        @endcan
                     @endforeach
                 </table>
                 <div wire:key="recipes-none">

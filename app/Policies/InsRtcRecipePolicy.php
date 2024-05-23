@@ -5,7 +5,7 @@ namespace App\Policies;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class InsRtcDevicePolicy
+class InsRtcRecipePolicy
 {
     /**
      * Create a new policy instance.
@@ -19,9 +19,9 @@ class InsRtcDevicePolicy
     {
         $auth = $user->ins_rtc_auths->first();
         $actions = json_decode($auth->actions ?? '{}', true);
-        return in_array('device-manage', $actions)
+        return in_array('recipe-manage', $actions)
         ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk membuat atau memperbarui perangkat RTC') );
+        : Response::deny( __('Kamu tak memiliki wewenang untuk membuat atau memperbarui resep RTC') );
     }
 
     public function before(User $user): bool|null
