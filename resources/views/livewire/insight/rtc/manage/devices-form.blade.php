@@ -54,18 +54,18 @@ new class extends Component {
             InsRtcDevice::create($validated);
             $msg = __('Perangkat didaftarkan');
         }
-        $this->js('notyf.success("'.$msg.'")'); 
+        $this->js('notyfSuccess("'.$msg.'")'); 
         $this->dispatch('updated');
-        $this->js('window.dispatchEvent(escKey)'); 
+        $this->js('$dispatch("close")'); 
     }
 
     public function delete()
     {
         Gate::authorize('manage', $this->device);
         $this->device->delete();
-        $this->js('notyf.success("'. __('Perangkat dihapus') .'")'); 
+        $this->js('notyfSuccess("'. __('Perangkat dihapus') .'")'); 
         $this->dispatch('updated');
-        $this->js('window.dispatchEvent(escKey)'); 
+        $this->js('$dispatch("close")'); 
     }
 
 };

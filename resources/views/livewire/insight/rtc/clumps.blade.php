@@ -149,7 +149,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </tr>
                     @foreach ($clumps as $clump)
                         <tr wire:key="clump-tr-{{ $clump->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'clump-show'); $dispatch('clump-show', { id: '{{ $clump->id }}'} )">
+                            x-on:click="$dispatch('open-modal', 'clump'); $dispatch('clump-load', { id: '{{ $clump->id }}'} )">
                             <td>{{ $clump->id }}</td>
                             <td>{{ $clump->line }}</td>
                             <td>{{ $clump->shift }}</td>
@@ -165,12 +165,6 @@ new #[Layout('layouts.app')] class extends Component {
                 </table>
             </div>
         </div>
-        <div wire:key="clump-show">
-            <x-modal name="clump-show" maxWidth="2xl">
-                <livewire:insight.rtc.clump-show />
-            </x-modal>
-        </div>
-
         <div class="flex items-center relative h-16">
             @if (!$clumps->isEmpty())
                 @if ($clumps->hasMorePages())
@@ -193,4 +187,9 @@ new #[Layout('layouts.app')] class extends Component {
             @endif
         </div>
     @endif
+    <div wire:key="clump">
+        <x-modal name="clump" maxWidth="2xl">
+            <livewire:insight.rtc.clump />
+        </x-modal>
+    </div>
 </div>

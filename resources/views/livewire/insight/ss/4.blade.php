@@ -77,7 +77,7 @@ new class extends Component {
            </div>
            <div class="pl-4 w-80">
                <div>
-                   <div class="text-6xl text-neutral-400 uppercase m-1">{{ __('Line') }}</div>
+                   <div class="text-6xl text-neutral-400 dark:text-white uppercase m-1">{{ __('Line') }}</div>
                    <x-select wire:model.live="device_id" class="text-6xl font-bold">
                        <option value=""></option>
                        @foreach ($devices as $device)
@@ -101,7 +101,7 @@ new class extends Component {
     @else
         <div wire:key="line-all-devices" class="p-0 sm:p-1 overflow-auto">
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
-                <table class="table table-2xl table-truncate text-neutral-600 dark:text-neutral-400">
+                <table class="table table-2xl table-truncate text-neutral-600 dark:text-white">
                     <thead>
                         <tr class="uppercase text-xs">
                             <th>{{ __('Shift') }}</th>

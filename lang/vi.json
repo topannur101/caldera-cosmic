@@ -107,7 +107,6 @@
    "Masuk": "Đăng nhập",
    "Are you sure you want to delete your account?": "Bạn có chắc chắn muốn xóa tài khoản của mình không?",
    "Tebal": "Dày",
-   "Raih cakrawala dalam waktu nyata": "Giành được thông tin chi tiết trong thời gian thực",
    "Tentukan rentang tanggal": "Chỉ định khoảng thời gian",
    "Integritas:": "Tính toàn vẹn:",
    "Model": "Mẫu",
@@ -181,7 +180,6 @@
    "Cancel": "Hủy",
    "wewenang": "quyền hạn",
    "Sirkulasi": "Lưu thông",
-   "dengan Caldera": "với Caldera",
    "Ringkasan Harian": "Tóm tắt hàng ngày",
    "Koreksi Oto.": "Sửa chữa tự động",
    "Lupa kata sandi": "Quên mật khẩu",
@@ -247,5 +245,9 @@
    "Akhir": "Kết thúc lúc", 
    "Info gilingan": "Thông tin lô", 
    "Info resep": "Thông tin công thức",
-   "Tak ada data": "Không có dữ liệu"
+   "Tak ada data": "Không có dữ liệu",
+   "Terjadi kesalahan pada server": "Đã xảy ra lỗi trên máy chủ",
+   "Perbarui": "Cập nhật",
+   "Tidak ditemukan": "Không tìm thấy"
+   
 }

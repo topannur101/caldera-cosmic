@@ -38,7 +38,7 @@ Route::prefix('insight')->group(function () {
     Route::view('/', 'livewire.insight.index')->name('insight');
 });
 
-Route::view('kpi', 'kpi')->name('kpi');
+// Route::view('kpi', 'kpi')->name('kpi');
 Route::view('profile', 'profile')->name('profile');
 Route::view('help', 'help')->name('help');
 

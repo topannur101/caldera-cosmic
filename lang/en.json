@@ -107,7 +107,6 @@
    "Masuk": "Log in",
    "Are you sure you want to delete your account?": "Are you sure you want to delete your account?",
    "Tebal": "Thick",
-   "Raih cakrawala dalam waktu nyata": "Gain insights in real time",
    "Tentukan rentang tanggal": "Specify date range",
    "Integritas:": "Integrity:",
    "Model": "Model",
@@ -181,7 +180,6 @@
    "Cancel": "Cancel",
    "wewenang": "authorizations",
    "Sirkulasi": "Circulation",
-   "dengan Caldera": "with Caldera",
    "Ringkasan Harian": "Daily Summary",
    "Koreksi Oto.": "Auto Correction",
    "Lupa kata sandi": "Forgot password",
@@ -247,5 +245,8 @@
    "Akhir": "End at",
    "Info gilingan": "Batch info",
    "Info resep": "Recipe info",
-   "Tak ada data": "No data"
+   "Tak ada data": "No data",
+   "Terjadi kesalahan pada server": "An error occurred on the server",
+   "Perbarui": "Update",
+   "Tidak ditemukan": "Not found"
 }

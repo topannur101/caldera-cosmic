@@ -13,6 +13,11 @@ new #[Layout('layouts.guest')] class extends Component
     /**
      * Handle an incoming authentication request.
      */
+    public function mount()
+    {
+        $this->js('$wire.form.bgm = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";');
+    }
+
     public function login(): void
     {
         $this->validate();
@@ -24,16 +29,17 @@ new #[Layout('layouts.guest')] class extends Component
         $accountPref = Pref::where('user_id', Auth::user()->id)->where('name', 'account')->first();
         $accountPref ? $data = json_decode($accountPref->data, true) : $data = '';
 
-        $lang   = isset($data['lang'])      ? $data['lang']     : 'id';
-        $bg     = isset($data['bg'])        ? $data['bg']       : 'auto';
-        $accent = isset($data['accent'])    ? $data['accent']   : 'purple';
-        $mblur  = $data['mblur'] ?? false;
+        $pref_lang   = isset($data['lang'])      ? $data['lang']     : 'id';
+        $pref_bg     = isset($data['bg'])        ? $data['bg']       : 'auto';
+        $pref_accent = isset($data['accent'])    ? $data['accent']   : 'purple';
+        $pref_mblur  = $data['mblur'] ?? false;
 
-        ($bg == 'auto' && $this->form->bgm == 'dark') ? session(['bg' => 'dark']) : session(['bg' => $bg]);
+        $bg = $pref_bg == 'auto' ? ($this->form->bgm == 'dark' ? 'dark' : null) : ($pref_bg == 'dark' ? 'dark' : null);
 
-        session(['mblur'    => $mblur]);
-        session(['lang'     => $lang]);
-        session(['accent'   => $accent]);
+        session(['bg'       => $bg]);
+        session(['mblur'    => $pref_mblur]);
+        session(['lang'     => $pref_lang]);
+        session(['accent'   => $pref_accent]);
 
         // navigate: false to reload page
         $this->redirectIntended(default: route('home', absolute: false), navigate: true);
@@ -46,7 +52,7 @@ new #[Layout('layouts.guest')] class extends Component
 
     <form wire:submit="login">
         <!-- Theme input -->
-        <input type="hidden" id="bgm" name="bgm" />
+        <input type="hidden" wire:model="form.bgm" id="bgm" name="bgm" />
 
         <!-- Email Address -->
         {{-- <div>

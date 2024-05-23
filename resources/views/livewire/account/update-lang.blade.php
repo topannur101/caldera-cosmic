@@ -22,26 +22,26 @@ new class extends Component
         try {
             $validated = $this->validate([
                 'lang' => ['required', Rule::in(['id', 'en', 'vi', 'ko'])]
-        ]);
-        } catch (ValidationException $e) {
+            ]);
+            $pref = Pref::firstOrCreate(
+                ['user_id' => Auth::user()->id, 'name' => 'account'],
+                ['data' => json_encode([])]
+            );
+            $existingData = json_decode($pref->data, true);
+            $existingData['lang'] = $validated['lang'];
+
+            App::setLocale($validated['lang']);
+            session()->put('lang', $validated['lang']);
+
+            $pref->update(['data' => json_encode($existingData)]);
+
+            $this->js('$dispatch("close")');
+            $this->redirectIntended(default: route('account', absolute: false), navigate: false);
+
+        } catch (\Throwable $th) {
+            $this->js('notyfError("' . __('Terjadi kesalahan pada server') . '")');
             $this->reset('lang');
-            throw $e;
         }
-
-        $pref = Pref::firstOrCreate(
-            ['user_id' => Auth::user()->id, 'name' => 'account'],
-            ['data' => json_encode([])]
-        );
-        $existingData = json_decode($pref->data, true);
-        $existingData['lang'] = $validated['lang'];
-
-        App::setLocale($validated['lang']);
-        session()->put('lang', $validated['lang']);
-
-        $pref->update(['data' => json_encode($existingData)]);
-
-        $this->js('window.dispatchEvent(escKey)');
-        $this->redirectIntended(default: route('account', absolute: false), navigate: false);
     }
 }; ?>
 
@@ -67,4 +67,6 @@ new class extends Component
             </x-action-message> --}}
         </div>
     </form>
+    <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
+    <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
 </section>

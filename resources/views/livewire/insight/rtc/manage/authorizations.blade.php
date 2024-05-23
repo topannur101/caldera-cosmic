@@ -56,7 +56,7 @@ new #[Layout('layouts.app')] class extends Component {
     </header>
 </x-slot>
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
-    <div>
+    <div wire:key="content-child">
         <div class="w-full mt-5">
             <div class="flex justify-between px-6 sm:px-0">
                 <div>
@@ -65,14 +65,11 @@ new #[Layout('layouts.app')] class extends Component {
                 <div>
                     @can('superuser')
                         <x-secondary-button type="button" class="my-auto" x-data=""
-                            x-on:click.prevent="$dispatch('open-modal', 'create-auth')">{{ __('Beri wewenang') }}</x-secondary-button>
+                            x-on:click.prevent="$dispatch('open-modal', 'authorization-create');">{{ __('Beri wewenang') }}</x-secondary-button>
                     @endcan
                 </div>
 
             </div>
-            <x-modal name="create-auth">
-                <livewire:insight.rtc.manage.authorizations-form wire:key="auths-create" lazy />
-            </x-modal>
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg mt-5">
                 <div class="flex items-center justify-between px-6 py-3">
                     <div class="text-xs font-bold uppercase">{{ __('Pengguna') }}</div>
@@ -85,7 +82,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <table wire:key="auths-table" class="table">
                     @foreach ($auths as $auth)
                         <tr wire:key="auth-tr-{{ $auth->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'edit-auth-{{ $auth->id }}')">
+                            x-on:click="$dispatch('open-modal', 'authorization-edit'); $dispatch('authorization-edit', { id: '{{ $auth->id }}'})">
                             <td>
                                 <div class="flex">
                                     <div>
@@ -118,10 +115,6 @@ new #[Layout('layouts.app')] class extends Component {
                                 {{ $auth->countActions() . ' ' . __('tindakan') }}
                             </td>
                         </tr>
-                        <x-modal :name="'edit-auth-' . $auth->id">
-                            <livewire:insight.rtc.manage.authorizations-form
-                                wire:key="auth-lw-{{ $auth->id . $loop->index }}" :auth="$auth" lazy />
-                        </x-modal>
                     @endforeach
                 </table>
                 <div wire:key="auths-none">
@@ -155,5 +148,14 @@ new #[Layout('layouts.app')] class extends Component {
             @endif
         </div>
     </div>
-
+    <div wire:key="authorization-create">
+        <x-modal name="authorization-create">
+            <livewire:insight.rtc.manage.authorization-create  />
+        </x-modal>
+    </div>
+    <div wire:key="authorization-edit">
+        <x-modal name="authorization-edit">
+            <livewire:insight.rtc.manage.authorization-edit  />
+        </x-modal>
+    </div>
 </div>

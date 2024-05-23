@@ -107,7 +107,6 @@
    "Masuk": "로그인",
    "Are you sure you want to delete your account?": "계정을 삭제하시겠습니까?",
    "Tebal": "두꺼움",
-   "Raih cakrawala dalam waktu nyata": "실시간으로 통찰을 얻으십시오",
    "Tentukan rentang tanggal": "날짜 범위 지정",
    "Integritas:": "무결성:",
    "Model": "모델",
@@ -181,7 +180,6 @@
    "Cancel": "취소",
    "wewenang": "권한",
    "Sirkulasi": "순환",
-   "dengan Caldera": "칼데라와 함께",
    "Ringkasan Harian": "일일 요약",
    "Koreksi Oto.": "자동 수정",
    "Lupa kata sandi": "비밀번호를 잊으셨습니까",
@@ -247,5 +245,8 @@
     "Akhir": "종료 시간", 
     "Info gilingan": "배치 정보", 
     "Info resep": "레시피 정보",
-    "Tak ada data": "데이터 없음"
+    "Tak ada data": "데이터 없음",
+    "Terjadi kesalahan pada server": "서버에서 오류가 발생했습니다",
+    "Perbarui": "업데이트",
+    "Tidak ditemukan": "찾을 수 없습니다"
 }

@@ -159,8 +159,8 @@ new #[Layout('layouts.app')] class extends Component {
 
                 // Generate CSV file and return as a download
                 $fileName = __('Wawasan_RTC') . '_' . date('Y-m-d_Hs') . '.csv';
-                $this->js('window.dispatchEvent(escKey)');
-                $this->js('notyf.success("' . __('Pengunduhan dimulai...') . '")');
+                $this->js('$dispatch("close")');
+                $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
 
                 return Response::stream(
                     function () use ($csv) {

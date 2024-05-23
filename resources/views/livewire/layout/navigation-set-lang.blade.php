@@ -11,7 +11,7 @@ new class extends Component {
 
     public function mount()
     {
-        $this->lang = session()->get('lang') ?? 'id';
+        $this->lang = session()->get('lang') ?? config('app.locale');
     }
 
     public function updated($property)

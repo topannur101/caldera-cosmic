@@ -8,9 +8,10 @@ use Illuminate\Validation\Rule;
 
 new #[Layout('layouts.app')] class extends Component {
     
-    public string $bg = '';
-    public string $accent = '';
-    public string $mblur = '';
+    public string $bgm      = '';
+    public string $bg       = '';
+    public string $accent   = '';
+    public string $mblur    = '';
 
     public function mount()
     {
@@ -21,6 +22,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->bg       = isset($data['bg'])        ? $data['bg']               : 'auto';
         $this->accent   = isset($data['accent'])    ? $data['accent']           : 'purple';
         $this->mblur    = isset($data['mblur'])     ? (bool) $data['mblur']     : false;
+        $this->js('$wire.bgm = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";');
     }
  
     public function updated($property)
@@ -37,11 +39,22 @@ new #[Layout('layouts.app')] class extends Component {
             $existingData['bg'] = $validated['bg'];
             $pref->update(['data' => json_encode($existingData)]);
 
-            session(['bg' => $this->bg]);
-            $this->js("const body = document.body;
-            const classes = ['auto', 'dark', 'light'];
-            classes.forEach((cls) => { body.classList.remove(cls); });
-            body.classList.add('" . $this->bg . "');");
+            $bg = $this->bg == 'auto' ? $this->bgm : $this->bg;
+            session(['bg' => $bg == 'dark' ? 'dark' : null]);
+
+            switch ($this->bg) {
+                case 'dark':
+                    $this->js('localStorage.theme = "dark"');
+                    break;
+                case 'light':
+                    $this->js('localStorage.theme = "light"');
+                    break;
+                default:
+                    $this->js('localStorage.removeItem("theme")');
+                    break;
+            }
+
+            $this->js("calderaSetTheme()");
         }
         if ($property == 'accent') {
             $validated = $this->validate([

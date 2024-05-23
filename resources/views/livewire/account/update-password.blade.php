@@ -34,8 +34,8 @@ new class extends Component
 
         $this->reset('current_password', 'password', 'password_confirmation');
 
-        $this->js('window.dispatchEvent(escKey)');
-        $this->js('notyf.success("' . __('Kata sandi diperbarui') . '")');
+        $this->js('$dispatch("close")');
+        $this->js('notyfSuccess("' . __('Kata sandi diperbarui') . '")');
         // $this->dispatch('password-updated');
     }
 }; ?>

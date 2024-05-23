@@ -38,11 +38,11 @@ new class extends Component {
                             {{ __('Inventaris') }}
                         </x-nav-link>
                     @endcan
-                    @can('viewAny', App\Models\KpiItem::class)
+                    {{-- @can('viewAny', App\Models\KpiItem::class)
                         <x-nav-link :href="route('kpi')" :active="request()->routeIs('kpi*')" wire:navigate>
                             {{ __('KPI') }}
                         </x-nav-link>
-                    @endcan
+                    @endcan --}}
                     <x-nav-link :href="route('insight')" :active="request()->is('insight*')" wire:navigate>
                         {{ __('Wawasan') }}
                     </x-nav-link>
@@ -144,11 +144,11 @@ new class extends Component {
                     {{ __('Inventaris') }}
                 </x-responsive-nav-link>
             @endcan
-            @can('viewAny', App\Models\KpiItem::class)
+            {{-- @can('viewAny', App\Models\KpiItem::class)
                 <x-responsive-nav-link :href="route('kpi')" :active="request()->routeIs('kpi*')" wire:navigate>
                     {{ __('KPI') }}
                 </x-responsive-nav-link>
-            @endcan
+            @endcan --}}
             <x-responsive-nav-link :href="route('insight')" :active="request()->routeIs('insight*')" wire:navigate>
                 {{ __('Wawasan') }}
             </x-responsive-nav-link>

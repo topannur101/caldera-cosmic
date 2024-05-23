@@ -50,14 +50,14 @@ new class extends Component {
 
         $this->validate();
 
-        $this->js('window.dispatchEvent(escKey)');
+        $this->js('$dispatch("close")');
     }
 
     public function delete()
     {
         $this->recipe->delete();
-        $this->js('window.dispatchEvent(escKey)');
-        $this->js('notyf.success("' . __('Resep dihapus') . '")');
+        $this->js('$dispatch("close")');
+        $this->js('notyfSuccess("' . __('Resep dihapus') . '")');
         $this->dispatch('updated');
     }
 
