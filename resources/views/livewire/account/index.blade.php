@@ -58,7 +58,7 @@ new #[Layout('layouts.app')] class extends Component
                        </div>
                    </div>
                </x-card-button>
-               <x-modal name="change-password" focusable>
+               <x-modal name="change-password" maxWidth="sm" focusable>
                    <div class="p-6">
                        <livewire:account.update-password />
                    </div>
@@ -81,7 +81,7 @@ new #[Layout('layouts.app')] class extends Component
                        </div>
                    </div>
                </x-card-button>
-               <x-modal name="change-language">
+               <x-modal name="change-language"  maxWidth="sm">
                 <div class="p-6">
                     <livewire:account.update-lang />
                 </div>

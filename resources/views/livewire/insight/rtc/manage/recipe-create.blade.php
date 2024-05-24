@@ -64,69 +64,75 @@ new class extends Component {
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
-        <div class="mt-6">
-            <label for="recipe-name"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Name') }}</label>
-            <x-text-input id="recipe-name" wire:model="name" type="text" />
-            @error('name')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
+        <div class="grid grid-cols-3 gap-x-3">
+            <div class="col-span-2 mt-6">
+                <label for="recipe-name"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Name') }}</label>
+                <x-text-input id="recipe-name" wire:model="name" type="text" />
+                @error('name')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
+            <div class="mt-6">
+                <label for="recipe-og_rs"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('OG RS') }}</label>
+                <x-text-input id="recipe-og_rs" wire:model="og_rs" type="text" />
+                @error('og_rs')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
         </div>
-        <div class="mt-6">
-            <label for="recipe-og_rs"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('OG RS') }}</label>
-            <x-text-input id="recipe-og_rs" wire:model="og_rs" type="text" />
-            @error('og_rs')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
+        <div class="grid grid-cols-3 gap-x-3">
+            <div class="mt-6">
+                <label for="recipe-std_min"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Std Min') }}</label>
+                <x-text-input id="recipe-std_min" wire:model="std_min" type="number" />
+                @error('std_min')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
+            <div class="mt-6">
+                <label for="recipe-std_max"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Std Max') }}</label>
+                <x-text-input id="recipe-std_max" wire:model="std_max" type="number" />
+                @error('std_max')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
+            <div class="mt-6">
+                <label for="recipe-std_mid"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Std Mid') }}</label>
+                <x-text-input id="recipe-std_mid" wire:model="std_mid" type="number" />
+                @error('std_mid')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
         </div>
-        <div class="mt-6">
-            <label for="recipe-std_min"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('STD Min') }}</label>
-            <x-text-input id="recipe-std_min" wire:model="std_min" type="number" />
-            @error('std_min')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
-        </div>
-        <div class="mt-6">
-            <label for="recipe-std_max"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('STD Max') }}</label>
-            <x-text-input id="recipe-std_max" wire:model="std_max" type="number" />
-            @error('std_max')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
-        </div>
-        <div class="mt-6">
-            <label for="recipe-std_mid"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('STD Mid') }}</label>
-            <x-text-input id="recipe-std_mid" wire:model="std_mid" type="number" />
-            @error('std_mid')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
-        </div>
-        <div class="mt-6">
-            <label for="recipe-scale"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Scale') }}</label>
-            <x-text-input id="recipe-scale" wire:model="scale" type="number" />
-            @error('scale')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
-        </div>
-        <div class="mt-6">
-            <label for="recipe-pfc_min"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('PFC Min') }}</label>
-            <x-text-input id="recipe-pfc_min" wire:model="pfc_min" type="number" />
-            @error('pfc_min')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
-        </div>
-        <div class="mt-6">
-            <label for="recipe-pfc_max"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('PFC Max') }}</label>
-            <x-text-input id="recipe-pfc_max" wire:model="pfc_max" type="number" />
-            @error('pfc_max')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
+        <div class="grid grid-cols-3 gap-x-3">
+            <div class="mt-6">
+                <label for="recipe-pfc_min"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('PFC Min') }}</label>
+                <x-text-input id="recipe-pfc_min" wire:model="pfc_min" type="number" />
+                @error('pfc_min')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
+            <div class="mt-6">
+                <label for="recipe-pfc_max"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('PFC Max') }}</label>
+                <x-text-input id="recipe-pfc_max" wire:model="pfc_max" type="number" />
+                @error('pfc_max')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
+            <div class="mt-6">
+                <label for="recipe-scale"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Scale') }}</label>
+                <x-text-input id="recipe-scale" wire:model="scale" type="number" />
+                @error('scale')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
         </div>     
         <div class="mt-6 flex justify-end items-end">
             <x-primary-button type="submit">

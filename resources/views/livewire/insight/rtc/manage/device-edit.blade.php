@@ -70,7 +70,7 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['line', 'ip_address']);
+        $this->reset(['id', 'line', 'ip_address']);
     }
 
     public function handleNotFound()

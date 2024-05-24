@@ -356,9 +356,9 @@ new #[Layout('layouts.app')] class extends Component {
                             </p>
                         </div>
                         <div class="mt-6 flex justify-end">
-                            <x-secondary-button type="button" x-on:click="$dispatch('close')">
+                            <x-primary-button type="button" x-on:click="$dispatch('close')">
                                 {{ __('Paham') }}
-                            </x-secondary-button>
+                            </x-primary-button>
                         </div>
                     </div>
                 </x-modal>

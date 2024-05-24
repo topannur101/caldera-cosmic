@@ -81,16 +81,14 @@ new #[Layout('layouts.app')] class extends Component {
 
         </div>
         <div wire:key="recipe-create">
-            <x-modal name="recipe-create">
+            <x-modal name="recipe-create" maxWidth="lg">
                 <livewire:insight.rtc.manage.recipe-create />
             </x-modal>
         </div>
-        <div wire:key="recipe-edit">
-            @can('manage', InsRtcRecipe::class)
-                <x-modal name="recipe-edit">
-                    <livewire:insight.rtc.manage.recipe-edit wire:key="recipe-edit" />
-                </x-modal>
-            @endcan
+        <div wire:key="recipe-edit">   
+            <x-modal name="recipe-edit">
+                <livewire:insight.rtc.manage.recipe-edit wire:key="recipe-edit" />
+            </x-modal>
         </div>
         <div class="w-full mt-5">
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg">

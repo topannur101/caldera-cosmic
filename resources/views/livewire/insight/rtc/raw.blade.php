@@ -159,9 +159,9 @@ new #[Layout('layouts.app')] class extends Component {
                                 {{ __('Mengindikasikan persentase data yang hadir di tiap jamnya. Contoh: Jika ada data setiap jam selama 21 jam dalam 1 hari, maka integritas bernilai 100%. Jika hanya ada data selama 10.5 jam selama 21 jam dalam 1 hari, maka integritas bernilai 50%') }}
                             </p>
                             <div class="mt-6 flex justify-end">
-                                <x-secondary-button type="button" x-on:click="$dispatch('close')">
+                                <x-primary-button type="button" x-on:click="$dispatch('close')">
                                     {{ __('Paham') }}
-                                </x-secondary-button>
+                                </x-primary-button>
                             </div>
                         </div>
                     </x-modal>
