@@ -68,7 +68,7 @@ new #[Layout('layouts.app')] class extends Component {
 </x-slot>
 <div id="content" class="py-12 max-w-5xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
-        <div class="flex justify-between px-6 sm:px-0">
+        <div class="flex justify-between px-6 sm:px-1">
             <div class="w-40">
                 <x-text-input-search wire:model.live="q" id="inv-q"
                     placeholder="{{ __('CARI') }}"></x-text-input-search>
@@ -90,59 +90,61 @@ new #[Layout('layouts.app')] class extends Component {
                 <livewire:insight.rtc.manage.recipe-edit wire:key="recipe-edit" />
             </x-modal>
         </div>
-        <div class="w-full mt-5">
-            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
-                <table wire:key="recipes-table" class="table">
-                    <tr>
-                        <th>{{ __('ID') }}</th>
-                        <th>{{ __('Nama') }}</th>
-                        <th>{{ __('OG/RS') }}</th>
-                        <th>{{ __('Min') }}</th>
-                        <th>{{ __('Maks') }}</th>
-                        <th>{{ __('Tengah') }}</th>
-                        <th>{{ __('Skala') }}</th>
-                        <th>{{ __('Min (PFC)') }}</th>
-                        <th>{{ __('Maks (PFC)') }}</th>
-                    </tr>
-                    @foreach ($recipes as $recipe)
-                        <tr wire:key="recipe-tr-{{ $recipe->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'recipe-edit'); $dispatch('recipe-edit', { id: {{ $recipe->id }} })">
-                            <td>
-                                {{ $recipe->id }}
-                            </td>
-                            <td>
-                                {{ $recipe->name }}
-                            </td>
-                            <td>
-                                {{ $recipe->og_rs }}
-                            </td>
-                            <td>
-                                {{ $recipe->std_min }}
-                            </td>
-                            <td>
-                                {{ $recipe->std_max }}
-                            </td>
-                            <td>
-                                {{ $recipe->std_mid }}
-                            </td>
-                            <td>
-                                {{ $recipe->scale }}
-                            </td>
-                            <td>
-                                {{ $recipe->pfc_min }}
-                            </td>
-                            <td>
-                                {{ $recipe->pfc_max }}
-                            </td>
+        <div class="overflow-auto w-full mt-5">
+            <div class="p-0 sm:p-1">
+                <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
+                    <table wire:key="recipes-table" class="table">
+                        <tr>
+                            <th>{{ __('ID') }}</th>
+                            <th>{{ __('Nama') }}</th>
+                            <th>{{ __('OG/RS') }}</th>
+                            <th>{{ __('Min') }}</th>
+                            <th>{{ __('Maks') }}</th>
+                            <th>{{ __('Tengah') }}</th>
+                            <th>{{ __('Skala') }}</th>
+                            <th>{{ __('Min (PFC)') }}</th>
+                            <th>{{ __('Maks (PFC)') }}</th>
                         </tr>
-                    @endforeach
-                </table>
-                <div wire:key="recipes-none">
-                    @if (!$recipes->count())
-                        <div class="text-center py-12">
-                            {{ __('Tak ada resep ditemukan') }}
-                        </div>
-                    @endif
+                        @foreach ($recipes as $recipe)
+                            <tr wire:key="recipe-tr-{{ $recipe->id . $loop->index }}" tabindex="0"
+                                x-on:click="$dispatch('open-modal', 'recipe-edit'); $dispatch('recipe-edit', { id: {{ $recipe->id }} })">
+                                <td>
+                                    {{ $recipe->id }}
+                                </td>
+                                <td>
+                                    {{ $recipe->name }}
+                                </td>
+                                <td>
+                                    {{ $recipe->og_rs }}
+                                </td>
+                                <td>
+                                    {{ $recipe->std_min }}
+                                </td>
+                                <td>
+                                    {{ $recipe->std_max }}
+                                </td>
+                                <td>
+                                    {{ $recipe->std_mid }}
+                                </td>
+                                <td>
+                                    {{ $recipe->scale }}
+                                </td>
+                                <td>
+                                    {{ $recipe->pfc_min }}
+                                </td>
+                                <td>
+                                    {{ $recipe->pfc_max }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                    <div wire:key="recipes-none">
+                        @if (!$recipes->count())
+                            <div class="text-center py-12">
+                                {{ __('Tak ada resep ditemukan') }}
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

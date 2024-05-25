@@ -60,7 +60,7 @@ new #[Layout('layouts.app')] class extends Component {
 </x-slot>
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
-        <div class="flex justify-between px-6 sm:px-0">
+        <div class="flex justify-between px-6 sm:px-1">
             <div class="w-40">
                 <x-text-input-search wire:model.live="q" id="inv-q"
                     placeholder="{{ __('CARI') }}"></x-text-input-search>
@@ -71,46 +71,46 @@ new #[Layout('layouts.app')] class extends Component {
             @endcan
         </div>
         <div wire:key="device-create">
-            <x-modal name="device-create">
+            <x-modal name="device-create" maxWidth="sm">
                 <livewire:insight.rtc.manage.device-create />
             </x-modal>
         </div>
-        <div wire:key="device-edit">
-            @can('manage', InsRtcDevice::class)
-                <x-modal name="device-edit">
-                    <livewire:insight.rtc.manage.device-edit wire:key="device-edit" />
-                </x-modal>
-            @endcan
+        <div wire:key="device-edit"> 
+            <x-modal name="device-edit" maxWidth="sm">
+                <livewire:insight.rtc.manage.device-edit wire:key="device-edit" />
+            </x-modal>
         </div>
-        <div class="w-full mt-5">
-            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
-                <table wire:key="devices-table" class="table">
-                    <tr>
-                        <th>{{ __('ID') }}</th>
-                        <th>{{ __('Line') }}</th>
-                        <th>{{ __('Alamat IP') }}</th>
-                    </tr>
-                    @foreach ($devices as $device)
-                        <tr wire:key="device-tr-{{ $device->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'device-edit'); $dispatch('device-edit', { id: {{ $device->id }} })">
-                            <td>
-                                {{ $device->id }}
-                            </td>
-                            <td>
-                                {{ $device->line }}
-                            </td>
-                            <td>
-                                {{ $device->ip_address }}
-                            </td>
+        <div class="overflow-auto w-full mt-5">
+            <div class="p-0 sm:p-1">
+                <div class="bg-white table dark:bg-neutral-800 shadow sm:rounded-lg">
+                    <table wire:key="devices-table" class="table">
+                        <tr>
+                            <th>{{ __('ID') }}</th>
+                            <th>{{ __('Line') }}</th>
+                            <th>{{ __('Alamat IP') }}</th>
                         </tr>
-                    @endforeach
-                </table>
-                <div wire:key="devices-none">
-                    @if (!$devices->count())
-                        <div class="text-center py-12">
-                            {{ __('Tak ada perangkat ditemukan') }}
-                        </div>
-                    @endif
+                        @foreach ($devices as $device)
+                            <tr wire:key="device-tr-{{ $device->id . $loop->index }}" tabindex="0"
+                                x-on:click="$dispatch('open-modal', 'device-edit'); $dispatch('device-edit', { id: {{ $device->id }} })">
+                                <td>
+                                    {{ $device->id }}
+                                </td>
+                                <td>
+                                    {{ $device->line }}
+                                </td>
+                                <td>
+                                    {{ $device->ip_address }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                    <div wire:key="devices-none">
+                        @if (!$devices->count())
+                            <div class="text-center py-12">
+                                {{ __('Tak ada perangkat ditemukan') }}
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

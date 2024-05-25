@@ -248,5 +248,12 @@
     "Tak ada data": "데이터 없음",
     "Terjadi kesalahan pada server": "서버에서 오류가 발생했습니다",
     "Perbarui": "업데이트",
-    "Tidak ditemukan": "찾을 수 없습니다"
+    "Tidak ditemukan": "찾을 수 없습니다",
+    "Perangkat baru": "새 기기",
+    "Wewenang baru": "새로운 권한",
+    "Perangkat ": "기기",
+    "Resep dibuat": "레시피 생성됨",
+    "Resep baru": "새 레시피",
+    "Kamu tak memiliki wewenang untuk membuat atau memperbarui resep RTC": "RTC 레시피를 생성하거나 업데이트할 권한이 없습니다"
+
 }

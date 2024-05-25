@@ -248,6 +248,11 @@
    "Tak ada data": "Không có dữ liệu",
    "Terjadi kesalahan pada server": "Đã xảy ra lỗi trên máy chủ",
    "Perbarui": "Cập nhật",
-   "Tidak ditemukan": "Không tìm thấy"
-   
+   "Tidak ditemukan": "Không tìm thấy",
+   "Perangkat baru": "Thiết bị mới",
+   "Wewenang baru": "Quyền mới",
+   "Perangkat ": "Thiết bị",
+   "Resep dibuat": "Công thức đã được tạo",
+   "Resep baru": "Công thức mới",
+   "Kamu tak memiliki wewenang untuk membuat atau memperbarui resep RTC": "Bạn không có quyền tạo hoặc cập nhật công thức RTC"
 }
