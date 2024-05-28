@@ -86,7 +86,7 @@ new class extends Component {
             <div class="mt-6">
                 <label for="recipe-std_min"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Std Min') }}</label>
-                <x-text-input id="recipe-std_min" wire:model="std_min" type="number" />
+                <x-text-input id="recipe-std_min" wire:model="std_min" type="number" step=".01" />
                 @error('std_min')
                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                 @enderror
@@ -94,7 +94,7 @@ new class extends Component {
             <div class="mt-6">
                 <label for="recipe-std_max"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Std Max') }}</label>
-                <x-text-input id="recipe-std_max" wire:model="std_max" type="number" />
+                <x-text-input id="recipe-std_max" wire:model="std_max" type="number" step=".01" />
                 @error('std_max')
                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                 @enderror
@@ -102,7 +102,7 @@ new class extends Component {
             <div class="mt-6">
                 <label for="recipe-std_mid"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Std Mid') }}</label>
-                <x-text-input id="recipe-std_mid" wire:model="std_mid" type="number" />
+                <x-text-input id="recipe-std_mid" wire:model="std_mid" type="number" step=".01" />
                 @error('std_mid')
                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                 @enderror
@@ -112,7 +112,7 @@ new class extends Component {
             <div class="mt-6">
                 <label for="recipe-pfc_min"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('PFC Min') }}</label>
-                <x-text-input id="recipe-pfc_min" wire:model="pfc_min" type="number" />
+                <x-text-input id="recipe-pfc_min" wire:model="pfc_min" type="number" step=".01" />
                 @error('pfc_min')
                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                 @enderror
@@ -120,7 +120,7 @@ new class extends Component {
             <div class="mt-6">
                 <label for="recipe-pfc_max"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('PFC Max') }}</label>
-                <x-text-input id="recipe-pfc_max" wire:model="pfc_max" type="number" />
+                <x-text-input id="recipe-pfc_max" wire:model="pfc_max" type="number" step=".01" />
                 @error('pfc_max')
                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                 @enderror
@@ -128,7 +128,7 @@ new class extends Component {
             <div class="mt-6">
                 <label for="recipe-scale"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Scale') }}</label>
-                <x-text-input id="recipe-scale" wire:model="scale" type="number" />
+                <x-text-input id="recipe-scale" wire:model="scale" type="number" step=".01" />
                 @error('scale')
                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                 @enderror
