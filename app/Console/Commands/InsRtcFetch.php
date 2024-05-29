@@ -63,7 +63,7 @@ class InsRtcFetch extends Command
     protected $clump_id_prev    = [];
     protected $clump_timeout    = 90; // original 60
     protected $recipe_id_prev   = [];
-    protected $recipe_timeout   = 5;
+    // protected $recipe_timeout   = 5;
     // Latest dt_client
     protected $dt_prev          = [];
     // System time (HMI) previous triggered correction
@@ -73,8 +73,8 @@ class InsRtcFetch extends Command
     function saveMetric($metric): void
     {
         $sensor = $metric['sensor_left'] . $metric['st_correct_left'] . $metric['sensor_right'] . $metric['st_correct_right'];
-        // Save to database if new value deteced
-        if ($sensor !== $this->sensor_prev[$metric['device_id']]) {
+        // Save to database if new value deteced AND both sensor are not zero
+        if ($sensor !== $this->sensor_prev[$metric['device_id']] && ($metric['sensor_left'] || $metric['sensor_right'])) {
 
             $collection = collect($this->zero_metrics[$metric['device_id']]);
 
@@ -144,7 +144,7 @@ class InsRtcFetch extends Command
             if (!$metric['sensor_left'] && !$metric['sensor_right']) {
                 
                 $this->zero_metrics[$metric['device_id']][] = $metric;
-                echo 'Consecutive data (zero) is not saved' . PHP_EOL;
+                echo 'Zero data is not saved' . PHP_EOL;
 
             } else {
                 echo 'Consecutive data is not saved' . PHP_EOL;
@@ -157,6 +157,7 @@ class InsRtcFetch extends Command
     {
         // Nanti ganti dengan semua IP perangkat yang terdaftar di database
         $devices = InsRtcDevice::all();
+        $unit_id = 1;
 
         // Initialize variables
         foreach($devices as $device) {
@@ -170,11 +171,10 @@ class InsRtcFetch extends Command
 
         while (true) {
             $dt_now = Carbon::now()->format('Y-m-d H:i:s');
-
+            
             // Tarik data MODBUS ke semua perangkat
             foreach ($devices as $device) {
-                $unit_id = 1;
-
+                
                 $fc2 = ReadCoilsBuilder::newReadInputDiscretes('tcp://' . $device->ip_address . ':503', $unit_id)
                     ->coil(0, 'is_correcting')
                     // ->coil(1, 'is_holding')

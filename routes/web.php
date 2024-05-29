@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CsvController;
 use Livewire\Volt\Volt;
 use App\Models\InsRtcMetric;
 use App\Models\InsRtcRecipe;
@@ -61,16 +62,16 @@ Route::middleware('auth')->group(function () {
     Route::prefix('inventory')->group(function () {
 
         Route::name('inventory.items.')->group(function () {
-            Volt::route('/items/create',    'inventory.items.create')       ->name('create');
-            Volt::route('/items/{id}',      'inventory.items.show')         ->name('show');
-            Volt::route('/items/{id}/edit', 'inventory.items.edit')         ->name('edit');
-            Volt::route('/items',           'inventory.items')              ->name('index');
+            Volt::route('/items/create',    'inventory.items.create')   ->name('create');
+            Volt::route('/items/{id}',      'inventory.items.show')     ->name('show');
+            Volt::route('/items/{id}/edit', 'inventory.items.edit')     ->name('edit');
+            Volt::route('/items',           'inventory.items')          ->name('index');
         });
 
         Route::name('inventory.circs.')->group(function () {
-            Volt::route('/circulations/create', 'inventory.circs.create')   ->name('create');
-            Volt::route('/circulations/print',  'inventory.circs.print')    ->name('print');
-            Volt::route('/circulations',        'inventory.circs')          ->name('index');
+            Volt::route('/circs/create',    'inventory.circs.create')   ->name('create');
+            Volt::route('/circs/print',     'inventory.circs.print')    ->name('print');
+            Volt::route('/circs',           'inventory.circs')          ->name('index');
         });
 
         Route::name('inventory.manage.')->group(function () {
@@ -86,6 +87,11 @@ Route::middleware('auth')->group(function () {
 
         Route::view('/', 'inventory')->name('inventory');
 
+    });
+
+    // CSV download
+    Route::name('csv.')->group(function () {
+        Route::get('/csv/ins-rtc-metrics', [CsvController::class, 'insRtcMetrics'])->name('ins-rtc-metrics');
     });
 
 });

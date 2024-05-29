@@ -57,8 +57,8 @@ new class extends Component {
                     return [$item->sensor_left > 0 ? $item->sensor_left : null, $item->sensor_right > 0 ? $item->sensor_right : null];
                 })
                 ->filter();
-            $minSensor = floor($nonZeroValues->min());
-            $maxSensor = ceil($nonZeroValues->max());
+                $minY = floor($nonZeroValues->min() * 2) / 2;
+                $maxY = ceil($nonZeroValues->max() * 2) / 2;
 
             // Prepare the data for the JavaScript
             $kiriData = $metrics
@@ -120,10 +120,10 @@ new class extends Component {
             },
             yaxis: {
                 min: " .
-                    $minSensor .
+                    $minY .
                     ",
                 max: " .
-                    $maxSensor .
+                    $maxY .
                     "
 
             },
