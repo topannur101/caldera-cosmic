@@ -24,74 +24,72 @@ new #[Layout('layouts.app')] class extends Component {
         $start = Carbon::parse($this->start_at)->addHours(6);
         $end = $start->copy()->addHours(24);
         $clumps = DB::table('ins_rtc_metrics')
-            ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
-            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
-            ->join('ins_rtc_recipes', 'ins_rtc_recipes.id', '=', 'ins_rtc_clumps.ins_rtc_recipe_id')
-            ->select(
-                'ins_rtc_devices.line',
-                'ins_rtc_clumps.id as id',
-                'ins_rtc_recipes.name as recipe_name',
-                'ins_rtc_recipes.id as recipe_id',
-                'ins_rtc_recipes.std_mid as std_mid'
+    ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
+    ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
+    ->join('ins_rtc_recipes', 'ins_rtc_recipes.id', '=', 'ins_rtc_clumps.ins_rtc_recipe_id')
+    ->select(
+        'ins_rtc_devices.line',
+        'ins_rtc_clumps.id as id',
+        'ins_rtc_recipes.name as recipe_name',
+        'ins_rtc_recipes.id as recipe_id',
+        'ins_rtc_recipes.std_mid as std_mid'
+    )
+    // Waktu mulai batch
+    ->selectRaw('MIN(ins_rtc_metrics.dt_client) as start_time')
+    // Waktu akhir batch
+    ->selectRaw('MAX(ins_rtc_metrics.dt_client) as end_time')
+    // Hitung durasi batch
+    ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as duration_seconds')
+    // Assign Shift 1, 2, 3
+    ->selectRaw('CASE WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 6 AND 13 THEN "1" WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 14 AND 21 THEN "2" ELSE "3" END AS shift')
+    
+    // Calculate mean (avg_left and avg_right)
+    ->selectRaw('ROUND(AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END), 2) as avg_left')
+    ->selectRaw('ROUND(AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END), 2) as avg_right')
+
+    // Calculate standard deviation number (dn_left and dn_right)
+    ->selectRaw('ROUND(
+        SQRT(
+            AVG(
+                POWER(
+                    CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left - 
+                    (SELECT AVG(sensor_left) FROM ins_rtc_metrics WHERE sensor_left <> 0) END,
+                    2
+                )
             )
-            // Waktu mulai batch
-            ->selectRaw('MIN(ins_rtc_metrics.dt_client) as start_time')
-            // Waktu akhir batch
-            ->selectRaw('MAX(ins_rtc_metrics.dt_client) as end_time')
-            // Hitung durasi batch
-            ->selectRaw('TIMESTAMPDIFF(SECOND, MIN(ins_rtc_metrics.dt_client), MAX(ins_rtc_metrics.dt_client)) as duration_seconds')
-            // Assign Shift 1, 2, 3
-            ->selectRaw('CASE WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 6 AND 13 THEN "1" WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 14 AND 21 THEN "2" ELSE "3" END AS shift')
-            
-            // Calculate mean (avg_left and avg_right)
-            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END)), 2) as avg_left')
-            ->selectRaw('ROUND((AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END)), 2) as avg_right')
+        ), 2) as dn_left')
+    ->selectRaw('ROUND(
+        SQRT(
+            AVG(
+                POWER(
+                    CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right - 
+                    (SELECT AVG(sensor_right) FROM ins_rtc_metrics WHERE sensor_right <> 0) END,
+                    2
+                )
+            )
+        ), 2) as dn_right')
 
-            // Calculate deviation number (dn_left and dn_right)
-            ->selectRaw('ROUND(
-                SQRT(
-                    AVG(
-                        POWER(
-                            CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left - 
-                            (SELECT AVG(sensor_left) FROM ins_rtc_metrics WHERE sensor_left <> 0) END,
-                            2
-                        )
-                    )
-                ), 2) as dn_left')
-
-            ->selectRaw('ROUND(
-                SQRT(
-                    AVG(
-                        POWER(
-                            CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right - 
-                            (SELECT AVG(sensor_right) FROM ins_rtc_metrics WHERE sensor_right <> 0) END,
-                            2
-                        )
-                    )
-                ), 2) as dn_right')
-
-            // Calculate deviation percent (dp_left and dp_right)
-            ->selectRaw('ROUND(
-                SQRT(
-                    AVG(
-                        POWER(
-                            CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left - 
-                            (SELECT AVG(sensor_left) FROM ins_rtc_metrics WHERE sensor_left <> 0) END,
-                            2
-                        )
-                    )
-                ) / ins_rtc_recipes.std_mid * 100, 1) as dp_left')
-
-            ->selectRaw('ROUND(
-                SQRT(
-                    AVG(
-                        POWER(
-                            CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right - 
-                            (SELECT AVG(sensor_right) FROM ins_rtc_metrics WHERE sensor_right <> 0) END,
-                            2
-                        )
-                    )
-                ) / ins_rtc_recipes.std_mid * 100, 1) as dp_right')
+    // Calculate deviation percent (dp_left and dp_right)
+    ->selectRaw('ROUND(
+        SQRT(
+            AVG(
+                POWER(
+                    CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left - 
+                    (SELECT AVG(sensor_left) FROM ins_rtc_metrics WHERE sensor_left <> 0) END,
+                    2
+                )
+            )
+        ) / ins_rtc_recipes.std_mid * 100, 1) as dp_left')
+    ->selectRaw('ROUND(
+        SQRT(
+            AVG(
+                POWER(
+                    CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right - 
+                    (SELECT AVG(sensor_right) FROM ins_rtc_metrics WHERE sensor_right <> 0) END,
+                    2
+                )
+            )
+        ) / ins_rtc_recipes.std_mid * 100, 1) as dp_right')
 
             // Untuk menghitung presentase trigger nyala brp kali dalam %
             ->selectRaw('ROUND(SUM(CASE WHEN ins_rtc_metrics.is_correcting = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as correcting_rate')
@@ -101,7 +99,7 @@ new #[Layout('layouts.app')] class extends Component {
             $clumps->where('ins_rtc_devices.line', $this->fline);
         }
 
-        $clumps->groupBy('ins_rtc_devices.line', 'ins_rtc_clumps.id', 'ins_rtc_recipes.id')
+        $clumps->groupBy('ins_rtc_clumps.id', 'ins_rtc_devices.line', 'ins_rtc_recipes.name', 'ins_rtc_recipes.id', 'ins_rtc_recipes.std_mid')
             ->orderBy('end_time', 'desc');
 
         $clumps = $clumps->paginate($this->perPage);
