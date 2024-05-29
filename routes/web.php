@@ -43,6 +43,11 @@ Route::prefix('insight')->group(function () {
 Route::view('profile', 'profile')->name('profile');
 Route::view('help', 'help')->name('help');
 
+// CSV download
+Route::name('csv.')->group(function () {
+    Route::get('/csv/ins-rtc-metrics', [CsvController::class, 'insRtcMetrics'])->name('ins-rtc-metrics');
+});
+
 // All routes that needs to be authenticated
 Route::middleware('auth')->group(function () {
 
@@ -87,11 +92,6 @@ Route::middleware('auth')->group(function () {
 
         Route::view('/', 'inventory')->name('inventory');
 
-    });
-
-    // CSV download
-    Route::name('csv.')->group(function () {
-        Route::get('/csv/ins-rtc-metrics', [CsvController::class, 'insRtcMetrics'])->name('ins-rtc-metrics');
     });
 
 });
