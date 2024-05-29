@@ -40,27 +40,8 @@ class CsvController extends Controller
         $callback = function() use($metrics, $headers) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $headers);
-            foreach($metrics as $metric) {
 
-                $action_left = '';
-                switch ($metric->action_left) {
-                    case 'thin':
-                        $action_left = __('Tipis');
-                        break;
-                    case 'thick':
-                    $action_left = __('Tebal');
-                    break;
-                }
-    
-                $action_right = '';
-                switch ($metric->action_right) {
-                    case 'thin':
-                        $action_right = __('Tipis');
-                        break;
-                    case 'thick':
-                        $action_right = __('Tebal');
-                        break;
-                }
+            foreach($metrics as $metric) {
 
                 $row['line']            = $metric->ins_rtc_clump->ins_rtc_device->line ?? '';
                 $row['clump_id']        = $metric->ins_rtc_clump_id ?? '';
@@ -68,20 +49,38 @@ class CsvController extends Controller
                 $row['recipe_name']     = $metric->ins_rtc_clump->ins_rtc_recipe->name ?? '';
                 $row['std_mid']         = $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '';
                 $row['is_correcting']   = $metric->is_correcting ? 'ON' : 'OFF';
-                $row['action_left']     = $action_left;
+                $row['action_left']     = $metric->action_left ?? '' == 'thin' ? __('Tipis') : ($metric->action_left ?? '' == 'thick' ? __('Tebal') : '');
                 $row['sensor_left']     = $metric->sensor_left ?? '';
-                $row['action_right']    = $action_right;
+                $row['action_right']    = $metric->action_right ?? '' == 'thin' ? __('Tipis') : ($metric->action_right ?? '' == 'thick' ? __('Tebal') : '');
                 $row['sensor_right']    = $metric->sensor_right ?? '';
                 $row['dt_client']       = $metric->dt_client;      
+
+                fputcsv($file, [
+                    $row['line'],
+                    $row['clump_id'],
+                    $row['recipe_id'],
+                    $row['recipe_name'],
+                    $row['std_mid'],
+                    $row['is_correcting'],
+                    $row['action_left'],
+                    $row['sensor_left'],
+                    $row['action_right'],
+                    $row['sensor_right'],
+                    $row['dt_client']
+                ]);
             }
+            fclose($file);
         };
 
         // Generate CSV file and return as a download
         $fileName = __('Wawasan_RTC') . '_' . date('Y-m-d_Hs') . '.csv';
 
         return response()->stream($callback, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            "Content-type"        => "text/csv; charset=utf-8",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
         ]);
 
     }
