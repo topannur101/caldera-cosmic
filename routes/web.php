@@ -46,6 +46,7 @@ Route::view('help', 'help')->name('help');
 // CSV download
 Route::name('csv.')->group(function () {
     Route::get('/csv/ins-rtc-metrics', [CsvController::class, 'insRtcMetrics'])->name('ins-rtc-metrics');
+    Route::get('/csv/ins-rtc-clumps', [CsvController::class, 'insRtcClumps'])->name('ins-rtc-clumps');
 });
 
 // All routes that needs to be authenticated

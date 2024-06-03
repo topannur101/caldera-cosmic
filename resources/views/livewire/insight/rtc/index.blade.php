@@ -100,7 +100,11 @@ new #[Layout('layouts.app')] class extends Component {
                 $this->redirectRoute('csv.ins-rtc-metrics', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
                 $this->js('$dispatch("close")');
                 $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
+                break;
             case 'clumps':
+                $this->redirectRoute('csv.ins-rtc-clumps', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
+                $this->js('$dispatch("close")');
+                $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
                 break;
         }
     }
@@ -224,7 +228,7 @@ new #[Layout('layouts.app')] class extends Component {
                             placeholder="{{ __('Line') }}" name="fline" />
                     </div>
                 </div>
-                @if ($view == 'raw')
+                @if ($view == 'raw' || $view == 'clumps')
                     <div wire:key="raw-panel">
                         <div class="m-3">
                             <div class="py-4">
