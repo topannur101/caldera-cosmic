@@ -38,56 +38,17 @@ new #[Layout('layouts.app')] class extends Component {
             ->selectRaw('CASE WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 6 AND 13 THEN "1" WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 14 AND 21 THEN "2" ELSE "3" END AS shift')
 
             // Calculate mean (avg_left and avg_right)
-            ->selectRaw('ROUND(AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END), 2) as avg_left')
-            ->selectRaw('ROUND(AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END), 2) as avg_right')
+            ->selectRaw('ROUND(AVG(ins_rtc_metrics.sensor_left), 2) as avg_left')
+            ->selectRaw('ROUND(AVG(ins_rtc_metrics.sensor_right), 2) as avg_right')
 
             // Calculate standard deviation number (dn_left and dn_right)
-            ->selectRaw('ROUND(
-                SQRT(
-                    SUM(
-                        POWER(
-                        CASE WHEN ins_rtc_metrics.sensor_left <> 0 
-                            THEN ins_rtc_metrics.sensor_left - (SELECT AVG(sensor_left) FROM ins_rtc_metrics WHERE sensor_left <> 0) 
-                        END, 2)
-                    ) / COUNT(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN 1 END)
-                ), 2
-            ) AS dn_left',)
-            ->selectRaw('ROUND(
-                SQRT(
-                    SUM(
-                        POWER(
-                        CASE WHEN ins_rtc_metrics.sensor_right <> 0 
-                            THEN ins_rtc_metrics.sensor_right - (SELECT AVG(sensor_right) FROM ins_rtc_metrics WHERE sensor_right <> 0) 
-                        END, 2)
-                    ) / COUNT(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN 1 END)
-                ), 2
-            ) AS dn_right',)
-            // Calculate deviation percent (dp_left and dp_right)
-            ->selectRaw('ROUND(
-                SQRT(
-                    AVG(
-                        POWER(
-                            CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left - 
-                            (SELECT AVG(sensor_left) FROM ins_rtc_metrics WHERE sensor_left <> 0) END,
-                            2
-                        )
-                    )
-                ) / ins_rtc_recipes.std_mid * 100, 1) as dp_left',)
-            ->selectRaw(
-                'ROUND(
-        SQRT(
-            AVG(
-                POWER(
-                    CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right - 
-                    (SELECT AVG(sensor_right) FROM ins_rtc_metrics WHERE sensor_right <> 0) END,
-                    2
-                )
-            )
-        ) / ins_rtc_recipes.std_mid * 100, 1) as dp_right',
-            )
+            ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_left), 2) as sd_left')
+            ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_right), 2) as sd_right')
 
             // Untuk menghitung presentase trigger nyala brp kali dalam %
             ->selectRaw('ROUND(SUM(CASE WHEN ins_rtc_metrics.is_correcting = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as correcting_rate')
+            ->where('ins_rtc_metrics.sensor_left', '>', 0)
+            ->where('ins_rtc_metrics.sensor_right', '>', 0)
             ->whereBetween('ins_rtc_metrics.dt_client', [$start, $end]);
 
         if ($this->fline) {
@@ -134,8 +95,9 @@ new #[Layout('layouts.app')] class extends Component {
                         <th>{{ __('Resep') }}</th>
                         <th>{{ __('Std') }}</th>
                         <th>{{ __('Oto') }}</th>
-                        <th>{{ __('Rerata | Dev Ki') }}</th>
-                        <th>{{ __('Rerata | Dev Ka') }}</th>
+                        <th>{{ __('AVG') }}</th>
+                        <th>{{ __('SD') }}</th>
+                        <th>{{ __('MAE') }}</th>
                         <th>{{ __('Durasi') }}</th>
                         <th>{{ __('Mulai') }}</th>
                     </tr>
@@ -148,10 +110,9 @@ new #[Layout('layouts.app')] class extends Component {
                             <td>{{ $clump->recipe_id . '. ' . $clump->recipe_name }}</td>
                             <td>{{ $clump->std_mid }}</td>
                             <td>{{ $clump->correcting_rate > 0.8 ? 'ON' : 'OFF' }}</td>
-                            <td>{{ $clump->avg_left ? $clump->avg_left . ' | ' . $clump->dn_left . ' (' . $clump->dp_left . '%)' : __('Tak ada data') }}
-                            </td>
-                            <td>{{ $clump->avg_right ? $clump->avg_right . ' | ' . $clump->dn_right . ' (' . $clump->dp_right . '%)' : __('Tak ada data') }}
-                            </td>
+                            <td>{{ $clump->avg_left . ' | ' . $clump->avg_right }}</td>
+                            <td>{{ $clump->sd_left . ' | ' . $clump->sd_right }}</td>
+                            <td></td>
                             <td>{{ Carbon::createFromTimestampUTC($clump->duration_seconds)->format('i:s') }}</td>
                             <td>{{ $clump->start_time }}</td>
                         </tr>
