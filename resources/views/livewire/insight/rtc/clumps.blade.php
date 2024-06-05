@@ -42,8 +42,8 @@ new #[Layout('layouts.app')] class extends Component {
             ->selectRaw('ROUND(AVG(ins_rtc_metrics.sensor_right), 2) as avg_right')
 
             // Calculate standard deviation number (dn_left and dn_right)
-            ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_left) / 2, 2) as sd_left')
-            ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_right) / 2, 2) as sd_right')
+            ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_left), 2) as sd_left')
+            ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_right), 2) as sd_right')
 
             // Untuk menghitung presentase trigger nyala brp kali dalam %
             ->selectRaw('ROUND(SUM(CASE WHEN ins_rtc_metrics.is_correcting = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as correcting_rate')

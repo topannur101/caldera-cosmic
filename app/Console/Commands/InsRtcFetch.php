@@ -47,6 +47,22 @@ class InsRtcFetch extends Command
         return $decimal;
     }
 
+    function convertPushTime($value)
+    {
+        $value = (int) $value; // Cast to integer to remove any leading zeros
+        $length = strlen((string) $value);
+
+        if ($length == 3 || $length == 2) {
+            $decimal = substr((string) $value, 0, -1) . '.' . substr((string) $value, -1);
+        } elseif ($length == 1) {
+            $decimal = '0.' . (string) $value;
+        } else {
+            $decimal = '0.0';
+        }
+
+        return $decimal;
+    }
+
     function action($pushThin, $pushThick)
     {
         $action = null;
@@ -112,6 +128,8 @@ class InsRtcFetch extends Command
 
             $action_left = null;
             $action_right = null;
+            $push_left = null;
+            $push_right = null;
 
             $st_cl = $metric['st_correct_left'];
             $st_cr = $metric['st_correct_right'];
@@ -119,11 +137,21 @@ class InsRtcFetch extends Command
             // Save 'thin' or 'thick' action if there's new correction system time
             if ($st_cl !== $this->st_cl_prev[$metric['device_id']]) {
                 $action_left = $this->action($metric['push_thin_left'], $metric['push_thick_left']);
+                $thin_left  = (int) $metric['push_thin_left'];
+                $thick_left = (int) $metric['push_thick_left'];
+                if($thin_left xor $thick_left) {
+                    $push_left = $thin_left + $thick_left;
+                }
                 $this->st_cl_prev[$metric['device_id']] = $st_cl;
             }
 
             if ($st_cr !== $this->st_cr_prev[$metric['device_id']]) {
                 $action_right = $this->action($metric['push_thin_right'], $metric['push_thick_right']);
+                $thin_right  = (int) $metric['push_thin_right'];
+                $thick_right = (int) $metric['push_thick_right'];
+                if($thin_right xor $thick_right) {
+                    $push_right = $thin_right + $thick_right;
+                }
                 $this->st_cr_prev[$metric['device_id']] = $st_cr;
             }
 
@@ -133,6 +161,8 @@ class InsRtcFetch extends Command
                 'sensor_right'          => $this->convertToDecimal($metric['sensor_right']),
                 'action_left'           => $action_left,
                 'action_right'          => $action_right,
+                'push_left'             => $push_left ? $this->convertPushTime($push_left) : null,
+                'push_right'            => $push_right ? $this->convertPushTime($push_right) : null,
                 'is_correcting'         => (bool) $metric['is_correcting'],
                 'clump_id'              => $this->clump_id_prev[$metric['device_id']],
                 'dt_client'             => $metric['dt_client'],

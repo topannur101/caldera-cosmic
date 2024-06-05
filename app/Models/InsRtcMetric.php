@@ -17,6 +17,8 @@ class InsRtcMetric extends Model
         'is_correcting',
         'action_left',
         'action_right',
+        'push_left',
+        'push_right',
         'sensor_left',
         'sensor_right',
         'dt_client',

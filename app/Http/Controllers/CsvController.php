@@ -33,8 +33,10 @@ class CsvController extends Controller
             __('Standar tengah'),
             __('Koreksi Oto.'),
             __('Kiri tindakan'), 
+            __('Kiri tekan'), 
             __('Kiri terukur'), 
             __('Kanan tindakan'),
+            __('Kanan tekan'), 
             __('Kanan terukur'),
             __('Waktu'), 
         ];
@@ -52,8 +54,10 @@ class CsvController extends Controller
                 $row['std_mid']         = $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '';
                 $row['is_correcting']   = $metric->is_correcting ? 'ON' : 'OFF';
                 $row['action_left']     = $metric->action_left ?? '' == 'thin' ? __('Tipis') : ($metric->action_left ?? '' == 'thick' ? __('Tebal') : '');
+                $row['push_left']       = $metric->push_left ?? '';
                 $row['sensor_left']     = $metric->sensor_left ?? '';
                 $row['action_right']    = $metric->action_right ?? '' == 'thin' ? __('Tipis') : ($metric->action_right ?? '' == 'thick' ? __('Tebal') : '');
+                $row['push_right']       = $metric->push_right ?? '';
                 $row['sensor_right']    = $metric->sensor_right ?? '';
                 $row['dt_client']       = $metric->dt_client;      
 
@@ -65,8 +69,10 @@ class CsvController extends Controller
                     $row['std_mid'],
                     $row['is_correcting'],
                     $row['action_left'],
+                    $row['push_left'],
                     $row['sensor_left'],
                     $row['action_right'],
+                    $row['push_right'],
                     $row['sensor_right'],
                     $row['dt_client']
                 ]);

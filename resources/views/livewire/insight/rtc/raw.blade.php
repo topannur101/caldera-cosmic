@@ -191,7 +191,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td>{{ $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '' }}</td>
                                 <td class="text-xs">{{ ((bool) $metric->is_correcting) ? 'ON' : 'OFF' }}</td>
         
-                                <td>
+                                <td title="{{ $metric->push_left }}">
                                     @switch($metric->action_left)
                                         @case('thin')
                                             <i class="fa fa-caret-down"></i>
@@ -204,7 +204,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 </td>
                                 <td>{{ $metric->sensor_left }}</td>
         
-                                <td>
+                                <td title="{{ $metric->push_right }}">
                                     @switch($metric->action_right)
                                         @case('thin')
                                             <i class="fa fa-caret-down"></i>
