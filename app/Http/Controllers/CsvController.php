@@ -53,10 +53,10 @@ class CsvController extends Controller
                 $row['recipe_name']     = $metric->ins_rtc_clump->ins_rtc_recipe->name ?? '';
                 $row['std_mid']         = $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '';
                 $row['is_correcting']   = $metric->is_correcting ? 'ON' : 'OFF';
-                $row['action_left']     = $metric->action_left == 'thin' ? __('Tipis') : ($metric->action_left ==  'tebal' ? __('Tebal') : '');
+                $row['action_left']     = $metric->action_left == 'thin' ? __('Tipis') : ($metric->action_left ==  'thick' ? __('Tebal') : '');
                 $row['push_left']       = $metric->push_left ?? '';
                 $row['sensor_left']     = $metric->sensor_left ?? '';
-                $row['action_right']     = $metric->action_right == 'thin' ? __('Tipis') : ($metric->action_right ==  'tebal' ? __('Tebal') : '');                $row['push_right']       = $metric->push_right ?? '';
+                $row['action_right']     = $metric->action_right == 'thin' ? __('Tipis') : ($metric->action_right ==  'thick' ? __('Tebal') : '');
                 $row['push_right']       = $metric->push_right ?? '';
                 $row['sensor_right']    = $metric->sensor_right ?? '';
                 $row['dt_client']       = $metric->dt_client;      
