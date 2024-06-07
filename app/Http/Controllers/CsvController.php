@@ -31,7 +31,7 @@ class CsvController extends Controller
             __('ID Resep'),
             __('Nama resep'),
             __('Standar tengah'),
-            __('Koreksi Oto.'),
+            __('Koreksi oto.'),
             __('Kiri tindakan'), 
             __('Kiri tekan'), 
             __('Kiri terukur'), 
@@ -53,10 +53,10 @@ class CsvController extends Controller
                 $row['recipe_name']     = $metric->ins_rtc_clump->ins_rtc_recipe->name ?? '';
                 $row['std_mid']         = $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '';
                 $row['is_correcting']   = $metric->is_correcting ? 'ON' : 'OFF';
-                $row['action_left']     = $metric->action_left ?? '' == 'thin' ? __('Tipis') : ($metric->action_left ?? '' == 'thick' ? __('Tebal') : '');
+                $row['action_left']     = $metric->action_left == 'thin' ? __('Tipis') : ($metric->action_left ==  'tebal' ? __('Tebal') : '');
                 $row['push_left']       = $metric->push_left ?? '';
                 $row['sensor_left']     = $metric->sensor_left ?? '';
-                $row['action_right']    = $metric->action_right ?? '' == 'thin' ? __('Tipis') : ($metric->action_right ?? '' == 'thick' ? __('Tebal') : '');
+                $row['action_right']     = $metric->action_right == 'thin' ? __('Tipis') : ($metric->action_right ==  'tebal' ? __('Tebal') : '');                $row['push_right']       = $metric->push_right ?? '';
                 $row['push_right']       = $metric->push_right ?? '';
                 $row['sensor_right']    = $metric->sensor_right ?? '';
                 $row['dt_client']       = $metric->dt_client;      
@@ -118,11 +118,17 @@ class CsvController extends Controller
             ->selectRaw('CASE WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 6 AND 13 THEN "1" WHEN HOUR(MIN(ins_rtc_metrics.dt_client)) BETWEEN 14 AND 21 THEN "2" ELSE "3" END AS shift')
 
             // Calculate mean (avg_left and avg_right)
-            ->selectRaw('ROUND(AVG(CASE WHEN ins_rtc_metrics.sensor_left <> 0 THEN ins_rtc_metrics.sensor_left END), 2) as avg_left')
-            ->selectRaw('ROUND(AVG(CASE WHEN ins_rtc_metrics.sensor_right <> 0 THEN ins_rtc_metrics.sensor_right END), 2) as avg_right')
+            ->selectRaw('ROUND(AVG(ins_rtc_metrics.sensor_left), 2) as avg_left')
+            ->selectRaw('ROUND(AVG(ins_rtc_metrics.sensor_right), 2) as avg_right')
+
+            // Calculate standard deviation number (dn_left and dn_right)
+            ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_left), 2) as sd_left')
+            ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_right), 2) as sd_right')
 
             // Untuk menghitung presentase trigger nyala brp kali dalam %
             ->selectRaw('ROUND(SUM(CASE WHEN ins_rtc_metrics.is_correcting = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as correcting_rate')
+            ->where('ins_rtc_metrics.sensor_left', '>', 0)
+            ->where('ins_rtc_metrics.sensor_right', '>', 0)
             ->whereBetween('ins_rtc_metrics.dt_client', [$start, $end]);
 
         if ($fline) {
@@ -134,14 +140,19 @@ class CsvController extends Controller
         $clumps = $clumps->get();
 
         $headers = [
-            __('IDG'), 
+            __('ID Gilingan'), 
             __('Line'),
             __('Shift'),
-            __('Resep'),
-            __('Std'),
-            __('Oto'),
-            __('Rerata kiri'), 
-            __('Rerata kanan'), 
+            __('ID Resep'),
+            __('Nama resep'),
+            __('Standar tengah'),
+            __('Koreksi oto.'),
+            __('AVG ki'), 
+            __('AVG ka'), 
+            __('SD ki'), 
+            __('SD ka'), 
+            __('MAE ki'), 
+            __('MAE ka'), 
             __('Durasi'),
             __('Mulai'),
         ];
@@ -155,11 +166,16 @@ class CsvController extends Controller
                 $row['clump_id']            = $clump->id;
                 $row['line']                = $clump->line;
                 $row['shift']               = $clump->shift;
-                $row['recipe']              = $clump->recipe_id . '. ' . $clump->recipe_name;
+                $row['recipe_id']           = $clump->recipe_id;
+                $row['recipe_name']         = $clump->recipe_name;
                 $row['std_mid']             = $clump->std_mid;
                 $row['is_correcting']       = $clump->correcting_rate > 0.8 ? 'ON' : 'OFF';
                 $row['avg_left']            = $clump->avg_left;
                 $row['avg_right']           = $clump->avg_right;
+                $row['sd_left']             = $clump->sd_left;
+                $row['sd_right']            = $clump->sd_right;
+                $row['mae_left']            = '';
+                $row['mae_right']           = '';
                 $row['duration_seconds']    = $clump->duration_seconds;
                 $row['start_time']          = $clump->start_time; 
 
@@ -167,11 +183,16 @@ class CsvController extends Controller
                     $row['clump_id'],
                     $row['line'],
                     $row['shift'],
-                    $row['recipe'],
+                    $row['recipe_id'],
+                    $row['recipe_name'],
                     $row['std_mid'],
                     $row['is_correcting'],
                     $row['avg_left'],
                     $row['avg_right'],
+                    $row['sd_left'],
+                    $row['sd_right'],
+                    $row['mae_left'],
+                    $row['mae_right'],
                     $row['duration_seconds'],
                     $row['start_time']
                 ]);
