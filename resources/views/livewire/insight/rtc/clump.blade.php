@@ -78,32 +78,42 @@ new class extends Component {
             foreach ($metrics as $metric) {
                 // Process action_left
                 if ($metric->action_left === 'thin' || $metric->action_left === 'thick') {
-                    $labelText = $metric->action_left === 'thick' ? '+' : '-';
+                    $labelText = $metric->action_left === 'thick' ? '▲' : '▼';
                     $actions[] = [
-                        'x' => $metric->dt_client,
+                        'x' => $metric->dt_client->valueOf(),
                         'y' => $metric->sensor_left,
                         'marker' => [
-                            'size' => 8,
+                            'size'          => 0,
+                            'strokeWidth'   => 0
                         ],
                         'label' => [
-                            'borderColor' => '#00BBF9',
+                            'borderWidth' => 0,
                             'text' => $labelText,
+                            'style' => [
+                                'background' => 'transparent',
+                                'color' => '#a3a3a3'
+                            ]
                         ],
                     ];
                 }
 
                 // Process action_right
                 if ($metric->action_right === 'thin' || $metric->action_right === 'thick') {
-                    $labelText = $metric->action_right === 'thick' ? '+' : '-';
+                    $labelText = $metric->action_right === 'thick' ? '▲' : '▼';
                     $actions[] = [
-                        'x' => $metric->dt_client,
+                        'x' => $metric->dt_client->valueOf(),
                         'y' => $metric->sensor_right,
                         'marker' => [
-                            'size' => 8,
+                            'size'          => 0,
+                            'strokeWidth'   => 0
                         ],
                         'label' => [
-                            'borderColor' => '#E27883',
+                            'borderWidth' => 0,
                             'text' => $labelText,
+                            'style' => [
+                                'background' => 'transparent',
+                                'color' => '#a3a3a3'
+                            ]
                         ],
                     ];
                 }
@@ -114,14 +124,22 @@ new class extends Component {
             $kananDataJs    = json_encode($kananData);
             $actionsJs      = json_encode($actions); 
 
-            $this->js(
+           $this->js(
                 "
             let options = {
             chart: {
                 height: '100%',
                 type: 'line',
                 toolbar: {
-                    show: false
+                    show: true,
+                    tools: {
+                        download: '<img src=\"/icon-download.svg\" width=\"18\">',
+                        zoom: '<img src=\"/icon-zoom-in.svg\" width=\"18\">',
+                        zoomin: false,
+                        zoomout: false,
+                        pan: '<img src=\"/icon-hand.svg\" width=\"20\">',
+                        reset: '<img src=\"/icon-zoom-out.svg\" width=\"18\">',
+                    }
                 },
                 animations: {
                     enabled: true,
@@ -180,7 +198,7 @@ new class extends Component {
                         $recipe_std_max +
                         0.05 .
                         ",
-                        borderColor: '#654db8',
+                        borderColor: 'transparent',
                         fillColor: '#654db8',
                         label: {
                             text: '" .
@@ -189,7 +207,12 @@ new class extends Component {
                         }
                     }
                 ],
-                points: " . $actionsJs . ",
+                points: " . $actionsJs . "
+            },
+            tooltip: {
+                x: {
+                    format: 'HH:mm:ss',
+                }              
             }
         };
 
