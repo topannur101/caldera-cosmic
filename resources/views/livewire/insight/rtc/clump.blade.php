@@ -73,9 +73,46 @@ new class extends Component {
                 })
                 ->toArray();
 
+            $actions = [];
+
+            foreach ($metrics as $metric) {
+                // Process action_left
+                if ($metric->action_left === 'thin' || $metric->action_left === 'thick') {
+                    $labelText = $metric->action_left === 'thick' ? '+' : '-';
+                    $actions[] = [
+                        'x' => $metric->dt_client,
+                        'y' => $metric->sensor_left,
+                        'marker' => [
+                            'size' => 8,
+                        ],
+                        'label' => [
+                            'borderColor' => '#00BBF9',
+                            'text' => $labelText,
+                        ],
+                    ];
+                }
+
+                // Process action_right
+                if ($metric->action_right === 'thin' || $metric->action_right === 'thick') {
+                    $labelText = $metric->action_right === 'thick' ? '+' : '-';
+                    $actions[] = [
+                        'x' => $metric->dt_client,
+                        'y' => $metric->sensor_right,
+                        'marker' => [
+                            'size' => 8,
+                        ],
+                        'label' => [
+                            'borderColor' => '#E27883',
+                            'text' => $labelText,
+                        ],
+                    ];
+                }
+            }
+
             // Convert PHP arrays to JavaScript arrays
-            $kiriDataJs = json_encode($kiriData);
-            $kananDataJs = json_encode($kananData);
+            $kiriDataJs     = json_encode($kiriData);
+            $kananDataJs    = json_encode($kananData);
+            $actionsJs      = json_encode($actions); 
 
             $this->js(
                 "
@@ -135,24 +172,25 @@ new class extends Component {
             annotations: {
                 yaxis: [
                     {
-                    y: " .
-                    $recipe_std_min -
-                    0.05 .
-                    ",
-                    y2: " .
-                    $recipe_std_max +
-                    0.05 .
-                    ",
-                    borderColor: '#654db8',
-                    fillColor: '#654db8',
-                    label: {
-                        text: '" .
-                    __('Standar') .
-                    "'
+                        y: " .
+                        $recipe_std_min -
+                        0.05 .
+                        ",
+                        y2: " .
+                        $recipe_std_max +
+                        0.05 .
+                        ",
+                        borderColor: '#654db8',
+                        fillColor: '#654db8',
+                        label: {
+                            text: '" .
+                        __('Standar') .
+                        "'
+                        }
                     }
-                    }
-                ]
-                }
+                ],
+                points: " . $actionsJs . ",
+            }
         };
 
         const parent = \$wire.\$el.querySelector('#chart-container');

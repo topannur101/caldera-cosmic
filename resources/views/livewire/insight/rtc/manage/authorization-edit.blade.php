@@ -137,6 +137,8 @@ new #[Layout('layouts.app')] class extends Component {
                 value="device-manage">{{ __('Kelola perangkat ') }}</x-checkbox>
             <x-checkbox id="recipe-manage" :disabled="!$is_superuser" wire:model="actions"
                 value="recipe-manage">{{ __('Kelola resep ') }}</x-checkbox>
+            <x-checkbox id="csv-download" :disabled="!$is_superuser" wire:model="actions"
+                value="csv-download">{{ __('Unduh CSV') }}</x-checkbox>
         </div>
         @can('superuser')
             <div class="mt-6 flex justify-between items-end">

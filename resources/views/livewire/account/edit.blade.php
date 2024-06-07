@@ -23,6 +23,6 @@ new #[Layout('layouts.app')] class extends Component {
 </x-slot>
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
-      No matter what the people say
+      Belum siap
     </div>
 </div>

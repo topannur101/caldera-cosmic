@@ -231,10 +231,12 @@ new #[Layout('layouts.app')] class extends Component {
                 @if ($view == 'raw' || $view == 'clumps')
                     <div wire:key="raw-panel">
                         <div class="m-3">
-                            <div class="py-4">
-                                <x-text-button type="button" wire:click="download" class="text-sm"><i
+                            @can('download', InsRtcMetric::class)
+                                <div class="py-4">
+                                    <x-text-button type="button" wire:click="download" class="text-sm"><i
                                         class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
-                            </div>
+                                </div>
+                            @endcan
                         </div>
                     </div>
                 @endif
