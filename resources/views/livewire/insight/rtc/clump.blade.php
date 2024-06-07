@@ -91,7 +91,7 @@ new class extends Component {
                             'text' => $labelText,
                             'style' => [
                                 'background' => 'transparent',
-                                'color' => '#a3a3a3'
+                                'color' => '#78d1fc'
                             ]
                         ],
                     ];
@@ -112,7 +112,7 @@ new class extends Component {
                             'text' => $labelText,
                             'style' => [
                                 'background' => 'transparent',
-                                'color' => '#a3a3a3'
+                                'color' => '#eea1a7'
                             ]
                         ],
                     ];
