@@ -3,7 +3,7 @@
     <x-slot name="title">{{ __('Inventaris') }}</x-slot>
 
     <x-slot name="header">
-      <x-inventory-nav></x-inventory-nav>
+      <x-nav-inventory></x-nav-inventory>
     </x-slot>
 
     <div class="max-w-xl lg:max-w-2xl mx-auto px-4 py-16">

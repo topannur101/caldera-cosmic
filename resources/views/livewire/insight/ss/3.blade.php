@@ -5,6 +5,7 @@ use Livewire\Attributes\Url;
 use App\Models\InsRtcDevice;
 
 new class extends Component {
+
     #[Url]
     public $device_id;
     public $devices = [];
@@ -13,7 +14,9 @@ new class extends Component {
     {
         $this->devices = InsRtcDevice::all();
     }
+    
 }; ?>
+
 <x-slot name="title">{{ __('RTC') . ' - ' . __('Bagan garis waktu nyata') }}</x-slot>
 <div class="w-full h-screen p-4">
     <div class="h-2/6 p-4">

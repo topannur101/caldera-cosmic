@@ -9,6 +9,7 @@ use Asantibanez\LivewireCharts\Models\LineChartModel;
 use Illuminate\Database\Eloquent\Builder;
 
 new class extends Component {
+    
     #[Url]
     public $sline;
     

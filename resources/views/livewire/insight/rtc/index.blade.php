@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Response;
 
 new #[Layout('layouts.app')] class extends Component {
     #[Url]
-    public $view = 'daily';
+    public $view = 'clumps';
 
     #[Url]
     public $start_at;
@@ -113,28 +113,11 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 
 <x-slot name="title">{{ __('Rubber Thickness Control') }}</x-slot>
+
 <x-slot name="header">
-    <header class="bg-white dark:bg-neutral-800 shadow">
-        <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div>  
-                <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
-                    <x-link href="{{ route('insight') }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Rubber Thickness Control') }}</span><span class="sm:hidden inline">{{ __('RTC') }}</span></span>
-                </h2>
-            </div>
-            <div class="space-x-8 -my-px ml-10 flex">
-                <x-nav-link href="{{ route('insight.rtc.index') }}" active="true" wire:navigate>
-                    <i class="fa mx-2 fa-fw fa-heart-pulse text-sm"></i>
-                </x-nav-link>
-                <x-nav-link href="{{ route('insight.rtc.slideshows') }}" wire:navigate>
-                    <i class="fa mx-2 fa-fw fa-tv text-sm"></i>
-                </x-nav-link>
-                <x-nav-link href="{{ route('insight.rtc.manage.index') }}" wire:navigate>
-                    <i class="fa mx-2 fa-fw fa-ellipsis-h text-sm"></i>
-                </x-nav-link>
-            </div>
-        </div>
-    </header>
+    <x-nav-insights-rtc></x-nav-insights-rtc>
 </x-slot>
+
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
     <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row min-w-0">
         <div>

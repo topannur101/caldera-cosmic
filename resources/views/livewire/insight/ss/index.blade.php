@@ -1,11 +1,19 @@
-<x-ss-layout>
+<?php
+
+use Livewire\Volt\Component;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
+
+new #[Layout('layouts.ss')] class extends Component {
+
+    #[Url]
+    public int $id;
+}
+
+?>
+
+<div>
     @switch($id)
-        @case(1)
-            <livewire:insight.ss.1 />
-            @break
-        @case(2)
-            <livewire:insight.ss.2 />
-            @break
         @case(3)
             <livewire:insight.ss.3 />
             @break
@@ -19,4 +27,4 @@
             <livewire:insight.ss.6 />
             @break
     @endswitch
-</x-ss-layout>
+</div>

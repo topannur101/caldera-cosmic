@@ -3,14 +3,10 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
-use League\Csv\Writer;
-use App\Models\InsRtcClump;
 use App\Models\InsRtcMetric;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Response;
 
 class CsvController extends Controller
 {

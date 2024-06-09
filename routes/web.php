@@ -13,9 +13,9 @@ Volt::route('/', 'home')->name('home');
 // Insight routes
 Route::prefix('insight')->group(function () {
     Route::name('insight.')->group(function () {
-        Route::view('/ss/{id}', 'livewire.insight.ss.index')->name('ss'); // slideshow
-        Volt::route('/acm', 'insight.acm.index')->name('acm.index');
-        Volt::route('/ldc', 'insight.ldc.index')->name('ldc.index');
+        Volt::route('/ss/{id}', 'insight.ss.index')->name('ss'); // slideshow
+        Volt::route('/acm',     'insight.acm.index')->name('acm.index');
+        Volt::route('/ldc',     'insight.ldc.index')->name('ldc.index');
     });
 
     Route::name('insight.rtc.')->group(function () {
@@ -71,24 +71,24 @@ Route::middleware('auth')->group(function () {
             Volt::route('/items/create',    'inventory.items.create')   ->name('create');
             Volt::route('/items/{id}',      'inventory.items.show')     ->name('show');
             Volt::route('/items/{id}/edit', 'inventory.items.edit')     ->name('edit');
-            Volt::route('/items',           'inventory.items')          ->name('index');
+            Volt::route('/items',           'inventory.items.index')    ->name('index');
         });
 
         Route::name('inventory.circs.')->group(function () {
             Volt::route('/circs/create',    'inventory.circs.create')   ->name('create');
             Volt::route('/circs/print',     'inventory.circs.print')    ->name('print');
-            Volt::route('/circs',           'inventory.circs')          ->name('index');
+            Volt::route('/circs',           'inventory.circs.index')    ->name('index');
         });
 
         Route::name('inventory.manage.')->group(function () {
-            Route::view('/manage/areas',                'inventory.manage.areas')               ->name('areas');
-            Route::view('/manage/authorizations',       'inventory.manage.authorizations')      ->name('authorizations');
-            Route::view('/manage/currencies',           'inventory.manage.currencies')          ->name('currencies');
-            Route::view('/manage/locations',            'inventory.manage.locations')           ->name('locations');
-            Route::view('/manage/tags',                 'inventory.manage.tags')                ->name('tags');
-            Route::view('/manage/mass-circulation',     'inventory.manage.mass-circulation')    ->name('mass-circulation');
-            Route::view('/manage/mass-edit',            'inventory.manage.mass-edit')           ->name('mass-edits');
-            Route::view('/manage',                      'inventory.manage')                     ->name('index');
+            Volt::route('/manage/areas',                'inventory.manage.areas')               ->name('areas');
+            Volt::route('/manage/authorizations',       'inventory.manage.authorizations')      ->name('authorizations');
+            Volt::route('/manage/currencies',           'inventory.manage.currencies')          ->name('currencies');
+            Volt::route('/manage/locations',            'inventory.manage.locations')           ->name('locations');
+            Volt::route('/manage/tags',                 'inventory.manage.tags')                ->name('tags');
+            Volt::route('/manage/mass-circulation',     'inventory.manage.mass-circulation')    ->name('mass-circulation');
+            Volt::route('/manage/mass-edit',            'inventory.manage.mass-edit')           ->name('mass-edits');
+            Volt::route('/manage',                      'inventory.manage.index')               ->name('index');
         });
 
         Route::view('/', 'inventory')->name('inventory');

@@ -1,10 +1,9 @@
 <?php
 
 use Livewire\Volt\Component;
-
+use Livewire\Attributes\Url;
 use Carbon\Carbon;
 use App\Models\InsRtcMetric;
-use Livewire\Attributes\Reactive;
 use App\Models\InsRtcDevice;
 
 new class extends Component {
