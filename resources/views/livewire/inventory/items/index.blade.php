@@ -256,7 +256,7 @@ class extends Component {
                                 </x-slot>
                             </x-dropdown>
                             <x-modal name="favs-manage">
-                                <livewire:inv-favs-manage wire:key="favs-manage" lazy />
+                                <livewire:layout.inv-favs-manage wire:key="favs-manage" lazy />
                             </x-modal>
                         </div>
                     </div>

@@ -7,8 +7,8 @@
                     {{ __('Cari') }}
                 @elseif( request()->is('inventory/circs*') )
                     {{ __('Sirkulasi') }}
-                @elseif( request()->is('inventory/manage*') )
-                    {{ __('Kelola') }}
+                @elseif( request()->is('inventory/admin*') )
+                    {{ __('Administrasi') }}
                 @else
                     {{ __('Inventaris') }}
                 @endif
@@ -22,7 +22,7 @@
            <x-nav-link href="{{ route('inventory.circs.index') }}" :active="request()->is('inventory/circs*')" wire:navigate>
                <i class="fa mx-2 fa-fw fa-arrow-right-arrow-left text-sm"></i>
            </x-nav-link>
-           <x-nav-link href="{{ route('inventory.manage.index') }}" :active="request()->is('inventory/manage*')" wire:navigate>
+           <x-nav-link href="{{ route('inventory.admin.index') }}" :active="request()->is('inventory/admin*')" wire:navigate>
                <i class="fa mx-2 fa-fw fa-ellipsis-h text-sm"></i>
            </x-nav-link>
        </div>

@@ -17,7 +17,7 @@ new #[Layout('layouts.app')] class extends Component {};
         <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-8">
             {{ __('Kelola') }}</h1>
         <div class="grid grid-cols-1 gap-1 my-8 ">
-            <x-card-link href="{{ route('insight.rtc.manage.authorizations') }}" wire:navigate>
+            <x-card-link href="{{ route('insight.rtc.manage.auths') }}" wire:navigate>
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">

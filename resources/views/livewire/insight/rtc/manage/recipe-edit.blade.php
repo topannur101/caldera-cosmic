@@ -138,7 +138,7 @@ new class extends Component {
                 </div>
                 <div class="mt-6">
                     <label for="recipe-std_max"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Std Max') }}</label>
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Std Maks') }}</label>
                     <x-text-input id="recipe-std_max" wire:model="std_max" type="number" step=".01" :disabled="Gate::denies('manage', InsRtcRecipe::class)" />
                     @error('std_max')
                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />

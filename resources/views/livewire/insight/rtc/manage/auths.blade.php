@@ -65,7 +65,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <div>
                     @can('superuser')
                         <x-secondary-button type="button" class="my-auto" x-data=""
-                            x-on:click.prevent="$dispatch('open-modal', 'authorization-create');">{{ __('Beri wewenang') }}</x-secondary-button>
+                            x-on:click.prevent="$dispatch('open-modal', 'auth-create');">{{ __('Beri wewenang') }}</x-secondary-button>
                     @endcan
                 </div>
             </div>
@@ -77,21 +77,21 @@ new #[Layout('layouts.app')] class extends Component {
                             placeholder="{{ __('CARI') }}"></x-text-input-search>
                     </div>
                 </div>
-                <div wire:key="authorization-create">
-                    <x-modal name="authorization-create">
-                        <livewire:insight.rtc.manage.authorization-create  />
+                <div wire:key="auth-create">
+                    <x-modal name="auth-create">
+                        <livewire:insight.rtc.manage.auth-create  />
                     </x-modal>
                 </div>
-                <div wire:key="authorization-edit">
-                    <x-modal name="authorization-edit">
-                        <livewire:insight.rtc.manage.authorization-edit  />
+                <div wire:key="auth-edit">
+                    <x-modal name="auth-edit">
+                        <livewire:insight.rtc.manage.auth-edit  />
                     </x-modal>
                 </div>
                 <hr class="border-neutral-200 dark:border-neutral-700" />
                 <table wire:key="auths-table" class="table">
                     @foreach ($auths as $auth)
                         <tr wire:key="auth-tr-{{ $auth->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'authorization-edit'); $dispatch('authorization-edit', { id: '{{ $auth->id }}'})">
+                            x-on:click="$dispatch('open-modal', 'auth-edit'); $dispatch('auth-edit', { id: '{{ $auth->id }}'})">
                             <td>
                                 <div class="flex">
                                     <div>
