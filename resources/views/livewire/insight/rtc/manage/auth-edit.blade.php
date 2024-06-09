@@ -25,7 +25,7 @@ new #[Layout('layouts.app')] class extends Component {
         ];
     }
 
-    #[On('authorization-edit')]
+    #[On('auth-edit')]
     public function loadAuth(int $id)
     {
         $auth = InsRtcAuth::find($id);
