@@ -46,7 +46,6 @@
    "Register": "Đăng ký",
    "Rubber Thickness Control": "Kiểm soát độ dày cao su",
    "Inventaris": "Hàng tồn kho",
-   "Kelola perangkat ": "Quản lý thiết bị",
    "Pengguna": "Người dùng",
    "Cari dan buat sirkulasi barang.": "Tìm kiếm và tạo lưu thông hàng hóa.",
    "Perangkat": "Thiết bị",
@@ -60,7 +59,6 @@
    "Kelola": "Quản lý",
    "Ada yang bisa dibantu?": "Có thể giúp gì không?",
    "Line": "Dây chuyền",
-   "Kelola resep ": "Quản lý công thức",
    "Kamu tak memiliki wewenang untuk membuat atau memperbarui barang di": "Bạn không được phép tạo hoặc cập nhật các mục trong",
    "Pilih tampilan": "Chọn chế độ xem",
    "Bekas": "Đã sử dụng",
@@ -360,5 +358,8 @@
    "Termurah": "Rẻ nhất",
    "PFC Max": "PFC Tối đa",
    "barang": "mặt hàng",
-   "Barang aktif": "Mặt hàng hoạt động"
+   "Barang aktif": "Mặt hàng hoạt động",
+   "Formula": "Formula",
+   "Digunakan untuk mengukur kekonsistenan ketebalan. Semakin kecil semakin konsisten.": "Được sử dụng để đo độ nhất quán của độ dày. Càng nhỏ càng nhất quán.",
+   "Digunakan untuk mengukur kepatuhan ketebalan terhadap standar. Semakin kecil semakin sesuai dengan standar.": "Được sử dụng để đo sự tuân thủ độ dày theo tiêu chuẩn. Càng nhỏ càng tuân thủ tiêu chuẩn."
 }

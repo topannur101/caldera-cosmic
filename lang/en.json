@@ -46,7 +46,6 @@
     "Register": "Register",
     "Rubber Thickness Control": "Rubber Thickness Control",
     "Inventaris": "Inventory",
-    "Kelola perangkat ": "Manage devices",
     "Pengguna": "User",
     "Cari dan buat sirkulasi barang.": "Search and create item circulation.",
     "Perangkat": "Devices",
@@ -60,7 +59,6 @@
     "Kelola": "Manage",
     "Ada yang bisa dibantu?": "Can I help with anything?",
     "Line": "Line",
-    "Kelola resep ": "Manage recipes",
     "Kamu tak memiliki wewenang untuk membuat atau memperbarui barang di": "You are not authorized to create or update items in",
     "Pilih tampilan": "Choose view",
     "Bekas": "Used",
@@ -360,5 +358,8 @@
     "Termurah": "Cheapest",
     "PFC Max": "PFC Max",
     "barang": "item",
-    "Barang aktif": "Active items"
+    "Barang aktif": "Active items",
+    "Formula": "Formula",
+    "Digunakan untuk mengukur kekonsistenan ketebalan. Semakin kecil semakin konsisten.": "Used to measure thickness consistency. The smaller the better.",
+    "Digunakan untuk mengukur kepatuhan ketebalan terhadap standar. Semakin kecil semakin sesuai dengan standar.": "Used to measure thickness compliance with standards. The smaller the more compliant with standards."
 }

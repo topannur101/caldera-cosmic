@@ -46,7 +46,6 @@
    "Register": "등록",
    "Rubber Thickness Control": "고무 두께 제어",
    "Inventaris": "재고",
-   "Kelola perangkat ": "장치 관리",
    "Pengguna": "사용자",
    "Cari dan buat sirkulasi barang.": "상품을 검색하고 순환을 만듭니다.",
    "Perangkat": "장치",
@@ -60,7 +59,6 @@
    "Kelola": "관리",
    "Ada yang bisa dibantu?": "도움이 필요하신가요?",
    "Line": "라인",
-   "Kelola resep ": "레시피 관리",
    "Kamu tak memiliki wewenang untuk membuat atau memperbarui barang di": "항목을 생성하거나 업데이트할 권한이 없습니다",
    "Pilih tampilan": "보기 선택",
    "Bekas": "중고",
@@ -360,5 +358,8 @@
     "Termurah": "가장 저렴한",
     "PFC Max": "최대 PFC",
     "barang": "항목",
-    "Barang aktif": "활성 항목"
+    "Barang aktif": "활성 항목",
+    "Formula": "Formula",
+    "Digunakan untuk mengukur kekonsistenan ketebalan. Semakin kecil semakin konsisten.": "두께 일관성을 측정하는 데 사용됩니다. 작을수록 더 일관적입니다.",
+    "Digunakan untuk mengukur kepatuhan ketebalan terhadap standar. Semakin kecil semakin sesuai dengan standar.": "두께 표준 준수를 측정하는 데 사용됩니다. 작을수록 표준에 더 부합합니다."
 }
