@@ -98,8 +98,35 @@ new #[Layout('layouts.app')] class extends Component {
 
 <div wire:poll class="overflow-auto w-full">
     <div>
-        <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
-            {{ __('Data Mentah') }}</h1>
+        <div class="flex justify-between items-center mb-6 px-5 py-1">
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
+                {{ __('Data Mentah') }}</h1>
+            <div class="flex gap-x-2 items-center">
+                <div class="text-sm"><span class="text-neutral-500">{{  __('Hari:') . ' ' }}</span><span>{{ $days }}</span></div>
+                <div class="text-sm"><span class="text-neutral-500">{{  __('Integritas:') . ' ' }}</span><span>{{ $integrity . '% ' }}</span></div>
+                <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
+            </div>
+        </div>
+        <x-modal name="raw-stats-info">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                    {{ __('Statistik data mentah') }}
+                </h2>
+                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
+                        class="font-bold">{{ __('Hari:') . ' ' }}</span>
+                    {{ __('Jumlah hari yang mengandung data. Digunakan sebagai referensi berapa hari kerja pada rentang tanggal yang ditentukan.') }}
+                </p>
+                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
+                        class="font-bold">{{ __('Integritas:') . ' ' }}</span>
+                    {{ __('Mengindikasikan persentase data yang hadir di tiap jamnya. Contoh: Jika ada data setiap jam selama 21 jam dalam 1 hari, maka integritas bernilai 100%. Jika hanya ada data selama 10.5 jam selama 21 jam dalam 1 hari, maka integritas bernilai 50%') }}
+                </p>
+                <div class="mt-6 flex justify-end">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                        {{ __('Paham') }}
+                    </x-primary-button>
+                </div>
+            </div>
+        </x-modal>
         @if (!$metrics->count())
             @if (!$start_at || !$end_at)
                 <div wire:key="no-range" class="py-20">
@@ -120,53 +147,6 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             @endif
         @else
-            <div wire:key="raw-stats" class="p-0 sm:p-1">
-                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-4">
-                    <div class="flex justify-between p-4 align-middle">
-                        <div class="flex gap-6">
-                            <div>
-                                <div class="uppercase text-xs mb-1">
-                                    {{ __('Hari ') }}
-                                </div>
-                                <div>
-                                    {{ $days }}
-                                </div>
-                            </div>
-                            <div>
-                                <div class="uppercase text-xs mb-1">
-                                    {{ __('Integritas') }}
-                                </div>
-                                <div>
-                                    {{ $integrity . '% ' }}
-                                </div>
-                            </div>
-                        </div>
-                        <x-text-button type="button" class="my-auto" x-data=""
-                            x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i
-                                class="far fa-question-circle"></i></x-text-button>
-                    </div>
-                    <x-modal name="raw-stats-info">
-                        <div class="p-6">
-                            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                                {{ __('Statistik data mentah') }}
-                            </h2>
-                            <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
-                                    class="font-bold">{{ __('Hari:') . ' ' }}</span>
-                                {{ __('Jumlah hari yang mengandung data. Digunakan sebagai referensi berapa hari kerja pada rentang tanggal yang ditentukan.') }}
-                            </p>
-                            <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
-                                    class="font-bold">{{ __('Integritas:') . ' ' }}</span>
-                                {{ __('Mengindikasikan persentase data yang hadir di tiap jamnya. Contoh: Jika ada data setiap jam selama 21 jam dalam 1 hari, maka integritas bernilai 100%. Jika hanya ada data selama 10.5 jam selama 21 jam dalam 1 hari, maka integritas bernilai 50%') }}
-                            </p>
-                            <div class="mt-6 flex justify-end">
-                                <x-primary-button type="button" x-on:click="$dispatch('close')">
-                                    {{ __('Paham') }}
-                                </x-primary-button>
-                            </div>
-                        </div>
-                    </x-modal>
-                </div>
-            </div>
             <div wire:key="raw-metrics" class="p-0 sm:p-1 overflow-auto">
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
                     <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">

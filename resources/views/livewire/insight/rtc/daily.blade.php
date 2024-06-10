@@ -63,7 +63,7 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 
 <div class="w-full overflow-auto">
-    <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5">
+    <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-5 py-1">
         {{ __('Ringkasan Harian') }}</h1>
 
     @if (!$devices->count())
