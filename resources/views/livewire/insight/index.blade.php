@@ -46,7 +46,7 @@
                 </div>
             </div>
         </x-card-link>
-        {{-- <x-card-link href="{{ route('insight.ldc.index') }}" wire:navigate>
+        <x-card-link href="{{ route('insight.ldc.index') }}" wire:navigate>
             <div class="flex">
                 <div>
                     <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">
@@ -79,6 +79,6 @@
                     </div>
                 </div>
             </div>
-        </x-card-link> --}}
+        </x-card-link>
     </div>
 </x-app-layout>
