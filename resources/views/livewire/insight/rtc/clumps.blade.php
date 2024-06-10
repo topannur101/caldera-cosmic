@@ -77,7 +77,7 @@ new #[Layout('layouts.app')] class extends Component {
     <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
         {{ __('Ringkasan Gilingan') }}</h1>
         <div class="flex gap-x-1">
-            <x-secondary-button type="button" wire:click="$refresh"><i class="fa fa-fw fa-rotate-right"></i></x-secondary-button>
+            <x-secondary-button type="button" wire:click="$refresh"><i class="fa fa-fw fa-rotate-right" wire:loading.remove></i><i class="fa fa-fw fa-circle-notch fa-spin" wire:loading></i></x-secondary-button>
             <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'clumps-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
         </div>
 </div>
