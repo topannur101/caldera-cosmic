@@ -75,7 +75,7 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
             @can('manage', InsRtcRecipe::class)
                 <x-secondary-button type="button" class="my-auto" x-data=""
-                    x-on:click.prevent="$dispatch('open-modal', 'recipe-create')">{{ __('Buat') }}</x-secondary-button>
+                    x-on:click.prevent="$dispatch('open-modal', 'recipe-create')"><i class="fa fa-plus fa-fw"></i></x-secondary-button>
             @endcan
 
 

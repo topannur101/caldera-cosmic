@@ -65,7 +65,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <div>
                     @can('superuser')
                         <x-secondary-button type="button" class="my-auto" x-data=""
-                            x-on:click.prevent="$dispatch('open-modal', 'auth-create');">{{ __('Beri wewenang') }}</x-secondary-button>
+                            x-on:click.prevent="$dispatch('open-modal', 'auth-create');"><i class="fa fa-plus fa-fw"></i></x-secondary-button>
                     @endcan
                 </div>
             </div>

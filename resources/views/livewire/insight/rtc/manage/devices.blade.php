@@ -67,7 +67,7 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
             @can('manage', InsRtcDevice::class)
                 <x-secondary-button type="button" class="my-auto" x-data=""
-                    x-on:click.prevent="$dispatch('open-modal', 'device-create')">{{ __('Buat') }}</x-secondary-button>
+                    x-on:click.prevent="$dispatch('open-modal', 'device-create')"><i class="fa fa-plus fa-fw"></i></x-secondary-button>
             @endcan
         </div>
         <div wire:key="device-create">
