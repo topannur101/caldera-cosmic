@@ -114,12 +114,12 @@ new class extends Component {
 <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-6 flex gap-x-6">
     <div class="w-60 grid grid-cols-1 grid-rows-2 gap-6 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
         <div>
-            <div class="text-sm uppercase">Selisih</div>
-            <div class="text-2xl font-bold">Di atas 6%</div>
+            <div class="text-sm uppercase">{{ __('Selisih') }}</div>
+            <div class="text-2xl font-bold">{{ __('Di atas 6%') }}</div>
         </div>
         <div>
             <div class="text-sm uppercase">Defect</div>
-            <div class="text-2xl font-bold text-red-500">Abnormal</div>
+            <div class="text-2xl font-bold text-red-500">{{ __('Abnormal') }}</div>
         </div>
     </div>
     <form wire:submit="save">
@@ -127,7 +127,7 @@ new class extends Component {
             <div>
                 <div>
                     <label for="hide-area_vn"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Vn') }}</label>
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('VN') }}</label>
                     <x-text-input-suffix suffix="SF" id="hide-area_vn" wire:model="area_vn" type="number" step=".1" />
                     @error('area_vn')
                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
@@ -146,7 +146,7 @@ new class extends Component {
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label for="hide-area_ab"
-                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Ab') }}</label>
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('AB') }}</label>
                         <x-text-input-suffix suffix="SF" id="hide-area_ab" wire:model="area_ab" type="number" step=".1" />
                         @error('area_ab')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
@@ -154,7 +154,7 @@ new class extends Component {
                     </div>
                     <div>
                         <label for="hide-area_qt"
-                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Qt') }}</label>
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('QT') }}</label>
                         <x-text-input-suffix suffix="SF" id="hide-area_qt" wire:model="area_qt" type="number" step=".1" />
                         @error('area_qt')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />

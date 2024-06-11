@@ -11,7 +11,7 @@ class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('Leather Data Collection') }}</x-slot>
+<x-slot name="title">{{ __('Pendataan Kulit') }}</x-slot>
 
 <x-slot name="header">
     <x-nav-insights-ldc></x-nav-insights-ldc>
