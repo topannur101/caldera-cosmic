@@ -11,29 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ldc_hides', function (Blueprint $table) {
+        Schema::create('ins_ldc_hides', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
 
             $table->string('code')->unique();
-            $table->decimal('areaVn', 4, 2);
-            $table->decimal('areaAb', 4, 2);
-            $table->decimal('areaQt', 4, 2);
+            $table->decimal('area_vn', 4, 2);
+            $table->decimal('area_ab', 4, 2);
+            $table->decimal('area_qt', 4, 2);
             $table->tinyInteger('grade')->nullable();
-            $table->date('workdate');
-            $table->string('style');
-            $table->string('line');
             $table->tinyInteger('shift');
-            $table->string('material');
             $table->foreignId('user_id');
+            $table->foreignId('ins_ldc_group_id');
 
             $table->index('code');
             $table->index('grade');
-            $table->index('workdate');
-            $table->index('style');
-            $table->index('line');
             $table->index('shift');
             $table->index('user_id');
+            $table->index('ins_ldc_group_id');
         });
     }
 
@@ -42,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ldc_hides');
+        Schema::dropIfExists('ins_ldc_hides');
     }
 };

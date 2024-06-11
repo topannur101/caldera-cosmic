@@ -40,10 +40,18 @@ function notyfError($msg)
    notyf.error($msg);
 }
 
+const escKey = new KeyboardEvent('keydown', {
+   key: 'Escape',
+   keyCode: 27,
+   which: 27,
+   code: 'Escape',
+});
+
 calderaSetTheme()
 window.calderaSetTheme  = calderaSetTheme;
 window.notyfSuccess     = notyfSuccess;
 window.notyfError       = notyfError;
 window.ApexCharts       = ApexCharts;
 window.axios            = axios;
- 
+window.escKey = escKey;
+
