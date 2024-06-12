@@ -126,6 +126,7 @@ new class extends Component {
     area_vn: $wire.entangle('area_vn'), 
     area_ab: $wire.entangle('area_ab'),
     area_qt: $wire.entangle('area_qt'),
+    code: '',
     get diff() {
         let area_vn = parseFloat(this.area_vn)
         let area_ab = parseFloat(this.area_ab)
@@ -135,7 +136,8 @@ new class extends Component {
         let area_vn = parseFloat(this.area_vn)
         let area_qt = parseFloat(this.area_qt)
         return((area_vn > 0 && area_qt > 0) ? ((area_vn - area_qt) / area_vn * 100) : 0)
-    }  
+    },
+    setCursorToEnd() { this.$refs.hidecode.focus(); this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); }
 }" class="relative bg-white dark:bg-neutral-800 shadow rounded-lg p-6 flex gap-x-6">
     <div class="w-60 grid grid-cols-1 grid-rows-2 gap-6 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
         <div>
@@ -201,12 +203,12 @@ new class extends Component {
                     <div>
                         <label for="hide-code"
                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Barcode') }}</label>
-                        <x-text-input id="hide-code" wire:model="code" type="text" step="1" />
+                        <x-text-input id="hide-code" x-model="code" x-ref="hidecode" type="text" step="1" />
                         <div class="flex w-full justify-between items-center text-neutral-500 px-3 mt-2 text-xs">
-                            <x-text-button type="button">XA</x-text-button>
-                            <x-text-button type="button">XB</x-text-button>
-                            <x-text-button type="button">XC</x-text-button>
-                            <x-text-button type="button">XD</x-text-button>
+                            <x-text-button @click="code = 'XA'; $nextTick(() => setCursorToEnd())" type="button">XA</x-text-button>
+                            <x-text-button @click="code = 'XB'; $nextTick(() => setCursorToEnd())" type="button">XB</x-text-button>
+                            <x-text-button @click="code = 'XC'; $nextTick(() => setCursorToEnd())" type="button">XC</x-text-button>
+                            <x-text-button @click="code = 'XD'; $nextTick(() => setCursorToEnd())" type="button">XD</x-text-button>
                         </div>
                         @error('code')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
