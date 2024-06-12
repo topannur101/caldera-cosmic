@@ -78,7 +78,7 @@ new class extends Component {
             foreach ($metrics as $metric) {
                 // Process action_left
                 if ($metric->action_left === 'thin' || $metric->action_left === 'thick') {
-                    $labelText = $metric->action_left === 'thick' ? '▲' : '▼';
+                    $action = $metric->action_left === 'thick' ? '▲' : '▼';
                     $actions[] = [
                         'x' => $metric->dt_client->valueOf(),
                         'y' => $metric->sensor_left,
@@ -88,7 +88,7 @@ new class extends Component {
                         ],
                         'label' => [
                             'borderWidth' => 0,
-                            'text' => $labelText,
+                            'text' => $action . ' ' . number_format($metric->push_left, 1),
                             'style' => [
                                 'background' => 'transparent',
                                 'color' => '#78d1fc'
@@ -99,7 +99,7 @@ new class extends Component {
 
                 // Process action_right
                 if ($metric->action_right === 'thin' || $metric->action_right === 'thick') {
-                    $labelText = $metric->action_right === 'thick' ? '▲' : '▼';
+                    $action = $metric->action_right === 'thick' ? '▲' : '▼';
                     $actions[] = [
                         'x' => $metric->dt_client->valueOf(),
                         'y' => $metric->sensor_right,
@@ -109,7 +109,7 @@ new class extends Component {
                         ],
                         'label' => [
                             'borderWidth' => 0,
-                            'text' => $labelText,
+                            'text' => $action . ' ' . number_format($metric->push_right, 1),
                             'style' => [
                                 'background' => 'transparent',
                                 'color' => '#eea1a7'

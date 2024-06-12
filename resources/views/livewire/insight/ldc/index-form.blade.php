@@ -115,11 +115,13 @@ new class extends Component {
     <div class="w-60 grid grid-cols-1 grid-rows-2 gap-6 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
         <div>
             <div class="text-sm uppercase">{{ __('Selisih') }}</div>
-            <div class="text-2xl font-bold">{{ __('Di atas 6%') }}</div>
+            <div class="text-green-500"><i class="fa fa-check-circle me-2"></i><span class="text-xl">{{ __('Di bawah 6%') }}</span></div>
+
+            {{-- <div class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Di atas 6%') }}</span></div> --}}
         </div>
         <div>
             <div class="text-sm uppercase">Defect</div>
-            <div class="text-2xl font-bold text-red-500">{{ __('Abnormal') }}</div>
+            <div class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Abnormal') }}</span></div>
         </div>
     </div>
     <form wire:submit="save">
