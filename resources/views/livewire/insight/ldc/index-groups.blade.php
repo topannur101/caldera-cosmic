@@ -1,6 +1,8 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
 use App\Models\InsLdcGroup;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
@@ -12,7 +14,7 @@ new class extends Component {
     public $style;
     public $material;
 
-    public int $sgid;
+    public $sgid;
 
     public function rules()
     {
@@ -24,11 +26,24 @@ new class extends Component {
         ];
     }
 
+    #[On('hide-saved')]
     public function with(): array
     {
         $groups = InsLdcGroup::where('updated_at', '>=', Carbon::now()->subDay())
                      ->orderBy('updated_at', 'desc')
                      ->get();
+
+        // Filter the records to find a specific group and get the IDs
+        $sgid = $groups->filter(function ($group) {
+            return $group->line == $this->line &&
+                $group->workdate == $this->workdate &&
+                $group->style == $this->style &&
+                $group->material == $this->material;
+        })->first();
+
+        if ($sgid) {
+            $this->sgid = $sgid->id;
+        }
 
         return [
             'groups' => $groups
@@ -49,7 +64,7 @@ new class extends Component {
         $this->sgid = 0;
         $this->selectGroup();
         $this->js('window.dispatchEvent(escKey)'); 
-        $this->js('notyfSuccess("' . __('Grup baru diterapkan') . '")');
+        $this->js('notyfSuccess("' . __('Grup diterapkan') . '")');
         $this->dispatch('updated');
     }
 
@@ -80,7 +95,20 @@ new class extends Component {
         }
     }
 
+    #[On('hide-load')]
+    public function hideLoad($data)
+    {
+        $group = InsLdcGroup::find($data['ins_ldc_group_id']);
+        if ($group) {
+            $this->line     = $group->line;
+            $this->workdate = $group->workdate;
+            $this->style    = $group->style;
+            $this->material = $group->material;
+        }
+        
+        $this->selectGroup();
 
+    }
 
 };
 
@@ -136,13 +164,12 @@ new class extends Component {
             </div>
         </form>
     </x-modal>
-    @if($sgid === 0)
-    <div>
+    <div wire:key="sgid-0" class="{{ $sgid === 0 ? 'block' : 'hidden' }}">
         <input type="radio" name="sgid" id="sgid-0" value="0" wire:model.live="sgid"
             class="peer hidden [&:checked_+_label_svg]:block" />
         <label for="sgid-0"
             class="block h-full transform translate-y-1 hover:translate-y-0 duration-200 ease-in-out cursor-pointer rounded-lg border bg-white shadow border-transparent dark:bg-neutral-800 px-4 py-2 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
-            <div class="flex items-center justify-between text-2xl">
+            <div class="flex items-center justify-between text-xl">
                 <div>{{ $line }} <span class="text-xs uppercase ml-1 mr-2">{{ Carbon::parse($workdate)->format('d M') }}</span></div>
                 <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20" fill="currentColor">
@@ -152,17 +179,16 @@ new class extends Component {
                 </svg>
             </div>
             <div class="mt-1">{{ $style }}</div>
-            <div class="mt-1 max-w-40 truncate">{{ $material }}</div>
+            <div class="mt-1 max-w-40 truncate text-xs">{{ $material }}</div>
         </label>
     </div>
-    @endif
     @foreach($groups as $group)
-    <div>
-        <input type="radio" name="sgid" id="sgid-{{ $loop->iteration }}" value="{{ $group->id }}" wire:model.live="sgid"
+    <div wire:key="sgid-{{ $loop->iteration }}">
+        <input type="radio" name="sgid" id="sgid-{{ $loop->iteration }}" value="{{ $group->id }}" wire:model.live="sgid" :checked={{ $group->id == $sgid ? 'true' : 'false'}}
             class="peer hidden [&:checked_+_label_svg]:block" />
         <label for="sgid-{{ $loop->iteration }}"
             class="block h-full transform translate-y-1 hover:translate-y-0 duration-200 ease-in-out cursor-pointer rounded-lg border bg-white shadow border-transparent dark:bg-neutral-800 px-4 py-2 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
-            <div class="flex items-center justify-between text-2xl">
+            <div class="flex items-center justify-between text-xl">
                 <div>{{ $group->line }} <span class="text-xs uppercase ml-1 mr-2">{{ Carbon::parse($group->workdate)->format('d M') }}</span></div>
                 <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20" fill="currentColor">
@@ -172,7 +198,7 @@ new class extends Component {
                 </svg>
             </div>
             <div class="mt-1">{{ $group->style }}</div>
-            <div class="mt-1 max-w-32 text-ellipsis">{{ $group->material }}</div>
+            <div class="my-1 max-w-40 truncate text-xs">{{ $group->material }}</div>
         </label>
     </div>
     @endforeach

@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class InsLdcHide extends Model
 {
@@ -19,4 +20,9 @@ class InsLdcHide extends Model
         'user_id',
         'ins_ldc_group_id'
     ];
+
+    public function ins_ldc_group(): BelongsTo
+    {
+        return $this->belongsTo(InsLdcGroup::class);
+    }
 }

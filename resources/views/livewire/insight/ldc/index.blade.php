@@ -20,7 +20,7 @@ new #[Layout('layouts.app')] class extends Component {};
                 <livewire:insight.ldc.index-hides />
             </div>
             <div class="w-full overflow-hidden">
-                <div class="overflow-x-auto mb-4 px-1 pt-1 pb-2">
+                <div id="ldc-index-groups" class="overflow-x-auto mb-4 px-1 pt-1 pb-2">
                     <livewire:insight.ldc.index-groups />
                 </div>
                 <div class="flex w-full p-1">
