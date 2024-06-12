@@ -37,7 +37,7 @@ new class extends Component {
             'area_ab'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'area_qt'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'grade'     => ['nullable', 'integer', 'min:1', 'max:3'],
-            'code'      => ['required', 'string', 'min:7', 'max:10'],
+            'code'      => ['required', 'alpha_num', 'min:7', 'max:10'],
             'shift'     => ['required', 'integer', 'min:1', 'max:3']
         ];
     }
@@ -59,10 +59,12 @@ new class extends Component {
 
     public function save()
     {
-        $this->line       = $this->clean($this->line);
-        $this->style      = $this->clean($this->style);
-        $this->material   = $this->clean($this->material);
-        $this->code       = $this->clean($this->code);
+        $this->line     = $this->clean($this->line);
+        $this->style    = $this->clean($this->style);
+        $this->material = $this->clean($this->material);
+        $this->code     = $this->clean($this->code);
+
+        $this->code     = preg_replace('/[^a-zA-Z0-9]/', '', $this->code);
 
         if (!$this->line || !$this->workdate || !$this->style) {
             $this->js('notyfError("' . __('Info grup tidak sah') . '")');
@@ -126,7 +128,7 @@ new class extends Component {
     area_vn: $wire.entangle('area_vn'), 
     area_ab: $wire.entangle('area_ab'),
     area_qt: $wire.entangle('area_qt'),
-    code: '',
+    code: $wire.entangle('code'),
     get diff() {
         let area_vn = parseFloat(this.area_vn)
         let area_ab = parseFloat(this.area_ab)
