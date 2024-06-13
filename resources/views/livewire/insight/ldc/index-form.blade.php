@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
 use Illuminate\Validation\Rule;
 
 use App\Models\InsLdcGroup;
@@ -47,6 +48,7 @@ new class extends Component {
         return trim(strtoupper($string));
     }
 
+    #[Renderless]
     #[On('group-selected')]
     public function setGroup($data)
     {
@@ -109,6 +111,7 @@ new class extends Component {
         $this->reset(['area_vn', 'area_ab', 'area_qt', 'grade', 'code']);
     }
 
+    #[Renderless]
     #[On('hide-load')]
     public function hideLoad($data)
     {
@@ -140,22 +143,7 @@ new class extends Component {
         return((area_vn > 0 && area_qt > 0) ? ((area_vn - area_qt) / area_vn * 100) : 0)
     },
     setCursorToEnd() { this.$refs.hidecode.focus(); this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); }
-}" class="relative bg-white dark:bg-neutral-800 shadow rounded-lg p-6 flex gap-x-6">
-    <div class="w-60 grid grid-cols-1 grid-rows-2 gap-6 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
-        <div>
-            <div class="text-sm uppercase">{{ __('Selisih') }}</div>
-            <div x-cloak x-show="diff < 6 && area_vn > 0 && area_ab > 0" class="text-green-500"><i class="fa fa-check-circle me-2"></i><span class="text-xl">{{ __('Di bawah 6%') }}</span></div>
-            <div x-cloak x-show="diff > 6 && area_vn > 0 && area_ab > 0" class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Di atas 6%') }}</span></div>
-            <div x-show="!area_vn || !area_ab"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
-            {{-- <div class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Di atas 6%') }}</span></div> --}}
-        </div>
-        <div>
-            <div class="text-sm uppercase">{{ __('Defect')}}</div>
-            <div x-cloak x-show="defect >= 0 && area_vn > 0 && area_qt > 0"><span class="text-xl">{{ __('OK') }}</span></div>
-            <div x-cloak x-show="defect < 0 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Abnormal') }}</span></div>
-            <div x-show="!area_vn || !area_qt"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
-        </div>
-    </div>
+}" class="p-6 flex gap-x-6">
     <form id="ldc-index-form-element" wire:submit="save">
         <div class="grid grid-cols-3 gap-3">
             <div>
@@ -232,10 +220,31 @@ new class extends Component {
                 </div>
             </div>
         </div>
-        <div class="flex w-full mt-6">
-            <x-primary-button type="submit" class="w-full justify-center">{{ __('Simpan') }}</x-primary-button>
+        <div class="flex justify-between mt-6">
+            <div class="text-xs text-neutral-500">
+                <div>{{ __('Waktu server:') }}</div>
+                <div>{{ Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY, HH:mm'); }}</div>
+            </div>
+            <x-primary-button type="submit">{{ __('Simpan') }}</x-primary-button>
         </div>
     </form>
+    <div class="w-60 grid grid-cols-1 grid-rows-2 gap-6 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
+        <div>
+            <div class="text-sm uppercase">{{ __('Selisih') }}</div>
+            <div x-cloak x-show="diff < 6 && area_vn > 0 && area_ab > 0" class="text-green-500"><i class="fa fa-check-circle me-2"></i><span class="text-xl">{{ __('Di bawah 6%') }}</span></div>
+            <div x-cloak x-show="diff > 6 && area_vn > 0 && area_ab > 0" class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Di atas 6%') }}</span></div>
+            <div x-show="!area_vn || !area_ab"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
+            {{-- <div class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Di atas 6%') }}</span></div> --}}
+        </div>
+        <div>
+            <div class="text-sm uppercase">{{ __('Defect')}}</div>
+            <div x-cloak x-show="defect >= 0 && area_vn > 0 && area_qt > 0"><span class="text-xl">{{ __('OK') }}</span></div>
+            <div x-cloak x-show="defect < 0 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Abnormal') }}</span></div>
+            <div x-show="!area_vn || !area_qt"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
+        </div>
+    </div>
+    <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
+    <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
 </div>
 
 @script

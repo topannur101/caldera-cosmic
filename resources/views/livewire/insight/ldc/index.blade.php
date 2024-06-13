@@ -16,15 +16,17 @@ new #[Layout('layouts.app')] class extends Component {};
 <div id="content" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     @if (Auth::user())
         <div class="flex flex-col gap-x-4 md:gap-x-4 sm:flex-row">
-            <div class="py-2">
+            <div class="p-1">
                 <livewire:insight.ldc.index-hides />
             </div>
-            <div class="w-full overflow-hidden">
-                <div id="ldc-index-groups" class="overflow-x-auto mb-4 px-1 pt-1 pb-2">
-                    <livewire:insight.ldc.index-groups />
-                </div>
-                <div class="flex w-full p-1">
-                    <livewire:insight.ldc.index-form />
+            <div class="w-full overflow-hidden p-1">
+                <div class="relative bg-white dark:bg-neutral-800 shadow rounded-lg overflow-hidden">
+                    <div id="ldc-index-groups" class="overflow-x-auto">
+                        <livewire:insight.ldc.index-groups />
+                    </div>
+                    <div class="flex w-full">
+                        <livewire:insight.ldc.index-form />
+                    </div>
                 </div>
             </div>
         </div>
