@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 use App\Models\InsLdcGroup;
 use App\Models\InsLdcHide;
 use Carbon\Carbon;
+use App\Caldera;
+use Illuminate\Support\Facades\Cache;
 
 new class extends Component {
 
@@ -81,6 +83,26 @@ new class extends Component {
             'material'  => $this->material,
         ]);
 
+        $styles = Cache::get('styles', collect([
+                    ['name' => $this->style, 'updated_at' => now() ]
+                ]));
+        $styles = Caldera::manageCollection($styles, $this->style);
+        Cache::put('styles', $styles);
+
+        $lines = Cache::get('lines', collect([
+                    ['name' => $this->line, 'updated_at' => now() ]
+                ]));
+        $lines = Caldera::manageCollection($lines, $this->line);
+        Cache::put('lines', $lines);
+
+        if($this->material) {
+            $materials = Cache::get('materials', collect([
+                    ['name' => $this->material, 'updated_at' => now() ]
+                    ]));
+            $materials = Caldera::manageCollection($materials, $this->material);
+            Cache::put('materials', $materials);
+        }        
+
         $group->updated_at = now();
         $group->save();
         $this->js('document.getElementById("ldc-index-groups").scrollLeft = 0;');
@@ -122,7 +144,6 @@ new class extends Component {
         $this->code     = $data['code'];
     }
 
-
 };
 
 ?>
@@ -143,14 +164,14 @@ new class extends Component {
         return((area_vn > 0 && area_qt > 0) ? ((area_vn - area_qt) / area_vn * 100) : 0)
     },
     setCursorToEnd() { this.$refs.hidecode.focus(); this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); }
-}" class="p-6 flex gap-x-6">
+}" class="px-6 py-8 flex gap-x-6">
     <form id="ldc-index-form-element" wire:submit="save">
         <div class="grid grid-cols-3 gap-3">
             <div>
                 <div>
                     <label for="hide-area_vn"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('VN') }}</label>
-                    <x-text-input-suffix suffix="SF" id="hide-area_vn" x-model="area_vn" type="number" step=".1" />
+                    <x-text-input-suffix suffix="SF" id="hide-area_vn" x-model="area_vn" type="number" step=".1" autocomplete="off" />
                     @error('area_vn')
                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                     @enderror
@@ -158,10 +179,15 @@ new class extends Component {
                 <div class="mt-3">
                     <label for="hide-grade"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Grade') }}</label>
-                    <x-text-input id="hide-grade" wire:model="grade" type="number" step="1" />
+                    <x-text-input id="hide-grade" wire:model="grade" type="number" list="hide-grades" step="1" />
                     @error('grade')
                         <x-input-error messages="{{ $message }}" class="px-3" />
                     @enderror
+                    <datalist id="hide-grades">
+                        <option value="1"></option>
+                        <option value="2"></option>
+                        <option value="3"></option>
+                    </datalist>
                 </div>
             </div>
             <div class="col-span-2">
@@ -173,7 +199,7 @@ new class extends Component {
                             <div class="text-neutral-500 text-xs pr-3">|</div>
                             <div class="text-neutral-500 text-xs"><span class="uppercase">{{ __('Selisih') .': ' }}</span><span x-text="diff.toFixed(1) + '%'"></span></div>
                         </div>
-                        <x-text-input-suffix suffix="SF" id="hide-area_ab" x-model="area_ab" type="number" step=".1" />
+                        <x-text-input-suffix suffix="SF" id="hide-area_ab" x-model="area_ab" type="number" step=".1" autocomplete="off" />
                         @error('area_ab')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                         @enderror
@@ -185,7 +211,7 @@ new class extends Component {
                             <div class="text-neutral-500 text-xs pr-3">|</div>
                             <div class="text-neutral-500 text-xs"><span class="uppercase">{{ __('Defect') . ': ' }}</span><span x-text="defect.toFixed(1) + '%'"></span></div>
                         </div>
-                        <x-text-input-suffix suffix="SF" id="hide-area_qt" x-model="area_qt" type="number" step=".1" />
+                        <x-text-input-suffix suffix="SF" id="hide-area_qt" x-model="area_qt" type="number" step=".1" autocomplete="off" />
                         @error('area_qt')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                         @enderror
@@ -193,7 +219,7 @@ new class extends Component {
                     <div>
                         <label for="hide-code"
                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Barcode') }}</label>
-                        <x-text-input id="hide-code" x-model="code" x-ref="hidecode" type="text" step="1" />
+                        <x-text-input id="hide-code" x-model="code" x-ref="hidecode" type="text" autocomplete="off" />
                         <div class="flex w-full justify-between items-center text-neutral-500 px-3 mt-2 text-xs">
                             <x-text-button @click="code = 'XA'; $nextTick(() => setCursorToEnd())" type="button">XA</x-text-button>
                             <x-text-button @click="code = 'XB'; $nextTick(() => setCursorToEnd())" type="button">XB</x-text-button>

@@ -6,6 +6,8 @@ use Livewire\Attributes\Renderless;
 use App\Models\InsLdcGroup;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use App\Caldera;
+use Illuminate\Support\Facades\Cache;
 
 new class extends Component {
 
@@ -21,7 +23,7 @@ new class extends Component {
         return [
             'line'        => ['required', 'string', 'min:2', 'max:3', 'regex:/^[a-zA-Z]+[0-9]+$/'],
             'workdate'    => ['required', 'date'],
-            'style'       => ['required', 'string', 'min:9', 'max:11'],
+            'style'       => ['required', 'string', 'min:9', 'max:11', 'regex:/^[a-zA-Z0-9]+-[a-zA-Z0-9]+$/'],
             'material'    => ['nullable', 'string', 'max:140'],
         ];
     }
@@ -32,6 +34,10 @@ new class extends Component {
         $groups = InsLdcGroup::where('updated_at', '>=', Carbon::now()->subDay())
                      ->orderBy('updated_at', 'desc')
                      ->get();
+
+        $cached_styles = Cache::get('styles', collect([]));
+        $cached_lines = Cache::get('lines', collect([]));
+        $cached_materials = Cache::get('materials', collect([]));
 
         // Filter the records to find a specific group and get the IDs
         $sgid = $groups->filter(function ($group) {
@@ -46,7 +52,10 @@ new class extends Component {
         }
 
         return [
-            'groups' => $groups
+            'groups' => $groups,
+            'cached_styles' => $cached_styles->sortBy('name')->values(),
+            'cached_lines' => $cached_lines->sortBy('name')->values(),
+            'cached_materials' => $cached_materials->sortBy('name')->values()
         ];
     }
 
@@ -88,7 +97,7 @@ new class extends Component {
                 $this->workdate = $group->workdate;
                 $this->style    = $group->style;
                 $this->material = $group->material;
-            }
+            }                        
 
             $this->selectGroup();
         }
@@ -138,26 +147,41 @@ new class extends Component {
                 <div class="mt-6">
                     <label for="gs-hide-style"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Style') }}</label>
-                    <x-text-input id="gs-hide-style" wire:model="style" type="text" />
+                    <x-text-input id="gs-hide-style" list="gs-hide-styles" wire:model="style" autocomplete="off" type="text" />
                     @error('style')
                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                     @enderror
+                    <datalist id="gs-hide-styles">
+                        @foreach($cached_styles as $cached_style)
+                        <option value="{{ $cached_style['name'] }}">
+                        @endforeach
+                    </datalist>
                 </div>
                 <div class="mt-6">
                     <label for="gs-hide-line"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                    <x-text-input id="gs-hide-line" wire:model="line" type="text" />
+                    <x-text-input id="gs-hide-line" list="gs-hide-lines" wire:model="line" type="text" autocomplete="off" />
                     @error('line')
                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                     @enderror
+                    <datalist id="gs-hide-lines">
+                        @foreach($cached_lines as $cached_line)
+                        <option value="{{ $cached_line['name'] }}">
+                        @endforeach
+                    </datalist>
                 </div>
                 <div class="mt-6">
                     <label for="gs-hide-material"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Material') }}</label>
-                    <x-text-input id="gs-hide-material" wire:model="material" type="text" />
+                    <x-text-input id="gs-hide-material" list="gs-hide-materials" wire:model="material" type="text" autocomplete="off" />
                     @error('material')
                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                     @enderror
+                    <datalist id="gs-hide-materials">
+                        @foreach($cached_materials as $cached_material)
+                        <option value="{{ $cached_material['name'] }}">
+                        @endforeach
+                    </datalist>
                 </div>
             </div>
             <div class="flex justify-end">
@@ -171,7 +195,7 @@ new class extends Component {
         <input type="radio" name="sgid" id="sgid-0" value="0" wire:model.live="sgid"
             class="peer hidden" />
         <label for="sgid-0"
-        class="block h-full cursor-pointer px-6 py-2 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-10 dark:hover:bg-opacity-10">
+        class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-20 dark:hover:bg-opacity-20">
             <div class="flex items-center justify-between text-lg">
                 <div>{{ $line }} <span class="text-xs uppercase ml-1 mr-2">{{ Carbon::parse($workdate)->format('d M') }}</span></div>
                 <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
@@ -190,7 +214,7 @@ new class extends Component {
         <input type="radio" name="sgid" id="sgid-{{ $loop->iteration }}" value="{{ $group->id }}" wire:model.live="sgid" :checked={{ $group->id == $sgid ? 'true' : 'false'}}
             class="peer hidden" />
         <label for="sgid-{{ $loop->iteration }}"
-            class="block h-full cursor-pointer px-6 py-2 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-10 dark:hover:bg-opacity-10">
+            class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-10 dark:hover:bg-opacity-10">
             <div class="flex items-center justify-between text-lg">
                 <div>{{ $group->line }} <span class="text-xs uppercase ml-1 mr-2">{{ Carbon::parse($group->workdate)->format('d M') }}</span></div>
             </div>
