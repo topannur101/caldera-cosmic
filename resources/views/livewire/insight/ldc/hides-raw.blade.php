@@ -35,28 +35,28 @@ new #[Layout('layouts.app')] class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->addDay();
 
-        $hides = InsLdcHide::join('ins_ldc_groups', 'ins_ldc_hides.ins_ldc_group_id', '=', 'ins_ldc_groups.id')
+        $hidesQuery = InsLdcHide::join('ins_ldc_groups', 'ins_ldc_hides.ins_ldc_group_id', '=', 'ins_ldc_groups.id')
         ->join('users', 'ins_ldc_hides.user_id', '=', 'users.id');
 
         if (!$this->is_workdate) {
-            $hides->whereBetween('ins_ldc_hides.updated_at', [$start, $end]);
+            $hidesQuery->whereBetween('ins_ldc_hides.updated_at', [$start, $end]);
         } else {
-            $hides->whereBetween('ins_ldc_groups.workdate', [$start, $end]);
+            $hidesQuery->whereBetween('ins_ldc_groups.workdate', [$start, $end]);
         }
 
         switch ($this->ftype) {
             case 'code':
-                $hides->where('ins_ldc_hides.code', 'LIKE', '%' . $this->fquery . '%');
+                $hidesQuery->where('ins_ldc_hides.code', 'LIKE', '%' . $this->fquery . '%');
                 break;
             case 'style':
-                $hides->where('ins_ldc_groups.style', 'LIKE', '%' . $this->fquery . '%');
+                $hidesQuery->where('ins_ldc_groups.style', 'LIKE', '%' . $this->fquery . '%');
             break;
             case 'emp_id':
-                $hides->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
+                $hidesQuery->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
             break;
             
             default:
-                $hides->where(function (Builder $query) {
+                $hidesQuery->where(function (Builder $query) {
                 $query
                     ->orWhere('ins_ldc_hides.code', 'LIKE', '%' . $this->fquery . '%')
                     ->orWhere('ins_ldc_groups.style', 'LIKE', '%' . $this->fquery . '%')
@@ -66,15 +66,19 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         if (!$this->is_workdate) {
-            $hides->orderBy('ins_ldc_hides.updated_at', 'DESC');
+            $hidesQuery->orderBy('ins_ldc_hides.updated_at', 'DESC');
         } else {
-            $hides->orderBy('ins_ldc_groups.workdate', 'DESC');
+            $hidesQuery->orderBy('ins_ldc_groups.workdate', 'DESC');
         }
 
-        $hides = $hides->paginate($this->perPage);
+        $hides = $hidesQuery->paginate($this->perPage);
+        $sum_area_vn = $hidesQuery->sum('area_vn');
+        $sum_area_ab = $hidesQuery->sum('area_ab');
 
         return [
             'hides' => $hides,
+            'sum_area_vn' => $sum_area_vn,
+            'sum_area_ab' => $sum_area_ab
         ];
     }
 
@@ -92,7 +96,7 @@ new #[Layout('layouts.app')] class extends Component {
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
                 {{ __('Data Mentah') }}</h1>
             <div class="flex gap-x-2 items-center">
-                <div class="text-sm"><span class="text-neutral-500">{{  __('Total') . ' ' }}<span class="mx-2">VN</span><span>|</span><span class="mx-2">AB</span><span>|</span><span class="mx-2">QT</span>:</span><span><span class="mx-2">{{ $hides->sum('area_vn') }}</span><span>|</span><span class="mx-2">{{ $hides->sum('area_ab') }}</span><span>|</span><span class="mx-2">{{ $hides->sum('area_qt') }}</span></span></div>
+                <div class="text-sm"><span class="text-neutral-500">{{  __('Total') . ' VN | AB : ' }}</span><span>{{ $sum_area_vn . ' | ' .  $sum_area_ab }}</span><span class="text-neutral-500 ms-4">{{  __('Total lembar') . ' : ' }}</span><span>{{ $hides->total() }}</span></div>
             </div>
         </div>
         @if (!$hides->count())
