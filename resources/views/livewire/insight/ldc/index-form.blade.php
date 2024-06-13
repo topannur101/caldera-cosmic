@@ -26,9 +26,6 @@ new class extends Component {
     public $code;
     public $shift;
 
-    // public float $diff;
-    // public float $defect;
-
     public function rules()
     {
         return [
@@ -51,15 +48,25 @@ new class extends Component {
     }
 
     #[Renderless]
-    #[On('group-selected')]
-    public function setGroup($data)
+    #[On('set-group')]
+    public function setGroup($line, $workdate, $style, $material)
     {
-        $this->line     = $data['line'];
-        $this->workdate = $data['workdate'];
-        $this->style    = $data['style'];
-        $this->material = $data['material'];
+        $this->line     = $line;
+        $this->workdate = $workdate;
+        $this->style    = $style;
+        $this->material = $material;
     }
 
+    #[Renderless]
+    #[On('set-hide')]
+    public function setHide($area_vn, $area_ab, $area_qt, $grade, $code)
+    {
+        $this->area_vn  = $area_vn;
+        $this->area_ab  = $area_ab;
+        $this->area_qt  = $area_qt;
+        $this->grade    = $grade;
+        $this->code     = $code;
+    }
 
     public function save()
     {
@@ -82,6 +89,8 @@ new class extends Component {
             'style'     => $this->style,
             'material'  => $this->material,
         ]);
+        $group->updated_at = now();
+        $group->save();
 
         $styles = Cache::get('styles', collect([
                     ['name' => $this->style, 'updated_at' => now() ]
@@ -103,8 +112,6 @@ new class extends Component {
             Cache::put('materials', $materials);
         }        
 
-        $group->updated_at = now();
-        $group->save();
         $this->js('document.getElementById("ldc-index-groups").scrollLeft = 0;');
 
         $hide = InsLdcHide::updateOrCreate(
@@ -131,17 +138,6 @@ new class extends Component {
     public function customReset()
     {
         $this->reset(['area_vn', 'area_ab', 'area_qt', 'grade', 'code']);
-    }
-
-    #[Renderless]
-    #[On('hide-load')]
-    public function hideLoad($data)
-    {
-        $this->area_vn  = $data['area_vn'];
-        $this->area_ab  = $data['area_ab'];
-        $this->area_qt  = $data['area_qt'];
-        $this->grade    = $data['grade'];
-        $this->code     = $data['code'];
     }
 
 };
@@ -260,7 +256,6 @@ new class extends Component {
             <div x-cloak x-show="diff < 6 && area_vn > 0 && area_ab > 0" class="text-green-500"><i class="fa fa-check-circle me-2"></i><span class="text-xl">{{ __('Di bawah 6%') }}</span></div>
             <div x-cloak x-show="diff > 6 && area_vn > 0 && area_ab > 0" class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Di atas 6%') }}</span></div>
             <div x-show="!area_vn || !area_ab"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
-            {{-- <div class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Di atas 6%') }}</span></div> --}}
         </div>
         <div>
             <div class="text-sm uppercase">{{ __('Defect')}}</div>

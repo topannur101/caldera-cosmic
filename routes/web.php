@@ -82,6 +82,7 @@ Route::name('csv.')->group(function () {
 
     Route::get('/csv/ins-rtc-metrics', [CsvController::class, 'insRtcMetrics'])->name('ins-rtc-metrics');
     Route::get('/csv/ins-rtc-clumps', [CsvController::class, 'insRtcClumps'])->name('ins-rtc-clumps');
+    Route::get('/csv/ins-ldc-hides', [CsvController::class, 'insLdcHides'])->name('ins-ldc-hides');
 
 });
 

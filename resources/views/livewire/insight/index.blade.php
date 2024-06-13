@@ -30,7 +30,7 @@
                                 </g>
                             </svg>
                         </div>
-                        <img class="opacity-70 hover:opacity-100 transition-opacity absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                        <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
                             src="/ins-rtm.jpg" />
                     </div>
                 </div>
@@ -64,7 +64,7 @@
                                 </g>
                             </svg>
                         </div>
-                        <img class="opacity-70 hover:opacity-100 transition-opacity absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                        <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
                             src="/ins-ldc.jpg" />
                     </div>
                 </div>

@@ -2,7 +2,6 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Renderless;
 use App\Models\InsLdcGroup;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
@@ -49,6 +48,10 @@ new class extends Component {
 
         if ($sgid) {
             $this->sgid = $sgid->id;
+        } elseif ( $this->line && $this->workdate && $this->style )  {
+            $this->sgid = 0;
+        } else {
+            $this->reset(['sgid']);
         }
 
         return [
@@ -59,63 +62,29 @@ new class extends Component {
         ];
     }
 
+    #[Renderless]
+    #[On('set-group')]
+    public function setGroup($line, $workdate, $style, $material)
+    {
+        $this->line     = $line;
+        $this->workdate = $workdate;
+        $this->style    = $style;
+        $this->material = $material;
+    }
+
     public function clean($string): string
     {
         return trim(strtoupper($string));
     }
 
-    public function setGroup()
+    public function applyGroup()
     {
         $this->line = $this->clean($this->line);
         $this->style = $this->clean($this->style);
         $this->material = $this->clean($this->material);
         $this->validate();
-        $this->sgid = 0;
-        $this->selectGroup();
         $this->js('window.dispatchEvent(escKey)'); 
-        $this->dispatch('updated');
-    }
-
-    public function selectGroup()
-    {
-        $data = [
-                'line'      => $this->line,
-                'workdate'  => $this->workdate,
-                'style'     => $this->style,
-                'material'  => $this->material
-            ];
-        $this->dispatch('group-selected', $data);
-    }
-
-    public function updated($property)
-    {
-        if ($property == 'sgid') {
-
-            $group = InsLdcGroup::find($this->sgid);
-            if ($group) {
-                $this->line     = $group->line;
-                $this->workdate = $group->workdate;
-                $this->style    = $group->style;
-                $this->material = $group->material;
-            }                        
-
-            $this->selectGroup();
-        }
-    }
-
-    #[On('hide-load')]
-    public function hideLoad($data)
-    {
-        $group = InsLdcGroup::find($data['ins_ldc_group_id']);
-        if ($group) {
-            $this->line     = $group->line;
-            $this->workdate = $group->workdate;
-            $this->style    = $group->style;
-            $this->material = $group->material;
-        }
-        
-        $this->selectGroup();
-
+        $this->dispatch('setGroup', line: $this->line, workdate: $this->workdate, style: $this->style, material: $this->material);
     }
 
 };
@@ -128,7 +97,7 @@ new class extends Component {
         x-on:click.prevent="$dispatch('open-modal', 'group-set')"><i class="fa fa-plus"></i></x-text-button>        
     </div>
     <x-modal name="group-set" maxWidth="sm">
-        <form wire:submit="setGroup" class="p-6">
+        <form wire:submit="applyGroup" class="p-6">
             <div class="flex justify-between items-start">
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                     {{ __('Grup baru') }}
@@ -192,7 +161,7 @@ new class extends Component {
         <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
     </x-modal>
     <div wire:key="sgid-0" class="{{ $sgid === 0 ? 'block' : 'hidden' }}">
-        <input type="radio" name="sgid" id="sgid-0" value="0" wire:model.live="sgid"
+        <input type="radio" name="sgid" id="sgid-0" value="0" wire:model="sgid" wire:click="selectGroup"
             class="peer hidden" />
         <label for="sgid-0"
         class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-20 dark:hover:bg-opacity-20">
@@ -211,7 +180,7 @@ new class extends Component {
     </div>
     @foreach($groups as $group)
     <div wire:key="sgid-{{ $loop->iteration }}">
-        <input type="radio" name="sgid" id="sgid-{{ $loop->iteration }}" value="{{ $group->id }}" wire:model.live="sgid" :checked={{ $group->id == $sgid ? 'true' : 'false'}}
+        <input type="radio" name="sgid" id="sgid-{{ $loop->iteration }}" value="{{ $group->id }}" wire:model="sgid" @click="$dispatch('set-group', { line: '{{ $group->line }}', workdate: '{{ $group->workdate }}', style: '{{ $group->style }}', material: '{{ $group->material }}' })" :checked={{ $group->id == $sgid ? 'true' : 'false'}}
             class="peer hidden" />
         <label for="sgid-{{ $loop->iteration }}"
             class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-10 dark:hover:bg-opacity-10">

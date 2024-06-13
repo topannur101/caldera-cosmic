@@ -25,4 +25,9 @@ class InsLdcHide extends Model
     {
         return $this->belongsTo(InsLdcGroup::class);
     }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

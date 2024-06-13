@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\InsLdcHide;
 use App\Models\InsRtcMetric;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 
 class CsvController extends Controller
 {
@@ -205,6 +207,117 @@ class CsvController extends Controller
             "Pragma"              => "no-cache",
             "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
             "Expires"             => "0"
+        ]);
+    }
+
+    public function insLdcHides(Request $request)
+    {
+        if (!Auth::user()) {
+            abort(403);
+        }
+
+        $start = Carbon::parse($request['start_at']);
+        $end = Carbon::parse($request['end_at'])->addDay();
+
+        $hides = InsLdcHide::join('ins_ldc_groups', 'ins_ldc_hides.ins_ldc_group_id', '=', 'ins_ldc_groups.id')
+            ->join('users', 'ins_ldc_hides.user_id', '=', 'users.id');
+
+        if (!$request->is_workdate) {
+            $hides->whereBetween('ins_ldc_hides.updated_at', [$start, $end]);
+        } else {
+            $hides->whereBetween('ins_ldc_groups.workdate', [$start, $end]);
+        }
+
+        switch ($request->ftype) {
+            case 'code':
+                $hides->where('ins_ldc_hides.code', 'LIKE', '%' . $request->fquery . '%');
+                break;
+            case 'style':
+                $hides->where('ins_ldc_groups.style', 'LIKE', '%' . $request->fquery . '%');
+                break;
+            case 'emp_id':
+                $hides->where('users.emp_id', 'LIKE', '%' . $request->fquery . '%');
+                break;
+            default:
+                $hides->where(function (Builder $query) use ($request) {
+                    $query
+                        ->orWhere('ins_ldc_hides.code', 'LIKE', '%' . $request->fquery . '%')
+                        ->orWhere('ins_ldc_groups.style', 'LIKE', '%' . $request->fquery . '%')
+                        ->orWhere('users.emp_id', 'LIKE', '%' . $request->fquery . '%');
+                });
+                break;
+        }
+
+        if (!$request->is_workdate) {
+            $hides->orderBy('ins_ldc_hides.updated_at', 'DESC');
+        } else {
+            $hides->orderBy('ins_ldc_groups.workdate', 'DESC');
+        }
+
+        $hides = $hides->get();
+
+        $headers = [
+            __('Diperbarui'), 
+            __('Kode'),
+            __('VN'),
+            __('AB'),
+            __('QT'),
+            __('G'),
+            __('S'),
+            __('WO'),
+            __('Style'),
+            __('Line'),
+            __('Material'),
+            __('IDK'),
+            __('Nama'),
+        ];
+
+        $callback = function() use($hides, $headers) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers);
+
+            foreach($hides as $hide) {
+                $row['updated_at'] = $hide->updated_at;
+                $row['code'] = $hide->code;
+                $row['area_vn'] = $hide->area_vn;
+                $row['area_ab'] = $hide->area_ab;
+                $row['area_qt'] = $hide->area_qt;
+                $row['grade'] = $hide->grade;
+                $row['shift'] = $hide->shift;
+                $row['workdate'] = $hide->ins_ldc_group->workdate;
+                $row['style'] = $hide->ins_ldc_group->style;
+                $row['line'] = $hide->ins_ldc_group->line;
+                $row['material'] = $hide->ins_ldc_group->material ?? '';
+                $row['emp_id'] = $hide->user->emp_id;
+                $row['name'] = $hide->user->name;
+
+                fputcsv($file, [
+                    $row['updated_at'],
+                    $row['code'],
+                    $row['area_vn'],
+                    $row['area_ab'],
+                    $row['area_qt'],
+                    $row['grade'],
+                    $row['shift'],
+                    $row['workdate'],
+                    $row['style'],
+                    $row['line'],
+                    $row['material'],
+                    $row['emp_id'],
+                    $row['name']
+                ]);
+            }
+            fclose($file);
+        };
+
+        $fileName = __('Wawasan') . ' ' . __('LDC') . '_'. __('Kulit') . '_' . date('Y-m-d_His') . '.csv';
+
+        return response()->stream($callback, 200, [
+            "Content-type" => "text/csv; charset=utf-8",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
         ]);
     }
 }

@@ -10,7 +10,7 @@
                 <i class="fa mx-2 fa-fw fa-pen text-sm"></i>
             </x-nav-link>
             <x-nav-link href="{{ route('insight.ldc.hides') }}" :active="request()->routeIs('insight.ldc.hides')" wire:navigate>
-                <i class="fa mx-2 fa-fw fa-table text-sm"></i>
+                <i class="fa mx-2 fa-fw fa-heart-pulse text-sm"></i>
             </x-nav-link>
         </div>
     </div>

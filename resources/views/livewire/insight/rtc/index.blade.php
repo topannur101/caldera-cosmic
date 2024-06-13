@@ -40,7 +40,11 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function mount()
     {
-        $this->setToday();
+        if(!$this->start_at || !$this->end_at)
+        {
+            $this->setToday();
+        }
+        
         $this->olines = InsRtcMetric::join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
             ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
             ->select('ins_rtc_devices.line')
@@ -57,11 +61,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->is_range = in_array($this->view, $this->rangeViews);
         $this->is_filter = in_array($this->view, $this->filterViews);
 
-        return [
-            'start_at' => $this->start_at,
-            'end_at' => $this->end_at,
-            'fline' => $this->fline,
-        ];
+        return [];
     }
 
     public function setToday()
@@ -185,7 +185,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                     <div class="mt-5">
                         <x-text-input wire:model.live="start_at" id="inv-date-start" type="date"></x-text-input>
-                        <x-text-input wire:model.live="end_at" id="inv-date-end" type="date"
+                        <x-text-input wire:model.live="end_at"  id="inv-date-end" type="date"
                             class="mt-3 mb-1 {{ $is_range ? '' : 'hidden' }}"></x-text-input>
                     </div>
                 </div>
