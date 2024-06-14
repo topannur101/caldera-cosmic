@@ -137,7 +137,7 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['area_vn', 'area_ab', 'area_qt', 'grade', 'code']);
+        $this->reset(['line', 'workdate', 'style', 'material', 'area_vn', 'area_ab', 'area_qt', 'grade', 'code']);
     }
 
 };
@@ -167,7 +167,7 @@ new class extends Component {
                 <div>
                     <label for="hide-area_vn"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('VN') }}</label>
-                    <x-text-input-suffix suffix="SF" id="hide-area_vn" x-model="area_vn" type="number" step=".1" autocomplete="off" />
+                    <x-text-input-suffix suffix="SF" id="hide-area_vn" x-model="area_vn" type="number" step=".01" autocomplete="off" />
                     @error('area_vn')
                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                     @enderror
@@ -195,7 +195,7 @@ new class extends Component {
                             <div class="text-neutral-500 text-xs pr-3">|</div>
                             <div class="text-neutral-500 text-xs"><span class="uppercase">{{ __('Selisih') .': ' }}</span><span x-text="diff.toFixed(1) + '%'"></span></div>
                         </div>
-                        <x-text-input-suffix suffix="SF" id="hide-area_ab" x-model="area_ab" type="number" step=".1" autocomplete="off" />
+                        <x-text-input-suffix suffix="SF" id="hide-area_ab" x-model="area_ab" type="number" step=".01" autocomplete="off" />
                         @error('area_ab')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                         @enderror
@@ -207,7 +207,7 @@ new class extends Component {
                             <div class="text-neutral-500 text-xs pr-3">|</div>
                             <div class="text-neutral-500 text-xs"><span class="uppercase">{{ __('Defect') . ': ' }}</span><span x-text="defect.toFixed(1) + '%'"></span></div>
                         </div>
-                        <x-text-input-suffix suffix="SF" id="hide-area_qt" x-model="area_qt" type="number" step=".1" autocomplete="off" />
+                        <x-text-input-suffix suffix="SF" id="hide-area_qt" x-model="area_qt" type="number" step=".01" autocomplete="off" />
                         @error('area_qt')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                         @enderror
@@ -286,8 +286,8 @@ new class extends Component {
           // Check if the current input is "hide-code"
           if (input === hideCodeInput) {
             if (submitButton) {
-                submitButton.click();
                 submitButton.focus();
+                $wire.save();
             }
           } else if (nextInput) {
             nextInput.focus();

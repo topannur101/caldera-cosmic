@@ -27,7 +27,6 @@ new class extends Component {
         ];
     }
 
-    #[On('hide-saved')]
     public function with(): array
     {
         $groups = InsLdcGroup::where('updated_at', '>=', Carbon::now()->subDay())
@@ -84,7 +83,13 @@ new class extends Component {
         $this->material = $this->clean($this->material);
         $this->validate();
         $this->js('window.dispatchEvent(escKey)'); 
-        $this->dispatch('setGroup', line: $this->line, workdate: $this->workdate, style: $this->style, material: $this->material);
+        $this->dispatch('set-group', line: $this->line, workdate: $this->workdate, style: $this->style, material: $this->material);
+    }
+
+    #[On('hide-saved')]
+    public function customReset()
+    {
+        $this->reset(['line', 'workdate', 'style', 'material', 'sgid']);
     }
 
 };
