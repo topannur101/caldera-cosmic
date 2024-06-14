@@ -62,7 +62,7 @@ new class extends Component {
     }
 
     #[Renderless]
-    #[On('set-group')]
+    #[On('set-hide')]
     public function setGroup($line, $workdate, $style, $material)
     {
         $this->line     = $line;

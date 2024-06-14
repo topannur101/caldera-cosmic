@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Cache;
 
 new class extends Component {
 
+    public $is_editing = 0;
+
     public $line;
     public $workdate;
     public $style;
@@ -47,25 +49,28 @@ new class extends Component {
         return trim(strtoupper($string));
     }
 
-    #[Renderless]
-    #[On('set-group')]
-    public function setGroup($line, $workdate, $style, $material)
-    {
-        $this->line     = $line;
-        $this->workdate = $workdate;
-        $this->style    = $style;
-        $this->material = $material;
-    }
+    // #[Renderless]
+    // #[On('set-group')]
+    // public function setGroup($line, $workdate, $style, $material)
+    // {
+    //     $this->line     = $line;
+    //     $this->workdate = $workdate;
+    //     $this->style    = $style;
+    //     $this->material = $material;
+    // }
 
-    #[Renderless]
     #[On('set-hide')]
-    public function setHide($area_vn, $area_ab, $area_qt, $grade, $code)
+    public function setHide($is_editing, $area_vn, $area_ab, $area_qt, $grade, $code)
     {
+        $this->is_editing = $is_editing;
+
         $this->area_vn  = $area_vn;
         $this->area_ab  = $area_ab;
         $this->area_qt  = $area_qt;
         $this->grade    = $grade;
         $this->code     = $code;
+
+        $this->resetValidation();
     }
 
     public function save()
@@ -131,13 +136,25 @@ new class extends Component {
         $this->js('$dispatch("close")');
         $this->js('notyfSuccess("' . __('Kulit disimpan') . '")');
         $this->dispatch('hide-saved');
-
         $this->customReset();
     }
 
     public function customReset()
     {
-        $this->reset(['line', 'workdate', 'style', 'material', 'area_vn', 'area_ab', 'area_qt', 'grade', 'code']);
+        $this->reset(['is_editing', 'line', 'workdate', 'style', 'material', 'area_vn', 'area_ab', 'area_qt', 'grade', 'code']);
+    }
+
+    public function delete()
+    {
+        if($this->code) {
+            $hide = InsLdcHide::where('code', $this->code);
+            if ($hide) {
+                $hide->delete();
+                $this->js('notyfSuccess("' . __('Kulit dihapus') . '")');
+                $this->dispatch('hide-saved');
+                $this->customReset();
+            }
+        }
     }
 
 };
@@ -145,9 +162,14 @@ new class extends Component {
 ?>
 
 <div x-data="{ 
+    line: $wire.entangle('line'), 
+    workdate: $wire.entangle('workdate'), 
+    style: $wire.entangle('style'), 
+    material: $wire.entangle('material'), 
     area_vn: $wire.entangle('area_vn'), 
     area_ab: $wire.entangle('area_ab'),
     area_qt: $wire.entangle('area_qt'),
+    area_qt_string: '',
     code: $wire.entangle('code'),
     get diff() {
         let area_vn = parseFloat(this.area_vn)
@@ -159,8 +181,19 @@ new class extends Component {
         let area_qt = parseFloat(this.area_qt)
         return((area_vn > 0 && area_qt > 0) ? ((area_vn - area_qt) / area_vn * 100) : 0)
     },
-    setCursorToEnd() { this.$refs.hidecode.focus(); this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); }
-}" class="px-6 py-8 flex gap-x-6">
+    get area_qt_eval() {
+        try {
+            let result = eval(this.area_qt_string.replace(/[^\d\.\+\-\*\/\(\)]/g, ''));
+            return !isNaN(result) ? result.toFixed(2) : '0.00';
+        } catch {
+            return '0.00';
+        }
+    },
+    setCursorToEnd() { 
+        this.$refs.hidecode.focus(); 
+        this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); 
+    }
+}" x-on:set-group.window="line = $event.detail.line; workdate = $event.detail.workdate; style = $event.detail.style; material = $event.detail.material" class="px-6 py-8 flex gap-x-6">
     <form id="ldc-index-form-element" wire:submit="save">
         <div class="grid grid-cols-3 gap-3">
             <div>
@@ -207,7 +240,7 @@ new class extends Component {
                             <div class="text-neutral-500 text-xs pr-3">|</div>
                             <div class="text-neutral-500 text-xs"><span class="uppercase">{{ __('Defect') . ': ' }}</span><span x-text="defect.toFixed(1) + '%'"></span></div>
                         </div>
-                        <x-text-input-suffix suffix="SF" id="hide-area_qt" x-model="area_qt" type="number" step=".01" autocomplete="off" />
+                        <x-text-input-suffix suffix="SF" id="hide-area_qt" x-model="area_qt" type="number" step=".01" autocomplete="off" x-on:keydown="if ($event.key === '+' || $event.key === '-') { $dispatch('open-spotlight', 'calculate-qt'); console.log(area_qt); area_qt_string = area_qt + $event.key }"  />
                         @error('area_qt')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                         @enderror
@@ -215,7 +248,7 @@ new class extends Component {
                     <div>
                         <label for="hide-code"
                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Barcode') }}</label>
-                        <x-text-input id="hide-code" x-model="code" x-ref="hidecode" type="text" autocomplete="off" />
+                        <x-text-input id="hide-code" x-model="code" x-ref="hidecode" type="text" autocomplete="off" :disabled="$is_editing ? 'disabled' : false" />
                         <div class="flex w-full justify-between items-center text-neutral-500 px-3 mt-2 text-xs">
                             <x-text-button @click="code = 'XA'; $nextTick(() => setCursorToEnd())" type="button">XA</x-text-button>
                             <x-text-button @click="code = 'XB'; $nextTick(() => setCursorToEnd())" type="button">XB</x-text-button>
@@ -247,9 +280,28 @@ new class extends Component {
                 <div>{{ __('Waktu server:') }}</div>
                 <div>{{ Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY, HH:mm'); }}</div>
             </div>
-            <x-primary-button type="submit">{{ __('Simpan') }}</x-primary-button>
+            <div class="flex gap-x-3">
+                <x-text-button type="button" class="uppercase text-xs text-red-500 {{ $is_editing ? '' : 'hidden' }}" wire:click="delete"
+                wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
+                {{ __('Hapus') }}
+            </x-text-button>
+                <x-primary-button type="submit">{{ __('Simpan') }}</x-primary-button>
+            </div>
         </div>
     </form>
+    <x-spotlight name="calculate-qt" focusable maxWidth="sm">
+        <div class="w-full flex flex-col gap-y-10 pb-10">
+            <header>
+                <h2 class="text-xl text-center font-medium">
+                    {{ __('Operasi matematika untuk QT')}}
+                </h2>
+            </header>
+            <div x-text="area_qt_eval" class="text-center font-bold text-7xl">
+                0.00
+            </div>
+            <x-text-input-transparent type="text" x-model="area_qt_string" x-on:keyup.enter="area_qt = area_qt_eval; window.dispatchEvent(escKey); $refs.hidecode.focus()"></x-text-input-transparent>
+        </div>
+    </x-spotlight>
     <div class="w-60 grid grid-cols-1 grid-rows-2 gap-6 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
         <div>
             <div class="text-sm uppercase">{{ __('Selisih') }}</div>
@@ -292,7 +344,7 @@ new class extends Component {
           } else if (nextInput) {
             nextInput.focus();
           }
-        }
+        } 
       });
     });
   }

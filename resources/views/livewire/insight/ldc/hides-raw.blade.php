@@ -36,7 +36,16 @@ new #[Layout('layouts.app')] class extends Component {
         $end = Carbon::parse($this->end_at)->addDay();
 
         $hidesQuery = InsLdcHide::join('ins_ldc_groups', 'ins_ldc_hides.ins_ldc_group_id', '=', 'ins_ldc_groups.id')
-        ->join('users', 'ins_ldc_hides.user_id', '=', 'users.id');
+        ->join('users', 'ins_ldc_hides.user_id', '=', 'users.id')
+        ->select(
+        'ins_ldc_hides.*',
+        'ins_ldc_hides.updated_at as hide_updated_at',
+        'ins_ldc_groups.workdate as group_workdate',
+        'ins_ldc_groups.style as group_style',
+        'ins_ldc_groups.line as group_line',
+        'ins_ldc_groups.material as group_material',
+        'users.emp_id as user_emp_id',
+        'users.name as user_name');
 
         if (!$this->is_workdate) {
             $hidesQuery->whereBetween('ins_ldc_hides.updated_at', [$start, $end]);
@@ -129,7 +138,7 @@ new #[Layout('layouts.app')] class extends Component {
         @else
             <div wire:key="raw-hides" class="p-0 sm:p-1 overflow-auto">
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
-                    <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                    <table class="table table-sm table-truncate text-sm text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
                             <th>{{ __('Diperbarui') }}</th>
                             <th>{{ __('Kode')}}</th>
@@ -147,22 +156,22 @@ new #[Layout('layouts.app')] class extends Component {
     
                         </tr>
                         @foreach ($hides as $hide)
-                            <tr>
-                                <td>{{ $hide->updated_at }}</td>
-                                <td>{{ $hide->code }}</td>
-                                <td>{{ $hide->area_vn }}</td>
-                                <td>{{ $hide->area_ab }}</td>
-                                <td>{{ $hide->area_qt }}</td>
-                                <td>{{ $hide->grade }}</td>
-                                <td>{{ $hide->shift }}</td>
-                                <td>{{ $hide->ins_ldc_group->workdate }}</td>
-                                <td>{{ $hide->ins_ldc_group->style }}</td>
-                                <td>{{ $hide->ins_ldc_group->line }}</td>
-                                <td>{{ $hide->ins_ldc_group->material }}</td>
-                                <td>{{ $hide->user->emp_id }}</td>
-                                <td>{{ $hide->user->name }}</td>
-                            </tr>
-                        @endforeach
+                        <tr>
+                            <td>{{ $hide->hide_updated_at }}</td>
+                            <td>{{ $hide->code }}</td>
+                            <td>{{ $hide->area_vn }}</td>
+                            <td>{{ $hide->area_ab }}</td>
+                            <td>{{ $hide->area_qt }}</td>
+                            <td>{{ $hide->grade }}</td>
+                            <td>{{ $hide->shift }}</td>
+                            <td>{{ $hide->group_workdate }}</td>
+                            <td>{{ $hide->group_style }}</td>
+                            <td>{{ $hide->group_line }}</td>
+                            <td>{{ $hide->group_material }}</td>
+                            <td>{{ $hide->user_emp_id }}</td>
+                            <td>{{ $hide->user_name }}</td>
+                        </tr>
+                    @endforeach
                     </table>
                 </div>
             </div>
