@@ -182,12 +182,15 @@ new #[Layout('layouts.app')] class extends Component {
                         <x-text-input wire:model.live="fquery" class="mt-4" type="search"
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
                     </div>
-                    <div class="mt-5">
-                        <x-radio id="ftype_false" wire:model.live="ftype" name="ftype" value="any">{{ __('Apapun') }}</x-radio>
-                        <x-radio id="ftype_code" wire:model.live="ftype" name="ftype"  value="code">{{ __('Kode') }}</x-radio>
-                        <x-radio id="ftype_style" wire:model.live="ftype" name="ftype" value="style">{{ __('Style') }}</x-radio>
-                        <x-radio id="ftype_emp_id" wire:model.live="ftype" name="ftype" value="emp_id">{{ __('Nomor karyawan') }}</x-radio>
-                        
+                    <div class="mt-3">
+                        <x-select id="hides-ftype" wire:model.live="ftype">
+                            <option value="any">{{ __('Apapun') }}</option>
+                            <option value="code">{{ __('Barcode') }}</option>
+                            <option value="style">{{ __('Style') }}</option>
+                            <option value="line">{{ __('Line') }}</option>
+                            <option value="material">{{ __('Material') }}</option>
+                            <option value="emp_id">{{ __('Nomor karyawan') }}</option>
+                        </x-select>                        
                     </div>
                 </div>
                 @if ($view == 'raw' || $view == 'clumps')

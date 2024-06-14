@@ -51,6 +51,12 @@ new #[Layout('layouts.app')] class extends Component {
             case 'style':
                 $hidesQuery->where('ins_ldc_groups.style', 'LIKE', '%' . $this->fquery . '%');
             break;
+            case 'line':
+                $hidesQuery->where('ins_ldc_groups.line', 'LIKE', '%' . $this->fquery . '%');
+            break;
+            case 'material':
+                $hidesQuery->where('ins_ldc_groups.material', 'LIKE', '%' . $this->fquery . '%');
+            break;
             case 'emp_id':
                 $hidesQuery->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
             break;
@@ -60,6 +66,8 @@ new #[Layout('layouts.app')] class extends Component {
                 $query
                     ->orWhere('ins_ldc_hides.code', 'LIKE', '%' . $this->fquery . '%')
                     ->orWhere('ins_ldc_groups.style', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('ins_ldc_groups.line', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('ins_ldc_groups.material', 'LIKE', '%' . $this->fquery . '%')
                     ->orWhere('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
                 });
                 break;
@@ -134,7 +142,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Style') }}</th>
                             <th>{{ __('Line') }}</th>
                             <th>{{ __('Material') }}</th>
-                            <th>{{ __('IDK') }}</th>
+                            <th>{{ __('NK') }}</th>
                             <th>{{ __('Nama') }}</th>
     
                         </tr>

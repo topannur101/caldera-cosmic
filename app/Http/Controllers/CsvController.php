@@ -212,49 +212,54 @@ class CsvController extends Controller
 
     public function insLdcHides(Request $request)
     {
-        if (!Auth::user()) {
-            abort(403);
-        }
-
         $start = Carbon::parse($request['start_at']);
         $end = Carbon::parse($request['end_at'])->addDay();
 
-        $hides = InsLdcHide::join('ins_ldc_groups', 'ins_ldc_hides.ins_ldc_group_id', '=', 'ins_ldc_groups.id')
+        $hidesQuery = InsLdcHide::join('ins_ldc_groups', 'ins_ldc_hides.ins_ldc_group_id', '=', 'ins_ldc_groups.id')
             ->join('users', 'ins_ldc_hides.user_id', '=', 'users.id');
 
         if (!$request->is_workdate) {
-            $hides->whereBetween('ins_ldc_hides.updated_at', [$start, $end]);
+            $hidesQuery->whereBetween('ins_ldc_hides.updated_at', [$start, $end]);
         } else {
-            $hides->whereBetween('ins_ldc_groups.workdate', [$start, $end]);
+            $hidesQuery->whereBetween('ins_ldc_groups.workdate', [$start, $end]);
         }
 
         switch ($request->ftype) {
             case 'code':
-                $hides->where('ins_ldc_hides.code', 'LIKE', '%' . $request->fquery . '%');
+                $hidesQuery->where('ins_ldc_hides.code', 'LIKE', '%' . $request['fquery'] . '%');
                 break;
             case 'style':
-                $hides->where('ins_ldc_groups.style', 'LIKE', '%' . $request->fquery . '%');
-                break;
+                $hidesQuery->where('ins_ldc_groups.style', 'LIKE', '%' . $request['fquery'] . '%');
+            break;
+            case 'line':
+                $hidesQuery->where('ins_ldc_groups.line', 'LIKE', '%' . $request['fquery'] . '%');
+            break;
+            case 'material':
+                $hidesQuery->where('ins_ldc_groups.material', 'LIKE', '%' . $request['fquery'] . '%');
+            break;
             case 'emp_id':
-                $hides->where('users.emp_id', 'LIKE', '%' . $request->fquery . '%');
-                break;
+                $hidesQuery->where('users.emp_id', 'LIKE', '%' . $request['fquery'] . '%');
+            break;
+            
             default:
-                $hides->where(function (Builder $query) use ($request) {
-                    $query
-                        ->orWhere('ins_ldc_hides.code', 'LIKE', '%' . $request->fquery . '%')
-                        ->orWhere('ins_ldc_groups.style', 'LIKE', '%' . $request->fquery . '%')
-                        ->orWhere('users.emp_id', 'LIKE', '%' . $request->fquery . '%');
+                $hidesQuery->where(function (Builder $query) use($request) {
+                $query
+                    ->orWhere('ins_ldc_hides.code', 'LIKE', '%' . $request['fquery'] . '%')
+                    ->orWhere('ins_ldc_groups.style', 'LIKE', '%' . $request['fquery'] . '%')
+                    ->orWhere('ins_ldc_groups.line', 'LIKE', '%' . $request['fquery'] . '%')
+                    ->orWhere('ins_ldc_groups.material', 'LIKE', '%' . $request['fquery'] . '%')
+                    ->orWhere('users.emp_id', 'LIKE', '%' . $request['fquery'] . '%');
                 });
                 break;
         }
 
         if (!$request->is_workdate) {
-            $hides->orderBy('ins_ldc_hides.updated_at', 'DESC');
+            $hidesQuery->orderBy('ins_ldc_hides.updated_at', 'DESC');
         } else {
-            $hides->orderBy('ins_ldc_groups.workdate', 'DESC');
+            $hidesQuery->orderBy('ins_ldc_groups.workdate', 'DESC');
         }
 
-        $hides = $hides->get();
+        $hides = $hidesQuery->get();
 
         $headers = [
             __('Diperbarui'), 
