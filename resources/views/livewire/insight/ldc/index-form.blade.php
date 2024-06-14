@@ -123,7 +123,7 @@ new class extends Component {
                 'area_vn'       => $this->area_vn,
                 'area_ab'       => $this->area_ab,
                 'area_qt'       => $this->area_qt,
-                'grade'         => $this->grade,
+                'grade'         => $this->grade ? $this->grade : null,
                 'shift'         => $this->shift,
                 'user_id'       => Auth::user()->id
             ]);
