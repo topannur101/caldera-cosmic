@@ -11,16 +11,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DownloadController extends Controller
-{   
+{    
   
     public function insRtcMetrics(Request $request)
     {
         if (!Auth::user()) {
             abort(403);
         }
-    
+        
         $start = Carbon::parse($request['start_at']);
         $end = Carbon::parse($request['end_at'])->addDay();
     
@@ -44,7 +45,7 @@ class DownloadController extends Controller
     
         $fileName = __('Wawasan') . ' ' . __('RTC') . '_'. __('Mentah') . '_' . date('Y-m-d_Hs') . '.xlsx';
     
-        $callback = function() use ($metrics, $headers) {
+        $response = new StreamedResponse(function() use ($metrics, $headers) {
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
     
@@ -75,17 +76,14 @@ class DownloadController extends Controller
     
             $writer = new Xlsx($spreadsheet);
             $writer->save('php://output');
-        };
+        });
     
-        return response()->stream($callback, 200, [
-            "Content-Type" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "Content-Disposition" => "attachment; filename=\"$fileName\"",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
-        ]);
-    }
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', "attachment;filename=\"$fileName\"");
+        $response->headers->set('Cache-Control', 'max-age=0');
     
+        return $response;
+    }  
     
    
     public function insRtcClumps(Request $request)
