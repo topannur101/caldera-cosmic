@@ -254,7 +254,7 @@ class extends Component {
                     </div>
                     <div class="m-3">
                         <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV sirkulasi') }}</x-text-button>
+                                class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh XLSX sirkulasi') }}</x-text-button>
                     </div>
                 </div>
     

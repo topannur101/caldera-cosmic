@@ -82,7 +82,7 @@ class extends Component {
 
     public function download()
     {
-      $this->redirectRoute('csv.inv-items', []);
+      $this->redirectRoute('download.inv-items', []);
       $this->js('$dispatch("close")');
       $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
     }
@@ -312,7 +312,7 @@ class extends Component {
                     </div>
                     <div class="m-3">
                         <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV barang') }}</x-text-button>
+                                class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh XLSX barang') }}</x-text-button>
                     </div>
                 </div>
                 <x-link-secondary-button href="#content"><i

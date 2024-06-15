@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\CsvController;
+use App\Http\Controllers\DownloadController;
 use Livewire\Volt\Volt;
 use App\Models\InsRtcMetric;
 use App\Models\InsRtcRecipe;
@@ -77,12 +77,12 @@ Route::prefix('insight')->group(function () {
 Route::view('profile', 'profile')->name('profile');
 Route::view('help', 'help')->name('help');
 
-// CSV download
-Route::name('csv.')->group(function () {
+// DOWNLOAD download
+Route::name('download.')->group(function () {
 
-    Route::get('/csv/ins-rtc-metrics', [CsvController::class, 'insRtcMetrics'])->name('ins-rtc-metrics');
-    Route::get('/csv/ins-rtc-clumps', [CsvController::class, 'insRtcClumps'])->name('ins-rtc-clumps');
-    Route::get('/csv/ins-ldc-hides', [CsvController::class, 'insLdcHides'])->name('ins-ldc-hides');
+    Route::get('/download/ins-rtc-metrics', [DownloadController::class, 'insRtcMetrics'])->name('ins-rtc-metrics');
+    Route::get('/download/ins-rtc-clumps', [DownloadController::class, 'insRtcClumps'])->name('ins-rtc-clumps');
+    Route::get('/download/ins-ldc-hides', [DownloadController::class, 'insLdcHides'])->name('ins-ldc-hides');
 
 });
 

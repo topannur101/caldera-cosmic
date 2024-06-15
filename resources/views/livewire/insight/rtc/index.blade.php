@@ -97,12 +97,12 @@ new #[Layout('layouts.app')] class extends Component {
     {
         switch ($this->view) {
             case 'raw':
-                $this->redirectRoute('csv.ins-rtc-metrics', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
+                $this->redirectRoute('download.ins-rtc-metrics', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
                 $this->js('$dispatch("close")');
                 $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
                 break;
             case 'clumps':
-                $this->redirectRoute('csv.ins-rtc-clumps', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
+                $this->redirectRoute('download.ins-rtc-clumps', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
                 $this->js('$dispatch("close")');
                 $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
                 break;
@@ -217,7 +217,7 @@ new #[Layout('layouts.app')] class extends Component {
                             @can('download', InsRtcMetric::class)
                                 <div class="py-4">
                                     <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                        class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
+                                        class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh XLSX') }}</x-text-button>
                                 </div>
                             @endcan
                         </div>
