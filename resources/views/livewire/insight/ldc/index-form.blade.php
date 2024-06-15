@@ -2,7 +2,6 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Renderless;
 use Illuminate\Validation\Rule;
 
 use App\Models\InsLdcGroup;
@@ -48,16 +47,6 @@ new class extends Component {
     {
         return trim(strtoupper($string));
     }
-
-    // #[Renderless]
-    // #[On('set-group')]
-    // public function setGroup($line, $workdate, $style, $material)
-    // {
-    //     $this->line     = $line;
-    //     $this->workdate = $workdate;
-    //     $this->style    = $style;
-    //     $this->material = $material;
-    // }
 
     #[On('set-hide')]
     public function setHide($is_editing, $line, $workdate, $style, $material, $area_vn, $area_ab, $area_qt, $grade, $code)
