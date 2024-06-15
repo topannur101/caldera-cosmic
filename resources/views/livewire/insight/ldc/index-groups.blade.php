@@ -166,7 +166,7 @@ new class extends Component {
         <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
     </x-modal>
     <div wire:key="sgid-0" class="{{ $sgid === 0 ? 'block' : 'hidden' }}">
-        <input type="radio" name="sgid" id="sgid-0" value="0" wire:model="sgid" :checked="{{ $sgid == 0 ? 'true' : 'false'}}"
+        <input type="radio" name="sgid" id="sgid-0" value="0" wire:model="sgid" @click="$dispatch('set-group', { line: '{{ $line }}', workdate: '{{ $workdate }}', style: '{{ $style }}', material: '{{ $material }}' })" :checked="{{ $sgid == 0 ? 'true' : 'false'}}"
             class="peer hidden" />
         <label for="sgid-0"
         class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-20 dark:hover:bg-opacity-20">

@@ -60,10 +60,14 @@ new class extends Component {
     // }
 
     #[On('set-hide')]
-    public function setHide($is_editing, $area_vn, $area_ab, $area_qt, $grade, $code)
+    public function setHide($is_editing, $line, $workdate, $style, $material, $area_vn, $area_ab, $area_qt, $grade, $code)
     {
         $this->is_editing = $is_editing;
 
+        $this->line     = $line;
+        $this->workdate = $workdate;
+        $this->style    = $style;
+        $this->material = $material;
         $this->area_vn  = $area_vn;
         $this->area_ab  = $area_ab;
         $this->area_qt  = $area_qt;
@@ -276,9 +280,9 @@ new class extends Component {
             </div>
         </div>
         <div class="flex justify-between mt-6">
-            <div class="text-xs text-neutral-500">
-                <div>{{ __('Waktu server:') }}</div>
-                <div>{{ Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY, HH:mm'); }}</div>
+            <div>
+                <div class="text-sm">{{ __('Material') .': ' }}<span x-text="material ? material : 'Tak ditentukan'"></span></div>
+                <div class="text-xs text-neutral-500">{{ __('Waktu server') .': ' . Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY, HH:mm'); }}</div>
             </div>
             <div class="flex gap-x-3">
                 <x-text-button type="button" class="uppercase text-xs text-red-500 {{ $is_editing ? '' : 'hidden' }}" wire:click="delete"
