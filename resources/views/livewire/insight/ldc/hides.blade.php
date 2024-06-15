@@ -198,7 +198,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <div class="m-3">
                             <div class="py-4">
                                 <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                    class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh XLSX') }}</x-text-button>
+                                    class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
                             </div>
                         </div>
                     </div>

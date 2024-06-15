@@ -103,7 +103,7 @@ new #[Layout('layouts.app')] class extends Component {
             <x-checkbox id="new-recipe-manage" wire:model="actions"
                 value="recipe-manage">{{ __('Kelola resep') }}</x-checkbox>
             <x-checkbox id="new-csv-download" wire:model="actions"
-                value="csv-download">{{ __('Unduh XLSX') }}</x-checkbox>
+                value="csv-download">{{ __('Unduh CSV') }}</x-checkbox>
         </div>
         <div class="mt-6 flex justify-end items-end">
             <x-primary-button type="submit">
