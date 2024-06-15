@@ -14,12 +14,13 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class DownloadController extends Controller
 {   
+  
     public function insRtcMetrics(Request $request)
     {
         if (!Auth::user()) {
             abort(403);
         }
-        
+    
         $start = Carbon::parse($request['start_at']);
         $end = Carbon::parse($request['end_at'])->addDay();
     
@@ -41,44 +42,50 @@ class DownloadController extends Controller
             __('Waktu'), 
         ];
     
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-    
-        // Add header row
-        foreach ($headers as $index => $header) {
-            $column = chr(65 + $index); // Convert index to column letter
-            $sheet->setCellValue($column . '1', $header);
-        }
-    
-        // Add data rows
-        $rowIndex = 2;
-        foreach ($metrics as $metric) {
-            $sheet->setCellValue('A' . $rowIndex, $metric->ins_rtc_clump->ins_rtc_device->line ?? '');
-            $sheet->setCellValue('B' . $rowIndex, $metric->ins_rtc_clump_id ?? '');
-            $sheet->setCellValue('C' . $rowIndex, $metric->ins_rtc_clump->ins_rtc_recipe->id ?? '');
-            $sheet->setCellValue('D' . $rowIndex, $metric->ins_rtc_clump->ins_rtc_recipe->name ?? '');
-            $sheet->setCellValue('E' . $rowIndex, $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '');
-            $sheet->setCellValue('F' . $rowIndex, $metric->is_correcting ? 'ON' : 'OFF');
-            $sheet->setCellValue('G' . $rowIndex, $metric->action_left == 'thin' ? __('Tipis') : ($metric->action_left == 'thick' ? __('Tebal') : ''));
-            $sheet->setCellValue('H' . $rowIndex, $metric->push_left ?? '');
-            $sheet->setCellValue('I' . $rowIndex, $metric->sensor_left ?? '');
-            $sheet->setCellValue('J' . $rowIndex, $metric->action_right == 'thin' ? __('Tipis') : ($metric->action_right == 'thick' ? __('Tebal') : ''));
-            $sheet->setCellValue('K' . $rowIndex, $metric->push_right ?? '');
-            $sheet->setCellValue('L' . $rowIndex, $metric->sensor_right ?? '');
-            $sheet->setCellValue('M' . $rowIndex, $metric->dt_client);
-            $rowIndex++;
-        }
-    
         $fileName = __('Wawasan') . ' ' . __('RTC') . '_'. __('Mentah') . '_' . date('Y-m-d_Hs') . '.xlsx';
     
-        return response()->streamDownload(function() use ($spreadsheet) {
+        $callback = function() use ($metrics, $headers) {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+    
+            // Add header row
+            foreach ($headers as $index => $header) {
+                $column = chr(65 + $index); // Convert index to column letter
+                $sheet->setCellValue($column . '1', $header);
+            }
+    
+            // Add data rows
+            $rowIndex = 2;
+            foreach ($metrics as $metric) {
+                $sheet->setCellValue('A' . $rowIndex, $metric->ins_rtc_clump->ins_rtc_device->line ?? '');
+                $sheet->setCellValue('B' . $rowIndex, $metric->ins_rtc_clump_id ?? '');
+                $sheet->setCellValue('C' . $rowIndex, $metric->ins_rtc_clump->ins_rtc_recipe->id ?? '');
+                $sheet->setCellValue('D' . $rowIndex, $metric->ins_rtc_clump->ins_rtc_recipe->name ?? '');
+                $sheet->setCellValue('E' . $rowIndex, $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '');
+                $sheet->setCellValue('F' . $rowIndex, $metric->is_correcting ? 'ON' : 'OFF');
+                $sheet->setCellValue('G' . $rowIndex, $metric->action_left == 'thin' ? __('Tipis') : ($metric->action_left == 'thick' ? __('Tebal') : ''));
+                $sheet->setCellValue('H' . $rowIndex, $metric->push_left ?? '');
+                $sheet->setCellValue('I' . $rowIndex, $metric->sensor_left ?? '');
+                $sheet->setCellValue('J' . $rowIndex, $metric->action_right == 'thin' ? __('Tipis') : ($metric->action_right == 'thick' ? __('Tebal') : ''));
+                $sheet->setCellValue('K' . $rowIndex, $metric->push_right ?? '');
+                $sheet->setCellValue('L' . $rowIndex, $metric->sensor_right ?? '');
+                $sheet->setCellValue('M' . $rowIndex, $metric->dt_client);
+                $rowIndex++;
+            }
+    
             $writer = new Xlsx($spreadsheet);
             $writer->save('php://output');
-        }, $fileName, [
+        };
+    
+        return response()->stream($callback, 200, [
             "Content-Type" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "Content-Disposition" => "attachment; filename=\"$fileName\"",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
         ]);
     }
+    
     
    
     public function insRtcClumps(Request $request)
