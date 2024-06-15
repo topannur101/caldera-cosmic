@@ -68,68 +68,73 @@ new class extends Component {
 
     public function save()
     {
-        $this->line     = $this->clean($this->line);
-        $this->style    = $this->clean($this->style);
-        $this->material = $this->clean($this->material);
-        $this->code     = $this->clean($this->code);
+        if( !Auth::user() ) {
+            $this->js('notyfError("' . __('Kamu belum masuk') . '")');
+        } else {
 
-        $this->code     = preg_replace('/[^a-zA-Z0-9]/', '', $this->code);
+            $this->line     = $this->clean($this->line);
+            $this->style    = $this->clean($this->style);
+            $this->material = $this->clean($this->material);
+            $this->code     = $this->clean($this->code);
 
-        if (!$this->line || !$this->workdate || !$this->style) {
-            $this->js('notyfError("' . __('Info grup tidak sah') . '")');
-        }
+            $this->code     = preg_replace('/[^a-zA-Z0-9]/', '', $this->code);
 
-        $validated = $this->validate();
+            if (!$this->line || !$this->workdate || !$this->style) {
+                $this->js('notyfError("' . __('Info grup tidak sah') . '")');
+            }
 
-        $group = InsLdcGroup::firstOrCreate([
-            'line'      => $this->line,
-            'workdate'  => $this->workdate,
-            'style'     => $this->style,
-            'material'  => $this->material,
-        ]);
-        $group->updated_at = now();
-        $group->save();
+            $validated = $this->validate();
 
-        $styles = Cache::get('styles', collect([
-                    ['name' => $this->style, 'updated_at' => now() ]
-                ]));
-        $styles = Caldera::manageCollection($styles, $this->style);
-        Cache::put('styles', $styles);
-
-        $lines = Cache::get('lines', collect([
-                    ['name' => $this->line, 'updated_at' => now() ]
-                ]));
-        $lines = Caldera::manageCollection($lines, $this->line);
-        Cache::put('lines', $lines);
-
-        if($this->material) {
-            $materials = Cache::get('materials', collect([
-                    ['name' => $this->material, 'updated_at' => now() ]
-                    ]));
-            $materials = Caldera::manageCollection($materials, $this->material);
-            Cache::put('materials', $materials);
-        }        
-
-        $this->js('document.getElementById("ldc-index-groups").scrollLeft = 0;');
-
-        $hide = InsLdcHide::updateOrCreate(
-            [ 
-                'code' => $this->code 
-            ], 
-            [
-                'ins_ldc_group_id' => $group->id,
-                'area_vn'       => $this->area_vn,
-                'area_ab'       => $this->area_ab,
-                'area_qt'       => $this->area_qt,
-                'grade'         => $this->grade ? $this->grade : null,
-                'shift'         => $this->shift,
-                'user_id'       => Auth::user()->id
+            $group = InsLdcGroup::firstOrCreate([
+                'line'      => $this->line,
+                'workdate'  => $this->workdate,
+                'style'     => $this->style,
+                'material'  => $this->material,
             ]);
+            $group->updated_at = now();
+            $group->save();
 
-        $this->js('$dispatch("close")');
-        $this->js('notyfSuccess("' . __('Kulit disimpan') . '")');
-        $this->dispatch('hide-saved');
-        $this->customReset();
+            $styles = Cache::get('styles', collect([
+                        ['name' => $this->style, 'updated_at' => now() ]
+                    ]));
+            $styles = Caldera::manageCollection($styles, $this->style);
+            Cache::put('styles', $styles);
+
+            $lines = Cache::get('lines', collect([
+                        ['name' => $this->line, 'updated_at' => now() ]
+                    ]));
+            $lines = Caldera::manageCollection($lines, $this->line);
+            Cache::put('lines', $lines);
+
+            if($this->material) {
+                $materials = Cache::get('materials', collect([
+                        ['name' => $this->material, 'updated_at' => now() ]
+                        ]));
+                $materials = Caldera::manageCollection($materials, $this->material);
+                Cache::put('materials', $materials);
+            }        
+
+            $this->js('document.getElementById("ldc-index-groups").scrollLeft = 0;');
+
+            $hide = InsLdcHide::updateOrCreate(
+                [ 
+                    'code' => $this->code 
+                ], 
+                [
+                    'ins_ldc_group_id' => $group->id,
+                    'area_vn'       => $this->area_vn,
+                    'area_ab'       => $this->area_ab,
+                    'area_qt'       => $this->area_qt,
+                    'grade'         => $this->grade ? $this->grade : null,
+                    'shift'         => $this->shift,
+                    'user_id'       => Auth::user()->id
+                ]);
+
+            $this->js('$dispatch("close")');
+            $this->js('notyfSuccess("' . __('Kulit disimpan') . '")');
+            $this->dispatch('hide-saved');
+            $this->customReset();
+        }
     }
 
     public function customReset()
@@ -139,13 +144,18 @@ new class extends Component {
 
     public function delete()
     {
-        if($this->code) {
-            $hide = InsLdcHide::where('code', $this->code);
-            if ($hide) {
-                $hide->delete();
-                $this->js('notyfSuccess("' . __('Kulit dihapus') . '")');
-                $this->dispatch('hide-saved');
-                $this->customReset();
+        if( !Auth::user() ) {
+            $this->js('notyfError("' . __('Kamu belum masuk') . '")');
+        } else {
+
+            if($this->code) {
+                $hide = InsLdcHide::where('code', $this->code);
+                if ($hide) {
+                    $hide->delete();
+                    $this->js('notyfSuccess("' . __('Kulit dihapus') . '")');
+                    $this->dispatch('hide-saved');
+                    $this->customReset();
+                }
             }
         }
     }

@@ -74,12 +74,17 @@ new class extends Component {
 
     public function applyGroup()
     {
-        $this->line = $this->clean($this->line);
-        $this->style = $this->clean($this->style);
-        $this->material = $this->clean($this->material);
-        $this->validate();
-        $this->js('window.dispatchEvent(escKey)');
-        $this->dispatch('set-group', line: $this->line, workdate: $this->workdate, style: $this->style, material: $this->material);
+        if( !Auth::user() ) {
+            $this->js('notyfError("' . __('Kamu belum masuk') . '")');
+        } else {
+            $this->line = $this->clean($this->line);
+            $this->style = $this->clean($this->style);
+            $this->material = $this->clean($this->material);
+            $this->validate();
+            $this->js('window.dispatchEvent(escKey)');
+            $this->dispatch('set-group', line: $this->line, workdate: $this->workdate, style: $this->style, material: $this->material);
+        }
+        
     }
 
     #[On('hide-saved')]
@@ -181,7 +186,7 @@ new class extends Component {
                 </svg>
             </div>
             <div class="mt-1">{{ $style }}</div>
-            <div class="mt-1 max-w-40 truncate text-xs">{{ $material }}</div>
+            <div class="mt-1 max-w-32 truncate text-xs">{{ $material }}</div>
         </label>
     </div>
     @foreach ($groups as $group)
@@ -198,7 +203,7 @@ new class extends Component {
                     </div>
                 </div>
                 <div class="mt-1">{{ $group->style }}</div>
-                <div class="my-1 max-w-40 truncate text-xs">{{ $group->material }}</div>
+                <div class="my-1 max-w-32 truncate text-xs">{{ $group->material }}</div>
             </label>
         </div>
     @endforeach
