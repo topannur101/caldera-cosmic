@@ -41,9 +41,11 @@ new class extends Component {
             })
             ->first();
 
+        $countError = count($this->getErrorBag()->messages());
+
         if ($sgid) {
             $this->sgid = $sgid->id;
-        } elseif ($this->line && $this->workdate && $this->style) {
+        } elseif ($this->line && $this->workdate && $this->style && $countError == 0) {
             $this->sgid = 0;
         } else {
             $this->reset(['sgid']);
@@ -74,17 +76,12 @@ new class extends Component {
 
     public function applyGroup()
     {
-        if( !Auth::user() ) {
-            $this->js('notyfError("' . __('Kamu belum masuk') . '")');
-        } else {
-            $this->line = $this->clean($this->line);
-            $this->style = $this->clean($this->style);
-            $this->material = $this->clean($this->material);
-            $this->validate();
-            $this->js('window.dispatchEvent(escKey)');
-            $this->dispatch('set-group', line: $this->line, workdate: $this->workdate, style: $this->style, material: $this->material);
-        }
-        
+        $this->line = $this->clean($this->line);
+        $this->style = $this->clean($this->style);
+        $this->material = $this->clean($this->material);
+        $this->validate();
+        $this->js('window.dispatchEvent(escKey)');
+        $this->dispatch('set-group', line: $this->line, workdate: $this->workdate, style: $this->style, material: $this->material);        
     }
 
     #[On('hide-saved')]
