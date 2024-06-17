@@ -33,7 +33,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         $start = Carbon::parse($this->start_at);
-        $end = Carbon::parse($this->end_at)->addDay();
+        $end = Carbon::parse($this->end_at)->endOfDay();
 
         $hidesQuery = InsLdcHide::join('ins_ldc_groups', 'ins_ldc_hides.ins_ldc_group_id', '=', 'ins_ldc_groups.id')
         ->join('users', 'ins_ldc_hides.user_id', '=', 'users.id')

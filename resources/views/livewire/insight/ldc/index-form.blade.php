@@ -280,10 +280,10 @@ new class extends Component {
         </div>
         <div class="flex justify-between mt-6">
             <div>
-                <div class="text-sm">{{ __('Material') .': ' }}<span x-text="material ? material : 'Tak ditentukan'"></span></div>
+                <div class="text-sm">{{ __('Material') .': ' }}<span x-text="material ? material : ''"></span></div>
                 <div class="text-xs text-neutral-500">{{ __('Waktu server') .': ' . Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY, HH:mm'); }}</div>
             </div>
-            <div class="flex gap-x-3">
+            <div class="flex gap-x-6">
                 <x-text-button type="button" class="uppercase text-xs text-red-500 {{ $is_editing ? '' : 'hidden' }}" wire:click="delete"
                 wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
                 {{ __('Hapus') }}

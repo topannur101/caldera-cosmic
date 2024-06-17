@@ -189,22 +189,30 @@ new class extends Component {
             <div class="mt-1 max-w-32 truncate text-xs">{{ $material }}</div>
         </label>
     </div>
-    @foreach ($groups as $group)
+    @if($groups->isEmpty() && $sgid === null)
         <div>
-            <input type="radio" name="sgid" id="sgid-{{ $loop->iteration }}" value="{{ $group->id }}"
-                wire:model="sgid"
-                @click="$dispatch('set-group', { line: '{{ $group->line }}', workdate: '{{ $group->workdate }}', style: '{{ $group->style }}', material: '{{ $group->material }}' })"
-                :checked="{{ $group->id == $sgid ? 'true' : 'false' }}" class="peer hidden" />
-            <label for="sgid-{{ $loop->iteration }}"
-                class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-10 dark:hover:bg-opacity-10">
-                <div class="flex items-center justify-between text-lg">
-                    <div>{{ $group->line }} <span
-                            class="text-xs uppercase ml-1 mr-2">{{ Carbon::parse($group->workdate)->format('d M') }}</span>
-                    </div>
-                </div>
-                <div class="mt-1">{{ $group->style }}</div>
-                <div class="my-1 max-w-32 truncate text-xs">{{ $group->material }}</div>
-            </label>
+            <div class="h-full flex items-center">
+                <div>{{ __('Tak ada riwayat grup ditemukan') }}</div>
+            </div>
         </div>
-    @endforeach
+    @else
+        @foreach ($groups as $group)
+            <div>
+                <input type="radio" name="sgid" id="sgid-{{ $loop->iteration }}" value="{{ $group->id }}"
+                    wire:model="sgid"
+                    @click="$dispatch('set-group', { line: '{{ $group->line }}', workdate: '{{ $group->workdate }}', style: '{{ $group->style }}', material: '{{ $group->material }}' })"
+                    :checked="{{ $group->id == $sgid ? 'true' : 'false' }}" class="peer hidden" />
+                <label for="sgid-{{ $loop->iteration }}"
+                    class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-10 dark:hover:bg-opacity-10">
+                    <div class="flex items-center justify-between text-lg">
+                        <div>{{ $group->line }} <span
+                                class="text-xs uppercase ml-1 mr-2">{{ Carbon::parse($group->workdate)->format('d M') }}</span>
+                        </div>
+                    </div>
+                    <div class="mt-1">{{ $group->style }}</div>
+                    <div class="my-1 max-w-32 truncate text-xs">{{ $group->material }}</div>
+                </label>
+            </div>
+        @endforeach
+    @endif
 </div>
