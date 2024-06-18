@@ -45,6 +45,18 @@ new #[Layout('layouts.app')] class extends Component {
             ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_left), 2) as sd_left')
             ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_right), 2) as sd_right')
 
+            // Calculate MAE
+            ->selectRaw('ROUND(
+                CASE 
+                    WHEN SUM(ins_rtc_metrics.sensor_left) = 0 THEN 0
+                    ELSE AVG(ins_rtc_metrics.sensor_left) - AVG(ins_rtc_recipes.std_mid)
+                END, 2) as mae_left')
+            ->selectRaw('ROUND(
+                CASE
+                    WHEN SUM(ins_rtc_metrics.sensor_right) = 0 THEN 0
+                    ELSE AVG(ins_rtc_metrics.sensor_right) - AVG(ins_rtc_recipes.std_mid)
+                END, 2) as mae_right')
+
             // Untuk menghitung presentase trigger nyala brp kali dalam %
             ->selectRaw('ROUND(SUM(CASE WHEN ins_rtc_metrics.is_correcting = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as correcting_rate')
             ->where('ins_rtc_metrics.sensor_left', '>', 0)
@@ -138,7 +150,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <td>{{ $clump->correcting_rate > 0.8 ? 'ON' : 'OFF' }}</td>
                             <td>{{ $clump->avg_left . ' | ' . $clump->avg_right }}</td>
                             <td>{{ $clump->sd_left . ' | ' . $clump->sd_right }}</td>
-                            <td></td>
+                            <td>{{ $clump->mae_left . ' | ' . $clump->mae_right }}</td>
                             <td>{{ Carbon::createFromTimestampUTC($clump->duration_seconds)->format('i:s') }}</td>
                             <td>{{ $clump->start_time }}</td>
                         </tr>
