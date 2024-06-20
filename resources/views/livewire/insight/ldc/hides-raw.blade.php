@@ -151,7 +151,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Style') }}</th>
                             <th>{{ __('Line') }}</th>
                             <th>{{ __('Material') }}</th>
-                            <th>{{ __('NK') }}</th>
+                            <th>{{ __('Emp ID') }}</th>
                             <th>{{ __('Nama') }}</th>
     
                         </tr>

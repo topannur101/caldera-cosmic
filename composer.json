@@ -13,7 +13,7 @@
     "require": {
         "php": "^8.2",
         "aldas/modbus-tcp-client": "^3.5",
-        "intervention/image": "^3.5",
+        "intervention/image": "^3.7",
         "laravel/breeze": "^2.0",
         "laravel/framework": "^11.0",
         "laravel/tinker": "^2.9",

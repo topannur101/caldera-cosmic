@@ -106,7 +106,7 @@ new class extends Component {
                     </x-dropdown>
                 @else
                 <div class="flex items-center gap-x-4 text-xs uppercase font-medium leading-5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300">
-                    <livewire:layout.navigation-set-lang :route="url()->current()" small="true" />
+                    <livewire:layout.navigation-lang-set :route="url()->current()" small="true" />
                     <div>                        
                         <x-link :href="route('login')" wire:navigate>{{ __('Masuk') }}
                         </x-link>
@@ -197,7 +197,7 @@ new class extends Component {
                     </button>
                 </div>
             @else
-                <div class="mb-2 px-4"><livewire:layout.navigation-set-lang :route="url()->current()" /></div>
+                <div class="mb-2 px-4"><livewire:layout.navigation-lang-set :route="url()->current()" /></div>
                 <x-responsive-nav-link :href="route('login')" wire:navigate>
                     <i class="fa fa-right-to-bracket mr-2"></i>{{ __('Masuk') }}
                 </x-responsive-nav-link>

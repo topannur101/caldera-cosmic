@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Notifications\Notifiable;
-use Intervention\Image\Drivers\Imagick\Driver;
+use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -70,9 +70,9 @@ class User extends Authenticatable
 
                 // process photo
                 $manager = new ImageManager(new Driver());
-                $image = $manager->read($path);
-                $image->scaleDown(width: 192);
-                $image->toJpeg(90);
+                $image = $manager->read($path)
+                ->scaleDown(width: 192)
+                ->toJpeg(90);
 
 
         

@@ -6,7 +6,7 @@ use App\Models\User;
 use function Livewire\Volt\{layout, state, mount};
 
 layout('layouts.app');
-state(['greeting', 'time', 'users']);
+state(['greeting', 'time', 'users', 'guests']);
 
 mount(function () {
     $greetings = [__('Udah makan belum?'), __('Gimana kabarnya?'), __('Apa kabar?'), __('Selamat datang!'), __('Eh ketemu lagi!'), __('Ada yang bisa dibantu?'), __('Hai,') . ' ' . (Auth::user()->name ?? __('Tamu')) . '!', __('Gimana gimana?')];
@@ -16,13 +16,64 @@ mount(function () {
     $user_ids = $sessions->pluck('user_id');
 
     $this->greeting = $greetings[array_rand($greetings)];
-    $this->time = Carbon::now()->format('Y-m-d H:i');
+    $this->time = Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMMM YYYY, HH:mm');
     $this->users = User::whereIn('id', $user_ids)->get();
+    $this->guests = Session::whereNull('user_id')->get();
 });
 
 ?>
 
-<div>
+<div class="relative">
+        <svg class="absolute top-0 left-0 min-h-screen" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <radialGradient id="Gradient1" cx="50%" cy="50%" fx="0.441602%" fy="50%" r=".5">
+                    <animate attributeName="fx" dur="68s" values="0%;3%;0%" repeatCount="indefinite"></animate>
+                    <stop offset="0%" stop-color="rgba(255, 0, 255, 0.1)"></stop>
+                    <stop offset="100%" stop-color="rgba(255, 0, 255, 0)"></stop>
+                </radialGradient>
+                <radialGradient id="Gradient2" cx="50%" cy="50%" fx="2.68147%" fy="50%" r=".5">
+                    <animate attributeName="fx" dur="47s" values="0%;3%;0%" repeatCount="indefinite"></animate>
+                    <stop offset="0%" stop-color="rgba(255, 255, 0, 0.1)"></stop>
+                    <stop offset="100%" stop-color="rgba(255, 255, 0, 0)"></stop>
+                </radialGradient>
+                <radialGradient id="Gradient3" cx="50%" cy="50%" fx="0.836536%" fy="50%" r=".5">
+                    <animate attributeName="fx" dur="43s" values="0%;3%;0%" repeatCount="indefinite"></animate>
+                    <stop offset="0%" stop-color="rgba(0, 255, 255, 0.1)"></stop>
+                    <stop offset="100%" stop-color="rgba(0, 255, 255, 0)"></stop>
+                </radialGradient>
+                <radialGradient id="Gradient4" cx="50%" cy="50%" fx="4.56417%" fy="50%" r=".5">
+                    <animate attributeName="fx" dur="46s" values="0%;5%;0%" repeatCount="indefinite"></animate>
+                    <stop offset="0%" stop-color="rgba(0, 255, 0, 0.1)"></stop>
+                    <stop offset="100%" stop-color="rgba(0, 255, 0, 0)"></stop>
+                </radialGradient>
+                <radialGradient id="Gradient5" cx="50%" cy="50%" fx="2.65405%" fy="50%" r=".5">
+                    <animate attributeName="fx" dur="49s" values="0%;5%;0%" repeatCount="indefinite"></animate>
+                    <stop offset="0%" stop-color="rgba(0, 0, 255, 0.1)"></stop>
+                    <stop offset="100%" stop-color="rgba(0, 0, 255, 0)"></stop>
+                </radialGradient>
+                <radialGradient id="Gradient6" cx="50%" cy="50%" fx="0.981338%" fy="50%" r=".5">
+                    <animate attributeName="fx" dur="51s" values="0%;5%;0%" repeatCount="indefinite"></animate>
+                    <stop offset="0%" stop-color="rgba(255, 0, 0, 0.1)"></stop>
+                    <stop offset="100%" stop-color="rgba(255, 0, 0, 0)"></stop>
+                </radialGradient>
+            </defs>
+            <rect x="13.744%" y="1.18473%" width="100%" height="100%" fill="url(#Gradient1)" transform="rotate(334.41 50 50)">
+                <animate attributeName="x" dur="40s" values="25%;0%;25%" repeatCount="indefinite"></animate>
+                <animate attributeName="y" dur="42s" values="0%;25%;0%" repeatCount="indefinite"></animate>
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="14s" repeatCount="indefinite"></animateTransform>
+            </rect>
+            <rect x="-2.17916%" y="35.4267%" width="100%" height="100%" fill="url(#Gradient2)" transform="rotate(255.072 50 50)">
+                <animate attributeName="x" dur="46s" values="-25%;0%;-25%" repeatCount="indefinite"></animate>
+                <animate attributeName="y" dur="48s" values="0%;50%;0%" repeatCount="indefinite"></animate>
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="24s" repeatCount="indefinite"></animateTransform>
+            </rect>
+            <rect x="9.00483%" y="14.5733%" width="100%" height="100%" fill="url(#Gradient3)" transform="rotate(139.903 50 50)">
+                <animate attributeName="x" dur="50s" values="0%;25%;0%" repeatCount="indefinite"></animate>
+                <animate attributeName="y" dur="24s" values="0%;25%;0%" repeatCount="indefinite"></animate>
+                <animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="18s" repeatCount="indefinite"></animateTransform>
+            </rect>
+            </svg>
+    
     @if (Auth::user()->id ?? false)
         <div class="max-w-4xl mx-auto py-8 px-4 lg:px-8">
             <div class="container relative max-w-2xl mx-auto text-center tracking-widest text-neutral-500 ">
@@ -39,56 +90,28 @@ mount(function () {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>                
             </div>
-            <div class="text-neutral-500">
-                <div class="text-center mb-20">
-                    <div class="mb-2">{{ __('Waktu server:') . ' ' . $time }}</div>
-                    <div>{{ $users->count() . ' ' . __('pengguna daring') }}</div>
-                </div>
-                <div class="flex flex-wrap justify-center gap-3">
-                    @foreach ($users as $user)
-                        <div class="inline-block bg-white dark:bg-neutral-800 rounded-full p-2">
-                            <div class="flex w-28 h-full truncate items-center gap-2">
-                                <div>
-                                    <div
-                                        class="w-6 h-6 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                                        @if ($user->photo)
-                                            <img class="w-full h-full object-cover dark:brightness-75"
-                                                src="{{ '/storage/users/' . $user->photo }}" />
-                                        @else
-                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
-                                                viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
-                                                <path
-                                                    d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
-                                            </svg>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="truncate">{{ $user->name }}</div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
+            <x-home-users :$time :$users :$guests centered="true" ></x-home-users>
         </div>
     @else
         <!-- Section 2 -->
-        <section class="px-2 py-32 md:px-0">
+        <section class="px-2 pt-32 md:px-0">
             <div class="container items-center max-w-6xl px-8 mx-auto xl:px-5">
-                <div class="flex flex-wrap items-center sm:-mx-3">
+                <div class="flex flex-wrap sm:-mx-3">
                     <div class="w-full md:w-1/2 md:px-3">
                         <div
                             class="w-full pb-6 space-y-6 sm:max-w-md lg:max-w-lg md:space-y-4 lg:space-y-8 xl:space-y-9 sm:pr-5 lg:pr-0 md:pb-0">
                             <h1
                                 class="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-300 sm:text-5xl md:text-4xl lg:text-5xl xl:text-6xl">
-                                @if(app()->getLocale() === 'ko')
-                                <span class="block text-caldy-600 xl:inline">{{ __('home.hero2') }}</span><span class="block xl:inline">{{ __('home.hero1') }}</span>
+                                @if (app()->getLocale() === 'ko')
+                                    <span class="block text-caldy-600 xl:inline">{{ __('home.hero2') }}</span><span
+                                        class="block xl:inline">{{ __('home.hero1') }}</span>
                                 @else
-                                <span class="block xl:inline">{{ __('home.hero1') }}</span><span class="block text-caldy-600 xl:inline">{{ __('home.hero2') }}</span>
+                                    <span class="block xl:inline">{{ __('home.hero1') }}</span><span
+                                        class="block text-caldy-600 xl:inline">{{ __('home.hero2') }}</span>
                                 @endif
-                                
+
                             </h1>
                             <p class="mx-auto text-base text-neutral-500 sm:max-w-md lg:text-xl md:max-w-3xl">
                                 {{ __('Manfaatkan kekuatan data real-time untuk membantu menyelesaikan tugasmu atau membuat keputusan dari ikhtisar.') }}
@@ -104,12 +127,10 @@ mount(function () {
                                         <polyline points="12 5 19 12 12 19"></polyline>
                                     </svg>
                                 </a>
-                                {{-- <a href="#_"
-                                class="flex items-center px-6 py-3 text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-600">
-                                {{ __('Pelajari lebih lanjut')}}
-                            </a> --}}
                             </div>
                         </div>
+                        <div class="pr-0 md:pr-8"><hr class="border-neutral-300 dark:border-neutral-800 my-10" /></div>
+                        <x-home-users :$time :$users :$guests></x-home-users>
                     </div>
                     <div class="w-full md:w-1/2">
                         <div class="w-full h-auto overflow-hidden rounded-md shadow-xl sm:rounded-xl">
