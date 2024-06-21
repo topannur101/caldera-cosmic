@@ -212,10 +212,6 @@ class DownloadController extends Controller
 
     public function insLdcHides(Request $request)
     {
-        if (!Auth::user()) {
-            abort(403);
-        }
-
         $start = Carbon::parse($request['start_at']);
         $end = Carbon::parse($request['end_at'])->addDay();
 

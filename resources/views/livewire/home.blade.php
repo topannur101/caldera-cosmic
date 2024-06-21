@@ -1,30 +1,38 @@
 <?php
 
-use Carbon\Carbon;
+use Livewire\Volt\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Session;
+use Carbon\Carbon;
 use App\Models\User;
-use function Livewire\Volt\{layout, state, mount};
 
-layout('layouts.app');
-state(['greeting', 'time', 'users', 'guests']);
+new #[Layout('layouts.app')] 
+class extends Component {
 
-mount(function () {
-    $greetings = [__('Udah makan belum?'), __('Gimana kabarnya?'), __('Apa kabar?'), __('Selamat datang!'), __('Eh ketemu lagi!'), __('Ada yang bisa dibantu?'), __('Hai,') . ' ' . (Auth::user()->name ?? __('Tamu')) . '!', __('Gimana gimana?')];
+    public function mount()
+    {
+        $greetings = [__('Udah makan belum?'), __('Gimana kabarnya?'), __('Apa kabar?'), __('Selamat datang!'), __('Eh ketemu lagi!'), __('Ada yang bisa dibantu?'), __('Hai,') . ' ' . (Auth::user()->name ?? __('Tamu')) . '!', __('Gimana gimana?')];
+        $this->greeting = $greetings[array_rand($greetings)];
+    }
 
-    $qago = Carbon::now()->subMinutes(30)->getTimestamp();
-    $sessions = Session::where('last_activity', '>', $qago)->get();
-    $user_ids = $sessions->pluck('user_id');
+    public function with(): array {
+        $qago = Carbon::now()->subMinutes(30)->getTimestamp();
+        $sessions = Session::where('last_activity', '>', $qago)->get();
+        $user_ids = $sessions->pluck('user_id');
 
-    $this->greeting = $greetings[array_rand($greetings)];
-    $this->time = Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMMM YYYY, HH:mm');
-    $this->users = User::whereIn('id', $user_ids)->get();
-    $this->guests = Session::whereNull('user_id')->get();
-});
+        return [
+            'time' => Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMMM YYYY, HH:mm:ss'),
+            'users' => User::whereIn('id', $user_ids)->get(),
+            'guests' => Session::whereNull('user_id')->get()
+        ];
+    }
+
+}
 
 ?>
 
-<div class="relative">
-        <svg class="absolute top-0 left-0 min-h-screen" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+<div wire:poll.9s class="relative">
+        <svg wire:ignore class="absolute top-0 left-0 min-h-screen" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
             <defs>
                 <radialGradient id="Gradient1" cx="50%" cy="50%" fx="0.441602%" fy="50%" r=".5">
                     <animate attributeName="fx" dur="68s" values="0%;3%;0%" repeatCount="indefinite"></animate>
