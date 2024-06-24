@@ -11,8 +11,7 @@ new class extends Component {
     #[On('hide-saved')]
     public function with(): array
     {
-        $hides = InsLdcHide::where('created_at', '>=', Carbon::now()->subDay())->where('user_id', Auth::user()->id ?? null);
-
+        $hides = InsLdcHide::where('updated_at', '>=', Carbon::now()->subDay())->where('user_id', Auth::user()->id ?? null);
         $hides = $hides->orderBy('updated_at', 'desc')->limit(5)->get();
 
         return [

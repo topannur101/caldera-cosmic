@@ -213,44 +213,62 @@ class DownloadController extends Controller
     public function insLdcHides(Request $request)
     {
         $start = Carbon::parse($request['start_at']);
-        $end = Carbon::parse($request['end_at'])->addDay();
+        $end = Carbon::parse($request['end_at'])->endOfDay();
 
-        $hides = InsLdcHide::join('ins_ldc_groups', 'ins_ldc_hides.ins_ldc_group_id', '=', 'ins_ldc_groups.id')
-            ->join('users', 'ins_ldc_hides.user_id', '=', 'users.id');
+        $hidesQuery = InsLdcHide::join('ins_ldc_groups', 'ins_ldc_hides.ins_ldc_group_id', '=', 'ins_ldc_groups.id')
+        ->join('users', 'ins_ldc_hides.user_id', '=', 'users.id')
+        ->select(
+        'ins_ldc_hides.*',
+        'ins_ldc_hides.updated_at as hide_updated_at',
+        'ins_ldc_groups.workdate as group_workdate',
+        'ins_ldc_groups.style as group_style',
+        'ins_ldc_groups.line as group_line',
+        'ins_ldc_groups.material as group_material',
+        'users.emp_id as user_emp_id',
+        'users.name as user_name');
 
         if (!$request->is_workdate) {
-            $hides->whereBetween('ins_ldc_hides.updated_at', [$start, $end]);
+            $hidesQuery->whereBetween('ins_ldc_hides.updated_at', [$start, $end]);
         } else {
-            $hides->whereBetween('ins_ldc_groups.workdate', [$start, $end]);
+            $hidesQuery->whereBetween('ins_ldc_groups.workdate', [$start, $end]);
         }
 
         switch ($request->ftype) {
             case 'code':
-                $hides->where('ins_ldc_hides.code', 'LIKE', '%' . $request->fquery . '%');
+                $hidesQuery->where('ins_ldc_hides.code', 'LIKE', '%' . $request->fquery . '%');
                 break;
             case 'style':
-                $hides->where('ins_ldc_groups.style', 'LIKE', '%' . $request->fquery . '%');
-                break;
+                $hidesQuery->where('ins_ldc_groups.style', 'LIKE', '%' . $request->fquery . '%');
+            break;
+            case 'line':
+                $hidesQuery->where('ins_ldc_groups.line', 'LIKE', '%' . $request->fquery . '%');
+            break;
+            case 'material':
+                $hidesQuery->where('ins_ldc_groups.material', 'LIKE', '%' . $request->fquery . '%');
+            break;
             case 'emp_id':
-                $hides->where('users.emp_id', 'LIKE', '%' . $request->fquery . '%');
-                break;
+                $hidesQuery->where('users.emp_id', 'LIKE', '%' . $request->fquery . '%');
+            break;
+            
             default:
-                $hides->where(function (Builder $query) use ($request) {
-                    $query
-                        ->orWhere('ins_ldc_hides.code', 'LIKE', '%' . $request->fquery . '%')
-                        ->orWhere('ins_ldc_groups.style', 'LIKE', '%' . $request->fquery . '%')
-                        ->orWhere('users.emp_id', 'LIKE', '%' . $request->fquery . '%');
+                $hidesQuery->where(function (Builder $query) use ($request) {
+                $query
+                    ->orWhere('ins_ldc_hides.code', 'LIKE', '%' . $request->fquery . '%')
+                    ->orWhere('ins_ldc_groups.style', 'LIKE', '%' . $request->fquery . '%')
+                    ->orWhere('ins_ldc_groups.line', 'LIKE', '%' . $request->fquery . '%')
+                    ->orWhere('ins_ldc_groups.material', 'LIKE', '%' . $request->fquery . '%')
+                    ->orWhere('users.emp_id', 'LIKE', '%' . $request->fquery . '%');
                 });
                 break;
         }
 
         if (!$request->is_workdate) {
-            $hides->orderBy('ins_ldc_hides.updated_at', 'DESC');
+            $hidesQuery->orderBy('ins_ldc_hides.updated_at', 'DESC');
         } else {
-            $hides->orderBy('ins_ldc_groups.workdate', 'DESC');
+            $hidesQuery->orderBy('ins_ldc_groups.workdate', 'DESC');
         }
 
-        $hides = $hides->get();
+        $hides = $hidesQuery->get();
 
         $headers = [
             __('Diperbarui'), 
@@ -273,19 +291,19 @@ class DownloadController extends Controller
             fputcsv($file, $headers);
 
             foreach($hides as $hide) {
-                $row['updated_at'] = $hide->updated_at;
+                $row['updated_at'] = $hide->hide_updated_at;
                 $row['code'] = $hide->code;
                 $row['area_vn'] = $hide->area_vn;
                 $row['area_ab'] = $hide->area_ab;
                 $row['area_qt'] = $hide->area_qt;
                 $row['grade'] = $hide->grade;
                 $row['shift'] = $hide->shift;
-                $row['workdate'] = $hide->ins_ldc_group->workdate;
-                $row['style'] = $hide->ins_ldc_group->style;
-                $row['line'] = $hide->ins_ldc_group->line;
-                $row['material'] = $hide->ins_ldc_group->material ?? '';
-                $row['emp_id'] = $hide->user->emp_id;
-                $row['name'] = $hide->user->name;
+                $row['workdate'] = $hide->group_workdate;
+                $row['style'] = $hide->group_style;
+                $row['line'] = $hide->group_line;
+                $row['material'] = $hide->group_material ?? '';
+                $row['emp_id'] = $hide->user_emp_id;
+                $row['name'] = $hide->user_name;
 
                 fputcsv($file, [
                     $row['updated_at'],
