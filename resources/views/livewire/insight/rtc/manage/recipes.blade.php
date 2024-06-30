@@ -55,30 +55,22 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 <x-slot name="title">{{ __('Resep') . ' — ' . __('Rubber thickness control') }}</x-slot>
 <x-slot name="header">
-    <header class="bg-white dark:bg-neutral-800 shadow">
-        <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div>
-                <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
-                    <x-link href="{{ route('insight.rtc.manage.index') }}" class="inline-block py-6" wire:navigate><i
-                            class="fa fa-arrow-left"></i></x-link><span class="ml-4">{{ __('Resep RTC') }}</span>
-                </h2>
-            </div>
-        </div>
-    </header>
+    <x-nav-insights-rtc-sub />
 </x-slot>
 <div id="content" class="py-12 max-w-5xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
-        <div class="flex justify-between px-6 sm:px-1">
-            <div class="w-40">
-                <x-text-input-search wire:model.live="q" id="inv-q"
-                    placeholder="{{ __('CARI') }}"></x-text-input-search>
+        <div class="flex justify-between px-6">
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Resep') }}</h1>
+            <div class="flex gap-x-2">
+                <div class="w-40">
+                    <x-text-input-search wire:model.live="q" id="inv-q"
+                        placeholder="{{ __('CARI') }}"></x-text-input-search>
+                </div>
+                @can('manage', InsRtcRecipe::class)
+                    <x-secondary-button type="button" x-data=""
+                        x-on:click.prevent="$dispatch('open-modal', 'recipe-create')"><i class="fa fa-plus fa-fw"></i></x-secondary-button>
+                @endcan
             </div>
-            @can('manage', InsRtcRecipe::class)
-                <x-secondary-button type="button" class="my-auto" x-data=""
-                    x-on:click.prevent="$dispatch('open-modal', 'recipe-create')"><i class="fa fa-plus fa-fw"></i></x-secondary-button>
-            @endcan
-
-
         </div>
         <div wire:key="recipe-create">
             <x-modal name="recipe-create" maxWidth="lg">
@@ -87,7 +79,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         <div wire:key="recipe-edit">   
             <x-modal name="recipe-edit">
-                <livewire:insight.rtc.manage.recipe-edit wire:key="recipe-edit" />
+                <livewire:insight.rtc.manage.recipe-edit />
             </x-modal>
         </div>
         <div class="overflow-auto w-full mt-5">
