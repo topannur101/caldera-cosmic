@@ -48,7 +48,7 @@ new #[Layout('layouts.app')] class extends Component {
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex justify-between px-6">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Otentikasi') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Wewenang') }}</h1>
             <div class="flex gap-x-2">
                 <div class="w-40">
                     <x-text-input-search wire:model.live="q" id="inv-q"
@@ -115,7 +115,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div wire:key="auths-none">
                         @if (!$auths->count())
                             <div class="text-center py-12">
-                                {{ __('Tak ada otentikasi ditemukan') }}
+                                {{ __('Tak ada wewenang ditemukan') }}
                             </div>
                         @endif
                     </div>

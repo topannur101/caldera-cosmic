@@ -37,7 +37,7 @@ new class extends Component {
             'area_vn'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'area_ab'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'area_qt'   => ['required', 'numeric', 'gte:0', 'lt:90'],
-            'grade'     => ['nullable', 'integer', 'min:1', 'max:3'],
+            'grade'     => ['nullable', 'integer', 'min:1', 'max:5'],
             'code'      => ['required', 'alpha_num', 'min:7', 'max:10'],
             'shift'     => ['required', 'integer', 'min:1', 'max:3']
         ];
@@ -110,7 +110,7 @@ new class extends Component {
                 $materials = Cache::get('materials', collect([
                         ['name' => $this->material, 'updated_at' => now() ]
                         ]));
-                $materials = Caldera::manageCollection($materials, $this->material);
+                $materials = Caldera::manageCollection($materials, $this->material, 50);
                 Cache::put('materials', $materials);
             }        
 
