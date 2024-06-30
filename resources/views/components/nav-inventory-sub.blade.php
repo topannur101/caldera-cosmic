@@ -5,8 +5,7 @@
        <div>
            <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
                <x-link href="{{ route('inventory.admin.index', ['view' => $view ]) }}" class="inline-block py-6"
-                   wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span
-                       class="hidden sm:inline">{{ __('Administration') }}</span></span>
+                   wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span>{{ __('Administration') }}</span></span>
            </h2>
        </div>
    </div>

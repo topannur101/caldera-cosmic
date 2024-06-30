@@ -186,13 +186,13 @@ new class extends Component {
                             {{ __('Profile') }}
                         </x-responsive-nav-link> --}}
                     <x-responsive-nav-link :href="route('account')" :active="request()->routeIs('account*')" wire:navigate>
-                        {{ __('Akun') }}
+                        <i class="fa fa-fw fa-user-pen me-2"></i>{{ __('Akun') }}
                     </x-responsive-nav-link>
 
                     <!-- Authentication -->
                     <button wire:click="logout" class="w-full text-start">
-                        <x-responsive-nav-link wire:navigate>
-                            <i class="fa fa-power-off me-2"></i>{{ __('Keluar') }}
+                        <x-responsive-nav-link>
+                            <i class="fa fa-fw fa-power-off me-2"></i>{{ __('Keluar') }}
                         </x-responsive-nav-link>
                     </button>
                 </div>
