@@ -51,17 +51,18 @@ new #[Layout('layouts.app')] class extends Component {
 </x-slot>
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
-        <div class="flex justify-between px-6">
+        <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Perangkat') }}</h1>
-            <div class="flex gap-x-2">
-                <div class="w-40">
-                    <x-text-input-search wire:model.live="q" id="inv-q"
-                        placeholder="{{ __('CARI') }}"></x-text-input-search>
-                </div>
-                @can('manage', InsRtcDevice::class)
-                    <x-secondary-button type="button" x-data=""
+            <div x-data="{ open: false }" class="flex justify-end gap-x-2">
+                @can('superuser')
+                    <x-secondary-button type="button" 
                         x-on:click.prevent="$dispatch('open-modal', 'device-create')"><i class="fa fa-plus fa-fw"></i></x-secondary-button>
                 @endcan
+                <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open"><i class="fa fa-search fa-fw"></i></x-secondary-button>
+                <div class="w-40" x-show="open" x-cloak>
+                    <x-text-input-search wire:model.live="q" id="inv-q" x-ref="search"
+                        placeholder="{{ __('CARI') }}"></x-text-input-search>
+                </div>
             </div>
         </div>
         <div wire:key="device-create">

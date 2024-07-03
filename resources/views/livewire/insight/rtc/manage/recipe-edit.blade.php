@@ -69,22 +69,22 @@ new class extends Component {
         }
     }
 
-    public function delete()
-    {
-        $recipe = InsRtcRecipe::find($this->id);
+    // public function delete()
+    // {
+    //     $recipe = InsRtcRecipe::find($this->id);
 
-        if ($recipe) {
-            Gate::authorize('manage', $recipe);
-            $recipe->delete();
+    //     if ($recipe) {
+    //         Gate::authorize('manage', $recipe);
+    //         $recipe->delete();
 
-            $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Resep dihapus') . '")');
-            $this->dispatch('updated');
-        } else {
-            $this->handleNotFound();
-        }
-        $this->customReset();
-    }
+    //         $this->js('$dispatch("close")');
+    //         $this->js('notyfSuccess("' . __('Resep dihapus') . '")');
+    //         $this->dispatch('updated');
+    //     } else {
+    //         $this->handleNotFound();
+    //     }
+    //     $this->customReset();
+    // }
 
     public function customReset()
     {
@@ -183,10 +183,10 @@ new class extends Component {
         @can('manage', InsRtcRecipe::class)
         <div class="flex justify-between items-end">
             <div>
-                <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete"
+                {{-- <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete"
                     wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
                     {{ __('Hapus') }}
-                </x-text-button>
+                </x-text-button> --}}
             </div>
             <x-primary-button type="submit">
                 {{ __('Simpan') }}
