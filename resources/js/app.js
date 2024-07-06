@@ -1,11 +1,7 @@
 import './bootstrap';
-
 import { Notyf } from 'notyf';
 import 'notyf/notyf.min.css';
-import ApexCharts from 'apexcharts';
 import axios from 'axios';
-
-
 
 function calderaSetTheme()
 {
@@ -51,7 +47,5 @@ calderaSetTheme()
 window.calderaSetTheme  = calderaSetTheme;
 window.notyfSuccess     = notyfSuccess;
 window.notyfError       = notyfError;
-window.ApexCharts       = ApexCharts;
 window.axios            = axios;
 window.escKey = escKey;
-

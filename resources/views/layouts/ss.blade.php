@@ -21,7 +21,6 @@
         {{ $slot }}
     </div>
     @livewireScripts
-    <script src="/vendor/livewire-charts/app.js"></script>
 
 </body>
 

@@ -46,16 +46,20 @@ new #[Layout('layouts.app')] class extends Component {
             ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_right), 2) as sd_right')
 
             // Calculate MAE
-            ->selectRaw('ROUND(
+            ->selectRaw(
+                'ROUND(
                 CASE 
                     WHEN SUM(ins_rtc_metrics.sensor_left) = 0 THEN 0
                     ELSE AVG(ins_rtc_metrics.sensor_left) - AVG(ins_rtc_recipes.std_mid)
-                END, 2) as mae_left')
-            ->selectRaw('ROUND(
+                END, 2) as mae_left',
+            )
+            ->selectRaw(
+                'ROUND(
                 CASE
                     WHEN SUM(ins_rtc_metrics.sensor_right) = 0 THEN 0
                     ELSE AVG(ins_rtc_metrics.sensor_right) - AVG(ins_rtc_recipes.std_mid)
-                END, 2) as mae_right')
+                END, 2) as mae_right',
+            )
 
             // Untuk menghitung presentase trigger nyala brp kali dalam %
             ->selectRaw('ROUND(SUM(CASE WHEN ins_rtc_metrics.is_correcting = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as correcting_rate')
@@ -85,34 +89,39 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 
 <div class="overflow-auto w-full">
-<div class="flex justify-between items-center mb-6 px-5 py-1">
-    <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
-        {{ __('Ringkasan Gilingan') }}</h1>
+    @vite(['resources/js/apexcharts.js'])
+    <div class="flex justify-between items-center mb-6 px-5 py-1">
+        <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
+            {{ __('Ringkasan Gilingan') }}</h1>
         <div class="flex gap-x-1">
-            <x-secondary-button type="button" wire:click="$refresh"><i class="fa fa-fw fa-rotate-right" wire:loading.remove></i><i class="fa fa-fw fa-circle-notch fa-spin" wire:loading></i></x-secondary-button>
-            <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'clumps-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
-        </div>
-</div>
-<x-modal name="clumps-info">
-    <div class="p-6">
-        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            {{ __('Formula') }}
-        </h2>
-        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
-                class="font-bold">{{ __('SD:') . ' ' . 'Standard Deviation.' . ' ' }}</span>
-            {{ __('Digunakan untuk mengukur kekonsistenan ketebalan. Semakin kecil semakin konsisten.') }}
-        </p>
-        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
-                class="font-bold">{{ __('MAE:') . ' ' . 'Mean Average Error.' . ' '}}</span>
-            {{ __('Digunakan untuk mengukur kepatuhan ketebalan terhadap standar. Semakin kecil semakin sesuai dengan standar.') }}
-        </p>
-        <div class="mt-6 flex justify-end">
-            <x-primary-button type="button" x-on:click="$dispatch('close')">
-                {{ __('Paham') }}
-            </x-primary-button>
+            <x-secondary-button type="button" wire:click="$refresh"><i class="fa fa-fw fa-rotate-right"
+                    wire:loading.remove></i><i class="fa fa-fw fa-circle-notch fa-spin"
+                    wire:loading></i></x-secondary-button>
+            <x-secondary-button type="button" x-data=""
+                x-on:click.prevent="$dispatch('open-modal', 'clumps-info')"><i
+                    class="fa fa-fw fa-question"></i></x-secondary-button>
         </div>
     </div>
-</x-modal>
+    <x-modal name="clumps-info">
+        <div class="p-6">
+            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                {{ __('Formula') }}
+            </h2>
+            <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
+                    class="font-bold">{{ __('SD:') . ' ' . 'Standard Deviation.' . ' ' }}</span>
+                {{ __('Digunakan untuk mengukur kekonsistenan ketebalan. Semakin kecil semakin konsisten.') }}
+            </p>
+            <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
+                    class="font-bold">{{ __('MAE:') . ' ' . 'Mean Average Error.' . ' ' }}</span>
+                {{ __('Digunakan untuk mengukur kepatuhan ketebalan terhadap standar. Semakin kecil semakin sesuai dengan standar.') }}
+            </p>
+            <div class="mt-6 flex justify-end">
+                <x-primary-button type="button" x-on:click="$dispatch('close')">
+                    {{ __('Paham') }}
+                </x-primary-button>
+            </div>
+        </div>
+    </x-modal>
 
     @if (!$clumps->count())
         <div wire:key="no-match" class="py-20">
