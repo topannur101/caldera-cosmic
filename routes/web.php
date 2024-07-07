@@ -49,24 +49,12 @@ Route::prefix('insight')->group(function () {
         Volt::route('/ldc/hides',   'insight.ldc.hides')        ->name('hides');
         Volt::route('/ldc',         'insight.ldc.index')        ->name('index');
 
-        // Volt::route('/rtc/manage/authorizations',   'insight.rtc.manage.auths')     ->name('manage.auths');
-        // Volt::route('/rtc/manage/devices',          'insight.rtc.manage.devices')   ->name('manage.devices');
-        // Volt::route('/rtc/manage/recipes',          'insight.rtc.manage.recipes')   ->name('manage.recipes');
-        // Volt::route('/rtc/manage',                  'insight.rtc.manage.index')     ->name('manage.index');
-        // Volt::route('/rtc/slideshows',              'insight.rtc.slideshows')       ->name('slideshows');
-        // Volt::route('/rtc',                         'insight.rtc.index')            ->name('index');
+    });
 
-        // Route::get('/rtc/metric/{device_id}', function (string $device_id) {
-        //     $metric = InsRtcMetric::join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
-        //         ->where('ins_rtc_clumps.ins_rtc_device_id', $device_id)
-        //         ->latest('dt_client')
-        //         ->first();
-        //     return $metric ? new InsRtcMetricResource($metric) : abort(404);
-        // })->name('metric');
+    Route::name('insight.omv.')->group(function () {
 
-        // Route::get('/rtc/recipe/{recipe_id}', function (string $recipe_id) {
-        //     return new InsRtcRecipeResource(InsRtcRecipe::findOrFail($recipe_id));
-        // })->name('recipe');
+        Volt::route('/omv/clumps',  'insight.omv.clumps')       ->name('clumps');
+        Volt::route('/omv',         'insight.omv.index')        ->name('index');
 
     });
 
