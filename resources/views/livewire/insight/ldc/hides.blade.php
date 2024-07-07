@@ -178,10 +178,6 @@ new #[Layout('layouts.app')] class extends Component {
                             </x-dropdown>
                         </div>
                     </div>
-                    <div>
-                        <x-text-input wire:model.live="fquery" class="mt-4" type="search"
-                            placeholder="{{ __('Kata kunci') }}" name="fquery" />
-                    </div>
                     <div class="mt-3">
                         <x-select id="hides-ftype" wire:model.live="ftype">
                             <option value="any">{{ __('Apapun') }}</option>
@@ -191,6 +187,10 @@ new #[Layout('layouts.app')] class extends Component {
                             <option value="material">{{ __('Material') }}</option>
                             <option value="emp_id">{{ __('Nomor karyawan') }}</option>
                         </x-select>                        
+                    </div>
+                    <div>
+                        <x-text-input wire:model.live="fquery" class="mt-4" type="search"
+                            placeholder="{{ __('Kata kunci') }}" name="fquery" />
                     </div>
                 </div>
                 @if ($view == 'raw' || $view == 'clumps')

@@ -1,0 +1,33 @@
+Form
+- Batch information (incl. batch type)
+- According to batch recipe, show procedure and start timer
+- Actively listen to serial procedure
+
+
+Gambaran umum apl. proses OMV v.2
+
+Phase 1
+In OMV
+- Minta informasi dasar batch ke user yang sedang login.
+- Tunjukkan prosedur penggilingan batch sesuai resep yang di pilih.
+- Baca beban setiap 1 detik sekali (melalui localhost python yang kemudian membaca serial arduino).
+- Jika beban melewati threshold mulai timer karena mengindikasikan material sudah masuk.
+- Jika timer mulai habis, perbolehkan user untuk menekan tombol selesai.
+- Kirim informasi batch dan hasil penggilingan (under or over) ke database Caldera. 
+- Cetak label identitas batch.
+
+Phase 2
+In Rheometer
+- 
+
+Phase 3
+Trial
+-
+
+
+Phase 4
+Debug
+
+
+Phase 5
+Add offline capability
