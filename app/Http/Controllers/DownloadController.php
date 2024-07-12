@@ -28,7 +28,9 @@ class DownloadController extends Controller
             __('ID Gilingan'),
             __('ID Resep'),
             __('Nama resep'),
-            __('Standar tengah'),
+            __('Std Min'),
+            __('Std Teng'),
+            __('Std Maks'),
             __('Koreksi oto.'),
             __('Kiri tindakan'), 
             __('Kiri tekan'), 
@@ -49,7 +51,9 @@ class DownloadController extends Controller
                 $row['clump_id']        = $metric->ins_rtc_clump_id ?? '';
                 $row['recipe_id']       = $metric->ins_rtc_clump->ins_rtc_recipe->id ?? '' ;
                 $row['recipe_name']     = $metric->ins_rtc_clump->ins_rtc_recipe->name ?? '';
+                $row['std_min']         = $metric->ins_rtc_clump->ins_rtc_recipe->std_min ?? '';
                 $row['std_mid']         = $metric->ins_rtc_clump->ins_rtc_recipe->std_mid ?? '';
+                $row['std_max']         = $metric->ins_rtc_clump->ins_rtc_recipe->std_max ?? '';
                 $row['is_correcting']   = $metric->is_correcting ? 'ON' : 'OFF';
                 $row['action_left']     = $metric->action_left == 'thin' ? __('Tipis') : ($metric->action_left ==  'thick' ? __('Tebal') : '');
                 $row['push_left']       = $metric->push_left ?? '';
@@ -64,7 +68,9 @@ class DownloadController extends Controller
                     $row['clump_id'],
                     $row['recipe_id'],
                     $row['recipe_name'],
+                    $row['std_min'],
                     $row['std_mid'],
+                    $row['std_max'],
                     $row['is_correcting'],
                     $row['action_left'],
                     $row['push_left'],
