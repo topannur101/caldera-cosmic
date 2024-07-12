@@ -207,7 +207,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         @switch($view)
             @case('raw')
-                <livewire:insight.ldc.hides-raw :$start_at :$end_at :$is_workdate :$fquery :$ftype />
+                <livewire:insight.ldc.summary-raw :$start_at :$end_at :$is_workdate :$fquery :$ftype />
             @break
 
             @default

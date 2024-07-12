@@ -46,14 +46,14 @@ Route::prefix('insight')->group(function () {
 
     Route::name('insight.ldc.')->group(function () {
 
-        Volt::route('/ldc/hides',   'insight.ldc.hides')        ->name('hides');
+        Volt::route('/ldc/summary', 'insight.ldc.summary')      ->name('summary');
         Volt::route('/ldc',         'insight.ldc.index')        ->name('index');
 
     });
 
     Route::name('insight.omv.')->group(function () {
 
-        Volt::route('/omv/clumps',  'insight.omv.clumps')       ->name('clumps');
+        Volt::route('/omv/summary', 'insight.omv.summary')      ->name('summary');
         Volt::route('/omv',         'insight.omv.index')        ->name('index');
 
     });
