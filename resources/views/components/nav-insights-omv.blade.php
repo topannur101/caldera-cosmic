@@ -12,6 +12,9 @@
             <x-nav-link href="{{ route('insight.omv.summary') }}" :active="request()->routeIs('insight.omv.summary')" wire:navigate>
                 <i class="fa mx-2 fa-fw fa-heart-pulse text-sm"></i>
             </x-nav-link>
+            <x-nav-link href="{{ route('insight.omv.manage.index') }}" :active="request()->routeIs('insight.omv.manage.index')" wire:navigate>
+                <i class="fa mx-2 fa-fw fa-ellipsis-h text-sm"></i>
+            </x-nav-link>
         </div>
     </div>
 </header>
