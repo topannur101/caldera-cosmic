@@ -31,3 +31,51 @@ Debug
 
 Phase 5
 Add offline capability
+
+omv_recipes
+. name 
+. type (original, mix, scrap)
+
+omv_recipe_steps
+. omv_recipe_id
+. order
+. duration
+. description
+
+omv_metrics
+. omv_recipe_id
+. user1_id
+. user2_id
+. eval (too soon, ok, too late)
+
+omv_recipe_steps_captures
+. omv_recipe_step_id
+. delay
+
+omv_captures
+. filename 
+. omv_metrics_id
+
+when submits:
+. handshake table recipes, recipes_steps to server whether it matches with server.
+. if handshake cannot be done because server can't be contacted, save data and photo captures locally.
+. if handshake can be done but server says it doesn't match, log as an error and discard photo captures
+. if handshake can be done and matches with the server, server would save it into database then upload photo captures to server.
+
+python app
+. listen for localhost:91/ampere-info then get serial data from Arduino then return it
+. listen for localhost:91/camera-stream then access the local webcam then return it as stream
+
+alpine data
+
+user_1_id
+user_2_id
+eval
+recipe_id
+recipe_name
+recipe_type
+recipe_steps [ [duration, description], [duration, description] ]
+recipe_steps_captures [ [delay], [delay] ]
+
+timerData()
+
