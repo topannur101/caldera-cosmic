@@ -67,7 +67,7 @@ new class extends Component {
         <div class="grid grid-cols-3 gap-x-3">
             <div class="col-span-2 mt-6">
                 <label for="recipe-name"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Name') }}</label>
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
                 <x-text-input id="recipe-name" wire:model="name" type="text" />
                 @error('name')
                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />

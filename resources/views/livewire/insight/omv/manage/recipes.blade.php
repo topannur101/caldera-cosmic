@@ -4,7 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 
-use App\Models\InsRtcRecipe;
+use App\Models\InsOmvRecipe;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,17 +21,11 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         $q = trim($this->q);
-        $recipes = InsRtcRecipe::where(function (Builder $query) use ($q) {
+        $recipes = InsOmvRecipe::where(function (Builder $query) use ($q) {
             $query
                 ->orWhere('name', 'LIKE', '%' . $q . '%')
-                ->orWhere('og_rs', 'LIKE', '%' . $q . '%')
-                ->orWhere('std_min', 'LIKE', '%' . $q . '%')
-                ->orWhere('std_max', 'LIKE', '%' . $q . '%')
-                ->orWhere('std_mid', 'LIKE', '%' . $q . '%')
-                ->orWhere('scale', 'LIKE', '%' . $q . '%')
-                ->orWhere('pfc_min', 'LIKE', '%' . $q . '%')
-                ->orWhere('pfc_max', 'LIKE', '%' . $q . '%');
-        })
+                ->orWhere('steps', 'LIKE', '%' . $q . '%');
+            })
             ->orderBy('id')
             ->paginate($this->perPage);
 
@@ -53,9 +47,9 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Resep') . ' — ' . __('Rubber thickness control') }}</x-slot>
+<x-slot name="title">{{ __('Resep') . ' — ' . __('Open Mill Validator') }}</x-slot>
 <x-slot name="header">
-    <x-nav-insights-rtc-sub />
+    <x-nav-insights-omv-sub />
 </x-slot>
 <div id="content" class="py-12 max-w-5xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
@@ -75,12 +69,12 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         <div wire:key="recipe-create">
             <x-modal name="recipe-create" maxWidth="lg">
-                <livewire:insight.rtc.manage.recipe-create />
+                <livewire:insight.omv.manage.recipe-create />
             </x-modal>
         </div>
         <div wire:key="recipe-edit">   
             <x-modal name="recipe-edit">
-                <livewire:insight.rtc.manage.recipe-edit />
+                <livewire:insight.omv.manage.recipe-edit />
             </x-modal>
         </div>
         <div class="overflow-auto w-full mt-5">
@@ -90,13 +84,8 @@ new #[Layout('layouts.app')] class extends Component {
                         <tr>
                             <th>{{ __('ID') }}</th>
                             <th>{{ __('Nama') }}</th>
-                            <th>{{ __('OG/RS') }}</th>
-                            <th>{{ __('Min') }}</th>
-                            <th>{{ __('Maks') }}</th>
-                            <th>{{ __('Tengah') }}</th>
-                            <th>{{ __('Skala') }}</th>
-                            <th>{{ __('Min (PFC)') }}</th>
-                            <th>{{ __('Maks (PFC)') }}</th>
+                            <th>{{ __('Langkah') }}</th>
+                            <th>{{ __('Titik tangkap') }}</th>
                         </tr>
                         @foreach ($recipes as $recipe)
                             <tr wire:key="recipe-tr-{{ $recipe->id . $loop->index }}" tabindex="0"
@@ -108,25 +97,10 @@ new #[Layout('layouts.app')] class extends Component {
                                     {{ $recipe->name }}
                                 </td>
                                 <td>
-                                    {{ $recipe->og_rs }}
+                                    
                                 </td>
                                 <td>
-                                    {{ $recipe->std_min }}
-                                </td>
-                                <td>
-                                    {{ $recipe->std_max }}
-                                </td>
-                                <td>
-                                    {{ $recipe->std_mid }}
-                                </td>
-                                <td>
-                                    {{ $recipe->scale }}
-                                </td>
-                                <td>
-                                    {{ $recipe->pfc_min }}
-                                </td>
-                                <td>
-                                    {{ $recipe->pfc_max }}
+                                   
                                 </td>
                             </tr>
                         @endforeach

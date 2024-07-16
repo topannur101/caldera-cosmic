@@ -16,7 +16,8 @@ return new class extends Migration
             $table->timestamps();
             
             $table->string('name');
-            $table->enum('type', ['original', 'mix', 'scrap']);
+            $table->json('steps');
+            $table->json('capture_points')->nullable();
         });
     }
 
