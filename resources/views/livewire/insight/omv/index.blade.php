@@ -117,7 +117,8 @@ class extends Component {};
             maxOvertimeDuration: 30,
             tolerance: 5,
             evaluation: '',
-    
+            pollingIntervalId: null,
+
             async loadRecipes() {
                 // Option 1: Load recipes from API
                 // try {
@@ -127,16 +128,16 @@ class extends Component {};
                 //     console.error('Failed to load recipes:', error);
                 //     this.recipes = []; // Fallback to empty array if API fails
                 // }
-    
+
                 // Option 2: Hardcoded recipes
                 this.recipes = [
                     {
                         id: 1,
                         name: 'Simple Recipe',
                         steps: [
-                            ['Recipe step 1', 120],
-                            ['Recipe step 2', 180],
-                            ['Recipe step 3', 660]
+                            ['Recipe step 1', 3],
+                            ['Recipe step 2', 3],
+                            ['Recipe step 3', 3]
                         ]
                     },
                     {
@@ -152,40 +153,71 @@ class extends Component {};
                     }
                 ];
             },
-    
+
             applySelectedRecipe() {
                 if (this.isRunning) {
                     alert('Please stop the current timer before selecting a new recipe.');
                     return;
                 }
-    
+
                 const selectedRecipe = this.recipes.find(r => r.id == this.selectedRecipeId);
                 if (selectedRecipe) {
                     this.activeRecipe = selectedRecipe;
                     this.steps = selectedRecipe.steps;
                     this.reset();
+                    this.startPolling(); // Start polling when a recipe is selected
                 }
             },
-    
+
+            startPolling() {
+                if (this.pollingIntervalId) {
+                    clearInterval(this.pollingIntervalId);
+                }
+                
+                this.pollingIntervalId = setInterval(() => {
+                    fetch('http://localhost:92/get-data')
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Received data:', data);
+                            if (data.data > 0 && !this.isRunning) {
+                                this.start();
+                                clearInterval(this.pollingIntervalId);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching data:', error);
+                        });
+                }, 3000); // Poll every 1 second
+            },
+
             start() {
                 if (!this.isRunning && this.steps.length > 0) {
                     this.isRunning = true;
                     this.startTime = Date.now();
                     this.remainingTime = this.totalDuration;
                     this.tick();
+                    
+                    // Additional safeguard to ensure polling stops
+                    if (this.pollingIntervalId) {
+                        clearInterval(this.pollingIntervalId);
+                        this.pollingIntervalId = null;
+                    }
                 } else if (this.steps.length === 0) {
                     alert('Please select a recipe before starting the timer.');
                 }
             },
-    
+
             stop() {
                 this.isRunning = false;
                 if (this.intervalId) {
                     cancelAnimationFrame(this.intervalId);
                 }
+                if (this.pollingIntervalId) {
+                    clearInterval(this.pollingIntervalId);
+                }
                 this.evaluateStop();
             },
-    
+
             reset() {
                 this.stop();
                 this.currentStepIndex = 0;
@@ -198,12 +230,12 @@ class extends Component {};
                 this.overtimeElapsed = 0;
                 this.evaluation = '';
             },
-    
+
             tick() {
                 if (this.isRunning) {
                     const now = Date.now();
                     const elapsedSeconds = (now - this.startTime) / 1000;
-    
+
                     if (elapsedSeconds <= this.totalDuration) {
                         this.remainingTime = Math.max(0, this.totalDuration - Math.floor(elapsedSeconds));
                         this.updateProgress(elapsedSeconds);
@@ -211,23 +243,23 @@ class extends Component {};
                         this.remainingTime = 0;
                         this.isOvertime = true;
                         this.overtimeElapsed = Math.floor(elapsedSeconds - this.totalDuration);
-    
+
                         if (this.overtimeElapsed >= this.maxOvertimeDuration) {
                             this.stop();
                             return;
                         }
                     }
-    
+
                     this.intervalId = requestAnimationFrame(() => this.tick());
                 }
             },
-    
+
             updateProgress(elapsedSeconds) {
                 let stepStartTime = 0;
                 for (let i = 0; i < this.steps.length; i++) {
                     let stepDuration = this.steps[i][1];
                     let stepEndTime = stepStartTime + stepDuration;
-    
+
                     if (elapsedSeconds < stepEndTime) {
                         this.currentStepIndex = i;
                         let stepElapsedTime = elapsedSeconds - stepStartTime;
@@ -238,17 +270,17 @@ class extends Component {};
                         this.stepProgresses[i] = 100;
                         this.stepRemainingTimes[i] = 0;
                     }
-    
+
                     stepStartTime = stepEndTime;
                 }
             },
-    
+
             evaluateStop() {
                 if (this.startTime === null) return;
-    
+
                 const elapsedTime = (Date.now() - this.startTime) / 1000;
                 const difference = Math.abs(elapsedTime - this.totalDuration);
-    
+
                 if (difference <= this.tolerance) {
                     this.evaluation = 'OK';
                 } else if (elapsedTime < this.totalDuration) {
@@ -257,7 +289,7 @@ class extends Component {};
                     this.evaluation = 'Too late';
                 }
             },
-    
+
             formatTime(seconds) {
                 const minutes = Math.floor(seconds / 60);
                 const remainingSeconds = Math.floor(seconds % 60);

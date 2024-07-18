@@ -174,4 +174,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(InsRtcAuth::class);
     }
+
+    public function ins_omv_auths(): HasMany
+    {
+        return $this->hasMany(InsRtcAuth::class);
+    }
 }

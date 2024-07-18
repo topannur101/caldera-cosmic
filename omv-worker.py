@@ -1,12 +1,14 @@
 import serial
 from flask import Flask, jsonify, send_file
+from flask_cors import CORS
 import time
 import cv2
 import io
 
-# pip install pyserial Flask opencv-python-headless
+# pip install pyserial Flask opencv-python-headless flask-cors
 
 app = Flask(__name__)
+CORS(app)  # This will enable CORS for all routes
 
 # Configure the serial port
 SERIAL_PORT = 'COM6'  # Change this to match your Arduino's COM port
@@ -23,26 +25,30 @@ error_count = 0
 
 def read_serial_data():
     global error_count
+    ser = None
     try:
-        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
-            ser.reset_input_buffer()
-            for _ in range(5):
-                line = ser.readline()
-                print(f"Raw data received: {line}")  # Debug print
-                if line:
-                    decoded_line = line.decode('utf-8', errors='replace').strip()
-                    print(f"Decoded data: {decoded_line}")  # Debug print
-                    if decoded_line.isdigit():  # Accept any numeric string
-                        return int(decoded_line)
-                    else:
-                        print(f"Invalid data format: {decoded_line}")  # Debug print
-                time.sleep(0.2)  # Short delay between attempts
-            print("No valid data received after 5 attempts")
-            return None
+        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+        ser.reset_input_buffer()
+        for _ in range(5):
+            line = ser.readline()
+            print(f"Raw data received: {line}")  # Debug print
+            if line:
+                decoded_line = line.decode('utf-8', errors='replace').strip()
+                print(f"Decoded data: {decoded_line}")  # Debug print
+                if decoded_line.isdigit():  # Accept any numeric string
+                    return int(decoded_line)
+                else:
+                    print(f"Invalid data format: {decoded_line}")  # Debug print
+            time.sleep(0.2)  # Short delay between attempts
+        print("No valid data received after 5 attempts")
+        return None
     except serial.SerialException as e:
         print(f"Error reading from serial port: {e}")
         error_count += 1
         return None
+    finally:
+        if ser is not None and ser.is_open:
+            ser.close()
 
 @app.route('/')
 def root():
