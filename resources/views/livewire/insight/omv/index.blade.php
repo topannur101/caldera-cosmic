@@ -15,7 +15,47 @@ class extends Component {};
 </x-slot>
 
 <div id="content" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
-    <div x-data="{ ...multiStepTimer(), photoSrc: '', loadPhoto() { this.photoSrc = ''; this.$nextTick(() => { this.photoSrc = 'http://localhost:92/get-photo'; $dispatch('open-modal', 'photo') }); }, serialSrc: '', loadSerial() { this.serialSrc = ''; this.$nextTick(() => { this.serialSrc = 'http://localhost:92/get-data'; $dispatch('open-modal', 'serial') }); }}" x-init="loadRecipes()">        
+    <div x-data="{ 
+        ...multiStepTimer(), 
+        photoSrc: '', 
+        loadPhoto() { 
+            this.photoSrc = ''; 
+            this.$nextTick(() => { 
+                this.photoSrc = 'http://localhost:92/get-photo'; 
+                $dispatch('open-modal', 'photo') 
+            }); 
+        }, 
+        serialSrc: '', 
+        loadSerial() { 
+            this.serialSrc = ''; 
+            this.$nextTick(() => { 
+                this.serialSrc = 'http://localhost:92/get-data'; 
+                $dispatch('open-modal', 'serial') 
+            }); 
+        },
+        wizard: {
+            currentStep: 1,
+            mixingType: '',
+            nextStep() {
+                if (this.currentStep < 2) {
+                    this.currentStep++;
+                }
+            },
+            prevStep() {
+                if (this.currentStep > 1) {
+                    this.currentStep--;
+                }
+            },
+            finishWizard() {
+                if (this.mixingType && this.selectedRecipeId) {
+                    this.applySelectedRecipe();
+                } else {
+                    alert('Please select both mixing type and recipe before finishing.');
+                }
+            }
+        }
+    }" x-init="loadRecipes()">
+    
         <div class="mb-4">
             <p x-text="'Total Time: ' + formatTime(totalDuration)"></p>
             <p x-text="'Current Step: ' + (currentStepIndex + 1)"></p>
@@ -24,26 +64,22 @@ class extends Component {};
             <p x-show="evaluation !== ''" x-text="'Evaluation: ' + evaluation"></p>
             <p x-show="activeRecipe" x-text="'Active Recipe: ' + activeRecipe.name"></p>
         </div>
+    
         <x-modal name="recipes">
-            <div class="p-6">
-                <header>
+            <div x-data="wizard" class="p-6">    
+                <!-- Step 1: Mixing Type -->
+                <div x-show="currentStep === 1">
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        {{ __('Pilih resep') }}
+                        {{ __('Pilih tipe mixing')}}
                     </h2>
-            
-                    <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                        {{ __('Pilih salah satu resep berikut dan klik terapkan.') }}
-                    </p>
-                </header>
-                <fieldset class="grid gap-2 mt-6">
-                    <template x-for="recipe in recipes" :key="recipe.id">
+                    <fieldset class="grid gap-2 mt-6">
                         <div>
-                            <input type="radio" name="recipe" :id="'recipe-' + recipe.id"
-                                class="peer hidden [&:checked_+_label_svg]:block" :value="recipe.id" x-model="selectedRecipeId" />
-                            <label :for="'recipe-' + recipe.id"
+                            <input type="radio" name="mixingType" id="mixingTypeNew"
+                                class="peer hidden [&:checked_+_label_svg]:block" value="new" x-model="mixingType" />
+                            <label for="mixingTypeNew"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between">
-                                    <p x-text="recipe.name"></p>
+                                    <p>{{ __('Baru') }}</p>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd"
@@ -53,31 +89,104 @@ class extends Component {};
                                 </div>
                             </label>
                         </div>
-                    </template>
-                </fieldset>
-                <div class="flex mt-6">
-                    <x-primary-button type="button" @click="applySelectedRecipe(); $dispatch('close')">{{ __('Terapkan') }}</x-primary-button>
+                        <div>
+                            <input type="radio" name="mixingType" id="mixingTypeRegrind"
+                                class="peer hidden [&:checked_+_label_svg]:block" value="regrind" x-model="mixingType" />
+                            <label for="mixingTypeRegrind"
+                                class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
+                                <div class="flex items-center justify-between">
+                                    <p>{{ __('Regrind') }}</p>
+                                    <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="mixingType" id="mixingTypeScrap"
+                                class="peer hidden [&:checked_+_label_svg]:block" value="scrap" x-model="mixingType" />
+                            <label for="mixingTypeScrap"
+                                class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
+                                <div class="flex items-center justify-between">
+                                    <p>{{ __('Scrap') }}</p>
+                                    <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </label>
+                        </div>
+                    </fieldset>
+                </div>
+    
+                <!-- Step 2: Recipe Selection -->
+                <div x-show="currentStep === 2">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Pilih resep')}}
+                    </h2>
+                    <fieldset class="grid gap-2 mt-6">
+                        <template x-for="recipe in recipes" :key="recipe.id">
+                            <div>
+                                <input type="radio" name="recipe" :id="'recipe-' + recipe.id"
+                                    class="peer hidden [&:checked_+_label_svg]:block" :value="recipe.id" x-model="selectedRecipeId" />
+                                <label :for="'recipe-' + recipe.id"
+                                    class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
+                                    <div class="flex items-center justify-between">
+                                        <p x-text="recipe.name"></p>
+                                        <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </template>
+                    </fieldset>
+                </div>
+    
+                <!-- Navigation buttons -->
+                <div class="flex justify-between mt-8">
+                    <x-secondary-button x-show="currentStep > 1" @click="prevStep">
+                        {{ __('Mundur') }}
+                    </x-secondary-button>
+                    <x-secondary-button type="button" x-show="currentStep < 2" @click="nextStep">
+                        {{ __('Maju') }}
+                    </x-secondary-button>
+                    <x-primary-button type="button" x-show="currentStep === 2" @click="finishWizard">
+                        {{ __('Terapkan') }}
+                    </x-primary-button>
                 </div>
             </div>
         </x-modal>
+    
         <x-modal name="photo">
             <div class="flex">
                 <iframe class="m-auto" :src="photoSrc" width="320" height="240" frameborder="0"></iframe>
             </div>
         </x-modal>
+    
         <x-modal name="serial">
             <div class="flex">
                 <iframe class="m-auto" :src="serialSrc" width="320" height="240" frameborder="0"></iframe>
             </div>
         </x-modal>
+    
         <div class="mb-4">
-            <x-secondary-button type="button" @click="$dispatch('open-modal', 'recipes')">{{ __('Pilih resep') }}</x-secondary-button>
+            <x-secondary-button type="button" @click="openWizard()">{{ __('Mulai') }}</x-secondary-button>
             <x-secondary-button type="button" @click="loadPhoto">{{ __('Ambil foto') }}</x-secondary-button>
             <x-secondary-button type="button" @click="loadSerial">{{ __('Data serial') }}</x-secondary-button>
             <x-secondary-button type="button" @click="start()" x-show="!isRunning"><i class="fa fa-fw fa-play me-2"></i>Start</x-secondary-button>
             <x-secondary-button type="button" @click="stop()" x-show="isRunning"><i class="fa fa-fw fa-stop me-2"></i>Stop</x-secondary-button>
             <x-secondary-button type="button" @click="reset()" ><i class="fa fa-fw fa-refresh me-2"></i>Restart</x-secondary-button> 
         </div>
+    
         <div class="grid grid-cols-3 gap-x-3 mt-8">
             <template x-for="(step, index) in steps" :key="index">
                 <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 mb-4">
@@ -155,15 +264,11 @@ class extends Component {};
             },
 
             applySelectedRecipe() {
-                if (this.isRunning) {
-                    alert('Please stop the current timer before selecting a new recipe.');
-                    return;
-                }
-
                 const selectedRecipe = this.recipes.find(r => r.id == this.selectedRecipeId);
                 if (selectedRecipe) {
                     this.activeRecipe = selectedRecipe;
                     this.steps = selectedRecipe.steps;
+                    this.$dispatch('close');
                     this.reset();
                     this.startPolling(); // Start polling when a recipe is selected
                 }
@@ -188,6 +293,14 @@ class extends Component {};
                             console.error('Error fetching data:', error);
                         });
                 }, 3000); // Poll every 1 second
+            },
+
+            openWizard() {
+                if (this.isRunning) {
+                    alert('Please stop the current timer before selecting a new recipe.');
+                    return;
+                }
+                this.$dispatch('open-modal', 'recipes')
             },
 
             start() {
@@ -297,5 +410,6 @@ class extends Component {};
             }
         };
     }
+
     </script>
 </div>
