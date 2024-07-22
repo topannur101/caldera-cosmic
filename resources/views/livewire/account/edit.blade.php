@@ -80,7 +80,7 @@ class extends Component
                         <x-input-error class="mt-2" :messages="$errors->get('emp_id')" />
                     </div>
                     <div class="flex justify-end">
-                        <x-primary-button>{{ __('Perbarui') }}</x-primary-button>
+                        <x-primary-button type="submit">{{ __('Perbarui') }}</x-primary-button>
                     </div>
                 </div>
             </form>

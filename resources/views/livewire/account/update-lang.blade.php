@@ -60,7 +60,7 @@ new class extends Component
             <x-radio wire:model="lang" id="lang-ko" name="lang" value="ko">한국 (AI)</x-radio>
         </div>
         <div class="flex items-center justify-end gap-4">
-            <x-primary-button>{{ __('Simpan') }}</x-primary-button>
+            <x-primary-button type="submit">{{ __('Simpan') }}</x-primary-button>
 {{-- 
             <x-action-message class="me-3" on="password-updated">
                 {{ __('Tersimpan.') }}

@@ -299,17 +299,17 @@ class extends Component {
                 <div class="my-auto"><span x-text="ids.length"></span><span
                         class="hidden lg:inline">{{ ' ' . __('terpilih') }}</span></div>
                 <div class="flex gap-x-2 items-center">
-                    <x-secondary-button x-show="ids.length === 1" class="flex items-center h-full"
+                    <x-secondary-button type="button" x-show="ids.length === 1" class="flex items-center h-full"
                         x-data="" x-on:click.prevent="$dispatch('open-modal', 'circ-show-'+ids[0])"><i
                             class="fa fa-fw fa-eye"></i></x-secondary-button>
-                    <x-secondary-button wire:click="print" x-on:click="$dispatch('open-modal', 'inv-circs-print');"
+                    <x-secondary-button type="button" type="button"n wire:click="print" x-on:click="$dispatch('open-modal', 'inv-circs-print');"
                         class="flex items-center h-full"><i class="fa fa-fw fa-print"></i><span
                             class="ml-2 hidden lg:inline">{{ __('Cetak') }}</span></x-secondary-button>
                     <div class="btn-group">
-                        <x-secondary-button x-on:click="$dispatch('open-modal', 'inv-circs-approve')"
+                        <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'inv-circs-approve')"
                             class="flex items-center"><i class="fa fa-fw fa-thumbs-up"></i><span
                                 class="ml-2">{{ __('Setujui') }}</span></x-secondary-button>
-                        <x-secondary-button x-on:click="$dispatch('open-modal', 'inv-circs-reject')"
+                        <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'inv-circs-reject')"
                             class="flex items-center"><i class="fa fa-fw fa-thumbs-down"></i></x-secondary-button>
                     </div>
                     <x-text-button type="button" @click="ids = []" class="ml-2"><i

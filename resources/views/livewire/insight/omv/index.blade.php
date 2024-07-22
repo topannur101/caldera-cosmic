@@ -4,7 +4,19 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 
 new #[Layout('layouts.app')] 
-class extends Component {};
+class extends Component {
+    
+    public string $userq = '';
+    public int    $user_id = 0;
+
+    #[Renderless]
+    public function updatedUserq()
+    {
+        $this->dispatch('userq-updated', $this->userq);
+    }
+};
+
+
 
 ?>
 
@@ -14,9 +26,10 @@ class extends Component {};
     <x-nav-insights-omv></x-nav-insights-omv>
 </x-slot>
 
-<div id="content" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     <div x-data="{ 
         ...multiStepTimer(), 
+        userq: @entangle('userq').live,
         photoSrc: '', 
         loadPhoto() { 
             this.photoSrc = ''; 
@@ -50,19 +63,52 @@ class extends Component {};
                 if (this.mixingType && this.selectedRecipeId) {
                     this.applySelectedRecipe();
                 } else {
-                    alert('Please select both mixing type and recipe before finishing.');
+                    alert('{{ __('Tipe mixing dan resep wajib dipilih') }}');
                 }
             }
         }
     }" x-init="loadRecipes()">
     
-        <div class="mb-4">
-            <p x-text="'Total Time: ' + formatTime(totalDuration)"></p>
-            <p x-text="'Current Step: ' + (currentStepIndex + 1)"></p>
-            <p x-text="'Total Remaining Time: ' + formatTime(remainingTime)"></p>
-            <p x-show="isOvertime" x-text="'Overtime: ' + formatTime(overtimeElapsed)"></p>
-            <p x-show="evaluation !== ''" x-text="'Evaluation: ' + evaluation"></p>
-            <p x-show="activeRecipe" x-text="'Active Recipe: ' + activeRecipe.name"></p>
+        <div class="mb-4 flex items-end gap-x-6 w-100">
+
+            <div>
+                <div class="text-2xl" x-text="activeRecipe ? ( activeRecipe.name + ' [' + wizard.mixingType.toUpperCase()  + '] ') : '{{ __('Tak ada resep aktif') }}'"></div>
+                <div class="text-neutral-500"><span>{{ __('Evaluasi terakhir')}}</span><span @click="start()">{{ ': '}}</span><span x-text="evaluation ? evaluation : '{{ __('Tak ada') }}'"></span></div>
+            </div>
+            
+            <div class="grow"></div>
+            <div class="text-2xl font-mono mb-1" x-text="formatTime(remainingTime)" x-show="isRunning" :class="remainingTime == 0 ? 'text-red-500' : ''"></div>
+            <div class="flex gap-x-3">
+                <div>
+                    <label for="shift"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
+                    <x-select id="shift">
+                        <option value=""></option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </x-select>
+                </div>
+                <div wire:key="user-select" x-data="{ open: false }" x-on:user-selected="userq = $event.detail; open = false">
+                    <div x-on:click.away="open = false">
+                        <label for="inv-user"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
+                        <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
+                            x-ref="userq" x-on:focus="open = true" id="inv-user" type="text"
+                            autocomplete="off" placeholder="{{ __('Pengguna') }}" />
+                        <div class="relative" x-show="open" x-cloak>
+                            <div class="absolute top-1 left-0 w-full">
+                                <livewire:layout.user-select />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <x-primary-button type="button" size="lg" @click="openWizard()" x-show="!isRunning && !activeRecipe"><i class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
+                <x-primary-button type="button" size="lg" @click="resetRecipeSelection()" x-show="!isRunning && activeRecipe">{{ __('Ulangi') }}</x-primary-button>
+                <x-primary-button type="button" size="lg" @click="stop()" x-cloak x-show="isRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
+            </div>
         </div>
     
         <x-modal name="recipes">
@@ -152,8 +198,8 @@ class extends Component {};
                 </div>
     
                 <!-- Navigation buttons -->
-                <div class="flex justify-between mt-8">
-                    <x-secondary-button x-show="currentStep > 1" @click="prevStep">
+                <div class="flex mt-8 justify-end gap-x-3">
+                    <x-secondary-button type="button" x-show="currentStep > 1" @click="prevStep">
                         {{ __('Mundur') }}
                     </x-secondary-button>
                     <x-secondary-button type="button" x-show="currentStep < 2" @click="nextStep">
@@ -177,7 +223,42 @@ class extends Component {};
                 <iframe class="m-auto" :src="serialSrc" width="320" height="240" frameborder="0"></iframe>
             </div>
         </x-modal>
-    
+
+        <div x-show="!activeRecipe">
+            <div class="py-20">
+                <div class="text-center text-neutral-500">
+                    <div class="text-2xl mb-2">{{ __('Hai,') . ' ' . (Auth::user()->name ?? __('Tamu')) . '!' }}</div>
+                    <div class="text-sm">{{ __('Jangan lupa pilih shift dan mitra kerjamu') }}</div>
+                </div>
+            </div>
+        </div>    
+        <div x-show="activeRecipe" class="grid grid-cols-3 gap-x-3 mt-8">
+            <template x-for="(step, index) in steps" :key="index">
+                <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 mb-4" :class="currentStepIndex != index && isRunning ? 'opacity-30': ''">
+                    <div class="mb-3 flex justify-between items-center">
+                        <span class="text-xs uppercase" :class="currentStepIndex == index && isRunning ? 'fa-fade': ''" x-text="'{{ __('Langkah') }}' + ' ' + (index + 1)"></span>
+                        <span class="text-xs font-mono" x-text="formatTime(stepRemainingTimes[index])"></span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5 mb-4 dark:bg-gray-700">
+                        <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
+                            :style="'width: ' + stepProgresses[index] + '%'"></div>
+                    </div>
+                    <div>
+                        <span class="text-2xl" x-text="step.description"></span><span class="opacity-30"></span>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        {{-- <div class="mb-4">
+            <p x-text="'Total Time: ' + formatTime(totalDuration)"></p>
+            <p x-text="'Current Step: ' + (currentStepIndex + 1)"></p>
+            <p x-text="'Total Remaining Time: ' + formatTime(remainingTime)"></p>
+            <p x-show="isOvertime" x-text="'Overtime: ' + formatTime(overtimeElapsed)"></p>
+            <p x-show="evaluation !== ''" x-text="'Evaluation: ' + evaluation"></p>
+            <p x-show="activeRecipe" x-text="'Active Recipe: ' + (activeRecipe ? activeRecipe.name : '?')"></p>
+        </div>
+
         <div class="mb-4">
             <x-secondary-button type="button" @click="openWizard()">{{ __('Mulai') }}</x-secondary-button>
             <x-secondary-button type="button" @click="loadPhoto">{{ __('Ambil foto') }}</x-secondary-button>
@@ -185,25 +266,8 @@ class extends Component {};
             <x-secondary-button type="button" @click="start()" x-show="!isRunning"><i class="fa fa-fw fa-play me-2"></i>Start</x-secondary-button>
             <x-secondary-button type="button" @click="stop()" x-show="isRunning"><i class="fa fa-fw fa-stop me-2"></i>Stop</x-secondary-button>
             <x-secondary-button type="button" @click="reset()" ><i class="fa fa-fw fa-refresh me-2"></i>Restart</x-secondary-button> 
-        </div>
-    
-        <div class="grid grid-cols-3 gap-x-3 mt-8">
-            <template x-for="(step, index) in steps" :key="index">
-                <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 mb-4">
-                    <div class="mb-3 flex justify-between items-center">
-                        <span class="text-xs uppercase" x-text="'{{ __('Langkah') }}' + ' ' + (index + 1)"></span>
-                        <span class="text-xs" x-text="formatTime(stepRemainingTimes[index]) + ' / ' + formatTime(step[1])"></span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-1.5 mb-4 dark:bg-gray-700">
-                        <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
-                            :style="'width: ' + stepProgresses[index] + '%'"></div>
-                    </div>
-                    <div>
-                        <span class="text-2xl" x-text="step[0]"></span>
-                    </div>
-                </div>
-            </template>
-        </div>
+        </div> --}}
+
     </div>
     
     <script>
@@ -223,44 +287,51 @@ class extends Component {};
             stepRemainingTimes: [],
             isOvertime: false,
             overtimeElapsed: 0,
-            maxOvertimeDuration: 30,
-            tolerance: 5,
+            maxOvertimeDuration: 900,
+            tolerance: 600,
             evaluation: '',
             pollingIntervalId: null,
 
             async loadRecipes() {
                 // Option 1: Load recipes from API
-                // try {
-                //     const response = await fetch('/api/recipes');
-                //     this.recipes = await response.json();
-                // } catch (error) {
-                //     console.error('Failed to load recipes:', error);
-                //     this.recipes = []; // Fallback to empty array if API fails
-                // }
+                try {
+                     const response = await fetch('/api/omv-recipes');
+                     this.recipes = await response.json();
+                 } catch (error) {
+                     console.error('Failed to load recipes:', error);
+                     this.recipes = []; // Fallback to empty array if API fails
+                 }
 
                 // Option 2: Hardcoded recipes
-                this.recipes = [
-                    {
-                        id: 1,
-                        name: 'Simple Recipe',
-                        steps: [
-                            ['Recipe step 1', 3],
-                            ['Recipe step 2', 3],
-                            ['Recipe step 3', 3]
-                        ]
-                    },
-                    {
-                        id: 2,
-                        name: 'Complex Recipe',
-                        steps: [
-                            ['Prep ingredients', 5],
-                            ['Cook base', 5],
-                            ['Add spices', 5],
-                            ['Simmer', 5],
-                            ['Garnish', 5]
-                        ]
-                    }
-                ];
+                // this.recipes = [
+                //     {
+                //         id: 1,
+                //         name: 'Simple Recipe',
+                //         steps: [
+                //             ['Recipe step 1', 3],
+                //             ['Recipe step 2', 3],
+                //             ['Recipe step 3', 3]
+                //         ]
+                //     },
+                //     {
+                //         id: 2,
+                //         name: 'Complex Recipe',
+                //         steps: [
+                //             ['Prep ingredients', 5],
+                //             ['Cook base', 5],
+                //             ['Add spices', 5],
+                //             ['Simmer', 5],
+                //             ['Garnish', 5]
+                //         ]
+                //     }
+                // ];
+            },
+
+            resetRecipeSelection() {
+                this.selectedRecipeId = null;
+                this.activeRecipe = null;
+                this.steps = [];
+                this.wizard.mixingType = '';
             },
 
             applySelectedRecipe() {
@@ -268,10 +339,15 @@ class extends Component {};
                 if (selectedRecipe) {
                     this.activeRecipe = selectedRecipe;
                     this.steps = selectedRecipe.steps;
+                    this.calculateTotalDuration();
+                    this.reset(false); // Reset timer state without clearing the recipe
                     this.$dispatch('close');
-                    this.reset();
                     this.startPolling(); // Start polling when a recipe is selected
                 }
+            },
+
+            calculateTotalDuration() {
+                this.totalDuration = this.steps.reduce((sum, step) => sum + step.duration, 0);
             },
 
             startPolling() {
@@ -297,9 +373,10 @@ class extends Component {};
 
             openWizard() {
                 if (this.isRunning) {
-                    alert('Please stop the current timer before selecting a new recipe.');
+                    alert('{{ __("PHentikan timer sebelum memilih resep baru.") }}');
                     return;
                 }
+                this.wizard.currentStep = 1;
                 this.$dispatch('open-modal', 'recipes')
             },
 
@@ -316,11 +393,11 @@ class extends Component {};
                         this.pollingIntervalId = null;
                     }
                 } else if (this.steps.length === 0) {
-                    alert('Please select a recipe before starting the timer.');
+                    alert('{{ __("Pilih resep terlebih dahulu sebelum menjalankan timer.") }}');
                 }
             },
 
-            stop() {
+            stop(resetRecipe = true) {
                 this.isRunning = false;
                 if (this.intervalId) {
                     cancelAnimationFrame(this.intervalId);
@@ -329,19 +406,28 @@ class extends Component {};
                     clearInterval(this.pollingIntervalId);
                 }
                 this.evaluateStop();
-            },
 
-            reset() {
-                this.stop();
+                // Reset recipe selection when timer is stopped, but only if resetRecipe is true
+                if (resetRecipe) {
+                    this.resetRecipeSelection();
+                }
+            },
+            reset(resetRecipe = true) {
+                this.stop(resetRecipe); // This will also reset the recipe selection if resetRecipe is true
                 this.currentStepIndex = 0;
-                this.totalDuration = this.steps.reduce((sum, step) => sum + step[1], 0);
-                this.remainingTime = this.totalDuration;
+                if (resetRecipe) {
+                    this.totalDuration = 0;
+                    this.remainingTime = 0;
+                    this.steps = [];
+                } else {
+                    this.calculateTotalDuration();
+                    this.remainingTime = this.totalDuration;
+                }
                 this.startTime = null;
                 this.stepProgresses = this.steps.map(() => 0);
-                this.stepRemainingTimes = this.steps.map(step => step[1]);
+                this.stepRemainingTimes = this.steps.map(step => step.duration);
                 this.isOvertime = false;
                 this.overtimeElapsed = 0;
-                this.evaluation = '';
             },
 
             tick() {
@@ -358,7 +444,7 @@ class extends Component {};
                         this.overtimeElapsed = Math.floor(elapsedSeconds - this.totalDuration);
 
                         if (this.overtimeElapsed >= this.maxOvertimeDuration) {
-                            this.stop();
+                            this.stop(true); // This will reset the recipe selection when the timer completes
                             return;
                         }
                     }
@@ -370,7 +456,7 @@ class extends Component {};
             updateProgress(elapsedSeconds) {
                 let stepStartTime = 0;
                 for (let i = 0; i < this.steps.length; i++) {
-                    let stepDuration = this.steps[i][1];
+                    let stepDuration = this.steps[i].duration;
                     let stepEndTime = stepStartTime + stepDuration;
 
                     if (elapsedSeconds < stepEndTime) {
@@ -395,11 +481,11 @@ class extends Component {};
                 const difference = Math.abs(elapsedTime - this.totalDuration);
 
                 if (difference <= this.tolerance) {
-                    this.evaluation = 'OK';
+                    this.evaluation = 'on_time';
                 } else if (elapsedTime < this.totalDuration) {
-                    this.evaluation = 'Too soon';
+                    this.evaluation = 'too_soon';
                 } else {
-                    this.evaluation = 'Too late';
+                    this.evaluation = 'too_late';
                 }
             },
 

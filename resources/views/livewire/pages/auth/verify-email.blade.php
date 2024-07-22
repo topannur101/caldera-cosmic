@@ -47,7 +47,7 @@ new #[Layout('layouts.guest')] class extends Component
     @endif
 
     <div class="mt-4 flex items-center justify-between">
-        <x-primary-button wire:click="sendVerification">
+        <x-primary-button type="submit" wire:click="sendVerification">
             {{ __('Kirim Ulang Email Verifikasi') }}
         </x-primary-button>
 

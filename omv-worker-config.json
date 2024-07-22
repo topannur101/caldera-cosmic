@@ -1,0 +1,23 @@
+{
+   "server": {
+       "host": "localhost",
+       "port": 92,
+       "debug": true
+   },
+   "serial": {
+       "port": "COM6",
+       "baud_rate": 9600
+   },
+   "photo": {
+       "width": 320,
+       "height": 240
+   },
+   "data_handling": {
+       "server_url": "http://localhost/api/omv",
+       "database_file": "queue.db",
+       "max_attempts": 3,
+       "max_age_days": 30,
+       "initial_backoff": 300,
+       "max_backoff": 3600
+   }
+}

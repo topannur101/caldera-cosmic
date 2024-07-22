@@ -47,7 +47,7 @@
                     <x-text-input-icon x-model="qloc" @keydown.enter.prevent="addLoc" icon="fa fa-fw fa-map-marker-alt"
                         id="inv-loc" type="text" placeholder="{{ __('Tambah lokasi') }}" />
                 </div>
-                <x-secondary-button x-on:click="addLoc"><i class="fa fa-plus"></i></x-secondary-button>
+                <x-secondary-button type="button" x-on:click="addLoc"><i class="fa fa-plus"></i></x-secondary-button>
             </div>
             <div x-show="qlocE" class="text-red-500 mt-2">
                 {{ __('Hanya menerima huruf, angka, dan strip') }}
@@ -76,7 +76,7 @@
                     <x-text-input-icon x-model="qtag" @keydown.enter.prevent="addTag" icon="fa fa-fw fa-tag" id="inv-tag"
                         type="text" placeholder="{{ __('Tambah tag') }}" />
                 </div>
-                <x-secondary-button x-on:click="addTag"><i class="fa fa-plus"></i></x-secondary-button>
+                <x-secondary-button type="button" x-on:click="addTag"><i class="fa fa-plus"></i></x-secondary-button>
             </div>
             <div x-show="qtagE" class="text-red-500 mt-2">
                 {{ __('Hanya menerima huruf, angka, dan strip') }}

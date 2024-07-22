@@ -19,4 +19,18 @@ class InsOmvRecipe extends Model
         'capture_points' => 'array',
         'steps' => 'array',
     ];
+
+    public function capturePointsCount()
+    {
+        $capture_points = json_decode($this->capture_points ?? '{}', true);
+        return count($capture_points);
+    }
+
+    public function stepsCount()
+    {
+        $steps = json_decode($this->steps ?? '{}', true);
+        return count($steps);
+    }
+
+
 }

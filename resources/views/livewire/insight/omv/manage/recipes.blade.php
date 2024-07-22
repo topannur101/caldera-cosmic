@@ -97,10 +97,10 @@ new #[Layout('layouts.app')] class extends Component {
                                     {{ $recipe->name }}
                                 </td>
                                 <td>
-                                    
+                                    {{ $recipe->stepsCount() }}                                    
                                 </td>
                                 <td>
-                                   
+                                    {{ $recipe->capturePointsCount() }}                                        
                                 </td>
                             </tr>
                         @endforeach

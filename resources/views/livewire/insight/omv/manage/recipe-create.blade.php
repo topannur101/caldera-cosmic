@@ -15,7 +15,7 @@ new class extends Component {
         return [
             'name' => ['required', 'min:1', 'max:140'],
             'capture_points' => ['nullable', 'string'],
-            'steps' => ['required', 'array', 'min:1', 'max:5'],
+            'steps' => ['required', 'array', 'min:1', 'max:6'],
             'steps.*.description' => ['required', 'string', 'max:480'],
             'steps.*.duration' => ['required', 'integer', 'min:1', 'max:7200'],
         ];
@@ -37,6 +37,14 @@ new class extends Component {
         if (count($capture_points) > 5) {
             $capture_points = array_slice($capture_points, 0, 5);
         }
+
+        // Ensure 'duration' in steps is an integer
+        $steps = array_map(function($step) {
+            return [
+                'description' => $step['description'],
+                'duration' => (int)$step['duration'],
+            ];
+        }, $validated['steps']);
 
         $recipe->fill([
             'name' => $validated['name'],
@@ -159,7 +167,7 @@ new class extends Component {
                 </div>
             @endforeach
         </div>
-        <x-secondary-button class="mt-6" type="button" wire:click="addStep">{{ __('Tambah langkah')}}</x-secondary-button>
+        <x-secondary-button type="button" class="mt-6" type="button" wire:click="addStep">{{ __('Tambah langkah')}}</x-secondary-button>
         <div class="mt-6 flex justify-end items-end">
             <x-primary-button type="submit">
                 {{ __('Simpan') }}
