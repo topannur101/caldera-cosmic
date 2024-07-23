@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             
-            $table->string('name');
+            $table->string('name')->unique();
             $table->json('steps');
             $table->json('capture_points')->nullable();
         });

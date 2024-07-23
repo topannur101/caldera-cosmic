@@ -23,6 +23,7 @@ return new class extends Migration
             $table->enum('eval', ['too_early', 'on_time', 'too_late']);
             $table->dateTime('start_at');
             $table->dateTime('end_at');
+            $table->enum('type', ['new', 'remixing', 'scrap']);
             
         });
     }

@@ -21,7 +21,7 @@ new class extends Component {
         ];
     }
 
-        #[On('device-edit')]
+    #[On('device-edit')]
     public function loadDevice(int $id)
     {
         $device = InsRtcDevice::find($id);

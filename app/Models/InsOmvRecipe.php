@@ -32,5 +32,27 @@ class InsOmvRecipe extends Model
         return count($steps);
     }
 
+    public function durationSum()
+    {
+        $steps = json_decode($this->steps ?? '{}', true);
+        $totalDuration = 0;
+
+        foreach ($steps as $step) {
+            if (isset($step['duration'])) {
+                $totalDuration += $step['duration'];
+            }
+        }
+        return $totalDuration;
+    }
+
+    public function durationSumFormatted()
+{
+    $totalDuration = $this->durationSum();
+    $minutes = floor($totalDuration / 60);
+    $seconds = $totalDuration % 60;
+
+    return sprintf('%02d:%02d', $minutes, $seconds);
+}
+
 
 }

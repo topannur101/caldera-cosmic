@@ -14,7 +14,7 @@
    },
    "data_handling": {
        "server_url": "http://localhost/api/omv",
-       "database_file": "queue.db",
+       "database_file": "omv-worker.db",
        "max_attempts": 3,
        "max_age_days": 30,
        "initial_backoff": 300,

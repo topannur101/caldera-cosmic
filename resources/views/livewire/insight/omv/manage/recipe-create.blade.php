@@ -6,6 +6,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
 
 new class extends Component {
+
     public string $name = '';
     public string $capture_points = '';
     public array $steps = [['description' => '', 'duration' => '']];
@@ -13,11 +14,11 @@ new class extends Component {
     public function rules()
     {
         return [
-            'name' => ['required', 'min:1', 'max:140'],
-            'capture_points' => ['nullable', 'string'],
-            'steps' => ['required', 'array', 'min:1', 'max:6'],
-            'steps.*.description' => ['required', 'string', 'max:480'],
-            'steps.*.duration' => ['required', 'integer', 'min:1', 'max:7200'],
+            'name'                  => ['required', 'min:1', 'max:140', 'unique:ins_omv_recipes'],
+            'capture_points'        => ['nullable', 'string'],
+            'steps'                 => ['required', 'array', 'min:1', 'max:6'],
+            'steps.*.description'   => ['required', 'string', 'max:480'],
+            'steps.*.duration'      => ['required', 'integer', 'min:1', 'max:7200'],
         ];
     }
 
@@ -26,6 +27,7 @@ new class extends Component {
         $recipe = new InsOmvRecipe;
         Gate::authorize('manage', $recipe);
 
+        $this->name = strtoupper(trim($this->name));
         $validated = $this->validate();
 
         // Process capture points
@@ -49,7 +51,7 @@ new class extends Component {
         $recipe->fill([
             'name' => $validated['name'],
             'capture_points' => json_encode($capture_points),
-            'steps' => json_encode($validated['steps']),
+            'steps' => json_encode($steps),
         ]);
 
         $recipe->save();
@@ -133,7 +135,7 @@ new class extends Component {
             @enderror
         </div>  
         <div class="mt-6">
-            <label for="recipe-capture-points" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Titik tangkap foto') }}</label>
+            <label for="recipe-capture-points" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Titik foto') }}</label>
             <x-text-input id="recipe-capture-points" wire:model="capture_points" type="text" placeholder="contoh: 30, 90, 120" />
             @error('capture_points')
                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />

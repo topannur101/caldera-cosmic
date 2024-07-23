@@ -85,7 +85,8 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('ID') }}</th>
                             <th>{{ __('Nama') }}</th>
                             <th>{{ __('Langkah') }}</th>
-                            <th>{{ __('Titik tangkap') }}</th>
+                            <th>{{ __('Titik foto') }}</th>
+                            <th>{{ __('Durasi') }}</th>
                         </tr>
                         @foreach ($recipes as $recipe)
                             <tr wire:key="recipe-tr-{{ $recipe->id . $loop->index }}" tabindex="0"
@@ -101,6 +102,9 @@ new #[Layout('layouts.app')] class extends Component {
                                 </td>
                                 <td>
                                     {{ $recipe->capturePointsCount() }}                                        
+                                </td>
+                                <td>
+                                    {{ $recipe->durationSumFormatted() }}
                                 </td>
                             </tr>
                         @endforeach
