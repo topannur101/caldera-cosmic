@@ -15,7 +15,9 @@ class InsOmvMetric extends Model
         'user_2_id',
         'eval',
         'start_at',
-        'end_at'
+        'end_at',
+        'type',
+        'shift'
     ];
 
     protected $casts = [

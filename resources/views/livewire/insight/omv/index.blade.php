@@ -1,5 +1,4 @@
 <?php
-
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 
@@ -15,8 +14,6 @@ class extends Component {
         $this->dispatch('userq-updated', $this->userq);
     }
 };
-
-
 
 ?>
 
@@ -77,9 +74,7 @@ class extends Component {
                 }
             }
         }" x-init="loadRecipes()">
-        
             <div class="mb-4 flex items-end gap-x-6 w-100">
-
                 <div>
                     <div class="text-2xl" x-text="activeRecipe ? ( activeRecipe.name + ' [' + wizard.mixingType.toUpperCase()  + '] ') : '{{ __('Tak ada resep aktif') }}'"></div>
                     <div class="text-neutral-500"><span>{{ __('Evaluasi terakhir')}}</span><span @click="start()">{{ ': '}}</span><span x-text="evaluation ? evaluation : '{{ __('Tak ada') }}'"></span></div>
@@ -91,7 +86,7 @@ class extends Component {
                     <div>
                         <label for="shift"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
-                        <x-select id="shift">
+                        <x-select id="shift" x-model="shift">
                             <option value=""></option>
                             <option value="1">1</option>
                             <option value="2">2</option>
@@ -116,7 +111,7 @@ class extends Component {
                 <div>
                     <x-primary-button type="button" size="lg" @click="openWizard()" x-show="!isRunning && !activeRecipe"><i class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
                     <x-primary-button type="button" size="lg" @click="resetRecipeSelection()" x-show="!isRunning && activeRecipe">{{ __('Ulangi') }}</x-primary-button>
-                    <x-primary-button type="button" size="lg" @click="stop()" x-cloak x-show="isRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
+                    <x-primary-button type="button" size="lg" @click="stop(true, true)" x-cloak x-show="isRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
                 </div>
             </div>
         
@@ -233,6 +228,9 @@ class extends Component {
                 </div>
             </x-modal>
 
+            <!-- Add a new element for displaying feedback messages -->
+            <div x-show="feedbackMessage" x-text="feedbackMessage" :class="{'bg-green-100 text-green-800': feedbackType === 'success', 'bg-red-100 text-red-800': feedbackType === 'error'}" class="p-4 rounded-md mb-4"></div>
+
             <div x-show="!activeRecipe">
                 <div class="py-20">
                     <div class="text-center text-neutral-500">
@@ -303,6 +301,9 @@ class extends Component {
                 tolerance: 240,
                 evaluation: '',
                 pollingIntervalId: null,
+                shift: '',
+                feedbackMessage: '',
+                feedbackType: '',
 
                 async loadRecipes() {
                     // Option 1: Load recipes from API
@@ -389,11 +390,10 @@ class extends Component {
                 start() {
                     if (!this.isRunning && this.steps.length > 0) {
                         this.isRunning = true;
-                        this.startTime = Date.now();
+                        this.startTime = new Date(); // Change this to store the full date object
                         this.remainingTime = this.totalDuration;
                         this.tick();
                         
-                        // Additional safeguard to ensure polling stops
                         if (this.pollingIntervalId) {
                             clearInterval(this.pollingIntervalId);
                             this.pollingIntervalId = null;
@@ -403,7 +403,7 @@ class extends Component {
                     }
                 },
 
-                stop(resetRecipe = true) {
+                stop(resetRecipe = true, sendData = false) {
                     this.isRunning = false;
                     if (this.intervalId) {
                         cancelAnimationFrame(this.intervalId);
@@ -411,13 +411,13 @@ class extends Component {
                     if (this.pollingIntervalId) {
                         clearInterval(this.pollingIntervalId);
                     }
-                    this.evaluateStop();
+                    this.evaluateStop(sendData);
 
-                    // Reset recipe selection when timer is stopped, but only if resetRecipe is true
                     if (resetRecipe) {
                         this.resetRecipeSelection();
                     }
                 },
+
                 reset(resetRecipe = true) {
                     this.stop(resetRecipe); // This will also reset the recipe selection if resetRecipe is true
                     this.currentStepIndex = 0;
@@ -450,7 +450,7 @@ class extends Component {
                             this.overtimeElapsed = Math.floor(elapsedSeconds - this.totalDuration);
 
                             if (this.overtimeElapsed >= this.maxOvertimeDuration) {
-                                this.stop(true); // This will reset the recipe selection when the timer completes
+                                this.stop(true, true); // This will reset the recipe selection when the timer completes
                                 return;
                             }
                         }
@@ -480,10 +480,11 @@ class extends Component {
                     }
                 },
 
-                evaluateStop() {
+                evaluateStop(sendData = false) {
                     if (this.startTime === null) return;
 
-                    const elapsedTime = (Date.now() - this.startTime) / 1000;
+                    const endTime = new Date();
+                    const elapsedTime = (endTime - this.startTime) / 1000;
                     const difference = Math.abs(elapsedTime - this.totalDuration);
 
                     if (difference <= this.tolerance) {
@@ -493,12 +494,65 @@ class extends Component {
                     } else {
                         this.evaluation = 'too_late';
                     }
+
+                    if (sendData) {
+                        // Prepare and send the JSON data
+                        const jsonData = {
+                            server_url: '{{ route('home') }}',
+                            recipe_id: this.activeRecipe.id.toString(),
+                            user_1_emp_id: '{{ Auth::user()->emp_id }}',
+                            user_2_emp_id: this.userq,
+                            eval: this.evaluation,
+                            start_at: this.formatDateTime(this.startTime),
+                            end_at: this.formatDateTime(endTime),
+                            type: this.wizard.mixingType,
+                            shift: this.shift
+                        };
+                        this.sendData(jsonData);
+                    }
+
+
                 },
 
                 formatTime(seconds) {
                     const minutes = Math.floor(seconds / 60);
                     const remainingSeconds = Math.floor(seconds % 60);
                     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+                },
+
+                formatDateTime(date) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
+                    
+                    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                },
+
+                sendData(jsonData) {
+                    fetch('http://localhost:92/send-data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(jsonData),
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Success:', data);
+                        notyfSuccess('{{ __("Data terkirim") }}');
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        notyfError('{{ __("Data gagal terkirim") }}');
+                    });
                 }
             };
         }

@@ -17,13 +17,21 @@ return new class extends Migration
 
             $table->foreignId('ins_omv_recipe_id')->nullable()->constrained()->nullOnDelete();
             $table->unsignedBigInteger('user_1_id');
-            $table->unsignedBigInteger('user_2_id');
+            $table->unsignedBigInteger('user_2_id')->nullable();
             $table->foreign('user_1_id')->references('id')->on('users');
             $table->foreign('user_2_id')->references('id')->on('users');
             $table->enum('eval', ['too_early', 'on_time', 'too_late']);
             $table->dateTime('start_at');
             $table->dateTime('end_at');
             $table->enum('type', ['new', 'remixing', 'scrap']);
+            $table->tinyInteger('shift')->nullable();
+
+            $table->index('ins_omv_recipe_id');
+            $table->index('user_1_id');
+            $table->index('user_2_id');
+            $table->index('eval');
+            $table->index('type');
+            $table->index('shift');
             
         });
     }

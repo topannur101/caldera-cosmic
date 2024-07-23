@@ -12,24 +12,26 @@ from flask_cors import CORS
 import os
 import logging
 from logging.handlers import RotatingFileHandler
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 CORS(app)
 
 # Load configuration
-with open('omv-worker-config.json', 'r') as config_file:
+config_file_path = 'omv-worker.json'
+with open(config_file_path, 'r') as config_file:
     config = json.load(config_file)
 
 # Set up logging
 log_file = 'omv-worker.log'
-log_handler = RotatingFileHandler(log_file, maxBytes=100000, backupCount=1)  # Approx. 500 lines
+log_handler = RotatingFileHandler(log_file, maxBytes=100000, backupCount=1)
 log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger = logging.getLogger()
 logger.addHandler(log_handler)
-logger.setLevel(logging.ERROR)  # Only log errors
+logger.setLevel(logging.ERROR)
 
 # Database setup
-conn = sqlite3.connect(config['data_handling']['database_file'], check_same_thread=False)
+conn = sqlite3.connect(config['app']['database_file'], check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS queue
                   (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,6 +46,107 @@ conn.commit()
 start_time = time.time()
 request_count = 0
 error_count = 0
+
+def is_valid_url(url):
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
+
+def validate_server_url(server):
+    return is_valid_url(server)
+
+def update_config(new_server):
+    if config['app']['remote_server_url'] != new_server:
+        config['app']['remote_server_url'] = new_server
+        with open(config_file_path, 'w') as config_file:
+            json.dump(config, config_file, indent=4)
+        logger.info(f"Updated remote server configuration to: {new_server}")
+
+@app.route('/send-data', methods=['POST'])
+def send_data():
+    data = request.json
+    if 'server_url' not in data:
+        return jsonify({"status": "error", "message": "server_url parameter is missing"}), 400
+    
+    server_url = data['server_url']
+    if not validate_server_url(server_url):
+        return jsonify({"status": "error", "message": "Invalid server_url parameter value"}), 400
+    
+    update_config(server_url)
+    
+    success, server_message = send_to_server(data)
+    if success:
+        return jsonify({"status": "success", "message": server_message}), 200
+    else:
+        queue_data(data, server_message)
+        error_message = f"Data queued. Server message: {server_message}"
+        logger.error(error_message)
+        return jsonify({"status": "queued", "message": error_message}), 202
+
+def send_to_server(data):
+    try:
+        server_url = f"{config['app']['remote_server_url']}/api/omv-metric"
+        response = requests.post(server_url, json=data, timeout=5)
+        server_message = response.text
+        if response.status_code != 200:
+            error_message = f"Server returned non-200 status code: {response.status_code}. Message: {server_message}"
+            logger.error(error_message)
+            return False, error_message
+        return True, server_message
+    except requests.RequestException as e:
+        error_message = f"Error sending data to server: {str(e)}"
+        logger.error(error_message)
+        return False, error_message
+
+def queue_data(data, server_message):
+    try:
+        current_time = datetime.now()
+        cursor.execute("""
+            INSERT INTO queue (data, attempts, created_at, last_tried_at, last_tried_msg)
+            VALUES (?, ?, ?, ?, ?)
+        """, (json.dumps(data), 0, current_time, current_time, server_message))
+        conn.commit()
+    except sqlite3.Error as e:
+        error_message = f"Error queueing data: {str(e)}"
+        logger.error(error_message)
+
+def retry_queued_data():
+    while True:
+        try:
+            cursor.execute("""
+                SELECT id, data, attempts FROM queue
+                WHERE attempts < ? AND created_at > ?
+            """, (config['data_handling']['max_attempts'], 
+                  datetime.now() - timedelta(days=config['data_handling']['max_age_days'])))
+            rows = cursor.fetchall()
+            for row in rows:
+                id, data, attempts = row
+                success, server_message = send_to_server(json.loads(data))
+                if success:
+                    cursor.execute("DELETE FROM queue WHERE id = ?", (id,))
+                else:
+                    new_attempts = attempts + 1
+                    cursor.execute("""
+                        UPDATE queue
+                        SET attempts = ?, last_tried_at = ?, last_tried_msg = ?
+                        WHERE id = ?
+                    """, (new_attempts, datetime.now(), server_message, id))
+                conn.commit()
+                time.sleep(calculate_backoff(attempts))
+            
+            if not rows:
+                # If no rows were processed, sleep for a while before checking again
+                time.sleep(config['data_handling']['initial_backoff'])
+        except Exception as e:
+            error_message = f"Error in retry_queued_data: {str(e)}"
+            logger.error(error_message)
+            time.sleep(config['data_handling']['initial_backoff'])
+
+def calculate_backoff(attempts):
+    return min(config['data_handling']['max_backoff'], 
+               config['data_handling']['initial_backoff'] * (2 ** attempts))
 
 def read_serial_data():
     global error_count
@@ -127,81 +230,6 @@ def debug_info():
         }
     })
 
-@app.route('/send-data', methods=['POST'])
-def send_data():
-    data = request.json
-    success, server_message = send_to_server(data)
-    if success:
-        return jsonify({"status": "success", "message": server_message}), 200
-    else:
-        queue_data(data, server_message)
-        error_message = f"Data queued. Server message: {server_message}"
-        logger.error(error_message)
-        return jsonify({"status": "queued", "message": error_message}), 202
-
-def send_to_server(data):
-    try:
-        response = requests.post(config['data_handling']['server_url'], json=data, timeout=5)
-        server_message = response.text
-        if response.status_code != 200:
-            error_message = f"Server returned non-200 status code: {response.status_code}. Message: {server_message}"
-            logger.error(error_message)
-            return False, error_message
-        return True, server_message
-    except requests.RequestException as e:
-        error_message = f"Error sending data to server: {str(e)}"
-        logger.error(error_message)
-        return False, error_message
-
-def queue_data(data, server_message):
-    try:
-        current_time = datetime.now()
-        cursor.execute("""
-            INSERT INTO queue (data, attempts, created_at, last_tried_at, last_tried_msg)
-            VALUES (?, ?, ?, ?, ?)
-        """, (json.dumps(data), 0, current_time, current_time, server_message))
-        conn.commit()
-    except sqlite3.Error as e:
-        error_message = f"Error queueing data: {str(e)}"
-        logger.error(error_message)
-
-def retry_queued_data():
-    while True:
-        try:
-            cursor.execute("""
-                SELECT id, data, attempts FROM queue
-                WHERE attempts < ? AND created_at > ?
-            """, (config['data_handling']['max_attempts'], 
-                  datetime.now() - timedelta(days=config['data_handling']['max_age_days'])))
-            rows = cursor.fetchall()
-            for row in rows:
-                id, data, attempts = row
-                success, server_message = send_to_server(json.loads(data))
-                if success:
-                    cursor.execute("DELETE FROM queue WHERE id = ?", (id,))
-                else:
-                    new_attempts = attempts + 1
-                    cursor.execute("""
-                        UPDATE queue
-                        SET attempts = ?, last_tried_at = ?, last_tried_msg = ?
-                        WHERE id = ?
-                    """, (new_attempts, datetime.now(), server_message, id))
-                conn.commit()
-                time.sleep(calculate_backoff(attempts))
-            
-            if not rows:
-                # If no rows were processed, sleep for a while before checking again
-                time.sleep(config['data_handling']['initial_backoff'])
-        except Exception as e:
-            error_message = f"Error in retry_queued_data: {str(e)}"
-            logger.error(error_message)
-            time.sleep(config['data_handling']['initial_backoff'])
-
-def calculate_backoff(attempts):
-    return min(config['data_handling']['max_backoff'], 
-               config['data_handling']['initial_backoff'] * (2 ** attempts))
-
 if __name__ == '__main__':
-    print(f"Starting server. Debug info available at http://{config['server']['host']}:{config['server']['port']}/debug-info")
     threading.Thread(target=retry_queued_data, daemon=True).start()
-    app.run(host=config['server']['host'], port=config['server']['port'], debug=config['server']['debug'])
+    app.run(host=config['app']['host'], port=config['app']['port'], debug=config['app']['debug'])

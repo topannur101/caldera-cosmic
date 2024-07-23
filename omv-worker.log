@@ -1,85 +1,9 @@
-2024-07-23 13:03:56,708 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on http://localhost:92
-2024-07-23 13:03:56,708 - INFO - [33mPress CTRL+C to quit[0m
-2024-07-23 13:03:56,710 - INFO -  * Restarting with stat
-2024-07-23 13:03:57,211 - WARNING -  * Debugger is active!
-2024-07-23 13:03:57,214 - INFO -  * Debugger PIN: 136-518-675
-2024-07-23 13:04:19,408 - INFO - 127.0.0.1 - - [23/Jul/2024 13:04:19] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:04:19,485 - INFO - 127.0.0.1 - - [23/Jul/2024 13:04:19] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
-2024-07-23 13:04:21,388 - INFO - 127.0.0.1 - - [23/Jul/2024 13:04:21] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:04:24,887 - INFO - 127.0.0.1 - - [23/Jul/2024 13:04:24] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:04:26,565 - INFO - 127.0.0.1 - - [23/Jul/2024 13:04:26] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:04:33,353 - INFO - 127.0.0.1 - - [23/Jul/2024 13:04:33] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:04:36,040 - INFO - 127.0.0.1 - - [23/Jul/2024 13:04:36] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:04:39,360 - INFO - 127.0.0.1 - - [23/Jul/2024 13:04:39] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:04:42,043 - INFO - 127.0.0.1 - - [23/Jul/2024 13:04:42] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:06:50,346 - INFO - 127.0.0.1 - - [23/Jul/2024 13:06:50] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:10:46,707 - INFO - 127.0.0.1 - - [23/Jul/2024 13:10:46] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:10:49,412 - INFO - 127.0.0.1 - - [23/Jul/2024 13:10:49] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:10:52,718 - INFO - 127.0.0.1 - - [23/Jul/2024 13:10:52] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:10:55,410 - INFO - 127.0.0.1 - - [23/Jul/2024 13:10:55] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:45:14,763 - INFO - 127.0.0.1 - - [23/Jul/2024 13:45:14] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 13:45:17,752 - INFO - 127.0.0.1 - - [23/Jul/2024 13:45:17] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:09:05,364 - INFO - 127.0.0.1 - - [23/Jul/2024 14:09:05] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:09:18,298 - INFO - 127.0.0.1 - - [23/Jul/2024 14:09:18] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:09:21,303 - INFO - 127.0.0.1 - - [23/Jul/2024 14:09:21] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:09:25,439 - INFO - 127.0.0.1 - - [23/Jul/2024 14:09:25] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:09:28,477 - INFO - 127.0.0.1 - - [23/Jul/2024 14:09:28] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:17:08,618 - INFO - 127.0.0.1 - - [23/Jul/2024 14:17:08] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:17:11,629 - INFO - 127.0.0.1 - - [23/Jul/2024 14:17:11] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:17:14,627 - INFO - 127.0.0.1 - - [23/Jul/2024 14:17:14] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:17:20,474 - INFO - 127.0.0.1 - - [23/Jul/2024 14:17:20] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:17:23,486 - INFO - 127.0.0.1 - - [23/Jul/2024 14:17:23] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:06,233 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:06] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:09,298 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:09] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:12,313 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:12] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:15,313 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:15] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:18,313 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:18] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:21,364 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:21] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:24,333 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:24] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:27,329 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:27] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:30,376 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:30] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:33,347 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:33] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:36,352 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:36] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:39,926 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:39] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:42,932 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:42] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:45,940 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:45] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:48,953 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:48] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:51,954 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:51] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:54,968 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:54] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:20:57,967 - INFO - 127.0.0.1 - - [23/Jul/2024 14:20:57] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:21:00,971 - INFO - 127.0.0.1 - - [23/Jul/2024 14:21:00] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:21:03,975 - INFO - 127.0.0.1 - - [23/Jul/2024 14:21:03] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:21:06,987 - INFO - 127.0.0.1 - - [23/Jul/2024 14:21:06] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:22:19,368 - INFO - 127.0.0.1 - - [23/Jul/2024 14:22:19] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:22:44,904 - INFO - 127.0.0.1 - - [23/Jul/2024 14:22:44] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:22:48,000 - INFO - 127.0.0.1 - - [23/Jul/2024 14:22:48] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:24:47,204 - INFO - 127.0.0.1 - - [23/Jul/2024 14:24:47] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:24:52,502 - INFO - 127.0.0.1 - - [23/Jul/2024 14:24:52] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:24:55,506 - INFO - 127.0.0.1 - - [23/Jul/2024 14:24:55] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:24:58,698 - INFO - 127.0.0.1 - - [23/Jul/2024 14:24:58] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:01,887 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:01] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:04,899 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:04] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:07,915 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:07] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:10,924 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:10] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:13,936 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:13] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:16,939 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:16] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:22,475 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:22] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:25,498 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:25] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:28,569 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:28] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:32,170 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:32] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:35,187 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:35] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:38,376 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:38] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:41,304 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:41] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:44,316 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:44] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:47,328 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:47] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:50,336 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:50] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:53,345 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:53] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:56,356 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:56] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 14:25:59,367 - INFO - 127.0.0.1 - - [23/Jul/2024 14:25:59] "GET /get-data HTTP/1.1" 200 -
-2024-07-23 15:06:22,765 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
-2024-07-23 15:06:22,767 - ERROR - Unable to read valid data from Arduino
-2024-07-23 15:06:22,770 - INFO - 127.0.0.1 - - [23/Jul/2024 15:06:22] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-23 15:49:32,245 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
-2024-07-23 15:49:32,246 - ERROR - Unable to read valid data from Arduino
-2024-07-23 15:49:32,248 - INFO - 127.0.0.1 - - [23/Jul/2024 15:49:32] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 01:28:25,472 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom start at tidak cocok dengan format Y-m-d H:i:s.","Kolom end at tidak cocok dengan format Y-m-d H:i:s."]}
+2024-07-24 01:28:25,780 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom start at tidak cocok dengan format Y-m-d H:i:s.","Kolom end at tidak cocok dengan format Y-m-d H:i:s."]}
+2024-07-24 01:29:42,003 - INFO - 127.0.0.1 - - [24/Jul/2024 01:29:42] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 01:29:42,597 - INFO - 127.0.0.1 - - [24/Jul/2024 01:29:42] "POST /send-data HTTP/1.1" 200 -
+2024-07-24 01:30:10,716 - INFO - 127.0.0.1 - - [24/Jul/2024 01:30:10] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 01:30:11,363 - INFO - 127.0.0.1 - - [24/Jul/2024 01:30:11] "POST /send-data HTTP/1.1" 200 -
+2024-07-24 01:30:15,064 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-07-24 01:30:15,065 - ERROR - Unable to read valid data from Arduino
+2024-07-24 01:30:15,066 - INFO - 127.0.0.1 - - [24/Jul/2024 01:30:15] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
