@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class InsOmvMetric extends Model
 {
@@ -23,4 +25,32 @@ class InsOmvMetric extends Model
         'start_at' => 'datetime',
         'end_at' => 'datetime',
     ];
+
+    public function ins_omv_recipe(): BelongsTo
+    {
+        return $this->belongsTo(InsOmvRecipe::class);
+    }
+
+    public function user_1(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function user_2(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function duration()
+    {
+        $start = Carbon::parse($this->start_at);
+        $end = Carbon::parse($this->end_at);
+        
+        $duration = $start->diffInSeconds($end);
+        
+        $minutes = floor($duration / 60);
+        $seconds = $duration % 60;
+        
+        return sprintf("%02d:%02d", $minutes, $seconds);
+    }
 }

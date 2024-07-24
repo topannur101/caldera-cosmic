@@ -47,13 +47,12 @@ class InsOmvRecipe extends Model
     }
 
     public function durationSumFormatted()
-{
-    $totalDuration = $this->durationSum();
-    $minutes = floor($totalDuration / 60);
-    $seconds = $totalDuration % 60;
+    {
+        $totalDuration = $this->durationSum();
+        $minutes = floor($totalDuration / 60);
+        $seconds = $totalDuration % 60;
 
-    return sprintf('%02d:%02d', $minutes, $seconds);
-}
-
+        return sprintf('%02d:%02d', $minutes, $seconds);
+    }
 
 }
