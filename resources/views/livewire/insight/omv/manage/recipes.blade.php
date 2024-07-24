@@ -68,12 +68,12 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div wire:key="recipe-create">
-            <x-modal name="recipe-create" maxWidth="lg">
+            <x-modal name="recipe-create" maxWidth="xl">
                 <livewire:insight.omv.manage.recipe-create />
             </x-modal>
         </div>
         <div wire:key="recipe-edit">   
-            <x-modal name="recipe-edit">
+            <x-modal name="recipe-edit" maxWidth="xl">
                 <livewire:insight.omv.manage.recipe-edit />
             </x-modal>
         </div>
@@ -83,6 +83,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <table wire:key="recipes-table" class="table">
                         <tr>
                             <th>{{ __('ID') }}</th>
+                            <th>{{ __('Tipe') }}</th>
                             <th>{{ __('Nama') }}</th>
                             <th>{{ __('Langkah') }}</th>
                             <th>{{ __('Titik foto') }}</th>
@@ -93,6 +94,9 @@ new #[Layout('layouts.app')] class extends Component {
                                 x-on:click="$dispatch('open-modal', 'recipe-edit'); $dispatch('recipe-edit', { id: {{ $recipe->id }} })">
                                 <td>
                                     {{ $recipe->id }}
+                                </td>
+                                <td class="uppercase">
+                                    {{ $recipe->type }}
                                 </td>
                                 <td>
                                     {{ $recipe->name }}

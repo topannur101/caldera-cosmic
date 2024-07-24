@@ -10,6 +10,7 @@ class InsOmvRecipe extends Model
     use HasFactory;
 
     protected $fillable = [
+        'type',
         'name',
         'capture_points',
         'steps'

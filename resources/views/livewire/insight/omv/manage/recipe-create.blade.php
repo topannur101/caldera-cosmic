@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Gate;
 
 new class extends Component {
 
+    public string $type = '';
     public string $name = '';
     public string $capture_points = '';
     public array $steps = [['description' => '', 'duration' => '']];
@@ -14,6 +15,7 @@ new class extends Component {
     public function rules()
     {
         return [
+            'type'                  => ['required', 'in:new,remixing,scrap'],
             'name'                  => ['required', 'min:1', 'max:140', 'unique:ins_omv_recipes'],
             'capture_points'        => ['nullable', 'string'],
             'steps'                 => ['required', 'array', 'min:1', 'max:6'],
@@ -49,6 +51,7 @@ new class extends Component {
         }, $validated['steps']);
 
         $recipe->fill([
+            'type' => $validated['type'],
             'name' => $validated['name'],
             'capture_points' => json_encode($capture_points),
             'steps' => json_encode($steps),
@@ -65,13 +68,13 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['name', 'capture_points', 'steps']);
+        $this->reset(['type', 'name', 'capture_points', 'steps']);
         $this->steps = [['description' => '', 'duration' => '']];
     }
 
     public function addStep()
     {
-        if (count($this->steps) < 5) {
+        if (count($this->steps) < 6) {
             $this->steps[] = ['description' => '', 'duration' => ''];
         }
     }
@@ -128,6 +131,19 @@ new class extends Component {
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
         <div class="mt-6">
+            <label for="recipe-type"
+            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tipe') }}</label>
+            <x-select id="recipe-type" wire:model="type">
+                <option value=""></option>
+                <option value="new">{{ __('Baru') }}</option>
+                <option value="remixing">{{ __('Remixing') }}</option>
+                <option value="scrap">{{ __('Scrap') }}</option>
+            </x-select>
+            @error('type')
+                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+            @enderror
+        </div>
+        <div class="mt-6">
             <label for="recipe-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
             <x-text-input id="recipe-name" wire:model="name" type="text" />
             @error('name')
@@ -141,36 +157,39 @@ new class extends Component {
                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
             @enderror
         </div>     
-        <div class="mt-6">
-            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Langkah-langkah') }}</label>
+        <div class="my-10">
+            <label class="block mb-4 uppercase text-xs text-center text-neutral-500">{{ __('Langkah-langkah') }}</label>
             @foreach($steps as $index => $step)
-                <div class="grid grid-cols-4 gap-y-2 gap-x-2 mt-2" 
-                     draggable="true"
+                <div class="mt-2" 
                      x-on:dragstart="startDrag({{ $index }})"
                      x-on:dragend="endDrag"
                      x-on:dragover.prevent="onDragOver({{ $index }})"
                      x-on:drop.prevent="onDrop({{ $index }})"
-                     :class="{ 'opacity-50': draggingIndex === {{ $index }}, 'border-t-2 border-blue-500': dragoverIndex === {{ $index }} }">
-                    <div class="col-span-3">
-                        <x-text-input type="text" wire:model="steps.{{ $index }}.description" placeholder="{{ __('Deskripsi')}}" />
+                     :class="{ 'opacity-50': draggingIndex === {{ $index }}, 'opacity-30': dragoverIndex === {{ $index }} }">
+                    <div class="grid grid-cols-4 gap-y-2 gap-x-2">
+                        <div class="flex gap-x-3 col-span-3 items-center">
+                            <i class="fa fa-grip-lines cursor-move" draggable="true"></i>
+                            <x-text-input type="text" wire:model="steps.{{ $index }}.description" placeholder="{{ __('Deskripsi')}}" />
+                        </div>    
+                        <div class="flex gap-x-3">
+                            <x-text-input type="number" wire:model="steps.{{ $index }}.duration" placeholder="{{ __('Detik') }}" />
+                            <x-text-button type="button" wire:click="removeStep({{ $index }})"><i class="fa fa-times"></i></x-text-button>
+                        </div>
+                    </div>
+                    <div class="px-3">
                         @error("steps.{$index}.description")
                             <x-input-error messages="{{ $message }}" class="mt-2" />
                         @enderror
-                    </div>    
-                    <div class="flex gap-x-3">
-                        <div>
-                            <x-text-input type="number" wire:model="steps.{{ $index }}.duration" placeholder="{{ __('Detik') }}" />
-                            @error("steps.{$index}.duration")
-                                <x-input-error messages="{{ $message }}" class="mt-2" />
-                            @enderror
-                        </div>
-                        <x-text-button type="button" wire:click="removeStep({{ $index }})"><i class="fa fa-times"></i></x-text-button>
+                        @error("steps.{$index}.duration")
+                            <x-input-error messages="{{ $message }}" class="mt-2" />
+                        @enderror
                     </div>
                 </div>
             @endforeach
         </div>
-        <x-secondary-button type="button" class="mt-6" type="button" wire:click="addStep">{{ __('Tambah langkah')}}</x-secondary-button>
-        <div class="mt-6 flex justify-end items-end">
+
+        <div class="mt-6 flex justify-between">
+            <x-secondary-button :disabled="count($steps) >= 6" type="button" type="button" wire:click="addStep">{{ __('Tambah langkah')}}</x-secondary-button>
             <x-primary-button type="submit">
                 {{ __('Simpan') }}
             </x-primary-button>

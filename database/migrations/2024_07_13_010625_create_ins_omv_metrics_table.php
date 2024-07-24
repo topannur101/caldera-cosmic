@@ -23,14 +23,12 @@ return new class extends Migration
             $table->enum('eval', ['too_early', 'on_time', 'too_late']);
             $table->dateTime('start_at');
             $table->dateTime('end_at');
-            $table->enum('type', ['new', 'remixing', 'scrap']);
             $table->tinyInteger('shift')->nullable();
 
             $table->index('ins_omv_recipe_id');
             $table->index('user_1_id');
             $table->index('user_2_id');
             $table->index('eval');
-            $table->index('type');
             $table->index('shift');
             
         });

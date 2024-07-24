@@ -21,6 +21,7 @@ Route::get('/omv-recipes', function() {
 
         return [
             'id' => $recipe->id,
+            'type' => $recipe->type,
             'name' => $recipe->name,
             'capture_points' => $capture_points,
             'steps' => $steps,
@@ -38,7 +39,6 @@ Route::post('/omv-metric', function (Request $request) {
         'eval' => 'required|in:too_early,on_time,too_late',
         'start_at' => 'required|date_format:Y-m-d H:i:s',
         'end_at' => 'required|date_format:Y-m-d H:i:s',
-        'type' => 'required|in:new,remixing,scrap',
         'shift' => 'nullable|integer|min:1|max:3'
     ]);
 
@@ -72,7 +72,6 @@ Route::post('/omv-metric', function (Request $request) {
     $omvMetric->eval = strtolower($request->eval); // converting eval to lowercase
     $omvMetric->start_at = $request->start_at;
     $omvMetric->end_at = $request->end_at;
-    $omvMetric->type = $request->type;
     $omvMetric->shift = $request->shift;
     $omvMetric->save();
 

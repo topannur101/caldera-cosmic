@@ -16,7 +16,6 @@ class InsOmvMetric extends Model
         'eval',
         'start_at',
         'end_at',
-        'type',
         'shift'
     ];
 

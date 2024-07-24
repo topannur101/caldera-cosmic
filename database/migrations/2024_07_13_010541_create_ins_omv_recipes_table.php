@@ -15,9 +15,12 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             
+            $table->enum('type', ['new', 'remixing', 'scrap']);
             $table->string('name')->unique();
             $table->json('steps');
             $table->json('capture_points')->nullable();
+
+            $table->index('type');
         });
     }
 

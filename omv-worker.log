@@ -1,9 +1,472 @@
-2024-07-24 01:28:25,472 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom start at tidak cocok dengan format Y-m-d H:i:s.","Kolom end at tidak cocok dengan format Y-m-d H:i:s."]}
-2024-07-24 01:28:25,780 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom start at tidak cocok dengan format Y-m-d H:i:s.","Kolom end at tidak cocok dengan format Y-m-d H:i:s."]}
-2024-07-24 01:29:42,003 - INFO - 127.0.0.1 - - [24/Jul/2024 01:29:42] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-24 01:29:42,597 - INFO - 127.0.0.1 - - [24/Jul/2024 01:29:42] "POST /send-data HTTP/1.1" 200 -
-2024-07-24 01:30:10,716 - INFO - 127.0.0.1 - - [24/Jul/2024 01:30:10] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-24 01:30:11,363 - INFO - 127.0.0.1 - - [24/Jul/2024 01:30:11] "POST /send-data HTTP/1.1" 200 -
-2024-07-24 01:30:15,064 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-24 01:30:15,065 - ERROR - Unable to read valid data from Arduino
-2024-07-24 01:30:15,066 - INFO - 127.0.0.1 - - [24/Jul/2024 01:30:15] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 11:36:30,223 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-07-24 11:36:30,224 - INFO - [33mPress CTRL+C to quit[0m
+2024-07-24 11:36:30,227 - INFO -  * Restarting with stat
+2024-07-24 11:36:30,794 - WARNING -  * Debugger is active!
+2024-07-24 11:36:30,801 - INFO -  * Debugger PIN: 136-518-675
+2024-07-24 11:36:44,549 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 11:36:44,550 - ERROR - Unable to read valid data from Arduino
+2024-07-24 11:36:44,552 - INFO - 127.0.0.1 - - [24/Jul/2024 11:36:44] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 11:36:47,531 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 11:36:47,532 - ERROR - Unable to read valid data from Arduino
+2024-07-24 11:36:47,533 - INFO - 127.0.0.1 - - [24/Jul/2024 11:36:47] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 11:36:50,217 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 11:36:50,218 - ERROR - Unable to read valid data from Arduino
+2024-07-24 11:36:50,218 - INFO - 127.0.0.1 - - [24/Jul/2024 11:36:50] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 11:36:55,513 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 11:36:55,514 - ERROR - Unable to read valid data from Arduino
+2024-07-24 11:36:55,514 - INFO - 127.0.0.1 - - [24/Jul/2024 11:36:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 11:37:23,110 - INFO - 127.0.0.1 - - [24/Jul/2024 11:37:23] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 11:37:26,619 - INFO - 127.0.0.1 - - [24/Jul/2024 11:37:26] "[35m[1mPOST /send-data HTTP/1.1[0m" 202 -
+2024-07-24 11:39:30,164 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 11:39:30,164 - ERROR - Unable to read valid data from Arduino
+2024-07-24 11:39:30,165 - INFO - 127.0.0.1 - - [24/Jul/2024 11:39:30] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 11:39:48,746 - INFO - 127.0.0.1 - - [24/Jul/2024 11:39:48] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 11:39:49,316 - INFO - 127.0.0.1 - - [24/Jul/2024 11:39:49] "POST /send-data HTTP/1.1" 200 -
+2024-07-24 12:17:40,980 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:17:40,981 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:17:40,983 - INFO - 127.0.0.1 - - [24/Jul/2024 12:17:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:17:43,666 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:17:43,667 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:17:43,668 - INFO - 127.0.0.1 - - [24/Jul/2024 12:17:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:17:46,960 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:17:46,961 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:17:46,962 - INFO - 127.0.0.1 - - [24/Jul/2024 12:17:46] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:17:56,824 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:17:56,825 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:17:56,826 - INFO - 127.0.0.1 - - [24/Jul/2024 12:17:56] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:17:59,504 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:17:59,505 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:17:59,506 - INFO - 127.0.0.1 - - [24/Jul/2024 12:17:59] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:02,811 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:02,812 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:02,813 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:10,691 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:10,692 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:10,693 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:10] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:13,379 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:13,380 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:13,381 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:16,683 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:16,684 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:16,684 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:16] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:19,389 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:19,390 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:19,391 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:22,698 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:22,699 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:22,700 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:22] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:25,692 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:25,693 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:25,695 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:25] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:28,393 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:28,394 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:28,395 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:28] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:31,696 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:31,696 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:31,698 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:31] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:34,380 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:34,380 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:34,381 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:34] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:37,692 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:37,693 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:37,694 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:37] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:40,383 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:40,383 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:40,384 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:43,698 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:43,698 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:43,699 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:46,693 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:46,693 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:46,694 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:46] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:49,385 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:49,385 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:49,386 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:49] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:52,699 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:52,699 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:52,701 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:52] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:55,690 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:55,691 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:55,691 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:18:58,377 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:18:58,378 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:18:58,378 - INFO - 127.0.0.1 - - [24/Jul/2024 12:18:58] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:01,692 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:01,693 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:01,694 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:04,383 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:04,383 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:04,384 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:04] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:07,692 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:07,692 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:07,693 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:10,397 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:10,398 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:10,398 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:10] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:13,692 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:13,692 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:13,693 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:16,694 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:16,694 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:16,696 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:16] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:19,390 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:19,391 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:19,393 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:30,397 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:30,397 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:30,400 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:30] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:33,079 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:33,081 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:33,081 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:33] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:36,391 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:36,391 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:36,392 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:36] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:39,085 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:39,085 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:39,086 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:39] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:42,392 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:42,393 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:42,395 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:42] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:45,082 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:45,083 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:45,084 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:45] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:48,396 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:48,396 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:48,397 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:48] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:51,085 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:51,086 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:51,086 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:51] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:19:54,386 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:19:54,387 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:19:54,388 - INFO - 127.0.0.1 - - [24/Jul/2024 12:19:54] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:02,258 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:02,259 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:02,260 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:04,964 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:04,964 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:04,965 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:04] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:08,257 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:08,258 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:08,259 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:08] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:17,285 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:17,285 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:17,286 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:17] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:20,599 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:20,599 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:20,602 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:20] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:23,275 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:23,275 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:23,276 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:23] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:26,591 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:26,591 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:26,593 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:26] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:29,286 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:29,287 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:29,289 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:29] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:32,598 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:32,598 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:32,607 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:32] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:35,278 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:35,279 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:35,279 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:35] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:38,595 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:38,595 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:38,597 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:38] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:41,276 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:41,276 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:41,277 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:41] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:20:44,596 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:20:44,597 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:20:44,598 - INFO - 127.0.0.1 - - [24/Jul/2024 12:20:44] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:24:07,160 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:24:07,160 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:24:07,162 - INFO - 127.0.0.1 - - [24/Jul/2024 12:24:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:24:09,858 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:24:09,859 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:24:09,860 - INFO - 127.0.0.1 - - [24/Jul/2024 12:24:09] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:24:13,166 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:24:13,167 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:24:13,168 - INFO - 127.0.0.1 - - [24/Jul/2024 12:24:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:24:39,096 - INFO - 127.0.0.1 - - [24/Jul/2024 12:24:39] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 12:24:39,647 - INFO - 127.0.0.1 - - [24/Jul/2024 12:24:39] "POST /send-data HTTP/1.1" 200 -
+2024-07-24 12:37:17,140 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:37:17,141 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:37:17,142 - INFO - 127.0.0.1 - - [24/Jul/2024 12:37:17] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:41:54,953 - INFO - 127.0.0.1 - - [24/Jul/2024 12:41:54] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 12:41:55,515 - INFO - 127.0.0.1 - - [24/Jul/2024 12:41:55] "POST /send-data HTTP/1.1" 200 -
+2024-07-24 12:42:03,967 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:42:03,968 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:42:03,969 - INFO - 127.0.0.1 - - [24/Jul/2024 12:42:03] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:42:07,264 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:42:07,265 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:42:07,266 - INFO - 127.0.0.1 - - [24/Jul/2024 12:42:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:42:09,956 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:42:09,957 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:42:09,958 - INFO - 127.0.0.1 - - [24/Jul/2024 12:42:09] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:42:13,267 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:42:13,267 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:42:13,269 - INFO - 127.0.0.1 - - [24/Jul/2024 12:42:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:46:01,953 - INFO - 127.0.0.1 - - [24/Jul/2024 12:46:01] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 12:46:02,534 - INFO - 127.0.0.1 - - [24/Jul/2024 12:46:02] "POST /send-data HTTP/1.1" 200 -
+2024-07-24 12:53:26,652 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:53:26,652 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:53:26,654 - INFO - 127.0.0.1 - - [24/Jul/2024 12:53:26] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:53:29,339 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:53:29,340 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:53:29,341 - INFO - 127.0.0.1 - - [24/Jul/2024 12:53:29] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:53:32,647 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:53:32,647 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:53:32,647 - INFO - 127.0.0.1 - - [24/Jul/2024 12:53:32] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:53:37,942 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:53:37,942 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:53:37,944 - INFO - 127.0.0.1 - - [24/Jul/2024 12:53:37] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:08,890 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:08] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 12:54:09,426 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:09] "POST /send-data HTTP/1.1" 200 -
+2024-07-24 12:54:19,599 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:19,599 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:19,601 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:23,568 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:23,569 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:23,570 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:23] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:26,323 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:26,323 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:26,324 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:26] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:28,908 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:28,908 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:28,910 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:28] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:31,602 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:31,603 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:31,604 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:31] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:34,898 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:34,898 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:34,899 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:34] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:37,595 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:37,595 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:37,597 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:37] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:40,906 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:40,907 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:40,908 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:43,603 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:43,604 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:43,605 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:46,904 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:46,905 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:46,906 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:46] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:49,592 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:49,593 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:49,593 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:49] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:52,911 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:52,911 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:52,913 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:52] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:55,601 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:55,602 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:55,603 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:54:58,898 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:54:58,899 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:54:58,900 - INFO - 127.0.0.1 - - [24/Jul/2024 12:54:58] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:01,603 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:01,603 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:01,605 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:04,913 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:04,913 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:04,914 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:04] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:07,591 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:07,592 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:07,593 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:10,905 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:10,906 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:10,908 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:10] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:13,601 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:13,601 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:13,603 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:16,903 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:16,904 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:16,905 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:16] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:19,597 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:19,598 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:19,599 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:22,910 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:22,910 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:22,912 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:22] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:25,595 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:25,596 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:25,597 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:25] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:28,901 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:28,901 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:28,903 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:28] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:31,596 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:31,596 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:31,598 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:31] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:34,908 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:34,908 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:34,909 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:34] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:37,600 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:37,600 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:37,601 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:37] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:40,906 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:40,906 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:40,907 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:43,600 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:43,600 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:43,601 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:46,901 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:46,901 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:46,902 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:46] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:49,594 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:49,594 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:49,595 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:49] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:52,899 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:52,900 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:52,902 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:52] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:55,602 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:55,602 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:55,603 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:55:58,903 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:55:58,904 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:55:58,905 - INFO - 127.0.0.1 - - [24/Jul/2024 12:55:58] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:01,593 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:01,593 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:01,594 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:04,911 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:04,911 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:04,913 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:04] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:07,598 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:07,599 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:07,601 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:10,903 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:10,904 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:10,906 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:10] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:13,596 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:13,596 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:13,598 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:16,912 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:16,912 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:16,914 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:16] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:19,596 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:19,596 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:19,598 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:22,909 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:22,910 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:22,911 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:22] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:25,604 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:25,605 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:25,606 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:25] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:28,905 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:28,906 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:28,907 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:28] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:31,597 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:31,597 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:31,599 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:31] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:34,906 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:34,907 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:34,908 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:34] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:37,596 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:37,597 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:37,599 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:37] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:40,898 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:40,898 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:40,909 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:51,298 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:51,298 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:51,300 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:51] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:54,600 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:54,601 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:54,602 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:54] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:56:57,289 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:56:57,290 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:56:57,292 - INFO - 127.0.0.1 - - [24/Jul/2024 12:56:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:57:00,596 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:57:00,596 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:57:00,598 - INFO - 127.0.0.1 - - [24/Jul/2024 12:57:00] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:57:03,296 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:57:03,297 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:57:03,299 - INFO - 127.0.0.1 - - [24/Jul/2024 12:57:03] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:57:06,606 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:57:06,606 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:57:06,608 - INFO - 127.0.0.1 - - [24/Jul/2024 12:57:06] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:57:09,293 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:57:09,293 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:57:09,294 - INFO - 127.0.0.1 - - [24/Jul/2024 12:57:09] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:57:12,592 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:57:12,593 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:57:12,594 - INFO - 127.0.0.1 - - [24/Jul/2024 12:57:12] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:57:16,059 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:57:16,059 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:57:16,061 - INFO - 127.0.0.1 - - [24/Jul/2024 12:57:16] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:57:19,366 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:57:19,366 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:57:19,367 - INFO - 127.0.0.1 - - [24/Jul/2024 12:57:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:57:44,845 - INFO - 127.0.0.1 - - [24/Jul/2024 12:57:44] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 12:57:45,460 - INFO - 127.0.0.1 - - [24/Jul/2024 12:57:45] "POST /send-data HTTP/1.1" 200 -
+2024-07-24 12:57:57,718 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:57:57,718 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:57:57,719 - INFO - 127.0.0.1 - - [24/Jul/2024 12:57:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:01,034 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:01,034 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:01,036 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:03,723 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:03,723 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:03,725 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:03] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:07,024 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:07,024 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:07,026 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:09,715 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:09,716 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:09,717 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:09] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:13,033 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:13,033 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:13,035 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:15,726 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:15,726 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:15,727 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:15] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:19,030 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:19,031 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:19,032 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:21,712 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:21,713 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:21,714 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:21] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:29,796 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:29,797 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:29,797 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:29] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:32,491 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:32,492 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:32,494 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:32] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:35,789 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:35,790 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:35,791 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:35] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:43,249 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:43,250 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:43,252 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:46,562 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:46,563 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:46,564 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:46] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:49,258 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:49,259 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:49,260 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:49] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:52,642 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:52,642 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:52,644 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:52] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:58:55,321 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:58:55,322 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:58:55,322 - INFO - 127.0.0.1 - - [24/Jul/2024 12:58:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 12:59:16,491 - INFO - 127.0.0.1 - - [24/Jul/2024 12:59:16] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 12:59:17,002 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom user 2 emp id yang dipilih tidak valid."]}
+2024-07-24 12:59:17,009 - ERROR - Data queued. Server message: Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom user 2 emp id yang dipilih tidak valid."]}
+2024-07-24 12:59:17,009 - INFO - 127.0.0.1 - - [24/Jul/2024 12:59:17] "[35m[1mPOST /send-data HTTP/1.1[0m" 202 -
+2024-07-24 12:59:53,443 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 12:59:53,444 - ERROR - Unable to read valid data from Arduino
+2024-07-24 12:59:53,445 - INFO - 127.0.0.1 - - [24/Jul/2024 12:59:53] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-24 13:00:14,990 - INFO - 127.0.0.1 - - [24/Jul/2024 13:00:14] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 13:00:15,564 - INFO - 127.0.0.1 - - [24/Jul/2024 13:00:15] "POST /send-data HTTP/1.1" 200 -
+2024-07-24 13:02:36,979 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom user 2 emp id yang dipilih tidak valid."]}
+2024-07-24 13:02:37,201 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom user 2 emp id yang dipilih tidak valid."]}
+2024-07-24 13:07:37,279 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom user 2 emp id yang dipilih tidak valid."]}
+2024-07-24 13:07:37,513 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom user 2 emp id yang dipilih tidak valid."]}
+2024-07-24 13:17:37,616 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom user 2 emp id yang dipilih tidak valid."]}
+2024-07-24 13:17:37,824 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom user 2 emp id yang dipilih tidak valid."]}
+2024-07-24 13:24:47,306 - INFO - 127.0.0.1 - - [24/Jul/2024 13:24:47] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-24 13:24:47,841 - INFO - 127.0.0.1 - - [24/Jul/2024 13:24:47] "POST /send-data HTTP/1.1" 200 -
+2024-07-24 14:04:57,075 - ERROR - Error reading from serial port: could not open port 'COM6': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2024-07-24 14:04:57,076 - ERROR - Unable to read valid data from Arduino
+2024-07-24 14:04:57,079 - INFO - 127.0.0.1 - - [24/Jul/2024 14:04:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
