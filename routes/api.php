@@ -36,7 +36,7 @@ Route::post('/omv-metric', function (Request $request) {
         'recipe_id' => 'required|exists:ins_omv_recipes,id',
         'user_1_emp_id' => 'required|exists:users,emp_id',
         'user_2_emp_id' => 'nullable|exists:users,emp_id',
-        'eval' => 'required|in:too_early,on_time,too_late',
+        'eval' => 'required|in:too_soon,on_time,too_late',
         'start_at' => 'required|date_format:Y-m-d H:i:s',
         'end_at' => 'required|date_format:Y-m-d H:i:s',
         'shift' => 'nullable|integer|min:1|max:3'
