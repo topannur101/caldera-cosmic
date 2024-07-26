@@ -1,6 +1,6 @@
 {
     "app": {
-        "host": "localhost",
+        "host": "127.0.0.1",
         "port": 92,
         "debug": true,
         "database_file": "omv-worker.db",

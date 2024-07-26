@@ -40,7 +40,7 @@ class extends Component {
             loadPhoto() { 
                 this.photoSrc = ''; 
                 this.$nextTick(() => { 
-                    this.photoSrc = 'http://localhost:92/get-photo'; 
+                    this.photoSrc = 'http://127.0.0.1:92/get-photo'; 
                     $dispatch('open-modal', 'photo') 
                 }); 
             }, 
@@ -48,7 +48,7 @@ class extends Component {
             loadSerial() { 
                 this.serialSrc = ''; 
                 this.$nextTick(() => { 
-                    this.serialSrc = 'http://localhost:92/get-data'; 
+                    this.serialSrc = 'http://127.0.0.1:92/get-data'; 
                     $dispatch('open-modal', 'serial') 
                 }); 
             }
@@ -264,7 +264,7 @@ class extends Component {
                 isOvertime: false,
                 overtimeElapsed: 0,
                 maxOvertimeDuration: 900,
-                tolerance: 240,
+                tolerance: 120, // 60 60 
                 evaluation: '',
                 pollingIntervalId: null,
                 shift: '',
@@ -331,7 +331,7 @@ class extends Component {
                     }
                     
                     this.pollingIntervalId = setInterval(() => {
-                        fetch('http://localhost:92/get-data')
+                        fetch('http://127.0.0.1:92/get-data')
                             .then(response => response.json())
                             .then(data => {
                                 console.log('Received data:', data);
@@ -528,7 +528,7 @@ class extends Component {
                 },
 
                 sendData(jsonData) {
-                    fetch('http://localhost:92/send-data', {
+                    fetch('http://127.0.0.1:92/send-data', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

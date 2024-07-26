@@ -503,3 +503,63 @@
 2024-07-26 08:58:13,067 - INFO - 127.0.0.1 - - [26/Jul/2024 08:58:13] "GET /get-data HTTP/1.1" 200 -
 2024-07-26 08:59:48,780 - INFO - 127.0.0.1 - - [26/Jul/2024 08:59:48] "OPTIONS /send-data HTTP/1.1" 200 -
 2024-07-26 08:59:49,386 - INFO - 127.0.0.1 - - [26/Jul/2024 08:59:49] "POST /send-data HTTP/1.1" 200 -
+2024-07-26 09:07:20,666 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-07-26 09:07:20,667 - INFO - [33mPress CTRL+C to quit[0m
+2024-07-26 09:07:20,668 - INFO -  * Restarting with stat
+2024-07-26 09:07:21,166 - WARNING -  * Debugger is active!
+2024-07-26 09:07:21,209 - INFO -  * Debugger PIN: 136-518-675
+2024-07-26 09:25:02,118 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-07-26 09:25:02,118 - INFO - [33mPress CTRL+C to quit[0m
+2024-07-26 09:25:02,120 - INFO -  * Restarting with stat
+2024-07-26 09:25:02,622 - WARNING -  * Debugger is active!
+2024-07-26 09:25:02,625 - INFO -  * Debugger PIN: 136-518-675
+2024-07-26 10:23:07,416 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-07-26 10:23:07,417 - INFO - [33mPress CTRL+C to quit[0m
+2024-07-26 10:23:07,418 - INFO -  * Restarting with stat
+2024-07-26 10:23:07,739 - WARNING -  * Debugger is active!
+2024-07-26 10:23:07,743 - INFO -  * Debugger PIN: 136-518-675
+2024-07-26 10:27:03,203 - INFO -  * Detected change in 'C:\\laragon\\www\\caldera-cosmic\\omv-worker.py', reloading
+2024-07-26 10:27:03,299 - INFO -  * Restarting with stat
+2024-07-26 10:27:03,674 - WARNING -  * Debugger is active!
+2024-07-26 10:27:03,678 - INFO -  * Debugger PIN: 136-518-675
+2024-07-26 10:27:06,851 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-07-26 10:27:06,852 - INFO - [33mPress CTRL+C to quit[0m
+2024-07-26 10:27:06,853 - INFO -  * Restarting with stat
+2024-07-26 10:27:07,190 - WARNING -  * Debugger is active!
+2024-07-26 10:27:07,192 - INFO -  * Debugger PIN: 136-518-675
+2024-07-26 10:28:06,926 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-07-26 10:28:06,926 - INFO - [33mPress CTRL+C to quit[0m
+2024-07-26 10:28:06,927 - INFO -  * Restarting with stat
+2024-07-26 10:28:07,236 - WARNING -  * Debugger is active!
+2024-07-26 10:28:07,239 - INFO -  * Debugger PIN: 136-518-675
+2024-07-26 10:28:15,632 - INFO - 127.0.0.1 - - [26/Jul/2024 10:28:15] "GET /get-data HTTP/1.1" 200 -
+2024-07-26 10:28:15,974 - INFO - 127.0.0.1 - - [26/Jul/2024 10:28:15] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2024-07-26 10:29:08,481 - INFO -  * Detected change in 'C:\\laragon\\www\\caldera-cosmic\\omv-worker.py', reloading
+2024-07-26 10:29:08,560 - INFO -  * Restarting with stat
+2024-07-26 10:29:08,895 - WARNING -  * Debugger is active!
+2024-07-26 10:29:08,898 - INFO -  * Debugger PIN: 136-518-675
+2024-07-26 10:32:08,171 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-07-26 10:32:08,171 - INFO - [33mPress CTRL+C to quit[0m
+2024-07-26 10:32:08,172 - INFO -  * Restarting with stat
+2024-07-26 10:32:08,498 - WARNING -  * Debugger is active!
+2024-07-26 10:32:08,512 - INFO -  * Debugger PIN: 136-518-675
+2024-07-26 10:35:25,029 - INFO -  * Detected change in 'C:\\laragon\\www\\caldera-cosmic\\omv-worker.py', reloading
+2024-07-26 10:35:25,098 - INFO -  * Restarting with stat
+2024-07-26 10:35:25,502 - WARNING -  * Debugger is active!
+2024-07-26 10:35:25,506 - INFO -  * Debugger PIN: 136-518-675
+2024-07-26 10:35:43,598 - INFO -  * Detected change in 'C:\\laragon\\www\\caldera-cosmic\\omv-worker.py', reloading
+2024-07-26 10:35:43,673 - INFO -  * Restarting with stat
+2024-07-26 10:35:44,111 - WARNING -  * Debugger is active!
+2024-07-26 10:35:44,114 - INFO -  * Debugger PIN: 136-518-675
+2024-07-26 10:38:48,349 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:92
+2024-07-26 10:38:48,350 - INFO - [33mPress CTRL+C to quit[0m
+2024-07-26 10:38:48,351 - INFO -  * Restarting with stat
+2024-07-26 10:38:48,660 - WARNING -  * Debugger is active!
+2024-07-26 10:38:48,663 - INFO -  * Debugger PIN: 136-518-675
