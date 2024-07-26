@@ -175,13 +175,15 @@ def read_serial_data():
 def get_data():
     global request_count
     request_count += 1
-    data = read_serial_data()
-    if data is not None:
-        return jsonify({"data": data})
+    raw_data = read_serial_data()
+    
+    if raw_data is not None:
+        eval_result = raw_data >= config['serial']['threshold']
+        return jsonify({"eval": eval_result, "raw": raw_data})
     else:
         error_message = "Unable to read valid data from Arduino"
         logger.error(error_message)
-        return jsonify({"error": error_message}), 500
+        return jsonify({"error": error_message, "eval": False, "raw": None}), 500
 
 def crop_and_resize(image, target_width, target_height):
     height, width = image.shape[:2]

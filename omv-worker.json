@@ -8,7 +8,8 @@
     },
     "serial": {
         "port": "COM6",
-        "baud_rate": 9600
+        "baud_rate": 9600,
+        "threshold": 700
     },
     "photo": {
         "width": 320,

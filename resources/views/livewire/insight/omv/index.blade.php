@@ -243,25 +243,6 @@ class extends Component {
                     </div>
                 </template>
             </div>
-
-            {{-- <div class="mb-4">
-                <p x-text="'Total Time: ' + formatTime(totalDuration)"></p>
-                <p x-text="'Current Step: ' + (currentStepIndex + 1)"></p>
-                <p x-text="'Total Remaining Time: ' + formatTime(remainingTime)"></p>
-                <p x-show="isOvertime" x-text="'Overtime: ' + formatTime(overtimeElapsed)"></p>
-                <p x-show="evaluation !== ''" x-text="'Evaluation: ' + evaluation"></p>
-                <p x-show="activeRecipe" x-text="'Active Recipe: ' + (activeRecipe ? activeRecipe.name : '?')"></p>
-            </div>
-
-            <div class="mb-4">
-                <x-secondary-button type="button" @click="openWizard()">{{ __('Mulai') }}</x-secondary-button>
-                <x-secondary-button type="button" @click="loadPhoto">{{ __('Ambil foto') }}</x-secondary-button>
-                <x-secondary-button type="button" @click="loadSerial">{{ __('Data serial') }}</x-secondary-button>
-                <x-secondary-button type="button" @click="start()" x-show="!isRunning"><i class="fa fa-fw fa-play me-2"></i>Start</x-secondary-button>
-                <x-secondary-button type="button" @click="stop()" x-show="isRunning"><i class="fa fa-fw fa-stop me-2"></i>Stop</x-secondary-button>
-                <x-secondary-button type="button" @click="reset()" ><i class="fa fa-fw fa-refresh me-2"></i>Restart</x-secondary-button> 
-            </div> --}}
-
         </div>
         
         <script>
@@ -291,7 +272,6 @@ class extends Component {
                 mixingType: '',
                 
                 async loadRecipes() {
-                    // Option 1: Load recipes from API
                     try {
                         const response = await fetch('/api/omv-recipes');
                         this.recipes = await response.json();
@@ -303,6 +283,7 @@ class extends Component {
                     //         "id": 1,
                     //         "type": "new", // new property
                     //         "name": "Simple Recipe",
+
                     //         "steps": [
                     //         {
                     //             "description": "Test",
@@ -354,7 +335,9 @@ class extends Component {
                             .then(response => response.json())
                             .then(data => {
                                 console.log('Received data:', data);
-                                if (data.data > 0 && !this.isRunning) {
+                                if (data.error) {
+                                    console.error('Error from server:', data.error);
+                                } else if (data.eval && !this.isRunning) {
                                     this.start();
                                     clearInterval(this.pollingIntervalId);
                                 }
@@ -362,8 +345,9 @@ class extends Component {
                             .catch(error => {
                                 console.error('Error fetching data:', error);
                             });
-                    }, 3000); // Poll every 1 second
+                    }, 3000);
                 },
+
                 nextStep() {
                     if (this.currentStep < 2) {
                         this.currentStep++;
