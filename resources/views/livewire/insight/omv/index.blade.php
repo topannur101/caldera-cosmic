@@ -35,23 +35,7 @@ class extends Component {
     @else
         <div x-data="{ 
             ...app(),
-            userq: @entangle('userq').live,
-            photoSrc: '', 
-            loadPhoto() { 
-                this.photoSrc = ''; 
-                this.$nextTick(() => { 
-                    this.photoSrc = 'http://127.0.0.1:92/get-photo'; 
-                    $dispatch('open-modal', 'photo') 
-                }); 
-            }, 
-            serialSrc: '', 
-            loadSerial() { 
-                this.serialSrc = ''; 
-                this.$nextTick(() => { 
-                    this.serialSrc = 'http://127.0.0.1:92/get-data'; 
-                    $dispatch('open-modal', 'serial') 
-                }); 
-            }
+            userq: @entangle('userq').live
         }" x-init="loadRecipes()">
             <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 flex items-stretch gap-x-6 w-100">
                 <div class="flex justify-between grow mx-3">
@@ -202,18 +186,6 @@ class extends Component {
                     </div>
                 </div>
             </x-modal>
-        
-            <x-modal name="photo">
-                <div class="flex">
-                    <iframe class="m-auto" :src="photoSrc" width="320" height="240" frameborder="0"></iframe>
-                </div>
-            </x-modal>
-        
-            <x-modal name="serial">
-                <div class="flex">
-                    <iframe class="m-auto" :src="serialSrc" width="320" height="240" frameborder="0"></iframe>
-                </div>
-            </x-modal>
 
             <div x-show="!activeRecipe">
                 <div class="py-20">
@@ -223,6 +195,7 @@ class extends Component {
                     </div>
                 </div>
             </div>    
+
             <div x-show="activeRecipe" class="grid grid-cols-3 gap-x-3 mt-3">
                 <template x-for="(step, index) in steps" :key="index">
                     <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 mb-4" :class="currentStepIndex != index && isRunning ? 'opacity-30': ''">
@@ -233,9 +206,15 @@ class extends Component {
                             </div>
                             <span class="text-xs font-mono" x-text="formatTime(stepRemainingTimes[index])"></span>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-4 dark:bg-gray-700">
+                        <div class="relative w-full bg-gray-200 rounded-full h-1.5 mb-8 dark:bg-gray-700">
                             <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
                                 :style="'width: ' + stepProgresses[index] + '%'"></div>
+                            <!-- Capture points -->
+                            <template x-for="point in capturePoints.filter(p => p >= getTotalPreviousStepsDuration(index) && p < getTotalPreviousStepsDuration(index + 1))" :key="point">
+                                <div class="absolute w-2 h-2 bg-caldy-500 rounded-full top-4 transform -translate-y-1/2"
+                                     :style="'left: ' + ((point - getTotalPreviousStepsDuration(index)) / step.duration * 100) + '%'"
+                                     :class="elapsedSeconds >= point ? 'opacity-30' : ''"></div>
+                            </template>
                         </div>
                         <div>
                             <span class="text-2xl" x-text="step.description"></span><span class="opacity-30"></span>
@@ -270,6 +249,10 @@ class extends Component {
                 shift: '',
                 currentStep: 1,
                 mixingType: '',
+                capturePoints: [],
+                capturedImages: [],
+                processedCapturePoints: [],
+                captureThreshold: 1,
                 
                 async loadRecipes() {
                     try {
@@ -277,20 +260,20 @@ class extends Component {
                         this.recipes = await response.json();
                     } catch (error) {
                         console.error('Failed to load recipes:', error);
-                        this.recipes = []; // Fallback to empty array if API fails
+                        this.recipes = [];
                     }
                     //     {
                     //         "id": 1,
                     //         "type": "new", // new property
                     //         "name": "Simple Recipe",
-
+                    //         "capture_points": [5, 70],
                     //         "steps": [
                     //         {
-                    //             "description": "Test",
+                    //             "description": "Should be description of step 1 recipe",
                     //             "duration": "50"
                     //         },
                     //         {
-                    //             "description": "st",
+                    //             "description": "Should be description of step 2 recipe",
                     //             "duration": "60"
                     //         }
                     //         ]
@@ -311,6 +294,7 @@ class extends Component {
                     if (selectedRecipe) {
                         this.activeRecipe = selectedRecipe;
                         this.steps = selectedRecipe.steps;
+                        this.capturePoints = selectedRecipe.capture_points || [];
                         this.calculateTotalDuration();
                         this.reset(false);
                         this.$dispatch('close');
@@ -323,6 +307,9 @@ class extends Component {
                         const duration = Number(step.duration);
                         return sum + (isNaN(duration) ? 0 : duration);
                     }, 0);
+                    
+                    // Subtract 1 from the total duration, ensuring it doesn't go below 0
+                    this.totalDuration = Math.max(0, this.totalDuration - 1);
                 },
 
                 startPolling() {
@@ -356,11 +343,13 @@ class extends Component {
                         }
                     }
                 },
+
                 prevStep() {
                     if (this.currentStep > 1) {
                         this.currentStep--;
                     }
                 },
+
                 finishWizard() {
                     if (this.mixingType && this.selectedRecipeId) {
                         this.applySelectedRecipe();
@@ -368,6 +357,7 @@ class extends Component {
                         alert('{{ __('Tipe mixing dan resep wajib dipilih') }}');
                     }
                 },
+
                 openWizard() {
                     if (this.isRunning) {
                         alert('{{ __("Hentikan timer sebelum memilih resep baru.") }}');
@@ -389,6 +379,8 @@ class extends Component {
                         this.isRunning = true;
                         this.startTime = new Date(); // Change this to store the full date object
                         this.remainingTime = this.totalDuration;
+                        this.processedCapturePoints = []; // Reset processed capture points
+                        this.capturedImages = []; // Reset captured images
                         this.tick();
                         
                         if (this.pollingIntervalId) {
@@ -438,9 +430,19 @@ class extends Component {
                         const now = Date.now();
                         const elapsedSeconds = (now - this.startTime) / 1000;
 
-                        if (elapsedSeconds <= this.totalDuration) {
+                        if (elapsedSeconds < (this.totalDuration + 1)) {
                             this.remainingTime = Math.max(0, this.totalDuration - Math.floor(elapsedSeconds));
                             this.updateProgress(elapsedSeconds);
+                            
+                            // Check for capture points
+                            this.capturePoints.forEach(point => {
+                                if (Math.abs(elapsedSeconds - point) < this.captureThreshold && !this.processedCapturePoints.includes(point)) {
+                                    console.log(`Capturing image at point: ${point}, elapsed time: ${elapsedSeconds}`); // Debug log
+                                    this.captureImage(this.getCurrentStepIndex(elapsedSeconds), point);
+                                    this.processedCapturePoints.push(point);
+                                }
+                            });
+                            
                         } else {
                             this.remainingTime = 0;
                             this.isOvertime = true;
@@ -465,12 +467,13 @@ class extends Component {
                         if (elapsedSeconds < stepEndTime) {
                             this.currentStepIndex = i;
                             let stepElapsedTime = elapsedSeconds - stepStartTime;
-                            this.stepProgresses[i] = (stepElapsedTime / stepDuration) * 100;
+                            this.stepProgresses[i] = Math.min(100, ((stepElapsedTime + 2) / stepDuration) * 100);
                             this.stepRemainingTimes[i] = Math.max(0, stepDuration - Math.ceil(stepElapsedTime));
                             break;
-                        } else {
-                            this.stepProgresses[i] = 100;
-                            this.stepRemainingTimes[i] = 0;
+                        // } else {
+                        //     console.log('hehe');
+                        //     this.stepProgresses[i] = 100;
+                        //     this.stepRemainingTimes[i] = 0;
                         }
 
                         stepStartTime = stepEndTime;
@@ -502,7 +505,8 @@ class extends Component {
                             eval: this.evaluation,
                             start_at: this.formatDateTime(this.startTime),
                             end_at: this.formatDateTime(endTime),
-                            shift: this.shift
+                            shift: this.shift,
+                            captured_images: this.capturedImages
                         };
                         this.sendData(jsonData);
                     }
@@ -549,7 +553,51 @@ class extends Component {
                         console.error('Error:', error);
                         notyfError('{{ __("Data gagal terkirim") }}');
                     });
-                }
+                },
+
+                captureImage(stepIndex, captureTime) {
+                    console.log(`Attempt to capture image at step ${stepIndex}, time ${captureTime}`); // Debug log
+                    fetch('http://127.0.0.1:92/get-photo')
+                        .then(response => response.blob())
+                        .then(imageBlob => {
+                            console.log(imageBlob);
+                        })
+                        // .then(response => response.json())
+                        // .then(data => {                            
+                        //     if (data.image) {
+                        //         console.log(`Image captured successfully at time ${captureTime}`); // Debug log
+                        //         this.capturedImages.push({
+                        //             stepIndex: stepIndex,
+                        //             captureTime: captureTime,
+                        //             image: data.image
+                        //         });
+                        //     } else {
+                        //         console.log(`No image data received at time ${captureTime}`); // Debug log
+                        //     }
+                        // })
+                        .catch(error => {
+                            console.error('Error capturing image:', error);
+                        });
+                },
+
+                getTotalPreviousStepsDuration(index) {
+                    return this.steps.slice(0, index).reduce((sum, step) => sum + Number(step.duration), 0);
+                },
+
+                get elapsedSeconds() {
+                    return this.isRunning ? (Date.now() - this.startTime) / 1000 : 0;
+                },
+
+                getCurrentStepIndex(elapsedSeconds) {
+                    let totalDuration = 0;
+                    for (let i = 0; i < this.steps.length; i++) {
+                        totalDuration += Number(this.steps[i].duration);
+                        if (elapsedSeconds < totalDuration) {
+                            return i;
+                        }
+                    }
+                    return this.steps.length - 1; // Return last step if elapsed time exceeds total duration
+                },
             };
         }
 
