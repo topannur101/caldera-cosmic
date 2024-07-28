@@ -39,7 +39,22 @@ Route::post('/omv-metric', function (Request $request) {
         'eval' => 'required|in:too_soon,on_time,too_late',
         'start_at' => 'required|date_format:Y-m-d H:i:s',
         'end_at' => 'required|date_format:Y-m-d H:i:s',
-        'shift' => 'nullable|integer|min:1|max:3'
+        'shift' => 'nullable|integer|min:1|max:3',
+        'captured_images' => 'required|array',
+        'captured_images.*.stepIndex' => 'required|integer',
+        'captured_images.*.captureTime' => 'required|numeric',
+        'captured_images.*.image' => [
+            'required',
+            'string',
+            'regex:/^data:image\/(?:jpeg|png|jpg|gif);base64,/',
+            function ($attribute, $value, $fail) {
+                $imageData = base64_decode(explode(',', $value)[1]);
+                $image = imagecreatefromstring($imageData);
+                if (!$image) {
+                    $fail('The '.$attribute.' must be a valid base64 encoded image.');
+                }
+            },
+        ],
     ]);
 
     if ($validator->fails()) {

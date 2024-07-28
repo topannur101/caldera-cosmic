@@ -253,6 +253,7 @@ class extends Component {
                 capturedImages: [],
                 processedCapturePoints: [],
                 captureThreshold: 1,
+                capturedImages: [],
                 
                 async loadRecipes() {
                     try {
@@ -532,6 +533,9 @@ class extends Component {
                 },
 
                 sendData(jsonData) {
+                    // Add captured images to JSON payload
+                    jsonData.captured_images = this.capturedImages;
+
                     fetch('http://127.0.0.1:92/send-data', {
                         method: 'POST',
                         headers: {
@@ -556,25 +560,26 @@ class extends Component {
                 },
 
                 captureImage(stepIndex, captureTime) {
-                    console.log(`Attempt to capture image at step ${stepIndex}, time ${captureTime}`); // Debug log
+                    console.log(`Attempt to capture image at step ${stepIndex}, time ${captureTime}`);
                     fetch('http://127.0.0.1:92/get-photo')
                         .then(response => response.blob())
                         .then(imageBlob => {
-                            console.log(imageBlob);
+                            return new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onloadend = () => resolve(reader.result);
+                                reader.onerror = reject;
+                                reader.readAsDataURL(imageBlob);
+                            });
                         })
-                        // .then(response => response.json())
-                        // .then(data => {                            
-                        //     if (data.image) {
-                        //         console.log(`Image captured successfully at time ${captureTime}`); // Debug log
-                        //         this.capturedImages.push({
-                        //             stepIndex: stepIndex,
-                        //             captureTime: captureTime,
-                        //             image: data.image
-                        //         });
-                        //     } else {
-                        //         console.log(`No image data received at time ${captureTime}`); // Debug log
-                        //     }
-                        // })
+                        .then(base64Image => {
+                            console.log(`Image captured successfully at time ${captureTime}`);
+                            this.capturedImages.push({
+                                stepIndex: stepIndex,
+                                captureTime: captureTime,
+                                image: base64Image,
+                                timestamp: new Date().toISOString()
+                            });
+                        })
                         .catch(error => {
                             console.error('Error capturing image:', error);
                         });

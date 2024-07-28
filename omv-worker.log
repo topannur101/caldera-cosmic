@@ -1,176 +1,19 @@
-2024-07-27 22:56:11,998 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on http://127.0.0.1:92
-2024-07-27 22:56:11,999 - INFO - [33mPress CTRL+C to quit[0m
-2024-07-27 22:56:12,002 - INFO -  * Restarting with stat
-2024-07-27 22:56:12,464 - WARNING -  * Debugger is active!
-2024-07-27 22:56:12,466 - INFO -  * Debugger PIN: 113-272-776
-2024-07-27 22:56:13,987 - INFO - 127.0.0.1 - - [27/Jul/2024 22:56:13] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 22:56:14,318 - INFO - 127.0.0.1 - - [27/Jul/2024 22:56:14] "POST /send-data HTTP/1.1" 200 -
-2024-07-27 22:56:25,275 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 22:56:25,276 - ERROR - Unable to read valid data from Arduino
-2024-07-27 22:56:25,276 - INFO - 127.0.0.1 - - [27/Jul/2024 22:56:25] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 22:57:11,215 - INFO - 127.0.0.1 - - [27/Jul/2024 22:57:11] "GET /get-photo HTTP/1.1" 200 -
-2024-07-27 22:57:26,780 - INFO - 127.0.0.1 - - [27/Jul/2024 22:57:26] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 22:57:27,076 - INFO - 127.0.0.1 - - [27/Jul/2024 22:57:27] "POST /send-data HTTP/1.1" 200 -
-2024-07-27 22:57:38,426 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 22:57:38,426 - ERROR - Unable to read valid data from Arduino
-2024-07-27 22:57:38,427 - INFO - 127.0.0.1 - - [27/Jul/2024 22:57:38] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 22:57:42,485 - INFO - 127.0.0.1 - - [27/Jul/2024 22:57:42] "GET /get-photo HTTP/1.1" 200 -
-2024-07-27 22:57:43,563 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 22:57:43,565 - ERROR - Unable to read valid data from Arduino
-2024-07-27 22:57:43,566 - INFO - 127.0.0.1 - - [27/Jul/2024 22:57:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 22:57:47,292 - INFO - 127.0.0.1 - - [27/Jul/2024 22:57:47] "GET /get-photo HTTP/1.1" 200 -
-2024-07-27 22:57:55,597 - INFO - 127.0.0.1 - - [27/Jul/2024 22:57:55] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 22:57:55,854 - INFO - 127.0.0.1 - - [27/Jul/2024 22:57:55] "POST /send-data HTTP/1.1" 200 -
-2024-07-27 22:58:14,957 - INFO - 127.0.0.1 - - [27/Jul/2024 22:58:14] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 22:58:15,305 - INFO - 127.0.0.1 - - [27/Jul/2024 22:58:15] "POST /send-data HTTP/1.1" 200 -
-2024-07-27 22:59:29,397 - INFO - 127.0.0.1 - - [27/Jul/2024 22:59:29] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 22:59:29,690 - INFO - 127.0.0.1 - - [27/Jul/2024 22:59:29] "POST /send-data HTTP/1.1" 200 -
-2024-07-27 22:59:41,534 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 22:59:41,535 - ERROR - Unable to read valid data from Arduino
-2024-07-27 22:59:41,536 - INFO - 127.0.0.1 - - [27/Jul/2024 22:59:41] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 22:59:46,683 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 22:59:46,684 - ERROR - Unable to read valid data from Arduino
-2024-07-27 22:59:46,685 - INFO - 127.0.0.1 - - [27/Jul/2024 22:59:46] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 22:59:51,817 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 22:59:51,818 - ERROR - Unable to read valid data from Arduino
-2024-07-27 22:59:51,820 - INFO - 127.0.0.1 - - [27/Jul/2024 22:59:51] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 22:59:56,952 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 22:59:56,953 - ERROR - Unable to read valid data from Arduino
-2024-07-27 22:59:56,953 - INFO - 127.0.0.1 - - [27/Jul/2024 22:59:56] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 22:59:57,870 - INFO - 127.0.0.1 - - [27/Jul/2024 22:59:57] "GET /get-photo HTTP/1.1" 200 -
-2024-07-27 23:00:09,804 - INFO - 127.0.0.1 - - [27/Jul/2024 23:00:09] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 23:00:10,084 - INFO - 127.0.0.1 - - [27/Jul/2024 23:00:10] "POST /send-data HTTP/1.1" 200 -
-2024-07-27 23:00:47,510 - INFO - 127.0.0.1 - - [27/Jul/2024 23:00:47] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 23:00:47,787 - INFO - 127.0.0.1 - - [27/Jul/2024 23:00:47] "POST /send-data HTTP/1.1" 200 -
-2024-07-27 23:02:32,981 - INFO - 127.0.0.1 - - [27/Jul/2024 23:02:32] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 23:02:33,255 - INFO - 127.0.0.1 - - [27/Jul/2024 23:02:33] "POST /send-data HTTP/1.1" 200 -
-2024-07-27 23:02:46,763 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:02:46,764 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:02:46,767 - INFO - 127.0.0.1 - - [27/Jul/2024 23:02:46] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:02:51,910 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:02:51,911 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:02:51,911 - INFO - 127.0.0.1 - - [27/Jul/2024 23:02:51] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:02:57,041 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:02:57,042 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:02:57,042 - INFO - 127.0.0.1 - - [27/Jul/2024 23:02:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:03:02,174 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:03:02,176 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:03:02,178 - INFO - 127.0.0.1 - - [27/Jul/2024 23:03:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:03:07,311 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:03:07,312 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:03:07,313 - INFO - 127.0.0.1 - - [27/Jul/2024 23:03:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:03:12,448 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:03:12,449 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:03:12,450 - INFO - 127.0.0.1 - - [27/Jul/2024 23:03:12] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:04:05,641 - INFO - 127.0.0.1 - - [27/Jul/2024 23:04:05] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 23:04:05,943 - INFO - 127.0.0.1 - - [27/Jul/2024 23:04:05] "POST /send-data HTTP/1.1" 200 -
-2024-07-27 23:04:40,001 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:04:40,002 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:04:40,004 - INFO - 127.0.0.1 - - [27/Jul/2024 23:04:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:04:45,140 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:04:45,141 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:04:45,143 - INFO - 127.0.0.1 - - [27/Jul/2024 23:04:45] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:04:50,277 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:04:50,278 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:04:50,279 - INFO - 127.0.0.1 - - [27/Jul/2024 23:04:50] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:04:55,413 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:04:55,415 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:04:55,417 - INFO - 127.0.0.1 - - [27/Jul/2024 23:04:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:05:00,555 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:05:00,555 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:05:00,556 - INFO - 127.0.0.1 - - [27/Jul/2024 23:05:00] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:05:38,152 - INFO - 127.0.0.1 - - [27/Jul/2024 23:05:38] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 23:05:38,424 - INFO - 127.0.0.1 - - [27/Jul/2024 23:05:38] "POST /send-data HTTP/1.1" 200 -
-2024-07-27 23:06:01,552 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:06:01,553 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:06:01,555 - INFO - 127.0.0.1 - - [27/Jul/2024 23:06:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:06:06,686 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:06:06,687 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:06:06,688 - INFO - 127.0.0.1 - - [27/Jul/2024 23:06:06] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:06:25,157 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on http://127.0.0.1:92
-2024-07-27 23:06:25,157 - INFO - [33mPress CTRL+C to quit[0m
-2024-07-27 23:06:25,159 - INFO -  * Restarting with stat
-2024-07-27 23:06:25,552 - WARNING -  * Debugger is active!
-2024-07-27 23:06:25,555 - INFO -  * Debugger PIN: 113-272-776
-2024-07-27 23:06:43,656 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-27 23:06:43,657 - ERROR - Unable to read valid data from Arduino
-2024-07-27 23:06:43,660 - INFO - 127.0.0.1 - - [27/Jul/2024 23:06:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-27 23:11:39,457 - INFO - 127.0.0.1 - - [27/Jul/2024 23:11:39] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-27 23:11:39,788 - INFO - 127.0.0.1 - - [27/Jul/2024 23:11:39] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 12:57:19,738 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on http://127.0.0.1:92
-2024-07-28 12:57:19,739 - INFO - [33mPress CTRL+C to quit[0m
-2024-07-28 12:57:19,743 - INFO -  * Restarting with stat
-2024-07-28 12:57:20,315 - WARNING -  * Debugger is active!
-2024-07-28 12:57:20,332 - INFO -  * Debugger PIN: 113-272-776
-2024-07-28 12:57:22,480 - INFO - 127.0.0.1 - - [28/Jul/2024 12:57:22] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 12:57:22,821 - INFO - 127.0.0.1 - - [28/Jul/2024 12:57:22] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 12:57:43,096 - INFO - 127.0.0.1 - - [28/Jul/2024 12:57:43] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 12:57:47,845 - INFO - 127.0.0.1 - - [28/Jul/2024 12:57:47] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 12:57:56,190 - INFO - 127.0.0.1 - - [28/Jul/2024 12:57:56] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 12:57:56,499 - INFO - 127.0.0.1 - - [28/Jul/2024 12:57:56] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 12:58:06,561 - INFO - 127.0.0.1 - - [28/Jul/2024 12:58:06] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 12:58:12,430 - INFO - 127.0.0.1 - - [28/Jul/2024 12:58:12] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 12:58:24,191 - INFO - 127.0.0.1 - - [28/Jul/2024 12:58:24] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 12:58:24,462 - INFO - 127.0.0.1 - - [28/Jul/2024 12:58:24] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 12:58:40,582 - INFO - 127.0.0.1 - - [28/Jul/2024 12:58:40] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 12:58:46,575 - INFO - 127.0.0.1 - - [28/Jul/2024 12:58:46] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 12:58:53,028 - INFO - 127.0.0.1 - - [28/Jul/2024 12:58:53] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 12:58:53,315 - INFO - 127.0.0.1 - - [28/Jul/2024 12:58:53] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 12:59:02,323 - INFO - 127.0.0.1 - - [28/Jul/2024 12:59:02] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 12:59:08,306 - INFO - 127.0.0.1 - - [28/Jul/2024 12:59:08] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 12:59:47,841 - INFO - 127.0.0.1 - - [28/Jul/2024 12:59:47] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 12:59:48,178 - INFO - 127.0.0.1 - - [28/Jul/2024 12:59:48] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 12:59:59,300 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-28 12:59:59,300 - ERROR - Unable to read valid data from Arduino
-2024-07-28 12:59:59,302 - INFO - 127.0.0.1 - - [28/Jul/2024 12:59:59] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-28 13:00:04,433 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-28 13:00:04,434 - ERROR - Unable to read valid data from Arduino
-2024-07-28 13:00:04,435 - INFO - 127.0.0.1 - - [28/Jul/2024 13:00:04] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-28 13:00:04,855 - INFO - 127.0.0.1 - - [28/Jul/2024 13:00:04] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:00:10,628 - INFO - 127.0.0.1 - - [28/Jul/2024 13:00:10] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:00:23,872 - INFO - 127.0.0.1 - - [28/Jul/2024 13:00:23] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:00:23,918 - INFO - 127.0.0.1 - - [28/Jul/2024 13:00:23] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
-2024-07-28 13:00:37,400 - INFO - 127.0.0.1 - - [28/Jul/2024 13:00:37] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 13:00:37,693 - INFO - 127.0.0.1 - - [28/Jul/2024 13:00:37] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 13:01:14,323 - INFO - 127.0.0.1 - - [28/Jul/2024 13:01:14] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:01:20,148 - INFO - 127.0.0.1 - - [28/Jul/2024 13:01:20] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:01:30,784 - INFO - 127.0.0.1 - - [28/Jul/2024 13:01:30] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 13:01:31,049 - INFO - 127.0.0.1 - - [28/Jul/2024 13:01:31] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 13:01:41,356 - INFO - 127.0.0.1 - - [28/Jul/2024 13:01:41] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:01:47,452 - INFO - 127.0.0.1 - - [28/Jul/2024 13:01:47] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:01:49,288 - INFO - 127.0.0.1 - - [28/Jul/2024 13:01:49] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 13:01:49,639 - INFO - 127.0.0.1 - - [28/Jul/2024 13:01:49] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 13:21:40,155 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on http://127.0.0.1:92
-2024-07-28 13:21:40,155 - INFO - [33mPress CTRL+C to quit[0m
-2024-07-28 13:21:40,157 - INFO -  * Restarting with stat
-2024-07-28 13:21:40,649 - WARNING -  * Debugger is active!
-2024-07-28 13:21:40,652 - INFO -  * Debugger PIN: 113-272-776
-2024-07-28 13:21:43,741 - INFO - 127.0.0.1 - - [28/Jul/2024 13:21:43] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 13:21:44,098 - INFO - 127.0.0.1 - - [28/Jul/2024 13:21:44] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 13:21:53,846 - INFO - 127.0.0.1 - - [28/Jul/2024 13:21:53] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:21:59,151 - INFO - 127.0.0.1 - - [28/Jul/2024 13:21:59] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:22:05,074 - INFO - 127.0.0.1 - - [28/Jul/2024 13:22:05] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:23:14,298 - INFO - 127.0.0.1 - - [28/Jul/2024 13:23:14] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:23:19,969 - INFO - 127.0.0.1 - - [28/Jul/2024 13:23:19] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:23:25,966 - INFO - 127.0.0.1 - - [28/Jul/2024 13:23:25] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:24:27,790 - INFO - 127.0.0.1 - - [28/Jul/2024 13:24:27] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:24:59,524 - INFO - 127.0.0.1 - - [28/Jul/2024 13:24:59] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:25:05,261 - INFO - 127.0.0.1 - - [28/Jul/2024 13:25:05] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:25:11,311 - INFO - 127.0.0.1 - - [28/Jul/2024 13:25:11] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:34:38,616 - INFO - 127.0.0.1 - - [28/Jul/2024 13:34:38] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 13:34:38,938 - INFO - 127.0.0.1 - - [28/Jul/2024 13:34:38] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 13:34:51,754 - INFO - 127.0.0.1 - - [28/Jul/2024 13:34:51] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:34:57,361 - INFO - 127.0.0.1 - - [28/Jul/2024 13:34:57] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:35:03,386 - INFO - 127.0.0.1 - - [28/Jul/2024 13:35:03] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:36:53,984 - INFO - 127.0.0.1 - - [28/Jul/2024 13:36:53] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:36:59,584 - INFO - 127.0.0.1 - - [28/Jul/2024 13:36:59] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:37:05,695 - INFO - 127.0.0.1 - - [28/Jul/2024 13:37:05] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:40:57,239 - INFO - 127.0.0.1 - - [28/Jul/2024 13:40:57] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 13:40:57,545 - INFO - 127.0.0.1 - - [28/Jul/2024 13:40:57] "POST /send-data HTTP/1.1" 200 -
-2024-07-28 13:41:10,578 - INFO - 127.0.0.1 - - [28/Jul/2024 13:41:10] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:41:16,272 - INFO - 127.0.0.1 - - [28/Jul/2024 13:41:16] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 13:41:22,221 - INFO - 127.0.0.1 - - [28/Jul/2024 13:41:22] "GET /get-photo HTTP/1.1" 200 -
+2024-07-28 14:37:14,484 - INFO - 127.0.0.1 - - [28/Jul/2024 14:37:14] "[35m[1mPOST /send-data HTTP/1.1[0m" 202 -
+2024-07-28 14:43:08,777 - INFO - 127.0.0.1 - - [28/Jul/2024 14:43:08] "GET /get-photo HTTP/1.1" 200 -
+2024-07-28 14:43:14,538 - INFO - 127.0.0.1 - - [28/Jul/2024 14:43:14] "GET /get-photo HTTP/1.1" 200 -
+2024-07-28 14:43:20,198 - INFO - 127.0.0.1 - - [28/Jul/2024 14:43:20] "GET /get-photo HTTP/1.1" 200 -
+2024-07-28 14:43:22,922 - INFO - 127.0.0.1 - - [28/Jul/2024 14:43:22] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-28 14:43:23,219 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom captured_images.0.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z.","Kolom captured_images.1.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z.","Kolom captured_images.2.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z."]}
+2024-07-28 14:43:23,226 - ERROR - Data queued. Server message: Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom captured_images.0.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z.","Kolom captured_images.1.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z.","Kolom captured_images.2.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z."]}
+2024-07-28 14:43:23,227 - INFO - 127.0.0.1 - - [28/Jul/2024 14:43:23] "[35m[1mPOST /send-data HTTP/1.1[0m" 202 -
+2024-07-28 14:46:02,445 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-07-28 14:46:02,446 - ERROR - Unable to read valid data from Arduino
+2024-07-28 14:46:02,447 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-28 14:46:06,351 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:06] "GET /get-photo HTTP/1.1" 200 -
+2024-07-28 14:46:07,588 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-07-28 14:46:07,589 - ERROR - Unable to read valid data from Arduino
+2024-07-28 14:46:07,589 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-07-28 14:46:11,993 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:11] "GET /get-photo HTTP/1.1" 200 -
+2024-07-28 14:46:17,971 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:17] "GET /get-photo HTTP/1.1" 200 -
+2024-07-28 14:46:20,145 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:20] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-28 14:46:20,527 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:20] "POST /send-data HTTP/1.1" 200 -
