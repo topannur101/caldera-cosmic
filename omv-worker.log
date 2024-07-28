@@ -1,19 +1,5 @@
-2024-07-28 14:37:14,484 - INFO - 127.0.0.1 - - [28/Jul/2024 14:37:14] "[35m[1mPOST /send-data HTTP/1.1[0m" 202 -
-2024-07-28 14:43:08,777 - INFO - 127.0.0.1 - - [28/Jul/2024 14:43:08] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 14:43:14,538 - INFO - 127.0.0.1 - - [28/Jul/2024 14:43:14] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 14:43:20,198 - INFO - 127.0.0.1 - - [28/Jul/2024 14:43:20] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 14:43:22,922 - INFO - 127.0.0.1 - - [28/Jul/2024 14:43:22] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 14:43:23,219 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom captured_images.0.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z.","Kolom captured_images.1.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z.","Kolom captured_images.2.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z."]}
-2024-07-28 14:43:23,226 - ERROR - Data queued. Server message: Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom captured_images.0.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z.","Kolom captured_images.1.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z.","Kolom captured_images.2.timestamp tidak cocok dengan format Y-m-d\\TH:i:s.u\\Z."]}
-2024-07-28 14:43:23,227 - INFO - 127.0.0.1 - - [28/Jul/2024 14:43:23] "[35m[1mPOST /send-data HTTP/1.1[0m" 202 -
-2024-07-28 14:46:02,445 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-28 14:46:02,446 - ERROR - Unable to read valid data from Arduino
-2024-07-28 14:46:02,447 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-28 14:46:06,351 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:06] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 14:46:07,588 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
-2024-07-28 14:46:07,589 - ERROR - Unable to read valid data from Arduino
-2024-07-28 14:46:07,589 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-07-28 14:46:11,993 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:11] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 14:46:17,971 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:17] "GET /get-photo HTTP/1.1" 200 -
-2024-07-28 14:46:20,145 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:20] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-07-28 14:46:20,527 - INFO - 127.0.0.1 - - [28/Jul/2024 14:46:20] "POST /send-data HTTP/1.1" 200 -
+2024-07-28 21:16:52,485 - INFO - 127.0.0.1 - - [28/Jul/2024 21:16:52] "GET /get-photo HTTP/1.1" 200 -
+2024-07-28 21:16:57,817 - INFO - 127.0.0.1 - - [28/Jul/2024 21:16:57] "GET /get-photo HTTP/1.1" 200 -
+2024-07-28 21:17:03,836 - INFO - 127.0.0.1 - - [28/Jul/2024 21:17:03] "GET /get-photo HTTP/1.1" 200 -
+2024-07-28 21:17:06,919 - INFO - 127.0.0.1 - - [28/Jul/2024 21:17:06] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-07-28 21:17:07,261 - INFO - 127.0.0.1 - - [28/Jul/2024 21:17:07] "POST /send-data HTTP/1.1" 200 -

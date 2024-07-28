@@ -1,10 +1,13 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Str;
 use App\Models\InsOmvMetric;
 use App\Models\InsOmvRecipe;
 use Illuminate\Http\Request;
+use App\Models\InsOmvCapture;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 // Route::get('/user', function (Request $request) {
@@ -40,7 +43,7 @@ Route::post('/omv-metric', function (Request $request) {
         'start_at' => 'required|date_format:Y-m-d H:i:s',
         'end_at' => 'required|date_format:Y-m-d H:i:s',
         'shift' => 'nullable|integer|min:1|max:3',
-        'captured_images' => 'required|array',
+        'captured_images' => 'nullable|array',
         'captured_images.*.stepIndex' => 'required|integer',
         'captured_images.*.captureTime' => 'required|numeric',
         'captured_images.*.image' => [
@@ -89,9 +92,44 @@ Route::post('/omv-metric', function (Request $request) {
     $omvMetric->end_at = $request->end_at;
     $omvMetric->shift = $request->shift;
     $omvMetric->save();
-
+    
+    $captureMessages = [];
+    
+    foreach ($request->captured_images as $index => $capturedImage) {
+        try {
+            $imageData = base64_decode(explode(',', $capturedImage['image'])[1]);
+            $extension = explode('/', mime_content_type($capturedImage['image']))[1];
+            
+            $fileName = sprintf(
+                '%s_%s_%s_%s.%s',
+                $omvMetric->id,
+                $capturedImage['stepIndex'],
+                $capturedImage['captureTime'],
+                Str::random(8),
+                $extension
+            );
+            
+            if (!Storage::put('/public/omv-captures/'.$fileName, $imageData)) {
+                throw new Exception("Failed to save image file.");
+            }
+    
+            $omvCapture = new InsOmvCapture();
+            $omvCapture->ins_omv_metric_id = $omvMetric->id;
+            $omvCapture->file_name = $fileName;
+            $omvCapture->save();
+    
+        } catch (Exception $e) {
+            $captureMessages[] = "Error saving capture {$index}: " . $e->getMessage();
+        }
+    }
+    
+    $responseMessage = 'OMV Metric saved successfully.';
+    if (!empty($captureMessages)) {
+        $responseMessage .= ' However, there were issues with some captures: ' . implode(', ', $captureMessages);
+    }
+    
     return response()->json([
         'status' => 'valid',
-        'msg' => 'none',
+        'msg' => $responseMessage,
     ], 200);
 });
