@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->string('file_name');
-            $table->foreignId('ins_omv_metrics_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('ins_omv_metric_id')->nullable()->constrained()->nullOnDelete();
         });
     }
 

@@ -18,12 +18,12 @@ app = Flask(__name__)
 CORS(app)
 
 # Load configuration
-config_file_path = 'omv-worker.json'
+config_file_path = 'config.json'
 with open(config_file_path, 'r') as config_file:
     config = json.load(config_file)
 
 # Set up logging
-log_file = 'omv-worker.log'
+log_file = 'debug.log'
 log_handler = RotatingFileHandler(log_file, maxBytes=100000, backupCount=1)
 log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger = logging.getLogger()
@@ -204,14 +204,17 @@ def crop_and_resize(image, target_width, target_height):
 @app.route('/get-photo')
 def get_photo():
     try:
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         if not cap.isOpened():
             raise IOError("Cannot open webcam")
-        ret, frame = cap.read()
+        
+        for i in range(config['capture']['frame']):
+            ret, frame = cap.read()
+
         cap.release()
         if not ret:
             raise IOError("Cannot capture image")
-        processed_frame = crop_and_resize(frame, config['photo']['width'], config['photo']['height'])
+        processed_frame = crop_and_resize(frame, config['capture']['width'], config['capture']['height'])
         _, buffer = cv2.imencode('.jpg', processed_frame)
         image_bytes = io.BytesIO(buffer)
         return send_file(image_bytes, mimetype='image/jpeg')
