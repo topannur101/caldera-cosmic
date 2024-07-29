@@ -355,13 +355,13 @@ class extends Component {
                     if (this.mixingType && this.selectedRecipeId) {
                         this.applySelectedRecipe();
                     } else {
-                        alert('{{ __('Tipe mixing dan resep wajib dipilih') }}');
+                        notyfError('{{ __("Tipe mixing dan resep wajib dipilih") }}');
                     }
                 },
 
                 openWizard() {
                     if (this.isRunning) {
-                        alert('{{ __("Hentikan timer sebelum memilih resep baru.") }}');
+                        notyfError('{{ __("Hentikan timer sebelum memilih resep baru.") }}');
                         return;
                     }
                     this.currentStep = 1;
@@ -389,7 +389,7 @@ class extends Component {
                             this.pollingIntervalId = null;
                         }
                     } else if (this.steps.length === 0) {
-                        alert('{{ __("Pilih resep terlebih dahulu sebelum menjalankan timer.") }}');
+                        notyfError('{{ __("Pilih resep terlebih dahulu sebelum menjalankan timer.") }}');
                     }
                 },
 
