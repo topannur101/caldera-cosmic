@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use App\Models\InsOmvMetric;
 use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Builder;
 
 new #[Layout('layouts.app')] class extends Component {
     use WithPagination;
@@ -21,6 +22,12 @@ new #[Layout('layouts.app')] class extends Component {
     #[Reactive]
     public $device_id;
 
+    #[Reactive]
+    public $fquery;
+
+    #[Reactive]
+    public $ftype;
+
     // public $integrity = 0;
     public $days = 0;
 
@@ -32,9 +39,49 @@ new #[Layout('layouts.app')] class extends Component {
         $end = Carbon::parse($this->end_at)->addDay();
 
         $metrics = InsOmvMetric::whereBetween('start_at', [$start, $end]);
+
+        $metrics = InsOmvMetric::join('ins_omv_recipes', 'ins_omv_metrics.ins_omv_recipe_id', '=', 'ins_omv_recipes.id')
+        ->join('users as user1', 'ins_omv_metrics.user_1_id', '=', 'user1.id')
+        ->join('users as user2', 'ins_omv_metrics.user_2_id', '=', 'user2.id')
+        ->select(
+            'ins_omv_metrics.*',
+            'ins_omv_metrics.start_at as start_at',
+            'ins_omv_metrics.end_at as end_at',
+            'ins_omv_recipes.name as recipe_name',
+            'user1.name as user_1_name',
+            'user2.name as user_2_name',
+            'user1.emp_id as user_1_emp_id',
+            'user2.emp_id as user_2_emp_id'
+        );
         // if ($this->device_id) {
         //     $metrics->where('device_id', $this->device_id);
         // }
+
+        switch ($this->ftype) {
+            case 'recipe':
+                $metrics->where('ins_omv_recipes.name', 'LIKE', '%' . $this->fquery . '%');
+            break;
+            // case 'line':
+            //     $metric->where('ins_ldc_groups.line', 'LIKE', '%' . $this->fquery . '%');
+            // break;
+            case 'emp_id':
+            $metrics->where(function (Builder $query) {
+                $query
+                    ->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
+            });
+            break;
+            
+            default:
+                $metrics->where(function (Builder $query) {
+                $query
+                    ->orWhere('ins_omv_recipes.name', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
+                });
+                break;
+        }
+
         $metrics = $metrics->orderBy('start_at', 'DESC')->paginate($this->perPage);
 
         // Statistics
@@ -154,11 +201,12 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('ID') }}</th>
                             <th>{{ __('Tipe') }}</th>
                             <th>{{ __('Resep') }}</th>
-                            <th>{{ __('Shift') }}</th>
+                            <th>{{ __('S') }}</th>
                             <th>{{ __('Operator 1') }}</th>
                             <th>{{ __('Operator 2') }}</th>
                             <th>{{ __('Evaluasi') }}</th>
                             <th>{{ __('Durasi') }}</th>
+                            <th><i class="fa fa-images"></i></th>
                             <th>{{ __('Awal') }}</th>
                             <th>{{ __('Akhir') }}</th>
                         </tr>
@@ -172,6 +220,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td>{{ ($metric->user_2->emp_id ?? '') . ' - ' . ($metric->user_2->name ?? '') }}</td>
                                 <td>{{ $metric->eval }}</td>
                                 <td>{{ $metric->duration() }}</td>
+                                <td>@if( $metric->capturesCount() ) <x-text-button type="button" x-on:click="$dispatch('open-modal', 'captures'); $dispatch('captures-load', { metric_id: '{{ $metric->id }}'} )">{{ $metric->capturesCount() }}</x-text-button> @else 0 @endif</td>
                                 <td>{{ $metric->start_at }}</td>
                                 <td>{{ $metric->end_at }}</td>
                         @endforeach
@@ -200,5 +249,10 @@ new #[Layout('layouts.app')] class extends Component {
                 @endif
             </div>
         @endif
+    </div>
+    <div wire:key="captures">
+        <x-modal name="captures">
+            <livewire:insight.omv.captures />
+        </x-modal>
     </div>
 </div>

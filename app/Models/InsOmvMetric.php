@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InsOmvMetric extends Model
 {
@@ -29,6 +30,16 @@ class InsOmvMetric extends Model
     public function ins_omv_recipe(): BelongsTo
     {
         return $this->belongsTo(InsOmvRecipe::class);
+    }
+
+    public function ins_omv_captures(): HasMany
+    {
+        return $this->hasMany(InsOmvCapture::class);
+    }
+
+    public function capturesCount()
+    {
+        return $this->ins_omv_captures->count();
     }
 
     public function user_1(): BelongsTo

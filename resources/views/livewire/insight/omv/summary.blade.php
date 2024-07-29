@@ -19,7 +19,10 @@ new #[Layout('layouts.app')] class extends Component {
     public $end_at;
 
     #[Url]
-    public $fline;
+    public $fquery;
+
+    #[Url]
+    public $ftype = 'any';
 
     #[Url]
     public $sline;
@@ -90,7 +93,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function resetFilter()
     {
-        $this->reset('fline');
+        $this->reset('fquery', 'ftype');
     }
 
     public function download()
@@ -201,9 +204,17 @@ new #[Layout('layouts.app')] class extends Component {
                             </x-dropdown>
                         </div>
                     </div>
+                    <div class="mt-3">
+                        <x-select id="hides-ftype" wire:model.live="ftype">
+                            <option value="any">{{ __('Apapun') }}</option>
+                            <option value="recipe">{{ __('Resep') }}</option>
+                            <option value="line">{{ __('Line') }}</option>
+                            <option value="emp_id">{{ __('Nomor karyawan') }}</option>
+                        </x-select>                        
+                    </div>
                     <div>
-                        <x-text-input wire:model.live="fline" class="mt-4" type="search"
-                            placeholder="{{ __('Line') }}" name="fline" />
+                        <x-text-input wire:model.live="fquery" class="mt-4" type="search"
+                            placeholder="{{ __('Kata kunci') }}" name="fquery" />
                     </div>
                 </div>
                 @if ($view == 'raw' || $view == 'clumps')
@@ -221,12 +232,12 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         @switch($view)
-            @case('daily')
+            {{-- @case('daily')
                 <livewire:insight.omv.summary-daily :$start_at :$fline />
-            @break
+            @break --}}
 
             @case('raw')
-                <livewire:insight.omv.summary-raw :$start_at :$end_at :$fline />
+                <livewire:insight.omv.summary-raw :$start_at :$end_at :$fquery :$ftype />
             @break
 
             @default
