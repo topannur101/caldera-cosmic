@@ -213,16 +213,15 @@ new #[Layout('layouts.app')] class extends Component {
                         @foreach ($metrics as $metric)
                             <tr>
                                 <td>{{ $metric->id }}</td>
-                                <td>{{ strtoupper($metric->ins_omv_recipe->type) }}</td>
-                                <td>{{ $metric->ins_omv_recipe->name }}</td>
                                 <td>{{ $metric->shift }}</td>
                                 <td>{{ ($metric->user_1->emp_id ?? '') . ' - ' . ($metric->user_1->name ?? '') }}</td>
                                 <td>{{ ($metric->user_2->emp_id ?? '') . ' - ' . ($metric->user_2->name ?? '') }}</td>
                                 <td>{{ $metric->eval }}</td>
-                                <td>{{ $metric->duration() }}</td>
-                                <td>@if( $metric->capturesCount() ) <x-text-button type="button" x-on:click="$dispatch('open-modal', 'captures'); $dispatch('captures-load', { metric_id: '{{ $metric->id }}'} )">{{ $metric->capturesCount() }}</x-text-button> @else 0 @endif</td>
+                                <td></td>
+                                <td></td>
                                 <td>{{ $metric->start_at }}</td>
                                 <td>{{ $metric->end_at }}</td>
+                            </tr>
                         @endforeach
                     </table>
                 </div>
