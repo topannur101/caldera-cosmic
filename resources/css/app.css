@@ -523,4 +523,54 @@ input[type="checkbox"]:checked + label.custom-checkbox {
       @apply !bg-caldy-500;
   }
 
+  .cal-shimmer {
+    mask: linear-gradient(-90deg, theme('colors.neutral.900') 30%, theme('colors.neutral.400/0.3'), theme('colors.neutral.900') 70%) right/350% 100%;
+    -webkit-mask: linear-gradient(-90deg, theme('colors.neutral.900') 30%, theme('colors.neutral.400/0.3'), theme('colors.neutral.900') 70%) right/350% 100%;
+    background-repeat: no-repeat;
+    animation: shimmer 2.5s infinite;
+  }
   
+  .dark .cal-shimmer {
+    mask: linear-gradient(-90deg, theme('colors.neutral.100') 30%, theme('colors.neutral.600/0.3'), theme('colors.neutral.100') 70%) right/350% 100%;
+    -webkit-mask: linear-gradient(-90deg, theme('colors.neutral.100') 30%, theme('colors.neutral.600/0.3'), theme('colors.neutral.100') 70%) right/350% 100%;
+  }
+  
+  @keyframes shimmer {
+    100% {
+      mask-position: left;
+      -webkit-mask-position: left;
+    }
+  }
+  
+  .cal-glow {
+    position: relative;
+  }
+  
+  .cal-glow:before, .cal-glow:after {
+    @apply rounded-lg bg-gradient-to-r from-transparent from-45% via-caldy-500 via-50% to-transparent to-55%;
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    background-size: 300%;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+    z-index: -1;
+    animation: steam 3s linear infinite;
+  }
+  
+  @keyframes steam {
+    0% {
+      background-position: 100% 0;
+    }
+    50% {
+      background-position: 50% 0;
+    }
+    100% {
+      background-position: 0% 0;
+    }
+  }
+  
+  .cal-glow:after {
+    filter: blur(30px);
+  }

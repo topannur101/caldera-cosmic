@@ -64,4 +64,22 @@ class InsOmvMetric extends Model
         
         return sprintf("%02d:%02d", $minutes, $seconds);
     }
+
+    public function evalFriendly()
+    {
+        $eval = '';
+        switch ($this->eval) {
+            case 'on_time':
+                $eval = __('Tepat waktu');
+                break;
+            
+            case 'too_soon':
+                $eval = __('Terlalu awal');
+                break;
+            case 'too_late':
+                $eval = __('Terlambat');
+                break;
+        }
+        return $eval;
+    }
 }

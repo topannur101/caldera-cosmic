@@ -36,9 +36,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         $start = Carbon::parse($this->start_at);
-        $end = Carbon::parse($this->end_at)->addDay();
-
-        $metrics = InsOmvMetric::whereBetween('start_at', [$start, $end]);
+        $end = Carbon::parse($this->end_at)->endOfDay();
 
         $metrics = InsOmvMetric::join('ins_omv_recipes', 'ins_omv_metrics.ins_omv_recipe_id', '=', 'ins_omv_recipes.id')
         ->join('users as user1', 'ins_omv_metrics.user_1_id', '=', 'user1.id')
@@ -52,7 +50,9 @@ new #[Layout('layouts.app')] class extends Component {
             'user2.name as user_2_name',
             'user1.emp_id as user_1_emp_id',
             'user2.emp_id as user_2_emp_id'
-        );
+        )
+        ->whereBetween('ins_omv_metrics.start_at', [$start, $end]);
+
         // if ($this->device_id) {
         //     $metrics->where('device_id', $this->device_id);
         // }
@@ -84,52 +84,6 @@ new #[Layout('layouts.app')] class extends Component {
 
         $metrics = $metrics->orderBy('start_at', 'DESC')->paginate($this->perPage);
 
-        // Statistics
-        // hitung tanggal, jam, line
-        // $u = DB::table('ins_rtc_metrics')
-        //     ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')  // Join with ins_rtc_clumps
-        //     ->select(DB::raw('CONCAT(DATE(dt_client), LPAD(HOUR(dt_client), 2, "0"), ins_rtc_clumps.ins_rtc_device_id) as date_hour_device_id'))  // Adjusted for correct path to ins_rtc_device_id
-        //     ->whereBetween('dt_client', [$start, $end]);
-
-        // if ($this->device_id) {
-        //     // Make sure to use the correct column from the correct table for the device ID
-        //     $u->where('ins_rtc_clumps.ins_rtc_device_id', $this->device_id);
-        // }
-
-        // $numeratorIntegrity = $u->groupBy('date_hour_device_id')->get()->count();
-
-
-        // hitung tanggal, line
-        // $v = DB::table('ins_rtc_metrics')
-        //     ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')  // Join with ins_rtc_clumps
-        //     ->select(DB::raw('CONCAT(DATE(dt_client), ins_rtc_clumps.ins_rtc_device_id) as date_device_id'))  // Use correct reference to ins_rtc_device_id
-        //     ->whereBetween('dt_client', [$start, $end]);
-
-        // if ($this->device_id) {
-        //     $v->where('ins_rtc_clumps.ins_rtc_device_id', $this->device_id);  // Adjusted to correct column
-        // }
-
-        // $denominatorIntegrity = $v->groupBy('date_device_id')->get()->count() * 21;
-
-
-        // hitung tanggal
-        $w = DB::table('ins_omv_metrics')
-            ->select(DB::raw('DATE(start_at) as date'))
-            ->whereBetween('start_at', [$start, $end]);
-        // if ($this->device_id) {
-        //     $w->where('device_id', $this->device_id);
-        // }
-        $this->days = $w->groupBy('date')->get()->count();
-
-        // if ($denominatorIntegrity > 0) {
-        //     $this->integrity = (int) (($numeratorIntegrity / $denominatorIntegrity) * 100);
-        // }
-
-        $x = InsOmvMetric::whereBetween('start_at', [$start, $end]);
-        if ($this->device_id) {
-            $x->where('device_id', $this->device_id);
-        }
-
         return [
             'metrics' => $metrics,
         ];
@@ -149,8 +103,6 @@ new #[Layout('layouts.app')] class extends Component {
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
                 {{ __('Data Mentah') }}</h1>
             <div class="flex gap-x-2 items-center">
-                <div class="text-sm"><span class="text-neutral-500">{{  __('Hari:') . ' ' }}</span><span>{{ $days }}</span></div>
-                {{-- <div class="text-sm"><span class="text-neutral-500">{{  __('Integritas:') . ' ' }}</span><span>{{ $integrity . '% ' }}</span></div> --}}
                 <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>
         </div>
@@ -159,14 +111,9 @@ new #[Layout('layouts.app')] class extends Component {
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                     {{ __('Statistik data mentah') }}
                 </h2>
-                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
-                        class="font-bold">{{ __('Hari:') . ' ' }}</span>
-                    {{ __('Jumlah hari yang mengandung data. Digunakan sebagai referensi berapa hari kerja pada rentang tanggal yang ditentukan.') }}
+                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                    {{ __('Belum ada informasi statistik yang tersedia.') }}
                 </p>
-                {{-- <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400"><span
-                        class="font-bold">{{ __('Integritas:') . ' ' }}</span>
-                    {{ __('Mengindikasikan persentase data yang hadir di tiap jamnya. Contoh: Jika ada data setiap jam selama 21 jam dalam 1 hari, maka integritas bernilai 100%. Jika hanya ada data selama 10.5 jam selama 21 jam dalam 1 hari, maka integritas bernilai 50%') }}
-                </p> --}}
                 <div class="mt-6 flex justify-end">
                     <x-primary-button type="button" x-on:click="$dispatch('close')">
                         {{ __('Paham') }}
@@ -201,9 +148,9 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('ID') }}</th>
                             <th>{{ __('Tipe') }}</th>
                             <th>{{ __('Resep') }}</th>
+                            <th>{{ __('L') }}</th>
                             <th>{{ __('S') }}</th>
-                            <th>{{ __('Operator 1') }}</th>
-                            <th>{{ __('Operator 2') }}</th>
+                            <th>{{ __('Operator') }}</th>
                             <th>{{ __('Evaluasi') }}</th>
                             <th>{{ __('Durasi') }}</th>
                             <th><i class="fa fa-images"></i></th>
@@ -213,12 +160,14 @@ new #[Layout('layouts.app')] class extends Component {
                         @foreach ($metrics as $metric)
                             <tr>
                                 <td>{{ $metric->id }}</td>
+                                <td>{{ strtoupper($metric->ins_omv_recipe->type) }}</td>
+                                <td>{{ $metric->ins_omv_recipe->name }}</td>
+                                <td></td>
                                 <td>{{ $metric->shift }}</td>
-                                <td>{{ ($metric->user_1->emp_id ?? '') . ' - ' . ($metric->user_1->name ?? '') }}</td>
-                                <td>{{ ($metric->user_2->emp_id ?? '') . ' - ' . ($metric->user_2->name ?? '') }}</td>
-                                <td>{{ $metric->eval }}</td>
-                                <td></td>
-                                <td></td>
+                                <td title="{{ __('Operator 2') . ': ' . ($metric->user_2->emp_id ?? '') . ' - ' . ($metric->user_2->name ?? '') }}">{{ ($metric->user_1->emp_id ?? '') . ' - ' . ($metric->user_1->name ?? '') }}</td>
+                                <td>{{ $metric->evalFriendly() }}</td>
+                                <td>{{ $metric->duration() }}</td>
+                                <td>@if( $metric->capturesCount() ) <x-text-button type="button" x-on:click="$dispatch('open-modal', 'captures'); $dispatch('captures-load', { metric_id: '{{ $metric->id }}'} )">{{ $metric->capturesCount() }}</x-text-button> @else 0 @endif</td>
                                 <td>{{ $metric->start_at }}</td>
                                 <td>{{ $metric->end_at }}</td>
                             </tr>

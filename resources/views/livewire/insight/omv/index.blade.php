@@ -37,6 +37,7 @@ class extends Component {
             ...app(),
             userq: @entangle('userq').live
         }" x-init="loadRecipes()">
+        <div :class="isRunning ? 'cal-glow z-10' : ''">
             <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 flex items-stretch gap-x-6 w-100">
                 <div class="flex justify-between grow mx-3">
                     <div class="flex flex-col justify-center">
@@ -44,7 +45,7 @@ class extends Component {
                         <div class="flex gap-x-3 text-neutral-500">
                             <div><span>{{ __('Tipe')}}</span><span @click="start()">{{ ': '}}</span><span x-text="activeRecipe ? mixingType.toUpperCase() : '{{ __('Tak ada resep aktif') }}'"></span></div>
                             <div>|</div>
-                            <div><span>{{ __('Evaluasi terakhir')}}</span><span @click="start()">{{ ': '}}</span><span x-text="evaluation ? evaluation : '{{ __('Tak ada') }}'"></span></div>
+                            <div @click="start()"><span>{{ __('Evaluasi terakhir')}}</span><span>{{ ': '}}</span><span x-text="evaluation == 'on_time' ? '{{ __('Tepat waktu') }}' : ( evaluation == 'too_soon' ? '{{ __('Terlalu awal') }}' : ( evaluation == 'too_late' ? '{{ __('Terlambat') }}' : '{{ __('Tak ada') }}' ))"></span></div>
                         </div>
                     </div>
                     <div class="flex items-center">
@@ -81,6 +82,24 @@ class extends Component {
                 <x-primary-button type="button" size="lg" @click="resetRecipeSelection()" x-show="!isRunning && activeRecipe"><i class="fa fa-undo mr-2"></i>{{ __('Ulangi') }}</x-primary-button>
                 <x-primary-button type="button" size="lg" @click="stop(true, true)" x-cloak x-show="isRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
             </div>
+        </div>
+            
+
+            <x-modal name="focus">
+                <div class="p-6">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Tampilan fokus aktif')}}
+                    </h2>
+                    <p class="mt-6">
+                        {{ __('Bilah navigasi sekarang disembunyikan untuk mencegah proses timer terputus karena beralih ke halaman lain.') }}
+                    </p>
+                    <div class="mt-6 flex justify-end">
+                        <x-primary-button type="button" x-on:click="$dispatch('close')">
+                            {{ __('Paham') }}
+                        </x-primary-button>
+                    </div>
+                </div>
+            </x-modal>
         
             <x-modal name="recipes">
                 <div class="p-6">    
@@ -198,8 +217,8 @@ class extends Component {
 
             <div x-show="activeRecipe" class="grid grid-cols-3 gap-x-3 mt-3">
                 <template x-for="(step, index) in steps" :key="index">
-                    <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 mb-4" :class="currentStepIndex != index && isRunning ? 'opacity-30': ''">
-                        <div class="mb-3 flex justify-between items-center">
+                    <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 mb-4" :class="currentStepIndex == index && isRunning ? 'opacity-100 cal-shimmer z-20': 'opacity-30'">
+                        <div class="mb-4 flex justify-between items-center">
                             <div class="flex gap-x-3" :class="currentStepIndex == index && isRunning ? 'fa-fade': ''">
                                 <i x-show="currentStepIndex == index && isRunning" class="fa-solid fa-spinner fa-spin-pulse"></i>
                                 <span class="text-xs uppercase"  x-text="'{{ __('Langkah') }}' + ' ' + (index + 1)"></span>
@@ -254,6 +273,7 @@ class extends Component {
                 processedCapturePoints: [],
                 captureThreshold: 1,
                 capturedImages: [],
+                focusModeFirst: true,
                 
                 async loadRecipes() {
                     try {
@@ -375,6 +395,17 @@ class extends Component {
                     this.filteredRecipes = this.recipes.filter(recipe => recipe.type === this.mixingType);
                 },
 
+                modifyClass(id, action, className) {
+                    const element = document.getElementById(id);
+                    if (element && element.classList) {
+                        if (action === 'remove') {
+                            element.classList.remove(className);
+                        } else if (action === 'add') {
+                            element.classList.add(className);
+                        }
+                    }
+                },
+
                 start() {
                     if (!this.isRunning && this.steps.length > 0) {
                         this.isRunning = true;
@@ -388,6 +419,15 @@ class extends Component {
                             clearInterval(this.pollingIntervalId);
                             this.pollingIntervalId = null;
                         }
+
+                        this.modifyClass('cal-nav-main-links', 'remove', 'sm:flex');
+                        this.modifyClass('cal-nav-omv', 'add', 'hidden');
+                        this.modifyClass('cal-nav-main-links-alt', 'remove', 'hidden');
+                        if (this.focusModeFirst) {
+                            this.focusModeFirst = false;
+                            this.$dispatch('open-modal', 'focus');
+                        }                            
+
                     } else if (this.steps.length === 0) {
                         notyfError('{{ __("Pilih resep terlebih dahulu sebelum menjalankan timer.") }}');
                     }
@@ -395,6 +435,10 @@ class extends Component {
 
                 stop(resetRecipe = true, sendData = false) {
                     this.isRunning = false;
+                    this.modifyClass('cal-nav-main-links', 'add', 'sm:flex');
+                    this.modifyClass('cal-nav-omv', 'remove', 'hidden');
+                    this.modifyClass('cal-nav-main-links-alt', 'add', 'hidden');
+
                     if (this.intervalId) {
                         cancelAnimationFrame(this.intervalId);
                     }

@@ -29,7 +29,12 @@ new class extends Component {
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex text-xs uppercase">
+                <div id="cal-nav-main-links-alt" class="hidden text-xs uppercase">
+                    <span class="inline-flex items-center ms-10 h-full border-b-2 border-transparent font-medium leading-5 text-neutral-500 dark:text-neutral-400 dark:hover:border-neutral-700">
+                        {{ __('Open Mill Validator') }}
+                    </span>
+                </div>
+                <div id="cal-nav-main-links" class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex text-xs uppercase">
                     {{-- <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link> --}}

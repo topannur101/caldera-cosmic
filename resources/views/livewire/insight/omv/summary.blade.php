@@ -232,10 +232,6 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         @switch($view)
-            {{-- @case('daily')
-                <livewire:insight.omv.summary-daily :$start_at :$fline />
-            @break --}}
-
             @case('raw')
                 <livewire:insight.omv.summary-raw :$start_at :$end_at :$fquery :$ftype />
             @break
