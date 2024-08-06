@@ -542,22 +542,32 @@ input[type="checkbox"]:checked + label.custom-checkbox {
     }
   }
   
-  .cal-glow {
+  .cal-glowing, .cal-glow {
     position: relative;
   }
   
-  .cal-glow:before, .cal-glow:after {
-    @apply rounded-lg bg-gradient-to-r from-transparent from-45% via-caldy-500 via-50% to-transparent to-55%;
+  .cal-glowing:before, .cal-glowing:after, .cal-glow:before, .cal-glow:after {
     content: '';
     position: absolute;
     left: -2px;
     top: -2px;
-    background-size: 300%;
     width: calc(100% + 4px);
     height: calc(100% + 4px);
     z-index: -1;
+  }
+
+  .cal-glowing:before, .cal-glowing:after {
+    @apply rounded-lg bg-gradient-to-r from-transparent from-45% via-caldy-500 via-50% to-transparent to-55%;
+    background-size: 300%;
     animation: steam 3s linear infinite;
   }
+
+  .cal-glow:before, .cal-glow:after {
+    @apply rounded-lg bg-gradient-to-r from-caldy-500 from-45% via-caldy-500 via-50% to-transparent to-55%;
+    background-size: 300%;
+    background-position: -100% 0;
+  }
+
   
   @keyframes steam {
     0% {
@@ -571,6 +581,7 @@ input[type="checkbox"]:checked + label.custom-checkbox {
     }
   }
   
-  .cal-glow:after {
+  .cal-glowing:after, .cal-glow:after {
     filter: blur(30px);
   }
+  

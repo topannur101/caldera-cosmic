@@ -37,7 +37,7 @@ class extends Component {
             ...app(),
             userq: @entangle('userq').live
         }" x-init="loadRecipes()">
-        <div :class="isRunning ? 'cal-glow z-10' : ''">
+        <div :class="!isRunning && activeRecipe ? 'cal-glowing z-10' : ''">
             <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 flex items-stretch gap-x-6 w-100">
                 <div class="flex justify-between grow mx-3">
                     <div class="flex flex-col justify-center">
