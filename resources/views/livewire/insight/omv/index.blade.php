@@ -37,7 +37,8 @@ class extends Component {
             ...app(),
             userq: @entangle('userq').live
         }" x-init="loadRecipes()">
-        <div :class="!isRunning && activeRecipe ? 'cal-glowing z-10' : ''">
+        <div :class="!isRunning && activeRecipe ? 'cal-glowing z-10' : (isRunning ? 'cal-glow z-10' : '')"
+        :style="'--cal-glow-pos:' + glowPosition">
             <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 flex items-stretch gap-x-6 w-100">
                 <div class="flex justify-between grow mx-3">
                     <div class="flex flex-col justify-center">
@@ -468,6 +469,12 @@ class extends Component {
                     this.stepRemainingTimes = this.steps.map(step => step.duration);
                     this.isOvertime = false;
                     this.overtimeElapsed = 0;
+                },
+
+                get glowPosition() {
+                    if (!this.isRunning) return '-100%';
+                    const progress = (this.totalDuration - this.remainingTime) / this.totalDuration;
+                    return `-${100 + progress * 100}%`;
                 },
 
                 tick() {
