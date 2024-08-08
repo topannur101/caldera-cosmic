@@ -563,11 +563,11 @@ input[type="checkbox"]:checked + label.custom-checkbox {
   }
 
   .cal-glow {
-    --cal-glow-pos: -100%;
+    --cal-glow-pos: 0%;
   }
 
   .cal-glow:before, .cal-glow:after {
-    @apply rounded-lg bg-gradient-to-r from-caldy-500 via-caldy-500 via-50% to-transparent to-55%;
+    @apply rounded-lg bg-gradient-to-r from-transparent via-transparent via-45% to-caldy-500 to-50%;
     background-size: 200%;
     background-position: var(--cal-glow-pos) 0%;
   }

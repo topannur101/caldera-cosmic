@@ -38,7 +38,7 @@ class extends Component {
             userq: @entangle('userq').live
         }" x-init="loadRecipes()">
         <div :class="!isRunning && activeRecipe ? 'cal-glowing z-10' : (isRunning ? 'cal-glow z-10' : '')"
-        :style="'--cal-glow-pos:' + glowPosition">
+        :style="'--cal-glow-pos: -' + (glowPosition * 100) + '%'">
             <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 flex items-stretch gap-x-6 w-100">
                 <div class="flex justify-between grow mx-3">
                     <div class="flex flex-col justify-center">
@@ -275,6 +275,7 @@ class extends Component {
                 captureThreshold: 1,
                 capturedImages: [],
                 focusModeFirst: true,
+                glowPosition: 0,
                 
                 async loadRecipes() {
                     try {
@@ -471,12 +472,6 @@ class extends Component {
                     this.overtimeElapsed = 0;
                 },
 
-                get glowPosition() {
-                    if (!this.isRunning) return '-100%';
-                    const progress = (this.totalDuration - this.remainingTime) / this.totalDuration;
-                    return `-${100 + progress * 100}%`;
-                },
-
                 tick() {
                     if (this.isRunning) {
                         const now = Date.now();
@@ -494,11 +489,14 @@ class extends Component {
                                     this.processedCapturePoints.push(point);
                                 }
                             });
+
+                            this.glowPosition = elapsedSeconds / this.totalDuration;
                             
                         } else {
                             this.remainingTime = 0;
                             this.isOvertime = true;
                             this.overtimeElapsed = Math.floor(elapsedSeconds - this.totalDuration);
+                            this.glowPosition = 1;
 
                             if (this.overtimeElapsed >= this.maxOvertimeDuration) {
                                 this.stop(true, true); // This will reset the recipe selection when the timer completes

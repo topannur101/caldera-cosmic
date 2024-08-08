@@ -80,7 +80,7 @@
                 </div>
             </div>
         </x-card-link>
-        <x-card-link href="http://172.70.52.65">
+        <x-card-link href="https://taekwang-id.comelz.cloud/">
             <div class="flex">
                 <div>
                     <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">
