@@ -149,7 +149,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Tipe') }}</th>
                             <th>{{ __('Resep') }}</th>
                             <th>{{ __('L') }}</th>
-                            <th>{{ __('S') }}</th>
+                            <th>{{ __('T') }}</th>
                             <th>{{ __('Operator') }}</th>
                             <th>{{ __('Evaluasi') }}</th>
                             <th>{{ __('Durasi') }}</th>
@@ -162,8 +162,8 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td>{{ $metric->id }}</td>
                                 <td>{{ strtoupper($metric->ins_omv_recipe->type) }}</td>
                                 <td>{{ $metric->ins_omv_recipe->name }}</td>
-                                <td></td>
-                                <td>{{ $metric->shift }}</td>
+                                <td>{{ $metric->line }}</td>
+                                <td>{{ $metric->team }}</td>
                                 <td title="{{ __('Operator 2') . ': ' . ($metric->user_2->emp_id ?? '') . ' - ' . ($metric->user_2->name ?? '') }}">{{ ($metric->user_1->emp_id ?? '') . ' - ' . ($metric->user_1->name ?? '') }}</td>
                                 <td>{{ $metric->evalFriendly() }}</td>
                                 <td>{{ $metric->duration() }}</td>

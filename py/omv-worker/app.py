@@ -64,6 +64,14 @@ def update_config(new_server):
             json.dump(config, config_file, indent=4)
         logger.info(f"Updated remote server configuration to: {new_server}")
 
+@app.route('/get-line')
+def get_line():
+    line = config['app'].get('line')
+    if line is not None:
+        return str(line), 200, {'Content-Type': 'text/plain'}
+    else:
+        return str(99), 404, {'Content-Type': 'text/plain'}
+
 @app.route('/send-data', methods=['POST'])
 def send_data():
     data = request.json

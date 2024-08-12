@@ -14,12 +14,14 @@ class InsOmvMetric extends Model
 
     protected $fillable = [
         'ins_omv_recipe_id',
+        'line',
+        'code',
+        'team',
         'user_1_id',
         'user_2_id',
         'eval',
         'start_at',
         'end_at',
-        'shift'
     ];
 
     protected $casts = [

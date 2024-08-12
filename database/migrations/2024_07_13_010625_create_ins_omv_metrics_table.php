@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('ins_omv_metrics', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-
             $table->foreignId('ins_omv_recipe_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('code')->nullable();
+            $table->tinyInteger('line');
+            $table->enum('team', ['A', 'B', 'C'])->nullable();
             $table->unsignedBigInteger('user_1_id');
             $table->unsignedBigInteger('user_2_id')->nullable();
             $table->foreign('user_1_id')->references('id')->on('users');
@@ -23,13 +25,13 @@ return new class extends Migration
             $table->enum('eval', ['too_soon', 'on_time', 'too_late']);
             $table->dateTime('start_at');
             $table->dateTime('end_at');
-            $table->tinyInteger('shift')->nullable();
 
             $table->index('ins_omv_recipe_id');
+            $table->index('line');
+            $table->index('team');
             $table->index('user_1_id');
             $table->index('user_2_id');
             $table->index('eval');
-            $table->index('shift');
             
         });
     }

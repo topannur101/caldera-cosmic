@@ -36,7 +36,7 @@ class extends Component {
         <div x-data="{ 
             ...app(),
             userq: @entangle('userq').live
-        }" x-init="loadRecipes()">
+        }" x-init="loadRecipes(); fetchLine()">
         <div :class="!isRunning && activeRecipe ? 'cal-glowing z-10' : (isRunning ? 'cal-glow z-10' : '')"
         :style="'--cal-glow-pos: -' + (glowPosition * 100) + '%'">
             <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 flex items-stretch gap-x-6 w-100">
@@ -55,13 +55,13 @@ class extends Component {
                 </div>
                 <div class="flex gap-x-3">
                     <div>
-                        <label for="shift"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
-                        <x-select id="shift" x-model="shift">
+                        <label for="team"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
+                        <x-select id="team" x-model="team">
                             <option value=""></option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
                         </x-select>
                     </div>
                     <div wire:key="user-select" x-data="{ open: false }" x-on:user-selected="userq = $event.detail; open = false" class="w-48">
@@ -102,10 +102,20 @@ class extends Component {
                 </div>
             </x-modal>
         
-            <x-modal name="recipes">
+            <x-modal name="recipes" focusable>
                 <div class="p-6">    
-                    <!-- Step 1: Mixing Type -->
+                    <!-- Step 1: Batch identity -->
                     <div x-show="currentStep === 1">
+                        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                            {{ __('Identitas gilingan')}}
+                        </h2>
+                        <div class="mt-6">
+                            <label for="code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
+                            <x-text-input id="code" x-model="code" type="text" />
+                        </div>
+                    </div>
+                    <!-- Step 2: Mixing Type -->
+                    <div x-show="currentStep === 2">
                         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                             {{ __('Pilih tipe mixing')}}
                         </h2>
@@ -161,8 +171,8 @@ class extends Component {
                         </fieldset>
                     </div>
         
-                    <!-- Step 2: Recipe Selection -->
-                    <div x-show="currentStep === 2">
+                    <!-- Step 3: Recipe Selection -->
+                    <div x-show="currentStep === 3">
                         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                             {{ __('Pilih resep')}}
                         </h2>
@@ -200,7 +210,10 @@ class extends Component {
                         <x-secondary-button type="button" x-show="currentStep > 1" @click="prevStep">
                             {{ __('Mundur') }}
                         </x-secondary-button>
-                        <x-primary-button type="button" x-show="currentStep === 2" @click="finishWizard">
+                        <x-secondary-button type="button" x-show="currentStep < 3" @click="nextStep">
+                            {{ __('Maju') }}
+                        </x-secondary-button>
+                        <x-primary-button type="button" x-show="currentStep === 3" @click="finishWizard">
                             {{ __('Terapkan') }}
                         </x-primary-button>
                     </div>
@@ -211,7 +224,7 @@ class extends Component {
                 <div class="py-20">
                     <div class="text-center text-neutral-500">
                         <div class="text-2xl mb-2">{{ __('Hai,') . ' ' . Auth::user()->name . '!' }}</div>
-                        <div class="text-sm">{{ __('Jangan lupa pilih shift dan mitra kerjamu') }}</div>
+                        <div class="text-sm">{{ __('Jangan lupa pilih tim dan mitra kerjamu') }}</div>
                     </div>
                 </div>
             </div>    
@@ -266,7 +279,7 @@ class extends Component {
                 tolerance: 120, // 60 60 
                 evaluation: '',
                 pollingIntervalId: null,
-                shift: '',
+                team: '',
                 currentStep: 1,
                 mixingType: '',
                 capturePoints: [],
@@ -276,6 +289,21 @@ class extends Component {
                 capturedImages: [],
                 focusModeFirst: true,
                 glowPosition: 0,
+                line: '',
+                code:'',
+
+                async fetchLine() {
+                    try {
+                        const response = await fetch('http://127.0.0.1:92/get-line');
+                        if (!response.ok) {
+                            throw new Error('Failed to get line');
+                        }
+                        this.line = await response.text();
+                        console.log('Line fetched:', this.line);
+                    } catch (error) {
+                        console.error('Failed to fetch line:', error);
+                    }
+                },
                 
                 async loadRecipes() {
                     try {
@@ -359,9 +387,9 @@ class extends Component {
                 },
 
                 nextStep() {
-                    if (this.currentStep < 2) {
+                    if (this.currentStep < 3) {
                         this.currentStep++;
-                        if (this.currentStep === 2) {
+                        if (this.currentStep === 3) {
                             this.filterRecipes();
                         }
                     }
@@ -550,12 +578,13 @@ class extends Component {
                         const jsonData = {
                             server_url: '{{ route('home') }}',
                             recipe_id: this.activeRecipe.id.toString(),
+                            line: this.line,
+                            team: this.team,
                             user_1_emp_id: '{{ Auth::user()->emp_id }}',
                             user_2_emp_id: this.userq,
                             eval: this.evaluation,
                             start_at: this.formatDateTime(this.startTime),
                             end_at: this.formatDateTime(endTime),
-                            shift: this.shift,
                             captured_images: this.capturedImages
                         };
                         this.sendData(jsonData);

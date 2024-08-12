@@ -37,12 +37,13 @@ Route::get('/omv-recipes', function() {
 Route::post('/omv-metric', function (Request $request) {
     $validator = Validator::make($request->all(), [
         'recipe_id' => 'required|exists:ins_omv_recipes,id',
+        'line' => 'required|integer|min:1|max:99',
+        'team' => 'required|in:A,B,C',
         'user_1_emp_id' => 'required|exists:users,emp_id',
         'user_2_emp_id' => 'nullable|exists:users,emp_id',
         'eval' => 'required|in:too_soon,on_time,too_late',
         'start_at' => 'required|date_format:Y-m-d H:i:s',
         'end_at' => 'required|date_format:Y-m-d H:i:s',
-        'shift' => 'nullable|integer|min:1|max:3',
         'captured_images' => 'nullable|array',
         'captured_images.*.stepIndex' => 'required|integer',
         'captured_images.*.captureTime' => 'required|numeric',
@@ -85,12 +86,13 @@ Route::post('/omv-metric', function (Request $request) {
 
     $omvMetric = new InsOmvMetric();
     $omvMetric->ins_omv_recipe_id = $request->recipe_id;
+    $omvMetric->line = $request->line;
+    $omvMetric->team = $request->team;
     $omvMetric->user_1_id = $user1->id;
     $omvMetric->user_2_id = $user2->id ?? null;
     $omvMetric->eval = strtolower($request->eval); // converting eval to lowercase
     $omvMetric->start_at = $request->start_at;
     $omvMetric->end_at = $request->end_at;
-    $omvMetric->shift = $request->shift;
     $omvMetric->save();
     
     $captureMessages = [];
