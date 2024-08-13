@@ -39,8 +39,8 @@ class extends Component {
         }" x-init="loadRecipes(); fetchLine()">
         <div :class="!isRunning && activeRecipe ? 'cal-glowing z-10' : (isRunning ? 'cal-glow z-10' : '')"
         :style="'--cal-glow-pos: -' + (glowPosition * 100) + '%'">
-            <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 flex items-stretch gap-x-6 w-100">
-                <div class="flex justify-between grow mx-3">
+            <div class="bg-white dark:bg-neutral-800 shadow rounded-lg flex w-full items-stretch">
+                <div class="flex justify-between grow mx-6 my-4">
                     <div class="flex flex-col justify-center">
                         <div class="text-2xl" x-text="activeRecipe ? activeRecipe.name : '{{ __('Menunggu...') }}'"></div>
                         <div class="flex gap-x-3 text-neutral-500">
@@ -53,8 +53,8 @@ class extends Component {
                         <div class="text-2xl font-mono" x-text="formatTime(remainingTime)" x-show="isRunning" :class="remainingTime == 0 ? 'text-red-500' : ''"></div>
                     </div>
                 </div>
-                <div class="flex gap-x-3">
-                    <div>
+                <div class="flex">
+                    <div class="px-2 py-4" :class="!team && isRunning ? 'bg-red-200 dark:bg-red-900 dark:text-white fa-fade' : ''">
                         <label for="team"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
                         <x-select id="team" x-model="team">
@@ -64,7 +64,7 @@ class extends Component {
                             <option value="C">C</option>
                         </x-select>
                     </div>
-                    <div wire:key="user-select" x-data="{ open: false }" x-on:user-selected="userq = $event.detail; open = false" class="w-48">
+                    <div class="px-2 py-4 w-48" :class="!userq && isRunning ? 'bg-red-200 dark:bg-red-900 dark:text-white fa-fade' : ''" wire:key="user-select" x-data="{ open: false }" x-on:user-selected="userq = $event.detail; open = false">
                         <div x-on:click.away="open = false">
                             <label for="inv-user"
                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
@@ -79,9 +79,9 @@ class extends Component {
                         </div>
                     </div>
                 </div>
-                <x-primary-button type="button" size="lg" @click="openWizard()" x-show="!isRunning && !activeRecipe"><i class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
-                <x-primary-button type="button" size="lg" @click="resetRecipeSelection()" x-show="!isRunning && activeRecipe"><i class="fa fa-undo mr-2"></i>{{ __('Ulangi') }}</x-primary-button>
-                <x-primary-button type="button" size="lg" @click="stop(true, true)" x-cloak x-show="isRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
+                <x-primary-button class="m-4" type="button" size="lg" @click="openWizard()" x-show="!isRunning && !activeRecipe"><i class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
+                <x-primary-button class="m-4" type="button" size="lg" @click="resetRecipeSelection()" x-show="!isRunning && activeRecipe"><i class="fa fa-undo mr-2"></i>{{ __('Ulangi') }}</x-primary-button>
+                <x-primary-button class="m-4" type="button" size="lg" @click="stop(true, true)" x-cloak x-show="isRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
             </div>
         </div>
             
@@ -176,7 +176,7 @@ class extends Component {
                         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                             {{ __('Pilih resep')}}
                         </h2>
-                        <fieldset class="grid gap-2 mt-6">
+                        <fieldset class="grid gap-2 mt-6 max-h-96 overflow-y-scroll p-1">
                             <template x-if="filteredRecipes.length > 0">
                                 <template x-for="recipe in filteredRecipes" :key="recipe.id">
                                     <div>
@@ -229,31 +229,40 @@ class extends Component {
                 </div>
             </div>    
 
-            <div x-show="activeRecipe" class="grid grid-cols-3 gap-x-3 mt-3">
+            <div x-show="activeRecipe" class="grid grid-cols-2 gap-x-3 mt-3">
                 <template x-for="(step, index) in steps" :key="index">
-                    <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 mb-4" :class="currentStepIndex == index && isRunning ? 'opacity-100 cal-shimmer z-20': 'opacity-30'">
-                        <div class="mb-4 flex justify-between items-center">
-                            <div class="flex gap-x-3" :class="currentStepIndex == index && isRunning ? 'fa-fade': ''">
-                                <i x-show="currentStepIndex == index && isRunning" class="fa-solid fa-spinner fa-spin-pulse"></i>
-                                <span class="text-xs uppercase"  x-text="'{{ __('Langkah') }}' + ' ' + (index + 1)"></span>
+                    <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 mb-4" :class="currentStepIndex == index && isRunning ? 'cal-shimmer': ''">
+                        <div class="flex gap-4  w-full mb-6">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center"
+                            :class="(currentStepIndex > index && isRunning) ? 'bg-green-500 text-neutral-800' : ((currentStepIndex == index && isRunning) ? 'bg-yellow-500 text-neutral-800' : 'bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800')">
+                                <span class="text-2xl font-bold" x-text="index + 1"></span>
                             </div>
-                            <span class="text-xs font-mono" x-text="formatTime(stepRemainingTimes[index])"></span>
-                        </div>
-                        <div class="relative w-full bg-gray-200 rounded-full h-1.5 mb-8 dark:bg-gray-700">
-                            <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
-                                :style="'width: ' + stepProgresses[index] + '%'"></div>
-                            <!-- Capture points -->
-                            <template x-for="point in capturePoints.filter(p => p >= getTotalPreviousStepsDuration(index) && p < getTotalPreviousStepsDuration(index + 1))" :key="point">
-                                <div class="absolute w-2 h-2 bg-caldy-500 rounded-full top-4 transform -translate-y-1/2"
-                                     :style="'left: ' + ((point - getTotalPreviousStepsDuration(index)) / step.duration * 100) + '%'"
-                                     :class="elapsedSeconds >= point ? 'opacity-30' : ''"></div>
-                            </template>
+                            <div class="grow">
+                                <div class="flex justify-between items-center mb-2">
+                                    <div class="flex gap-x-3" :class="currentStepIndex == index && isRunning ? 'fa-fade': ''">
+                                        <i x-show="currentStepIndex == index && isRunning" class="fa-solid fa-spinner fa-spin-pulse"></i>
+                                        <span class="text-xs uppercase"  x-text="(currentStepIndex > index && isRunning) ? '{{ __('Selesai') }}' : ((currentStepIndex == index && isRunning) ? '{{ __('Berjalan') }}' : '{{ __('Menunggu') }}')"></span>
+                                    </div>
+                                    <span class="text-xs font-mono" x-text="formatTime(stepRemainingTimes[index])"></span>
+                                </div>
+                                <div class="relative w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                                    <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
+                                        :style="'width: ' + stepProgresses[index] + '%'"></div>
+                                    <!-- Capture points -->
+                                    <template x-for="point in capturePoints.filter(p => p >= getTotalPreviousStepsDuration(index) && p < getTotalPreviousStepsDuration(index + 1))" :key="point">
+                                        <div class="absolute w-2 h-2 bg-caldy-500 rounded-full top-4 transform -translate-y-1/2"
+                                             :style="'left: ' + ((point - getTotalPreviousStepsDuration(index)) / step.duration * 100) + '%'"
+                                             :class="elapsedSeconds >= point ? 'opacity-30' : ''"></div>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <span class="text-2xl" x-text="step.description"></span><span class="opacity-30"></span>
                         </div>
                     </div>
                 </template>
+                <div class="hidden bg-green-500 text-neutral-800 bg-red-200 dark:bg-red-900 bg-yellow-500 text-neutral-800 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800"></div>
             </div>
         </div>
         

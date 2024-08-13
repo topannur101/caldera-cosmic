@@ -30,7 +30,7 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 <div>
     @if(count($users))
-    <div class="bg-white dark:bg-neutral-800 shadow-lg sm:rounded-lg overflow-hidden">
+    <div class="bg-white dark:bg-neutral-800 shadow-lg sm:rounded-lg overflow-y-scroll max-h-72">
         @foreach($users as $user)
         <button type=button class="flex p-3 text-left w-full hover:bg-caldy-500/10 active:bg-caldy-500/30" x-on:click="$dispatch('user-selected', '{{ $user->emp_id }}')">
             <div>
