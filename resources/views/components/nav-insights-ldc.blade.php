@@ -12,6 +12,9 @@
             <x-nav-link href="{{ route('insight.ldc.summary') }}" :active="request()->routeIs('insight.ldc.summary')" wire:navigate>
                 <i class="fa mx-2 fa-fw fa-heart-pulse text-sm"></i>
             </x-nav-link>
+            <x-nav-link href="{{ route('insight.ldc.manage.index') }}" :active="request()->routeIs('insight.ldc.manage.index')" wire:navigate>
+                <i class="fa mx-2 fa-fw fa-ellipsis text-sm"></i>
+            </x-nav-link>
         </div>
     </div>
 </header>

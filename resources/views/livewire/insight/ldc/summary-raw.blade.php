@@ -30,6 +30,8 @@ new #[Layout('layouts.app')] class extends Component {
 
     public $perPage = 20;
 
+    public $sort = 'updated';
+
     public function with(): array
     {
         $start = Carbon::parse($this->start_at);
@@ -82,10 +84,22 @@ new #[Layout('layouts.app')] class extends Component {
                 break;
         }
 
-        if (!$this->is_workdate) {
-            $hidesQuery->orderBy('ins_ldc_hides.updated_at', 'DESC');
-        } else {
-            $hidesQuery->orderBy('ins_ldc_groups.workdate', 'DESC');
+        switch ($this->sort) {
+            case 'updated':
+                if (!$this->is_workdate) {
+                    $hidesQuery->orderBy('ins_ldc_hides.updated_at', 'DESC');
+                } else {
+                    $hidesQuery->orderBy('ins_ldc_groups.workdate', 'DESC');
+                }
+                break;
+            
+            case 'sf_low':
+            $hidesQuery->orderBy(DB::raw('ins_ldc_hides.area_vn + ins_ldc_hides.area_ab + ins_ldc_hides.area_qt'), 'ASC');
+                break;
+
+            case 'sf_high':
+            $hidesQuery->orderBy(DB::raw('ins_ldc_hides.area_vn + ins_ldc_hides.area_ab + ins_ldc_hides.area_qt'), 'DESC');
+                break;
         }
 
         $hides = $hidesQuery->paginate($this->perPage);
@@ -112,8 +126,13 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="flex justify-between items-center mb-6 px-5 py-1">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
                 {{ __('Data Mentah') }}</h1>
-            <div class="flex gap-x-2 items-center">
-                <div class="text-sm"><span class="text-neutral-500">{{  __('Total') . ' VN | AB : ' }}</span><span>{{ $sum_area_vn . ' | ' .  $sum_area_ab }}</span><span class="text-neutral-500 ms-4">{{  __('Total lembar') . ' : ' }}</span><span>{{ $hides->total() }}</span></div>
+            <div class="flex gap-x-5 items-center">
+                <div class="grow text-sm"><span class="text-neutral-500">{{  __('Total') . ' VN | AB : ' }}</span><span>{{ $sum_area_vn . ' | ' .  $sum_area_ab }}</span><span class="text-neutral-500 ms-4">{{  __('Total lembar') . ' : ' }}</span><span>{{ $hides->total() }}</span></div>
+                <x-select wire:model.live="sort">
+                    <option value="updated">{{ __('Diperbarui') }}</option>
+                    <option value="sf_low">{{ __('SF Terkecil') }}</option>
+                    <option value="sf_high">{{ __('SF Terbesar') }}</option>
+                </x-select>
             </div>
         </div>
         @if (!$hides->count())

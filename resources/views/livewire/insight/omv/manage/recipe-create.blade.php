@@ -38,8 +38,8 @@ new class extends Component {
         $capture_points = array_filter($capture_points, fn($point) => $point > 0 && $point <= 7200);
         sort($capture_points);
         
-        if (count($capture_points) > 5) {
-            $capture_points = array_slice($capture_points, 0, 5);
+        if (count($capture_points) > 10) {
+            $capture_points = array_slice($capture_points, 0, 10);
         }
 
         // Ensure 'duration' in steps is an integer

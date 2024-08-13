@@ -46,8 +46,10 @@ Route::prefix('insight')->group(function () {
 
     Route::name('insight.ldc.')->group(function () {
 
-        Volt::route('/ldc/summary',         'insight.ldc.summary')      ->name('summary');
-        Volt::route('/ldc',                 'insight.ldc.index')        ->name('index');
+        Volt::route('/ldc/manage/authorizations',   'insight.ldc.manage.auths') ->name('manage.auths');
+        Volt::route('/ldc/manage',                  'insight.ldc.manage.index') ->name('manage.index');
+        Volt::route('/ldc/summary',                 'insight.ldc.summary')      ->name('summary');
+        Volt::route('/ldc',                         'insight.ldc.index')        ->name('index');
 
     });
 

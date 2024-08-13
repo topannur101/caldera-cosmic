@@ -82,6 +82,14 @@ class extends Component {
         $this->reset('fquery', 'ftype');
     }
 
+    public function filterByMe()
+    {
+        if (Auth::user()) {
+            $this->ftype = 'emp_id';
+            $this->fquery = Auth::user()->emp_id;
+        }
+    }
+
     public function download()
     {
         switch ($this->view) {
@@ -172,6 +180,13 @@ class extends Component {
                                     <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
                                 </x-slot>
                                 <x-slot name="content">
+                                    @if(Auth::user())
+                                    <x-dropdown-link href="#" wire:click.prevent="filterByMe">
+                                        {{ __('Oleh aku') }}
+                                    </x-dropdown-link>
+                                    <hr
+                                    class="border-neutral-300 dark:border-neutral-600 {{ $is_range ? '' : 'hidden' }}" />
+                                    @endif
                                     <x-dropdown-link href="#" wire:click.prevent="resetFilter">
                                         {{ __('Kosongkan filter') }}
                                     </x-dropdown-link>
@@ -180,7 +195,7 @@ class extends Component {
                         </div>
                     </div>
                     <div class="mt-3">
-                        <x-select id="hides-ftype" wire:model.live="ftype">
+                        <x-select class="w-full" id="hides-ftype" wire:model.live="ftype">
                             <option value="any">{{ __('Apapun') }}</option>
                             <option value="code">{{ __('Barcode') }}</option>
                             <option value="style">{{ __('Style') }}</option>
@@ -192,7 +207,7 @@ class extends Component {
                     <div>
                         <x-text-input wire:model.live="fquery" class="mt-4" type="search"
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
-                    </div>
+                    </div>              
                 </div>
                 @if ($view == 'raw' || $view == 'clumps')
                     <div wire:key="raw-panel">

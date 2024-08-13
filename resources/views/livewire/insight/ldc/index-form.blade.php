@@ -219,6 +219,8 @@ new class extends Component {
                         <option value="1"></option>
                         <option value="2"></option>
                         <option value="3"></option>
+                        <option value="4"></option>
+                        <option value="5"></option>
                     </datalist>
                 </div>
             </div>
@@ -265,7 +267,7 @@ new class extends Component {
                     <div>
                         <label for="hide-shift"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
-                        <x-select id="hide-shift" wire:model="shift">
+                        <x-select class="w-full" id="hide-shift" wire:model="shift">
                             <option value=""></option>
                             <option value="1">1</option>
                             <option value="2">2</option>
