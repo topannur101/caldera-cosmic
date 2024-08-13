@@ -209,6 +209,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <option value="any">{{ __('Apapun') }}</option>
                             <option value="recipe">{{ __('Resep') }}</option>
                             <option value="line">{{ __('Line') }}</option>
+                            <option value="team">{{ __('Tim') }}</option>
                             <option value="emp_id">{{ __('Nomor karyawan') }}</option>
                         </x-select>                        
                     </div>

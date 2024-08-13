@@ -54,11 +54,19 @@ Route::prefix('insight')->group(function () {
     Route::name('insight.omv.')->group(function () {
 
         Volt::route('/omv/manage/authorizations',   'insight.omv.manage.auths')     ->name('manage.auths');
-        // Volt::route('/omv/manage/devices',          'insight.omv.manage.devices')   ->name('manage.devices');
         Volt::route('/omv/manage/recipes',          'insight.omv.manage.recipes')   ->name('manage.recipes');
         Volt::route('/omv/manage',                  'insight.omv.manage.index')     ->name('manage.index');
-        Volt::route('/omv/summary',         'insight.omv.summary')          ->name('summary');
-        Volt::route('/omv',                 'insight.omv.index')            ->name('index');
+        Volt::route('/omv/summary',                 'insight.omv.summary')          ->name('summary');
+        Volt::route('/omv',                         'insight.omv.index')            ->name('index');
+
+    });
+
+    Route::name('insight.rdc.')->group(function () {
+
+        Volt::route('/rdc/manage/authorizations',   'insight.rdc.manage.auths')     ->name('manage.auths');
+        Volt::route('/rdc/manage',                  'insight.rdc.manage.index')     ->name('manage.index');
+        Volt::route('/rdc/summary',                 'insight.rdc.summary')          ->name('summary');
+        Volt::route('/rdc',                         'insight.rdc.index')            ->name('index');
 
     });
 
