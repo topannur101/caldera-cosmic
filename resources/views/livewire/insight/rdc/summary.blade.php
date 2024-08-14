@@ -8,7 +8,8 @@ use App\Models\InsRtcMetric;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Response;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.app')] 
+class extends Component {
     #[Url]
     public $view = 'raw';
 
@@ -19,24 +20,18 @@ new #[Layout('layouts.app')] class extends Component {
     public $end_at;
 
     #[Url]
+    public $is_workdate = 0;
+
+    #[Url]
     public $fquery;
 
     #[Url]
     public $ftype = 'any';
 
-    #[Url]
-    public $sline;
-    public $olines = [];
-
-    public $dateViews = ['raw', 'daily'];
+    public $dateViews = ['raw'];
     public $rangeViews = ['raw'];
     public $filterViews = ['raw'];
 
-    public $dataIntegrity = 0;
-    public $dataAccuracy = 0;
-    public $dayCount = 0;
-
-    public $is_line;
     public $is_date;
     public $is_range;
     public $is_filter;
@@ -47,15 +42,6 @@ new #[Layout('layouts.app')] class extends Component {
         {
             $this->setToday();
         }
-        
-        $this->olines = InsRtcMetric::join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
-            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
-            ->select('ins_rtc_devices.line')
-            ->distinct()
-            ->orderBy('ins_rtc_devices.line')
-            ->get()
-            ->pluck('line')
-            ->toArray();
     }
 
     public function with(): array
@@ -96,16 +82,26 @@ new #[Layout('layouts.app')] class extends Component {
         $this->reset('fquery', 'ftype');
     }
 
+    public function filterByMe()
+    {
+        if (Auth::user()) {
+            $this->ftype = 'emp_id';
+            $this->fquery = Auth::user()->emp_id;
+        }
+    }
+
     public function download()
     {
         switch ($this->view) {
             case 'raw':
-                $this->redirectRoute('download.ins-rtc-metrics', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
-                $this->js('$dispatch("close")');
-                $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
-                break;
-            case 'clumps':
-                $this->redirectRoute('download.ins-rtc-clumps', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
+                $this->redirectRoute('download.ins-rdc-hides', 
+                [
+                    'start_at'      => $this->start_at, 
+                    'end_at'        => $this->end_at, 
+                    'is_workdate'   => $this->is_workdate, 
+                    'fquery'        => $this->fquery,
+                    'ftype'         => $this->ftype,
+                ]);
                 $this->js('$dispatch("close")');
                 $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
                 break;
@@ -115,44 +111,25 @@ new #[Layout('layouts.app')] class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('Open Mill Validation') }}</x-slot>
+<x-slot name="title">{{ __('Pendataan Kulit') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-insights-omv></x-nav-insights-omv>
+    <x-nav-insights-rdc></x-nav-insights-rdc>
 </x-slot>
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
     <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row min-w-0">
         <div>
             <div class="w-full sm:w-44 md:w-64 px-3 sm:px-0 mb-5">
-                <div class="btn-group h-10 w-full">
-                    <x-radio-button wire:model.live="view" grow value="daily" name="view" id="view-daily">
-                        <div class="text-center my-auto">
-                            <i class="fa fa-fw fa-calendar-day text-center m-auto"></i>
-                        </div>
-                    </x-radio-button>
+                {{-- <div class="btn-group h-10 w-full">
                     <x-radio-button wire:model.live="view" grow value="raw" name="view" id="view-raw">
                         <div class="text-center my-auto">
                             <i class="fa fa-fw fa-table text-center m-auto"></i>
                         </div>
                     </x-radio-button>
-                </div>
+                </div> --}}
                 <div
-                    class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_line ? '' : 'hidden' }}">
-                    <div class="flex items-start justify-between">
-                        <div><i class="fa fa-ruler-horizontal mr-3"></i>{{ __('Line') }}</div>
-                    </div>
-                    <div class="mt-5">
-                        <x-select wire:model.live="sline">
-                            <option value=""></option>
-                            @foreach ($olines as $oline)
-                                <option value="{{ $oline }}">{{ $oline }}</option>
-                            @endforeach
-                        </x-select>
-                    </div>
-                </div>
-                <div
-                    class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_date ? '' : 'hidden' }}">
+                    class="bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_date ? '' : 'hidden' }}">
                     <div class="flex items-start justify-between">
                         <div><i class="fa fa-calendar mr-3"></i>{{ $is_range ? __('Rentang') : __('Tanggal') }}</div>
                         <div class="flex items-center">
@@ -183,8 +160,14 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                     <div class="mt-5">
                         <x-text-input wire:model.live="start_at" id="inv-date-start" type="date"></x-text-input>
-                        <x-text-input wire:model.live="end_at"  id="inv-date-end" type="date"
+                        <x-text-input wire:model.live="end_at" id="inv-date-end" type="date"
                             class="mt-3 mb-1 {{ $is_range ? '' : 'hidden' }}"></x-text-input>
+                    </div>
+                    <div class="mt-5">
+                        <x-radio id="is_workdate_false" wire:model.live="is_workdate" name="is_workdate"
+                        :checked="!$is_workdate" value="">{{ __('Tanggal catat') }}</x-radio>
+                        <x-radio id="is_workdate_true" wire:model.live="is_workdate" name="is_workdate" :checked="$is_workdate"
+                            value="true">{{ __('Tanggal WO') }}</x-radio>
                     </div>
                 </div>
                 <div
@@ -197,6 +180,13 @@ new #[Layout('layouts.app')] class extends Component {
                                     <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
                                 </x-slot>
                                 <x-slot name="content">
+                                    @if(Auth::user())
+                                    <x-dropdown-link href="#" wire:click.prevent="filterByMe">
+                                        {{ __('Oleh aku') }}
+                                    </x-dropdown-link>
+                                    <hr
+                                    class="border-neutral-300 dark:border-neutral-600 {{ $is_range ? '' : 'hidden' }}" />
+                                    @endif
                                     <x-dropdown-link href="#" wire:click.prevent="resetFilter">
                                         {{ __('Kosongkan filter') }}
                                     </x-dropdown-link>
@@ -207,26 +197,25 @@ new #[Layout('layouts.app')] class extends Component {
                     <div class="mt-3">
                         <x-select class="w-full" id="hides-ftype" wire:model.live="ftype">
                             <option value="any">{{ __('Apapun') }}</option>
-                            <option value="recipe">{{ __('Resep') }}</option>
+                            <option value="code">{{ __('Barcode') }}</option>
+                            <option value="style">{{ __('Style') }}</option>
                             <option value="line">{{ __('Line') }}</option>
-                            <option value="team">{{ __('Tim') }}</option>
+                            <option value="material">{{ __('Material') }}</option>
                             <option value="emp_id">{{ __('Nomor karyawan') }}</option>
                         </x-select>                        
                     </div>
                     <div>
                         <x-text-input wire:model.live="fquery" class="mt-4" type="search"
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
-                    </div>
+                    </div>              
                 </div>
                 @if ($view == 'raw' || $view == 'clumps')
                     <div wire:key="raw-panel">
                         <div class="m-3">
-                            @can('download', InsRtcMetric::class)
-                                <div class="py-4">
-                                    <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                        class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
-                                </div>
-                            @endcan
+                            <div class="py-4">
+                                <x-text-button type="button" wire:click="download" class="text-sm"><i
+                                    class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -234,7 +223,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         @switch($view)
             @case('raw')
-                <livewire:insight.omv.summary-raw :$start_at :$end_at :$fquery :$ftype />
+                <livewire:insight.rdc.summary-raw :$start_at :$end_at :$is_workdate :$fquery :$ftype />
             @break
 
             @default
@@ -249,3 +238,4 @@ new #[Layout('layouts.app')] class extends Component {
         @endswitch
     </div>
 </div>
+

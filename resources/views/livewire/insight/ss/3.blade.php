@@ -49,7 +49,7 @@ new class extends Component {
             <div class="pl-4 w-40">
                 <div>
                     <div class="text-4xl text-neutral-400 uppercase m-1">{{ __('Line') }}</div>
-                    <x-select wire:model.live="device_id" class="text-6xl font-bold">
+                    <x-select wire:model.live="device_id" class="text-6xl font-bold w-full">
                         <option value=""></option>
                         @foreach ($devices as $device)
                             <option value="{{ $device->id }}">{{ $device->line }}</option>

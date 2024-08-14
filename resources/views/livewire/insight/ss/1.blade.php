@@ -173,7 +173,7 @@ new class extends Component {
             <div class="col-start-6">
                 <div>
                     <div class="text-6xl uppercase mb-3 mx-1">{{ __('Line') }}</div>
-                    <x-select wire:model.live="sline" class="text-9xl font-bold">
+                    <x-select wire:model.live="sline" class="text-9xl font-bold w-full">
                         <option value=""></option>
                         @foreach ($lines as $line)
                             <option value="{{ $line }}">{{ $line }}</option>
