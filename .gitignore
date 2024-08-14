@@ -17,7 +17,6 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-/dist/stats.html
 /py/omv-worker/env/*
 /py/omv-worker/config.json
 /py/omv-worker/database.db

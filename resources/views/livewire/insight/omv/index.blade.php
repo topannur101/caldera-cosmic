@@ -39,7 +39,7 @@ class extends Component {
         fetchLine()">
             <div :class="!isRunning && activeRecipe ? 'cal-glowing z-10' : (isRunning ? 'cal-glow z-10' : '')"
                 :style="'--cal-glow-pos: -' + (glowPosition * 100) + '%'">
-                <div class="bg-white dark:bg-neutral-800 shadow rounded-lg flex w-full items-stretch">
+                <div class="bg-white dark:bg-neutral-800 bg-opacity-80 dark:bg-opacity-80 shadow rounded-lg flex w-full items-stretch">
                     <div class="flex justify-between grow mx-6 my-4">
                         <div class="flex flex-col justify-center">
                             <div class="text-2xl" x-text="activeRecipe ? activeRecipe.name : '{{ __('Menunggu...') }}'">
@@ -101,22 +101,6 @@ class extends Component {
                         x-show="isRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
                 </div>
             </div>
-
-            <x-modal name="focus">
-                <div class="p-6">
-                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        {{ __('Tampilan fokus aktif') }}
-                    </h2>
-                    <p class="mt-6">
-                        {{ __('Bilah navigasi sekarang disembunyikan untuk mencegah proses timer terputus karena beralih ke halaman lain.') }}
-                    </p>
-                    <div class="mt-6 flex justify-end">
-                        <x-primary-button type="button" x-on:click="$dispatch('close')">
-                            {{ __('Paham') }}
-                        </x-primary-button>
-                    </div>
-                </div>
-            </x-modal>
 
             <x-modal name="recipes" focusable>
                 <div class="p-6">
@@ -330,7 +314,6 @@ class extends Component {
                     processedCapturePoints: [],
                     captureThreshold: 1,
                     capturedImages: [],
-                    focusModeFirst: true,
                     glowPosition: 0,
                     line: '',
                     code: '',
@@ -496,10 +479,6 @@ class extends Component {
                             this.modifyClass('cal-nav-main-links', 'remove', 'sm:flex');
                             this.modifyClass('cal-nav-omv', 'add', 'hidden');
                             this.modifyClass('cal-nav-main-links-alt', 'remove', 'hidden');
-                            if (this.focusModeFirst) {
-                                this.focusModeFirst = false;
-                                this.$dispatch('open-modal', 'focus');
-                            }
 
                         } else if (this.steps.length === 0) {
                             notyfError('{{ __('Pilih resep terlebih dahulu sebelum menjalankan timer.') }}');

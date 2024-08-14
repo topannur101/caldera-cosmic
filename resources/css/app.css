@@ -586,6 +586,6 @@ input[type="checkbox"]:checked + label.custom-checkbox {
   }
   
   .cal-glowing:after, .cal-glow:after {
-    filter: blur(10px);
+    filter: blur(6px);
   }
   

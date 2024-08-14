@@ -214,12 +214,12 @@ class extends Component {
                         @endforeach
                     @endif
                 </datalist>
-                <x-select wire:model.live="status" class="mt-4">
+                <x-select wire:model.live="status" class="w-full mt-4">
                     <option value="active">{{ __('Barang aktif') }}</option>
                     <option value="inactive">{{ __('Barang nonaktif') }}</option>
                     <option value="both">{{ __('Aktif dan nonaktif') }}</option>
                 </x-select>
-                <x-select wire:model.live="qty" class="mt-4">
+                <x-select wire:model.live="qty" class="w-full mt-4">
                     <option value="total">{{ __('Qty total') }}</option>
                     <option value="main">{{ __('Qty utama saja') }}</option>
                     <option value="used">{{ __('Qty bekas saja') }}</option>

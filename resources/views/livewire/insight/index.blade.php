@@ -42,7 +42,7 @@
                             <div class="flex grow py-4 px-2 sm:p-6">
                                 <div class="grow">
                                     <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                                        {{ __('Open Mill Validator') . ' '. 'v2.0' }}
+                                        {{ __('Open Mill Validator') }}
                                     </div>
                                     <div class="text-sm text-neutral-600 dark:text-neutral-400">
                                         {{ __('Sistem validasi proses open mill untuk mengevaluasi kepatuhan resep.') }}
