@@ -212,7 +212,7 @@ def crop_and_resize(image, target_width, target_height):
 @app.route('/get-photo')
 def get_photo():
     try:
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(config['capture']['device_index'], cv2.CAP_DSHOW)
         if not cap.isOpened():
             raise IOError("Cannot open webcam")
         
