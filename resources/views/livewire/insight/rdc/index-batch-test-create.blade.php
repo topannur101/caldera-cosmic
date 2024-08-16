@@ -11,16 +11,13 @@ use App\Models\InsRubberBatch;
 // use Livewire\Attributes\Renderless;
 // use Illuminate\Support\Facades\Gate;
 
-new #[Layout('layouts.app')] 
-class extends Component {
-
+new #[Layout('layouts.app')] class extends Component {
     public int $id;
     public string $updated_at;
     public string $code;
     public string $model;
     public string $color;
     public string $mcs;
-    public string $rdc_eval;
 
     // public function rules()
     // {
@@ -30,24 +27,22 @@ class extends Component {
     //     ];
     // }
 
-    #[On('batch-load')]
+    #[On('batch-test-create')]
     public function loadBatch(int $id)
     {
         $batch = InsRubberBatch::find($id);
-        
+
         if ($batch) {
-            $this->id           = $batch->id;
-            $this->updated_at   = $batch->updated_at ?? '';
-            $this->code         = $batch->code;
-            $this->model        = $batch->model ?? '-';
-            $this->color        = $batch->color ?? '-';
-            $this->mcs          = $batch->mcs ?? '-';
-            $this->rdc_eval     = $batch->rdc_eval ?? '-';
+            $this->id = $batch->id;
+            $this->updated_at = $batch->updated_at ?? '';
+            $this->code = $batch->code;
+            $this->model = $batch->model ?? '-';
+            $this->color = $batch->color ?? '-';
+            $this->mcs = $batch->mcs ?? '-';
             // $this->actions = json_decode($batch->actions ?? '[]', true);
         } else {
             $this->handleNotFound();
         }
-
     }
 
     // public function with(): array
@@ -95,7 +90,7 @@ class extends Component {
 
     public function customReset()
     {
-        $this->reset(['id', 'model', 'color', 'mcs', 'rdc_eval']);
+        $this->reset(['id', 'model', 'color', 'mcs']);
     }
 
     public function handleNotFound()
@@ -104,19 +99,6 @@ class extends Component {
         $this->js('notyfError("' . __('Tidak ditemukan') . '")');
         $this->dispatch('updated');
     }
-
-    public function addToQueue()
-    {
-        $batch = InsRubberBatch::find($this->id);
-        if ($batch) {
-            $batch->update([
-                'rdc_eval' => 'queue'
-            ]);
-            $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Ditambahkan ke antrian') . '")');
-            $this->dispatch('updated');
-        }        
-    }
 };
 
 ?>
@@ -124,51 +106,124 @@ class extends Component {
     <div class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Info batch') }}
+                {{ __('Sisipkan hasil uji') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
         <dl class="text-neutral-900 divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700 mt-6 text-sm">
             <div class="flex flex-col pb-3">
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Kode') }}</dt>
-                <dd>{{ $code }}</dd>
+                <dd>{{ $code ?? '-' }}</dd>
             </div>
             <div class="flex flex-col py-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Model/Warna')}}</dt>
-                <dd>{{ $model . ' / ' . $color}}</dd>
+                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Model/Warna/MCS') }}</dt>
+                <dd>{{ $model . ' / ' . $color . ' / ' . $mcs }}</dd>
             </div>
-            <div class="flex flex-col py-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('MCS')}}</dt>
-                <dd>{{ $mcs }}</dd>
-            </div>
-            <div class="flex flex-col py-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Evaluasi uji rheo')}}</dt>
-                <dd>{{ $rdc_eval }}</dd>
-            </div>
-            <div class="flex flex-col pt-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Diperbarui') }}</dt>
-                <dd>{{ $updated_at }}</dd>
+            <div class="flex-flex-col pt-3">
+                <div x-data="{ dropping: false }" class="relative py-3" x-on:dragover.prevent="dropping = true">
+                    <div wire:loading.class="hidden"
+                        class="absolute w-full h-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/80 dark:bg-neutral-800/80 py-3"
+                        x-cloak x-show="dropping">
+                        <div
+                            class="flex justify-around items-center w-full h-full border-dashed border-2 border-neutral-500  text-neutral-500 dark:text-neutral-400 rounded-lg">
+                            <div class="text-center">
+                                <div class="text-4xl mb-3">
+                                    <i class="fa fa-upload"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input wire:model="temp" type="file"
+                        class="absolute inset-0 m-0 p-0 w-full h-full outline-none opacity-0" x-cloak x-ref="temp"
+                        x-show="dropping" x-on:dragleave.prevent="dropping = false" x-on:drop="dropping = false" />
+                    <div>
+                        <x-secondary-button type="button" x-on:click="$refs.temp.click()"><i
+                                class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3">
+                        <div class="mt-6">
+                            <label for="test-s_max"
+                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S maks') }}</label>
+                            <x-text-input id="test-s_max" wire:model="s_max" type="number" step=".01"
+                                :disabled="Gate::denies('manage', InsRdcTest::class)" />
+                            @error('s_max')
+                                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                            @enderror
+                        </div>
+                        <div class="mt-6">
+                            <label for="test-s_min"
+                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S Min') }}</label>
+                            <x-text-input id="test-s_min" wire:model="s_min" type="number" step=".01"
+                                :disabled="Gate::denies('manage', InsRdcTest::class)" />
+                            @error('s_min')
+                                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                            @enderror
+                        </div>
+                        <div class="mt-6">
+                            <label for="test-eval"
+                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Evaluasi') }}</label>
+                            <x-select class="w-full" id="test-eval" wire:model="eval">
+                                <option value=""></option>
+                                <option value="pass">{{ __('Lolos') }}</option>
+                                <option value="fail">{{ __('Gagal') }}</option>
+                            </x-select>
+                            @error('test-eval')
+                                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3">
+                        <div class="mt-6">
+                            <label for="test-tc10"
+                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC10') }}</label>
+                            <x-text-input id="test-tc10" wire:model="tc10" type="number" step=".01"
+                                :disabled="Gate::denies('manage', InsRdcTest::class)" />
+                            @error('tc10')
+                                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                            @enderror
+                        </div>
+                        <div class="mt-6">
+                            <label for="test-tc50"
+                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC50') }}</label>
+                            <x-text-input id="test-tc50" wire:model="tc50" type="number" step=".01"
+                                :disabled="Gate::denies('manage', InsRdcTest::class)" />
+                            @error('tc50')
+                                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                            @enderror
+                        </div>
+                        <div class="mt-6">
+                            <label for="test-tc90"
+                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC90') }}</label>
+                            <x-text-input id="test-tc90" wire:model="tc90" type="number" step=".01"
+                                :disabled="Gate::denies('manage', InsRdcTest::class)" />
+                            @error('tc90')
+                                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                            @enderror
+                        </div>
+                    </div>
+                </div>
             </div>
         </dl>
-        @can('manage', InsRdcTest::class)
-            <div class="mt-6 flex justify-end">
-                {{-- <div>
-                    <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete"
-                        wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
-                        {{ __('Cabut') }}
-                    </x-text-button>
-                </div> --}}
-                @if($rdc_eval == 'queue')
-                <x-secondary-button type="button" disabled>
-                    {{ __('Sudah diantrikan') }}
-                </x-secondary-button>
-                @else
-                <x-secondary-button type="button" wire:click="addToQueue">
-                    {{ __('Tambah ke antrian') }}
-                </x-secondary-button>
-                @endif
-            </div>
-        @endcan
+        <div class="mt-6 flex justify-between items-center">
+            <x-dropdown align="left" width="48">
+                <x-slot name="trigger">
+                    <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                </x-slot>
+                <x-slot name="content">
+                    <x-dropdown-link href="#" wire:click.prevent="setToday">
+                        {{ __('Kosongkan semua isian') }}
+                    </x-dropdown-link>
+                    <hr class="border-neutral-300 dark:border-neutral-600 {{ true ? '' : 'hidden' }}" />
+                    <x-dropdown-link href="#" wire:click.prevent="setLastMonth"
+                        class="{{ true ? '' : 'hidden' }}">
+                        {{ __('Hapus dari antrian') }}
+                    </x-dropdown-link>
+                </x-slot>
+            </x-dropdown>
+            <x-primary-button type="button" wire:click="addToQueue">
+                {{ __('Simpan') }}
+            </x-primary-button>
+        </div>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>

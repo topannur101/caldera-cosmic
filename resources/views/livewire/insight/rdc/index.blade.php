@@ -77,7 +77,7 @@ class extends Component {
                     </tr>
                     @foreach ($batches as $batch)
                         <tr wire:key="batch-tr-{{ $batch->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'batch-test-create'); $dispatch('batch-test-create', { batch_id: '{{ $batch->id }}'})">
+                            x-on:click="$dispatch('open-modal', 'batch-test-create'); $dispatch('batch-test-create', { id: '{{ $batch->id }}'})">
                             <td>
                                 {{ $batch->updated_at }}
                             </td>
@@ -94,7 +94,7 @@ class extends Component {
                                 {{ $batch->mcs }}
                             </td>
                             <td>
-                                {{ $batch->rdc_eval }}
+                                {{ $batch->rdcEvalHuman() }}
                             </td>
                         </tr>
                     @endforeach

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('model')->nullable();
             $table->string('color')->nullable();
             $table->string('mcs')->nullable();
-            $table->enum('rdc_eval', ['queue', 'pass', 'eval'])->nullable();
+            $table->enum('rdc_eval', ['queue', 'pass', 'fail'])->nullable();
             $table->enum('omv_eval', ['too_soon', 'on_time', 'too_late'])->nullable();
 
             $table->index('code');

@@ -3,12 +3,12 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
 use App\Models\InsRdcTest;
-// use Illuminate\Validation\Rule;
-
-// use App\Models\User;
 use App\Models\InsRubberBatch;
-// use Livewire\Attributes\Renderless;
+
+// use Illuminate\Validation\Rule;
+// use App\Models\User;
 // use Illuminate\Support\Facades\Gate;
 
 new #[Layout('layouts.app')] 
@@ -21,6 +21,7 @@ class extends Component {
     public string $color;
     public string $mcs;
     public string $rdc_eval;
+    public string $rdc_eval_human;
 
     // public function rules()
     // {
@@ -36,13 +37,14 @@ class extends Component {
         $batch = InsRubberBatch::find($id);
         
         if ($batch) {
-            $this->id           = $batch->id;
-            $this->updated_at   = $batch->updated_at ?? '';
-            $this->code         = $batch->code;
-            $this->model        = $batch->model ?? '-';
-            $this->color        = $batch->color ?? '-';
-            $this->mcs          = $batch->mcs ?? '-';
-            $this->rdc_eval     = $batch->rdc_eval ?? '-';
+            $this->id               = $batch->id;
+            $this->updated_at       = $batch->updated_at ?? '';
+            $this->code             = $batch->code;
+            $this->model            = $batch->model ?? '-';
+            $this->color            = $batch->color ?? '-';
+            $this->mcs              = $batch->mcs ?? '-';
+            $this->rdc_eval         = $batch->rdc_eval ?? '-';
+            $this->rdc_eval_human   = $batch->rdcEvalHuman();
             // $this->actions = json_decode($batch->actions ?? '[]', true);
         } else {
             $this->handleNotFound();
@@ -95,7 +97,7 @@ class extends Component {
 
     public function customReset()
     {
-        $this->reset(['id', 'model', 'color', 'mcs', 'rdc_eval']);
+        $this->reset(['id', 'model', 'color', 'mcs', 'rdc_eval', 'rdc_eval_human']);
     }
 
     public function handleNotFound()
@@ -105,6 +107,7 @@ class extends Component {
         $this->dispatch('updated');
     }
 
+    #[Renderless]
     public function addToQueue()
     {
         $batch = InsRubberBatch::find($this->id);
@@ -134,16 +137,16 @@ class extends Component {
                 <dd>{{ $code }}</dd>
             </div>
             <div class="flex flex-col py-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Model/Warna')}}</dt>
-                <dd>{{ $model . ' / ' . $color}}</dd>
-            </div>
-            <div class="flex flex-col py-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('MCS')}}</dt>
-                <dd>{{ $mcs }}</dd>
+                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Model/Warna/MCS')}}</dt>
+                <dd>{{ $model . ' / ' . $color . ' / ' . $mcs}}</dd>
             </div>
             <div class="flex flex-col py-3">
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Evaluasi uji rheo')}}</dt>
-                <dd>{{ $rdc_eval }}</dd>
+                <dd><x-pill class="uppercase" color="{{ 
+                    $rdc_eval === 'queue' ? 'yellow' : 
+                    ($rdc_eval === 'pass' ? 'green' : 
+                    ($rdc_eval === 'fail' ? 'red' : ''))
+                }}">{{ $rdc_eval_human }}</x-pill></dd>
             </div>
             <div class="flex flex-col pt-3">
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Diperbarui') }}</dt>

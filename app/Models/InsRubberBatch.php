@@ -17,4 +17,22 @@ class InsRubberBatch extends Model
         'rdc_eval',
         'omv_eval'
     ];
+
+    public function rdcEvalHuman(): string
+    {
+        $this->rdc_eval;
+
+        switch ($this->rdc_eval) {
+            case 'queue':
+                return __('Dalam antrian');
+                break;
+            case 'pass':
+                return __('Lolos');
+                break;
+            case 'fail':
+                return __('Gagal');
+                break;
+        }
+        return __('Baru');
+    }
 }
