@@ -36,7 +36,7 @@ class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('Pendataan Kulit') }}</x-slot>
+<x-slot name="title">{{ __('Pendataan Rheometer') }}</x-slot>
 
 <x-slot name="header">
     <x-nav-insights-rdc></x-nav-insights-rdc>
@@ -45,7 +45,7 @@ class extends Component {
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     <div class="flex flex-col gap-y-8 sm:flex-row">
         <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">
-            {{ __('Hasil Uji per Batch') }}</h1>
+            {{ __('Catat Hasil Uji') }}</h1>
         <div class="px-8">
             <form wire:submit="batchQuery" class="btn-group">
                 <x-text-input class="w-20" wire:model="code" id="rdc-code" placeholder="{{ __('Kode') }}"></x-text-input->

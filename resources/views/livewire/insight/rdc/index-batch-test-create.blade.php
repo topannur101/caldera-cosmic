@@ -4,28 +4,47 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use App\Models\InsRdcTest;
+use App\Models\InsRubberBatch;
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 // use Illuminate\Validation\Rule;
 
 // use App\Models\User;
-use App\Models\InsRubberBatch;
 // use Livewire\Attributes\Renderless;
 // use Illuminate\Support\Facades\Gate;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.app')] 
+class extends Component {
+
+    use WithFileUploads;
+
     public int $id;
     public string $updated_at;
     public string $code;
-    public string $model;
-    public string $color;
-    public string $mcs;
+    
+    public string $model = '';
+    public string $color = '';
+    public string $mcs = '';
 
-    // public function rules()
-    // {
-    //     return [
-    //         'actions' => ['array'],
-    //         'actions.*' => ['string'],
-    //     ];
-    // }
+    public string $e_model;
+    public string $e_color;
+    public string $e_mcs;
+
+    public string $o_model;
+    public string $o_color;
+    public string $o_mcs;
+
+    public float $s_max;
+    public float $s_min;
+    public string $eval;
+    public float $tc10;
+    public float $tc50;
+    public float $tc90;
+
+    public bool $update_batch_info = false;
+
+    public $file;
 
     #[On('batch-test-create')]
     public function loadBatch(int $id)
@@ -36,14 +55,117 @@ new #[Layout('layouts.app')] class extends Component {
             $this->id = $batch->id;
             $this->updated_at = $batch->updated_at ?? '';
             $this->code = $batch->code;
-            $this->model = $batch->model ?? '-';
-            $this->color = $batch->color ?? '-';
-            $this->mcs = $batch->mcs ?? '-';
-            // $this->actions = json_decode($batch->actions ?? '[]', true);
+            $this->model = $batch->model ?? '';
+            $this->color = $batch->color ?? '';
+            $this->mcs = $batch->mcs ?? '';
+            
+        } else {
+            $this->handleNotFound();
+        }
+
+        $this->customReset();
+    }
+
+    public function updatedFile()
+    {
+        $this->validate([
+            'file' => 'file|mimes:xls,xlsx|max:1024'
+        ]);
+
+        $this->extractData();
+    }
+
+    private function find3Digit($string) {
+        preg_match_all('/\/?(\d{3})/', $string, $matches);
+        return !empty($matches[1]) ? end($matches[1]) : null;
+    }
+
+    private function extractData()
+    {
+        try {
+            $path = $this->file->getRealPath();
+            $spreadsheet = IOFactory::load($path);
+            $worksheet = $spreadsheet->getActiveSheet();
+            
+            $extractedMcs = $worksheet->getCell('D2')->getValue();
+            $extractedData = $worksheet->rangeToArray('A12:L12')[0];
+
+            $this->e_model = strtoupper(trim($extractedData[0]));
+            $this->e_color = strtoupper(trim($extractedData[1]));
+            $this->e_mcs   = $this->find3Digit($extractedMcs);
+
+            $this->s_max = $extractedData[6];
+            $this->s_min = $extractedData[7];
+            $this->tc10  = $extractedData[8];
+            $this->tc50  = $extractedData[9];
+            $this->tc90  = $extractedData[10];
+
+            $eval = strtoupper(trim($extractedData[11]));
+            $this->eval = ($eval == 'OK' ? 'pass' : ($eval == 'Fail' ? 'fail' : ''));
+
+            if((!$this->model && !$this->color && !$this->mcs) && ($this->e_model || $this->e_color || $this->e_mcs)) 
+            {
+                $this->update_batch_info = true;
+                $this->updateBatchInfo();
+            }
+
+            $this->js('notyfSuccess("' . __('Data berhasil diekstrak') . '")'); 
+
+        } catch (\Exception $e) {
+            $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
+            $this->js('console.log("'. $e->getMessage() .'")');
+        }
+    }
+
+    public function removeFromQueue()
+    {
+        $batch = InsRubberBatch::find($this->id);
+
+        if ($batch) {
+            $batch->update([
+                'rdc_eval' => null
+            ]);
+            $this->js('notyfSuccess("' . __('Dihapus dari antrian') . '")'); 
+            $this->js('$dispatch("close")');
+            $this->dispatch('updated');
         } else {
             $this->handleNotFound();
         }
     }
+
+    private function updateBatchInfo()
+    {
+        if ($this->update_batch_info)
+        {
+            // apply extracted then keep the old one.
+            $this->o_model = $this->e_model ? $this->model : '';
+            $this->o_color = $this->e_color ? $this->color : '';
+            $this->o_mcs   = $this->e_mcs ? $this->mcs : '';
+
+            $this->model = $this->e_model ? $this->e_model : $this->model;
+            $this->color = $this->e_color ? $this->e_color : $this->color;
+            $this->mcs = $this->e_mcs ? $this->e_mcs : $this->mcs;
+
+        } else {
+            $this->model = $this->o_model;
+            $this->color = $this->o_color;
+            $this->mcs = $this->o_mcs;
+        }
+
+    } 
+
+    public function updatedUpdateBatchInfo()
+    {
+        $this->updateBatchInfo();
+    }
+
+    // public function rules()
+    // {
+    //     return [
+    //         'actions' => ['array'],
+    //         'actions.*' => ['string'],
+    //     ];
+    // }
 
     // public function with(): array
     // {
@@ -90,7 +212,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function customReset()
     {
-        $this->reset(['id', 'model', 'color', 'mcs']);
+        $this->reset(['file','s_max', 's_min', 'eval', 'tc10', 'tc50', 'tc90', 'model', 'color', 'mcs', 'e_model', 'e_color', 'e_mcs', 'o_model', 'o_color', 'o_mcs']);
     }
 
     public function handleNotFound()
@@ -117,7 +239,7 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
             <div class="flex flex-col py-3">
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Model/Warna/MCS') }}</dt>
-                <dd>{{ $model . ' / ' . $color . ' / ' . $mcs }}</dd>
+                <dd>{{ ($model ? $model : '-') . ' / ' . ($color ? $color : '-') . ' / ' . ($mcs ? $mcs : '-') }}</dd>
             </div>
             <div class="flex-flex-col pt-3">
                 <div x-data="{ dropping: false }" class="relative py-3" x-on:dragover.prevent="dropping = true">
@@ -133,12 +255,16 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
                         </div>
                     </div>
-                    <input wire:model="temp" type="file"
-                        class="absolute inset-0 m-0 p-0 w-full h-full outline-none opacity-0" x-cloak x-ref="temp"
+                    <input wire:model="file" type="file"
+                        class="absolute inset-0 m-0 p-0 w-full h-full outline-none opacity-0" x-cloak x-ref="file"
                         x-show="dropping" x-on:dragleave.prevent="dropping = false" x-on:drop="dropping = false" />
-                    <div>
-                        <x-secondary-button type="button" x-on:click="$refs.temp.click()"><i
+                    <div class="flex justify-between">
+                        <x-secondary-button type="button" x-on:click="$refs.file.click()"><i
                                 class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
+                        @if($e_model || $e_color || $e_mcs)
+                        <x-checkbox id="update-batch-info" wire:model.live="update_batch_info"
+                        value="update-batch-info">{{ __('Perbarui info batch') }}</x-checkbox>
+                        @endif
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3">
                         <div class="mt-6">
@@ -210,18 +336,18 @@ new #[Layout('layouts.app')] class extends Component {
                     <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
                 </x-slot>
                 <x-slot name="content">
-                    <x-dropdown-link href="#" wire:click.prevent="setToday">
+                    <x-dropdown-link href="#" wire:click.prevent="customReset">
                         {{ __('Kosongkan semua isian') }}
                     </x-dropdown-link>
                     <hr class="border-neutral-300 dark:border-neutral-600 {{ true ? '' : 'hidden' }}" />
-                    <x-dropdown-link href="#" wire:click.prevent="setLastMonth"
+                    <x-dropdown-link href="#" wire:click.prevent="removeFromQueue"
                         class="{{ true ? '' : 'hidden' }}">
                         {{ __('Hapus dari antrian') }}
                     </x-dropdown-link>
                 </x-slot>
             </x-dropdown>
-            <x-primary-button type="button" wire:click="addToQueue">
-                {{ __('Simpan') }}
+            <x-primary-button type="button" wire:click="insertTest">
+                {{ __('Sisipkan') }}
             </x-primary-button>
         </div>
     </div>
