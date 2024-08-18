@@ -178,6 +178,16 @@ class User extends Authenticatable
 
     public function ins_omv_auths(): HasMany
     {
-        return $this->hasMany(InsRtcAuth::class);
+        return $this->hasMany(InsOmvAuth::class);
+    }
+
+    public function ins_rdc_auths(): HasMany
+    {
+        return $this->hasMany(InsRdcAuth::class);
+    }
+
+    public function ins_ldc_auths(): HasMany
+    {
+        return $this->hasMany(InsLdcAuth::class);
     }
 }

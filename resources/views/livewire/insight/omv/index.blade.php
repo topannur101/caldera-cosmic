@@ -278,9 +278,6 @@ class extends Component {
                         </div>
                     </div>
                 </template>
-                <div
-                    class="hidden bg-green-500 text-neutral-800 bg-red-200 dark:bg-red-900 bg-yellow-500 text-neutral-800 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800">
-                </div>
             </div>
         </div>
 

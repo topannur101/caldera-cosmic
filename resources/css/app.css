@@ -588,4 +588,7 @@ input[type="checkbox"]:checked + label.custom-checkbox {
   .cal-glowing:after, .cal-glow:after {
     filter: blur(6px);
   }
-  
+
+  .cal-includes {
+    @apply bg-green-500 text-neutral-800 bg-red-200 dark:bg-red-900 bg-yellow-500 text-neutral-800 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800;
+  }

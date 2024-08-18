@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
+            $table->foreignId('user_id');
             $table->foreignId('ins_rubber_batch_id');
             $table->enum('eval', ['pass', 'fail']);
             $table->enum('machine', ['mdr', 'ta_rpa']);
@@ -24,6 +25,9 @@ return new class extends Migration
             $table->decimal('tc50', 5, 2);
             $table->decimal('tc90', 5, 2);
             $table->json('data')->nullable();
+
+            $table->index('user_id');
+            $table->index('ins_rubber_batch_id');
         });
     }
 

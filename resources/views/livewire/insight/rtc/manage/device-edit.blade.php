@@ -29,6 +29,7 @@ new class extends Component {
             $this->id           = $device->id;
             $this->line         = $device->line;
             $this->ip_address   = $device->ip_address;
+            $this->resetValidation();
         } else {
             $this->handleNotFound();
         }

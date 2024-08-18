@@ -138,7 +138,7 @@ class extends Component {
             </div>
             <div class="flex flex-col py-3">
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Model/Warna/MCS')}}</dt>
-                <dd>{{ $model . ' / ' . $color . ' / ' . $mcs}}</dd>
+                <dd>{{ $model . ' / ' . $color . ' / ' . $mcs }}</dd>
             </div>
             <div class="flex flex-col py-3">
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Evaluasi uji rheo')}}</dt>
@@ -164,6 +164,10 @@ class extends Component {
                 @if($rdc_eval == 'queue')
                 <x-secondary-button type="button" disabled>
                     {{ __('Sudah diantrikan') }}
+                </x-secondary-button>
+                @elseif($rdc_eval == 'pass')
+                <x-secondary-button type="button" disabled>
+                    {{ __('Sudah lolos') }}
                 </x-secondary-button>
                 @else
                 <x-secondary-button type="button" wire:click="addToQueue">

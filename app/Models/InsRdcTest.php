@@ -18,6 +18,22 @@ class InsRdcTest extends Model
         'tc10',
         'tc50',
         'tc90',
-        'data'
+        'data',
+        'user_id',
     ];
+
+    public function evalHuman(): string
+    {
+        $this->eval;
+
+        switch ($this->eval) {
+            case 'pass':
+                return __('Lolos');
+                break;
+            case 'fail':
+                return __('Gagal');
+                break;
+        }
+        return __('Baru');
+    }
 }

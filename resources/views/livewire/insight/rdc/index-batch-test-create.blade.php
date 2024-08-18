@@ -42,7 +42,7 @@ class extends Component {
     public float $tc50;
     public float $tc90;
 
-    public bool $update_batch_info = false;
+    public bool $update_batch = false;
 
     public $file;
 
@@ -58,7 +58,7 @@ class extends Component {
             $this->model = $batch->model ?? '';
             $this->color = $batch->color ?? '';
             $this->mcs = $batch->mcs ?? '';
-            
+            $this->resetValidation();
         } else {
             $this->handleNotFound();
         }
@@ -105,7 +105,7 @@ class extends Component {
 
             if((!$this->model && !$this->color && !$this->mcs) && ($this->e_model || $this->e_color || $this->e_mcs)) 
             {
-                $this->update_batch_info = true;
+                $this->update_batch = true;
                 $this->updateBatchInfo();
             }
 
@@ -135,7 +135,7 @@ class extends Component {
 
     private function updateBatchInfo()
     {
-        if ($this->update_batch_info)
+        if ($this->update_batch)
         {
             // apply extracted then keep the old one.
             $this->o_model = $this->e_model ? $this->model : '';
@@ -159,13 +159,59 @@ class extends Component {
         $this->updateBatchInfo();
     }
 
-    // public function rules()
-    // {
-    //     return [
-    //         'actions' => ['array'],
-    //         'actions.*' => ['string'],
-    //     ];
-    // }
+    public function rules()
+    {
+        return [
+            'model'         => ['nullable', 'min:1', 'max:50'],
+            'color'         => ['nullable', 'min:1', 'max:10'],
+            'mcs'           => ['nullable', 'min:1', 'max:10'],
+            's_max'         => ['required', 'numeric', 'gt:0', 'lt:999'],
+            's_min'         => ['required', 'numeric', 'gt:0', 'lt:999'],
+            'eval'          => ['required', 'in:pass,fail'],
+            'tc10'          => ['required', 'numeric', 'gt:0', 'lt:99'],
+            'tc50'          => ['required', 'numeric', 'gt:0', 'lt:99'],
+            'tc90'          => ['required', 'numeric', 'gt:0', 'lt:99'],
+        ];
+    }
+
+    public function insertTest()
+    {
+        $batch = InsRubberBatch::find($this->id);
+
+        if ($batch) {
+            $test = new InsRdcTest;
+            Gate::authorize('manage', $test);
+
+            $validated = $this->validate();
+
+            $test->fill([
+                's_max' => $validated['s_max'],
+                's_min' => $validated['s_min'],
+                'eval'  => $validated['eval'],
+                'tc10'  => $validated['tc10'],
+                'tc50'  => $validated['tc50'],
+                'tc90'  => $validated['tc90'],
+                'user_id' => Auth::user()->id,
+                'ins_rubber_batch_id' => $batch->id
+            ]);
+
+            $test->save();
+
+            $batch->update([
+                'rdc_eval' => $validated['eval']
+            ]);
+
+            $this->js('$dispatch("close")');
+            $this->js('notyfSuccess("' . __('Hasil uji disisipkan') . '")');
+            $this->dispatch('updated');
+
+            $this->customReset();
+
+        } else {
+            $this->handleNotFound();
+        }
+      
+    }
 
     // public function with(): array
     // {
@@ -212,6 +258,7 @@ class extends Component {
 
     public function customReset()
     {
+        $this->resetValidation();
         $this->reset(['file','s_max', 's_min', 'eval', 'tc10', 'tc50', 'tc90', 'model', 'color', 'mcs', 'e_model', 'e_color', 'e_mcs', 'o_model', 'o_color', 'o_mcs']);
     }
 
@@ -262,7 +309,7 @@ class extends Component {
                         <x-secondary-button type="button" x-on:click="$refs.file.click()"><i
                                 class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
                         @if($e_model || $e_color || $e_mcs)
-                        <x-checkbox id="update-batch-info" wire:model.live="update_batch_info"
+                        <x-checkbox id="update-batch-info" wire:model.live="update_batch"
                         value="update-batch-info">{{ __('Perbarui info batch') }}</x-checkbox>
                         @endif
                     </div>
@@ -293,7 +340,7 @@ class extends Component {
                                 <option value="pass">{{ __('Lolos') }}</option>
                                 <option value="fail">{{ __('Gagal') }}</option>
                             </x-select>
-                            @error('test-eval')
+                            @error('eval')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                             @enderror
                         </div>

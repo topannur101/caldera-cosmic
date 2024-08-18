@@ -35,6 +35,7 @@ new #[Layout('layouts.app')] class extends Component {
             $this->user_emp_id  = $auth->user->emp_id;
             $this->user_photo   = $auth->user->photo ?? '';
             $this->actions      = json_decode($auth->actions ?? '[]', true);
+            $this->resetValidation();
         } else {
             $this->handleNotFound();
         }
@@ -135,8 +136,8 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="grid grid-cols-1 gap-y-3 mt-6">
             {{-- <x-checkbox id="device-manage" :disabled="!$is_superuser" wire:model="actions"
                 value="device-manage">{{ __('Kelola perangkat ') }}</x-checkbox> --}}
-            <x-checkbox id="hide-update" :disabled="!$is_superuser" wire:model="actions"
-                value="hide-update">{{ __('Memperbarui data') }}</x-checkbox>
+            <x-checkbox id="hide-edit" :disabled="!$is_superuser" wire:model="actions"
+                value="hide-edit">{{ __('Menyunting data kulit') }}</x-checkbox>
         </div>
         @can('superuser')
             <div class="mt-6 flex justify-between items-end">

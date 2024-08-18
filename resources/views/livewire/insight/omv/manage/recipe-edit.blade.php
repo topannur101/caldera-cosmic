@@ -44,7 +44,7 @@ new class extends Component {
             if (is_array($cps)) {
                 $this->capture_points   = implode(', ', $cps);
             } 
-            
+            $this->resetValidation();
         } else {
             $this->handleNotFound();
         }

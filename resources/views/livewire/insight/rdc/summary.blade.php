@@ -3,7 +3,6 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Carbon\Carbon;
-use League\Csv\Writer;
 use App\Models\InsRtcMetric;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Response;
@@ -163,12 +162,12 @@ class extends Component {
                         <x-text-input wire:model.live="end_at" id="inv-date-end" type="date"
                             class="mt-3 mb-1 {{ $is_range ? '' : 'hidden' }}"></x-text-input>
                     </div>
-                    <div class="mt-5">
+                    {{-- <div class="mt-5">
                         <x-radio id="is_workdate_false" wire:model.live="is_workdate" name="is_workdate"
                         :checked="!$is_workdate" value="">{{ __('Tanggal catat') }}</x-radio>
                         <x-radio id="is_workdate_true" wire:model.live="is_workdate" name="is_workdate" :checked="$is_workdate"
                             value="true">{{ __('Tanggal WO') }}</x-radio>
-                    </div>
+                    </div> --}}
                 </div>
                 <div
                     class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_filter ? '' : 'hidden' }}">
@@ -197,10 +196,10 @@ class extends Component {
                     <div class="mt-3">
                         <x-select class="w-full" id="hides-ftype" wire:model.live="ftype">
                             <option value="any">{{ __('Apapun') }}</option>
-                            <option value="code">{{ __('Barcode') }}</option>
-                            <option value="style">{{ __('Style') }}</option>
-                            <option value="line">{{ __('Line') }}</option>
-                            <option value="material">{{ __('Material') }}</option>
+                            <option value="code">{{ __('Kode') }}</option>
+                            <option value="model">{{ __('Model') }}</option>
+                            <option value="warna">{{ __('Warna') }}</option>
+                            <option value="mcs">{{ __('MCS') }}</option>
                             <option value="emp_id">{{ __('Nomor karyawan') }}</option>
                         </x-select>                        
                     </div>

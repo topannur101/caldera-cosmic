@@ -7,10 +7,11 @@ use Livewire\WithPagination;
 use Carbon\Carbon;
 use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
-use App\Models\InsRdcHide;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\InsRdcTest;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.app')] 
+class extends Component {
     use WithPagination;
 
     #[Reactive]
@@ -18,9 +19,6 @@ new #[Layout('layouts.app')] class extends Component {
 
     #[Reactive]
     public $end_at;
-    
-    #[Reactive]
-    public $is_workdate;
 
     #[Reactive]
     public $fquery;
@@ -37,79 +35,75 @@ new #[Layout('layouts.app')] class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $hidesQuery = InsRdcHide::join('ins_rdc_groups', 'ins_rdc_hides.ins_rdc_group_id', '=', 'ins_rdc_groups.id')
-        ->join('users', 'ins_rdc_hides.user_id', '=', 'users.id')
+        $testsQuery = InsRdcTest::join('ins_rubber_batches', 'ins_rdc_tests.ins_rubber_batch_id', '=', 'ins_rubber_batches.id')
+        ->join('users', 'ins_rdc_tests.user_id', '=', 'users.id')
         ->select(
-        'ins_rdc_hides.*',
-        'ins_rdc_hides.updated_at as hide_updated_at',
-        'ins_rdc_groups.workdate as group_workdate',
-        'ins_rdc_groups.style as group_style',
-        'ins_rdc_groups.line as group_line',
-        'ins_rdc_groups.material as group_material',
+        'ins_rdc_tests.*',
+        'ins_rdc_tests.updated_at as test_updated_at',
+        'ins_rubber_batches.code as batch_code',
+        'ins_rubber_batches.model as batch_model',
+        'ins_rubber_batches.color as batch_color',
+        'ins_rubber_batches.mcs as batch_mcs',
         'users.emp_id as user_emp_id',
         'users.name as user_name');
 
-        if (!$this->is_workdate) {
-            $hidesQuery->whereBetween('ins_rdc_hides.updated_at', [$start, $end]);
-        } else {
-            $hidesQuery->whereBetween('ins_rdc_groups.workdate', [$start, $end]);
-        }
+        $testsQuery->whereBetween('ins_rdc_tests.updated_at', [$start, $end]);
 
         switch ($this->ftype) {
             case 'code':
-                $hidesQuery->where('ins_rdc_hides.code', 'LIKE', '%' . $this->fquery . '%');
+                $testsQuery->where('ins_rubber_batches.code', 'LIKE', '%' . $this->fquery . '%');
+            break;
+            case 'model':
+                $testsQuery->where('ins_rubber_batches.model', 'LIKE', '%' . $this->fquery . '%');
                 break;
-            case 'style':
-                $hidesQuery->where('ins_rdc_groups.style', 'LIKE', '%' . $this->fquery . '%');
+            case 'color':
+                $testsQuery->where('ins_rubber_batches.color', 'LIKE', '%' . $this->fquery . '%');
             break;
-            case 'line':
-                $hidesQuery->where('ins_rdc_groups.line', 'LIKE', '%' . $this->fquery . '%');
-            break;
-            case 'material':
-                $hidesQuery->where('ins_rdc_groups.material', 'LIKE', '%' . $this->fquery . '%');
+            case 'mcs':
+                $testsQuery->where('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%');
             break;
             case 'emp_id':
-                $hidesQuery->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
+                $testsQuery->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
             break;
             
             default:
-                $hidesQuery->where(function (Builder $query) {
+                $testsQuery->where(function (Builder $query) {
                 $query
-                    ->orWhere('ins_rdc_hides.code', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('ins_rdc_groups.style', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('ins_rdc_groups.line', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('ins_rdc_groups.material', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('ins_rubber_batches.code', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('ins_rubber_batches.model', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('ins_rubber_batches.color', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%')
                     ->orWhere('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
                 });
                 break;
         }
 
-        switch ($this->sort) {
-            case 'updated':
-                if (!$this->is_workdate) {
-                    $hidesQuery->orderBy('ins_rdc_hides.updated_at', 'DESC');
-                } else {
-                    $hidesQuery->orderBy('ins_rdc_groups.workdate', 'DESC');
-                }
-                break;
+        // switch ($this->sort) {
+        //     case 'updated':
+        //         if (!$this->is_workdate) {
+        //             $testsQuery->orderBy('ins_rdc_tests.updated_at', 'DESC');
+        //         } else {
+        //             $testsQuery->orderBy('ins_rdc_groups.workdate', 'DESC');
+        //         }
+        //         break;
             
-            case 'sf_low':
-            $hidesQuery->orderBy(DB::raw('ins_rdc_hides.area_vn + ins_rdc_hides.area_ab + ins_rdc_hides.area_qt'), 'ASC');
-                break;
+        //     case 'sf_low':
+        //     $testsQuery->orderBy(DB::raw('ins_rdc_tests.area_vn + ins_rdc_tests.area_ab + ins_rdc_tests.area_qt'), 'ASC');
+        //         break;
 
-            case 'sf_high':
-            $hidesQuery->orderBy(DB::raw('ins_rdc_hides.area_vn + ins_rdc_hides.area_ab + ins_rdc_hides.area_qt'), 'DESC');
-                break;
-        }
+        //     case 'sf_high':
+        //     $testsQuery->orderBy(DB::raw('ins_rdc_tests.area_vn + ins_rdc_tests.area_ab + ins_rdc_tests.area_qt'), 'DESC');
+        //         break;
+        // }
 
-        $hides = $hidesQuery->paginate($this->perPage);
-        $sum_area_vn = $hidesQuery->sum('area_vn');
-        $sum_area_ab = $hidesQuery->sum('area_ab');
+        $tests = $testsQuery->paginate($this->perPage);
+        // $sum_area_vn = $testsQuery->sum('area_vn');
+        // $sum_area_ab = $testsQuery->sum('area_ab');
 
         return [
-            'hides' => $hides,
-            'sum_area_vn' => $sum_area_vn,
-            'sum_area_ab' => $sum_area_ab
+            'tests' => $tests,
+            // 'sum_area_vn' => $sum_area_vn,
+            // 'sum_area_ab' => $sum_area_ab
         ];
     }
 
@@ -125,17 +119,27 @@ new #[Layout('layouts.app')] class extends Component {
     <div>
         <div class="flex justify-between items-center mb-6 px-5 py-1">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
-                {{ __('Data Mentah') }}</h1>
-            <div class="flex gap-x-5 items-center">
-                <div class="grow text-sm"><span class="text-neutral-500">{{  __('Total') . ' VN | AB : ' }}</span><span>{{ $sum_area_vn . ' | ' .  $sum_area_ab }}</span><span class="text-neutral-500 ms-4">{{  __('Total lembar') . ' : ' }}</span><span>{{ $hides->total() }}</span></div>
-                <x-select wire:model.live="sort">
-                    <option value="updated">{{ __('Diperbarui') }}</option>
-                    <option value="sf_low">{{ __('SF Terkecil') }}</option>
-                    <option value="sf_high">{{ __('SF Terbesar') }}</option>
-                </x-select>
+                {{ __('Data Hasil Uji') }}</h1>
+            <div class="flex gap-x-2 items-center">
+                <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>
         </div>
-        @if (!$hides->count())
+        <x-modal name="raw-stats-info">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                    {{ __('Statistik hasil uji') }}
+                </h2>
+                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                    {{ __('Belum ada informasi statistik yang tersedia.') }}
+                </p>
+                <div class="mt-6 flex justify-end">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                        {{ __('Paham') }}
+                    </x-primary-button>
+                </div>
+            </div>
+        </x-modal>
+        @if (!$tests->count())
             @if (!$start_at || !$end_at)
                 <div wire:key="no-range" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -155,53 +159,43 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             @endif
         @else
-            <div wire:key="raw-hides" class="p-0 sm:p-1 overflow-auto">
+            <div wire:key="raw-tests" class="p-0 sm:p-1 overflow-auto">
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
                     <table class="table table-sm table-truncate text-sm text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
                             <th>{{ __('Diperbarui') }}</th>
-                            <th>{{ __('Kode')}}</th>
-                            <th>{{ __('VN') }}</th>
-                            <th>{{ __('AB') }}</th>
-                            <th>{{ __('QT') }}</th>
-                            <th>{{ __('G') }}</th>
-                            <th>{{ __('S') }}</th>
-                            <th>{{ __('WO') }}</th>
-                            <th>{{ __('Style') }}</th>
-                            <th>{{ __('Line') }}</th>
-                            <th>{{ __('Material') }}</th>
-                            <th>{{ __('Emp ID') }}</th>
+                            <th>{{ __('Kode') }}</th>
+                            <th>{{ __('Model/Warna/MCS') }}</th>
+                            <th>{{ __('Evaluasi') }}</th>
+                            <th>{{ __('NIK') }}</th>
                             <th>{{ __('Nama') }}</th>
     
                         </tr>
-                        @foreach ($hides as $hide)
+                        @foreach ($tests as $test)
                         <tr>
-                            <td>{{ $hide->hide_updated_at }}</td>
-                            <td>{{ $hide->code }}</td>
-                            <td>{{ $hide->area_vn }}</td>
-                            <td>{{ $hide->area_ab }}</td>
-                            <td>{{ $hide->area_qt }}</td>
-                            <td>{{ $hide->grade }}</td>
-                            <td>{{ $hide->shift }}</td>
-                            <td>{{ $hide->group_workdate }}</td>
-                            <td>{{ $hide->group_style }}</td>
-                            <td>{{ $hide->group_line }}</td>
-                            <td>{{ $hide->group_material }}</td>
-                            <td>{{ $hide->user_emp_id }}</td>
-                            <td>{{ $hide->user_name }}</td>
+                            <td>{{ $test->test_updated_at }}</td>
+                            <td>{{ $test->batch_code }}</td>
+                            <td>{{ ($test->batch_model ? $test->batch_model : '-') . ' / ' . ($test->batch_color ? $test->batch_color : '-') . ' / ' . ($test->batch_mcs ? $test->batch_mcs : '-') }}</td>
+                            <td><x-pill class="uppercase" color="{{ 
+                                $test->eval === 'queue' ? 'yellow' : 
+                                ($test->eval === 'pass' ? 'green' : 
+                                ($test->eval === 'fail' ? 'red' : ''))
+                            }}">{{ $test->evalHuman() }}</x-pill></td>
+                            <td>{{ $test->user_emp_id }}</td>
+                            <td>{{ $test->user_name }}</td>
                         </tr>
                     @endforeach
                     </table>
                 </div>
             </div>
             <div class="flex items-center relative h-16">
-                @if (!$hides->isEmpty())
-                    @if ($hides->hasMorePages())
+                @if (!$tests->isEmpty())
+                    @if ($tests->hasMorePages())
                         <div wire:key="more" x-data="{
                             observe() {
-                                const observer = new IntersectionObserver((hides) => {
-                                    hides.forEach(hide => {
-                                        if (hide.isIntersecting) {
+                                const observer = new IntersectionObserver((tests) => {
+                                    tests.forEach(test => {
+                                        if (test.isIntersecting) {
                                             @this.loadMore()
                                         }
                                     })

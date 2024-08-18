@@ -35,6 +35,7 @@ new #[Layout('layouts.app')] class extends Component {
             $this->user_emp_id  = $auth->user->emp_id;
             $this->user_photo   = $auth->user->photo ?? '';
             $this->actions      = json_decode($auth->actions ?? '[]', true);
+            $this->resetValidation();
         } else {
             $this->handleNotFound();
         }

@@ -3,7 +3,6 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Carbon\Carbon;
-use League\Csv\Writer;
 use App\Models\InsRtcMetric;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Response;
@@ -223,7 +222,7 @@ class extends Component {
         </div>
         @switch($view)
             @case('raw')
-                <livewire:insight.ldc.summary-raw :$start_at :$end_at :$is_workdate :$fquery :$ftype />
+                <livewire:insight.ldc.summary.raw :$start_at :$end_at :$is_workdate :$fquery :$ftype />
             @break
 
             @default

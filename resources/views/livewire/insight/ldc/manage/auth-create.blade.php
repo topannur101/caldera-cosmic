@@ -100,8 +100,8 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="grid grid-cols-1 gap-y-3 mt-6">
             {{-- <x-checkbox id="new-device-manage" wire:model="actions"
                 value="device-manage">{{ __('Kelola perangkat') }}</x-checkbox> --}}
-            <x-checkbox id="new-hide-update" wire:model="actions"
-                value="hide-update">{{ __('Memperbarui data') }}</x-checkbox>
+            <x-checkbox id="new-hide-edit" wire:model="actions"
+                value="hide-edit">{{ __('Menyunting data kulit') }}</x-checkbox>
         </div>
         <div class="mt-6 flex justify-end items-end">
             <x-primary-button type="submit">

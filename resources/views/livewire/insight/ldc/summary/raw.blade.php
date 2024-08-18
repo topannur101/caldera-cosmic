@@ -135,6 +135,13 @@ new #[Layout('layouts.app')] class extends Component {
                 </x-select>
             </div>
         </div>
+        @can('manage', InsLdcHide::class)
+            <div wire:key="hide-edit">   
+                <x-modal name="hide-edit">
+                    <livewire:insight.ldc.summary.hide-edit />
+                </x-modal>
+            </div>
+        @endcan
         @if (!$hides->count())
             @if (!$start_at || !$end_at)
                 <div wire:key="no-range" class="py-20">
@@ -170,12 +177,13 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Style') }}</th>
                             <th>{{ __('Line') }}</th>
                             <th>{{ __('Material') }}</th>
-                            <th>{{ __('Emp ID') }}</th>
+                            <th>{{ __('NIK') }}</th>
                             <th>{{ __('Nama') }}</th>
     
                         </tr>
                         @foreach ($hides as $hide)
-                        <tr>
+                        <tr wire:key="hide-tr-{{ $hide->id . $loop->index }}" tabindex="0"
+                            x-on:click="$dispatch('open-modal', 'hide-edit'); $dispatch('hide-edit', { id: '{{ $hide->id }}'})">
                             <td>{{ $hide->hide_updated_at }}</td>
                             <td>{{ $hide->code }}</td>
                             <td>{{ $hide->area_vn }}</td>
