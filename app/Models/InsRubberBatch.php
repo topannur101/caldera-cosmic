@@ -24,13 +24,13 @@ class InsRubberBatch extends Model
 
         switch ($this->rdc_eval) {
             case 'queue':
-                return __('Dalam antrian');
+                return __('Antri');
                 break;
             case 'pass':
-                return __('Lolos');
+                return __('Pass');
                 break;
             case 'fail':
-                return __('Gagal');
+                return __('Fail');
                 break;
         }
         return __('Baru');

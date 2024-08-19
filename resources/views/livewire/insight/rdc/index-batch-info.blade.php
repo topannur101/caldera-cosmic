@@ -110,7 +110,7 @@ class extends Component {
                 </x-secondary-button>
                 @elseif($rdc_eval == 'pass')
                 <x-secondary-button type="button" disabled>
-                    {{ __('Sudah lolos') }}
+                    {{ __('Sudah PASS') }}
                 </x-secondary-button>
                 @else
                 <x-secondary-button type="button" wire:click="addToQueue">

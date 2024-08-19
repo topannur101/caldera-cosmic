@@ -78,6 +78,8 @@ class extends Component {
                 break;
         }
 
+        $testsQuery->orderBy('ins_rdc_tests.updated_at', 'DESC');
+
         // switch ($this->sort) {
         //     case 'updated':
         //         if (!$this->is_workdate) {

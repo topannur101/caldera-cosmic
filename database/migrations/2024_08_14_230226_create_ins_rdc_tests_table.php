@@ -25,6 +25,7 @@ return new class extends Migration
             $table->decimal('tc50', 5, 2);
             $table->decimal('tc90', 5, 2);
             $table->json('data')->nullable();
+            $table->timestamp('queued_at')->nullable();
 
             $table->index('user_id');
             $table->index('ins_rubber_batch_id');

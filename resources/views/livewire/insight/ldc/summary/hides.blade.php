@@ -135,13 +135,11 @@ new #[Layout('layouts.app')] class extends Component {
                 </x-select>
             </div>
         </div>
-        @can('manage', InsLdcHide::class)
-            <div wire:key="hide-edit">   
-                <x-modal name="hide-edit">
-                    <livewire:insight.ldc.summary.hide-edit />
-                </x-modal>
-            </div>
-        @endcan
+        <div wire:key="hide-edit">   
+            <x-modal name="hide-edit">
+                <livewire:insight.ldc.summary.hide-edit />
+            </x-modal>
+        </div>
         @if (!$hides->count())
             @if (!$start_at || !$end_at)
                 <div wire:key="no-range" class="py-20">

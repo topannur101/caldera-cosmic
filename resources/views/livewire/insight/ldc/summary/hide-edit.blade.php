@@ -145,6 +145,7 @@ new class extends Component {
 
     public function customReset()
     {
+        $this->resetValidation();
         $this->reset(['id', 'line', 'workdate', 'style', 'material', 'area_vn', 'area_ab', 'area_qt', 'grade', 'code', 'shift']);
     }
 
@@ -174,27 +175,39 @@ new class extends Component {
     <form wire:submit="save" class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Edit kulit') }}
+                {{ __('Kulit') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
         <div class="mb-6">
             <div class="mt-6">
-                <label for="gs-hide-workdate"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('WO') }}</label>
-                <x-text-input id="gs-hide-workdate" wire:model="workdate" type="date" />
-                @error('workdate')
-                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                @enderror
+                <div class="grid grid-cols1 sm:grid-cols-2 mt-6 gap-y-6 gap-x-3">
+                    <div>
+                        <label for="gs-hide-line"
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                        <x-text-input id="gs-hide-line" list="gs-hide-lines" wire:model="line" type="text" :disabled="Gate::denies('manage', InsLdcHide::class)"
+                            autocomplete="off" />
+
+                        <datalist id="gs-hide-lines">
+                            @foreach ($cached_lines as $cached_line)
+                                <option value="{{ $cached_line['name'] }}">
+                            @endforeach
+                        </datalist>
+  
+                    </div>
+                    <div>
+                        <label for="gs-hide-workdate"
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('WO') }}</label>
+                        <x-text-input id="gs-hide-workdate" wire:model="workdate" type="date" :disabled="Gate::denies('manage', InsLdcHide::class)" />
+
+                    </div>
+                </div>
             </div>
             <div class="mt-6">
                 <label for="gs-hide-style"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Style') }}</label>
-                <x-text-input id="gs-hide-style" list="gs-hide-styles" wire:model="style" autocomplete="off"
+                <x-text-input id="gs-hide-style" list="gs-hide-styles" wire:model="style" autocomplete="off" :disabled="Gate::denies('manage', InsLdcHide::class)"
                     type="text" />
-                @error('style')
-                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                @enderror
                 <datalist id="gs-hide-styles">
                     @foreach ($cached_styles as $cached_style)
                         <option value="{{ $cached_style['name'] }}">
@@ -202,27 +215,10 @@ new class extends Component {
                 </datalist>
             </div>
             <div class="mt-6">
-                <label for="gs-hide-line"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                <x-text-input id="gs-hide-line" list="gs-hide-lines" wire:model="line" type="text"
-                    autocomplete="off" />
-                @error('line')
-                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                @enderror
-                <datalist id="gs-hide-lines">
-                    @foreach ($cached_lines as $cached_line)
-                        <option value="{{ $cached_line['name'] }}">
-                    @endforeach
-                </datalist>
-            </div>
-            <div class="mt-6">
                 <label for="gs-hide-material"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Material') }}</label>
-                <x-text-input id="gs-hide-material" list="gs-hide-materials" wire:model="material" type="text"
+                <x-text-input id="gs-hide-material" list="gs-hide-materials" wire:model="material" type="text" :disabled="Gate::denies('manage', InsLdcHide::class)"
                     autocomplete="off" />
-                @error('material')
-                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                @enderror
                 <datalist id="gs-hide-materials">
                     @foreach ($cached_materials as $cached_material)
                         <option value="{{ $cached_material['name'] }}">
@@ -235,18 +231,12 @@ new class extends Component {
                 <div>
                     <label for="hide-area_vn"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('VN') }}</label>
-                    <x-text-input-suffix suffix="SF" id="hide-area_vn" wire:model="area_vn" type="number" step=".01" autocomplete="off" />
-                    @error('area_vn')
-                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                    @enderror
+                    <x-text-input id="hide-area_vn" wire:model="area_vn" type="number" step=".01" autocomplete="off" :disabled="Gate::denies('manage', InsLdcHide::class)" />
                 </div>
-                <div class="mt-3">
+                <div class="mt-6">
                     <label for="hide-grade"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Grade') }}</label>
-                    <x-text-input id="hide-grade" wire:model="grade" type="number" list="hide-grades" step="1" />
-                    @error('grade')
-                        <x-input-error messages="{{ $message }}" class="px-3" />
-                    @enderror
+                    <x-text-input id="hide-grade" wire:model="grade" type="number" list="hide-grades" step="1" :disabled="Gate::denies('manage', InsLdcHide::class)" />
                     <datalist id="hide-grades">
                         <option value="1"></option>
                         <option value="2"></option>
@@ -257,46 +247,68 @@ new class extends Component {
                 </div>
             </div>
             <div class="col-span-2">
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-x-3 gap-y-6">
                     <div>
                         <label for="hide-area_ab"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('AB') }}</label>
-                        <x-text-input-suffix suffix="SF" id="hide-area_ab" wire:model="area_ab" type="number" step=".01" autocomplete="off" />
-                        @error('area_ab')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
+                        <x-text-input id="hide-area_ab" wire:model="area_ab" type="number" step=".01" autocomplete="off" :disabled="Gate::denies('manage', InsLdcHide::class)" />
                     </div>
                     <div>
                         <label for="hide-area_qt"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('QT') }}</label>
-                        <x-text-input-suffix suffix="SF" id="hide-area_qt" wire:model="area_qt" type="number" step=".01" autocomplete="off" x-on:keydown="if ($event.key === '+' || $event.key === '-') { $dispatch('open-spotlight', 'calculate-qt'); console.log(area_qt); area_qt_string = area_qt + $event.key }"  />
-                        @error('area_qt')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
+                        <x-text-input id="hide-area_qt" wire:model="area_qt" type="number" step=".01" autocomplete="off" :disabled="Gate::denies('manage', InsLdcHide::class)"  />
                     </div>
                     <div>
                         <label for="hide-code"
                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Barcode') }}</label>
                         <x-text-input id="hide-code" wire:model="code" x-ref="hidecode" type="text" autocomplete="off" disabled="disabled" />
-                        @error('code')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
                     </div>
                     <div>
                         <label for="hide-shift"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
-                        <x-select class="w-full" id="hide-shift" wire:model="shift">
+                        <x-select class="w-full" id="hide-shift" wire:model="shift" :disabled="Gate::denies('manage', InsLdcHide::class)">
                             <option value=""></option>
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3">3</option>
                         </x-select>
-                        @error('shift')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="mt-6">
+            <ul class="max-w-md space-y-1 text-sm text-red-600 dark:text-red-400 list-disc list-inside">
+                @error('line')
+                    <li>{{ $message }}</li>
+                @enderror
+                @error('workdate')
+                    <li>{{ $message }}</li>
+                @enderror
+                @error('style')
+                    <li>{{ $message }}</li>
+                @enderror
+                @error('material')
+                    <li>{{ $message }}</li>
+                @enderror
+                @error('area_vn')
+                    <li>{{ $message }}</li>
+                @enderror
+                @error('grade')
+                    <li>{{ $message }}</li>
+                @enderror
+                @error('area_ab')
+                    <li>{{ $message }}</li>
+                @enderror
+                @error('area_qt')
+                    <li>{{ $message }}</li>
+                @enderror
+                @error('code')
+                    <li>{{ $message }}</li>
+                @enderror
+                @error('shift')
+                    <li>{{ $message }}</li>
+                @enderror
+            </ul>
         </div>
         @can('manage', InsLdcHide::class)
         <div class="flex justify-end items-end mt-6">

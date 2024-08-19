@@ -98,7 +98,7 @@ new class extends Component {
         <x-text-button type="button" x-data="" class="p-3 h-full text-lg"
             x-on:click.prevent="$dispatch('open-modal', 'group-set')"><i class="fa fa-plus"></i></x-text-button>
     </div>
-    <x-modal name="group-set" maxWidth="sm">
+    <x-modal name="group-set">
         <form wire:submit="applyGroup" class="p-6">
             <div class="flex justify-between items-start">
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
@@ -108,13 +108,29 @@ new class extends Component {
                         class="fa fa-times"></i></x-text-button>
             </div>
             <div class="mb-6">
-                <div class="mt-6">
-                    <label for="gs-hide-workdate"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('WO') }}</label>
-                    <x-text-input id="gs-hide-workdate" wire:model="workdate" type="date" />
-                    @error('workdate')
-                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                    @enderror
+                <div class="grid grid-cols1 sm:grid-cols-2 mt-6 gap-y-6 gap-x-3">
+                    <div>
+                        <label for="gs-hide-line"
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                        <x-text-input id="gs-hide-line" list="gs-hide-lines" wire:model="line" type="text"
+                            autocomplete="off" />
+                        @error('line')
+                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                        @enderror
+                        <datalist id="gs-hide-lines">
+                            @foreach ($cached_lines as $cached_line)
+                                <option value="{{ $cached_line['name'] }}">
+                            @endforeach
+                        </datalist>
+                    </div>
+                    <div>
+                        <label for="gs-hide-workdate"
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('WO') }}</label>
+                        <x-text-input id="gs-hide-workdate" wire:model="workdate" type="date" />
+                        @error('workdate')
+                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                        @enderror
+                    </div>
                 </div>
                 <div class="mt-6">
                     <label for="gs-hide-style"
@@ -130,20 +146,7 @@ new class extends Component {
                         @endforeach
                     </datalist>
                 </div>
-                <div class="mt-6">
-                    <label for="gs-hide-line"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                    <x-text-input id="gs-hide-line" list="gs-hide-lines" wire:model="line" type="text"
-                        autocomplete="off" />
-                    @error('line')
-                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                    @enderror
-                    <datalist id="gs-hide-lines">
-                        @foreach ($cached_lines as $cached_line)
-                            <option value="{{ $cached_line['name'] }}">
-                        @endforeach
-                    </datalist>
-                </div>
+
                 <div class="mt-6">
                     <label for="gs-hide-material"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Material') }}</label>

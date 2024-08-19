@@ -115,8 +115,6 @@ class extends Component {
                 $this->updateBatchInfo();
             }
 
-            $this->js('notyfSuccess("' . __('Data berhasil diekstrak') . '")'); 
-
         } catch (\Exception $e) {
             $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
             $this->js('console.log("'. $e->getMessage() .'")');
@@ -340,8 +338,8 @@ class extends Component {
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Evaluasi') }}</label>
                             <x-select class="w-full" id="test-eval" wire:model="eval">
                                 <option value=""></option>
-                                <option value="pass">{{ __('Lolos') }}</option>
-                                <option value="fail">{{ __('Gagal') }}</option>
+                                <option value="pass">{{ __('PASS') }}</option>
+                                <option value="fail">{{ __('FAIL') }}</option>
                             </x-select>
                             @error('eval')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />

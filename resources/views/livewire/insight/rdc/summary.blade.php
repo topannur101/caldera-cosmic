@@ -110,7 +110,7 @@ class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('Pendataan Kulit') }}</x-slot>
+<x-slot name="title">{{ __('Pendataan Rheometer') }}</x-slot>
 
 <x-slot name="header">
     <x-nav-insights-rdc></x-nav-insights-rdc>
