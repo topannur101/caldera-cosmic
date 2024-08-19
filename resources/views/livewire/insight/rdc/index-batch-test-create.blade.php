@@ -27,13 +27,13 @@ class extends Component {
     public string $color = '';
     public string $mcs = '';
 
-    public string $e_model;
-    public string $e_color;
-    public string $e_mcs;
+    public string $e_model = '';
+    public string $e_color = '';
+    public string $e_mcs = '';
 
-    public string $o_model;
-    public string $o_color;
-    public string $o_mcs;
+    public string $o_model = '';
+    public string $o_color = '';
+    public string $o_mcs = '';
 
     public float $s_max;
     public float $s_min;
@@ -55,9 +55,15 @@ class extends Component {
             $this->id = $batch->id;
             $this->updated_at = $batch->updated_at ?? '';
             $this->code = $batch->code;
-            $this->model = $batch->model ?? '';
-            $this->color = $batch->color ?? '';
-            $this->mcs = $batch->mcs ?? '';
+
+            $this->model    = $batch->model ?? '';
+            $this->color    = $batch->color ?? '';
+            $this->mcs      = $batch->mcs ?? '';
+
+            $this->o_model  = $batch->model ?? '';
+            $this->o_color  = $batch->color ?? '';
+            $this->o_mcs    = $batch->mcs ?? '';
+
             $this->resetValidation();
         } else {
             $this->handleNotFound();
@@ -135,42 +141,31 @@ class extends Component {
 
     private function updateBatchInfo()
     {
-        if ($this->update_batch)
-        {
-            // apply extracted then keep the old one.
-            $this->o_model = $this->e_model ? $this->model : '';
-            $this->o_color = $this->e_color ? $this->color : '';
-            $this->o_mcs   = $this->e_mcs ? $this->mcs : '';
-
-            $this->model = $this->e_model ? $this->e_model : $this->model;
-            $this->color = $this->e_color ? $this->e_color : $this->color;
-            $this->mcs = $this->e_mcs ? $this->e_mcs : $this->mcs;
-
+        if ($this->update_batch) {
+            // Use extracted values if available, otherwise keep current value
+            $this->model = $this->e_model ?: $this->model;
+            $this->color = $this->e_color ?: $this->color;
+            $this->mcs = $this->e_mcs ?: $this->mcs;
         } else {
+            // Revert to original values
             $this->model = $this->o_model;
             $this->color = $this->o_color;
             $this->mcs = $this->o_mcs;
         }
-
-    } 
-
-    public function updatedUpdateBatchInfo()
-    {
-        $this->updateBatchInfo();
     }
 
     public function rules()
     {
         return [
-            'model'         => ['nullable', 'min:1', 'max:50'],
-            'color'         => ['nullable', 'min:1', 'max:10'],
-            'mcs'           => ['nullable', 'min:1', 'max:10'],
-            's_max'         => ['required', 'numeric', 'gt:0', 'lt:999'],
-            's_min'         => ['required', 'numeric', 'gt:0', 'lt:999'],
+            'model'         => ['required_if_accepted:update_batch', 'nullable', 'min:1', 'max:50'],
+            'color'         => ['required_if_accepted:update_batch', 'nullable', 'min:1', 'max:10'],
+            'mcs'           => ['required_if_accepted:update_batch', 'nullable', 'min:1', 'max:10'],
+            's_max'         => ['required', 'numeric', 'gt:0', 'lt:99'],
+            's_min'         => ['required', 'numeric', 'gt:0', 'lt:99'],
             'eval'          => ['required', 'in:pass,fail'],
-            'tc10'          => ['required', 'numeric', 'gt:0', 'lt:99'],
-            'tc50'          => ['required', 'numeric', 'gt:0', 'lt:99'],
-            'tc90'          => ['required', 'numeric', 'gt:0', 'lt:99'],
+            'tc10'          => ['required', 'numeric', 'gt:0', 'lt:999'],
+            'tc50'          => ['required', 'numeric', 'gt:0', 'lt:999'],
+            'tc90'          => ['required', 'numeric', 'gt:0', 'lt:999'],
         ];
     }
 
@@ -197,6 +192,14 @@ class extends Component {
 
             $test->save();
 
+            if ($this->update_batch) {
+                $batch->update([
+                    'model' => $this->e_model ?: $this->model,
+                    'color' => $this->e_color ?: $this->color,
+                    'mcs'   => $this->e_mcs ?: $this->mcs,
+                ]);
+            }
+
             $batch->update([
                 'rdc_eval' => $validated['eval']
             ]);
@@ -213,12 +216,11 @@ class extends Component {
       
     }
 
-    // public function with(): array
-    // {
-    //     return [
-    //         'is_superuser' => Gate::allows('superuser'),
-    //     ];
-    // }
+    public function with(): array
+    {
+        $this->updateBatchInfo();
+        return [];
+    }
 
     // public function save()
     // {
@@ -305,12 +307,13 @@ class extends Component {
                     <input wire:model="file" type="file"
                         class="absolute inset-0 m-0 p-0 w-full h-full outline-none opacity-0" x-cloak x-ref="file"
                         x-show="dropping" x-on:dragleave.prevent="dropping = false" x-on:drop="dropping = false" />
-                    <div class="flex justify-between">
+                    <div class="flex justify-between items-end">
                         <x-secondary-button type="button" x-on:click="$refs.file.click()"><i
                                 class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
                         @if($e_model || $e_color || $e_mcs)
-                        <x-checkbox id="update-batch-info" wire:model.live="update_batch"
-                        value="update-batch-info">{{ __('Perbarui info batch') }}</x-checkbox>
+                        <div>
+                            <x-toggle name="mblur" wire:model.live="update_batch" :checked="$update_batch ? true : false" >{{ __('Perbarui info batch') }}</x-toggle>
+                        </div>
                         @endif
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3">

@@ -23,81 +23,22 @@ class extends Component {
     public string $rdc_eval;
     public string $rdc_eval_human;
 
-    // public function rules()
-    // {
-    //     return [
-    //         'actions' => ['array'],
-    //         'actions.*' => ['string'],
-    //     ];
-    // }
-
     #[On('batch-load')]
-    public function loadBatch(int $id)
+    public function loadBatch(int $id, string $updated_at, string $code, string $model, string $color, string $mcs, string $rdc_eval, string $rdc_eval_human)
     {
-        $batch = InsRubberBatch::find($id);
-        
-        if ($batch) {
-            $this->id               = $batch->id;
-            $this->updated_at       = $batch->updated_at ?? '';
-            $this->code             = $batch->code;
-            $this->model            = $batch->model ?? '-';
-            $this->color            = $batch->color ?? '-';
-            $this->mcs              = $batch->mcs ?? '-';
-            $this->rdc_eval         = $batch->rdc_eval ?? '-';
-            $this->rdc_eval_human   = $batch->rdcEvalHuman();
-            // $this->actions = json_decode($batch->actions ?? '[]', true);
-        } else {
-            $this->handleNotFound();
-        }
-
+        $this->id               = $id;
+        $this->updated_at       = $updated_at ? $updated_at : '-';
+        $this->code             = $code ? $code : '-';
+        $this->model            = $model ? $model : '-';
+        $this->color            = $color ? $model : '-';
+        $this->mcs              = $mcs ? $mcs : '-';
+        $this->rdc_eval         = $rdc_eval ? $rdc_eval : '-';
+        $this->rdc_eval_human   = $rdc_eval_human ? $rdc_eval_human : __('Tak diketahui');
     }
-
-    // public function with(): array
-    // {
-    //     return [
-    //         'is_superuser' => Gate::allows('superuser'),
-    //     ];
-    // }
-
-    // public function save()
-    // {
-    //     Gate::batchorize('superuser');
-    //     $this->validate();
-
-    //     $batch = InsRubberBatch::find($this->id);
-    //     if ($batch) {
-    //         $batch->actions = json_encode($this->actions, true);
-    //         $batch->update();
-
-    //         $this->js('$dispatch("close")');
-    //         $this->js('notyfSuccess("' . __('Wewenang diperbarui') . '")');
-    //         $this->dispatch('updated');
-    //     } else {
-    //         $this->handleNotFound();
-    //         $this->customReset();
-    //     }
-    // }
-
-    // public function delete()
-    // {
-    //     Gate::batchorize('superuser');
-
-    //     $batch = InsRubberBatch::find($this->id);
-    //     if ($batch) {
-    //         $batch->delete();
-
-    //         $this->js('$dispatch("close")');
-    //         $this->js('notyfSuccess("' . __('Wewenang dicabut') . '")');
-    //         $this->dispatch('updated');
-    //     } else {
-    //         $this->handleNotFound();
-    //     }
-    //     $this->customReset();
-    // }
 
     public function customReset()
     {
-        $this->reset(['id', 'model', 'color', 'mcs', 'rdc_eval', 'rdc_eval_human']);
+        $this->reset(['id', 'updated_at', 'model', 'color', 'mcs', 'rdc_eval', 'rdc_eval_human']);
     }
 
     public function handleNotFound()
@@ -118,7 +59,9 @@ class extends Component {
             $this->js('$dispatch("close")');
             $this->js('notyfSuccess("' . __('Ditambahkan ke antrian') . '")');
             $this->dispatch('updated');
-        }        
+        } else {
+            $this->handleNotFound();
+        }      
     }
 };
 

@@ -26,7 +26,17 @@ class extends Component {
             $batch = InsRubberBatch::firstOrCreate(
                 ['code' => $this->code]
             );
-            $this->js('$dispatch("open-modal", "batch-info"); $dispatch("batch-load", { id: '. $batch->id .'})');
+            $this->js('$dispatch("open-modal", "batch-info"); $dispatch("batch-load", { 
+                id: ' . $batch->id . ', 
+                updated_at: "' . $batch->updated_at . '", 
+                code: "' . $batch->code . '", 
+                model: "' . $batch->model . '", 
+                color: "' . $batch->color . '", 
+                mcs: "' . $batch->mcs . '", 
+                rdc_eval: "' . $batch->rdc_eval . '", 
+                rdc_eval_human: "' . $batch->rdcEvalHuman() . '"
+            })');
+            $this->reset(['code']);
         } else {
             $this->js('notyfError("' . __('Kode tidak boleh kosong') . '")');
         }
