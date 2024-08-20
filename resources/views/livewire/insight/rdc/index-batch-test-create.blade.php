@@ -107,7 +107,7 @@ class extends Component {
             $this->tc90  = $extractedData[10];
 
             $eval = strtoupper(trim($extractedData[11]));
-            $this->eval = ($eval == 'OK' ? 'pass' : ($eval == 'Fail' ? 'fail' : ''));
+            $this->eval = ($eval == 'OK' ? 'pass' : ($eval == 'SL' ? 'fail' : ''));
 
             if((!$this->model && !$this->color && !$this->mcs) && ($this->e_model || $this->e_color || $this->e_mcs)) 
             {
@@ -281,7 +281,7 @@ class extends Component {
         </div>
         <dl class="text-neutral-900 divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700 mt-6 text-sm">
             <div class="flex flex-col pb-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Kode') }}</dt>
+                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Nomor batch') }}</dt>
                 <dd>{{ $code ?? '-' }}</dd>
             </div>
             <div class="flex flex-col py-3">
@@ -335,7 +335,7 @@ class extends Component {
                         </div>
                         <div class="mt-6">
                             <label for="test-eval"
-                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Evaluasi') }}</label>
+                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Hasil') }}</label>
                             <x-select class="w-full" id="test-eval" wire:model="eval">
                                 <option value=""></option>
                                 <option value="pass">{{ __('PASS') }}</option>

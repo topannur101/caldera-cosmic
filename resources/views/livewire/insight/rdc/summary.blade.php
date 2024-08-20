@@ -81,6 +81,22 @@ class extends Component {
         $this->reset('fquery', 'ftype');
     }
 
+    public function filterPass()
+    {
+        if (Auth::user()) {
+            $this->ftype = 'eval';
+            $this->fquery = 'pass';
+        }
+    }
+
+    public function filterFail()
+    {
+        if (Auth::user()) {
+            $this->ftype = 'eval';
+            $this->fquery = 'fail';
+        }
+    }
+
     public function filterByMe()
     {
         if (Auth::user()) {
@@ -179,6 +195,12 @@ class extends Component {
                                     <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
                                 </x-slot>
                                 <x-slot name="content">
+                                    <x-dropdown-link href="#" wire:click.prevent="filterPass">
+                                        <x-pill class="uppercase" color="green">{{ __('PASS') }}</x-pill>
+                                    </x-dropdown-link>
+                                    <x-dropdown-link href="#" wire:click.prevent="filterFail">
+                                        <x-pill class="uppercase" color="red">{{ __('FAIL') }}</x-pill>
+                                    </x-dropdown-link>
                                     @if(Auth::user())
                                     <x-dropdown-link href="#" wire:click.prevent="filterByMe">
                                         {{ __('Oleh aku') }}
@@ -200,6 +222,7 @@ class extends Component {
                             <option value="model">{{ __('Model') }}</option>
                             <option value="warna">{{ __('Warna') }}</option>
                             <option value="mcs">{{ __('MCS') }}</option>
+                            <option value="eval">{{ __('Hasil') }}</option>
                             <option value="emp_id">{{ __('Nomor karyawan') }}</option>
                         </x-select>                        
                     </div>
@@ -222,7 +245,7 @@ class extends Component {
         </div>
         @switch($view)
             @case('raw')
-                <livewire:insight.rdc.summary-raw :$start_at :$end_at :$is_workdate :$fquery :$ftype />
+                <livewire:insight.rdc.summary-tests :$start_at :$end_at :$is_workdate :$fquery :$ftype />
             @break
 
             @default

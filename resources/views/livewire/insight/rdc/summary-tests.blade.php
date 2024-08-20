@@ -62,6 +62,9 @@ class extends Component {
             case 'mcs':
                 $testsQuery->where('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%');
             break;
+            case 'eval':
+                $testsQuery->where('ins_rdc_tests.eval', 'LIKE', '%' . $this->fquery . '%');
+            break;
             case 'emp_id':
                 $testsQuery->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
             break;
@@ -121,7 +124,7 @@ class extends Component {
     <div>
         <div class="flex justify-between items-center mb-6 px-5 py-1">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
-                {{ __('Data Hasil Uji') }}</h1>
+                {{ __('Hasil Uji') }}</h1>
             <div class="flex gap-x-2 items-center">
                 <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>
@@ -165,25 +168,29 @@ class extends Component {
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
                     <table class="table table-sm table-truncate text-sm text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
-                            <th>{{ __('Diperbarui') }}</th>
+                            <th>{{ __('Waktu antri') }}</th>
+                            <th>{{ __('Waktu uji') }}</th>
                             <th>{{ __('Kode') }}</th>
-                            <th>{{ __('Model/Warna/MCS') }}</th>
-                            <th>{{ __('Evaluasi') }}</th>
-                            <th>{{ __('NIK') }}</th>
+                            <th>{{ __('Model') }}</th>
+                            <th>{{ __('Warna') }}</th>
+                            <th>{{ __('MCS') }}</th>
+                            <th>{{ __('Hasil') }}</th>
                             <th>{{ __('Nama') }}</th>
     
                         </tr>
                         @foreach ($tests as $test)
                         <tr>
+                            <td>{{ $test->test_queued_at }}</td>
                             <td>{{ $test->test_updated_at }}</td>
                             <td>{{ $test->batch_code }}</td>
-                            <td>{{ ($test->batch_model ? $test->batch_model : '-') . ' / ' . ($test->batch_color ? $test->batch_color : '-') . ' / ' . ($test->batch_mcs ? $test->batch_mcs : '-') }}</td>
+                            <td>{{ $test->batch_model ? $test->batch_model : '-' }}</td>
+                            <td>{{ $test->batch_color ? $test->batch_color : '-'  }}</td>
+                            <td>{{ $test->batch_mcs ? $test->batch_mcs : '-' }}</td>
                             <td><x-pill class="uppercase" color="{{ 
                                 $test->eval === 'queue' ? 'yellow' : 
                                 ($test->eval === 'pass' ? 'green' : 
                                 ($test->eval === 'fail' ? 'red' : ''))
                             }}">{{ $test->evalHuman() }}</x-pill></td>
-                            <td>{{ $test->user_emp_id }}</td>
                             <td>{{ $test->user_name }}</td>
                         </tr>
                     @endforeach

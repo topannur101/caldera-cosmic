@@ -81,7 +81,7 @@ class extends Component {
             <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
                 <table wire:key="rdc-index-table" class="table">
                     <tr>
-                        <th>{{ __('Kode') }}</th>
+                        <th>{{ __('Nomor batch') }}</th>
                         <th>{{ __('Model/Warna/MCS') }}</th>
                         <th>{{ __('Diperbarui') }}</th>
                         <th></th>

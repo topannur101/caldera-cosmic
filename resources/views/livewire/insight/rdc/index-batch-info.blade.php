@@ -77,14 +77,14 @@ class extends Component {
         <dl class="text-neutral-900 divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700 mt-6 text-sm">
             <div class="flex flex-col pb-3">
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Kode') }}</dt>
-                <dd>{{ $code }}</dd>
+                <dd>{{ $code ?: '-' }}</dd>
             </div>
             <div class="flex flex-col py-3">
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Model/Warna/MCS')}}</dt>
                 <dd>{{ $model . ' / ' . $color . ' / ' . $mcs }}</dd>
             </div>
             <div class="flex flex-col py-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Evaluasi uji rheo')}}</dt>
+                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Hasil rheometer')}}</dt>
                 <dd><x-pill class="uppercase" color="{{ 
                     $rdc_eval === 'queue' ? 'yellow' : 
                     ($rdc_eval === 'pass' ? 'green' : 
