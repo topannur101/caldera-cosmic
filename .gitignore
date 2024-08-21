@@ -21,3 +21,10 @@ yarn-error.log
 /py/omv-worker/config.json
 /py/omv-worker/database.db
 /py/omv-worker/debug.log
+/py/omv-worker/__pycache__
+/py/omv-worker-ui/env/*
+/py/omv-worker-ui/config.json
+/py/omv-worker-ui/database.db
+/py/omv-worker-ui/debug.log
+/py/omv-worker-ui/__pycache__
+
