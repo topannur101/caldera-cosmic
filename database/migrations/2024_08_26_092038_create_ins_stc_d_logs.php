@@ -11,12 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ins_omv_captures', function (Blueprint $table) {
+        Schema::create('ins_stc_d_logs', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
 
-            $table->string('file_name');
-            $table->foreignId('ins_omv_metric_id')->nullable()->constrained()->nullOnDelete(); // should be indexed
+            $table->foreignId('ins_stc_d_sum_id');
+            $table->timestamp('taken_at');
+            $table->decimal('temp', 3, 1);
+            
+            $table->index('ins_stc_d_sum_id');
+            $table->index('taken_at');
         });
     }
 
@@ -25,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ins_omv_captures');
+        Schema::dropIfExists('ins_stc_d_logs');
     }
 };

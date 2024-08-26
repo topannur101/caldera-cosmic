@@ -3,6 +3,7 @@
 use App\Livewire\Forms\LoginForm;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use App\Models\Pref;
 
@@ -10,11 +11,15 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public LoginForm $form;
 
+    #[Url]
+    public string $redirect = '';
+
     /**
      * Handle an incoming authentication request.
      */
     public function mount()
     {
+        $this->redirect = $this->redirect ?: route('home', absolute: false);
         $this->js('$wire.form.bgm = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";');
     }
 
@@ -42,7 +47,7 @@ new #[Layout('layouts.guest')] class extends Component
         session(['accent'   => $pref_accent]);
 
         // navigate: false to reload page
-        $this->redirectIntended(default: route('home', absolute: false), navigate: true);
+        $this->redirectIntended(default: $this->redirect, navigate: true);
     }
 }; ?>
 

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->integer('line')->unique();
+            $table->integer('line')->unique(); // should be unsigned
             $table->ipAddress('ip_address');
 
             $table->index('line');

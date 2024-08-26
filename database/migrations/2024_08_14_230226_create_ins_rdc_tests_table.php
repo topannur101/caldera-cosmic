@@ -29,6 +29,7 @@ return new class extends Migration
 
             $table->index('user_id');
             $table->index('ins_rubber_batch_id');
+            $table->index('queued_at');
         });
     }
 

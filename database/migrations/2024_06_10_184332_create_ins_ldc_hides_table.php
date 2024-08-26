@@ -19,8 +19,8 @@ return new class extends Migration
             $table->decimal('area_vn', 4, 2);
             $table->decimal('area_ab', 4, 2);
             $table->decimal('area_qt', 4, 2);
-            $table->tinyInteger('grade')->nullable();
-            $table->tinyInteger('shift');
+            $table->tinyInteger('grade')->nullable(); // should be unsigned
+            $table->tinyInteger('shift'); // should be unsigned
             $table->foreignId('user_id');
             $table->foreignId('ins_ldc_group_id');
 

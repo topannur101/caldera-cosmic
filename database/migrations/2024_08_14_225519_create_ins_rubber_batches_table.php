@@ -23,6 +23,8 @@ return new class extends Migration
             $table->enum('omv_eval', ['too_soon', 'on_time', 'too_late'])->nullable();
 
             $table->index('code');
+            $table->index('rdc_eval');
+            $table->index('omv_eval');
         });
     }
 
