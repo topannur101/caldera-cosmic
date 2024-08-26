@@ -76,7 +76,7 @@ class extends Component {
         </x-modal>
     </div>
     @endcan
-    <div class="overflow-auto w-full mt-5">
+    <div class="overflow-auto w-full my-8">
         <div class="p-0 sm:p-1">
             <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
                 <table wire:key="rdc-index-table" class="table">

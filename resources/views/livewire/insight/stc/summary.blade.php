@@ -129,7 +129,7 @@ class extends Component {
 <x-slot name="title">{{ __('Pendataan Rheometer') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-insights-rdc></x-nav-insights-rdc>
+    <x-nav-insights-stc></x-nav-insights-stc>
 </x-slot>
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">

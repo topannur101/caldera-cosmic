@@ -43,7 +43,7 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 <x-slot name="title">{{ __('Wewenang') . ' — ' . __('Open Mill Validator') }}</x-slot>
 <x-slot name="header">
-    <x-nav-insights-rdc-sub />
+    <x-nav-insights-stc-sub />
 </x-slot>
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
@@ -71,7 +71,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <livewire:insight.rdc.manage.auth-edit  />
             </x-modal>
         </div>
-        <div class="overflow-auto w-full mt-5">
+        <div class="overflow-auto w-full my-8">
             <div class="p-0 sm:p-1">
                 <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
                     <table wire:key="auths-table" class="table">

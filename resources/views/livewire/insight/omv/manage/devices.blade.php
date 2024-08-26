@@ -75,7 +75,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <livewire:insight.rtc.manage.device-edit wire:key="device-edit" />
             </x-modal>
         </div>
-        <div class="overflow-auto w-full mt-5">
+        <div class="overflow-auto w-full my-8">
             <div class="p-0 sm:p-1">
                 <div class="bg-white table dark:bg-neutral-800 shadow sm:rounded-lg">
                     <table wire:key="devices-table" class="table">

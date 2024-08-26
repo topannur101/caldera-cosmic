@@ -18,7 +18,9 @@ new #[Layout('layouts.app')]
 class extends Component {
 
     use WithFileUploads;
-
+    
+    public $file;
+    
     public int $id;
     public string $updated_at;
     public string $code;
@@ -43,8 +45,6 @@ class extends Component {
     public float $tc90;
 
     public bool $update_batch = false;
-
-    public $file;
 
     #[On('batch-test-create')]
     public function loadBatch(int $id)
