@@ -363,7 +363,7 @@ class extends Component {
                                 <option value="{{ $machine->id }}">{{ $machine->number . ' - ' . $machine->name }}</option>
                             @endforeach
                         </x-select>
-                        <x-secondary-button type="button" x-on:click="$refs.file.click()" x-bind:disabled="!machine_id || {{ (bool) $file }}" ><i
+                        <x-secondary-button type="button" x-on:click="$refs.file.click()" x-bind:disabled="!machine_id || {{ $file ? 'true' : 'false' }}" ><i
                                 class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
 
                     </div>
