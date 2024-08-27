@@ -18,51 +18,55 @@ return new class extends Migration
 
             $table->tinyInteger('number')->unsigned();
             $table->string('name');
-            $table->json('data');
+            $table->json('cells');
         });
 
-        $rpaElite =  [
-            "Model" => "A12",
-            "OGRS" => "D2",
-            "Color" => "B12",
-            "S'Max" => "G12",
-            "S'Min" => "H12",
-            "TC10" => "I12",
-            "TC50" => "J12",
-            "TC90" => "K12",
-            "Status" => "L12"
+        Schema::table('ins_rdc_tests', function (Blueprint $table) {
+            $table->foreignId('ins_rdc_machine_id')->constrained();
+        });
+
+        $rpaElite = [
+            ["field" => "model", "address" => "A12"],
+            ["field" => "mcs", "address" => "D2"],
+            ["field" => "color", "address" => "B12"],
+            ["field" => "s_max", "address" => "G12"],
+            ["field" => "s_min", "address" => "H12"],
+            ["field" => "tc10", "address" => "I12"],
+            ["field" => "tc50", "address" => "J12"],
+            ["field" => "tc90", "address" => "K12"],
+            ["field" => "eval", "address" => "L12"]
         ];
         
         $mdrOne = [
-            "Model" => "A12",
-            "OGRS" => "D2",
-            "Color" => "B12",
-            "S'Max" => "J12",
-            "S'Min" => "K12",
-            "TC10" => "G12",
-            "TC50" => "I12",
-            "TC90" => "L12",
-            "Status" => "M12"
+            ["field" => "model", "address" => "A12"],
+            ["field" => "mcs", "address" => "D2"],
+            ["field" => "color", "address" => "B12"],
+            ["field" => "s_max", "address" => "J12"],
+            ["field" => "s_min", "address" => "K12"],
+            ["field" => "tc10", "address" => "G12"],
+            ["field" => "tc50", "address" => "I12"],
+            ["field" => "tc90", "address" => "L12"],
+            ["field" => "eval", "address" => "M12"]
         ];
 
         DB::table('ins_rdc_machines')->insert([
             [
                 'ID' => 1,
                 'NUMBER' => 2,
-                'NAME' => 'RPA Elite',
-                'DATA' => json_encode($rpaElite),
+                'NAME' => 'RPA ELITE',
+                'CELLS' => json_encode($rpaElite),
             ],
             [
                 'ID' => 2,
                 'NUMBER' => 3,
-                'NAME' => 'RPA Elite',
-                'DATA' => json_encode($rpaElite),
+                'NAME' => 'RPA ELITE',
+                'CELLS' => json_encode($rpaElite),
             ],
             [
                 'ID' => 3,
                 'NUMBER' => 4,
-                'NAME' => 'MDR One',
-                'DATA' => json_encode($mdrOne),
+                'NAME' => 'MDR ONE',
+                'CELLS' => json_encode($mdrOne),
             ]
         ]);
     }
@@ -72,6 +76,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('ins_rdc_tests', function (Blueprint $table) {
+            $table->dropForeign(['ins_rdc_machine_id']);
+            $table->dropColumn('ins_rdc_machine_id');        
+        });
         Schema::dropIfExists('ins_rdc_machines');
     }
 };

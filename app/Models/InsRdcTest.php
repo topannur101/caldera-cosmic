@@ -11,6 +11,7 @@ class InsRdcTest extends Model
 
     protected $fillable = [
         'ins_rubber_batch_id',
+        'ins_rdc_machine_id',
         'eval',
         'machine',
         's_min',

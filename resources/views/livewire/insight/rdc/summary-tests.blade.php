@@ -36,6 +36,7 @@ class extends Component {
         $end = Carbon::parse($this->end_at)->endOfDay();
 
         $testsQuery = InsRdcTest::join('ins_rubber_batches', 'ins_rdc_tests.ins_rubber_batch_id', '=', 'ins_rubber_batches.id')
+        ->join('ins_rdc_machines', 'ins_rdc_tests.ins_rdc_machine_id', '=', 'ins_rdc_machines.id')
         ->join('users', 'ins_rdc_tests.user_id', '=', 'users.id')
         ->select(
         'ins_rdc_tests.*',
@@ -45,6 +46,7 @@ class extends Component {
         'ins_rubber_batches.model as batch_model',
         'ins_rubber_batches.color as batch_color',
         'ins_rubber_batches.mcs as batch_mcs',
+        'ins_rdc_machines.number as machine_number',
         'users.emp_id as user_emp_id',
         'users.name as user_name');
 
@@ -176,6 +178,7 @@ class extends Component {
                             <th>{{ __('Warna') }}</th>
                             <th>{{ __('MCS') }}</th>
                             <th>{{ __('Hasil') }}</th>
+                            <th>{{ __('M') }}</th>
                             <th>{{ __('Nama') }}</th>
     
                         </tr>
@@ -192,6 +195,7 @@ class extends Component {
                                 ($test->eval === 'pass' ? 'green' : 
                                 ($test->eval === 'fail' ? 'red' : ''))
                             }}">{{ $test->evalHuman() }}</x-pill></td>
+                            <td>{{ $test->machine_number }}</td>
                             <td>{{ $test->user_name }}</td>
                         </tr>
                     @endforeach

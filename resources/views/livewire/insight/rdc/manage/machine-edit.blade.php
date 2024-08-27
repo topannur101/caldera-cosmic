@@ -8,27 +8,34 @@ use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\On;
 
 new class extends Component {
-
+    
     public int $id;
-    public $line;
-    public $ip_address;
+
+    public int $number;
+    public string $name = '';
+    public array $cells = [['field' => '', 'address' => '']];
 
     public function rules()
     {
         return [
-            'line'          => ['required', 'integer', 'min:1', 'max:99', Rule::unique('ins_rtc_devices', 'line')->ignore($this->id ?? null)],
-            'ip_address'    => ['required', 'ipv4', Rule::unique('ins_rtc_devices', 'ip_address')->ignore($this->id ?? null)]
+            'number'                => ['required', 'integer', 'min:1', 'max:99', Rule::unique('ins_rdc_machines', 'number')->ignore($this->id ?? null)],
+            'name'                  => ['required', 'string', 'min:1', 'max:20'],
+            'cells'                 => ['required', 'array', 'min:1', 'max:9'],
+            'cells.*.field'         => ['required', 'string', 'max:20'],
+            'cells.*.address'       => ['required', 'string', 'regex:/^[A-Z]+[1-9]\d*$/'],
         ];
     }
 
-        #[On('device-edit')]
-    public function loadDevice(int $id)
+    #[On('machine-edit')]
+    public function loadMachine(int $id)
     {
-        $device = InsRdcMachine::find($id);
-        if ($device) {
-            $this->id           = $device->id;
-            $this->line         = $device->line;
-            $this->ip_address   = $device->ip_address;
+        $machine = InsRdcMachine::find($id);
+        if ($machine) {
+            $this->id               = $machine->id;
+            $this->number           = $machine->number;
+            $this->name             = $machine->name;
+            $this->cells            = json_decode($machine->cells, true);
+        
             $this->resetValidation();
         } else {
             $this->handleNotFound();
@@ -37,14 +44,30 @@ new class extends Component {
 
     public function save()
     {
-        $device = InsRdcMachine::find($this->id);
+        $machine = InsRdcMachine::find($this->id);
+
+        $this->name = strtoupper(trim($this->name));
         $validated = $this->validate();
 
-        if($device) {
-            Gate::authorize('manage', $device);
-            $device->update($validated);
+        if($machine) {
+            Gate::authorize('manage', $machine);
+
+            // Ensure 'appropriate casing
+            $cells = array_map(function($cell) {
+                return [
+                    'field'     => strtolower(trim($cell['field'])),
+                    'address'   => strtoupper(trim($cell['address'])),
+                ];
+            }, $validated['cells']);
+
+            $machine->update([
+                'number' => $validated['number'],
+                'name' => $validated['name'],
+                'cells' => json_encode($cells),
+            ]);
+
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Perangkat diperbarui') . '")');
+            $this->js('notyfSuccess("' . __('Mesin diperbarui') . '")');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();
@@ -52,26 +75,10 @@ new class extends Component {
         }
     }
 
-    public function delete()
-    {
-        $device = InsRdcMachine::find($this->id);
-        
-        if($device) {
-            Gate::authorize('manage', $device);
-            $device->delete();
-
-            $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Perangkat dihapus') . '")');
-            $this->dispatch('updated');
-        } else {
-            $this->handleNotFound();
-        }
-        $this->customReset(); 
-    }
-
     public function customReset()
     {
-        $this->reset(['id', 'line', 'ip_address']);
+        $this->reset(['number', 'name', 'cells']);
+        $this->cells = [['field' => '', 'address' => '']];
     }
 
     public function handleNotFound()
@@ -81,46 +88,114 @@ new class extends Component {
         $this->dispatch('updated');
     }
 
+    public function addCell()
+    {
+        if (count($this->cells) < 9) {
+            $this->cells[] = ['field' => '', 'address' => ''];
+        }
+    }
+
+    public function removeCell($index)
+    {
+        if (count($this->cells) > 1) {
+            unset($this->cells[$index]);
+            $this->cells = array_values($this->cells);
+        }
+    }
+
+    public function moveCell($fromIndex, $toIndex)
+    {
+        if ($fromIndex !== $toIndex && $fromIndex >= 0 && $toIndex >= 0 && $fromIndex < count($this->cells) && $toIndex < count($this->cells)) {
+            $cell = $this->cells[$fromIndex];
+            array_splice($this->cells, $fromIndex, 1);
+            array_splice($this->cells, $toIndex, 0, [$cell]);
+        }
+    }
 };
 ?>
 
-<div>
+<div x-data="{ 
+    draggingIndex: null,
+    dragoverIndex: null,
+    isDragging: false,
+    startDrag(index) {
+        this.draggingIndex = index;
+        this.isDragging = true;
+    },
+    endDrag() {
+        this.draggingIndex = null;
+        this.dragoverIndex = null;
+        this.isDragging = false;
+    },
+    onDragOver(index) {
+        if (this.draggingIndex !== null && this.draggingIndex !== index) {
+            this.dragoverIndex = index;
+        }
+    },
+    onDrop(index) {
+        if (this.draggingIndex !== null) {
+            $wire.moveCell(this.draggingIndex, index);
+            this.endDrag();
+        }
+    }
+}">
     <form wire:submit="save" class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Perangkat ') }}
+                {{ __('Mesin ') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
-        <div class="mb-6">
-            <div class="mt-6">
-                <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('ID') }}</label>
-                <div class="px-3">{{ $id ?? '?' }}</div>
-            </div>
-            <div class="mt-6">
-                <label for="device-line"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                <x-text-input id="device-line" wire:model="line" :disabled="Gate::denies('manage', InsRdcMachine::class)" type="number" min="1" max="99" />
-                @error('line')
-                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                @enderror
-            </div>
-            <div class="mt-6">
-                <label for="device-ip-address"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Alamat IP') }}</label>
-                <x-text-input id="device-ip-address" wire:model="ip_address" :disabled="Gate::denies('manage', InsRdcMachine::class)" type="text" />
-                @error('ip_address')
-                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                @enderror
-            </div>
+        <div class="mt-6">
+            <label for="machine-number" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nomor') }}</label>
+            <x-text-input id="machine-number" wire:model="number" type="number" :disabled="Gate::denies('manage', InsRdcMachine::class)" />
+            @error('number')
+                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+            @enderror
+        </div>  
+        <div class="mt-6">
+            <label for="machine-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+            <x-text-input id="machine-name" wire:model="name" type="text" :disabled="Gate::denies('manage', InsRdcMachine::class)" />
+            @error('name')
+                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+            @enderror
+        </div>    
+        <div class="my-10">
+            <label class="block mb-4 uppercase text-xs text-center text-neutral-500">{{ __('Sel-sel') }}</label>
+            @foreach($cells as $index => $cell)
+                <div class="mt-2" 
+                     x-on:dragstart="startDrag({{ $index }})"
+                     x-on:dragend="endDrag"
+                     x-on:dragover.prevent="onDragOver({{ $index }})"
+                     x-on:drop.prevent="onDrop({{ $index }})"
+                     :class="{ 'opacity-50': draggingIndex === {{ $index }}, 'opacity-30': dragoverIndex === {{ $index }} }">
+                    <div class="grid grid-cols-2 gap-y-2 gap-x-2">
+                        <div class="flex gap-x-3 items-center">
+                            <i class="fa fa-grip-lines cursor-move" draggable="true"></i>
+                             <x-text-input type="text" wire:model="cells.{{ $index }}.field" :disabled="Gate::denies('manage', InsRdcMachine::class)" />
+                        </div>    
+                        <div class="flex gap-x-3">
+                            <x-text-input type="text" wire:model="cells.{{ $index }}.address" :disabled="Gate::denies('manage', InsRdcMachine::class)" />
+                            @can('manage', InsRdcMachine::class)
+                                <x-text-button type="button" wire:click="removeCell({{ $index }})"><i class="fa fa-times"></i></x-text-button>
+                            @endcan
+                        </div>
+                    </div>
+                    <div class="px-3">
+                        @error("cells.{$index}.field")
+                            <x-input-error messages="{{ $message }}" class="mt-2" />
+                        @enderror
+                        @error("cells.{$index}.address")
+                            <x-input-error messages="{{ $message }}" class="mt-2" />
+                        @enderror
+                    </div>
+                </div>
+            @endforeach
         </div>
+        
         @can('manage', InsRdcMachine::class)
-        <div class="flex justify-between items-end">
-            <div>
-                <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete" wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
-                    {{ __('Hapus') }}
-                </x-text-button>
-            </div>
+        <div class="mt-6 flex justify-between">
+            <x-secondary-button :disabled="count($cells) >= 9" type="button" wire:click="addCell">{{ __('Tambah sel')}}</x-secondary-button>
             <x-primary-button type="submit">
                 {{ __('Simpan') }}
             </x-primary-button>

@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use App\Models\InsRdcTest;
+use App\Models\InsRdcMachine;
 use App\Models\InsRubberBatch;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Validator;
@@ -90,25 +91,45 @@ class extends Component {
     private function extractData()
     {
         try {
+            // Fetch the machine data based on the selected machine_id
+            $machine = InsRdcMachine::find($this->machine_id);
+
+            if (!$machine) {
+                throw new \Exception("Mesin tidak ditemukan");
+            }
+
+            $cellsConfig = json_decode($machine->cells, true);
+
             $path = $this->file->getRealPath();
             $spreadsheet = IOFactory::load($path);
             $worksheet = $spreadsheet->getActiveSheet();
-            
-            $extractedMcs = $worksheet->getCell('D2')->getValue();
-            $extractedData = $worksheet->rangeToArray('A12:L12')[0];
 
-            $this->e_model = strtoupper(trim($extractedData[0]));
-            $this->e_color = strtoupper(trim($extractedData[1]));
-            $this->e_mcs   = $this->find3Digit($extractedMcs);
+            foreach ($cellsConfig as $config) {
+                $field = $config['field'];
+                $address = $config['address'];
+                $value = $worksheet->getCell($address)->getValue();
 
-            $this->s_max = $extractedData[6];
-            $this->s_min = $extractedData[7];
-            $this->tc10  = $extractedData[8];
-            $this->tc50  = $extractedData[9];
-            $this->tc90  = $extractedData[10];
-
-            $eval = strtoupper(trim($extractedData[11]));
-            $this->eval = ($eval == 'OK' ? 'pass' : ($eval == 'SL' ? 'fail' : ''));
+                switch ($field) {
+                    case 'model':
+                    case 'color':
+                        $this->{"e_$field"} = $this->safeString($value);
+                        break;
+                    case 'mcs':
+                        $this->e_mcs = $this->find3Digit($this->safeString($value));
+                        break;
+                    case 's_max':
+                    case 's_min':
+                    case 'tc10':
+                    case 'tc50':
+                    case 'tc90':
+                        $this->$field = $this->safeFloat($value);
+                        break;
+                    case 'eval':
+                        $eval = $this->safeString($value);
+                        $this->eval = ($eval == 'OK' ? 'pass' : ($eval == 'SL' ? 'fail' : ''));
+                        break;
+                }
+            }
 
             if((!$this->model && !$this->color && !$this->mcs) && ($this->e_model || $this->e_color || $this->e_mcs)) 
             {
@@ -120,6 +141,16 @@ class extends Component {
             $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
             $this->js('console.log("'. $e->getMessage() .'")');
         }
+    }
+
+    private function safeString($value): string
+    {
+        return is_string($value) ? strtoupper(trim($value)) : '';
+    }
+
+    private function safeFloat($value): ?float
+    {
+        return is_numeric($value) ? (float)$value : 0;
     }
 
     public function removeFromQueue()
@@ -156,15 +187,16 @@ class extends Component {
     public function rules()
     {
         return [
-            'model'         => ['required_if_accepted:update_batch', 'nullable', 'min:1', 'max:50'],
-            'color'         => ['required_if_accepted:update_batch', 'nullable', 'min:1', 'max:10'],
-            'mcs'           => ['required_if_accepted:update_batch', 'nullable', 'min:1', 'max:10'],
+            'model'         => ['nullable', 'min:1', 'max:50'],
+            'color'         => ['nullable', 'min:1', 'max:10'],
+            'mcs'           => ['nullable', 'min:1', 'max:10'],
             's_max'         => ['required', 'numeric', 'gt:0', 'lt:99'],
             's_min'         => ['required', 'numeric', 'gt:0', 'lt:99'],
             'eval'          => ['required', 'in:pass,fail'],
             'tc10'          => ['required', 'numeric', 'gt:0', 'lt:999'],
             'tc50'          => ['required', 'numeric', 'gt:0', 'lt:999'],
             'tc90'          => ['required', 'numeric', 'gt:0', 'lt:999'],
+            'machine_id'    => ['required', 'exists:ins_rdc_machines,id'],
         ];
     }
 
@@ -187,6 +219,7 @@ class extends Component {
                 'tc90'  => $validated['tc90'],
                 'user_id' => Auth::user()->id,
                 'ins_rubber_batch_id' => $batch->id,
+                'ins_rdc_machine_id' => $validated['machine_id'],
                 'queued_at' => $batch->updated_at,
             ]);
 
@@ -219,7 +252,9 @@ class extends Component {
     public function with(): array
     {
         $this->updateBatchInfo();
-        return [];
+        return [
+            'machines' => InsRdcMachine::orderBy('number')->get()
+        ];
     }
 
     // public function save()
@@ -296,8 +331,16 @@ class extends Component {
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Model/Warna/MCS') }}</dt>
                 <dd>{{ ($model ? $model : '-') . ' / ' . ($color ? $color : '-') . ' / ' . ($mcs ? $mcs : '-') }}</dd>
             </div>
+            @if($e_model || $e_color || $e_mcs)
+            <div class="flex flex-col py-3">
+                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Data batch dari unggahan') }}</dt>
+                <dd class="mt-2">
+                    <x-toggle name="mblur" wire:model.live="update_batch" :checked="$update_batch ? true : false" >{{ __('Perbarui info batch') }}</x-toggle>
+                </dd>
+            </div>
+            @endif
             <div class="flex-flex-col pt-3">
-                <div x-data="{ dropping: false }" class="relative py-3" x-on:dragover.prevent="dropping = true">
+                <div x-data="{ dropping: false, machine_id: @entangle('machine_id') }" class="relative py-3" x-on:dragover.prevent="machine_id ? dropping = true : dropping = false">
                     <div wire:loading.class="hidden"
                         class="absolute w-full h-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/80 dark:bg-neutral-800/80 py-3"
                         x-cloak x-show="dropping">
@@ -311,23 +354,28 @@ class extends Component {
                         </div>
                     </div>
                     <input wire:model="file" type="file"
-                        class="absolute inset-0 m-0 p-0 w-full h-full outline-none opacity-0" x-cloak x-ref="file"
-                        x-show="dropping" x-on:dragleave.prevent="dropping = false" x-on:drop="dropping = false" />
-                    <div class="flex justify-between items-end">
-                        <x-secondary-button type="button" x-on:click="$refs.file.click()"><i
+                            class="absolute inset-0 m-0 p-0 w-full h-full outline-none opacity-0" x-cloak x-ref="file"
+                            x-show="dropping" x-on:dragleave.prevent="dropping = false" x-on:drop="dropping = false" />
+                    <div class="flex justify-between items-center gap-3">
+                        <x-select class="w-full" id="test-machine_id" x-model="machine_id" :disabled="$file">
+                            <option value=""></option>
+                            @foreach($machines as $machine)
+                                <option value="{{ $machine->id }}">{{ $machine->number . ' - ' . $machine->name }}</option>
+                            @endforeach
+                        </x-select>
+                        <x-secondary-button type="button" x-on:click="$refs.file.click()" x-bind:disabled="!machine_id || {{ (bool) $file }}" ><i
                                 class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
-                        @if($e_model || $e_color || $e_mcs)
-                        <div>
-                            <x-toggle name="mblur" wire:model.live="update_batch" :checked="$update_batch ? true : false" >{{ __('Perbarui info batch') }}</x-toggle>
-                        </div>
-                        @endif
+
                     </div>
+                    @error('machine_id')
+                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                    @enderror
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3">
                         <div class="mt-6">
                             <label for="test-s_max"
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S maks') }}</label>
                             <x-text-input id="test-s_max" wire:model="s_max" type="number" step=".01"
-                                :disabled="Gate::denies('manage', InsRdcTest::class)" />
+                                :disabled="Gate::denies('manage', InsRdcTest::class) || $file" />
                             @error('s_max')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                             @enderror
@@ -336,7 +384,7 @@ class extends Component {
                             <label for="test-s_min"
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S Min') }}</label>
                             <x-text-input id="test-s_min" wire:model="s_min" type="number" step=".01"
-                                :disabled="Gate::denies('manage', InsRdcTest::class)" />
+                                :disabled="Gate::denies('manage', InsRdcTest::class) || $file" />
                             @error('s_min')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                             @enderror
@@ -344,7 +392,7 @@ class extends Component {
                         <div class="mt-6">
                             <label for="test-eval"
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Hasil') }}</label>
-                            <x-select class="w-full" id="test-eval" wire:model="eval">
+                            <x-select class="w-full" id="test-eval" wire:model="eval" :disabled="Gate::denies('manage', InsRdcTest::class) || $file">
                                 <option value=""></option>
                                 <option value="pass">{{ __('PASS') }}</option>
                                 <option value="fail">{{ __('FAIL') }}</option>
@@ -359,7 +407,7 @@ class extends Component {
                             <label for="test-tc10"
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC10') }}</label>
                             <x-text-input id="test-tc10" wire:model="tc10" type="number" step=".01"
-                                :disabled="Gate::denies('manage', InsRdcTest::class)" />
+                                :disabled="Gate::denies('manage', InsRdcTest::class) || $file" />
                             @error('tc10')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                             @enderror
@@ -368,7 +416,7 @@ class extends Component {
                             <label for="test-tc50"
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC50') }}</label>
                             <x-text-input id="test-tc50" wire:model="tc50" type="number" step=".01"
-                                :disabled="Gate::denies('manage', InsRdcTest::class)" />
+                                :disabled="Gate::denies('manage', InsRdcTest::class) || $file" />
                             @error('tc50')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                             @enderror
@@ -377,7 +425,7 @@ class extends Component {
                             <label for="test-tc90"
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC90') }}</label>
                             <x-text-input id="test-tc90" wire:model="tc90" type="number" step=".01"
-                                :disabled="Gate::denies('manage', InsRdcTest::class)" />
+                                :disabled="Gate::denies('manage', InsRdcTest::class) || $file" />
                             @error('tc90')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                             @enderror
@@ -385,6 +433,7 @@ class extends Component {
                     </div>
                 </div>
             </div>
+
         </dl>
         <div class="mt-6 flex justify-between items-center">
             <x-dropdown align="left" width="48">
@@ -392,11 +441,8 @@ class extends Component {
                     <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
                 </x-slot>
                 <x-slot name="content">
-                    <x-dropdown-link href="#" wire:click.prevent="machineReset">
-                        {{ __('Ganti mesin rheometer') }}
-                    </x-dropdown-link>
                     <x-dropdown-link href="#" wire:click.prevent="customReset">
-                        {{ __('Kosongkan semua isian') }}
+                        {{ __('Reset') }}
                     </x-dropdown-link>
                     <hr class="border-neutral-300 dark:border-neutral-600 {{ true ? '' : 'hidden' }}" />
                     <x-dropdown-link href="#" wire:click.prevent="removeFromQueue"

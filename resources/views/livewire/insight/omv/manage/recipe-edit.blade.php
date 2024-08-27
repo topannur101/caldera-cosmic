@@ -265,7 +265,7 @@ new class extends Component {
         
         @can('manage', InsOmvRecipe::class)
         <div class="mt-6 flex justify-between">
-            <x-secondary-button :disabled="count($steps) >= 6" type="button" type="button" wire:click="addStep">{{ __('Tambah langkah')}}</x-secondary-button>
+            <x-secondary-button :disabled="count($steps) >= 6" type="button" wire:click="addStep">{{ __('Tambah langkah')}}</x-secondary-button>
             <x-primary-button type="submit">
                 {{ __('Simpan') }}
             </x-primary-button>

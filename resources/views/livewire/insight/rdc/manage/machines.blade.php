@@ -22,9 +22,11 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $q = trim($this->q);
         $machines = InsRdcMachine::where(function (Builder $query) use ($q) {
-            $query->orWhere('name', 'LIKE', '%' . $q . '%')->orWhere('data', 'LIKE', '%' . $q . '%');
-        })
-            ->orderBy('name')
+            $query
+                ->orWhere('number', 'LIKE', '%' . $q . '%')
+                ->orWhere('name', 'LIKE', '%' . $q . '%');
+            })
+            ->orderBy('id')
             ->paginate($this->perPage);
 
         return [
@@ -66,23 +68,24 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div wire:key="machine-create">
-            <x-modal name="machine-create" maxWidth="sm">
+            <x-modal name="machine-create">
                 <livewire:insight.rdc.manage.machine-create />
             </x-modal>
         </div>
-        <div wire:key="machine-edit"> 
-            <x-modal name="machine-edit" maxWidth="sm">
-                <livewire:insight.rdc.manage.machine-edit wire:key="machine-edit" />
+        <div wire:key="machine-edit">   
+            <x-modal name="machine-edit">
+                <livewire:insight.rdc.manage.machine-edit />
             </x-modal>
         </div>
         <div class="overflow-auto w-full my-8">
             <div class="p-0 sm:p-1">
-                <div class="bg-white table dark:bg-neutral-800 shadow sm:rounded-lg">
+                <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
                     <table wire:key="machines-table" class="table">
                         <tr>
                             <th>{{ __('ID') }}</th>
+                            <th>{{ __('Nomor') }}</th>
                             <th>{{ __('Nama') }}</th>
-                            <th>{{ __('Data') }}</th>
+                            <th>{{ __('Sel') }}</th>
                         </tr>
                         @foreach ($machines as $machine)
                             <tr wire:key="machine-tr-{{ $machine->id . $loop->index }}" tabindex="0"
@@ -91,10 +94,13 @@ new #[Layout('layouts.app')] class extends Component {
                                     {{ $machine->id }}
                                 </td>
                                 <td>
+                                    {{ $machine->number }}
+                                </td>
+                                <td>
                                     {{ $machine->name }}
                                 </td>
                                 <td>
-                                    {{ $machine->data }}
+                                    {{ $machine->cellsCount() }}                                    
                                 </td>
                             </tr>
                         @endforeach

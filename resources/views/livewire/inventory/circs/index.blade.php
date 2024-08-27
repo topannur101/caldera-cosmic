@@ -302,7 +302,7 @@ class extends Component {
                     <x-secondary-button type="button" x-show="ids.length === 1" class="flex items-center h-full"
                         x-data="" x-on:click.prevent="$dispatch('open-modal', 'circ-show-'+ids[0])"><i
                             class="fa fa-fw fa-eye"></i></x-secondary-button>
-                    <x-secondary-button type="button" type="button" wire:click="print" x-on:click="$dispatch('open-modal', 'inv-circs-print');"
+                    <x-secondary-button type="button" wire:click="print" x-on:click="$dispatch('open-modal', 'inv-circs-print');"
                         class="flex items-center h-full"><i class="fa fa-fw fa-print"></i><span class="ml-2 hidden lg:inline">{{ __('Cetak') }}</span></x-secondary-button>
                     <div class="btn-group">
                         <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'inv-circs-approve')"

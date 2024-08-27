@@ -102,6 +102,8 @@ new #[Layout('layouts.app')] class extends Component {
                 value="device-manage">{{ __('Kelola perangkat') }}</x-checkbox> --}}
             <x-checkbox id="new-test-manage" wire:model="actions"
                 value="test-manage">{{ __('Mengelola hasil uji') }}</x-checkbox>
+            <x-checkbox id="new-machine-manage" wire:model="actions"
+            value="machine-manage">{{ __('Mengelola mesin rheometer') }}</x-checkbox>
         </div>
         <div class="mt-6 flex justify-end items-end">
             <x-primary-button type="submit">
