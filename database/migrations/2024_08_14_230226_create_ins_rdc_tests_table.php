@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->foreignId('user_id');
-            $table->foreignId('ins_rubber_batch_id');
+            $table->foreignId('user_id')->constrained();
+            $table->foreignId('ins_rubber_batch_id')->constrained()->cascadeOnDelete();
             $table->enum('eval', ['pass', 'fail']);
             $table->enum('machine', ['mdr', 'ta_rpa']);
             $table->decimal('s_min', 4, 2);
@@ -30,6 +30,7 @@ return new class extends Migration
             $table->index('user_id');
             $table->index('ins_rubber_batch_id');
             $table->index('queued_at');
+            
         });
     }
 

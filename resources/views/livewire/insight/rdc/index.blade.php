@@ -33,6 +33,8 @@ class extends Component {
                 model: "' . $batch->model . '", 
                 color: "' . $batch->color . '", 
                 mcs: "' . $batch->mcs . '", 
+                omv_eval: "' . $batch->omv_eval . '", 
+                omv_eval_human: "' . $batch->omvEvalHuman() . '",
                 rdc_eval: "' . $batch->rdc_eval . '", 
                 rdc_eval_human: "' . $batch->rdcEvalHuman() . '"
             })');

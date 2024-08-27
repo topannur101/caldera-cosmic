@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->foreignId('ins_stc_m_sum_id');
+            $table->foreignId('ins_stc_m_sum_id')->constrained()->cascadeOnDelete();
             $table->timestamp('taken_at');
             $table->decimal('temp', 3, 1);
             $table->smallInteger('speed')->unsigned();

@@ -20,6 +20,7 @@ class InsRdcTest extends Model
         'tc90',
         'data',
         'user_id',
+        'queued_at'
     ];
 
     public function evalHuman(): string

@@ -42,6 +42,7 @@ class extends Component {
     public float $tc50;
     public float $tc90;
 
+    public int $machine_id;
     public bool $update_batch = false;
 
     public $file;
@@ -185,7 +186,8 @@ class extends Component {
                 'tc50'  => $validated['tc50'],
                 'tc90'  => $validated['tc90'],
                 'user_id' => Auth::user()->id,
-                'ins_rubber_batch_id' => $batch->id
+                'ins_rubber_batch_id' => $batch->id,
+                'queued_at' => $batch->updated_at,
             ]);
 
             $test->save();
@@ -255,6 +257,12 @@ class extends Component {
     //     }
     //     $this->customReset();
     // }
+
+    public function machineReset()
+    {
+        $this->customReset();
+        $this->reset(['machine_id']);
+    }
 
     public function customReset()
     {
@@ -384,6 +392,9 @@ class extends Component {
                     <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
                 </x-slot>
                 <x-slot name="content">
+                    <x-dropdown-link href="#" wire:click.prevent="machineReset">
+                        {{ __('Ganti mesin rheometer') }}
+                    </x-dropdown-link>
                     <x-dropdown-link href="#" wire:click.prevent="customReset">
                         {{ __('Kosongkan semua isian') }}
                     </x-dropdown-link>

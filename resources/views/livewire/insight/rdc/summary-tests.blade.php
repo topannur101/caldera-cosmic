@@ -39,6 +39,7 @@ class extends Component {
         ->join('users', 'ins_rdc_tests.user_id', '=', 'users.id')
         ->select(
         'ins_rdc_tests.*',
+        'ins_rdc_tests.queued_at as test_queued_at',
         'ins_rdc_tests.updated_at as test_updated_at',
         'ins_rubber_batches.code as batch_code',
         'ins_rubber_batches.model as batch_model',

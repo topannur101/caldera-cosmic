@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->foreignId('ins_stc_machine_id');
+            $table->foreignId('ins_stc_machine_id')->constrained();
             $table->timestamp('start_time');
             $table->timestamp('end_time');
             $table->decimal('s_1_temp', 3, 1);

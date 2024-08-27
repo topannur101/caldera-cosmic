@@ -15,7 +15,7 @@ class InsRubberBatch extends Model
         'color',
         'mcs',
         'rdc_eval',
-        'omv_eval'
+        'omv_eval',
     ];
 
     public function rdcEvalHuman(): string
@@ -32,7 +32,22 @@ class InsRubberBatch extends Model
             case 'fail':
                 return __('Fail');
                 break;
+            default:
+            return __('Baru');
         }
-        return __('Baru');
+    }
+
+    public function omvEvalHuman(): string
+    {
+        switch ($this->omv_eval) {
+            case 'on_time':
+                return __('Tepat waktu');
+            case 'too_soon':
+                return __('Terlalu awal');
+            case 'too_late':
+                return __('Terlambat');
+            default:
+                return __('Baru');
+        }
     }
 }

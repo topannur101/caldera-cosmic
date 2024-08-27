@@ -58,9 +58,13 @@ class extends Component {
                             <div class="text-2xl" x-text="activeRecipe ? activeRecipe.name : '{{ __('Menunggu...') }}'">
                             </div>
                             <div class="flex gap-x-3 text-neutral-500">
+                                <div><span>{{ __('Kode') }}</span><span>{{ ': ' }}</span><span
+                                    x-text="code ? code.toUpperCase() : '{{ __('Tak ada') }}'"></span>
+                                </div>
+                                <div>|</div>
                                 <div><span>{{ __('Tipe') }}</span><span
                                         @click="start()">{{ ': ' }}</span><span
-                                        x-text="activeRecipe ? mixingType.toUpperCase() : '{{ __('Tak ada resep aktif') }}'"></span>
+                                        x-text="activeRecipe ? mixingType.toUpperCase() : '{{ __('Tak ada') }}'"></span>
                                 </div>
                                 <div>|</div>
                                 <div @click="start()">
@@ -125,7 +129,7 @@ class extends Component {
                         <div class="mt-6">
                             <label for="code"
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
-                            <x-text-input id="code" x-model="code" type="text" />
+                            <x-text-input id="code" x-model="code" type="text" @keydown.enter="nextStep" />
                         </div>
                     </div>
                     <!-- Step 2: Mixing Type -->
@@ -372,6 +376,7 @@ class extends Component {
                         this.selectedRecipeId = null;
                         this.activeRecipe = null;
                         this.steps = [];
+                        this.code = '';
                         this.mixingType = '';
                         this.filteredRecipes = [];
                     },
@@ -613,6 +618,7 @@ class extends Component {
                             const jsonData = {
                                 server_url: '{{ route('home') }}',
                                 recipe_id: this.activeRecipe.id.toString(),
+                                code: this.code,
                                 line: this.line,
                                 team: this.team,
                                 user_1_emp_id: '{{ Auth::user()->emp_id }}',

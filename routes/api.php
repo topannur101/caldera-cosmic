@@ -6,6 +6,7 @@ use App\Models\InsOmvMetric;
 use App\Models\InsOmvRecipe;
 use Illuminate\Http\Request;
 use App\Models\InsOmvCapture;
+use App\Models\InsRubberBatch;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -37,6 +38,7 @@ Route::get('/omv-recipes', function() {
 Route::post('/omv-metric', function (Request $request) {
     $validator = Validator::make($request->all(), [
         'recipe_id' => 'required|exists:ins_omv_recipes,id',
+        'code' => 'nullable|string|max:20',
         'line' => 'required|integer|min:1|max:99',
         'team' => 'required|in:A,B,C',
         'user_1_emp_id' => 'required|exists:users,emp_id',
@@ -84,6 +86,12 @@ Route::post('/omv-metric', function (Request $request) {
         ], 400);
     }
 
+    $code = strtoupper(trim($request->code));
+    $batch = $code ? InsRubberBatch::firstOrCreate(['code' => $code]) : null;
+
+    $batch->omv_eval = strtolower($request->eval);
+    $batch->save();
+
     $omvMetric = new InsOmvMetric();
     $omvMetric->ins_omv_recipe_id = $request->recipe_id;
     $omvMetric->line = $request->line;
@@ -93,6 +101,7 @@ Route::post('/omv-metric', function (Request $request) {
     $omvMetric->eval = strtolower($request->eval); // converting eval to lowercase
     $omvMetric->start_at = $request->start_at;
     $omvMetric->end_at = $request->end_at;
+    $omvMetric->ins_rubber_batch_id = $batch->id ?? null;
     $omvMetric->save();
     
     $captureMessages = [];

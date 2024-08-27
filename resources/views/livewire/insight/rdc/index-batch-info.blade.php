@@ -20,25 +20,29 @@ class extends Component {
     public string $model;
     public string $color;
     public string $mcs;
+    public string $omv_eval;
+    public string $omv_eval_human;
     public string $rdc_eval;
     public string $rdc_eval_human;
 
     #[On('batch-load')]
-    public function loadBatch(int $id, string $updated_at, string $code, string $model, string $color, string $mcs, string $rdc_eval, string $rdc_eval_human)
+    public function loadBatch(int $id, string $updated_at, string $code, string $model, string $color, string $mcs, string $omv_eval, string $omv_eval_human, string $rdc_eval, string $rdc_eval_human)
     {
         $this->id               = $id;
         $this->updated_at       = $updated_at ? $updated_at : '-';
         $this->code             = $code ? $code : '-';
         $this->model            = $model ? $model : '-';
-        $this->color            = $color ? $model : '-';
+        $this->color            = $color ? $color : '-';
         $this->mcs              = $mcs ? $mcs : '-';
+        $this->omv_eval         = $omv_eval ? $omv_eval : '-';
+        $this->omv_eval_human   = $omv_eval_human ? $omv_eval_human : __('Tak diketahui');
         $this->rdc_eval         = $rdc_eval ? $rdc_eval : '-';
         $this->rdc_eval_human   = $rdc_eval_human ? $rdc_eval_human : __('Tak diketahui');
     }
 
     public function customReset()
     {
-        $this->reset(['id', 'updated_at', 'model', 'color', 'mcs', 'rdc_eval', 'rdc_eval_human']);
+        $this->reset(['id', 'updated_at', 'model', 'color', 'mcs', 'omv_eval', 'omv_eval_human', 'rdc_eval', 'rdc_eval_human']);
     }
 
     public function handleNotFound()
@@ -83,14 +87,21 @@ class extends Component {
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Model/Warna/MCS')}}</dt>
                 <dd>{{ $model . ' / ' . $color . ' / ' . $mcs }}</dd>
             </div>
-            <div class="flex flex-col py-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Hasil rheometer')}}</dt>
-                <dd><x-pill class="uppercase" color="{{ 
-                    $rdc_eval === 'queue' ? 'yellow' : 
-                    ($rdc_eval === 'pass' ? 'green' : 
-                    ($rdc_eval === 'fail' ? 'red' : ''))
-                }}">{{ $rdc_eval_human }}</x-pill></dd>
+            <div class="grid grid-cols-2">
+                <div class="flex flex-col py-3">
+                    <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Hasil open mill')}}</dt>
+                    <dd><x-pill class="uppercase" color="{{ $omv_eval === 'on_time' ? 'green' : ($omv_eval === 'too_late' || $omv_eval === 'too_soon' ? 'red' : '') }}">{{ $omv_eval_human }}</x-pill></dd>
+                </div>
+                <div class="flex flex-col py-3">
+                    <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Hasil rheometer')}}</dt>
+                    <dd><x-pill class="uppercase" color="{{ 
+                        $rdc_eval === 'queue' ? 'yellow' : 
+                        ($rdc_eval === 'pass' ? 'green' : 
+                        ($rdc_eval === 'fail' ? 'red' : ''))
+                    }}">{{ $rdc_eval_human }}</x-pill></dd>
+                </div>
             </div>
+
             <div class="flex flex-col pt-3">
                 <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Diperbarui') }}</dt>
                 <dd>{{ $updated_at }}</dd>
