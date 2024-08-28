@@ -22,12 +22,18 @@ class InsOmvMetric extends Model
         'eval',
         'start_at',
         'end_at',
+        'ins_rubber_batch_id'
     ];
 
     protected $casts = [
         'start_at' => 'datetime',
         'end_at' => 'datetime',
     ];
+
+    public function ins_rubber_batch(): BelongsTo
+    {
+        return $this->belongsTo(InsRubberBatch::class);
+    }
 
     public function ins_omv_recipe(): BelongsTo
     {

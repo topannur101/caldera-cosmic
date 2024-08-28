@@ -5,6 +5,7 @@ use Livewire\Attributes\Layout;
 use App\Models\InsRubberBatch;
 use App\Models\InsRdcTest;
 use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Validator;
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -21,8 +22,26 @@ class extends Component {
 
     public function batchQuery()
     {
-        $this->code = strtoupper(trim($this->code));
-        if ($this->code) {
+
+        $validator = Validator::make(
+            ['code' => $this->code ],
+            ['code' => 'required|string|min:1|max:20'],
+            [
+                'required'  => __('Kode wajib diisi'),
+                'string'    => __('Kode harus berupa teks/string.'),
+                'min'       => __('Kode minimal 1 karakter'),
+                'max'       => __('Kode maksimal 50 karakter')
+            ]
+        );
+
+        if ($validator->fails()) {
+
+            $errors = $validator->errors();
+            $error = $errors->first('code');
+            $this->js('notyfError("'.$error.'")'); 
+
+        } else {
+
             $batch = InsRubberBatch::firstOrCreate(
                 ['code' => $this->code]
             );
@@ -39,8 +58,7 @@ class extends Component {
                 rdc_eval_human: "' . $batch->rdcEvalHuman() . '"
             })');
             $this->reset(['code']);
-        } else {
-            $this->js('notyfError("' . __('Kode tidak boleh kosong') . '")');
+
         }
 
     }
@@ -78,7 +96,7 @@ class extends Component {
         </x-modal>
     </div>
     @endcan
-    <div class="overflow-auto w-full my-8">
+    <div wire:poll.30s class="overflow-auto w-full my-8">
         <div class="p-0 sm:p-1">
             <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
                 <table wire:key="rdc-index-table" class="table">

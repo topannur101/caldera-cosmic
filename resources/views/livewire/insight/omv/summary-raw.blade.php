@@ -149,6 +149,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
                             <th>{{ __('ID') }}</th>
+                            <th>{{ __('Kode') }}</th>
                             <th>{{ __('Tipe') }}</th>
                             <th>{{ __('Resep') }}</th>
                             <th>{{ __('L') }}</th>
@@ -163,6 +164,7 @@ new #[Layout('layouts.app')] class extends Component {
                         @foreach ($metrics as $metric)
                             <tr>
                                 <td>{{ $metric->id }}</td>
+                                <td>{{ $metric->ins_rubber_batch->code }}</td>
                                 <td>{{ strtoupper($metric->ins_omv_recipe->type) }}</td>
                                 <td>{{ $metric->ins_omv_recipe->name }}</td>
                                 <td>{{ $metric->line }}</td>

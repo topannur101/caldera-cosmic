@@ -124,7 +124,7 @@ class extends Component {
                     <!-- Step 1: Batch identity -->
                     <div x-show="currentStep === 1">
                         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Identitas gilingan') }}
+                            {{ __('Identitas batch') }}
                         </h2>
                         <div class="mt-6">
                             <label for="code"
