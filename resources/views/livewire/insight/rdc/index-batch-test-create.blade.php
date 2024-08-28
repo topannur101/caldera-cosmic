@@ -187,9 +187,6 @@ class extends Component {
     public function rules()
     {
         return [
-            'model'         => ['nullable', 'min:1', 'max:50'],
-            'color'         => ['nullable', 'min:1', 'max:10'],
-            'mcs'           => ['nullable', 'min:1', 'max:10'],
             's_max'         => ['required', 'numeric', 'gt:0', 'lt:99'],
             's_min'         => ['required', 'numeric', 'gt:0', 'lt:99'],
             'eval'          => ['required', 'in:pass,fail'],
@@ -208,40 +205,59 @@ class extends Component {
             $test = new InsRdcTest;
             Gate::authorize('manage', $test);
 
-            $validated = $this->validate();
+            $validatedTest  = $this->validate();
+            $validatedBatch = Validator::make(
+                [
+                    'model'      => $this->e_model,
+                    'color'      => $this->e_color,
+                    'mcs'        => $this->e_mcs,
+                ],
+                [
+                    'model'      => 'nullable|string|max:50',
+                    'color'      => 'nullable|string|max:10',
+                    'mcs'        => 'nullable|string|max:10',
+                ]
+            );
 
-            $test->fill([
-                's_max' => $validated['s_max'],
-                's_min' => $validated['s_min'],
-                'eval'  => $validated['eval'],
-                'tc10'  => $validated['tc10'],
-                'tc50'  => $validated['tc50'],
-                'tc90'  => $validated['tc90'],
-                'user_id' => Auth::user()->id,
-                'ins_rubber_batch_id' => $batch->id,
-                'ins_rdc_machine_id' => $validated['machine_id'],
-                'queued_at' => $batch->updated_at,
-            ]);
+            if ($validatedBatch->fails() && $this->update_batch) {
+                $error = $validatedBatch->errors()->first();
+                $this->js('notyfError("'.$error.'")'); 
 
-            $test->save();
+            } else {
 
-            if ($this->update_batch) {
-                $batch->update([
-                    'model' => $this->e_model ?: $this->model,
-                    'color' => $this->e_color ?: $this->color,
-                    'mcs'   => $this->e_mcs ?: $this->mcs,
+                $test->fill([
+                    's_max'                 => $validatedTest['s_max'],
+                    's_min'                 => $validatedTest['s_min'],
+                    'eval'                  => $validatedTest['eval'],
+                    'tc10'                  => $validatedTest['tc10'],
+                    'tc50'                  => $validatedTest['tc50'],
+                    'tc90'                  => $validatedTest['tc90'],
+                    'user_id'               => Auth::user()->id,
+                    'ins_rubber_batch_id'   => $batch->id,
+                    'ins_rdc_machine_id'    => $validatedTest['machine_id'],
+                    'queued_at'             => $batch->updated_at,
                 ]);
+
+                $test->save();
+
+                if ($this->update_batch) {
+                    $batch->update([
+                        'model' => $this->e_model ?: $this->model,
+                        'color' => $this->e_color ?: $this->color,
+                        'mcs'   => $this->e_mcs ?: $this->mcs,
+                    ]);
+                }
+
+                $batch->update([
+                    'rdc_eval' => $validatedTest['eval']
+                ]);
+
+                $this->js('$dispatch("close")');
+                $this->js('notyfSuccess("' . __('Hasil uji disisipkan') . '")');
+                $this->dispatch('updated');
+
+                $this->customReset();
             }
-
-            $batch->update([
-                'rdc_eval' => $validated['eval']
-            ]);
-
-            $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Hasil uji disisipkan') . '")');
-            $this->dispatch('updated');
-
-            $this->customReset();
 
         } else {
             $this->handleNotFound();
