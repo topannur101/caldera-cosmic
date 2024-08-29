@@ -123,7 +123,7 @@ class extends Component {
 
 ?>
 
-<div class="overflow-auto w-full">
+<div wire:poll.30s class="overflow-auto w-full">
     <div>
         <div class="flex justify-between items-center mb-6 px-5 py-1">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
@@ -132,21 +132,26 @@ class extends Component {
                 <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>
         </div>
-        <x-modal name="raw-stats-info">
-            <div class="p-6">
-                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                    {{ __('Statistik hasil uji') }}
-                </h2>
-                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                    {{ __('Belum ada informasi statistik yang tersedia.') }}
-                </p>
-                <div class="mt-6 flex justify-end">
-                    <x-primary-button type="button" x-on:click="$dispatch('close')">
-                        {{ __('Paham') }}
-                    </x-primary-button>
+        <div wire:key="modals"> 
+            <x-modal name="raw-stats-info">
+                <div class="p-6">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Statistik hasil uji') }}
+                    </h2>
+                    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                        {{ __('Belum ada informasi statistik yang tersedia.') }}
+                    </p>
+                    <div class="mt-6 flex justify-end">
+                        <x-primary-button type="button" x-on:click="$dispatch('close')">
+                            {{ __('Paham') }}
+                        </x-primary-button>
+                    </div>
                 </div>
-            </div>
-        </x-modal>
+            </x-modal>  
+            <x-modal name="test-show">
+                <livewire:insight.rdc.summary.test-show />
+            </x-modal>
+        </div>
         @if (!$tests->count())
             @if (!$start_at || !$end_at)
                 <div wire:key="no-range" class="py-20">
@@ -172,7 +177,6 @@ class extends Component {
                     <table class="table table-sm table-truncate text-sm text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
                             <th>{{ __('Waktu antri') }}</th>
-                            <th>{{ __('Waktu uji') }}</th>
                             <th>{{ __('Kode') }}</th>
                             <th>{{ __('Model') }}</th>
                             <th>{{ __('Warna') }}</th>
@@ -180,12 +184,12 @@ class extends Component {
                             <th>{{ __('Hasil') }}</th>
                             <th>{{ __('M') }}</th>
                             <th>{{ __('Nama') }}</th>
-    
+                            <th>{{ __('Diperbarui') }}</th>
                         </tr>
                         @foreach ($tests as $test)
-                        <tr>
+                        <tr wire:key="test-tr-{{ $test->id . $loop->index }}" tabindex="0"
+                            x-on:click="$dispatch('open-modal', 'test-show'); $dispatch('test-show', { id: '{{ $test->id }}'})">
                             <td>{{ $test->test_queued_at }}</td>
-                            <td>{{ $test->test_updated_at }}</td>
                             <td>{{ $test->batch_code }}</td>
                             <td>{{ $test->batch_model ? $test->batch_model : '-' }}</td>
                             <td>{{ $test->batch_color ? $test->batch_color : '-'  }}</td>
@@ -194,9 +198,10 @@ class extends Component {
                                 $test->eval === 'queue' ? 'yellow' : 
                                 ($test->eval === 'pass' ? 'green' : 
                                 ($test->eval === 'fail' ? 'red' : ''))
-                            }}">{{ $test->evalHuman() }}</x-pill></td>
+                                }}">{{ $test->evalHuman() }}</x-pill></td>
                             <td>{{ $test->machine_number }}</td>
                             <td>{{ $test->user_name }}</td>
+                            <td>{{ $test->test_updated_at }}</td>
                         </tr>
                     @endforeach
                     </table>

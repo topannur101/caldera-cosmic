@@ -14,8 +14,8 @@
     <div id="content" class="py-12 max-w-5xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-                <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-8">
-                    {{ __('Sistem Outsole') }}</h1>
+                <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
+                    {{ __('Area Outsole') }}</h1>
                 <div class="grid gap-2">
                     <x-card-link href="{{ route('insight.omv.index') }}" wire:navigate>
                         <div class="flex">
@@ -156,8 +156,8 @@
                 </div>
             </div>
             <div>
-                <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-8">
-                    {{ __('Sistem OKC') }}</h1>
+                <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
+                    {{ __('Area OKC') }}</h1>
                 <div class="grid gap-2">
                     <x-card-link href="{{ route('insight.ldc.index') }}" wire:navigate>
                         <div class="flex">

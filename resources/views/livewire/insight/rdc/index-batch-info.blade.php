@@ -7,10 +7,6 @@ use Livewire\Attributes\Renderless;
 use App\Models\InsRdcTest;
 use App\Models\InsRubberBatch;
 
-// use Illuminate\Validation\Rule;
-// use App\Models\User;
-// use Illuminate\Support\Facades\Gate;
-
 new #[Layout('layouts.app')] 
 class extends Component {
 

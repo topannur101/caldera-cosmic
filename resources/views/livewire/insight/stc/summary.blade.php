@@ -245,7 +245,7 @@ class extends Component {
         </div>
         @switch($view)
             @case('raw')
-                <livewire:insight.rdc.summary-tests :$start_at :$end_at :$is_workdate :$fquery :$ftype />
+                <livewire:insight.rdc.summary.tests :$start_at :$end_at :$is_workdate :$fquery :$ftype />
             @break
 
             @default

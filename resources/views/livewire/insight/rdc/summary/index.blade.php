@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Response;
 new #[Layout('layouts.app')] 
 class extends Component {
     #[Url]
-    public $view = 'raw';
+    public $view = 'tests';
 
     #[Url]
     public $start_at;
@@ -27,9 +27,9 @@ class extends Component {
     #[Url]
     public $ftype = 'any';
 
-    public $dateViews = ['raw'];
-    public $rangeViews = ['raw'];
-    public $filterViews = ['raw'];
+    public $dateViews = ['tests'];
+    public $rangeViews = ['tests'];
+    public $filterViews = ['tests'];
 
     public $is_date;
     public $is_range;
@@ -83,18 +83,14 @@ class extends Component {
 
     public function filterPass()
     {
-        if (Auth::user()) {
-            $this->ftype = 'eval';
-            $this->fquery = 'pass';
-        }
+        $this->ftype = 'eval';
+        $this->fquery = 'pass';
     }
 
     public function filterFail()
     {
-        if (Auth::user()) {
-            $this->ftype = 'eval';
-            $this->fquery = 'fail';
-        }
+        $this->ftype = 'eval';
+        $this->fquery = 'fail';
     }
 
     public function filterByMe()
@@ -108,7 +104,7 @@ class extends Component {
     public function download()
     {
         switch ($this->view) {
-            case 'raw':
+            case 'tests':
                 $this->redirectRoute('download.ins-rdc-hides', 
                 [
                     'start_at'      => $this->start_at, 
@@ -137,7 +133,7 @@ class extends Component {
         <div>
             <div class="w-full sm:w-44 md:w-64 px-3 sm:px-0 mb-5">
                 {{-- <div class="btn-group h-10 w-full">
-                    <x-radio-button wire:model.live="view" grow value="raw" name="view" id="view-raw">
+                    <x-radio-button wire:model.live="view" grow value="tests" name="view" id="view-tests">
                         <div class="text-center my-auto">
                             <i class="fa fa-fw fa-table text-center m-auto"></i>
                         </div>
@@ -231,8 +227,8 @@ class extends Component {
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
                     </div>              
                 </div>
-                @if ($view == 'raw' || $view == 'clumps')
-                    <div wire:key="raw-panel">
+                @if ($view == 'tests' || $view == 'clumps')
+                    <div wire:key="tests-panel">
                         <div class="m-3">
                             <div class="py-4">
                                 <x-text-button type="button" wire:click="download" class="text-sm"><i
@@ -244,8 +240,8 @@ class extends Component {
             </div>
         </div>
         @switch($view)
-            @case('raw')
-                <livewire:insight.rdc.summary-tests :$start_at :$end_at :$is_workdate :$fquery :$ftype />
+            @case('tests')
+                <livewire:insight.rdc.summary.tests :$start_at :$end_at :$is_workdate :$fquery :$ftype />
             @break
 
             @default

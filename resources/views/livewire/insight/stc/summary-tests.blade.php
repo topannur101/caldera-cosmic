@@ -164,24 +164,23 @@ class extends Component {
                 </div>
             @endif
         @else
-            <div wire:key="raw-tests" class="p-0 sm:p-1 overflow-auto">
+            <div wire:poll.30s wire:key="raw-tests" class="p-0 sm:p-1 overflow-auto">
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
                     <table class="table table-sm table-truncate text-sm text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
                             <th>{{ __('Waktu antri') }}</th>
-                            <th>{{ __('Waktu uji') }}</th>
                             <th>{{ __('Kode') }}</th>
                             <th>{{ __('Model') }}</th>
                             <th>{{ __('Warna') }}</th>
                             <th>{{ __('MCS') }}</th>
                             <th>{{ __('Hasil') }}</th>
                             <th>{{ __('Nama') }}</th>
+                            <th>{{ __('Waktu selesai uji') }}</th>
     
                         </tr>
                         @foreach ($tests as $test)
                         <tr>
                             <td>{{ $test->test_queued_at }}</td>
-                            <td>{{ $test->test_updated_at }}</td>
                             <td>{{ $test->batch_code }}</td>
                             <td>{{ $test->batch_model ? $test->batch_model : '-' }}</td>
                             <td>{{ $test->batch_color ? $test->batch_color : '-'  }}</td>
@@ -190,8 +189,9 @@ class extends Component {
                                 $test->eval === 'queue' ? 'yellow' : 
                                 ($test->eval === 'pass' ? 'green' : 
                                 ($test->eval === 'fail' ? 'red' : ''))
-                            }}">{{ $test->evalHuman() }}</x-pill></td>
+                                }}">{{ $test->evalHuman() }}</x-pill></td>
                             <td>{{ $test->user_name }}</td>
+                            <td>{{ $test->test_updated_at }}</td>
                         </tr>
                     @endforeach
                     </table>

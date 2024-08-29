@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InsRdcTest extends Model
 {
@@ -37,5 +38,15 @@ class InsRdcTest extends Model
                 break;
         }
         return __('Baru');
+    }
+
+    public function ins_rubber_batch(): BelongsTo
+    {
+        return $this->belongsTo(InsRubberBatch::class);
+    }
+
+    public function ins_rdc_machine(): BelongsTo
+    {
+        return $this->belongsTo(InsRdcMachine::class);
     }
 }

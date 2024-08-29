@@ -9,7 +9,7 @@
             <x-nav-link href="{{ route('insight.rdc.index') }}" :active="request()->routeIs('insight.rdc.index')" wire:navigate>
                 <i class="fa mx-2 fa-fw fa-pen text-sm"></i>
             </x-nav-link>
-            <x-nav-link href="{{ route('insight.rdc.summary') }}" :active="request()->routeIs('insight.rdc.summary')" wire:navigate>
+            <x-nav-link href="{{ route('insight.rdc.summary.index') }}" :active="request()->routeIs('insight.rdc.summary.index')" wire:navigate>
                 <i class="fa mx-2 fa-fw fa-heart-pulse text-sm"></i>
             </x-nav-link>
             <x-nav-link href="{{ route('insight.rdc.manage.index') }}" :active="request()->routeIs('insight.rdc.manage.index')" wire:navigate>

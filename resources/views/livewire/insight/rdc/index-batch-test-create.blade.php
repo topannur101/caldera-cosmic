@@ -214,7 +214,7 @@ class extends Component {
                 ],
                 [
                     'model'      => 'nullable|string|max:50',
-                    'color'      => 'nullable|string|max:10',
+                    'color'      => 'nullable|string|max:20',
                     'mcs'        => 'nullable|string|max:10',
                 ]
             );
