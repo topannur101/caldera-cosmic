@@ -36,7 +36,7 @@
                                         </svg>
                                     </div>
                                     <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                                        src="/ins-omv.jpg" />
+                                        src="/ins-omv-i.jpg" />
                                 </div>
                             </div>
                             <div class="flex grow py-4 px-2 sm:p-6">
@@ -70,7 +70,7 @@
                                         </svg>
                                     </div>
                                     <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                                        src="/ins-rtm.jpg" />
+                                        src="/ins-rtc-i.jpg" />
                                 </div>
                             </div>
                             <div class="flex grow py-4 px-2 sm:p-6">
@@ -104,7 +104,7 @@
                                         </svg>
                                     </div>
                                     <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                                        src="/ins-rdc.jpg" />
+                                        src="/ins-rdc-i.jpg" />
                                 </div>
                             </div>
                             <div class="flex grow py-4 px-2 sm:p-6">
@@ -138,7 +138,7 @@
                                         </svg>
                                     </div>
                                     <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                                        src="/ins-stc.jpg" />
+                                        src="/ins-stc-i.jpg" />
                                 </div>
                             </div>
                             <div class="flex grow py-4 px-2 sm:p-6">
@@ -178,7 +178,7 @@
                                         </svg>
                                     </div>
                                     <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                                        src="/ins-ldc.jpg" />
+                                        src="/ins-ldc-i.jpg" />
                                 </div>
                             </div>
                             <div class="flex grow py-4 px-2 sm:p-6">
