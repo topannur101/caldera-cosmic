@@ -47,7 +47,7 @@ class extends Component {
             );
             $this->js('$dispatch("open-modal", "batch-info"); $dispatch("batch-load", { 
                 id: ' . $batch->id . ', 
-                updated_at: "' . $batch->updated_at . '", 
+                updated_at_human: "' . $batch->updated_at_human . '", 
                 code: "' . $batch->code . '", 
                 model: "' . $batch->model . '", 
                 color: "' . $batch->color . '", 
@@ -55,7 +55,8 @@ class extends Component {
                 omv_eval: "' . $batch->omv_eval . '", 
                 omv_eval_human: "' . $batch->omvEvalHuman() . '",
                 rdc_eval: "' . $batch->rdc_eval . '", 
-                rdc_eval_human: "' . $batch->rdcEvalHuman() . '"
+                rdc_eval_human: "' . $batch->rdcEvalHuman() . '",
+                rdc_tests_count: "' . $batch->ins_rdc_tests->count() . '"
             })');
             $this->reset(['code']);
 

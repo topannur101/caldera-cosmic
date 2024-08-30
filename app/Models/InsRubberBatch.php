@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InsRubberBatch extends Model
 {
@@ -49,5 +50,10 @@ class InsRubberBatch extends Model
             default:
                 return __('Baru');
         }
+    }
+
+    public function ins_rdc_tests(): HasMany
+    {
+        return $this->hasMany(InsRdcTest::class);
     }
 }

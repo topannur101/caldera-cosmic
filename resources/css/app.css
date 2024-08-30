@@ -347,6 +347,15 @@ input[type="checkbox"]:checked + label.custom-checkbox {
     @apply p-2;
   }
 
+  .table.table-xs th, .table.table-xs td {
+    @apply p-1;
+  }
+
+  .table.table-col-heading-fit tr td:first-child {
+    width: 1%;
+    text-wrap: nowrap;
+  }
+
   .table.table-xl th, .table.table-xl td {
     @apply px-2 py-6 text-4xl;
   }

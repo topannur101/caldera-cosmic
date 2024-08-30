@@ -11,7 +11,7 @@ new #[Layout('layouts.app')]
 class extends Component {
 
     public int $id;
-    public string $updated_at;
+    public string $updated_at_human;
     public string $code;
     public string $model;
     public string $color;
@@ -20,25 +20,27 @@ class extends Component {
     public string $omv_eval_human;
     public string $rdc_eval;
     public string $rdc_eval_human;
+    public int $rdc_tests_count;
 
     #[On('batch-load')]
-    public function loadBatch(int $id, string $updated_at, string $code, string $model, string $color, string $mcs, string $omv_eval, string $omv_eval_human, string $rdc_eval, string $rdc_eval_human)
+    public function loadBatch(int $id, string $updated_at_human, string $code, string $model, string $color, string $mcs, string $omv_eval, string $omv_eval_human, string $rdc_eval, string $rdc_eval_human, int $rdc_tests_count)
     {
         $this->id               = $id;
-        $this->updated_at       = $updated_at ? $updated_at : '-';
-        $this->code             = $code ? $code : '-';
-        $this->model            = $model ? $model : '-';
-        $this->color            = $color ? $color : '-';
-        $this->mcs              = $mcs ? $mcs : '-';
-        $this->omv_eval         = $omv_eval ? $omv_eval : '-';
-        $this->omv_eval_human   = $omv_eval_human ? $omv_eval_human : __('Tak diketahui');
-        $this->rdc_eval         = $rdc_eval ? $rdc_eval : '-';
-        $this->rdc_eval_human   = $rdc_eval_human ? $rdc_eval_human : __('Tak diketahui');
+        $this->code             = $code ?: '-';
+        $this->model            = $model ?: '-';
+        $this->color            = $color ?: '-';
+        $this->mcs              = $mcs ?: '-';
+        $this->omv_eval         = $omv_eval ?: '-';
+        $this->omv_eval_human   = $omv_eval_human ?: '-';
+        $this->rdc_eval         = $rdc_eval ?: '-';
+        $this->rdc_eval_human   = $rdc_eval_human ?: '-';
+        $this->rdc_tests_count  = $rdc_tests_count ?: 0;
+        $this->updated_at_human = $updated_at_human ?: '-';
     }
 
     public function customReset()
     {
-        $this->reset(['id', 'updated_at', 'model', 'color', 'mcs', 'omv_eval', 'omv_eval_human', 'rdc_eval', 'rdc_eval_human']);
+        $this->reset(['id', 'updated_at_human', 'model', 'color', 'mcs', 'omv_eval', 'omv_eval_human', 'rdc_eval', 'rdc_eval_human', 'rdc_tests_count']);
     }
 
     public function handleNotFound()
@@ -70,39 +72,100 @@ class extends Component {
     <div class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Info batch') }}
+                {{ __('Informasi batch') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
-        <dl class="text-neutral-900 divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700 mt-6 text-sm">
-            <div class="flex flex-col pb-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Kode') }}</dt>
-                <dd>{{ $code ?: '-' }}</dd>
-            </div>
-            <div class="flex flex-col py-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Model/Warna/MCS')}}</dt>
-                <dd>{{ $model . ' / ' . $color . ' / ' . $mcs }}</dd>
-            </div>
-            <div class="grid grid-cols-2">
-                <div class="flex flex-col py-3">
-                    <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Hasil open mill')}}</dt>
-                    <dd><x-pill class="uppercase" color="{{ $omv_eval === 'on_time' ? 'green' : ($omv_eval === 'too_late' || $omv_eval === 'too_soon' ? 'red' : '') }}">{{ $omv_eval_human }}</x-pill></dd>
-                </div>
-                <div class="flex flex-col py-3">
-                    <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Hasil rheometer')}}</dt>
-                    <dd><x-pill class="uppercase" color="{{ 
-                        $rdc_eval === 'queue' ? 'yellow' : 
-                        ($rdc_eval === 'pass' ? 'green' : 
-                        ($rdc_eval === 'fail' ? 'red' : ''))
-                    }}">{{ $rdc_eval_human }}</x-pill></dd>
-                </div>
-            </div>
+        <div class="flex gap-x-6 mt-6">
+            <div>                        
+                <ol class="relative border-s border-neutral-200 dark:border-neutral-700 mt-2">                  
+                    <li class="mb-6 ms-4">
+                        <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
+                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('OMV')}}</div>
+                        <x-pill class="uppercase"
+                        color="{{ $omv_eval === 'on_time' ? 'green' : ($omv_eval === 'too_late' || $omv_eval === 'too_soon' ? 'red' : '') }}">{{ $omv_eval_human }}</x-pill>    
+                    </li>
+                    <li class="mb-6 ms-4">
+                        <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
+                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('RTC')}}</div>
+                        <x-pill class="uppercase"
+                        color="neutral">{{ __('Segera') }}</x-pill>
+                    </li>
+                    <li class="mb-6 ms-4">
+                        <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
+                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Rheo')}}</div>
+                        <x-pill class="uppercase"
+                        color="{{ $rdc_eval === 'queue' ? 'yellow' : ($rdc_eval === 'pass' ? 'green' : ($rdc_eval === 'fail' ? 'red' : '')) }}">{{ $rdc_eval_human }}</x-pill> 
 
-            <div class="flex flex-col pt-3">
-                <dt class="mb-1 text-neutral-500 dark:text-neutral-400">{{ __('Diperbarui') }}</dt>
-                <dd>{{ $updated_at }}</dd>
+                    </li>
+                    <li class="ms-4">
+                        <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
+                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Aging') }}</div>
+                        <x-pill class="uppercase"
+                        color="neutral">{{ __('Segera') }}</x-pill>                                </li>
+                </ol>
             </div>
-        </dl>
+            <div class="grow">
+                <table class="table table-xs table-col-heading-fit">
+                    <tr>
+                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                            {{ __('Kode 1') . ': ' }}
+                        </td>
+                        <td>
+                            {{ $code }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                            {{ __('Kode 2') . ': ' }}
+                        </td>
+                        <td>
+                            {{ 'TBA' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                            {{ __('Model') . ': ' }}
+                        </td>
+                        <td>
+                            {{ $model }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                            {{ __('Warna') . ': ' }}
+                        </td>
+                        <td>
+                            {{ $color }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                            {{ __('MCS') . ': ' }}
+                        </td>
+                        <td>
+                            {{ $mcs }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                            {{ __('Uji rheo') . ': ' }}
+                        </td>
+                        <td>
+                            {{ $rdc_tests_count . ' kali' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                            {{ __('Diperbarui') . ': ' }}
+                        </td>
+                        <td>
+                            {{ $updated_at_human }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
         @can('manage', InsRdcTest::class)
             <div class="mt-6 flex justify-end">
                 {{-- <div>
