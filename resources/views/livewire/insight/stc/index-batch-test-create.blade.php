@@ -220,42 +220,6 @@ class extends Component {
         return [];
     }
 
-    // public function save()
-    // {
-    //     Gate::batchorize('superuser');
-    //     $this->validate();
-
-    //     $batch = InsRubberBatch::find($this->id);
-    //     if ($batch) {
-    //         $batch->actions = json_encode($this->actions, true);
-    //         $batch->update();
-
-    //         $this->js('$dispatch("close")');
-    //         $this->js('notyfSuccess("' . __('Wewenang diperbarui') . '")');
-    //         $this->dispatch('updated');
-    //     } else {
-    //         $this->handleNotFound();
-    //         $this->customReset();
-    //     }
-    // }
-
-    // public function delete()
-    // {
-    //     Gate::batchorize('superuser');
-
-    //     $batch = InsRubberBatch::find($this->id);
-    //     if ($batch) {
-    //         $batch->delete();
-
-    //         $this->js('$dispatch("close")');
-    //         $this->js('notyfSuccess("' . __('Wewenang dicabut') . '")');
-    //         $this->dispatch('updated');
-    //     } else {
-    //         $this->handleNotFound();
-    //     }
-    //     $this->customReset();
-    // }
-
     public function customReset()
     {
         $this->resetValidation();

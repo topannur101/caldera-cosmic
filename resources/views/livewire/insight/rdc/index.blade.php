@@ -22,6 +22,7 @@ class extends Component {
 
     public function batchQuery()
     {
+        $this->code = strtoupper(trim($this->code));
 
         $validator = Validator::make(
             ['code' => $this->code ],

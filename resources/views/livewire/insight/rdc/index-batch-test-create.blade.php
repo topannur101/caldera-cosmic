@@ -225,18 +225,18 @@ class extends Component {
 
             $testValidator = Validator::make(
                 [
+                    'eval'       => $this->eval,
                     's_max'      => $this->s_max,
                     's_min'      => $this->s_min,
-                    'eval'       => $this->eval,
                     'tc10'       => $this->tc10,
                     'tc50'       => $this->tc50,
                     'tc90'       => $this->tc90,
                     'machine_id' => $this->machine_id
                 ],
                 [
+                    'eval'       => ['required', 'in:pass,fail'],
                     's_max'      => ['required', 'numeric', 'gt:0', 'lt:99'],
                     's_min'      => ['required', 'numeric', 'gt:0', 'lt:99'],
-                    'eval'       => ['required', 'in:pass,fail'],
                     'tc10'       => ['required', 'numeric', 'gt:0', 'lt:999'],
                     'tc50'       => ['required', 'numeric', 'gt:0', 'lt:999'],
                     'tc90'       => ['required', 'numeric', 'gt:0', 'lt:999'],
@@ -343,7 +343,7 @@ class extends Component {
                     <input wire:model="file" type="file"
                             class="absolute inset-0 m-0 p-0 w-full h-full outline-none opacity-0" x-cloak x-ref="file"
                             x-show="dropping" x-on:dragleave.prevent="dropping = false" x-on:drop="dropping = false" />
-                    <div class="flex flex-col items-center justify-center gap-6 h-48">
+                    <div class="flex flex-col items-center justify-center gap-y-3 h-48">
                         <x-select class="w-full" id="test-machine_id" x-model="machine_id" :disabled="$file">
                             <option value=""></option>
                             @foreach($machines as $machine)
@@ -351,6 +351,9 @@ class extends Component {
                             @endforeach
                         </x-select>
                         @error('machine_id')
+                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                        @enderror
+                        @error('file')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                         @enderror
                     </div>
@@ -536,6 +539,18 @@ class extends Component {
                             <div class="relative py-3">
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3">
                                     <div class="mt-6">
+                                        <label for="test-eval"
+                                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Hasil') }}</label>
+                                        <x-select class="w-full" id="test-eval" wire:model="eval">
+                                            <option value=""></option>
+                                            <option value="pass">{{ __('PASS') }}</option>
+                                            <option value="fail">{{ __('FAIL') }}</option>
+                                        </x-select>
+                                        @error('eval')
+                                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                                        @enderror
+                                    </div>
+                                    <div class="mt-6">
                                         <label for="test-s_max"
                                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S maks') }}</label>
                                         <x-text-input id="test-s_max" wire:model="s_max" type="number" step=".01" />
@@ -548,18 +563,6 @@ class extends Component {
                                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S Min') }}</label>
                                         <x-text-input id="test-s_min" wire:model="s_min" type="number" step=".01" />
                                         @error('s_min')
-                                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                                        @enderror
-                                    </div>
-                                    <div class="mt-6">
-                                        <label for="test-eval"
-                                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Hasil') }}</label>
-                                        <x-select class="w-full" id="test-eval" wire:model="eval">
-                                            <option value=""></option>
-                                            <option value="pass">{{ __('PASS') }}</option>
-                                            <option value="fail">{{ __('FAIL') }}</option>
-                                        </x-select>
-                                        @error('eval')
                                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                                         @enderror
                                     </div>

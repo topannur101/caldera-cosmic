@@ -190,7 +190,7 @@ class extends Component {
                     </div>
                 </dd>
             </div>
-            <div class="flex flex-col py-6">
+            <div class="flex flex-col pt-6">
                 <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Hasil uji rheometer') }}</dt>
                 <dd>
                     <div>
