@@ -61,7 +61,7 @@ new class extends Component {
 
     public function addCell()
     {
-        if (count($this->cells) < 9) {
+        if (count($this->cells) < 10) {
             $this->cells[] = ['field' => '', 'address' => ''];
         }
     }
@@ -163,7 +163,7 @@ new class extends Component {
         </div>
 
         <div class="mt-6 flex justify-between">
-            <x-secondary-button :disabled="count($cells) >= 9" type="button" wire:click="addCell">{{ __('Tambah sel')}}</x-secondary-button>
+            <x-secondary-button :disabled="count($cells) >= 10" type="button" wire:click="addCell">{{ __('Tambah sel')}}</x-secondary-button>
             <x-primary-button type="submit">
                 {{ __('Simpan') }}
             </x-primary-button>
