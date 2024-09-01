@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('ins_rubber_batch_id')->constrained()->cascadeOnDelete();
             $table->enum('eval', ['pass', 'fail']);
-            $table->enum('machine', ['mdr', 'ta_rpa']);
             $table->decimal('s_min', 4, 2);
             $table->decimal('s_max', 4, 2);
             $table->decimal('tc10', 5, 2);

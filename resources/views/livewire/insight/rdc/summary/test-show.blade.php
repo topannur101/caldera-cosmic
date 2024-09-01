@@ -15,6 +15,7 @@ class extends Component {
    public string $batch_model;
    public string $batch_color;
    public string $batch_mcs;
+   public string $batch_code_alt;
    public string $batch_omv_eval;
    public string $batch_omv_eval_human;
    public string $batch_rdc_eval;
@@ -46,6 +47,7 @@ class extends Component {
          $this->batch_model            = $test->ins_rubber_batch->model ?? '-';
          $this->batch_color            = $test->ins_rubber_batch->color ?? '-';
          $this->batch_mcs              = $test->ins_rubber_batch->mcs ?? '-';
+         $this->batch_code_alt         = $test->ins_rubber_batch->code_alt ?? '-';
          $this->batch_omv_eval         = $test->ins_rubber_batch->omv_eval ?? '-';
          $this->batch_omv_eval_human   = $test->ins_rubber_batch->omvEvalHuman();
          $this->batch_rdc_eval         = $test->ins_rubber_batch->rdc_eval ?? '-';
@@ -130,7 +132,7 @@ class extends Component {
                         <table class="table table-xs table-col-heading-fit">
                             <tr>
                                 <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                    {{ __('Kode 1') . ': ' }}
+                                    {{ __('Kode') . ': ' }}
                                 </td>
                                 <td>
                                     {{ $batch_code }}
@@ -138,10 +140,10 @@ class extends Component {
                             </tr>
                             <tr>
                                 <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                    {{ __('Kode 2') . ': ' }}
+                                    {{ __('Kode alt') . ': ' }}
                                 </td>
                                 <td>
-                                    {{ 'TBA' }}
+                                    {{ $batch_code_alt }}
                                 </td>
                             </tr>
                             <tr>

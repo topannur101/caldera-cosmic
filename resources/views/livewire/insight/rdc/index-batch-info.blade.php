@@ -16,6 +16,7 @@ class extends Component {
     public string $model;
     public string $color;
     public string $mcs;
+    public string $code_alt;
     public string $omv_eval;
     public string $omv_eval_human;
     public string $rdc_eval;
@@ -23,13 +24,14 @@ class extends Component {
     public int $rdc_tests_count;
 
     #[On('batch-load')]
-    public function loadBatch(int $id, string $updated_at_human, string $code, string $model, string $color, string $mcs, string $omv_eval, string $omv_eval_human, string $rdc_eval, string $rdc_eval_human, int $rdc_tests_count)
+    public function loadBatch(int $id, string $updated_at_human, string $code, string $model, string $color, string $mcs, string $code_alt, string $omv_eval, string $omv_eval_human, string $rdc_eval, string $rdc_eval_human, int $rdc_tests_count)
     {
         $this->id               = $id;
         $this->code             = $code ?: '-';
         $this->model            = $model ?: '-';
         $this->color            = $color ?: '-';
         $this->mcs              = $mcs ?: '-';
+        $this->code_alt         = $code_alt ?: '-';
         $this->omv_eval         = $omv_eval ?: '-';
         $this->omv_eval_human   = $omv_eval_human ?: '-';
         $this->rdc_eval         = $rdc_eval ?: '-';
@@ -40,7 +42,7 @@ class extends Component {
 
     public function customReset()
     {
-        $this->reset(['id', 'updated_at_human', 'model', 'color', 'mcs', 'omv_eval', 'omv_eval_human', 'rdc_eval', 'rdc_eval_human', 'rdc_tests_count']);
+        $this->reset(['id', 'updated_at_human', 'model', 'color', 'mcs', 'code_alt', 'omv_eval', 'omv_eval_human', 'rdc_eval', 'rdc_eval_human', 'rdc_tests_count']);
     }
 
     public function handleNotFound()
@@ -109,7 +111,7 @@ class extends Component {
                 <table class="table table-xs table-col-heading-fit">
                     <tr>
                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                            {{ __('Kode 1') . ': ' }}
+                            {{ __('Kode') . ': ' }}
                         </td>
                         <td>
                             {{ $code }}
@@ -117,10 +119,10 @@ class extends Component {
                     </tr>
                     <tr>
                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                            {{ __('Kode 2') . ': ' }}
+                            {{ __('Kode alt') . ': ' }}
                         </td>
                         <td>
-                            {{ 'TBA' }}
+                            {{ $code_alt }}
                         </td>
                     </tr>
                     <tr>

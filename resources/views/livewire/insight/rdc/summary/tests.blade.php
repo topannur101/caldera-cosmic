@@ -43,6 +43,7 @@ class extends Component {
         'ins_rdc_tests.queued_at as test_queued_at',
         'ins_rdc_tests.updated_at as test_updated_at',
         'ins_rubber_batches.code as batch_code',
+        'ins_rubber_batches.code_alt as batch_code_alt',
         'ins_rubber_batches.model as batch_model',
         'ins_rubber_batches.color as batch_color',
         'ins_rubber_batches.mcs as batch_mcs',
@@ -178,6 +179,7 @@ class extends Component {
                         <tr class="uppercase text-xs">
                             <th>{{ __('Waktu antri') }}</th>
                             <th>{{ __('Kode') }}</th>
+                            <th>{{ __('Alt') }}</th>
                             <th>{{ __('Model') }}</th>
                             <th>{{ __('Warna') }}</th>
                             <th>{{ __('MCS') }}</th>
@@ -191,6 +193,7 @@ class extends Component {
                             x-on:click="$dispatch('open-modal', 'test-show'); $dispatch('test-show', { id: '{{ $test->id }}'})">
                             <td>{{ $test->test_queued_at }}</td>
                             <td>{{ $test->batch_code }}</td>
+                            <td>{{ $test->batch_code_alt }}</td>
                             <td>{{ $test->batch_model ? $test->batch_model : '-' }}</td>
                             <td>{{ $test->batch_color ? $test->batch_color : '-'  }}</td>
                             <td>{{ $test->batch_mcs ? $test->batch_mcs : '-' }}</td>

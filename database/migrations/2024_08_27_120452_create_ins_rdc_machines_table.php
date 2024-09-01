@@ -34,7 +34,8 @@ return new class extends Migration
             ["field" => "tc10", "address" => "I12"],
             ["field" => "tc50", "address" => "J12"],
             ["field" => "tc90", "address" => "K12"],
-            ["field" => "eval", "address" => "L12"]
+            ["field" => "eval", "address" => "L12"],
+            ["field" => "code_alt", "address" => "E12"]
         ];
         
         $mdrOne = [
@@ -46,7 +47,8 @@ return new class extends Migration
             ["field" => "tc10", "address" => "G12"],
             ["field" => "tc50", "address" => "I12"],
             ["field" => "tc90", "address" => "L12"],
-            ["field" => "eval", "address" => "M12"]
+            ["field" => "eval", "address" => "M12"],
+            ["field" => "code_alt", "address" => "E12"]
         ];
 
         DB::table('ins_rdc_machines')->insert([

@@ -12,6 +12,7 @@ class InsRubberBatch extends Model
 
     protected $fillable = [
         'code',
+        'code_alt',
         'model',
         'color',
         'mcs',
