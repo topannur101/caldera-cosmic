@@ -47,7 +47,7 @@ class extends Component {
             );
             $this->js('$dispatch("open-modal", "batch-info"); $dispatch("batch-load", { 
                 id: ' . $batch->id . ', 
-                updated_at_human: "' . $batch->updated_at_human . '", 
+                updated_at_human: "' . $batch->updated_at->diffForHumans() . '", 
                 code: "' . $batch->code . '", 
                 model: "' . $batch->model . '", 
                 color: "' . $batch->color . '", 

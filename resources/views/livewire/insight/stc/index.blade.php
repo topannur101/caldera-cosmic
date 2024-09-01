@@ -72,38 +72,6 @@ class extends Component {
                 <x-secondary-button type="button" x-on:click="$refs.file.click()"><i
                         class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
             </div>
-            {{-- <table wire:key="stc-index-table" class="table">
-                <tr>
-                    <th>{{ __('Nomor batch') }}</th>
-                    <th>{{ __('Model/Warna/MCS') }}</th>
-                    <th>{{ __('Diperbarui') }}</th>
-                    <th></th>
-                </tr>
-                @foreach ($batches as $batch)
-                    <tr wire:key="batch-tr-{{ $batch->id . $loop->index }}" tabindex="0"
-                        x-on:click="$dispatch('open-modal', 'batch-test-create'); $dispatch('batch-test-create', { id: '{{ $batch->id }}'})">
-                        <td>
-                            {{ $batch->code }}
-                        </td>
-                        <td>
-                            {{ ($batch->model ? $batch->model : '-') . ' / ' . ($batch->color ? $batch->color : '-') . ' / ' . ($batch->mcs ? $batch->mcs : '-') }}
-                        </td>
-                        <td>
-                            {{ $batch->updated_at }}
-                        </td>
-                        <td>
-                            {{ $batch->updated_at->diffForHumans() }}
-                        </td>
-                    </tr>
-                @endforeach
-            </table>
-            <div wire:key="batches-none">
-                @if (!$batches->count())
-                    <div class="text-center py-12">
-                        {{ __('Antrian kosong') }}
-                    </div>
-                @endif
-            </div> --}}
         </div>
     </div>
 </div>

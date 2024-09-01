@@ -262,26 +262,23 @@ class extends Component {
                             </div>
                         </div>
                     </div>
-                </dd>
-            </div>
-            <div class="flex flex-col py-6">
-                <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Waktu uji') }}</dt>
-                <dd>
-                    <div>
-                        <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                            {{ __('Diantrikan pada') . ': ' }}
-                        </span>
-                        <span>
-                            {{ $test_queued_at }}
-                        </span>
-                    </div>
-                    <div>
-                        <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                            {{ __('Diselesaikan pada') . ': ' }}
-                        </span>
-                        <span>
-                            {{ $test_updated_at }}
-                        </span>
+                    <div class="mt-3">
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Diantrikan pada') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $test_queued_at }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Diselesaikan pada') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $test_updated_at }}
+                            </span>
+                        </div>
                     </div>
                 </dd>
             </div>
