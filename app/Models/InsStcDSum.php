@@ -32,4 +32,22 @@ class InsStcDSum extends Model
         'z_4_temp' => 'float',
         'speed' => 'integer',
     ];
+
+    public static function dataCountEvalHuman($dataCountEval): string
+    {
+        switch ($dataCountEval) {
+            case 'optimal':
+                return __('Optimal');
+                break;
+            
+            case 'too_many':
+                return __('Terlalu banyak');
+                break;
+            case 'too_few':
+                return __('Terlalu sedikit');
+                break;
+            default:
+                return __('Tak diketahui');
+        }
+    }
 }

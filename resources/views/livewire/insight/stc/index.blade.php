@@ -7,6 +7,8 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Validator;
 use App\Models\InsStcMachine;
 use App\Models\InsStcLog;
+use App\Models\InsStcDSum;
+use Carbon\Carbon;
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -29,6 +31,9 @@ class extends Component {
     public array $logs = [['taken_at' => '', 'temp' => '']];
 
     public string $view = 'initial';
+    public string $data_count_eval;
+    public string $data_count_eval_human;
+    public string $duration;
 
     public const PREHEAT_COUNT = 5;
     public const ZONE_1_COUNT = 12;
@@ -36,23 +41,25 @@ class extends Component {
     public const ZONE_3_COUNT = 12;
     public const ZONE_4_COUNT = 12;
 
-    public const EXPECTED_DATA_COUNT = self::PREHEAT_COUNT + self::ZONE_1_COUNT + 
-                                       self::ZONE_2_COUNT + self::ZONE_3_COUNT + 
-                                       self::ZONE_4_COUNT;
+    public const EXP_COUNT = self::PREHEAT_COUNT + self::ZONE_1_COUNT + self::ZONE_2_COUNT + self::ZONE_3_COUNT + self::ZONE_4_COUNT;
+    public const COUNT_TOLERANCE = 5;
 
-    public const DATA_COUNT_TOLERANCE = 5;
-
-    public const DATA_COUNT_EVAL = [
-        'OPTIMAL' => 'optimal',
-        'TOO_FEW' => 'too_few',
-        'TOO_MANY' => 'too_many',
+    public array $xzones = [
+        'preheat_count' => self::PREHEAT_COUNT,
+        'zone_1_count'  => self::ZONE_1_COUNT,
+        'zone_2_count'  => self::ZONE_2_COUNT,
+        'zone_3_count'  => self::ZONE_3_COUNT,
+        'zone_4_count'  => self::ZONE_4_COUNT,
+        'exp_count'     => self::EXP_COUNT,
     ];
+
+    public array $yzones = [40, 50, 60, 70, 80];
 
     public function rules()
     {
         return [
-            'start_time'        => ['required', 'date', 'before_or_equal:end_time'],
-            'end_time'          => ['required', 'date', 'after_or_equal:start_time'],
+            'start_time'        => ['required', 'date'],
+            'end_time'          => ['required', 'date'],
             'preheat_temp'      => ['required', 'numeric', 'min:0', 'max:99'],
             'z_1_temp'          => ['required', 'numeric', 'min:0', 'max:99'],
             'z_2_temp'          => ['required', 'numeric', 'min:0', 'max:99'],
@@ -60,7 +67,7 @@ class extends Component {
             'z_4_temp'          => ['required', 'numeric', 'min:0', 'max:99'],
             'speed'             => ['required', 'integer', 'min:1', 'max:99'],
             'logs'              => ['required', 'array', 'min:1', 'max:99'],
-            'logs.*.taken_at'   => ['required', 'date', 'between:start_time,end_time'],
+            'logs.*.taken_at'   => ['required', 'date'],
             'logs.*.temp'       => ['required', 'numeric', 'min:0', 'max:99'],
         ];
     }
@@ -82,50 +89,90 @@ class extends Component {
         $this->view = 'upload';
     }
 
+    public function save()
+    {
+        $this->validate();
+        $this->js('notyfSuccess("' . __('Pass validation') . '")'); 
+    }
+
     public function updatedFile()
     {
         $this->validate([
             'file' => 'file|mimes:csv|max:1024'
         ]);
-
         $this->extractData();
-        $this->view = 'review';
     }
 
     private function extractData()
     {
-        try {
-            $csv = array_map('str_getcsv', file($this->file->getPathname()));
-            array_shift($csv); // Remove header row
+        $csv = array_map('str_getcsv', file($this->file->getPathname()));
+        array_shift($csv); // Remove header row
 
-            // Sort by timestamp (first column)
-            usort($csv, function($a, $b) {
-                return strtotime($a[0]) - strtotime($b[0]);
-            });
+        // Sort by timestamp (first column)
+        usort($csv, function($a, $b) {
+            return strtotime($a[0]) - strtotime($b[0]);
+        });
 
-            $dataCount = min(count($csv), self::EXPECTED_DATA_COUNT);
+        $dataCount = min(count($csv), self::EXP_COUNT);
 
-            // Evaluate data count
-            if ($dataCount < self::EXPECTED_DATA_COUNT - self::DATA_COUNT_TOLERANCE) {
-                $this->dataCountEval = self::DATA_COUNT_EVAL['TOO_FEW'];
-            } elseif ($dataCount > self::EXPECTED_DATA_COUNT + self::DATA_COUNT_TOLERANCE) {
-                $this->dataCountEval = self::DATA_COUNT_EVAL['TOO_MANY'];
-            } else {
-                $this->dataCountEval = self::DATA_COUNT_EVAL['OPTIMAL'];
-            }
+        // Evaluate data count
+        if ($dataCount < self::EXP_COUNT - self::COUNT_TOLERANCE) {
+            $this->data_count_eval = 'too_few';
+        } elseif ($dataCount > self::EXP_COUNT + self::COUNT_TOLERANCE) {
+            $this->data_count_eval = 'too_many';
+        } else {
+            $this->data_count_eval = 'optimal';
+        }
+        $this->data_count_eval_human = InsStcDSum::dataCountEvalHuman($this->data_count_eval);
 
-            $data = array_slice($csv, 0, $dataCount);
+        $data = array_slice($csv, 0, $dataCount);
 
-            $this->start_time = $data[0][0];
-            $this->end_time = end($data)[0];
+        $validator = Validator::make(
+            [
+                'start_time'    => $data[0][0],
+                'end_time'      => end($data)[0],
+                'preheat'       => array_slice($data, 0, self::PREHEAT_COUNT),
+                'z_1'           => array_slice($data, self::PREHEAT_COUNT, self::ZONE_1_COUNT),
+                'z_2'           => array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT, self::ZONE_2_COUNT),
+                'z_3'           => array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT + self::ZONE_2_COUNT, self::ZONE_3_COUNT),
+                'z_4'           => array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT + self::ZONE_2_COUNT + self::ZONE_3_COUNT, self::ZONE_4_COUNT),
+            ], 
+            [
+                'start_time'    => 'required|date',
+                'end_time'      => 'required|date|after:start_time',
+                'preheat.*.0'   => 'required|date',
+                'z_1.*.0'       => 'required|date',
+                'z_2.*.0'       => 'required|date',
+                'z_3.*.0'       => 'required|date',
+                'z_4.*.0'       => 'required|date',
+                'preheat.*.1'   => 'required|numeric|max:99',
+                'z_1.*.1'       => 'required|numeric|max:99',
+                'z_2.*.1'       => 'required|numeric|max:99',
+                'z_3.*.1'       => 'required|numeric|max:99',
+                'z_4.*.1'       => 'required|numeric|max:99',
+            ]);
 
-            $this->preheat_temp = $this->calculateMedian(array_slice($data, 0, self::PREHEAT_COUNT));
-            $this->z_1_temp = $this->calculateMedian(array_slice($data, self::PREHEAT_COUNT, self::ZONE_1_COUNT));
-            $this->z_2_temp = $this->calculateMedian(array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT, self::ZONE_2_COUNT));
-            $this->z_3_temp = $this->calculateMedian(array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT + self::ZONE_2_COUNT, self::ZONE_3_COUNT));
-            $this->z_4_temp = $this->calculateMedian(array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT + self::ZONE_2_COUNT + self::ZONE_3_COUNT, self::ZONE_4_COUNT));
+        if ($validator->fails()) {
+            $error = $validator->errors()->first();
+            $this->js('notyfError("'.$error.'")'); 
 
-            $this->speed = 0;
+        } else {
+            $validatedData      = $validator->validated();
+            $this->start_time   = $validatedData['start_time'];
+            $this->end_time     = $validatedData['end_time'];
+            $this->preheat_temp = $this->calculateMedian($validatedData['preheat'] ?? null);
+            $this->z_1_temp     = $this->calculateMedian($validatedData['z_1'] ?? null);
+            $this->z_2_temp     = $this->calculateMedian($validatedData['z_2'] ?? null);
+            $this->z_3_temp     = $this->calculateMedian($validatedData['z_3'] ?? null);
+            $this->z_4_temp     = $this->calculateMedian($validatedData['z_4'] ?? null);
+
+            $x = Carbon::parse($validatedData['start_time']);
+            $y = Carbon::parse($validatedData['end_time']);
+            $this->duration = $x->diff($y)->forHumans([
+                'parts' => 2,
+                'join' => true,
+                'short' => false,
+            ]);
 
             $this->logs = array_map(function($row) {
                 return [
@@ -133,13 +180,9 @@ class extends Component {
                     'temp' => round((float)$row[1], 1)
                 ];
             }, $data);
-            
-        } catch (\Exception $e) {
-            $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
-            $this->js('console.log("'. $e->getMessage() .'")');
-            $this->view = 'upload';
-            $this->reset(['file']);
+            $this->view = 'review';
         }
+
     }
 
     private function calculateMedian($data)
@@ -162,6 +205,27 @@ class extends Component {
         return round($median, 1);
     }
 
+    public function customReset()
+    {
+        $this->reset(['file', 'machine_id', 'device_code', 'start_time', 'end_time', 'preheat_temp', 'z_1_temp', 'z_2_temp', 'z_3_temp', 'z_4_temp', 'speed', 'logs', 'view', 'data_count_eval', 'data_count_eval_human', 'duration']);
+    }
+
+    public function downloadCSV()
+    {
+        $filePath = public_path('ins-stc-sample.csv');
+
+        if (!file_exists($filePath)) {
+            $this->js('alert("' . __('File CSV tidak ditemukan') . '")');
+            return;
+        }
+
+        return response()->streamDownload(function () use ($filePath) {
+            echo file_get_contents($filePath);
+        }, 'ins-stc-sample.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
 
 };
 
@@ -175,7 +239,7 @@ class extends Component {
 
 <div id="content" class="py-12 max-w-lg mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     @if (!Auth::user())
-        <div class="flex flex-col items-center gap-y-6 py-20">
+        <div class="flex flex-col items-center gap-y-6 px-6 py-20">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl">
                 <i class="fa fa-exclamation-circle"></i>
             </div>
@@ -197,18 +261,22 @@ class extends Component {
         </div>
     @else
     <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">{{ __('Pembukuan') }}</h1>
+    @vite(['resources/js/apexcharts.js'])
     <div class="w-full my-8">
+        <x-modal name="d-logs-review" maxWidth="2xl">
+            <livewire:insight.stc.index-d-logs-review />
+        </x-modal>
         <div x-data="{ dropping: false }" class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             @switch($view)
                 @case('initial')
                     <div>
                         <div class="mb-6">
-                            <label for="stc-machine_id"
+                            <label for="d-log-machine_id"
                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin') }}</label>
-                            <x-select class="w-full" id="stc-machine_id" wire:model="machine_id">
+                            <x-select class="w-full" id="d-log-machine_id" wire:model="machine_id">
                                 <option value=""></option>
                                 @foreach ($machines as $machine)
-                                    <option value="{{ $machine->id }}">{{ $machine->line . '. ' . $machine->code }}</option>
+                                    <option value="{{ $machine->id }}">{{ 'Line ' . $machine->line . ' (' . $machine->code . ')' }}</option>
                                 @endforeach
                             </x-select>
                             @error('machine_id')
@@ -216,9 +284,9 @@ class extends Component {
                             @enderror
                         </div>
                         <div class="mb-6">
-                            <label for="stc-device_code"
+                            <label for="d-log-device_code"
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode alat') }}</label>
-                            <x-text-input id="stc-device_code" wire:model="device_code" type="text"
+                            <x-text-input id="d-log-device_code" wire:model="device_code" type="text"
                                 :disabled="Gate::denies('manage', InsStcLog::class)" />
                             @error('device_code')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
@@ -253,7 +321,7 @@ class extends Component {
                                                 {{ __('Mesin') . ': ' }}
                                             </td>
                                             <td>
-                                                {{ $machines->firstWhere('id', $this->machine_id) ? ($machines->firstWhere('id', $this->machine_id)->line . '. ' . $machines->firstWhere('id', $this->machine_id)->code ) : '-' }}
+                                                {{ $machines->firstWhere('id', $this->machine_id) ? 'Line ' . ($machines->firstWhere('id', $this->machine_id)->line . ' (' . $machines->firstWhere('id', $this->machine_id)->code . ')' ) : '-' }}
                                             </td>
                                         </tr>
                                         <tr>
@@ -284,7 +352,7 @@ class extends Component {
                                                 {{ __('Mesin') . ': ' }}
                                             </td>
                                             <td>
-                                                {{ $machines->firstWhere('id', $this->machine_id) ? ($machines->firstWhere('id', $this->machine_id)->line . '. ' . $machines->firstWhere('id', $this->machine_id)->code ) : '-' }}
+                                                {{ $machines->firstWhere('id', $this->machine_id) ? 'Line ' . ($machines->firstWhere('id', $this->machine_id)->line . ' (' . $machines->firstWhere('id', $this->machine_id)->code ) . ')' : '-' }}
                                             </td>
                                         </tr>
                                         <tr>
@@ -320,49 +388,54 @@ class extends Component {
                                     </tr>
                                     <tr>
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Suhu awal') . ': ' }}
+                                            {{ __('Durasi') . ': ' }}
                                         </td>
                                         <td>
-                                            {{ $preheat_temp }}
+                                            {{ $duration }}
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Zona 1') . ': ' }}
+                                            {{ __('Jumlah data') . ': ' }}
                                         </td>
                                         <td>
-                                            {{ $z_1_temp }}
+                                            {{ count($logs) . ' ('. $data_count_eval_human .')' }}
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Zona 2') . ': ' }}
+                                            {{ __('Suhu median') . ': ' }}
                                         </td>
                                         <td>
-                                            {{ $z_2_temp }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Zona 3') . ': ' }}
-                                        </td>
-                                        <td>
-                                            {{ $z_3_temp }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Zona 4') . ': ' }}
-                                        </td>
-                                        <td>
-                                            {{ $z_4_temp }}
                                         </td>
                                     </tr>
                                 </table>
+                                <div class="grid grid-cols-5 mt-3 text-center">
+                                    <div>
+                                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Preheat')}}</div>
+                                        <div>{{ $preheat_temp }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Zona 1')}}</div>
+                                        <div>{{ $z_1_temp }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Zona 2')}}</div>
+                                        <div>{{ $z_2_temp }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Zona 3')}}</div>
+                                        <div>{{ $z_3_temp }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Zona 4')}}</div>
+                                        <div>{{ $z_4_temp }}</div>
+                                    </div>
+                                </div>
                                 <div class="mt-3">
-                                    <label for="stc-speed"
+                                    <label for="d-log-speed"
                                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kecepatan') }}</label>
-                                    <x-text-input-suffix suffix="RPM" id="stc-speed" x-model="speed" type="number" step="1" autocomplete="off" />
+                                    <x-text-input-suffix suffix="RPM" id="d-log-speed" wire:model="speed" type="number" step="1" autocomplete="off" />
                                     @error('speed')
                                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                                     @enderror
@@ -370,8 +443,7 @@ class extends Component {
                                 </dd>
                             </div>
                         </dl>
-                        @break
-                    
+                        @break                    
             @endswitch
             <div class="flex justify-between items-center">
                 <x-dropdown align="left" width="48">
@@ -379,12 +451,12 @@ class extends Component {
                         <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
                     </x-slot>
                     <x-slot name="content">
-                        <x-dropdown-link href="#" wire:click.prevent="customReset">
+                        <x-dropdown-link href="#" wire:click.prevent="downloadCSV">
                             {{ __('Unduh CSV contoh') }}
                         </x-dropdown-link>
                         @if($view != 'initial')
                         <hr class="border-neutral-300 dark:border-neutral-600 {{ true ? '' : 'hidden' }}" />
-                        <x-dropdown-link href="#" wire:click.prevent="removeFromQueue"
+                        <x-dropdown-link href="#" wire:click.prevent="customReset"
                             class="{{ true ? '' : 'hidden' }}">
                             {{ __('Ulangi dari awal') }}
                         </x-dropdown-link>
@@ -400,8 +472,8 @@ class extends Component {
                         class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-primary-button>
                     @endif
                     @if($view == 'review')
-                    <x-secondary-button type="button">{{ __('Ulas data') }}</x-secondary-button>
-                    <x-primary-button type="button">{{ __('Simpan') }}</x-primary-button>
+                    <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}', xzones: '{{ json_encode($xzones) }}', yzones: '{{ json_encode($yzones)}}'})">{{ __('Tinjau data') }}</x-secondary-button>
+                    <x-primary-button type="button" wire:click="save">{{ __('Simpan') }}</x-primary-button>
                     @endif
                 </div>
             </div>

@@ -15,7 +15,7 @@ new #[Layout('layouts.app')] class extends Component {};
 
 <div id="content" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     @if (!Auth::user())
-        <div class="flex flex-col items-center gap-y-6 py-20">
+        <div class="flex flex-col items-center gap-y-6 px-6 py-20">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl">
                 <i class="fa fa-exclamation-circle"></i>
             </div>
