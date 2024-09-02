@@ -6,7 +6,8 @@ use Livewire\Attributes\On;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Validator;
 use App\Models\InsStcMachine;
-use App\Models\InsStcLog;
+use App\Models\InsStcDevice;
+use App\Models\InsStcDLog;
 use App\Models\InsStcDSum;
 use Carbon\Carbon;
 
@@ -58,17 +59,7 @@ class extends Component {
     public function rules()
     {
         return [
-            'start_time'        => ['required', 'date'],
-            'end_time'          => ['required', 'date'],
-            'preheat_temp'      => ['required', 'numeric', 'min:0', 'max:99'],
-            'z_1_temp'          => ['required', 'numeric', 'min:0', 'max:99'],
-            'z_2_temp'          => ['required', 'numeric', 'min:0', 'max:99'],
-            'z_3_temp'          => ['required', 'numeric', 'min:0', 'max:99'],
-            'z_4_temp'          => ['required', 'numeric', 'min:0', 'max:99'],
-            'speed'             => ['required', 'integer', 'min:1', 'max:99'],
-            'logs'              => ['required', 'array', 'min:1', 'max:99'],
-            'logs.*.taken_at'   => ['required', 'date'],
-            'logs.*.temp'       => ['required', 'numeric', 'min:0', 'max:99'],
+            'speed' => ['required', 'integer', 'min:1', 'max:99'],
         ];
     }
 
@@ -91,8 +82,41 @@ class extends Component {
 
     public function save()
     {
+        // validate only speed
         $this->validate();
-        $this->js('notyfSuccess("' . __('Pass validation') . '")'); 
+        
+        // make sure gone through validation
+        if($this->view == 'review') {
+            $d_sum = new InsStcDsum;
+            Gate::authorize('manage', $d_sum);
+
+            $device = InsStcDevice::where('code', $this->device_code)->first();
+            $d_sum->fill([
+                'ins_stc_device_id'     => $device->id,
+                'ins_stc_machine_id'    => $this->machine_id,
+                'start_time'            => $this->start_time,
+                'end_time'              => $this->end_time,
+                'preheat_temp'          => $this->preheat_temp,
+                'z_1_temp'              => $this->z_1_temp,
+                'z_2_temp'              => $this->z_2_temp,
+                'z_3_temp'              => $this->z_3_temp,
+                'z_4_temp'              => $this->z_4_temp,
+                'speed'                 => $this->speed,
+            ]);
+            $d_sum->save();
+
+            foreach ($this->logs as $log) {
+                InsStcDLog::create([
+                    'ins_stc_d_sum_id' => $d_sum->id,
+                    'taken_at' => $log['taken_at'],
+                    'temp' => $log['temp']
+                ]);
+            }
+
+            $this->js('notyfSuccess("'. __('Disimpan') .'")'); 
+            $this->customReset();
+        }
+
     }
 
     public function updatedFile()
@@ -155,6 +179,7 @@ class extends Component {
         if ($validator->fails()) {
             $error = $validator->errors()->first();
             $this->js('notyfError("'.$error.'")'); 
+            $this->reset(['file']);
 
         } else {
             $validatedData      = $validator->validated();
@@ -286,8 +311,7 @@ class extends Component {
                         <div class="mb-6">
                             <label for="d-log-device_code"
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode alat') }}</label>
-                            <x-text-input id="d-log-device_code" wire:model="device_code" type="text"
-                                :disabled="Gate::denies('manage', InsStcLog::class)" />
+                            <x-text-input id="d-log-device_code" wire:model="device_code" type="text" />
                             @error('device_code')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                             @enderror
