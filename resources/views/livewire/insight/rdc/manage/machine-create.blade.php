@@ -16,7 +16,7 @@ new class extends Component {
         return [
             'number'                => ['required', 'integer', 'min:1', 'max:99', 'unique:ins_rdc_machines'],
             'name'                  => ['required', 'string', 'min:1', 'max:20'],
-            'cells'                 => ['required', 'array', 'min:1', 'max:9'],
+            'cells'                 => ['required', 'array', 'min:1', 'max:10'],
             'cells.*.field'         => ['required', 'string', 'max:20'],
             'cells.*.address'       => ['required', 'string', 'regex:/^[A-Z]+[1-9]\d*$/'],
         ];
