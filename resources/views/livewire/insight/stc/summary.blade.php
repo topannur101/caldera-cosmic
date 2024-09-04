@@ -3,14 +3,14 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Carbon\Carbon;
-use App\Models\InsRtcMetric;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Response;
+use App\Models\InsStcDSums;
 
 new #[Layout('layouts.app')] 
 class extends Component {
     #[Url]
-    public $view = 'raw';
+    public $view = 'd-sums';
 
     #[Url]
     public $start_at;
@@ -19,17 +19,14 @@ class extends Component {
     public $end_at;
 
     #[Url]
-    public $is_workdate = 0;
-
-    #[Url]
     public $fquery;
 
     #[Url]
     public $ftype = 'any';
 
-    public $dateViews = ['raw'];
-    public $rangeViews = ['raw'];
-    public $filterViews = ['raw'];
+    public $dateViews = ['d-sums'];
+    public $rangeViews = ['d-sums'];
+    public $filterViews = ['d-sums'];
 
     public $is_date;
     public $is_range;
@@ -81,22 +78,6 @@ class extends Component {
         $this->reset('fquery', 'ftype');
     }
 
-    public function filterPass()
-    {
-        if (Auth::user()) {
-            $this->ftype = 'eval';
-            $this->fquery = 'pass';
-        }
-    }
-
-    public function filterFail()
-    {
-        if (Auth::user()) {
-            $this->ftype = 'eval';
-            $this->fquery = 'fail';
-        }
-    }
-
     public function filterByMe()
     {
         if (Auth::user()) {
@@ -107,26 +88,13 @@ class extends Component {
 
     public function download()
     {
-        switch ($this->view) {
-            case 'raw':
-                $this->redirectRoute('download.ins-rdc-hides', 
-                [
-                    'start_at'      => $this->start_at, 
-                    'end_at'        => $this->end_at, 
-                    'is_workdate'   => $this->is_workdate, 
-                    'fquery'        => $this->fquery,
-                    'ftype'         => $this->ftype,
-                ]);
-                $this->js('$dispatch("close")');
-                $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
-                break;
-        }
+        $this->js('alert("' . __('Fitur dalam pengembangan') . '")');
     }
 };
 
 ?>
 
-<x-slot name="title">{{ __('Pendataan Rheometer') }}</x-slot>
+<x-slot name="title">{{ __('IP Stabilization Control') }}</x-slot>
 
 <x-slot name="header">
     <x-nav-insights-stc></x-nav-insights-stc>
@@ -178,12 +146,6 @@ class extends Component {
                         <x-text-input wire:model.live="end_at" id="inv-date-end" type="date"
                             class="mt-3 mb-1 {{ $is_range ? '' : 'hidden' }}"></x-text-input>
                     </div>
-                    {{-- <div class="mt-5">
-                        <x-radio id="is_workdate_false" wire:model.live="is_workdate" name="is_workdate"
-                        :checked="!$is_workdate" value="">{{ __('Tanggal catat') }}</x-radio>
-                        <x-radio id="is_workdate_true" wire:model.live="is_workdate" name="is_workdate" :checked="$is_workdate"
-                            value="true">{{ __('Tanggal WO') }}</x-radio>
-                    </div> --}}
                 </div>
                 <div
                     class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_filter ? '' : 'hidden' }}">
@@ -231,8 +193,8 @@ class extends Component {
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
                     </div>              
                 </div>
-                @if ($view == 'raw' || $view == 'clumps')
-                    <div wire:key="raw-panel">
+                @if ($view == 'd-sums')
+                    <div wire:key="d-sums-panel">
                         <div class="m-3">
                             <div class="py-4">
                                 <x-text-button type="button" wire:click="download" class="text-sm"><i
@@ -244,8 +206,8 @@ class extends Component {
             </div>
         </div>
         @switch($view)
-            @case('raw')
-                <livewire:insight.rdc.summary.tests :$start_at :$end_at :$is_workdate :$fquery :$ftype />
+            @case('d-sums')
+                <livewire:insight.stc.summary-d-sums :$start_at :$end_at :$fquery :$ftype />
             @break
 
             @default

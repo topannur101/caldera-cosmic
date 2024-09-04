@@ -66,7 +66,7 @@ class extends Component {
     public function with(): array
     {
         return [
-            'machines' => InsStcMachine::all()
+            'machines' => InsStcMachine::orderBy('line')->get()
         ];
     }
 
@@ -251,7 +251,6 @@ class extends Component {
         ]);
     }
 
-
 };
 
 ?>
@@ -301,7 +300,7 @@ class extends Component {
                             <x-select class="w-full" id="d-log-machine_id" wire:model="machine_id">
                                 <option value=""></option>
                                 @foreach ($machines as $machine)
-                                    <option value="{{ $machine->id }}">{{ 'Line ' . $machine->line . ' (' . $machine->code . ')' }}</option>
+                                    <option value="{{ $machine->id }}">{{ 'Line ' . $machine->line }}</option>
                                 @endforeach
                             </x-select>
                             @error('machine_id')

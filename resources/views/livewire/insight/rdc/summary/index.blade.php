@@ -227,7 +227,7 @@ class extends Component {
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
                     </div>              
                 </div>
-                @if ($view == 'tests' || $view == 'clumps')
+                @if ($view == 'tests')
                     <div wire:key="tests-panel">
                         <div class="m-3">
                             <div class="py-4">

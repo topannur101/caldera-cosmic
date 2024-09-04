@@ -48,6 +48,7 @@ new class extends Component {
         $this->reset(['code', 'name', 'line']);
     }
 };
+
 ?>
 
 <div>
