@@ -8,7 +8,7 @@
                 @elseif( request()->is('inventory/circs*') )
                     {{ __('Sirkulasi') }}
                 @elseif( request()->is('inventory/admin*') )
-                    {{ __('Administrasi') }}
+                    {{ __('Kelola') }}
                 @else
                     {{ __('Inventaris') }}
                 @endif

@@ -22,8 +22,8 @@ class extends Component {
 
 <div id="content" class="py-12 max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
   <div class="grid grid-cols-2">
-      <x-tab href="{{ route('inventory.admin.index', [ 'nav' => 'admin' ])}}" wire:navigate :active="!$view" class="text-center">{{__('Area')}}</x-tab>
-      <x-tab href="{{ route('inventory.admin.index', [ 'nav' => 'admin', 'view' => 'global' ])}}" wire:navigate :active="$view == 'global'" class="text-center">{{__('Global')}}</x-tab>
+      <x-tab href="{{ route('inventory.admin.index', [ 'nav' => 'inventory' ])}}" wire:navigate :active="!$view" class="text-center">{{__('Inventaris')}}</x-tab>
+      <x-tab href="{{ route('inventory.admin.index', [ 'nav' => 'inventory', 'view' => 'administration' ])}}" wire:navigate :active="$view == 'administration'" class="text-center">{{__('Administrasi')}}</x-tab>
   </div>
   @if(!$view)
   <div class="grid grid-cols-1 gap-1 my-8 ">
@@ -139,7 +139,7 @@ class extends Component {
               {{ __('Akses terbatas') }}
           </h2>
           <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-              {{__('Pengaturan di Administrasi Global hanya bisa diubah oleh akun superuser.')}}
+              {{__('Pengaturan Administrasi hanya bisa disetel oleh akun superuser.')}}
           </p>
           <div class="mt-6 flex justify-end">
               <x-secondary-button type="button" x-on:click="$dispatch('close')">

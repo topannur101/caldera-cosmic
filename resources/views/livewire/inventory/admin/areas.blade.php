@@ -21,7 +21,7 @@ new #[Layout('layouts.app')] class extends Component {
 <x-slot name="title">{{ __('Area') . ' — ' . __('Inventaris') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-inventory-sub view="global" />
+    <x-nav-inventory-sub view="administration" />
 </x-slot>
 
 <div id="content" class="py-12 max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">

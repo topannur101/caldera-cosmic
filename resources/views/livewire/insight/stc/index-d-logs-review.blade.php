@@ -25,8 +25,8 @@ new class extends Component {
         $this->logs = json_decode($logs, true);
         $this->xzones = json_decode($xzones, true);
         $this->yzones = json_decode($yzones, true);
-        $this->ymax = $this->yzones ? max($this->yzones) + 5 : $this->ymax;
-        $this->ymin = $this->yzones ? min($this->yzones) : $this->ymin;
+        $this->ymax = $this->yzones ? max($this->yzones) + 0 : $this->ymax;
+        $this->ymin = $this->yzones ? min($this->yzones) - 0 : $this->ymin;
         $this->generateChart();
     }
 
@@ -109,7 +109,8 @@ new class extends Component {
             ],
             'annotations' => [
                 'xaxis' => $this->generateXAnnotations(),
-                'yaxis' => $this->generateYAnnotations()
+                'yaxis' => $this->generateYAnnotations(),
+                'points' => $this->generatePointAnnotations(),
             ],
             'grid' => [
                'yaxis' => [
@@ -137,10 +138,10 @@ new class extends Component {
                         'borderColor' => $this->xzoneColors[$zoneName] ?? '#000000',
                         'label' => [
                             'style' => [
-                                'color' => '#fff',
-                                'background' => $this->xzoneColors[$zoneName] ?? '#000000'
+                                'color' => 'transparent',
+                                'background' => 'transparent'
                             ],
-                            'text' => ucfirst(str_replace('_', ' ', $zoneName))
+                            'text' => ''
                         ]
                     ];
                 }
@@ -160,10 +161,10 @@ new class extends Component {
                'y' => $value,
                'borderColor' => '#bcbcbc',
                'label' => [
-                  'borderColor' => '#bcbcbc',
+                  'borderColor' => 'transparent',
                   'style' => [
-                     'color' => '#fff',
-                     'background' => '#bcbcbc'
+                     'color' => '#bcbcbc',
+                     'background' => 'transparent'
                   ],
                   'text' => $value . "°C"
                ]
@@ -171,6 +172,48 @@ new class extends Component {
       }
       return $annotations;
    }
+
+   private function generatePointAnnotations()
+    {
+        $pointAnnotations = [];
+        $preheatCount = $this->xzones['preheat_count'];
+        $currentIndex = $preheatCount;
+        $zoneNames = ['zone_1_count', 'zone_2_count', 'zone_3_count', 'zone_4_count'];
+        $yzonesReversed = array_reverse($this->yzones);
+
+        foreach ($zoneNames as $index => $zoneName) {
+            $zoneCount = $this->xzones[$zoneName];
+            $midpointIndex = $currentIndex + floor($zoneCount / 2);
+            
+            if (isset($this->logs[$midpointIndex])) {
+                $yValue = ($yzonesReversed[$index] + $yzonesReversed[$index + 1]) / 2;
+                
+                $pointAnnotations[] = [
+                    'x' => $this->parseDate($this->logs[$midpointIndex]['taken_at']),
+                    'y' => $yValue,
+                    'marker' => [
+                        'size' => 8,
+                        'fillColor' => '#fff',
+                        'strokeColor' => '#FF4560',
+                        'radius' => 2,
+                    ],
+                    'label' => [
+                        'borderWidth' => 0,
+                        'borderColor' => '#FF4560',
+                        'text' => 'Z' . ($index + 1),
+                        'style' => [
+                            'color' => '#fff',
+                            'background' => '#FF4560',
+                        ]
+                    ]
+                ];
+            }
+            
+            $currentIndex += $zoneCount;
+        }
+
+        return $pointAnnotations;
+    }
 
     private function parseDate($dateString)
     {

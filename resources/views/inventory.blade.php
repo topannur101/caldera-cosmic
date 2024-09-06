@@ -25,7 +25,7 @@
             </li>
             <li class="flex items-center space-x-3 rtl:space-x-reverse">
                 <i class="fa fa-ellipsis-h fa-fw me-2"></i>
-                <span><span class="font-semibold text-neutral-900 dark:text-white">{{ __('Administrasi') }}</span>
+                <span><span class="font-semibold text-neutral-900 dark:text-white">{{ __('Kelola') }}</span>
                     {{ ' ' . __('untuk mengelola barang beserta propertinya dan lainnya.') }}</span>
             </li>
         </ul>
