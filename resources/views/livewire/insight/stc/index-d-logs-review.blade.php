@@ -9,22 +9,23 @@ new class extends Component {
     public array $logs = [];
     public array $xzones = [];
     public array $yzones = [];
+    public float $z_1_temp = 0;
+    public float $z_2_temp = 0;
+    public float $z_3_temp = 0;
+    public float $z_4_temp = 0;
     public int $ymax = 10;
     public int $ymin = 0;
-    private array $xzoneColors = [
-        'preheat' => '#FFA500',
-        'zone_1' => '#775DD0',
-        'zone_2' => '#775DD0',
-        'zone_3' => '#775DD0',
-        'zone_4' => '#775DD0',
-    ];
 
     #[On('d-logs-review')]
-    public function dLogsLoad($logs, $xzones, $yzones)
+    public function dLogsLoad($logs, $xzones, $yzones, $z_1_temp, $z_2_temp, $z_3_temp, $z_4_temp )
     {
         $this->logs = json_decode($logs, true);
         $this->xzones = json_decode($xzones, true);
         $this->yzones = json_decode($yzones, true);
+        $this->z_1_temp = $z_1_temp;
+        $this->z_2_temp = $z_2_temp;
+        $this->z_3_temp = $z_3_temp;
+        $this->z_4_temp = $z_4_temp;
         $this->ymax = $this->yzones ? max($this->yzones) + 0 : $this->ymax;
         $this->ymin = $this->yzones ? min($this->yzones) - 0 : $this->ymin;
         $this->generateChart();
@@ -92,7 +93,7 @@ new class extends Component {
             ],
             'yaxis' => [
                 'title' => [
-                    'text' => __('Suhu')
+                    'text' => '°C'
                ],
                'max' => $this->ymax,
                'min' => $this->ymin,
@@ -135,7 +136,7 @@ new class extends Component {
                 if (isset($this->logs[$position])) {
                     $annotations[] = [
                         'x' => $this->parseDate($this->logs[$position]['taken_at']),
-                        'borderColor' => $this->xzoneColors[$zoneName] ?? '#000000',
+                        'borderColor' => '#775DD0',
                         'label' => [
                             'style' => [
                                 'color' => 'transparent',
@@ -192,18 +193,15 @@ new class extends Component {
                     'x' => $this->parseDate($this->logs[$midpointIndex]['taken_at']),
                     'y' => $yValue,
                     'marker' => [
-                        'size' => 8,
-                        'fillColor' => '#fff',
-                        'strokeColor' => '#FF4560',
-                        'radius' => 2,
+                            'size'          => 0,
+                            'strokeWidth'   => 0
                     ],
                     'label' => [
                         'borderWidth' => 0,
-                        'borderColor' => '#FF4560',
-                        'text' => 'Z' . ($index + 1),
+                        'text' => 'Z' . ($index + 1). ': ' $this->z_1_temp,
                         'style' => [
-                            'color' => '#fff',
-                            'background' => '#FF4560',
+                            'background' => '#00BBF9',
+                            'color' => '#ffffff'
                         ]
                     ]
                 ];

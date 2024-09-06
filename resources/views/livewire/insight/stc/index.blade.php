@@ -22,11 +22,11 @@ class extends Component {
     public string $device_code = '';
     public string $start_time;
     public string $end_time;
-    public float $preheat_temp;
-    public float $z_1_temp;
-    public float $z_2_temp;
-    public float $z_3_temp;
-    public float $z_4_temp;
+    public float $preheat_temp = 0;
+    public float $z_1_temp = 0;
+    public float $z_2_temp = 0;
+    public float $z_3_temp = 0;
+    public float $z_4_temp = 0;
     public int $speed;
 
     public array $logs = [['taken_at' => '', 'temp' => '']];
@@ -495,7 +495,7 @@ class extends Component {
                         class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-primary-button>
                     @endif
                     @if($view == 'review')
-                    <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}', xzones: '{{ json_encode($xzones) }}', yzones: '{{ json_encode($yzones)}}'})">{{ __('Tinjau data') }}</x-secondary-button>
+                    <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}', xzones: '{{ json_encode($xzones) }}', yzones: '{{ json_encode($yzones)}}', z_1_temp: '{{ $this->z_1_temp }}', z_2_temp: '{{ $this->z_2_temp }}', z_3_temp: '{{ $this->z_3_temp }}', z_4_temp: '{{ $this->z_4_temp }}' })">{{ __('Tinjau data') }}</x-secondary-button>
                     <x-primary-button type="button" wire:click="save">{{ __('Simpan') }}</x-primary-button>
                     @endif
                 </div>
