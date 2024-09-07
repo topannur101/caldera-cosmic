@@ -130,7 +130,11 @@ class extends Component {
     private function extractData()
     {
         $csv = array_map('str_getcsv', file($this->file->getPathname()));
-        array_shift($csv); // Remove header row
+        
+        // Remove the first three rows
+        for ($i = 0; $i < 3; $i++) {
+            array_shift($csv);
+        }
 
         // Sort by timestamp (first column)
         usort($csv, function($a, $b) {
@@ -160,7 +164,7 @@ class extends Component {
                 'z_2'           => array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT, self::ZONE_2_COUNT),
                 'z_3'           => array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT + self::ZONE_2_COUNT, self::ZONE_3_COUNT),
                 'z_4'           => array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT + self::ZONE_2_COUNT + self::ZONE_3_COUNT, self::ZONE_4_COUNT),
-            ], 
+            ],
             [
                 'start_time'    => 'required|date',
                 'end_time'      => 'required|date|after:start_time',
@@ -169,18 +173,19 @@ class extends Component {
                 'z_2.*.0'       => 'required|date',
                 'z_3.*.0'       => 'required|date',
                 'z_4.*.0'       => 'required|date',
-                'preheat.*.1'   => 'required|numeric|max:99',
-                'z_1.*.1'       => 'required|numeric|max:99',
-                'z_2.*.1'       => 'required|numeric|max:99',
-                'z_3.*.1'       => 'required|numeric|max:99',
-                'z_4.*.1'       => 'required|numeric|max:99',
-            ]);
+                'preheat.*.3'   => 'required|numeric|max:99',
+                'z_1.*.3'       => 'required|numeric|max:99',
+                'z_2.*.3'       => 'required|numeric|max:99',
+                'z_3.*.3'       => 'required|numeric|max:99',
+                'z_4.*.3'       => 'required|numeric|max:99',
+            ]
+        );
 
         if ($validator->fails()) {
             $error = $validator->errors()->first();
-            $this->js('notyfError("'.$error.'")'); 
+            $this->js('notyfError("'.$error.'")');
+            
             $this->reset(['file']);
-
         } else {
             $validatedData      = $validator->validated();
             $this->start_time   = $validatedData['start_time'];
@@ -202,12 +207,11 @@ class extends Component {
             $this->logs = array_map(function($row) {
                 return [
                     'taken_at' => $row[0],
-                    'temp' => round((float)$row[1], 1)
+                    'temp' => round((float)$row[3], 1)  // Changed index from 1 to 3
                 ];
             }, $data);
             $this->view = 'review';
         }
-
     }
 
     private function calculateMedian($data)
