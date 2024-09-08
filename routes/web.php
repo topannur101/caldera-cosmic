@@ -79,7 +79,7 @@ Route::prefix('insight')->group(function () {
         Volt::route('/stc/manage/machines',         'insight.stc.manage.machines')  ->name('manage.machines');
         Volt::route('/stc/manage/devices',          'insight.stc.manage.devices')   ->name('manage.devices');
         Volt::route('/stc/manage',                  'insight.stc.manage.index')     ->name('manage.index');
-        Volt::route('/stc/summary',                 'insight.stc.summary')          ->name('summary');
+        Volt::route('/stc/summary',                 'insight.stc.summary.index')    ->name('summary.index');
         Volt::route('/stc',                         'insight.stc.index')            ->name('index');
 
     });

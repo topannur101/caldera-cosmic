@@ -180,11 +180,6 @@ class extends Component {
                     <div class="mt-3">
                         <x-select class="w-full" id="hides-ftype" wire:model.live="ftype">
                             <option value="any">{{ __('Apapun') }}</option>
-                            <option value="code">{{ __('Kode') }}</option>
-                            <option value="model">{{ __('Model') }}</option>
-                            <option value="warna">{{ __('Warna') }}</option>
-                            <option value="mcs">{{ __('MCS') }}</option>
-                            <option value="eval">{{ __('Hasil') }}</option>
                             <option value="emp_id">{{ __('Nomor karyawan') }}</option>
                         </x-select>                        
                     </div>
@@ -207,7 +202,7 @@ class extends Component {
         </div>
         @switch($view)
             @case('d-sums')
-                <livewire:insight.stc.summary-d-sums :$start_at :$end_at :$fquery :$ftype />
+                <livewire:insight.stc.summary.d-sums :$start_at :$end_at :$fquery :$ftype />
             @break
 
             @default

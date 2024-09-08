@@ -3,44 +3,25 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
 use Carbon\Carbon;
+use App\InsStc;
 
 new class extends Component {
     
     public array $logs = [];
-    public array $xzones = [];
-    public array $yzones = [];
-    public float $z_1_temp = 0;
-    public float $z_2_temp = 0;
-    public float $z_3_temp = 0;
-    public float $z_4_temp = 0;
-    public int $ymax = 10;
-    public int $ymin = 0;
 
     #[On('d-logs-review')]
-    public function dLogsLoad($logs, $xzones, $yzones, $z_1_temp, $z_2_temp, $z_3_temp, $z_4_temp )
+    public function dLogsLoad($logs, $xzones, $yzones, $z_1_temp, $z_2_temp, $z_3_temp, $z_4_temp)
     {
-        $this->logs = json_decode($logs, true);
-        $this->xzones = json_decode($xzones, true);
-        $this->yzones = json_decode($yzones, true);
-        $this->z_1_temp = $z_1_temp;
-        $this->z_2_temp = $z_2_temp;
-        $this->z_3_temp = $z_3_temp;
-        $this->z_4_temp = $z_4_temp;
-        $this->ymax = $this->yzones ? max($this->yzones) + 0 : $this->ymax;
-        $this->ymin = $this->yzones ? min($this->yzones) - 0 : $this->ymin;
-        $this->generateChart();
-    }
+        $logs   = json_decode($logs, true);
+        $xzones = json_decode($xzones, true);
+        $yzones = json_decode($yzones, true);
+        $ymax   = $yzones ? max($yzones) + 0 : $ymax;
+        $ymin   = $yzones ? min($yzones) - 0 : $ymin;
 
-    private function generateChart()
-    {
-        $chartData = array_map(function ($log) {
-            return [$this->parseDate($log['taken_at']), $log['temp']];
-        }, $this->logs);
-
-        $chartDataJs = json_encode($chartData);
+        $this->logs = $logs;
 
         $this->js("
-            let options = " . json_encode($this->getChartOptions($chartDataJs)) . ";
+            let options = " . json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin)) . ";
 
             const parent = \$wire.\$el.querySelector('#chart-container');
             parent.innerHTML = '';
@@ -52,170 +33,6 @@ new class extends Component {
             let mainChart = new ApexCharts(parent.querySelector('#chart-main'), options);
             mainChart.render();
         ");
-    }
-
-    private function getChartOptions($chartDataJs)
-    {
-        return [
-            'chart' => [
-                'height' => '100%',
-                'type' => 'line',
-                'toolbar' => [
-                    'show' => true,
-                    'tools' => [
-                        'download' => '<img src="/icon-download.svg" width="18">',
-                        'zoom' => '<img src="/icon-zoom-in.svg" width="18">',
-                        'zoomin' => false,
-                        'zoomout' => false,
-                        'pan' => '<img src="/icon-hand.svg" width="20">',
-                        'reset' => '<img src="/icon-zoom-out.svg" width="18">',
-                    ]
-                ],
-                'animations' => [
-                    'enabled' => true,
-                    'easing' => 'easeout',
-                    'speed' => 400,
-                    'animateGradually' => [
-                        'enabled' => false,
-                    ],
-                ]
-            ],
-            'series' => [[
-                'name' => __('Suhu'),
-                'data' => json_decode($chartDataJs, true),
-                'color' => '#00BBF9'
-            ]],
-            'xaxis' => [
-                'type' => 'datetime',
-                'labels' => [
-                    'datetimeUTC' => false,
-               ]
-            ],
-            'yaxis' => [
-                'title' => [
-                    'text' => '°C'
-               ],
-               'max' => $this->ymax,
-               'min' => $this->ymin,
-
-            ],
-            'stroke' => [
-                'curve' => 'smooth',
-                'width' => 1,
-            ],
-            'tooltip' => [
-                'x' => [
-                    'format' => 'dd MMM yyyy HH:mm',
-                ]              
-            ],
-            'annotations' => [
-                'xaxis' => $this->generateXAnnotations(),
-                'yaxis' => $this->generateYAnnotations(),
-                'points' => $this->generatePointAnnotations(),
-            ],
-            'grid' => [
-               'yaxis' => [
-                  'lines' => [
-                     'show' => false
-                  ]
-               ]
-            ]
-        ];
-    }
-
-    private function generateXAnnotations()
-    {
-        $annotations = [];
-        $previousCount = 0;
-
-        foreach ($this->xzones as $zone => $count) {
-            if (strpos($zone, 'count') !== false && $count > 0) {
-                $zoneName = str_replace('_count', '', $zone);
-                $position = $previousCount + $count;
-
-                if (isset($this->logs[$position])) {
-                    $annotations[] = [
-                        'x' => $this->parseDate($this->logs[$position]['taken_at']),
-                        'borderColor' => '#775DD0',
-                        'label' => [
-                            'style' => [
-                                'color' => 'transparent',
-                                'background' => 'transparent'
-                            ],
-                            'text' => ''
-                        ]
-                    ];
-                }
-
-                $previousCount += $count;
-            }
-        }
-
-        return $annotations;
-    }
-
-    private function generateYAnnotations()
-   {
-      $annotations = [];
-      foreach ($this->yzones as $index => $value) {
-         $annotations[] = [
-               'y' => $value,
-               'borderColor' => '#bcbcbc',
-               'label' => [
-                  'borderColor' => 'transparent',
-                  'style' => [
-                     'color' => '#bcbcbc',
-                     'background' => 'transparent'
-                  ],
-                  'text' => $value . "°C"
-               ]
-         ];
-      }
-      return $annotations;
-   }
-
-   private function generatePointAnnotations()
-    {
-        $pointAnnotations = [];
-        $preheatCount = $this->xzones['preheat_count'];
-        $currentIndex = $preheatCount;
-        $zoneNames = ['zone_1_count', 'zone_2_count', 'zone_3_count', 'zone_4_count'];
-        $yzonesReversed = array_reverse($this->yzones);
-
-        foreach ($zoneNames as $index => $zoneName) {
-            $zoneCount = $this->xzones[$zoneName];
-            $midpointIndex = $currentIndex + floor($zoneCount / 2);
-            
-            if (isset($this->logs[$midpointIndex])) {
-                $yValue = ($yzonesReversed[$index] + $yzonesReversed[$index + 1]) / 2;
-                
-                $pointAnnotations[] = [
-                    'x' => $this->parseDate($this->logs[$midpointIndex]['taken_at']),
-                    'y' => $yValue,
-                    'marker' => [
-                            'size'          => 0,
-                            'strokeWidth'   => 0
-                    ],
-                    'label' => [
-                        'borderWidth' => 0,
-                        'text' => 'Z' . ($index + 1). ': ' $this->z_1_temp,
-                        'style' => [
-                            'background' => '#00BBF9',
-                            'color' => '#ffffff'
-                        ]
-                    ]
-                ];
-            }
-            
-            $currentIndex += $zoneCount;
-        }
-
-        return $pointAnnotations;
-    }
-
-    private function parseDate($dateString)
-    {
-        return Carbon::parse($dateString)->timestamp * 1000;
     }
 
     public function with(): array

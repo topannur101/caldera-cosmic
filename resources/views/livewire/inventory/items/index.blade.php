@@ -5,7 +5,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use Livewire\Attributes\Url;
 
-use App\Inventory;
+use App\Inv;
 use App\Models\Pref;
 use App\Models\User;
 use App\Models\InvLoc;
@@ -151,7 +151,7 @@ class extends Component {
         $area_ids = array_intersect($area_ids_set, $area_ids_auth);
         $this->area_ids_clean = array_values($area_ids);
 
-        $inv_items = Inventory::itemsBuild(
+        $inv_items = Inv::itemsBuild(
             $this->area_ids_clean,
             $this->q,
             $this->status,

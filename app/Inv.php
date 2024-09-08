@@ -7,7 +7,7 @@ use App\Models\InvCirc;
 use App\Models\InvItem;
 use Illuminate\Database\Eloquent\Builder;
 
-class Inventory
+class Inv
 {
     public static function itemsBuild($areas, $q, $status, $filter, $loc, $tag, $without, $sort, $qty): Builder
     {

@@ -4,8 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
-use App\Models\InsRdcTest;
-use App\Models\InsRubberBatch;
+use App\Models\InsStcDSum;
 
 new #[Layout('layouts.app')] 
 class extends Component {

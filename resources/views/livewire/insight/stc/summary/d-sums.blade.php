@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\InsRdcDSum;
+use App\Models\InsStcDSum;
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -35,48 +35,18 @@ class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        // $dSumsQuery = InsRdcDSum::join('ins_rubber_batches', 'ins_rdc_d_sums.ins_rubber_batch_id', '=', 'ins_rubber_batches.id')
-        // ->join('users', 'ins_rdc_d_sums.user_id', '=', 'users.id')
-        // ->select(
-        // 'ins_rdc_d_sums.*',
-        // 'ins_rdc_d_sums.updated_at as d_sum_updated_at',
-        // 'ins_rubber_batches.code as batch_code',
-        // 'ins_rubber_batches.model as batch_model',
-        // 'ins_rubber_batches.color as batch_color',
-        // 'ins_rubber_batches.mcs as batch_mcs',
-        // 'users.emp_id as user_emp_id',
-        // 'users.name as user_name');
-
-        $dSumsQuery = InsRdcDSum::join('ins_rubber_batches', 'ins_rdc_d_sums.ins_rubber_batch_id', '=', 'ins_rubber_batches.id')
-        ->join('users', 'ins_rdc_d_sums.user_id', '=', 'users.id')
+        $dSumsQuery = InsStcDSum::join('ins_stc_machines', 'ins_stc_d_sums.ins_stc_machine_id', '=', 'ins_stc_machines.id')
+        ->join('users', 'ins_stc_d_sums.user_id', '=', 'users.id')
         ->select(
-        'ins_rdc_d_sums.*',
-        'ins_rdc_d_sums.updated_at as d_sum_updated_at',
-        'ins_rubber_batches.code as batch_code',
-        'ins_rubber_batches.model as batch_model',
-        'ins_rubber_batches.color as batch_color',
-        'ins_rubber_batches.mcs as batch_mcs',
+        'ins_stc_d_sums.*',
+        'ins_stc_d_sums.updated_at as d_sum_updated_at',
+        'ins_stc_machines.line as machine_line',
         'users.emp_id as user_emp_id',
         'users.name as user_name');
 
-        $dSumsQuery->whereBetween('ins_rdc_d_sums.updated_at', [$start, $end]);
+        $dSumsQuery->whereBetween('ins_stc_d_sums.updated_at', [$start, $end]);
 
         switch ($this->ftype) {
-            case 'code':
-                $dSumsQuery->where('ins_rubber_batches.code', 'LIKE', '%' . $this->fquery . '%');
-            break;
-            case 'model':
-                $dSumsQuery->where('ins_rubber_batches.model', 'LIKE', '%' . $this->fquery . '%');
-                break;
-            case 'color':
-                $dSumsQuery->where('ins_rubber_batches.color', 'LIKE', '%' . $this->fquery . '%');
-            break;
-            case 'mcs':
-                $dSumsQuery->where('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%');
-            break;
-            case 'eval':
-                $dSumsQuery->where('ins_rdc_d_sums.eval', 'LIKE', '%' . $this->fquery . '%');
-            break;
             case 'emp_id':
                 $dSumsQuery->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
             break;
@@ -84,43 +54,35 @@ class extends Component {
             default:
                 $dSumsQuery->where(function (Builder $query) {
                 $query
-                    ->orWhere('ins_rubber_batches.code', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('ins_rubber_batches.model', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('ins_rubber_batches.color', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%')
                     ->orWhere('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
                 });
                 break;
         }
 
-        $dSumsQuery->orderBy('ins_rdc_d_sums.updated_at', 'DESC');
+        $dSumsQuery->orderBy('ins_stc_d_sums.updated_at', 'DESC');
 
         // switch ($this->sort) {
         //     case 'updated':
         //         if (!$this->is_workdate) {
-        //             $dSumsQuery->orderBy('ins_rdc_d_sums.updated_at', 'DESC');
+        //             $dSumsQuery->orderBy('ins_stc_d_sums.updated_at', 'DESC');
         //         } else {
-        //             $dSumsQuery->orderBy('ins_rdc_groups.workdate', 'DESC');
+        //             $dSumsQuery->orderBy('ins_stc_groups.workdate', 'DESC');
         //         }
         //         break;
             
         //     case 'sf_low':
-        //     $dSumsQuery->orderBy(DB::raw('ins_rdc_d_sums.area_vn + ins_rdc_d_sums.area_ab + ins_rdc_d_sums.area_qt'), 'ASC');
+        //     $dSumsQuery->orderBy(DB::raw('ins_stc_d_sums.area_vn + ins_stc_d_sums.area_ab + ins_stc_d_sums.area_qt'), 'ASC');
         //         break;
 
         //     case 'sf_high':
-        //     $dSumsQuery->orderBy(DB::raw('ins_rdc_d_sums.area_vn + ins_rdc_d_sums.area_ab + ins_rdc_d_sums.area_qt'), 'DESC');
+        //     $dSumsQuery->orderBy(DB::raw('ins_stc_d_sums.area_vn + ins_stc_d_sums.area_ab + ins_stc_d_sums.area_qt'), 'DESC');
         //         break;
         // }
 
         $dSums = $dSumsQuery->paginate($this->perPage);
-        // $sum_area_vn = $dSumsQuery->sum('area_vn');
-        // $sum_area_ab = $dSumsQuery->sum('area_ab');
 
         return [
             'd_sums' => $dSums,
-            // 'sum_area_vn' => $sum_area_vn,
-            // 'sum_area_ab' => $sum_area_ab
         ];
     }
 
@@ -141,22 +103,27 @@ class extends Component {
                 <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>
         </div>
-        <x-modal name="raw-stats-info">
-            <div class="p-6">
-                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                    {{ __('Statistik hasil ukur') }}
-                </h2>
-                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                    {{ __('Belum ada informasi statistik yang tersedia.') }}
-                </p>
-                <div class="mt-6 flex justify-end">
-                    <x-primary-button type="button" x-on:click="$dispatch('close')">
-                        {{ __('Paham') }}
-                    </x-primary-button>
+        <div wire:key="modals"> 
+            <x-modal name="raw-stats-info">
+                <div class="p-6">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Statistik hasil ukur') }}
+                    </h2>
+                    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                        {{ __('Belum ada informasi statistik yang tersedia.') }}
+                    </p>
+                    <div class="mt-6 flex justify-end">
+                        <x-primary-button type="button" x-on:click="$dispatch('close')">
+                            {{ __('Paham') }}
+                        </x-primary-button>
+                    </div>
                 </div>
-            </div>
-        </x-modal>
-        @if (!$dSums->count())
+            </x-modal>  
+            <x-modal name="d_sum-show">
+                <livewire:insight.stc.summary.d-sum-show />
+            </x-modal>
+        </div>
+        @if (!$d_sums->count())
             @if (!$start_at || !$end_at)
                 <div wire:key="no-range" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -180,23 +147,22 @@ class extends Component {
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
                     <table class="table table-sm table-truncate text-sm text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
-                            <th>{{ __('Waktu') }}</th>
+                            <th>{{ __('Waktu mulai') }}</th>
                             <th>{{ __('Durasi') }}</th>
+                            <th>{{ __('Line') }}</th>
+                            <th>{{ __('RPM') }}</th>   
                             <th>{{ __('Median suhu') }}</th>
-                            <th>{{ __('RPM') }}</th>    
+                            <th>{{ __('Nama') }}</th>
+                            <th>{{ __('Diperbarui pada') }}</th> 
                         </tr>
-                        @foreach ($dSums as $d_sum)
-                        <tr>
-                            <td>{{ $d_sum->d_sum_queued_at }}</td>
-                            <td>{{ $d_sum->batch_code }}</td>
-                            <td>{{ $d_sum->batch_model ? $d_sum->batch_model : '-' }}</td>
-                            <td>{{ $d_sum->batch_color ? $d_sum->batch_color : '-'  }}</td>
-                            <td>{{ $d_sum->batch_mcs ? $d_sum->batch_mcs : '-' }}</td>
-                            <td><x-pill class="uppercase" color="{{ 
-                                $d_sum->eval === 'queue' ? 'yellow' : 
-                                ($d_sum->eval === 'pass' ? 'green' : 
-                                ($d_sum->eval === 'fail' ? 'red' : ''))
-                                }}">{{ $d_sum->evalHuman() }}</x-pill></td>
+                        @foreach ($d_sums as $d_sum)
+                        <tr wire:key="d_sum-tr-{{ $d_sum->id . $loop->index }}" tabindex="0"
+                            x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $d_sum->id }}'})">
+                            <td>{{ $d_sum->start_time }}</td>
+                            <td></td>
+                            <td>{{ $d_sum->machine_line }}</td>
+                            <td>{{ $d_sum->speed }}</td>
+                            <td>{{ $d_sum->z_1_temp . ' | ' . $d_sum->z_2_temp . ' | ' . $d_sum->z_3_temp . ' | ' . $d_sum->z_4_temp  }}</td>
                             <td>{{ $d_sum->user_name }}</td>
                             <td>{{ $d_sum->d_sum_updated_at }}</td>
                         </tr>
@@ -205,8 +171,8 @@ class extends Component {
                 </div>
             </div>
             <div class="flex items-center relative h-16">
-                @if (!$dSums->isEmpty())
-                    @if ($dSums->hasMorePages())
+                @if (!$d_sums->isEmpty())
+                    @if ($d_sums->hasMorePages())
                         <div wire:key="more" x-data="{
                             observe() {
                                 const observer = new IntersectionObserver((d_sums) => {

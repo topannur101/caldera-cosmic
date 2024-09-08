@@ -10,6 +10,8 @@ use App\Models\InsStcDevice;
 use App\Models\InsStcDLog;
 use App\Models\InsStcDSum;
 use Carbon\Carbon;
+use App\Caldera;
+use App\InsStc;
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -36,25 +38,17 @@ class extends Component {
     public string $data_count_eval_human;
     public string $duration;
 
-    public const PREHEAT_COUNT = 5;
-    public const ZONE_1_COUNT = 12;
-    public const ZONE_2_COUNT = 12;
-    public const ZONE_3_COUNT = 12;
-    public const ZONE_4_COUNT = 12;
-
-    public const EXP_COUNT = self::PREHEAT_COUNT + self::ZONE_1_COUNT + self::ZONE_2_COUNT + self::ZONE_3_COUNT + self::ZONE_4_COUNT;
-    public const COUNT_TOLERANCE = 5;
-
     public array $xzones = [
-        'preheat_count' => self::PREHEAT_COUNT,
-        'zone_1_count'  => self::ZONE_1_COUNT,
-        'zone_2_count'  => self::ZONE_2_COUNT,
-        'zone_3_count'  => self::ZONE_3_COUNT,
-        'zone_4_count'  => self::ZONE_4_COUNT,
-        'exp_count'     => self::EXP_COUNT,
+        'preheat' => 5,
+        'zone_1'  => 12,
+        'zone_2'  => 12,
+        'zone_3'  => 12,
+        'zone_4'  => 12,
     ];
 
     public array $yzones = [40, 50, 60, 70, 80];
+
+    public const COUNT_TOLERANCE = 5;
 
     public function rules()
     {
@@ -94,6 +88,7 @@ class extends Component {
             $d_sum->fill([
                 'ins_stc_device_id'     => $device->id,
                 'ins_stc_machine_id'    => $this->machine_id,
+                'user_id'               => Auth::user()->id,
                 'start_time'            => $this->start_time,
                 'end_time'              => $this->end_time,
                 'preheat_temp'          => $this->preheat_temp,
@@ -136,17 +131,22 @@ class extends Component {
             array_shift($csv);
         }
 
+        // remove if there's empty column date and temp
+        $csv = array_values(array_filter($csv, function($row) {
+            return !empty($row[0]) && !empty($row[3]);
+        }));
+        
         // Sort by timestamp (first column)
         usort($csv, function($a, $b) {
             return strtotime($a[0]) - strtotime($b[0]);
         });
 
-        $dataCount = min(count($csv), self::EXP_COUNT);
+        $dataCount = min(count($csv), array_sum($this->xzones));
 
         // Evaluate data count
-        if ($dataCount < self::EXP_COUNT - self::COUNT_TOLERANCE) {
+        if ($dataCount < array_sum($this->xzones) - self::COUNT_TOLERANCE) {
             $this->data_count_eval = 'too_few';
-        } elseif ($dataCount > self::EXP_COUNT + self::COUNT_TOLERANCE) {
+        } elseif ($dataCount > array_sum($this->xzones) + self::COUNT_TOLERANCE) {
             $this->data_count_eval = 'too_many';
         } else {
             $this->data_count_eval = 'optimal';
@@ -155,83 +155,69 @@ class extends Component {
 
         $data = array_slice($csv, 0, $dataCount);
 
-        $validator = Validator::make(
-            [
-                'start_time'    => $data[0][0],
-                'end_time'      => end($data)[0],
-                'preheat'       => array_slice($data, 0, self::PREHEAT_COUNT),
-                'z_1'           => array_slice($data, self::PREHEAT_COUNT, self::ZONE_1_COUNT),
-                'z_2'           => array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT, self::ZONE_2_COUNT),
-                'z_3'           => array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT + self::ZONE_2_COUNT, self::ZONE_3_COUNT),
-                'z_4'           => array_slice($data, self::PREHEAT_COUNT + self::ZONE_1_COUNT + self::ZONE_2_COUNT + self::ZONE_3_COUNT, self::ZONE_4_COUNT),
-            ],
-            [
-                'start_time'    => 'required|date',
-                'end_time'      => 'required|date|after:start_time',
-                'preheat.*.0'   => 'required|date',
-                'z_1.*.0'       => 'required|date',
-                'z_2.*.0'       => 'required|date',
-                'z_3.*.0'       => 'required|date',
-                'z_4.*.0'       => 'required|date',
-                'preheat.*.3'   => 'required|numeric|max:99',
-                'z_1.*.3'       => 'required|numeric|max:99',
-                'z_2.*.3'       => 'required|numeric|max:99',
-                'z_3.*.3'       => 'required|numeric|max:99',
-                'z_4.*.3'       => 'required|numeric|max:99',
-            ]
-        );
-
-        if ($validator->fails()) {
-            $error = $validator->errors()->first();
-            $this->js('notyfError("'.$error.'")');
-            
-            $this->reset(['file']);
-        } else {
-            $validatedData      = $validator->validated();
-            $this->start_time   = $validatedData['start_time'];
-            $this->end_time     = $validatedData['end_time'];
-            $this->preheat_temp = $this->calculateMedian($validatedData['preheat'] ?? null);
-            $this->z_1_temp     = $this->calculateMedian($validatedData['z_1'] ?? null);
-            $this->z_2_temp     = $this->calculateMedian($validatedData['z_2'] ?? null);
-            $this->z_3_temp     = $this->calculateMedian($validatedData['z_3'] ?? null);
-            $this->z_4_temp     = $this->calculateMedian($validatedData['z_4'] ?? null);
-
-            $x = Carbon::parse($validatedData['start_time']);
-            $y = Carbon::parse($validatedData['end_time']);
-            $this->duration = $x->diff($y)->forHumans([
-                'parts' => 2,
-                'join' => true,
-                'short' => false,
-            ]);
-
-            $this->logs = array_map(function($row) {
-                return [
-                    'taken_at' => $row[0],
-                    'temp' => round((float)$row[3], 1)  // Changed index from 1 to 3
-                ];
-            }, $data);
-            $this->view = 'review';
-        }
-    }
-
-    private function calculateMedian($data)
-    {
         if (empty($data)) {
-            return 0;
-        }
+            $this->js('notyfError("'. __('Tak ada data yang sah ditemukan') .'")');
 
-        $temperatures = array_column($data, 1);
-        sort($temperatures);
-        $count = count($temperatures);
-        $middleIndex = floor(($count - 1) / 2);
-
-        if ($count % 2 == 0) {
-            $median = ($temperatures[$middleIndex] + $temperatures[$middleIndex + 1]) / 2;
         } else {
-            $median = $temperatures[$middleIndex];
+            $validator = Validator::make(
+                [
+                    'start_time'    => $data[0][0],
+                    'end_time'      => end($data)[0],
+                    'preheat'       => InsStc::sliceZoneData($data, $this->xzones, 'preheat'),
+                    'z_1'           => InsStc::sliceZoneData($data, $this->xzones, 'zone_1'),
+                    'z_2'           => InsStc::sliceZoneData($data, $this->xzones, 'zone_2'),
+                    'z_3'           => InsStc::sliceZoneData($data, $this->xzones, 'zone_3'),
+                    'z_4'           => InsStc::sliceZoneData($data, $this->xzones, 'zone_4'),
+                ],
+                [
+                    'start_time'    => 'required|date',
+                    'end_time'      => 'required|date|after:start_time',
+                    'preheat.*.0'   => 'required|date',
+                    'z_1.*.0'       => 'required|date',
+                    'z_2.*.0'       => 'required|date',
+                    'z_3.*.0'       => 'required|date',
+                    'z_4.*.0'       => 'required|date',
+                    'preheat.*.3'   => 'required|numeric|max:99',
+                    'z_1.*.3'       => 'required|numeric|max:99',
+                    'z_2.*.3'       => 'required|numeric|max:99',
+                    'z_3.*.3'       => 'required|numeric|max:99',
+                    'z_4.*.3'       => 'required|numeric|max:99',
+                ]
+            );
+
+            if ($validator->fails()) {
+                $error = $validator->errors()->first();
+                $this->js('notyfError("'.$error.'")');
+                $this->reset(['file']);
+
+            } else {
+                $validatedData      = $validator->validated();
+                $this->start_time   = $validatedData['start_time'];
+                $this->end_time     = $validatedData['end_time'];
+                $this->preheat_temp = Caldera::findMedian(InsStc::extractTemps($validatedData, 'preheat'));
+                $this->z_1_temp     = Caldera::findMedian(InsStc::extractTemps($validatedData, 'z_1'));
+                $this->z_2_temp     = Caldera::findMedian(InsStc::extractTemps($validatedData, 'z_2'));
+                $this->z_3_temp     = Caldera::findMedian(InsStc::extractTemps($validatedData, 'z_3'));
+                $this->z_4_temp     = Caldera::findMedian(InsStc::extractTemps($validatedData, 'z_4'));
+
+                $x = Carbon::parse($validatedData['start_time']);
+                $y = Carbon::parse($validatedData['end_time']);
+                $this->duration = $x->diff($y)->forHumans([
+                    'parts' => 2,
+                    'join' => true,
+                    'short' => false,
+                ]);
+
+                $this->logs = array_map(function($row) {
+                    return [
+                        'taken_at' => $row[0],
+                        'temp' => round((float)$row[3], 1)  // Changed index from 1 to 3
+                    ];
+                }, $data);
+                $this->view = 'review';
+            }
         }
 
-        return round($median, 1);
     }
 
     public function customReset()

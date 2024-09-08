@@ -5,7 +5,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Layout;
 
-use App\Inventory;
+use App\Inv;
 use Carbon\Carbon;
 use App\Models\Pref;
 use App\Models\User;
@@ -123,7 +123,7 @@ class extends Component {
         $area_ids_clean = array_intersect($area_ids_set, $area_ids_allowed);
         $this->area_ids_clean = array_values($area_ids_clean);
 
-        $circs = Inventory::circsBuild(
+        $circs = Inv::circsBuild(
             $this->area_ids_clean, 
             $this->q, 
             $this->status, 
