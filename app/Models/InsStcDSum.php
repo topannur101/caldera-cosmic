@@ -34,9 +34,9 @@ class InsStcDSum extends Model
         'speed' => 'integer',
     ];
 
-    public static function dataCountEvalHuman($dataCountEval): string
+    public static function logsCountEvalHuman($logsCountEval): string
     {
-        switch ($dataCountEval) {
+        switch ($logsCountEval) {
             case 'optimal':
                 return __('Optimal');
                 break;

@@ -39,17 +39,4 @@ class Caldera
         return $collection->sortByDesc('updated_at')->values();
     }
 
-    public static function findMedian(array $arr): float
-    {
-        sort($arr);
-        $count = count($arr);
-        $middle = floor($count / 2);
-        if ($count % 2 == 0) {
-            $median = ($arr[$middle - 1] 
-                        + $arr[$middle]) / 2;
-        } else {
-            $median = $arr[$middle];
-        }
-        return $median;        
-    }
 }

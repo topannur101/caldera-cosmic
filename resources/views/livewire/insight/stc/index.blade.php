@@ -10,7 +10,6 @@ use App\Models\InsStcDevice;
 use App\Models\InsStcDLog;
 use App\Models\InsStcDSum;
 use Carbon\Carbon;
-use App\Caldera;
 use App\InsStc;
 
 new #[Layout('layouts.app')] 
@@ -19,6 +18,7 @@ class extends Component {
     use WithFileUploads;
 
     public $file;
+    public array $logs = [['taken_at' => '', 'temp' => '']];
 
     public int $machine_id;
     public string $device_code = '';
@@ -31,11 +31,9 @@ class extends Component {
     public float $z_4_temp = 0;
     public int $speed;
 
-    public array $logs = [['taken_at' => '', 'temp' => '']];
-
     public string $view = 'initial';
-    public string $data_count_eval;
-    public string $data_count_eval_human;
+    public string $logs_count_eval;
+    public string $logs_count_eval_human;
     public string $duration;
 
     public array $xzones = [
@@ -124,64 +122,81 @@ class extends Component {
 
     private function extractData()
     {
-        $csv = array_map('str_getcsv', file($this->file->getPathname()));
-        
-        // Remove the first three rows
-        for ($i = 0; $i < 3; $i++) {
-            array_shift($csv);
+        $rows = array_map('str_getcsv', file($this->file->getPathname()));
+        $skipRows = 3;
+        $tempColumn = 3;
+
+        for ($i = 0; $i < $skipRows; $i++) {
+            array_shift($rows);
         }
 
-        // remove if there's empty column date and temp
-        $csv = array_values(array_filter($csv, function($row) {
-            return !empty($row[0]) && !empty($row[3]);
-        }));
-        
-        // Sort by timestamp (first column)
-        usort($csv, function($a, $b) {
-            return strtotime($a[0]) - strtotime($b[0]);
+        $logs = [];
+
+        foreach ($rows as $row) {
+            if (isset($row[0]) && isset($row[$tempColumn]) && 
+                $row[0] !== '' && $row[$tempColumn] !== '') {
+                $timestamp = strtotime($row[0]);
+                if ($timestamp !== false) {  // Ensure valid date/time
+                    $logs[] = [
+                        'taken_at' => $row[0],
+                        'temp' => $row[$tempColumn],
+                        'timestamp' => $timestamp // Adding timestamp for sorting
+                    ];
+                }
+            }
+        }
+
+        usort($logs, function($a, $b) {
+            return $a['timestamp'] <=> $b['timestamp'];
         });
 
-        $dataCount = min(count($csv), array_sum($this->xzones));
+        $logsCount = min(count($logs), array_sum($this->xzones));
 
-        // Evaluate data count
-        if ($dataCount < array_sum($this->xzones) - self::COUNT_TOLERANCE) {
-            $this->data_count_eval = 'too_few';
-        } elseif ($dataCount > array_sum($this->xzones) + self::COUNT_TOLERANCE) {
-            $this->data_count_eval = 'too_many';
+        // Evaluate logs count
+        if ($logsCount < array_sum($this->xzones) - self::COUNT_TOLERANCE) {
+            $this->logs_count_eval = 'too_few';
+        } elseif ($logsCount > array_sum($this->xzones) + self::COUNT_TOLERANCE) {
+            $this->logs_count_eval = 'too_many';
         } else {
-            $this->data_count_eval = 'optimal';
+            $this->logs_count_eval = 'optimal';
         }
-        $this->data_count_eval_human = InsStcDSum::dataCountEvalHuman($this->data_count_eval);
+        $this->logs_count_eval_human = InsStcDSum::logsCountEvalHuman($this->logs_count_eval);
 
-        $data = array_slice($csv, 0, $dataCount);
+        $logs = array_slice($logs, 0, $logsCount);
 
-        if (empty($data)) {
+        if (empty($logs)) {
             $this->js('notyfError("'. __('Tak ada data yang sah ditemukan') .'")');
 
         } else {
+            $slicedPh = InsStc::sliceZoneData($logs, $this->xzones, 'preheat');
+            $slicedZ1 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_1');
+            $slicedZ2 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_2');
+            $slicedZ3 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_3');
+            $slicedZ4 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_4');
+
             $validator = Validator::make(
                 [
-                    'start_time'    => $data[0][0],
-                    'end_time'      => end($data)[0],
-                    'preheat'       => InsStc::sliceZoneData($data, $this->xzones, 'preheat'),
-                    'z_1'           => InsStc::sliceZoneData($data, $this->xzones, 'zone_1'),
-                    'z_2'           => InsStc::sliceZoneData($data, $this->xzones, 'zone_2'),
-                    'z_3'           => InsStc::sliceZoneData($data, $this->xzones, 'zone_3'),
-                    'z_4'           => InsStc::sliceZoneData($data, $this->xzones, 'zone_4'),
+                    'start_time'    => $logs[0]['taken_at'],
+                    'end_time'      => $logs[array_key_last($logs)]['taken_at'],
+                    'p_h'           => $slicedPh,
+                    'z_1'           => $slicedZ1,
+                    'z_2'           => $slicedZ2,
+                    'z_3'           => $slicedZ3,
+                    'z_4'           => $slicedZ4,
                 ],
                 [
-                    'start_time'    => 'required|date',
-                    'end_time'      => 'required|date|after:start_time',
-                    'preheat.*.0'   => 'required|date',
-                    'z_1.*.0'       => 'required|date',
-                    'z_2.*.0'       => 'required|date',
-                    'z_3.*.0'       => 'required|date',
-                    'z_4.*.0'       => 'required|date',
-                    'preheat.*.3'   => 'required|numeric|max:99',
-                    'z_1.*.3'       => 'required|numeric|max:99',
-                    'z_2.*.3'       => 'required|numeric|max:99',
-                    'z_3.*.3'       => 'required|numeric|max:99',
-                    'z_4.*.3'       => 'required|numeric|max:99',
+                    'start_time'        => 'required|date',
+                    'end_time'          => 'required|date|after:start_time',
+                    'p_h.*.taken_at'    => 'required|date',
+                    'z_1.*.taken_at'    => 'required|date',
+                    'z_2.*.taken_at'    => 'required|date',
+                    'z_3.*.taken_at'    => 'required|date',
+                    'z_4.*.taken_at'    => 'required|date',
+                    'p_h.*.temp'        => 'required|numeric|max:99',
+                    'z_1.*.temp'        => 'required|numeric|max:99',
+                    'z_2.*.temp'        => 'required|numeric|max:99',
+                    'z_3.*.temp'        => 'required|numeric|max:99',
+                    'z_4.*.temp'        => 'required|numeric|max:99',
                 ]
             );
 
@@ -191,14 +206,15 @@ class extends Component {
                 $this->reset(['file']);
 
             } else {
+                $this->logs         = $logs;
                 $validatedData      = $validator->validated();
                 $this->start_time   = $validatedData['start_time'];
                 $this->end_time     = $validatedData['end_time'];
-                $this->preheat_temp = Caldera::findMedian(InsStc::extractTemps($validatedData, 'preheat'));
-                $this->z_1_temp     = Caldera::findMedian(InsStc::extractTemps($validatedData, 'z_1'));
-                $this->z_2_temp     = Caldera::findMedian(InsStc::extractTemps($validatedData, 'z_2'));
-                $this->z_3_temp     = Caldera::findMedian(InsStc::extractTemps($validatedData, 'z_3'));
-                $this->z_4_temp     = Caldera::findMedian(InsStc::extractTemps($validatedData, 'z_4'));
+                $this->preheat_temp = InsStc::calculateMedianTemp($validatedData['p_h']);
+                $this->z_1_temp     = InsStc::calculateMedianTemp($validatedData['z_1']);
+                $this->z_2_temp     = InsStc::calculateMedianTemp($validatedData['z_2']);
+                $this->z_3_temp     = InsStc::calculateMedianTemp($validatedData['z_3']);
+                $this->z_4_temp     = InsStc::calculateMedianTemp($validatedData['z_4']);
 
                 $x = Carbon::parse($validatedData['start_time']);
                 $y = Carbon::parse($validatedData['end_time']);
@@ -208,21 +224,31 @@ class extends Component {
                     'short' => false,
                 ]);
 
-                $this->logs = array_map(function($row) {
-                    return [
-                        'taken_at' => $row[0],
-                        'temp' => round((float)$row[3], 1)  // Changed index from 1 to 3
-                    ];
-                }, $data);
                 $this->view = 'review';
             }
         }
-
     }
 
     public function customReset()
     {
-        $this->reset(['file', 'machine_id', 'device_code', 'start_time', 'end_time', 'preheat_temp', 'z_1_temp', 'z_2_temp', 'z_3_temp', 'z_4_temp', 'speed', 'logs', 'view', 'data_count_eval', 'data_count_eval_human', 'duration']);
+        $this->reset([
+            'file', 
+            'logs', 
+            'machine_id', 
+            'device_code', 
+            'start_time', 
+            'end_time', 
+            'preheat_temp', 
+            'z_1_temp', 
+            'z_2_temp', 
+            'z_3_temp', 
+            'z_4_temp', 
+            'speed', 
+            'view', 
+            'logs_count_eval', 
+            'logs_count_eval_human', 
+            'duration'
+        ]);
     }
 
     public function downloadCSV()
@@ -412,7 +438,7 @@ class extends Component {
                                             {{ __('Jumlah data') . ': ' }}
                                         </td>
                                         <td>
-                                            {{ count($logs) . ' ('. $data_count_eval_human .')' }}
+                                            {{ count($logs) . ' ('. $logs_count_eval_human .')' }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -423,11 +449,11 @@ class extends Component {
                                         </td>
                                     </tr>
                                 </table>
-                                <div class="grid grid-cols-5 mt-3 text-center">
-                                    <div>
+                                <div class="grid grid-cols-4 mt-3 text-center">
+                                    {{-- <div>
                                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Preheat')}}</div>
                                         <div>{{ $preheat_temp }}</div>
-                                    </div>
+                                    </div> --}}
                                     <div>
                                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Zona 1')}}</div>
                                         <div>{{ $z_1_temp }}</div>
@@ -485,7 +511,7 @@ class extends Component {
                         class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-primary-button>
                     @endif
                     @if($view == 'review')
-                    <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}', xzones: '{{ json_encode($xzones) }}', yzones: '{{ json_encode($yzones)}}', z_1_temp: '{{ $this->z_1_temp }}', z_2_temp: '{{ $this->z_2_temp }}', z_3_temp: '{{ $this->z_3_temp }}', z_4_temp: '{{ $this->z_4_temp }}' })">{{ __('Tinjau data') }}</x-secondary-button>
+                    <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}', xzones: '{{ json_encode($xzones) }}', yzones: '{{ json_encode($yzones)}}' })">{{ __('Tinjau data') }}</x-secondary-button>
                     <x-primary-button type="button" wire:click="save">{{ __('Simpan') }}</x-primary-button>
                     @endif
                 </div>

@@ -7,10 +7,10 @@ use App\InsStc;
 
 new class extends Component {
     
-    public array $logs = [];
+    public array $logs = [['taken_at' => '', 'temp' => '']];
 
     #[On('d-logs-review')]
-    public function dLogsLoad($logs, $xzones, $yzones, $z_1_temp, $z_2_temp, $z_3_temp, $z_4_temp)
+    public function dLogsLoad($logs, $xzones, $yzones)
     {
         $logs   = json_decode($logs, true);
         $xzones = json_decode($xzones, true);
@@ -33,13 +33,6 @@ new class extends Component {
             let mainChart = new ApexCharts(parent.querySelector('#chart-main'), options);
             mainChart.render();
         ");
-    }
-
-    public function with(): array
-    {
-        return [
-            'logs' => $this->logs,
-        ];
     }
 };
 ?>

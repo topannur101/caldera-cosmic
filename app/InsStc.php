@@ -3,6 +3,7 @@
 namespace App;
 
 use Carbon\Carbon;
+use InvalidArgumentException;
 
 class InsStc
 {
@@ -79,19 +80,7 @@ class InsStc
                 ],
             ],
         ];
-    }
-
-    public static function extractTemps(array $data, string $key): array
-    {
-        if (!isset($data[$key]) || !is_array($data[$key])) {
-            return [];
-        }
-    
-        return array_map(function($item) {
-            return isset($item[3]) && is_numeric($item[3]) ? (float)$item[3] : null;
-        }, $data[$key]);
-    }
-    
+    }  
 
     private static function generateXAnnotations($xzones, $logs)
     {
@@ -154,6 +143,7 @@ class InsStc
         foreach ($zoneNames as $index => $zoneName) {
             $zoneCount = $xzones[$zoneName];
             $midpointIndex = $currentIndex + floor($zoneCount / 2);
+            $slicedZone = InsStc::sliceZoneData($logs, $xzones, $zoneName);
 
             if (isset($logs[$midpointIndex])) {
                 $yValue = ($yzonesReversed[$index] + $yzonesReversed[$index + 1]) / 2;
@@ -167,7 +157,7 @@ class InsStc
                     ],
                     'label' => [
                         'borderWidth' => 0,
-                        'text' => 'Z' . ($index + 1) . ': ',
+                        'text' => 'Z' . ($index + 1) . ': ' . InsStc::calculateMedianTemp($slicedZone),
                         'style' => [
                             'background' => '#00BBF9',
                             'color' => '#ffffff',
@@ -187,30 +177,63 @@ class InsStc
         return Carbon::parse($dateString)->timestamp * 1000;
     }
 
-    public static function sliceZoneData(array $data, array $xzones, string $targetZone): ?array
+    public static function sliceZoneData(array $logs, array $xzones, string $selectedZone): array
     {
         $zoneOrder = ['preheat', 'zone_1', 'zone_2', 'zone_3', 'zone_4'];
-    
-        if (!isset($xzones[$targetZone])) {
-            return null; // Target zone not found
+        
+        if (!in_array($selectedZone, $zoneOrder)) {
+            throw new InvalidArgumentException("Invalid zone selected: $selectedZone");
         }
-    
+        
         $startIndex = 0;
+        $endIndex = 0;
+        
         foreach ($zoneOrder as $zone) {
-            if ($zone === $targetZone) {
-                break;
+            if (!isset($xzones[$zone])) {
+                continue;
             }
-            if (isset($xzones[$zone])) {
-                $startIndex += $xzones[$zone];
+            
+            $zoneSize = $xzones[$zone];
+            $endIndex = $startIndex + $zoneSize;
+            
+            if ($zone === $selectedZone) {
+                // Ensure we don't exceed the array bounds
+                $endIndex = min($endIndex, count($logs));
+                return array_slice($logs, $startIndex, $endIndex - $startIndex);
             }
+            
+            $startIndex = $endIndex;
+        }
+        
+        // If we get here, the selected zone wasn't found or had no logs
+        return [];
+    }
+
+    public static function calculateMedianTemp(array $data): float
+    {
+        $temperatures = array_map(function($item) {
+            return is_numeric($item['temp']) ? (float)$item['temp'] : null;
+        }, $data);
+    
+        $temperatures = array_filter($temperatures, function($temp) {
+            return $temp !== null;
+        });
+    
+        $count = count($temperatures);
+    
+        if ($count === 0) {
+            return 0;
         }
     
-        if ($startIndex >= count($data)) {
-            return null; // Start index out of bounds
-        }
+        sort($temperatures);
     
-        $length = $xzones[$targetZone];
-        return array_slice($data, $startIndex, $length);
+        $middle = floor($count / 2);
+    
+        if ($count % 2 === 0) {
+            return ($temperatures[$middle - 1] + $temperatures[$middle]) / 2;
+        } else {
+            return $temperatures[$middle];
+        }
     }
     
 }
