@@ -3,12 +3,14 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Validator;
 use App\Models\InsStcMachine;
 use App\Models\InsStcDevice;
 use App\Models\InsStcDLog;
 use App\Models\InsStcDSum;
+use App\Models\User;
 use Carbon\Carbon;
 use App\InsStc;
 
@@ -30,6 +32,9 @@ class extends Component {
     public float $z_3_temp = 0;
     public float $z_4_temp = 0;
     public int $speed;
+
+    public string $userq = '';
+    public int $user_2_id;
 
     public string $view = 'initial';
     public string $logs_count_eval;
@@ -65,7 +70,17 @@ class extends Component {
     public function submitInitial()
     {
         $this->device_code = strtoupper(trim($this->device_code));
+        
+        $this->userq = trim($this->userq);
+        if ($this->userq) {
+            $this->user_2_id = User::where('emp_id', $this->userq)->first()->id ?? 0;
+
+        } else {
+            $this->reset(['user_2_id']);
+        }
+
         $this->validate([
+            'user_2_id'         => ['nullable', 'exists:users,id'],
             'machine_id'        => ['required', 'integer', 'exists:ins_stc_machines,id'],
             'device_code'       => ['required', 'exists:ins_stc_devices,code'],
         ]);
@@ -86,7 +101,8 @@ class extends Component {
             $d_sum->fill([
                 'ins_stc_device_id'     => $device->id,
                 'ins_stc_machine_id'    => $this->machine_id,
-                'user_id'               => Auth::user()->id,
+                'user_1_id'             => Auth::user()->id,
+                'user_2_id'             => $this->user_2_id,
                 'start_time'            => $this->start_time,
                 'end_time'              => $this->end_time,
                 'preheat_temp'          => $this->preheat_temp,
@@ -118,6 +134,12 @@ class extends Component {
             'file' => 'file|mimes:csv|max:1024'
         ]);
         $this->extractData();
+    }
+
+    #[Renderless]
+    public function updatedUserq()
+    {
+        $this->dispatch('userq-updated', $this->userq);
     }
 
     private function extractData()
@@ -247,7 +269,9 @@ class extends Component {
             'view', 
             'logs_count_eval', 
             'logs_count_eval_human', 
-            'duration'
+            'duration',
+            'userq',
+            'user_2_id'
         ]);
     }
 
@@ -331,6 +355,26 @@ class extends Component {
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                             @enderror
                         </div>   
+                        <div class="mb-6" x-data="{ open: false, userq: @entangle('userq').live }"
+                            x-on:user-selected="userq = $event.detail; open = false">
+                            <div x-on:click.away="open = false">
+                                <label for="stc-user"
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
+                                <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
+                                    x-ref="userq" x-on:focus="open = true" id="stc-user" type="text"
+                                    autocomplete="off" placeholder="{{ __('Pengguna') }}" />
+                                <div class="relative" x-show="open" x-cloak>
+                                    <div class="absolute top-1 left-0 w-full z-10">
+                                        <livewire:layout.user-select />
+                                    </div>
+                                </div>
+                            </div>
+                            <div wire:key="error-user_2_id">
+                                @error('user_2_id')
+                                    <x-input-error messages="{{ $message }}" class="mt-2" />
+                                @enderror
+                            </div>
+                        </div>
                     </div>                                   
                     @break
 

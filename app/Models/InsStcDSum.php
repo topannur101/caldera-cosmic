@@ -12,7 +12,8 @@ class InsStcDSum extends Model
     protected $fillable = [
         'ins_stc_device_id',
         'ins_stc_machine_id',
-        'user_id',
+        'user_1_id',
+        'user_2_id',
         'start_time',
         'end_time',
         'preheat_temp',

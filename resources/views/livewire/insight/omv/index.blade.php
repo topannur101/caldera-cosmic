@@ -95,10 +95,10 @@ class extends Component {
                             wire:key="user-select" x-data="{ open: false }"
                             x-on:user-selected="userq = $event.detail; open = false">
                             <div x-on:click.away="open = false">
-                                <label for="inv-user"
+                                <label for="omv-user"
                                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
                                 <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
-                                    x-ref="userq" x-on:focus="open = true" id="inv-user" type="text"
+                                    x-ref="userq" x-on:focus="open = true" id="omv-user" type="text"
                                     autocomplete="off" placeholder="{{ __('Pengguna') }}" />
                                 <div class="relative" x-show="open" x-cloak>
                                     <div class="absolute top-1 left-0 w-full z-10">

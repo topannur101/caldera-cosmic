@@ -17,7 +17,10 @@ return new class extends Migration
 
             $table->foreignId('ins_stc_device_id')->constrained();
             $table->foreignId('ins_stc_machine_id')->constrained();
-            $table->foreignId('user_id')->constrained();
+            $table->unsignedBigInteger('user_1_id');
+            $table->unsignedBigInteger('user_2_id')->nullable();
+            $table->foreign('user_1_id')->references('id')->on('users');
+            $table->foreign('user_2_id')->references('id')->on('users');
             $table->timestamp('start_time');
             $table->timestamp('end_time');
             $table->decimal('preheat_temp', 3, 1);
