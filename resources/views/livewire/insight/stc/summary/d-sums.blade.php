@@ -161,7 +161,7 @@ class extends Component {
                             <th>{{ __('Line') }}</th>
                             <th>{{ __('RPM') }}</th>   
                             <th>{{ __('Median suhu') }}</th>
-                            <th>{{ __('Nama') }}</th>
+                            <th>{{ __('Penguji') }}</th>
                             <th>{{ __('Diperbarui pada') }}</th> 
                         </tr>
                         @foreach ($d_sums as $d_sum)

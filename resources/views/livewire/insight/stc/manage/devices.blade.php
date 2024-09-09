@@ -47,14 +47,14 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Alat') . ' — ' . __('IP Stabilization Control') }}</x-slot>
+<x-slot name="title">{{ __('Perangkat') . ' — ' . __('IP Stabilization Control') }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-stc-sub />
 </x-slot>
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Alat') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Perangkat') }}</h1>
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
                 @can('superuser')
                     <x-secondary-button type="button" 
@@ -104,7 +104,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div wire:key="devices-none">
                         @if (!$devices->count())
                             <div class="text-center py-12">
-                                {{ __('Tak ada alat ditemukan') }}
+                                {{ __('Tak ada perangkat ditemukan') }}
                             </div>
                         @endif
                     </div>

@@ -52,7 +52,7 @@ new class extends Component {
             ]);
 
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Alat diperbarui') . '")');
+            $this->js('notyfSuccess("' . __('Perangkat diperbarui') . '")');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();
@@ -78,7 +78,7 @@ new class extends Component {
     <form wire:submit="save" class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Alat ') }}
+                {{ __('Perangkat ') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
