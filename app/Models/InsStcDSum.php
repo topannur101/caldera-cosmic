@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\InsStc;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InsStcDSum extends Model
 {
@@ -32,7 +34,7 @@ class InsStcDSum extends Model
         'z_2_temp' => 'float',
         'z_3_temp' => 'float',
         'z_4_temp' => 'float',
-        'speed' => 'integer',
+        'speed' => 'float',
     ];
 
     public static function logsCountEvalHuman($logsCountEval): string
@@ -51,5 +53,15 @@ class InsStcDSum extends Model
             default:
                 return __('Tak diketahui');
         }
+    }
+
+    public function duration(): string
+    {
+        return InsStc::duration($this->start_time, $this->end_time);
+    }
+
+    public function ins_stc_d_logs(): HasMany
+    {
+        return $this->hasMany(InsStcDlog::class);
     }
 }

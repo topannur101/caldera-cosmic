@@ -31,7 +31,7 @@ class extends Component {
     public float $z_2_temp = 0;
     public float $z_3_temp = 0;
     public float $z_4_temp = 0;
-    public int $speed;
+    public float $speed;
 
     public string $userq = '';
     public int $user_2_id;
@@ -56,7 +56,7 @@ class extends Component {
     public function rules()
     {
         return [
-            'speed' => ['required', 'integer', 'min:1', 'max:99'],
+            'speed' => ['required', 'numeric', 'min:0', 'max:99'],
         ];
     }
 
@@ -232,19 +232,12 @@ class extends Component {
                 $validatedData      = $validator->validated();
                 $this->start_time   = $validatedData['start_time'];
                 $this->end_time     = $validatedData['end_time'];
-                $this->preheat_temp = InsStc::calculateMedianTemp($validatedData['p_h']);
-                $this->z_1_temp     = InsStc::calculateMedianTemp($validatedData['z_1']);
-                $this->z_2_temp     = InsStc::calculateMedianTemp($validatedData['z_2']);
-                $this->z_3_temp     = InsStc::calculateMedianTemp($validatedData['z_3']);
-                $this->z_4_temp     = InsStc::calculateMedianTemp($validatedData['z_4']);
-
-                $x = Carbon::parse($validatedData['start_time']);
-                $y = Carbon::parse($validatedData['end_time']);
-                $this->duration = $x->diff($y)->forHumans([
-                    'parts' => 2,
-                    'join' => true,
-                    'short' => false,
-                ]);
+                $this->preheat_temp = InsStc::medianTemp($validatedData['p_h']);
+                $this->z_1_temp     = InsStc::medianTemp($validatedData['z_1']);
+                $this->z_2_temp     = InsStc::medianTemp($validatedData['z_2']);
+                $this->z_3_temp     = InsStc::medianTemp($validatedData['z_3']);
+                $this->z_4_temp     = InsStc::medianTemp($validatedData['z_4']);
+                $this->duration     = InsStc::duration($validatedData['start_time'], $validatedData['end_time']);
 
                 $this->view = 'review';
             }
@@ -518,7 +511,7 @@ class extends Component {
                                 <div class="mt-3">
                                     <label for="d-log-speed"
                                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kecepatan') }}</label>
-                                    <x-text-input-suffix suffix="RPM" id="d-log-speed" wire:model="speed" type="number" step="1" autocomplete="off" />
+                                    <x-text-input-suffix suffix="RPM" id="d-log-speed" wire:model="speed" type="number" step=".1" autocomplete="off" />
                                     @error('speed')
                                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                                     @enderror

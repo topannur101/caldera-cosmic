@@ -42,7 +42,7 @@ class InsStc
                 [
                     'name' => __('Suhu'),
                     'data' => json_decode($chartDataJs, true),
-                    'color' => '#00BBF9',
+                    'color' => '#D64550',
                 ],
             ],
             'xaxis' => [
@@ -157,9 +157,9 @@ class InsStc
                     ],
                     'label' => [
                         'borderWidth' => 0,
-                        'text' => 'Z' . ($index + 1) . ': ' . InsStc::calculateMedianTemp($slicedZone),
+                        'text' => 'Z' . ($index + 1) . ': ' . InsStc::medianTemp($slicedZone),
                         'style' => [
-                            'background' => '#00BBF9',
+                            'background' => '#D64550',
                             'color' => '#ffffff',
                         ],
                     ],
@@ -209,7 +209,7 @@ class InsStc
         return [];
     }
 
-    public static function calculateMedianTemp(array $data): float
+    public static function medianTemp(array $data): float
     {
         $temperatures = array_map(function($item) {
             return is_numeric($item['temp']) ? (float)$item['temp'] : null;
@@ -234,6 +234,17 @@ class InsStc
         } else {
             return $temperatures[$middle];
         }
+    }
+
+    public static function duration($start_time, $end_time): string
+    {
+        $x = Carbon::parse($start_time);
+        $y = Carbon::parse($end_time);
+        return $x->diff($y)->forHumans([
+            'parts' => 2,
+            'join' => true,
+            'short' => false,
+        ]);
     }
     
 }

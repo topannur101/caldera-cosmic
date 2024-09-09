@@ -36,25 +36,34 @@ class extends Component {
         $end = Carbon::parse($this->end_at)->endOfDay();
 
         $dSumsQuery = InsStcDSum::join('ins_stc_machines', 'ins_stc_d_sums.ins_stc_machine_id', '=', 'ins_stc_machines.id')
-        ->join('users', 'ins_stc_d_sums.user_id', '=', 'users.id')
+        ->join('users as user1', 'ins_stc_d_sums.user_1_id', '=', 'user1.id')
+        ->join('users as user2', 'ins_stc_d_sums.user_2_id', '=', 'user2.id')
         ->select(
-        'ins_stc_d_sums.*',
-        'ins_stc_d_sums.updated_at as d_sum_updated_at',
-        'ins_stc_machines.line as machine_line',
-        'users.emp_id as user_emp_id',
-        'users.name as user_name');
+            'ins_stc_d_sums.*',
+            'ins_stc_d_sums.updated_at as d_sum_updated_at',
+            'ins_stc_machines.line as machine_line',
+            'user1.emp_id as user1_emp_id',
+            'user1.name as user1_name',
+            'user2.emp_id as user2_emp_id',
+            'user2.name as user2_name'
+        );
 
         $dSumsQuery->whereBetween('ins_stc_d_sums.updated_at', [$start, $end]);
 
         switch ($this->ftype) {
             case 'emp_id':
-                $dSumsQuery->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
-            break;
+                $dSumsQuery->where(function (Builder $query) {
+                $query
+                    ->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
+                });
+                break;
             
             default:
                 $dSumsQuery->where(function (Builder $query) {
                 $query
-                    ->orWhere('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
+                    ->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
+                    ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
                 });
                 break;
         }
@@ -119,7 +128,7 @@ class extends Component {
                     </div>
                 </div>
             </x-modal>  
-            <x-modal name="d_sum-show">
+            <x-modal name="d_sum-show" maxWidth="xl">
                 <livewire:insight.stc.summary.d-sum-show />
             </x-modal>
         </div>
@@ -159,11 +168,11 @@ class extends Component {
                         <tr wire:key="d_sum-tr-{{ $d_sum->id . $loop->index }}" tabindex="0"
                             x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $d_sum->id }}'})">
                             <td>{{ $d_sum->start_time }}</td>
-                            <td></td>
+                            <td>{{ $d_sum->duration() }}</td>
                             <td>{{ $d_sum->machine_line }}</td>
                             <td>{{ $d_sum->speed }}</td>
                             <td>{{ $d_sum->z_1_temp . ' | ' . $d_sum->z_2_temp . ' | ' . $d_sum->z_3_temp . ' | ' . $d_sum->z_4_temp  }}</td>
-                            <td>{{ $d_sum->user_name }}</td>
+                            <td>{{ $d_sum->user1_name }}</td>
                             <td>{{ $d_sum->d_sum_updated_at }}</td>
                         </tr>
                     @endforeach

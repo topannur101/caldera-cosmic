@@ -26,7 +26,7 @@ return new class extends Migration
             $table->decimal('s_6_temp', 3, 1);
             $table->decimal('s_7_temp', 3, 1);
             $table->decimal('s_8_temp', 3, 1);
-            $table->smallInteger('median_speed')->unsigned();
+            $table->decimal('median_speed', 3, 1);
 
             $table->index('ins_stc_machine_id');
             $table->index('start_time');

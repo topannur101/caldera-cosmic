@@ -19,6 +19,6 @@ class InsStcMLog extends Model
     protected $casts = [
         'taken_at' => 'datetime',
         'temp' => 'float',
-        'speed' => 'integer',
+        'speed' => 'float',
     ];
 }

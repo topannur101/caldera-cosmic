@@ -28,7 +28,7 @@ return new class extends Migration
             $table->decimal('z_2_temp', 3, 1);
             $table->decimal('z_3_temp', 3, 1);
             $table->decimal('z_4_temp', 3, 1);
-            $table->smallInteger('speed')->unsigned();
+            $table->decimal('speed', 3, 1);
 
             $table->index('ins_stc_device_id');
             $table->index('ins_stc_machine_id');
