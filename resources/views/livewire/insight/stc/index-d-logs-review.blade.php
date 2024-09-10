@@ -52,7 +52,11 @@ new class extends Component {
             {{ __('Pembagian zona') }}
         </h2>
         <div class="mt-3">
-         {{ __('Preheat diambil berdasarkan 5 data pertama. Selanjutnya, setiap zona diwakili oleh 12 data berturut-turut.') }}
+            <div>{{ __('Preheat') }}</div>   
+            <div>{{ __('Zona 1') .': 70-80°C' }}</div>      
+            <div>{{ __('Zona 2') .': 60-70°C' }}</div>     
+            <div>{{ __('Zona 3') .': 50-60°C' }}</div>     
+            <div>{{ __('Zona 4') .': 40-50°C' }}</div>           
         </div>
       </div>
       <div class="max-h-48 overflow-y-auto relative">

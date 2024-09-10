@@ -53,13 +53,6 @@ class extends Component {
 
     public const COUNT_TOLERANCE = 5;
 
-    public function rules()
-    {
-        return [
-            'speed' => ['required', 'numeric', 'min:0', 'max:99'],
-        ];
-    }
-
     public function with(): array
     {
         return [
@@ -82,6 +75,7 @@ class extends Component {
         $this->validate([
             'user_2_id'         => ['nullable', 'exists:users,id'],
             'machine_id'        => ['required', 'integer', 'exists:ins_stc_machines,id'],
+            'speed'             => ['required', 'numeric', 'min:0', 'max:99'],
             'device_code'       => ['required', 'exists:ins_stc_devices,code'],
         ]);
         $this->view = 'upload';
@@ -89,8 +83,6 @@ class extends Component {
 
     public function save()
     {
-        // validate only speed
-        $this->validate();
         
         // make sure gone through validation
         if($this->view == 'review') {
@@ -294,7 +286,7 @@ class extends Component {
     <x-nav-insights-stc></x-nav-insights-stc>
 </x-slot>
 
-<div id="content" class="py-12 max-w-lg mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="py-12 max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     @if (!Auth::user())
         <div class="flex flex-col items-center gap-y-6 px-6 py-20">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl">
@@ -328,16 +320,77 @@ class extends Component {
                 @case('initial')
                     <div>
                         <div class="mb-6">
+                            <div class="grid grid-cols-2 gap-x-3">
+                                <div>
+                                    <label for="d-log-sequence"
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengukuran ke') }}</label>
+                                    <x-select class="w-full" id="d-log-sequence" wire:model="sequence">
+                                        <option value=""></option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                    </x-select>
+                                </div>
+                                <div x-data="{ open: false, userq: @entangle('userq').live }"
+                                    x-on:user-selected="userq = $event.detail; open = false">
+                                    <div x-on:click.away="open = false">
+                                        <label for="stc-user"
+                                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
+                                        <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
+                                            x-ref="userq" x-on:focus="open = true" id="stc-user" type="text"
+                                            autocomplete="off" placeholder="{{ __('Pengguna') }}" />
+                                        <div class="relative" x-show="open" x-cloak>
+                                            <div class="absolute top-1 left-0 w-full z-10">
+                                                <livewire:layout.user-select />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div wire:key="error-user_2_id">
+        
+                                    </div>
+                                </div>                            
+                            </div>
+                            @error('sequence')
+                                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                            @enderror
+                                @error('user_2_id')
+                                <x-input-error messages="{{ $message }}" class="mt-2" />
+                            @enderror
+                        </div> 
+                        <div class="mb-6">
                             <label for="d-log-machine_id"
                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin') }}</label>
                             <x-select class="w-full" id="d-log-machine_id" wire:model="machine_id">
                                 <option value=""></option>
                                 @foreach ($machines as $machine)
-                                    <option value="{{ $machine->id }}">{{ 'Line ' . $machine->line }}</option>
+                                    <option value="{{ $machine->id }}">{{ 'Line ' . $machine->line . ' | ' . $machine->name }}</option>
                                 @endforeach
                             </x-select>
                             @error('machine_id')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                            @enderror
+                        </div>
+                        <div class="mb-6">
+                            <div class="grid grid-cols-2 gap-x-3">
+                                <div>
+                                    <label for="d-log-position"
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
+                                    <x-select class="w-full" id="d-log-position" wire:model="position">
+                                        <option value=""></option>
+                                            <option value="upper">{{ __('Atas') }}</option>
+                                            <option value="lower">{{ __('Bawah') }}</option>
+                                    </x-select>
+                                </div>
+                                <div>
+                                    <label for="d-log-speed"
+                                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kecepatan') }}</label>
+                                    <x-text-input-suffix suffix="RPM" id="d-log-speed" wire:model="speed" type="number" step=".1" autocomplete="off" />
+                                </div>                               
+                            </div>
+                            @error('position')
+                                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                            @enderror
+                            @error('speed')
+                                <x-input-error messages="{{ $message }}" class="px-3 mt-2 mb-6" />
                             @enderror
                         </div>
                         <div class="mb-6">
@@ -348,26 +401,7 @@ class extends Component {
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                             @enderror
                         </div>   
-                        <div class="mb-6" x-data="{ open: false, userq: @entangle('userq').live }"
-                            x-on:user-selected="userq = $event.detail; open = false">
-                            <div x-on:click.away="open = false">
-                                <label for="stc-user"
-                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
-                                <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
-                                    x-ref="userq" x-on:focus="open = true" id="stc-user" type="text"
-                                    autocomplete="off" placeholder="{{ __('Pengguna') }}" />
-                                <div class="relative" x-show="open" x-cloak>
-                                    <div class="absolute top-1 left-0 w-full z-10">
-                                        <livewire:layout.user-select />
-                                    </div>
-                                </div>
-                            </div>
-                            <div wire:key="error-user_2_id">
-                                @error('user_2_id')
-                                    <x-input-error messages="{{ $message }}" class="mt-2" />
-                                @enderror
-                            </div>
-                        </div>
+
                     </div>                                   
                     @break
 
@@ -508,14 +542,7 @@ class extends Component {
                                         <div>{{ $z_4_temp }}</div>
                                     </div>
                                 </div>
-                                <div class="mt-3">
-                                    <label for="d-log-speed"
-                                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kecepatan') }}</label>
-                                    <x-text-input-suffix suffix="RPM" id="d-log-speed" wire:model="speed" type="number" step=".1" autocomplete="off" />
-                                    @error('speed')
-                                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                                    @enderror
-                                </div>
+
                                 </dd>
                             </div>
                         </dl>
@@ -544,10 +571,12 @@ class extends Component {
                     <x-primary-button type="button" wire:click="submitInitial">{{ __('Lanjut') }}</x-primary-button>
                     @endif
                     @if($view == 'upload')
+                    <x-secondary-button type="button" wire:click="$set('view', 'initial')">{{ __('Mundur') }}</x-secondary-button>
                     <x-primary-button type="button" x-on:click="$refs.file.click()"><i
                         class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-primary-button>
                     @endif
                     @if($view == 'review')
+                    <x-secondary-button type="button" wire:click="$set('view', 'upload'), $">{{ __('Mundur') }}</x-secondary-button>
                     <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}', xzones: '{{ json_encode($xzones) }}', yzones: '{{ json_encode($yzones)}}' })">{{ __('Tinjau data') }}</x-secondary-button>
                     <x-primary-button type="button" wire:click="save">{{ __('Simpan') }}</x-primary-button>
                     @endif

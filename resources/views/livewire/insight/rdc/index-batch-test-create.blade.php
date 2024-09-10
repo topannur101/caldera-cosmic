@@ -207,7 +207,7 @@ class extends Component {
         if ($batch) {
             $test = new InsRdcTest;
             Gate::authorize('manage', $test);
-
+        
             $batchValidator = Validator::make(
                 [
                     'model'      => $this->model,
@@ -253,6 +253,8 @@ class extends Component {
                 $this->js('notyfError("'.$testError.'")'); 
             } else {
 
+                $queued_at = $batch->updated_at;
+
                 if($this->update_batch) {
                     $batch->update([
                         'model'     => $this->model,
@@ -272,7 +274,7 @@ class extends Component {
                     'user_id'               => Auth::user()->id,
                     'ins_rubber_batch_id'   => $batch->id,
                     'ins_rdc_machine_id'    => $this->machine_id,
-                    'queued_at'             => $batch->updated_at,
+                    'queued_at'             => $queued_at,
                 ]);
 
                 $test->save();
@@ -618,7 +620,7 @@ class extends Component {
             </x-dropdown>
             <div class="flex flex-row gap-x-3">
                 @if($view != 'form')
-                <x-secondary-button type="button" wire:click="$set('view', 'form')">{{ __('Isi manual') }}</x-secondary-button>
+                <x-secondary-button type="button" wire:click="$set('view', 'form'); $set('file', '')">{{ __('Isi manual') }}</x-secondary-button>
                 @endif
                 @if($view == 'review' || $view == 'form')
                 <x-primary-button type="button" wire:click="insertTest">
