@@ -246,5 +246,19 @@ class InsStc
             'short' => false,
         ]);
     }
+
+    public static function positionHuman(string $position): string
+    {
+        $positionHuman = __('Tak diketahui');
+        switch ($position) {
+            case 'upper':
+                $positionHuman = __('Atas');
+                break;
+            case 'lower':
+                $positionHuman = __('Bawah');
+                break;
+        }
+        return $positionHuman;
+    }
     
 }

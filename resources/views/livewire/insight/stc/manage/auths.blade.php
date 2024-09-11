@@ -4,14 +4,15 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 
-use App\Models\InsRdcAuth;
+use App\Models\InsStcAuth;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Illuminate\Database\Eloquent\Builder;
 
 
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.app')] 
+class extends Component {
    use WithPagination;
 
     #[Url]
@@ -22,10 +23,10 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         $q = trim($this->q);
-        $auths = InsRdcAuth::join('users', 'ins_rdc_auths.user_id', '=', 'users.id')
-            ->select('ins_rdc_auths.*', 'users.name as user_name', 'users.emp_id as user_emp_id', 'users.photo as user_photo')
+        $auths = InsStcAuth::join('users', 'ins_stc_auths.user_id', '=', 'users.id')
+            ->select('ins_stc_auths.*', 'users.name as user_name', 'users.emp_id as user_emp_id', 'users.photo as user_photo')
 
-            ->orderBy('ins_rdc_auths.user_id', 'desc');
+            ->orderBy('ins_stc_auths.user_id', 'desc');
 
         if ($q) {
             $auths->where(function (Builder $query) use ($q) {
@@ -41,7 +42,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Wewenang') . ' — ' . __('Open Mill Validator') }}</x-slot>
+<x-slot name="title">{{ __('Wewenang') . ' — ' . __('IP Stabilization Control') }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-stc-sub />
 </x-slot>
@@ -63,12 +64,12 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         <div wire:key="auth-create">
             <x-modal name="auth-create">
-                <livewire:insight.rdc.manage.auth-create  />
+                <livewire:insight.stc.manage.auth-create  />
             </x-modal>
         </div>
         <div wire:key="auth-edit">
             <x-modal name="auth-edit">
-                <livewire:insight.rdc.manage.auth-edit  />
+                <livewire:insight.stc.manage.auth-edit  />
             </x-modal>
         </div>
         <div class="overflow-auto w-full my-8">

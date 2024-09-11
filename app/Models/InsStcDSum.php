@@ -24,6 +24,9 @@ class InsStcDSum extends Model
         'z_3_temp',
         'z_4_temp',
         'speed',
+        'sequence',
+        'position',
+        'set_temps',
     ];
     
     protected $casts = [

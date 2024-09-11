@@ -6,7 +6,7 @@ use Livewire\Attributes\On;
 use Illuminate\Validation\Rule;
 
 use App\Models\User;
-use App\Models\InsRdcAuth;
+use App\Models\InsStcAuth;
 use Livewire\Attributes\Renderless;
 use Illuminate\Support\Facades\Gate;
 
@@ -18,7 +18,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function rules()
     {
         return [
-            'user_id'   => ['required', 'gt:0', 'integer', 'unique:ins_rdc_auths'],
+            'user_id'   => ['required', 'gt:0', 'integer', 'unique:ins_stc_auths'],
             'actions'   => ['array'],
             'actions.*' => ['string']
         ];
@@ -43,7 +43,7 @@ new #[Layout('layouts.app')] class extends Component {
         if ($this->user_id == 1) {
             $this->js('notyfError("' . __('Superuser sudah memiliki wewenang penuh') . '")');
         } else {
-            InsRdcAuth::create([
+            InsStcAuth::create([
                 'user_id' => $this->user_id,
                 'actions' => json_encode($this->actions)
             ]);
@@ -98,10 +98,8 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
-            {{-- <x-checkbox id="new-device-manage" wire:model="actions"
-                value="device-manage">{{ __('Kelola perangkat') }}</x-checkbox> --}}
-            <x-checkbox id="new-test-manage" wire:model="actions"
-                value="test-manage">{{ __('Mengelola hasil uji') }}</x-checkbox>
+            <x-checkbox id="new-d-sum-manage" wire:model="actions"
+                value="d-sum-manage">{{ __('Mengelola hasil ukur') }}</x-checkbox>
         </div>
         <div class="mt-6 flex justify-end items-end">
             <x-primary-button type="submit">

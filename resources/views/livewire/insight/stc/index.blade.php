@@ -22,8 +22,18 @@ class extends Component {
     public $file;
     public array $logs = [['taken_at' => '', 'temp' => '']];
 
+    public int $sequence;
+    public string $userq = '';
+    public int $user_2_id;
+    public string $user_2_name;
+    public string $user_2_emp_id;
     public int $machine_id;
+    public string $position;
+    public float $speed;
+    public string $set_temps_raw;
+    public array $set_temps = [];
     public string $device_code = '';
+
     public string $start_time;
     public string $end_time;
     public float $preheat_temp = 0;
@@ -31,10 +41,6 @@ class extends Component {
     public float $z_2_temp = 0;
     public float $z_3_temp = 0;
     public float $z_4_temp = 0;
-    public float $speed;
-
-    public string $userq = '';
-    public int $user_2_id;
 
     public string $view = 'initial';
     public string $logs_count_eval;
@@ -66,16 +72,25 @@ class extends Component {
         
         $this->userq = trim($this->userq);
         if ($this->userq) {
-            $this->user_2_id = User::where('emp_id', $this->userq)->first()->id ?? 0;
+            $user_2 = User::where('emp_id', $this->userq)->first();
+            if ($user_2) {
+                $this->user_2_id        = $user_2->id;
+                $this->user_2_name      = $user_2->name;
+                $this->user_2_emp_id    = $user_2->emp_id;
+            }
 
         } else {
             $this->reset(['user_2_id']);
         }
 
         $this->validate([
+            'sequence'          => ['required', 'integer', 'min:1', 'max:2'],
             'user_2_id'         => ['nullable', 'exists:users,id'],
             'machine_id'        => ['required', 'integer', 'exists:ins_stc_machines,id'],
-            'speed'             => ['required', 'numeric', 'min:0', 'max:99'],
+            'position'          => ['required', 'in:upper,lower'],
+            'speed'             => ['required', 'numeric', 'min:0.1', 'max:99'],
+            'set_temps'         => ['required', 'array', 'size:8'],
+            'set_temps.*'       => ['required', 'numeric', 'min:1', 'max:99'],
             'device_code'       => ['required', 'exists:ins_stc_devices,code'],
         ]);
         $this->view = 'upload';
@@ -83,7 +98,6 @@ class extends Component {
 
     public function save()
     {
-        
         // make sure gone through validation
         if($this->view == 'review') {
             $d_sum = new InsStcDsum;
@@ -103,6 +117,9 @@ class extends Component {
                 'z_3_temp'              => $this->z_3_temp,
                 'z_4_temp'              => $this->z_4_temp,
                 'speed'                 => $this->speed,
+                'sequence'              => $this->sequence,
+                'position'              => $this->position,
+                'set_temps'             => json_encode($this->set_temps),
             ]);
             $d_sum->save();
 
@@ -206,11 +223,11 @@ class extends Component {
                     'z_2.*.taken_at'    => 'required|date',
                     'z_3.*.taken_at'    => 'required|date',
                     'z_4.*.taken_at'    => 'required|date',
-                    'p_h.*.temp'        => 'required|numeric|max:99',
-                    'z_1.*.temp'        => 'required|numeric|max:99',
-                    'z_2.*.temp'        => 'required|numeric|max:99',
-                    'z_3.*.temp'        => 'required|numeric|max:99',
-                    'z_4.*.temp'        => 'required|numeric|max:99',
+                    'p_h.*.temp'        => 'required|numeric|min:1|max:99',
+                    'z_1.*.temp'        => 'required|numeric|min:1|max:99',
+                    'z_2.*.temp'        => 'required|numeric|min:1|max:99',
+                    'z_3.*.temp'        => 'required|numeric|min:1|max:99',
+                    'z_4.*.temp'        => 'required|numeric|min:1|max:99',
                 ]
             );
 
@@ -241,8 +258,17 @@ class extends Component {
         $this->reset([
             'file', 
             'logs', 
+
+            'sequence',
+            'userq',
+            'user_2_id',
             'machine_id', 
+            'position',
+            'speed', 
+            'set_temps_raw',
+            'set_temps',
             'device_code', 
+            
             'start_time', 
             'end_time', 
             'preheat_temp', 
@@ -250,13 +276,11 @@ class extends Component {
             'z_2_temp', 
             'z_3_temp', 
             'z_4_temp', 
-            'speed', 
+
             'view', 
             'logs_count_eval', 
             'logs_count_eval_human', 
             'duration',
-            'userq',
-            'user_2_id'
         ]);
     }
 
@@ -393,10 +417,36 @@ class extends Component {
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2 mb-6" />
                             @enderror
                         </div>
+                        <div x-data="{
+                                set_temps: @entangle('set_temps'),
+                                set_temps_raw: @entangle('set_temps_raw'),
+                                set_temps_count: 0,
+                                updateSetTemps() {
+                                    this.set_temps = this.set_temps_raw.split(',').map(temp => temp.trim()).filter(temp => temp !== '');
+                                    this.set_temps_count = this.set_temps.length;
+                                }
+                            }" class="mb-6">
+                                <div class="flex justify-between px-3 mb-2 uppercase text-xs text-neutral-500">
+                                    <label for="d-log-set_temps">{{ __('Suhu diatur') }}</label>
+                                    <div><span x-text="set_temps_count"></span>{{ ' ' . __('entri terbaca') }}</div>
+                                </div>
+                                <x-text-input 
+                                    id="d-log-set_temps" 
+                                    x-model="set_temps_raw" 
+                                    @input="updateSetTemps"
+                                    type="text" placeholder="75, 65, 55,..."
+                                />
+                                @error('set_temps')
+                                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                                @enderror
+                                @error('set_temps.*')
+                                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                                @enderror
+                            </div>
                         <div class="mb-6">
                             <label for="d-log-device_code"
                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode alat') }}</label>
-                            <x-text-input id="d-log-device_code" wire:model="device_code" type="text" />
+                            <x-text-input id="d-log-device_code" wire:model="device_code" type="text" placeholder="Scan atau ketik di sini..." />
                             @error('device_code')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                             @enderror
@@ -422,55 +472,197 @@ class extends Component {
                             <input wire:model="file" type="file"
                                     class="absolute inset-0 m-0 p-0 w-full h-full outline-none opacity-0" x-cloak x-ref="file"
                                     x-show="dropping" x-on:dragleave.prevent="dropping = false" x-on:drop="dropping = false" />
-                            <div class="flex flex-col pb-6 mb-6">
-                                <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi instrumen') }}</dt>
-                                <dd>
-                                    <table class="table table-xs table-col-heading-fit">
-                                        <tr>
-                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Mesin') . ': ' }}
-                                            </td>
-                                            <td>
-                                                {{ $machines->firstWhere('id', $this->machine_id) ? 'Line ' . ($machines->firstWhere('id', $this->machine_id)->line . ' (' . $machines->firstWhere('id', $this->machine_id)->code . ')' ) : '-' }}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Kode alat') . ': ' }}
-                                            </td>
-                                            <td>
-                                                {{ $device_code }}
-                                            </td>
-                                        </tr>
-                                    </table>
+                            <dl class="text-neutral-900 divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700 mb-6">
+                                <div class="flex flex-col pb-6">
+                                    <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi pengukuran') }}</dt>
+                                    <dd>
+                                        <table class="table table-xs table-col-heading-fit">
+                                            <tr>
+                                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                    {{ __('Pengukuran ke') . ': ' }}
+                                                </td>
+                                                <td>
+                                                    {{ $sequence }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                    {{ __('Pengukur 1') . ': ' }}
+                                                </td>
+                                                <td>
+                                                    {{ Auth::user()->name . ' ('. Auth::user()->emp_id .')' }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                    {{ __('Pengukur 2') . ': ' }}
+                                                </td>
+                                                <td>
+                                                    {{ $user_2_name . ' ('.$user_2_emp_id .')' }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                    {{ __('Kode alat ukur') . ': ' }}
+                                                </td>
+                                                <td>
+                                                    {{ $device_code }}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </dd>
+                                </div>
+                                <div class="flex flex-col py-6">
+                                    <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi mesin') }}</dt>
+                                    <dd>
+                                        <table class="table table-xs table-col-heading-fit">
+                                            <tr>
+                                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                    {{ __('Line') . ': ' }}
+                                                </td>
+                                                <td>
+                                                    {{ $machines->firstWhere('id', $this->machine_id)->line }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                    {{ __('Mesin') . ': ' }}
+                                                </td>
+                                                <td>
+                                                    {{ $machines->firstWhere('id', $this->machine_id)->code . ' ('. $machines->firstWhere('id', $this->machine_id)->name .')' }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                    {{ __('Posisi') . ': ' }}
+                                                </td>
+                                                <td>
+                                                    {{ InsStc::positionHuman($position) }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                    {{ __('Kecepatan') . ': ' }}
+                                                </td>
+                                                <td>
+                                                    {{ $speed . ' RPM' }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                    {{ __('Suhu diatur') . ': ' }}
+                                                </td>
+                                                <td class="flex gap-x-3">
+                                                    @foreach($set_temps as $set_temp)
+                                                        <div>
+                                                            {{ $set_temp }}
+                                                        </div>
+                                                        @if(!$loop->last)
+                                                            <div class="text-neutral-300 dark:text-neutral-600">|</div>
+                                                        @endif
+                                                    @endforeach
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </dd>
                                     @error('file')
                                         <x-input-error messages="{{ $message }}" class="px-1 mt-2" />
                                     @enderror
-                                </dd>
-                            </div>
+                                </div>    
+                            </dl>
                         </div>
                         @break
 
                         @case('review')
                         <dl class="text-neutral-900 divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
                             <div class="flex flex-col pb-6">
-                                <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi instrumen') }}</dt>
+                                <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi pengukuran') }}</dt>
                                 <dd>
                                     <table class="table table-xs table-col-heading-fit">
+                                        <tr>
+                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                {{ __('Pengukuran ke') . ': ' }}
+                                            </td>
+                                            <td>
+                                                {{ $sequence }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                {{ __('Pengukur 1') . ': ' }}
+                                            </td>
+                                            <td>
+                                                {{ Auth::user()->name . ' ('. Auth::user()->emp_id .')' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                {{ __('Pengukur 2') . ': ' }}
+                                            </td>
+                                            <td>
+                                                {{ $user_2_name . ' ('.$user_2_emp_id .')' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                {{ __('Kode alat ukur') . ': ' }}
+                                            </td>
+                                            <td>
+                                                {{ $device_code }}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </dd>
+                            </div>
+                            <div class="flex flex-col py-6">
+                                <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi mesin') }}</dt>
+                                <dd>
+                                    <table class="table table-xs table-col-heading-fit">
+                                        <tr>
+                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                {{ __('Line') . ': ' }}
+                                            </td>
+                                            <td>
+                                                {{ $machines->firstWhere('id', $this->machine_id)->line }}
+                                            </td>
+                                        </tr>
                                         <tr>
                                             <td class="text-neutral-500 dark:text-neutral-400 text-sm">
                                                 {{ __('Mesin') . ': ' }}
                                             </td>
                                             <td>
-                                                {{ $machines->firstWhere('id', $this->machine_id) ? 'Line ' . ($machines->firstWhere('id', $this->machine_id)->line . ' (' . $machines->firstWhere('id', $this->machine_id)->code ) . ')' : '-' }}
+                                                {{ $machines->firstWhere('id', $this->machine_id)->code . ' ('. $machines->firstWhere('id', $this->machine_id)->name .')' }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Kode alat') . ': ' }}
+                                                {{ __('Posisi') . ': ' }}
                                             </td>
                                             <td>
-                                                {{ $device_code }}
+                                                {{ InsStc::positionHuman($position) }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                {{ __('Kecepatan') . ': ' }}
+                                            </td>
+                                            <td>
+                                                {{ $speed . ' RPM' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                {{ __('Suhu diatur') . ': ' }}
+                                            </td>
+                                            <td class="flex gap-x-3">
+                                                @foreach($set_temps as $set_temp)
+                                                    <div>
+                                                        {{ $set_temp }}
+                                                    </div>
+                                                    @if(!$loop->last)
+                                                        <div class="text-neutral-300 dark:text-neutral-600">|</div>
+                                                    @endif
+                                                @endforeach
                                             </td>
                                         </tr>
                                     </table>
@@ -521,10 +713,10 @@ class extends Component {
                                     </tr>
                                 </table>
                                 <div class="grid grid-cols-4 mt-3 text-center">
-                                    {{-- <div>
+                                    <div>
                                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Preheat')}}</div>
                                         <div>{{ $preheat_temp }}</div>
-                                    </div> --}}
+                                    </div>
                                     <div>
                                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Zona 1')}}</div>
                                         <div>{{ $z_1_temp }}</div>

@@ -29,11 +29,18 @@ return new class extends Migration
             $table->decimal('z_3_temp', 3, 1);
             $table->decimal('z_4_temp', 3, 1);
             $table->decimal('speed', 3, 1);
+            $table->tinyInteger('sequence')->unsigned();
+            $table->enum('position', ['upper', 'lower']);
+            $table->json('set_temps');
 
             $table->index('ins_stc_device_id');
             $table->index('ins_stc_machine_id');
+            $table->index('user_1_id');
+            $table->index('user_2_id');
             $table->index('start_time');
             $table->index('end_time');
+            $table->index('sequence');
+            $table->index('position');
         });
     }
 

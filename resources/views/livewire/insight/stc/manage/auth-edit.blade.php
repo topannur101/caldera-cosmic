@@ -6,7 +6,7 @@ use Livewire\Attributes\On;
 use Illuminate\Validation\Rule;
 
 use App\Models\User;
-use App\Models\InsRdcAuth;
+use App\Models\InsStcAuth;
 use Livewire\Attributes\Renderless;
 use Illuminate\Support\Facades\Gate;
 
@@ -28,7 +28,7 @@ new #[Layout('layouts.app')] class extends Component {
     #[On('auth-edit')]
     public function loadAuth(int $id)
     {
-        $auth = InsRdcAuth::find($id);
+        $auth = InsStcAuth::find($id);
         if ($auth) {
             $this->id           = $auth->id;
             $this->user_name    = $auth->user->name;
@@ -53,7 +53,7 @@ new #[Layout('layouts.app')] class extends Component {
         Gate::authorize('superuser');
         $this->validate();
 
-        $auth = InsRdcAuth::find($this->id);
+        $auth = InsStcAuth::find($this->id);
         if ($auth) {
             $auth->actions = json_encode($this->actions, true);
             $auth->update();
@@ -71,7 +71,7 @@ new #[Layout('layouts.app')] class extends Component {
     {
         Gate::authorize('superuser');
 
-        $auth = InsRdcAuth::find($this->id);
+        $auth = InsStcAuth::find($this->id);
         if ($auth) {
             $auth->delete();
 
@@ -134,10 +134,8 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
-            {{-- <x-checkbox id="device-manage" :disabled="!$is_superuser" wire:model="actions"
-                value="device-manage">{{ __('Kelola perangkat ') }}</x-checkbox> --}}
-            <x-checkbox id="test-manage" :disabled="!$is_superuser" wire:model="actions"
-                value="test-manage">{{ __('Mengelola hasil uji') }}</x-checkbox>
+            <x-checkbox id="d-sum-manage" :disabled="!$is_superuser" wire:model="actions"
+                value="d-sum-manage">{{ __('Mengelola hasil ukur') }}</x-checkbox>
         </div>
         @can('superuser')
             <div class="mt-6 flex justify-between items-end">
