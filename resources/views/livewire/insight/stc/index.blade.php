@@ -712,7 +712,7 @@ class extends Component {
                                         </td>
                                     </tr>
                                 </table>
-                                <div class="grid grid-cols-4 mt-3 text-center">
+                                <div class="grid grid-cols-5 mt-3 text-center">
                                     <div>
                                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Preheat')}}</div>
                                         <div>{{ $preheat_temp }}</div>

@@ -17,6 +17,38 @@
                 <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                     {{ __('Area Outsole') }}</h1>
                 <div class="grid gap-2">
+                    <div class="bg-neutral-800 rounded-lg p-4 relative overflow-hidden" x-data="{ expanded: false }">
+                        <!-- Large background icon on the right side -->
+                        <div class="absolute -right-6 -top-3 text-neutral-600 opacity-20">
+                            <img class="w-40 h-40" src="/ink-omv.svg" />
+                        </div>
+                        <div class="relative z-10">
+                          <div class="flex items-center mb-2">
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <h3 class="text-xl font-semibold text-white ml-2">Open Mill Validator</h3>
+                          </div>
+                          <p class="text-neutral-400 text-sm mb-4">Sistem validasi proses open mill untuk mengevaluasi kepatuhan resep.</p>
+                          <div class="flex justify-between items-center">
+                            <button 
+                              @click="expanded = !expanded"
+                              class="flex items-center text-neutral-400 text-sm hover:text-white transition-colors"
+                            >
+                              <i x-show="!expanded" class="fas fa-chevron-down mr-1"></i>
+                              <i x-show="expanded" class="fas fa-chevron-up mr-1"></i>
+                              <span x-text="expanded ? 'Sembunyikan Status' : 'Tampilkan Status'"></span>
+                            </button>
+                            <button class="bg-caldy-500 hover:bg-caldy-600 text-white py-1 px-3 rounded flex items-center text-sm transition-colors">
+                              {{ __('Kunjungi') }}
+                              <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                          </div>
+                          <div x-show="expanded" class="mt-3 text-sm text-neutral-300 border-t border-neutral-700 pt-3">
+                            Status: Online
+                            <br />
+                            Pembaruan terakhir: 5 menit yang lalu
+                          </div>
+                        </div>
+                      </div>
                     <x-card-link href="{{ route('insight.omv.index') }}" wire:navigate>
                         <div class="flex">
                             <div>
