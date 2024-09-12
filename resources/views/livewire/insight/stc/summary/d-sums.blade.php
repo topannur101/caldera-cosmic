@@ -204,14 +204,15 @@ class extends Component {
     </div>
     <!-- Hidden printable area -->
     <div id="print-container" class="cal-offscreen aspect-[297/210] bg-white text-neutral-900">
-        <div class="flex flex-col w-full h-full">
+        <div class="flex flex-col gap-6 w-full h-full p-3">
             <div class="grow-0">
                 <div id="print-container-header"></div>
             </div>
-            <div class="w-full h-full grow  rounded overflow-hidden" id="print-chart-container"
-        wire:key="print-chart-container" wire:ignore></div>
+            <div class="grow border border-neutral-500 rounded-lg p-3">
+                <div id="print-chart-container" wire:key="print-chart-container" wire:ignore></div>
+            </div>
             <div class="grow-0">
-                <div id="print-container-footer"></div>
+                <div id="print-container-footer"></div> 
             </div>
         </div>
     </div>

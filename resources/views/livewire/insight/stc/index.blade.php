@@ -424,7 +424,9 @@ class extends Component {
                                 set_temps_raw: @entangle('set_temps_raw'),
                                 set_temps_count: 0,
                                 updateSetTemps() {
-                                    this.set_temps = this.set_temps_raw.split(',').map(temp => temp.trim()).filter(temp => temp !== '');
+                                    if (this.set_temps_raw) {
+                                        this.set_temps = this.set_temps_raw.split(',').map(temp => temp.trim()).filter(temp => temp !== '');
+                                    }
                                     this.set_temps_count = this.set_temps.length;
                                 }
                             }" x-init="updateSetTemps" class="mb-6">
