@@ -77,10 +77,12 @@ class extends Component {
                 $this->user_2_id        = $user_2->id;
                 $this->user_2_name      = $user_2->name;
                 $this->user_2_emp_id    = $user_2->emp_id;
+            } else {
+                $this->user_2_id = null;
             }
 
         } else {
-            $this->reset(['user_2_id']);
+            $this->reset(['user_2_id', 'user_2_name', 'user_2_emp_id']);
         }
 
         $this->validate([
@@ -108,7 +110,7 @@ class extends Component {
                 'ins_stc_device_id'     => $device->id,
                 'ins_stc_machine_id'    => $this->machine_id,
                 'user_1_id'             => Auth::user()->id,
-                'user_2_id'             => $this->user_2_id,
+                'user_2_id'             => $this->user_2_id ?? null,
                 'start_time'            => $this->start_time,
                 'end_time'              => $this->end_time,
                 'preheat_temp'          => $this->preheat_temp,
@@ -425,7 +427,7 @@ class extends Component {
                                     this.set_temps = this.set_temps_raw.split(',').map(temp => temp.trim()).filter(temp => temp !== '');
                                     this.set_temps_count = this.set_temps.length;
                                 }
-                            }" class="mb-6">
+                            }" x-init="updateSetTemps" class="mb-6">
                                 <div class="flex justify-between px-3 mb-2 uppercase text-xs text-neutral-500">
                                     <label for="d-log-set_temps">{{ __('Suhu diatur') }}</label>
                                     <div><span x-text="set_temps_count"></span>{{ ' ' . __('entri terbaca') }}</div>
@@ -498,7 +500,7 @@ class extends Component {
                                                     {{ __('Pengukur 2') . ': ' }}
                                                 </td>
                                                 <td>
-                                                    {{ $user_2_name . ' ('.$user_2_emp_id .')' }}
+                                                    {{ $user_2_emp_id ? ($user_2_name . ' ('.$user_2_emp_id .')') : '-' }}
                                                 </td>
                                             </tr>
                                             <tr>
@@ -552,7 +554,7 @@ class extends Component {
                                                 <td class="text-neutral-500 dark:text-neutral-400 text-sm">
                                                     {{ __('Suhu diatur') . ': ' }}
                                                 </td>
-                                                <td class="flex gap-x-3">
+                                                <td class="flex gap-x-2">
                                                     @foreach($set_temps as $set_temp)
                                                         <div>
                                                             {{ $set_temp }}

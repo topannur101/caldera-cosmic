@@ -37,7 +37,7 @@ class extends Component {
 
         $dSumsQuery = InsStcDSum::join('ins_stc_machines', 'ins_stc_d_sums.ins_stc_machine_id', '=', 'ins_stc_machines.id')
         ->join('users as user1', 'ins_stc_d_sums.user_1_id', '=', 'user1.id')
-        ->join('users as user2', 'ins_stc_d_sums.user_2_id', '=', 'user2.id')
+        ->leftjoin('users as user2', 'ins_stc_d_sums.user_2_id', '=', 'user2.id') // leftjoin cause user2 can be null
         ->select(
             'ins_stc_d_sums.*',
             'ins_stc_d_sums.updated_at as d_sum_updated_at',
@@ -202,4 +202,37 @@ class extends Component {
             </div>
         @endif
     </div>
+    <!-- Hidden printable area -->
+    <div id="print-container" class="cal-offscreen aspect-[297/210] bg-white text-neutral-900">
+        <div class="flex flex-col w-full h-full">
+            <div class="grow-0">
+                <div id="print-container-header"></div>
+            </div>
+            <div class="w-full h-full grow  rounded overflow-hidden" id="print-chart-container"
+        wire:key="print-chart-container" wire:ignore></div>
+            <div class="grow-0">
+                <div id="print-container-footer"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('printChart', () => {
+                const hdEl = document.getElementById('print-container-header-dynamic');
+                const hsEl = document.getElementById('print-container-header');
+                const fdEl = document.getElementById('print-container-footer-dynamic');
+                const fsEl = document.getElementById('print-container-footer');
+
+                if (!hdEl || !hsEl || !fdEl || !fsEl) {
+                    notyfError("{{ __('Terjadi galat ketika mencoba mencetak. Periksa console') }}");
+                    console.error('One of the elements not found. All 4 elements exist in the DOM for printing.');
+                } else {
+                    // Transfer content then print
+                    hsEl.innerHTML = hdEl.innerHTML;
+                    fsEl.innerHTML = fdEl.innerHTML;
+                    window.print();      
+                }          
+            });
+        });
+    </script>
 </div>

@@ -17,7 +17,7 @@
                 <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                     {{ __('Area Outsole') }}</h1>
                 <div class="grid gap-2">
-                    <div class="bg-neutral-800 rounded-lg p-4 relative overflow-hidden" x-data="{ expanded: false }">
+                    {{-- <div class="bg-neutral-800 rounded-lg p-4 relative overflow-hidden" x-data="{ expanded: false }">
                         <!-- Large background icon on the right side -->
                         <div class="absolute -right-6 -top-3 text-neutral-600 opacity-20">
                             <img class="w-40 h-40" src="/ink-omv.svg" />
@@ -48,7 +48,7 @@
                             Pembaruan terakhir: 5 menit yang lalu
                           </div>
                         </div>
-                      </div>
+                      </div> --}}
                     <x-card-link href="{{ route('insight.omv.index') }}" wire:navigate>
                         <div class="flex">
                             <div>

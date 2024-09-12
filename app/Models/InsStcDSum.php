@@ -4,8 +4,9 @@ namespace App\Models;
 
 use App\InsStc;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class InsStcDSum extends Model
 {
@@ -67,4 +68,25 @@ class InsStcDSum extends Model
     {
         return $this->hasMany(InsStcDlog::class);
     }
+
+    public function user_1(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function user_2(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function ins_stc_machine(): BelongsTo
+    {
+        return $this->belongsTo(InsStcMachine::class);
+    }
+
+    public function ins_stc_device(): BelongsTo
+    {
+        return $this->belongsTo(InsStcDevice::class);
+    }
+
 }
