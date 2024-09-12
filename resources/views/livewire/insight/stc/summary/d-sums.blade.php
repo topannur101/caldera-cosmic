@@ -202,38 +202,5 @@ class extends Component {
             </div>
         @endif
     </div>
-    <!-- Hidden printable area -->
-    <div id="print-container" class="cal-offscreen aspect-[297/210] bg-white text-neutral-900">
-        <div class="flex flex-col gap-6 w-full h-full p-3">
-            <div class="grow-0">
-                <div id="print-container-header"></div>
-            </div>
-            <div class="grow border border-neutral-500 rounded-lg p-3">
-                <div id="print-chart-container" wire:key="print-chart-container" wire:ignore></div>
-            </div>
-            <div class="grow-0">
-                <div id="print-container-footer"></div> 
-            </div>
-        </div>
-    </div>
-    <script>
-        document.addEventListener('livewire:initialized', () => {
-            Livewire.on('printChart', () => {
-                const hdEl = document.getElementById('print-container-header-dynamic');
-                const hsEl = document.getElementById('print-container-header');
-                const fdEl = document.getElementById('print-container-footer-dynamic');
-                const fsEl = document.getElementById('print-container-footer');
-
-                if (!hdEl || !hsEl || !fdEl || !fsEl) {
-                    notyfError("{{ __('Terjadi galat ketika mencoba mencetak. Periksa console') }}");
-                    console.error('One of the elements not found. All 4 elements exist in the DOM for printing.');
-                } else {
-                    // Transfer content then print
-                    hsEl.innerHTML = hdEl.innerHTML;
-                    fsEl.innerHTML = fdEl.innerHTML;
-                    window.print();      
-                }          
-            });
-        });
-    </script>
 </div>
+

@@ -16,6 +16,7 @@ class InsStc
 
         return [
             'chart' => [
+                'redrawOnParentResize' => true,
                 'height' => '100%',
                 'type' => 'line',
                 'toolbar' => [

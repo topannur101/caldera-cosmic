@@ -48,8 +48,7 @@ class extends Component {
 
                 // Render hidden printable chart
                 const printChartContainer = document.querySelector('#print-chart-container');
-                printChartContainer.innerHTML = '<div id=\"print-chart\" style=\"aspect-ratio: 20 / 9\"></div>';
-                let printableChart = new ApexCharts(printChartContainer.querySelector('#print-chart'), options);
+                let printableChart = new ApexCharts(printChartContainer, options);
                 printableChart.render();
             ");
         
@@ -70,10 +69,6 @@ class extends Component {
       $this->dispatch('updated');
    }
 
-   public function print()
-    {
-        $this->dispatch('printSheet');
-    }
 };
 
 ?>
@@ -101,7 +96,7 @@ class extends Component {
                     <dd>
                         <table>
                             <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                <td class="text-neutral-500 dark:text-neutral-400 text-xs">
                                     {{ __('Pengukuran ke') }}
                                 </td>
                                 <td class="px-1">:</td>
@@ -110,7 +105,7 @@ class extends Component {
                                 </td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                <td class="text-neutral-500 dark:text-neutral-400 text-xs">
                                     {{ __('Pengukur 1') }}
                                 </td>
                                 <td class="px-1">:</td>
@@ -119,7 +114,7 @@ class extends Component {
                                 </td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                <td class="text-neutral-500 dark:text-neutral-400 text-xs">
                                     {{ __('Pengukur 2') }}
                                 </td>
                                 <td class="px-1">:</td>
@@ -128,7 +123,7 @@ class extends Component {
                                 </td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                <td class="text-neutral-500 dark:text-neutral-400 text-xs">
                                     {{ __('Kode alat ukur') }}
                                 </td>
                                 <td class="px-1">:</td>
@@ -144,7 +139,7 @@ class extends Component {
                     <dd>
                         <table>
                             <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                <td class="text-neutral-500 dark:text-neutral-400 text-xs">
                                     {{ __('Line') }}
                                 </td>
                                 <td class="px-1">:</td>
@@ -153,7 +148,7 @@ class extends Component {
                                 </td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                <td class="text-neutral-500 dark:text-neutral-400 text-xs">
                                     {{ __('Mesin') }}
                                 </td>
                                 <td class="px-1">:</td>
@@ -162,7 +157,7 @@ class extends Component {
                                 </td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                <td class="text-neutral-500 dark:text-neutral-400 text-xs">
                                     {{ __('Posisi') }}
                                 </td>
                                 <td class="px-1">:</td>
@@ -171,7 +166,7 @@ class extends Component {
                                 </td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                <td class="text-neutral-500 dark:text-neutral-400 text-xs">
                                     {{ __('Kecepatan') }}
                                 </td>
                                 <td class="px-1">:</td>
@@ -188,7 +183,7 @@ class extends Component {
                         <div class="grid grid-cols-8 text-center gap-x-6">
                             @foreach(json_decode($dSum->set_temps, true) as $set_temp)
                             <div>
-                                <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Wilayah') . ' ' . $loop->iteration}}</div>
+                                <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Zona') . ' ' . $loop->iteration}}</div>
                                 <div>{{ $set_temp }}</div>
                             </div>
                             @endforeach
