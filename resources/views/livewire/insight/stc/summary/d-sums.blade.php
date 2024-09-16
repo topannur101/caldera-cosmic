@@ -9,6 +9,7 @@ use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\InsStcDSum;
+use App\InsStc;
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -103,6 +104,10 @@ class extends Component {
 
 ?>
 
+<x-slot name="printable">
+    <livewire:insight.stc.summary.d-sum-print />
+</x-slot>
+
 <div class="overflow-auto w-full">
     <div>
         <div class="flex justify-between items-center mb-6 px-5 py-1">
@@ -171,7 +176,7 @@ class extends Component {
                             <td>{{ $d_sum->start_time }}</td>
                             <td>{{ $d_sum->duration() }}</td>
                             <td>{{ $d_sum->machine_line }}</td>
-                            <td>{{ $d_sum->position }}</td>
+                            <td>{{ InsStc::positionHuman($d_sum->position) }}</td>
                             <td>{{ $d_sum->speed }}</td>
                             <td>{{ $d_sum->z_1_temp . ' | ' . $d_sum->z_2_temp . ' | ' . $d_sum->z_3_temp . ' | ' . $d_sum->z_4_temp  }}</td>
                             <td>{{ $d_sum->user1_name }}</td>

@@ -710,7 +710,7 @@ class extends Component {
                                             {{ __('Durasi') }}
                                         </td>
                                         <td>
-                                            {{ $duration . ' (Dari ' . count($logs) . ' baris data)' }}
+                                            {{ $duration . ' ' . __('dari') . ' ' . count($logs) . ' ' . __('baris data') }}
                                         </td>
                                     </tr>
                                     <tr>

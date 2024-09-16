@@ -100,10 +100,6 @@ class extends Component {
     <x-nav-insights-stc></x-nav-insights-stc>
 </x-slot>
 
-<x-slot name="printable">
-    <livewire:insight.stc.summary.d-sum-print />
-</x-slot>
-
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
     @vite(['resources/js/apexcharts.js'])
     <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row min-w-0">
