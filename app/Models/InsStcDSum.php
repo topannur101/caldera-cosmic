@@ -24,6 +24,7 @@ class InsStcDSum extends Model
         'z_2_temp',
         'z_3_temp',
         'z_4_temp',
+        'postheat_temp',
         'speed',
         'sequence',
         'position',
@@ -38,6 +39,7 @@ class InsStcDSum extends Model
         'z_2_temp' => 'float',
         'z_3_temp' => 'float',
         'z_4_temp' => 'float',
+        'postheat_temp' => 'float',
         'speed' => 'float',
     ];
 

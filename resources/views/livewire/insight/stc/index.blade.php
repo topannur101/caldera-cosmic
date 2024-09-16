@@ -41,23 +41,23 @@ class extends Component {
     public float $z_2_temp = 0;
     public float $z_3_temp = 0;
     public float $z_4_temp = 0;
+    public float $postheat_temp = 0;
 
     public string $view = 'initial';
     public string $logs_count_eval;
     public string $logs_count_eval_human;
     public string $duration;
 
-    public array $xzones = [
-        'preheat' => 5,
-        'zone_1'  => 12,
-        'zone_2'  => 12,
-        'zone_3'  => 12,
-        'zone_4'  => 12,
-    ];
-
-    public array $yzones = [40, 50, 60, 70, 80];
+    public array $xzones = [];
+    public array $yzones = [];
 
     public const COUNT_TOLERANCE = 5;
+
+    public function mount()
+    {
+        $this->xzones = InsStc::zones('x');
+        $this->yzones = InsStc::zones('y');
+    }
 
     public function with(): array
     {
@@ -118,6 +118,7 @@ class extends Component {
                 'z_2_temp'              => $this->z_2_temp,
                 'z_3_temp'              => $this->z_3_temp,
                 'z_4_temp'              => $this->z_4_temp,
+                'postheat_temp'         => $this->postheat_temp,
                 'speed'                 => $this->speed,
                 'sequence'              => $this->sequence,
                 'position'              => $this->position,
@@ -201,35 +202,45 @@ class extends Component {
             $this->js('notyfError("'. __('Tak ada data yang sah ditemukan') .'")');
 
         } else {
-            $slicedPh = InsStc::sliceZoneData($logs, $this->xzones, 'preheat');
+            $slicedPr = InsStc::sliceZoneData($logs, $this->xzones, 'preheat');
             $slicedZ1 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_1');
             $slicedZ2 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_2');
             $slicedZ3 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_3');
             $slicedZ4 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_4');
+            $slicedPs = InsStc::sliceZoneData($logs, $this->xzones, 'postheat');
 
             $validator = Validator::make(
                 [
                     'start_time'    => $logs[0]['taken_at'],
                     'end_time'      => $logs[array_key_last($logs)]['taken_at'],
-                    'p_h'           => $slicedPh,
+                    'pr'            => $slicedPr,
                     'z_1'           => $slicedZ1,
                     'z_2'           => $slicedZ2,
                     'z_3'           => $slicedZ3,
                     'z_4'           => $slicedZ4,
+                    'ps'            => $slicedPs,
                 ],
                 [
                     'start_time'        => 'required|date',
                     'end_time'          => 'required|date|after:start_time',
-                    'p_h.*.taken_at'    => 'required|date',
+                    // 'pr'                => 'required|array|min:1',
+                    // 'z_1'               => 'required|array|min:1',
+                    // 'z_2'               => 'required|array|min:1',
+                    // 'z_3'               => 'required|array|min:1',
+                    // 'z_4'               => 'required|array|min:1',
+                    // 'ps'                => 'required|array|min:1',
+                    'pr.*.taken_at'     => 'required|date',
                     'z_1.*.taken_at'    => 'required|date',
                     'z_2.*.taken_at'    => 'required|date',
                     'z_3.*.taken_at'    => 'required|date',
                     'z_4.*.taken_at'    => 'required|date',
-                    'p_h.*.temp'        => 'required|numeric|min:1|max:99',
+                    'ps.*.taken_at'     => 'required|date',
+                    'pr.*.temp'         => 'required|numeric|min:1|max:99',
                     'z_1.*.temp'        => 'required|numeric|min:1|max:99',
                     'z_2.*.temp'        => 'required|numeric|min:1|max:99',
                     'z_3.*.temp'        => 'required|numeric|min:1|max:99',
                     'z_4.*.temp'        => 'required|numeric|min:1|max:99',
+                    'ps.*.temp'         => 'required|numeric|min:1|max:99',
                 ]
             );
 
@@ -239,16 +250,17 @@ class extends Component {
                 $this->reset(['file']);
 
             } else {
-                $this->logs         = $logs;
-                $validatedData      = $validator->validated();
-                $this->start_time   = $validatedData['start_time'];
-                $this->end_time     = $validatedData['end_time'];
-                $this->preheat_temp = InsStc::medianTemp($validatedData['p_h']);
-                $this->z_1_temp     = InsStc::medianTemp($validatedData['z_1']);
-                $this->z_2_temp     = InsStc::medianTemp($validatedData['z_2']);
-                $this->z_3_temp     = InsStc::medianTemp($validatedData['z_3']);
-                $this->z_4_temp     = InsStc::medianTemp($validatedData['z_4']);
-                $this->duration     = InsStc::duration($validatedData['start_time'], $validatedData['end_time']);
+                $this->logs             = $logs;
+                $validatedData          = $validator->validated();
+                $this->start_time       = $validatedData['start_time'];
+                $this->end_time         = $validatedData['end_time'];
+                $this->preheat_temp     = InsStc::medianTemp($validatedData['pr'] ?? []);
+                $this->z_1_temp         = InsStc::medianTemp($validatedData['z_1'] ?? []);
+                $this->z_2_temp         = InsStc::medianTemp($validatedData['z_2'] ?? []);
+                $this->z_3_temp         = InsStc::medianTemp($validatedData['z_3'] ?? []);
+                $this->z_4_temp         = InsStc::medianTemp($validatedData['z_4'] ?? []);
+                $this->postheat_temp    = InsStc::medianTemp($validatedData['ps'] ?? []);
+                $this->duration         = InsStc::duration($validatedData['start_time'], $validatedData['end_time']);
 
                 $this->view = 'review';
             }
@@ -278,6 +290,7 @@ class extends Component {
             'z_2_temp', 
             'z_3_temp', 
             'z_4_temp', 
+            'postheat_temp', 
 
             'view', 
             'logs_count_eval', 
@@ -319,7 +332,7 @@ class extends Component {
                 <i class="fa fa-exclamation-circle"></i>
             </div>
             <div class="text-center text-neutral-500 dark:text-neutral-600">
-                {{ __('Masuk terlebih dahulu untuk melakukan pembukuan hasil ukur') }}
+                {{ __('Masuk terlebih dahulu untuk melakukan pencatatan hasil ukur') }}
             </div>
             <div>
                 <a href="{{ route('login', ['redirect' => url()->current()]) }}" wire:navigate
@@ -335,7 +348,7 @@ class extends Component {
             </div>
         </div>
     @else
-    <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">{{ __('Pembukuan') }}</h1>
+    <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">{{ __('Pencatatan') }}</h1>
     @vite(['resources/js/apexcharts.js'])
     <div class="w-full my-8">
         <x-modal name="d-logs-review" maxWidth="2xl">
@@ -349,7 +362,7 @@ class extends Component {
                             <div class="grid grid-cols-2 gap-x-3">
                                 <div>
                                     <label for="d-log-sequence"
-                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengukuran ke') }}</label>
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Urutan') }}</label>
                                     <x-select class="w-full" id="d-log-sequence" wire:model="sequence">
                                         <option value=""></option>
                                             <option value="1">1</option>
@@ -483,7 +496,7 @@ class extends Component {
                                         <table class="table table-xs table-col-heading-fit">
                                             <tr>
                                                 <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                    {{ __('Pengukuran ke') . ': ' }}
+                                                    {{ __('Urutan') . ': ' }}
                                                 </td>
                                                 <td>
                                                     {{ $sequence }}
@@ -585,7 +598,7 @@ class extends Component {
                                     <table class="table table-xs table-col-heading-fit">
                                         <tr>
                                             <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Pengukuran ke') . ': ' }}
+                                                {{ __('Urutan') . ': ' }}
                                             </td>
                                             <td>
                                                 {{ $sequence }}
@@ -694,18 +707,10 @@ class extends Component {
                                     </tr>
                                     <tr>
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Durasi') . ': ' }}
+                                            {{ __('Durasi') }}
                                         </td>
                                         <td>
-                                            {{ $duration }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Jumlah data') . ': ' }}
-                                        </td>
-                                        <td>
-                                            {{ count($logs) . ' ('. $logs_count_eval_human .')' }}
+                                            {{ $duration . ' (Dari ' . count($logs) . ' baris data)' }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -716,11 +721,11 @@ class extends Component {
                                         </td>
                                     </tr>
                                 </table>
-                                <div class="grid grid-cols-5 mt-3 text-center">
-                                    <div>
+                                <div class="grid grid-cols-4 mt-3 text-center">
+                                    {{-- <div>
                                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Preheat')}}</div>
                                         <div>{{ $preheat_temp }}</div>
-                                    </div>
+                                    </div> --}}
                                     <div>
                                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Zona 1')}}</div>
                                         <div>{{ $z_1_temp }}</div>
@@ -737,6 +742,10 @@ class extends Component {
                                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Zona 4')}}</div>
                                         <div>{{ $z_4_temp }}</div>
                                     </div>
+                                    {{-- <div>
+                                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Postheat')}}</div>
+                                        <div>{{ $postheat_temp }}</div>
+                                    </div> --}}
                                 </div>
 
                                 </dd>

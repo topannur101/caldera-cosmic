@@ -56,7 +56,8 @@ new class extends Component {
             <div>{{ __('Zona 1') .': 70-80°C' }}</div>      
             <div>{{ __('Zona 2') .': 60-70°C' }}</div>     
             <div>{{ __('Zona 3') .': 50-60°C' }}</div>     
-            <div>{{ __('Zona 4') .': 40-50°C' }}</div>           
+            <div>{{ __('Zona 4') .': 40-50°C' }}</div>      
+            <div>{{ __('Postheat') }}</div>        
         </div>
       </div>
       <div class="max-h-48 overflow-y-auto relative">

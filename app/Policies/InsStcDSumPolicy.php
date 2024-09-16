@@ -21,7 +21,7 @@ class InsStcDSumPolicy
         $actions = json_decode($auth->actions ?? '{}', true);
         return in_array('d-sum-manage', $actions)
         ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk mengelola pembukuan hasil ukur') );
+        : Response::deny( __('Kamu tak memiliki wewenang untuk mengelola pencatatan hasil ukur') );
     }
 
     public function before(User $user): bool|null

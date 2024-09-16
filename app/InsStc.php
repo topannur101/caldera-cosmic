@@ -180,7 +180,7 @@ class InsStc
 
     public static function sliceZoneData(array $logs, array $xzones, string $selectedZone): array
     {
-        $zoneOrder = ['preheat', 'zone_1', 'zone_2', 'zone_3', 'zone_4'];
+        $zoneOrder = ['preheat', 'zone_1', 'zone_2', 'zone_3', 'zone_4', 'postheat'];
         
         if (!in_array($selectedZone, $zoneOrder)) {
             throw new InvalidArgumentException("Invalid zone selected: $selectedZone");
@@ -260,6 +260,29 @@ class InsStc
                 break;
         }
         return $positionHuman;
+    }
+
+    public static function zones(string $axis): array
+    {
+        switch ($axis) {
+            case 'x':
+                return [
+                    'preheat'   => 5,
+                    'zone_1'    => 12,
+                    'zone_2'    => 12,
+                    'zone_3'    => 12,
+                    'zone_4'    => 12,
+                    'postheat'  => 5
+                ];
+                break;
+            case 'y':
+                return [ 40, 50, 60, 70, 80 ];
+                break;
+            
+            default:
+                return [];
+                break;
+        }
     }
     
 }

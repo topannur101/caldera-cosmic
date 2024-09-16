@@ -18,9 +18,14 @@
         <div class="min-h-screen bg-neutral-100 dark:bg-neutral-900 overflow-hidden">
             <livewire:layout.navigation />
 
-            <!-- Page Heading -->
+            <!-- Page Header -->
             @if (isset($header))
             {{ $header }}
+            @endif
+
+            <!-- Page Printable -->
+            @if (isset($printable))
+            {{ $printable }}
             @endif
 
             <!-- Page Content -->

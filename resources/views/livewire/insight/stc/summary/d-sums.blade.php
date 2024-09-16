@@ -159,9 +159,10 @@ class extends Component {
                             <th>{{ __('Waktu mulai') }}</th>
                             <th>{{ __('Durasi') }}</th>
                             <th>{{ __('Line') }}</th>
+                            <th>{{ __('Posisi') }}</th>  
                             <th>{{ __('RPM') }}</th>   
                             <th>{{ __('Median suhu') }}</th>
-                            <th>{{ __('Penguji') }}</th>
+                            <th>{{ __('Pengukur') }}</th>
                             <th>{{ __('Diperbarui pada') }}</th> 
                         </tr>
                         @foreach ($d_sums as $d_sum)
@@ -170,6 +171,7 @@ class extends Component {
                             <td>{{ $d_sum->start_time }}</td>
                             <td>{{ $d_sum->duration() }}</td>
                             <td>{{ $d_sum->machine_line }}</td>
+                            <td>{{ $d_sum->position }}</td>
                             <td>{{ $d_sum->speed }}</td>
                             <td>{{ $d_sum->z_1_temp . ' | ' . $d_sum->z_2_temp . ' | ' . $d_sum->z_3_temp . ' | ' . $d_sum->z_4_temp  }}</td>
                             <td>{{ $d_sum->user1_name }}</td>

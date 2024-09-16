@@ -28,6 +28,7 @@ return new class extends Migration
             $table->decimal('z_2_temp', 3, 1);
             $table->decimal('z_3_temp', 3, 1);
             $table->decimal('z_4_temp', 3, 1);
+            $table->decimal('postheat_temp', 3, 1);
             $table->decimal('speed', 3, 1);
             $table->tinyInteger('sequence')->unsigned();
             $table->enum('position', ['upper', 'lower']);
