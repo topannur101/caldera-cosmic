@@ -67,25 +67,29 @@ class extends Component {
             $logs = $dSum->ins_stc_d_logs->toArray();
             $xzones = $this->xzones;
             $yzones = $this->yzones;
-            $ymax = $yzones ? max($yzones) + 0 : $ymax;
-            $ymin = $yzones ? min($yzones) - 0 : $ymin;
+            $ymax = $yzones ? max($yzones) + 5 : $ymax;
+            $ymin = $yzones ? min($yzones) - 10 : $ymin;
 
             $this->js(
                 "
-                let options = " .
-                    json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin)) .
+                let modalOptions = " .
+                    json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 100)) .
                     ";
 
                 // Render modal chart
                 const modalChartContainer = \$wire.\$el.querySelector('#modal-chart-container');
                 modalChartContainer.innerHTML = '<div id=\"modal-chart\"></div>';
-                let modalChart = new ApexCharts(modalChartContainer.querySelector('#modal-chart'), options);
+                let modalChart = new ApexCharts(modalChartContainer.querySelector('#modal-chart'), modalOptions);
                 modalChart.render();
+
+                let printOptions = " .
+                    json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 85)) .
+                    ";
 
                 // // Render hidden printable chart
                 const printChartContainer = document.querySelector('#print-chart-container');
                 printChartContainer.innerHTML = '<div id=\"print-chart\"></div>';
-                let printChart = new ApexCharts(printChartContainer.querySelector('#print-chart'), options);
+                let printChart = new ApexCharts(printChartContainer.querySelector('#print-chart'), printOptions);
                 printChart.render();
             ",
             );

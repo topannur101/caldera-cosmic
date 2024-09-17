@@ -422,7 +422,7 @@ class extends Component {
                                 <div>
                                     <label for="d-log-speed"
                                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kecepatan') }}</label>
-                                    <x-text-input-suffix suffix="RPM" id="d-log-speed" wire:model="speed" type="number" step=".1" autocomplete="off" />
+                                    <x-text-input-suffix suffix="RPM" id="d-log-speed" wire:model="speed" type="number" step=".01" autocomplete="off" />
                                 </div>                               
                             </div>
                             @error('position')

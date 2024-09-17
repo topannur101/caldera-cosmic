@@ -15,13 +15,13 @@ new class extends Component {
         $logs   = json_decode($logs, true);
         $xzones = json_decode($xzones, true);
         $yzones = json_decode($yzones, true);
-        $ymax   = $yzones ? max($yzones) + 0 : $ymax;
-        $ymin   = $yzones ? min($yzones) - 0 : $ymin;
+        $ymax   = $yzones ? max($yzones) + 5 : $ymax;
+        $ymin   = $yzones ? min($yzones) - 10 : $ymin;
 
         $this->logs = $logs;
 
         $this->js("
-            let options = " . json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin)) . ";
+            let options = " . json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 100)) . ";
 
             const parent = \$wire.\$el.querySelector('#chart-container');
             parent.innerHTML = '';
