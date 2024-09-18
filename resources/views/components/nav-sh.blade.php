@@ -8,7 +8,7 @@
                 @elseif( request()->is('sh/manage*') )
                     {{ __('Kelola') }}
                 @else
-                    <span class="hidden sm:inline">{{ __('Pemandanan Informasi Sepatu') }}</span><span class="sm:hidden inline">{{ __('PINTU') }}</span>
+                    <span class="hidden sm:inline">{{ __('Administrasi') }}</span><span class="sm:hidden inline">{{ __('Admin') }}</span>
                 @endif
                </div>
            </h2>
