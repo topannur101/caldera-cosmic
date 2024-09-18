@@ -21,6 +21,7 @@ class InsRdcTest extends Model
         'tc50',
         'tc90',
         'data',
+        'tag',
         'user_id',
         'queued_at'
     ];

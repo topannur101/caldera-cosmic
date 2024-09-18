@@ -63,7 +63,7 @@ new #[Layout('layouts.app')] class extends Component {};
                             {{ __('Kelola wewenang') }}
                         </div>
                         <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
-                            {{ __('Kelola wewenang pengguna data rheometer') }}
+                            {{ __('Kelola wewenang pengguna IP STC') }}
                         </div>
                     </div>
                 </div>

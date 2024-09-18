@@ -195,4 +195,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(InsStcAuth::class);
     }
+
+    public function sh_auths(): HasMany
+    {
+        return $this->hasMany(ShAuth::class);
+    }
 }

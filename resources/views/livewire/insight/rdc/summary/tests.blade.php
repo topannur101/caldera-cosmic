@@ -185,6 +185,7 @@ class extends Component {
                             <th>{{ __('MCS') }}</th>
                             <th>{{ __('Hasil') }}</th>
                             <th>{{ __('M') }}</th>
+                            <th>{{ __('Tag') }}</th>
                             <th>{{ __('Nama') }}</th>
                             <th>{{ __('Diperbarui') }}</th>
                         </tr>
@@ -203,6 +204,7 @@ class extends Component {
                                 ($test->eval === 'fail' ? 'red' : ''))
                                 }}">{{ $test->evalHuman() }}</x-pill></td>
                             <td>{{ $test->machine_number }}</td>
+                            <td>{{ $test->tag }}</td>
                             <td>{{ $test->user_name }}</td>
                             <td>{{ $test->test_updated_at }}</td>
                         </tr>

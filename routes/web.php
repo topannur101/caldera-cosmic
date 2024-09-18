@@ -67,6 +67,7 @@ Route::prefix('insight')->group(function () {
 
         Volt::route('/rdc/manage/authorizations',   'insight.rdc.manage.auths')     ->name('manage.auths');
         Volt::route('/rdc/manage/machines',         'insight.rdc.manage.machines')  ->name('manage.machines');
+        Volt::route('/rdc/manage/tags',             'insight.rdc.manage.tags')      ->name('manage.tags');
         Volt::route('/rdc/manage',                  'insight.rdc.manage.index')     ->name('manage.index');
         Volt::route('/rdc/summary',                 'insight.rdc.summary.index')    ->name('summary.index');
         Volt::route('/rdc',                         'insight.rdc.index')            ->name('index');
@@ -154,8 +155,21 @@ Route::middleware('auth')->group(function () {
             
         });
 
-        Route::view('/', 'inventory')->name('inventory');
+        Route::view('/', 'livewire.inventory.index')->name('inventory');
 
+    });
+
+    // SH routes
+    Route::prefix('sh')->group(function () {
+
+        Route::name('sh.')->group(function () {
+
+            Volt::route('/manage/models',    'sh.manage.mods')  ->name('manage.mods');
+            Volt::route('/manage',           'sh.manage.index') ->name('manage.index');
+        
+        });
+
+        Route::view('/', 'livewire.sh.index')->name('sh');
     });
 
 });

@@ -3,17 +3,14 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use App\Models\ShMod;
 use App\Models\InsRdcTest;
 use App\Models\InsRdcMachine;
+use App\Models\InsRdcTag;
 use App\Models\InsRubberBatch;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-// use Illuminate\Validation\Rule;
-
-// use App\Models\User;
-// use Livewire\Attributes\Renderless;
-// use Illuminate\Support\Facades\Gate;
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -28,17 +25,18 @@ class extends Component {
     public string $color = '';
     public string $mcs = '';
     public string $code_alt = '';
-
+    
     public string $e_model = '';
     public string $e_color = '';
     public string $e_mcs = '';
     public string $e_code_alt = '';
-
+    
     public string $o_model = '';
     public string $o_color = '';
     public string $o_mcs = '';
     public string $o_code_alt = '';
-
+    
+    public string $tag = '';
     public float $s_max;
     public float $s_min;
     public string $eval;
@@ -48,9 +46,17 @@ class extends Component {
 
     public int $machine_id;
     public bool $update_batch = false;
+    public $sh_mods;
+    public $ins_rdc_tags;
 
     public $file;
     public string $view = 'upload';
+
+    public function mount()
+    {
+        $this->sh_mods = ShMod::where('is_active', true)->orderBy('updated_at', 'desc')->get();
+        $this->ins_rdc_tags = InsRdcTag::orderBy('name')->get();
+    }
 
     #[On('batch-test-create')]
     public function loadBatch(int $id)
@@ -216,7 +222,7 @@ class extends Component {
                     'code_alt'   => $this->code_alt,
                 ],
                 [
-                    'model'      => 'nullable|string|max:50',
+                    'model'      => 'required|exists:sh_mods,name',
                     'color'      => 'nullable|string|max:20',
                     'mcs'        => 'nullable|string|max:10',
                     'code_alt'   => 'nullable|string|max:50',
@@ -231,7 +237,8 @@ class extends Component {
                     'tc10'       => $this->tc10,
                     'tc50'       => $this->tc50,
                     'tc90'       => $this->tc90,
-                    'machine_id' => $this->machine_id
+                    'machine_id' => $this->machine_id,
+                    'tag'        => $this->tag,
                 ],
                 [
                     'eval'       => ['required', 'in:pass,fail'],
@@ -241,6 +248,7 @@ class extends Component {
                     'tc50'       => ['required', 'numeric', 'gt:0', 'lt:999'],
                     'tc90'       => ['required', 'numeric', 'gt:0', 'lt:999'],
                     'machine_id' => ['required', 'exists:ins_rdc_machines,id'],
+                    'tag'        => ['nullable', 'exists:ins_rdc_tags,name'],
                 ]
             );
 
@@ -275,6 +283,7 @@ class extends Component {
                     'ins_rubber_batch_id'   => $batch->id,
                     'ins_rdc_machine_id'    => $this->machine_id,
                     'queued_at'             => $queued_at,
+                    'tag'                   => $this->tag,
                 ]);
 
                 $test->save();
@@ -307,7 +316,7 @@ class extends Component {
     public function customReset()
     {
         $this->resetValidation();
-        $this->reset(['file','s_max', 's_min', 'eval', 'tc10', 'tc50', 'tc90', 'model', 'color', 'mcs', 'code_alt', 'e_model', 'e_color', 'e_mcs' , 'e_code_alt', 'o_model', 'o_color', 'o_mcs', 'o_code_alt', 'update_batch', 'machine_id', 'view']);
+        $this->reset(['file','s_max', 's_min', 'eval', 'tc10', 'tc50', 'tc90', 'model', 'color', 'mcs', 'code_alt', 'e_model', 'e_color', 'e_mcs' , 'e_code_alt', 'o_model', 'o_color', 'o_mcs', 'o_code_alt', 'update_batch', 'machine_id', 'tag', 'view']);
     }
 
     public function handleNotFound()
@@ -386,14 +395,6 @@ class extends Component {
                                 </tr>
                                 <tr>
                                     <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                        {{ __('Model') . ': ' }}
-                                    </td>
-                                    <td>
-                                        {{ $model ?: '-' }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
                                         {{ __('Warna') . ': ' }}
                                     </td>
                                     <td>
@@ -409,8 +410,21 @@ class extends Component {
                                     </td>
                                 </tr>
                             </table>
+                            <div class="mt-6">
+                                <label for="test-model"
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Model') }}</label>
+                                <x-text-input id="test-model" list="test-models" wire:model="model" type="text" />
+                                @error('model')
+                                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                                @enderror
+                                <datalist id="test-models">
+                                    @foreach ($sh_mods as $sh_mod)
+                                        <option value="{{ $sh_mod->name }}">
+                                    @endforeach
+                                </datalist>
+                            </div>
                             @if($e_model || $e_color || $e_mcs || $e_code_alt)
-                                <div class="mt-3">
+                                <div class="mt-6">
                                     <x-toggle name="update_batch" wire:model.live="update_batch" :checked="$update_batch ? true : false" >{{ __('Perbarui informasi batch') }}</x-toggle>
                                 </div>
                             @endif
@@ -491,6 +505,19 @@ class extends Component {
                                     </tr>
                                 </table>
                             </div>
+                            <div class="mt-6">
+                                <label for="test-tag"
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tag') }}</label>
+                                <x-text-input id="test-tag" list="test-tags" wire:model="tag" type="text" />
+                                @error('tag')
+                                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                                @enderror
+                                <datalist id="test-tags">
+                                    @foreach ($ins_rdc_tags as $ins_rdc_tag)
+                                        <option value="{{ $ins_rdc_tag->name }}">
+                                    @endforeach
+                                </datalist>
+                            </div>
                         </dd>
                     </div>
                 </dl>            
@@ -512,10 +539,15 @@ class extends Component {
                             <div class="mt-6">
                                 <label for="test-model"
                                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Model') }}</label>
-                                <x-text-input id="test-model" wire:model="model" type="text" />
+                                <x-text-input id="test-model" list="test-models" wire:model="model" type="text" />
                                 @error('model')
                                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                                 @enderror
+                                <datalist id="test-models">
+                                    @foreach ($sh_mods as $sh_mod)
+                                        <option value="{{ $sh_mod->name }}">
+                                    @endforeach
+                                </datalist>
                             </div>
                             <div class="mt-6">
                                 <label for="test-color"
@@ -538,7 +570,7 @@ class extends Component {
                     <div class="flex-flex-col pt-6">
                         <dt class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Hasil uji') }}</dt>
                         <dd>
-                            <div class="relative py-3">
+                            <div class="relative pt-3">
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3">
                                     <div class="mt-6">
                                         <label for="test-eval"
@@ -596,7 +628,20 @@ class extends Component {
                                     </div>
                                 </div>
                             </div>
-                        </dd>  
+                        </dd> 
+                        <div class="mt-6">
+                            <label for="test-tag"
+                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tag') }}</label>
+                            <x-text-input id="test-tag" list="test-tags" wire:model="tag" type="text" />
+                            @error('tag')
+                                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                            @enderror
+                            <datalist id="test-tags">
+                                @foreach ($ins_rdc_tags as $ins_rdc_tag)
+                                    <option value="{{ $ins_rdc_tag->name }}">
+                                @endforeach
+                            </datalist>
+                        </div> 
                     </div>
                 </div>
                 @break

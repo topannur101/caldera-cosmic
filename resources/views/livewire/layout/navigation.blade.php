@@ -54,6 +54,11 @@ new class extends Component {
                     <x-nav-link :href="route('help')" :active="request()->is('help*')" wire:navigate>
                         {{ __('Bantuan') }}
                     </x-nav-link>
+                    @if((Auth::user()->id ?? false) == 1)
+                    <x-nav-link :href="route('sh')" :active="request()->routeIs('sh*')" wire:navigate>
+                        {{ __('Pintu') }}
+                    </x-nav-link>
+                @endif
 
                 </div>
             </div>
