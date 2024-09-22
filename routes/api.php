@@ -46,10 +46,10 @@ Route::post('/omv-metric', function (Request $request) {
         'eval' => 'required|in:too_soon,on_time,too_late',
         'start_at' => 'required|date_format:Y-m-d H:i:s',
         'end_at' => 'required|date_format:Y-m-d H:i:s',
-        'captured_images' => 'nullable|array',
-        'captured_images.*.stepIndex' => 'required|integer',
-        'captured_images.*.captureTime' => 'required|numeric',
-        'captured_images.*.image' => [
+        'images' => 'nullable|array',
+        'images.*.step_index' => 'required|integer',
+        'images.*.capture_point' => 'required|numeric',
+        'images.*.image' => [
             'required',
             'string',
             'regex:/^data:image\/(?:jpeg|png|jpg|gif);base64,/',
@@ -61,6 +61,9 @@ Route::post('/omv-metric', function (Request $request) {
                 }
             },
         ],
+        'amps' => 'nullable|array',
+        'amps.*.taken_at' => 'required|datetime', // make sure the validation
+        'amps.*.value' => 'required|numeric',
     ]);
 
     if ($validator->fails()) {
@@ -68,15 +71,16 @@ Route::post('/omv-metric', function (Request $request) {
             'status' => 'invalid',
             'msg' => $validator->errors()->all(),
         ], 400);
-    }
-
-    $user1 = User::where('emp_id', $request->user_1_emp_id)->first();
-    $user2 = User::where('emp_id', $request->user_2_emp_id)->first();
+    } 
+    
+    $validated = $validator->validated();
+    $user1 = User::where('emp_id', $validated['user_1_emp_id'])->first();
+    $user2 = User::where('emp_id', $validated['user_2_emp_id'])->first();
 
     $errors = [];
 
     if (!$user1) {
-        $errors[] = "The emp_id '{$request->user_1_emp_id}' on user_1_emp_id does not exist.";
+        $errors[] = "The emp_id '{$validated['user_1_emp_id']}' on user_1_emp_id does not exist.";
     }
 
      if (!empty($errors)) {
@@ -86,36 +90,40 @@ Route::post('/omv-metric', function (Request $request) {
         ], 400);
     }
 
-    $code = strtoupper(trim($request->code));
-    $batch = $code ? InsRubberBatch::firstOrCreate(['code' => $code]) : null;
-
-    $batch->omv_eval = strtolower($request->eval);
-    $batch->save();
+    $code = strtoupper(trim($validated['code']));
+    $batch = null;
+    if ($code) {
+        $batch = InsRubberBatch::firstOrCreate(['code' => $code]);
+        if ($batch) {
+            $batch->omv_eval = strtolower($validated['eval']);
+            $batch->save();
+        }
+    }
 
     $omvMetric = new InsOmvMetric();
-    $omvMetric->ins_omv_recipe_id = $request->recipe_id;
-    $omvMetric->line = $request->line;
-    $omvMetric->team = $request->team;
+    $omvMetric->ins_omv_recipe_id = $validated['recipe_id'];
+    $omvMetric->line = $validated['line'];
+    $omvMetric->team = $validated['team'];
     $omvMetric->user_1_id = $user1->id;
     $omvMetric->user_2_id = $user2->id ?? null;
-    $omvMetric->eval = strtolower($request->eval); // converting eval to lowercase
-    $omvMetric->start_at = $request->start_at;
-    $omvMetric->end_at = $request->end_at;
-    $omvMetric->ins_rubber_batch_id = $batch->id ?? null;
+    $omvMetric->eval = strtolower($validated['eval']); // converting eval to lowercase
+    $omvMetric->start_at = $validated['start_at'];
+    $omvMetric->end_at = $validated['end_at'];
+    $omvMetric->ins_rubber_batch_id = ($batch->id ?? false) ?: null;
     $omvMetric->save();
     
     $captureMessages = [];
     
-    foreach ($request->captured_images as $index => $capturedImage) {
+    foreach ($validated['images'] as $index => $image) {
         try {
-            $imageData = base64_decode(explode(',', $capturedImage['image'])[1]);
-            $extension = explode('/', mime_content_type($capturedImage['image']))[1];
+            $imageData = base64_decode(explode(',', $image['image'])[1]);
+            $extension = explode('/', mime_content_type($image['image']))[1];
             
             $fileName = sprintf(
                 '%s_%s_%s_%s.%s',
                 $omvMetric->id,
-                $capturedImage['stepIndex'],
-                $capturedImage['captureTime'],
+                $image['stepIndex'],
+                $image['capture_point'],
                 Str::random(8),
                 $extension
             );

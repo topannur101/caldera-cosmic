@@ -203,26 +203,28 @@ new class extends Component {
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
-        <div class="mt-6">
-            <label for="recipe-type"
-            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tipe') }}</label>
-            <x-select id="recipe-type" wire:model="type" :disabled="Gate::denies('manage', InsOmvRecipe::class)">
-                <option value=""></option>
-                <option value="new">{{ __('Baru') }}</option>
-                <option value="remixing">{{ __('Remixing') }}</option>
-                <option value="scrap">{{ __('Scrap') }}</option>
-            </x-select>
-            @error('type')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
+        <div class="flex gap-x-3">
+            <div class="mt-6">
+                <label for="recipe-type"
+                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tipe') }}</label>
+                <x-select id="recipe-type" wire:model="type" :disabled="Gate::denies('manage', InsOmvRecipe::class)">
+                    <option value=""></option>
+                    <option value="new">{{ __('Baru') }}</option>
+                    <option value="remixing">{{ __('Remixing') }}</option>
+                    <option value="scrap">{{ __('Scrap') }}</option>
+                </x-select>
+                @error('type')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
+            <div class="mt-6 grow">
+                <label for="recipe-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+                <x-text-input id="recipe-name" wire:model="name" type="text" :disabled="Gate::denies('manage', InsOmvRecipe::class)" />
+                @error('name')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>  
         </div>
-        <div class="mt-6">
-            <label for="recipe-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
-            <x-text-input id="recipe-name" wire:model="name" type="text" :disabled="Gate::denies('manage', InsOmvRecipe::class)" />
-            @error('name')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
-        </div>  
         <div class="mt-6">
             <label for="recipe-capture-points" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Titik foto') }}</label>
             <x-text-input id="recipe-capture-points" wire:model="capture_points" type="text" :disabled="Gate::denies('manage', InsOmvRecipe::class)" />

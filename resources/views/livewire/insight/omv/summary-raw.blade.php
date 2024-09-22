@@ -164,7 +164,7 @@ new #[Layout('layouts.app')] class extends Component {
                         @foreach ($metrics as $metric)
                             <tr>
                                 <td>{{ $metric->id }}</td>
-                                <td>{{ $metric->ins_rubber_batch->code }}</td>
+                                <td>{{ $metric->ins_rubber_batch->code ?? '' }}</td>
                                 <td>{{ strtoupper($metric->ins_omv_recipe->type) }}</td>
                                 <td>{{ $metric->ins_omv_recipe->name }}</td>
                                 <td>{{ $metric->line }}</td>

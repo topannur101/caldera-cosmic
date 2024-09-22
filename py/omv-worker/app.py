@@ -15,7 +15,7 @@ from logging.handlers import RotatingFileHandler
 from urllib.parse import urlparse
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Load configuration
 config_file_path = 'config.json'

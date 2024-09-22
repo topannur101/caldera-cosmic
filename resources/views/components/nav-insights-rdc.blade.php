@@ -5,15 +5,15 @@
                 <x-link href="{{ route('insight') }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Pendataan Rheometer') }}</span><span class="sm:hidden inline">{{ __('RDC') }}</span></span>
             </h2>
         </div>
-        <div class="space-x-3 -my-px ml-10 flex">
-            <x-nav-link class="text-sm px-3 uppercase" href="{{ route('insight.rdc.index') }}" :active="request()->routeIs('insight.rdc.index')" wire:navigate>
-                <i class="fa fa-inbox text-sm"></i><span class="ms-3 hidden md:inline">{{ __('Antrian') }}</span>
+        <div class="space-x-6 -my-px ml-10 flex">
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.rdc.index') }}" :active="request()->routeIs('insight.rdc.index')" wire:navigate>
+                <i class="fa fa-inbox text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Antrian') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-3 uppercase" href="{{ route('insight.rdc.summary.index') }}" :active="request()->routeIs('insight.rdc.summary.index')" wire:navigate>
-                <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden md:inline">{{ __('Data') }}</span>
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.rdc.summary.index') }}" :active="request()->routeIs('insight.rdc.summary.index')" wire:navigate>
+                <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-3 uppercase" href="{{ route('insight.rdc.manage.index') }}" :active="request()->routeIs('insight.rdc.manage.index')" wire:navigate>
-                <i class="fa fa-ellipsis-h text-sm"></i><span class="ms-3 hidden md:inline">{{ __('Kelola') }}</span>
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.rdc.manage.index') }}" :active="request()->routeIs('insight.rdc.manage.index')" wire:navigate>
+                <i class="fa fa-ellipsis-h text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Kelola') }}</span>
             </x-nav-link>
         </div>
     </div>
