@@ -37,19 +37,19 @@ Route::get('/omv-recipes', function() {
 
 Route::post('/omv-metric', function (Request $request) {
     $validator = Validator::make($request->all(), [
-        'recipe_id' => 'required|exists:ins_omv_recipes,id',
-        'code' => 'nullable|string|max:20',
-        'line' => 'required|integer|min:1|max:99',
-        'team' => 'required|in:A,B,C',
-        'user_1_emp_id' => 'required|exists:users,emp_id',
-        'user_2_emp_id' => 'nullable|exists:users,emp_id',
-        'eval' => 'required|in:too_soon,on_time,too_late',
-        'start_at' => 'required|date_format:Y-m-d H:i:s',
-        'end_at' => 'required|date_format:Y-m-d H:i:s',
-        'images' => 'nullable|array',
+        'recipe_id'         => 'required|exists:ins_omv_recipes,id',
+        'code'              => 'nullable|string|max:20',
+        'line'              => 'required|integer|min:1|max:99',
+        'team'              => 'required|in:A,B,C',
+        'user_1_emp_id'     => 'required|exists:users,emp_id',
+        'user_2_emp_id'     => 'nullable|exists:users,emp_id',
+        'eval'              => 'required|in:too_soon,on_time,too_late',
+        'start_at'          => 'required|date_format:Y-m-d H:i:s',
+        'end_at'            => 'required|date_format:Y-m-d H:i:s',
+        'images'            => 'nullable|array',
         'images.*.step_index' => 'required|integer',
-        'images.*.capture_point' => 'required|numeric',
-        'images.*.image' => [
+        'images.*.taken_at' => 'required|numeric',
+        'images.*.image'    => [
             'required',
             'string',
             'regex:/^data:image\/(?:jpeg|png|jpg|gif);base64,/',
@@ -61,15 +61,15 @@ Route::post('/omv-metric', function (Request $request) {
                 }
             },
         ],
-        'amps' => 'nullable|array',
-        'amps.*.taken_at' => 'required|datetime', // make sure the validation
-        'amps.*.value' => 'required|numeric',
+        'amps'              => 'nullable|array',
+        'amps.*.taken_at'   => 'required|numeric',
+        'amps.*.value'      => 'required|integer',
     ]);
 
     if ($validator->fails()) {
         return response()->json([
-            'status' => 'invalid',
-            'msg' => $validator->errors()->all(),
+            'status'        => 'invalid',
+            'msg'           => $validator->errors()->all(),
         ], 400);
     } 
     
@@ -109,6 +109,7 @@ Route::post('/omv-metric', function (Request $request) {
     $omvMetric->eval = strtolower($validated['eval']); // converting eval to lowercase
     $omvMetric->start_at = $validated['start_at'];
     $omvMetric->end_at = $validated['end_at'];
+    $omvMetric->data = json_encode(['amps' => $validated['amps']]);
     $omvMetric->ins_rubber_batch_id = ($batch->id ?? false) ?: null;
     $omvMetric->save();
     
@@ -122,8 +123,8 @@ Route::post('/omv-metric', function (Request $request) {
             $fileName = sprintf(
                 '%s_%s_%s_%s.%s',
                 $omvMetric->id,
-                $image['stepIndex'],
-                $image['capture_point'],
+                $image['step_index'],
+                $image['taken_at'],
                 Str::random(8),
                 $extension
             );

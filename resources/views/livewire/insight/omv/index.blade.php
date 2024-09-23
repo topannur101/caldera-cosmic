@@ -66,8 +66,15 @@ class extends Component {
                                     x-text="batchCode ? batchCode.toUpperCase() : '{{ __('Tak ada') }}'"></span>
                                 </div>
                                 <div>|</div>
-                                <div><span>{{ __('Line') }}</span><span>{{ ': ' }}</span><span :class="batchLine ? '' : 'text-red-500'"
-                                        x-text="batchLine ? batchLine : '{{ __('Kesalahan') }}'"></span>
+                                <div x-cloak x-show="!batchLine" x-on:click="$dispatch('open-modal', 'omv-worker-unavailable');" class="text-red-500 cursor-pointer">
+                                    <span>{{ __('Line') }}</span><span>{{ ': ' }}</span>
+                                    <span>
+                                        <i class="fa fa-exclamation-circle"></i>
+                                    </span>
+                                </div>
+                                <div x-cloak x-show="batchLine">
+                                    <span>{{ __('Line') }}</span><span>{{ ': ' }}</span>
+                                    <span x-show="batchLine" x-text="batchLine"></span>
                                 </div>
                                 <div>|</div>
                                 <div @click="start()">
@@ -121,6 +128,31 @@ class extends Component {
                         x-show="timerIsRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
                 </div>
             </div>
+
+            <x-modal name="omv-worker-unavailable" maxWidth="sm">
+                <div class="text-center pt-6">
+                    <i class="fa fa-exclamation-triangle text-4xl "></i>
+                    <h2 class="mt-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('omv-worker tidak merespon') }}
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                        {{ __('Caldera perlu bersandingan dengan aplikasi omv-worker untuk berkomunikasi dengan sensor dan kamera.') }}
+                    </p>
+                    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                        {{ __('Kamu dapat mengabaikan pesan ini dan lanjut menggunakan aplikasi, namun data tidak akan terkirim ke server.') }}
+                    </p>
+                    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                        {{ __('Hubungi penanggung jawab/PIC Caldera untuk memperbaiki masalah ini.') }}
+                    </p>
+                    <div class="mt-6 flex justify-end">
+                        <x-primary-button type="button" x-on:click="$dispatch('close')">
+                            {{ __('Oke') }}
+                        </x-primary-button>
+                    </div>
+                </div>
+            </x-modal>
 
             <x-modal name="recipes" focusable>
                 <div class="p-6">
@@ -288,7 +320,7 @@ class extends Component {
                                         <div class="absolute w-2 h-2 bg-caldy-500 rounded-full top-4 transform -translate-y-1/2"
                                             :style="'left: ' + ((point - getTotalPreviousStepsDuration(index)) / step.duration *
                                                 100) + '%'"
-                                            :class="elapsedSeconds >= point ? 'opacity-30' : ''"></div>
+                                            :class="timerElapsedSeconds >= point ? 'opacity-30' : ''"></div>
                                     </template>
                                 </div>
                             </div>
@@ -300,7 +332,6 @@ class extends Component {
                 </template>
             </div>
         </div>
-
         <script>
             function app() {
                 return {
@@ -337,7 +368,7 @@ class extends Component {
                     stepProgressPercentages: [],
                     stepRemainingTimes: [],
                     
-                    timerElapsedTime: 0,
+                    timerElapsedSeconds: 0,
                     timerIntervalId: null,
                     timerIsRunning: false,
                     timerProgressPosition: 0, // glow
@@ -346,15 +377,17 @@ class extends Component {
                     wizardCurrentStep: 1,
 
                     async fetchLine() {
-                        try {
-                            const response = await fetch('http://127.0.0.1:92/get-line');
-                            if (!response.ok) {
-                                throw new Error('Failed to get line');
+                        if (!this.batchLine) {
+                            try {
+                                const response = await fetch('http://127.0.0.1:92/get-line');
+                                if (!response.ok) {
+                                    throw new Error('Failed to get line');
+                                }
+                                this.batchLine = await response.text();
+                                console.log('Line fetched:', this.batchLine);
+                            } catch (error) {
+                                console.error('Failed to fetch line:', error);
                             }
-                            this.batchLine = await response.text();
-                            console.log('Line fetched:', this.batchLine);
-                        } catch (error) {
-                            console.error('Failed to fetch line:', error);
                         }
                     },
 
@@ -404,6 +437,10 @@ class extends Component {
                             this.reset(false);
                             this.$dispatch('close');
                             this.startPollingA();
+
+                            if (!this.batchLine) {
+                                this.$dispatch('open-modal', 'omv-worker-unavailable');
+                            }
                         }
                     },
 
@@ -423,21 +460,22 @@ class extends Component {
                         }
 
                         this.pollingAId = setInterval(() => {
+                            this.fetchLine();
                             fetch('http://127.0.0.1:92/get-data')
                                 .then(response => response.json())
                                 .then(data => {
-                                    console.log('Received data:', data);
+                                    console.log('Polling A:', data);
                                     if (data.error) {
-                                        console.error('Error from server:', data.error);
+                                        console.error('Polling A server error:', data.error);
                                     } else if (data.eval && !this.timerIsRunning) {
                                         this.start();
                                         clearInterval(this.pollingAId);
                                     }
                                 })
                                 .catch(error => {
-                                    console.error('Error fetching data:', error);
+                                    console.error('Polling A error:', error);
                                 });
-                        }, 3000);
+                        }, 4000);
                     },
 
                     nextStep() {
@@ -494,6 +532,7 @@ class extends Component {
                         if (!this.timerIsRunning && this.stepList.length > 0) {
                             this.timerIsRunning = true;
                             this.batchStartTime = new Date(); // Change this to store the full date object
+                            this.timerElapsedSeconds = 0;
                             this.timerRemainingTime = this.recipeSelectedDuration;
                             this.recipeCapturePointsDone = []; // Reset processed capture points
                             this.batchImages = []; // Reset captured images
@@ -517,21 +556,25 @@ class extends Component {
 
                     startPollingB() {
                         this.pollingBId = setInterval(() => {
+                            this.fetchLine();
                             fetch('http://127.0.0.1:92/get-data')
                                 .then(response => response.json())
                                 .then(data => {
-                                    if (data.value !== undefined) {
+                                    console.log('Polling B:', data);
+                                    if (data.error) {
+                                        console.error('Polling B server error:', data.error);
+                                    } else {
                                         this.batchAmps.push({
-                                            taken_at: new Date().toISOString(),
-                                            value: data.value
+                                            taken_at: this.timerElapsedSeconds,
+                                            value: data.raw
                                         });
                                     }
                                 })
                                 .catch(error => {
-                                    console.error('Error fetching data during timer:', error);
+                                    console.error('Polling B error:', error);
                                 });
-                        }, 3000); // Poll every 3 seconds, adjust as needed
-                    }
+                        }, 4000);
+                    },                    
 
                     stop(resetRecipe = true, sendData = false) {
                         this.timerIsRunning = false;
@@ -575,32 +618,31 @@ class extends Component {
 
                     tick() {
                         if (this.timerIsRunning) {
-                            const now = Date.now();
-                            const elapsedSeconds = (now - this.batchStartTime) / 1000;
+                            this.timerElapsedSeconds = (new Date() - this.batchStartTime) / 1000;
 
-                            if (elapsedSeconds < (this.recipeSelectedDuration + 1)) {
-                                this.timerRemainingTime = Math.max(0, this.recipeSelectedDuration - Math.floor(elapsedSeconds));
-                                this.updateProgress(elapsedSeconds);
+                            if (this.timerElapsedSeconds < (this.recipeSelectedDuration + 1)) {
+                                this.timerRemainingTime = Math.max(0, this.recipeSelectedDuration - Math.floor(this.timerElapsedSeconds));
+                                this.updateProgress(this.timerElapsedSeconds);
                                 
                                 // Check for capture points
                                 this.recipeCapturePoints.forEach(point => {
 
-                                    if (Math.abs(elapsedSeconds - point) < this.recipeCaptureThreshold && !this
+                                    if (Math.abs(this.timerElapsedSeconds - point) < this.recipeCaptureThreshold && !this
                                         .recipeCapturePointsDone.includes(point)) {
                                         console.log(
-                                            `Capturing image at point: ${point}, elapsed time: ${elapsedSeconds}`
+                                            `Image capture point: ${point}, elapsed time: ${this.timerElapsedSeconds}`
                                             ); // Debug log
-                                        this.captureImage(this.getStepCurrentIndex(elapsedSeconds), point);
+                                        this.captureImage(this.getStepCurrentIndex(this.timerElapsedSeconds), point);
                                         this.recipeCapturePointsDone.push(point);
                                     }
                                 });
 
-                                this.timerProgressPosition = elapsedSeconds / this.recipeSelectedDuration;
+                                this.timerProgressPosition = this.timerElapsedSeconds / this.recipeSelectedDuration;
 
                             } else {
                                 this.timerRemainingTime = 0;
                                 this.overtimeIsActive = true;
-                                this.overtimeElapsed = Math.floor(elapsedSeconds - this.recipeSelectedDuration);
+                                this.overtimeElapsed = Math.floor(this.timerElapsedSeconds - this.recipeSelectedDuration);
                                 this.timerProgressPosition = 1;
 
                                 if (this.overtimeElapsed >= this.overtimeMaxDuration) {
@@ -638,13 +680,11 @@ class extends Component {
                     evaluateStop(sendData = false) {
                         if (this.batchStartTime === null) return;
 
-                        const endTime = new Date();
-                        const elapsedTime = (endTime - this.batchStartTime) / 1000;
-                        const difference = Math.abs(elapsedTime - this.recipeSelectedDuration);
+                        const difference = Math.abs(this.timerElapsedSeconds - this.recipeSelectedDuration);
 
                         if (difference <= this.evalTolerance) {
                             this.batchEval = 'on_time';
-                        } else if (elapsedTime < this.recipeSelectedDuration) {
+                        } else if (this.timerElapsedSeconds < this.recipeSelectedDuration) {
                             this.batchEval = 'too_soon';
                         } else {
                             this.batchEval = 'too_late';
@@ -662,15 +702,13 @@ class extends Component {
                                 user_2_emp_id: this.userq,
                                 eval: this.batchEval,
                                 start_at: this.formatDateTime(this.batchStartTime),
-                                end_at: this.formatDateTime(endTime),
+                                end_at: this.formatDateTime(new Date()),
                                 images: this.batchImages,
                                 amps: this.batchAmps
                             };
                             console.log(jsonData);
                             this.sendData(jsonData);
                         }
-
-
                     },
 
                     formatTime(seconds) {
@@ -718,7 +756,7 @@ class extends Component {
                     },
 
                     captureImage(stepIndex, capturePoint) {
-                        console.log(`Attempt to capture image at step ${stepIndex}, time ${capturePoint}`);
+                        console.log(`Image capture step index: ${stepIndex}, time: ${capturePoint}`);
                         fetch('http://127.0.0.1:92/get-photo')
                             .then(response => response.blob())
                             .then(imageBlob => {
@@ -730,11 +768,11 @@ class extends Component {
                                 });
                             })
                             .then(base64Image => {
-                                console.log(`Image captured successfully at time ${capturePoint}`);
+                                const elapsedSeconds = this.timerElapsedSeconds;
+                                console.log(`Image capture success at: ${elapsedSeconds}`);
                                 this.batchImages.push({
                                     step_index: stepIndex,
-                                    capture_point: capturePoint,
-                                    capture_time: new Date().toISOString(),
+                                    taken_at: elapsedSeconds,
                                     image: base64Image
                                 });
                             })
@@ -745,10 +783,6 @@ class extends Component {
 
                     getTotalPreviousStepsDuration(index) {
                         return this.stepList.slice(0, index).reduce((sum, step) => sum + Number(step.duration), 0);
-                    },
-
-                    get elapsedSeconds() {
-                        return this.timerIsRunning ? (Date.now() - this.batchStartTime) / 1000 : 0;
                     },
 
                     getStepCurrentIndex(elapsedSeconds) {

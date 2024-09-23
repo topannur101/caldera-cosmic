@@ -288,7 +288,7 @@ class DownloadController extends Controller
             __('Style'),
             __('Line'),
             __('Material'),
-            __('IDK'),
+            __('NIK'),
             __('Nama'),
         ];
 
