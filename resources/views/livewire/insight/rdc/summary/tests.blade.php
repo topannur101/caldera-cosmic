@@ -28,7 +28,7 @@ class extends Component {
 
     public $perPage = 20;
 
-    public $sort = 'updated';
+    // public $sort = 'updated';
 
     public function with(): array
     {

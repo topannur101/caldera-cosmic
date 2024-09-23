@@ -19,17 +19,14 @@ class extends Component {
     public $end_at;
 
     #[Url]
-    public $is_workdate = 0;
-
-    #[Url]
     public $fquery;
 
     #[Url]
     public $ftype = 'any';
 
-    public $dateViews = ['tests'];
-    public $rangeViews = ['tests'];
-    public $filterViews = ['tests'];
+    public $dateViews = ['tests', 'by-mcs'];
+    public $rangeViews = ['tests', 'by-mcs'];
+    public $filterViews = ['tests', 'by-mcs'];
 
     public $is_date;
     public $is_range;
@@ -246,7 +243,11 @@ class extends Component {
         </div>
         @switch($view)
             @case('tests')
-                <livewire:insight.rdc.summary.tests :$start_at :$end_at :$is_workdate :$fquery :$ftype />
+                <livewire:insight.rdc.summary.tests :$start_at :$end_at :$fquery :$ftype />
+            @break
+
+            @case('by-mcs')
+                <livewire:insight.rdc.summary.by-mcs />
             @break
 
             @default
