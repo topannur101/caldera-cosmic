@@ -115,6 +115,7 @@ class extends Component {
                 break;
         }
     }
+
 };
 
 ?>
@@ -247,7 +248,7 @@ class extends Component {
             @break
 
             @case('by-mcs')
-                <livewire:insight.rdc.summary.by-mcs />
+                <livewire:insight.rdc.summary.by-mcs :$start_at :$end_at />
             @break
 
             @default

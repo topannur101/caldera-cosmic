@@ -14,6 +14,19 @@ use App\InsRdc;
 new #[Layout('layouts.app')] 
 class extends Component {
 
+    #[Reactive]
+    public $start_at;
+
+    #[Reactive]
+    public $end_at;
+
+    public function updated($property, $value)
+    {
+        if (in_array($property, ['start_at', 'end_at'])) {
+            $this->js('notyfSuccess("' . __('Something gets updated...') . '")');        
+        }
+    }
+
     #[On('by-mcs-apply')]
     public function apply()
     {
@@ -43,6 +56,9 @@ class extends Component {
             <div class="flex gap-x-2 items-center">
                 <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>
+        </div>
+        <div>
+            {{ $start_at . ' || ' .  $end_at }}
         </div>
         <div wire:key="modals"> 
             <x-modal name="raw-stats-info">
