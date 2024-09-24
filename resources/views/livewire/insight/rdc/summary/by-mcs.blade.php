@@ -5,7 +5,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 
 use Carbon\Carbon;
-use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\InsRdcTest;
@@ -14,26 +13,20 @@ use App\InsRdc;
 new #[Layout('layouts.app')] 
 class extends Component {
 
-    #[Reactive]
     public $start_at;
-
-    #[Reactive]
     public $end_at;
 
-    public function updated($property, $value)
-    {
-        if (in_array($property, ['start_at', 'end_at'])) {
-            $this->js('notyfSuccess("' . __('Something gets updated...') . '")');        
-        }
-    }
+    public $tests;
 
-    #[On('by-mcs-apply')]
-    public function apply()
+    #[On('by-mcs-update')]
+    public function update($start_at, $end_at)
     {
+        $this->tests = InsRdcTest::whereBetween('queued_at', [$start_at, $end_at])->get();
+        // each model contains tc10 and tc90 which is numeric.
         $this->js(
                 "
                 let options = " .
-                    json_encode(InsRdc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 100)) .
+                    json_encode(InsRdc::getChartOptions($this->tests, 100)) .
                     ";
 
                 // Render chart
@@ -42,7 +35,7 @@ class extends Component {
                 let chart = new ApexCharts(chartContainer.querySelector('#chart'), options);
                 chart.render();
             ",
-            );
+        );
     }
 };
 
@@ -56,9 +49,6 @@ class extends Component {
             <div class="flex gap-x-2 items-center">
                 <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>
-        </div>
-        <div>
-            {{ $start_at . ' || ' .  $end_at }}
         </div>
         <div wire:key="modals"> 
             <x-modal name="raw-stats-info">
@@ -80,8 +70,32 @@ class extends Component {
                 <livewire:insight.rdc.summary.test-show />
             </x-modal>
         </div>
-        <div class="h-96 bg-white dark:brightness-75 text-neutral-900 rounded overflow-hidden my-8"
-            id="chart-container" wire:key="chart-container" wire:ignore>
-        </div>        
+        @if(!$tests)
+        {{ $visible = false }}  
+            <div wire:key="no-range" class="py-20">
+                <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                    <i class="fa fa-calendar relative"><i
+                            class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                </div>
+                <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tentukan rentang tanggal') }}
+                </div>
+            </div>
+        @elseif (!$tests->count())
+        {{ $visible = false }}  
+            <div wire:key="no-match" class="py-20">
+                <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                    <i class="fa fa-ghost"></i>
+                </div>
+                <div class="text-center text-neutral-500 dark:text-neutral-600">{{ __('Tidak ada yang cocok') }}
+                </div>
+            </div>
+        @else
+        <div class="hidden">{{ $visible = true }}</div>
+        @endif
+        <div @if(!$visible) class="hidden" @endif>
+            <div wire:key="tests-chart" class="h-96 bg-white dark:brightness-75 text-neutral-900 rounded overflow-hidden my-8"
+                id="chart-container" wire:key="chart-container" wire:ignore>
+            </div>  
+        </div> 
     </div>
 </div>

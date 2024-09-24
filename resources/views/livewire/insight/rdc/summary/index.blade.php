@@ -26,7 +26,7 @@ class extends Component {
 
     public $dateViews = ['tests', 'by-mcs'];
     public $rangeViews = ['tests', 'by-mcs'];
-    public $filterViews = ['tests', 'by-mcs'];
+    public $filterViews = ['tests'];
 
     public $is_date;
     public $is_range;
@@ -115,7 +115,6 @@ class extends Component {
                 break;
         }
     }
-
 };
 
 ?>
@@ -127,6 +126,7 @@ class extends Component {
 </x-slot>
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
+    @vite(['resources/js/apexcharts.js'])
     <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row min-w-0">
         <div>
             <div class="w-full sm:w-44 md:w-64 px-3 sm:px-0 mb-5">
@@ -230,6 +230,15 @@ class extends Component {
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
                     </div>              
                 </div>
+                @if ($view == 'by-mcs')
+                    <div wire:key="by-mcs-panel">
+                        <div class="m-3">
+                            <div class="py-4">
+                                <x-secondary-button type="button" x-on:click="$dispatch('by-mcs-update', { start_at: '{{ $start_at }}', end_at: '{{ $end_at }}' })">{{ __('Perbarui') }}</x-secondary-button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 @if ($view == 'tests')
                     <div wire:key="tests-panel">
                         <div class="m-3">
@@ -248,7 +257,7 @@ class extends Component {
             @break
 
             @case('by-mcs')
-                <livewire:insight.rdc.summary.by-mcs :$start_at :$end_at />
+                <livewire:insight.rdc.summary.by-mcs />
             @break
 
             @default
