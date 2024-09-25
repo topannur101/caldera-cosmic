@@ -121,24 +121,26 @@ new class extends Component {
                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
             @enderror
         </div>    
-        <div class="mt-6">
-            <label for="std-mcs" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
-            <x-text-input id="std-mcs" wire:model="mcs" type="number" step="1" :disabled="Gate::denies('manage', InsRdcStd::class)" />
-            @error('mcs')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
-        </div>
-        <div class="mt-6">
-            <label for="std-tag_id" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tag') }}</label>
-            <x-select class="w-full" id="std-tag_id" wire:model="tag_id" :disabled="Gate::denies('manage', InsRdcStd::class)">
-                <option value=""></option>
-                @foreach($tags as $tag)
-                    <option value="{{ $tag->id }}">{{ $tag->name }}</option>
-                @endforeach
-            </x-select>
-            @error('tag_id')
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
+        <div class="grid grid-cols-2 gap-x-3">
+            <div class="mt-6">
+                <label for="std-mcs" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
+                <x-text-input id="std-mcs" wire:model="mcs" type="number" step="1" :disabled="Gate::denies('manage', InsRdcStd::class)" />
+                @error('mcs')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
+            <div class="mt-6">
+                <label for="std-tag_id" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tag') }}</label>
+                <x-select class="w-full" id="std-tag_id" wire:model="tag_id" :disabled="Gate::denies('manage', InsRdcStd::class)">
+                    <option value=""></option>
+                    @foreach($tags as $tag)
+                        <option value="{{ $tag->id }}">{{ $tag->name }}</option>
+                    @endforeach
+                </x-select>
+                @error('tag_id')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
         </div>
         <div class="grid grid-cols-2 gap-x-3">
             <div class="mt-6">
