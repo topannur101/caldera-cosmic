@@ -68,6 +68,7 @@ Route::prefix('insight')->group(function () {
         Volt::route('/rdc/manage/authorizations',   'insight.rdc.manage.auths')     ->name('manage.auths');
         Volt::route('/rdc/manage/machines',         'insight.rdc.manage.machines')  ->name('manage.machines');
         Volt::route('/rdc/manage/tags',             'insight.rdc.manage.tags')      ->name('manage.tags');
+        Volt::route('/rdc/manage/stds',             'insight.rdc.manage.stds')      ->name('manage.stds');
         Volt::route('/rdc/manage',                  'insight.rdc.manage.index')     ->name('manage.index');
         Volt::route('/rdc/summary',                 'insight.rdc.summary.index')    ->name('summary.index');
         Volt::route('/rdc',                         'insight.rdc.index')            ->name('index');

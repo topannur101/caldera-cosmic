@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Gate;
 
 new class extends Component {
 
-    public int $number;
     public string $name = '';
 
     public function rules()

@@ -21,7 +21,10 @@ class extends Component {
     #[On('by-mcs-update')]
     public function update($start_at, $end_at)
     {
-        $this->tests = InsRdcTest::whereBetween('queued_at', [$start_at, $end_at])->get();
+        $start = Carbon::parse($this->start_at);
+        $end = Carbon::parse($this->end_at)->endOfDay();
+
+        $this->tests = InsRdcTest::whereBetween('queued_at', [$start, $end])->get();
         // each model contains tc10 and tc90 which is numeric.
         $this->js(
                 "
