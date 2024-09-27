@@ -35,11 +35,6 @@ new class extends Component {
                     </span>
                 </div>
                 <div id="cal-nav-main-links" class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex text-xs uppercase">
-                    @if((Auth::user()->id ?? false) == 1)
-                        <x-nav-link :href="route('sh')" :active="request()->routeIs('sh*')" wire:navigate>
-                            {{ __('Admin') }}
-                        </x-nav-link>
-                    @endif
                     {{-- <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link> --}}
@@ -59,6 +54,11 @@ new class extends Component {
                     {{-- <x-nav-link :href="route('help')" :active="request()->is('help*')" wire:navigate>
                         {{ __('Bantuan') }}
                     </x-nav-link> --}}
+                    @if((Auth::user()->id ?? false) == 1)
+                        <x-nav-link :href="route('sh')" :active="request()->routeIs('sh*')" wire:navigate>
+                            {{ __('Admin') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -145,11 +145,6 @@ new class extends Component {
     <!-- Responsive Navigation Menu -->
     <div :class="{ 'block': open, 'hidden': !open }" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            @if((Auth::user()->id ?? false) == 1)
-            <x-responsive-nav-link :href="route('sh')" :active="request()->routeIs('sh*')" wire:navigate>
-                {{ __('Administrasi') }}
-            </x-responsive-nav-link>
-            @endif
             {{-- <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </x-responsive-nav-link> --}}
@@ -169,6 +164,11 @@ new class extends Component {
             {{-- <x-responsive-nav-link :href="route('help')" :active="request()->routeIs('help*')" wire:navigate>
                 {{ __('Bantuan') }}
             </x-responsive-nav-link> --}}
+            @if((Auth::user()->id ?? false) == 1)
+            <x-responsive-nav-link :href="route('sh')" :active="request()->routeIs('sh*')" wire:navigate>
+                {{ __('Admin') }}
+            </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

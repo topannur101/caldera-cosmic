@@ -58,7 +58,7 @@ Route::prefix('insight')->group(function () {
         Volt::route('/omv/manage/authorizations',   'insight.omv.manage.auths')     ->name('manage.auths');
         Volt::route('/omv/manage/recipes',          'insight.omv.manage.recipes')   ->name('manage.recipes');
         Volt::route('/omv/manage',                  'insight.omv.manage.index')     ->name('manage.index');
-        Volt::route('/omv/summary',                 'insight.omv.summary')          ->name('summary');
+        Volt::route('/omv/summary',                 'insight.omv.summary.index')    ->name('summary.index');
         Volt::route('/omv',                         'insight.omv.index')            ->name('index');
 
     });

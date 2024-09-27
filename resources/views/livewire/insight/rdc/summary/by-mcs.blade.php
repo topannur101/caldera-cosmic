@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Reactive;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +14,10 @@ use App\InsRdc;
 new #[Layout('layouts.app')] 
 class extends Component {
 
+    #[Reactive]
     public $start_at;
+    
+    #[Reactive]
     public $end_at;
 
     public $tests;
@@ -24,7 +28,8 @@ class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $this->tests = InsRdcTest::whereBetween('queued_at', [$start, $end])->get();
+        $this->tests = InsRdcTest::whereBetween('updated_at', [$start, $end])->get();
+
         // each model contains tc10 and tc90 which is numeric.
         $this->js(
                 "

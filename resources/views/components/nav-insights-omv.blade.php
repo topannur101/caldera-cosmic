@@ -9,7 +9,7 @@
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.omv.index') }}" :active="request()->routeIs('insight.omv.index')" wire:navigate>
                 <i class="fa fa-pen text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Buat') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.omv.summary') }}" :active="request()->routeIs('insight.omv.summary')" wire:navigate>
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.omv.summary.index') }}" :active="request()->routeIs('insight.omv.summary.index')" wire:navigate>
                 <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.omv.manage.index') }}" :active="request()->routeIs('insight.omv.manage.index')" wire:navigate>

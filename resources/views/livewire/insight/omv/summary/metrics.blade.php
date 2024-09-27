@@ -10,7 +10,8 @@ use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.app')] 
+class extends Component {
     use WithPagination;
 
     #[Reactive]
@@ -109,21 +110,29 @@ new #[Layout('layouts.app')] class extends Component {
                 <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>
         </div>
-        <x-modal name="raw-stats-info">
-            <div class="p-6">
-                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                    {{ __('Statistik data mentah') }}
-                </h2>
-                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                    {{ __('Belum ada informasi statistik yang tersedia.') }}
-                </p>
-                <div class="mt-6 flex justify-end">
-                    <x-primary-button type="button" x-on:click="$dispatch('close')">
-                        {{ __('Paham') }}
-                    </x-primary-button>
+        <div wire:key="modals"> 
+            <x-modal name="raw-stats-info">
+                <div class="p-6">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Statistik data mentah') }}
+                    </h2>
+                    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                        {{ __('Belum ada informasi statistik yang tersedia.') }}
+                    </p>
+                    <div class="mt-6 flex justify-end">
+                        <x-primary-button type="button" x-on:click="$dispatch('close')">
+                            {{ __('Paham') }}
+                        </x-primary-button>
+                    </div>
                 </div>
-            </div>
-        </x-modal>
+            </x-modal> 
+            <x-modal name="metric-show" maxWidth="lg">
+                <livewire:insight.omv.summary.metric-show />
+            </x-modal>
+            {{-- <x-modal name="captures">
+                <livewire:insight.omv.summary.metric-captures />
+            </x-modal> --}}
+        </div>
         @if (!$metrics->count())
             @if (!$start_at || !$end_at)
                 <div wire:key="no-range" class="py-20">
@@ -162,7 +171,8 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Akhir') }}</th>
                         </tr>
                         @foreach ($metrics as $metric)
-                            <tr>
+                        <tr wire:key="metric-tr-{{ $metric->id . $loop->index }}" tabindex="0"
+                            x-on:click="$dispatch('open-modal', 'metric-show'); $dispatch('metric-show', { id: '{{ $metric->id }}'})">
                                 <td>{{ $metric->id }}</td>
                                 <td>{{ $metric->ins_rubber_batch->code ?? '' }}</td>
                                 <td>{{ strtoupper($metric->ins_omv_recipe->type) }}</td>
@@ -172,7 +182,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td title="{{ __('Operator 2') . ': ' . ($metric->user_2->emp_id ?? '') . ' - ' . ($metric->user_2->name ?? '') }}">{{ ($metric->user_1->emp_id ?? '') . ' - ' . ($metric->user_1->name ?? '') }}</td>
                                 <td>{{ $metric->evalFriendly() }}</td>
                                 <td>{{ $metric->duration() }}</td>
-                                <td>@if( $metric->capturesCount() ) <x-text-button type="button" x-on:click="$dispatch('open-modal', 'captures'); $dispatch('captures-load', { metric_id: '{{ $metric->id }}'} )">{{ $metric->capturesCount() }}</x-text-button> @else 0 @endif</td>
+                                <td>{{ $metric->capturesCount() }}</td>
                                 <td>{{ $metric->start_at }}</td>
                                 <td>{{ $metric->end_at }}</td>
                             </tr>
@@ -202,10 +212,5 @@ new #[Layout('layouts.app')] class extends Component {
                 @endif
             </div>
         @endif
-    </div>
-    <div wire:key="captures">
-        <x-modal name="captures">
-            <livewire:insight.omv.captures />
-        </x-modal>
     </div>
 </div>
