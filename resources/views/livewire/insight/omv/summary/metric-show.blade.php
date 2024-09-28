@@ -10,31 +10,45 @@ new #[Layout('layouts.app')]
 class extends Component {
     public int $id;
 
-    public array $amps;
-
     #[On('metric-show')]
     public function showMetric(int $id)
     {
         $metric = InsOmvMetric::find($id);
         
         if ($metric) {
-            $data = json_decode($metric->data, true) ?: [ 'amps' => [] ];
+
             $this->id = $metric->id;
-            $this->amps = $data['amps'];
+            $data = json_decode($metric->data, true) ?: [ 'amps' => [] ];
+            
+            if ($data['amps']) {
+                // Koleksi durasi di setiap step resep dan di inkrementalkan
+                $steps = json_decode($metric->ins_omv_recipe->steps, true) ?: [];
+                $step_durations = [];
+                $inc_durations = 0;
 
-            $this->js(
-                "
-                let modalOptions = " .
-                    json_encode(InsOmv::getChartOptions($this->amps, $metric->start_at, 100)) .
-                    ";
+                foreach ($steps as $step) {
+                    $inc_durations += $step['duration'];
+                    $step_durations[] = $inc_durations;
+                }
 
-                // Render modal chart
-                const modalChartContainer = \$wire.\$el.querySelector('#modal-chart-container');
-                modalChartContainer.innerHTML = '<div id=\"modal-chart\"></div>';
-                let modalChart = new ApexCharts(modalChartContainer.querySelector('#modal-chart'), modalOptions);
-                modalChart.render();
-            ",
-            );
+                // koleksi titik foto
+                $capture_points = json_decode($metric->ins_omv_recipe->capture_points, true) ?: [];
+
+                $this->js(
+                    "
+                    let modalOptions = " .
+                        json_encode(InsOmv::getChartOptions($data['amps'], $metric->start_at, $step_durations, $capture_points, 100)) .
+                        ";
+
+                    // Render modal chart
+                    const modalChartContainer = \$wire.\$el.querySelector('#modal-chart-container');
+                    modalChartContainer.innerHTML = '<div id=\"modal-chart\"></div>';
+                    let modalChart = new ApexCharts(modalChartContainer.querySelector('#modal-chart'), modalOptions);
+                    modalChart.render();
+                ",
+                );
+            }
+
         } else {
             $this->handleNotFound();
         }
