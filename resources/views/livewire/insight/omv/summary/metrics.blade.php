@@ -126,7 +126,7 @@ class extends Component {
                     </div>
                 </div>
             </x-modal> 
-            <x-modal name="metric-show" maxWidth="lg">
+            <x-modal name="metric-show" maxWidth="2xl">
                 <livewire:insight.omv.summary.metric-show />
             </x-modal>
             {{-- <x-modal name="captures">

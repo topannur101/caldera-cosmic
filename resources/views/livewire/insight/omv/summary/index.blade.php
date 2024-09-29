@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Response;
 
 new #[Layout('layouts.app')] class extends Component {
     #[Url]
-    public $view = 'raw';
+    public $view = 'metrics';
 
     #[Url]
     public $start_at;
@@ -27,9 +27,9 @@ new #[Layout('layouts.app')] class extends Component {
     public $sline;
     public $olines = [];
 
-    public $dateViews = ['raw', 'daily'];
-    public $rangeViews = ['raw'];
-    public $filterViews = ['raw'];
+    public $dateViews = ['metrics', 'daily'];
+    public $rangeViews = ['metrics'];
+    public $filterViews = ['metrics'];
 
     public $dataIntegrity = 0;
     public $dataAccuracy = 0;
@@ -98,7 +98,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function download()
     {
         switch ($this->view) {
-            case 'raw':
+            case 'metrics':
                 $this->redirectRoute('download.ins-rtc-metrics', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
                 $this->js('$dispatch("close")');
                 $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
@@ -131,7 +131,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <i class="fa fa-fw fa-calendar-day text-center m-auto"></i>
                         </div>
                     </x-radio-button>
-                    <x-radio-button wire:model.live="view" grow value="raw" name="view" id="view-raw">
+                    <x-radio-button wire:model.live="view" grow value="metrics" name="view" id="view-metrics">
                         <div class="text-center my-auto">
                             <i class="fa fa-fw fa-table text-center m-auto"></i>
                         </div>
@@ -218,8 +218,8 @@ new #[Layout('layouts.app')] class extends Component {
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
                     </div>
                 </div>
-                @if ($view == 'raw' || $view == 'clumps')
-                    <div wire:key="raw-panel">
+                @if ($view == 'metrics' || $view == 'clumps')
+                    <div wire:key="metrics-panel">
                         <div class="m-3">
                             @can('download', InsRtcMetric::class)
                                 <div class="py-4">
@@ -233,7 +233,7 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         @switch($view)
-            @case('raw')
+            @case('metrics')
                 <livewire:insight.omv.summary.metrics :$start_at :$end_at :$fquery :$ftype />
             @break
 
