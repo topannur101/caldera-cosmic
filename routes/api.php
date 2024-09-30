@@ -42,7 +42,7 @@ Route::post('/omv-metric', function (Request $request) {
         'line'              => 'required|integer|min:1|max:99',
         'team'              => 'required|in:A,B,C',
         'user_1_emp_id'     => 'required|exists:users,emp_id',
-        'user_2_emp_id'     => 'nullable|exists:users,emp_id',
+        'user_2_emp_id'     => 'nullable|string',
         'eval'              => 'required|in:too_soon,on_time,too_late',
         'start_at'          => 'required|date_format:Y-m-d H:i:s',
         'end_at'            => 'required|date_format:Y-m-d H:i:s',
