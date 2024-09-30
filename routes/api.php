@@ -83,6 +83,12 @@ Route::post('/omv-metric', function (Request $request) {
         $errors[] = "The emp_id '{$validated['user_1_emp_id']}' on user_1_emp_id does not exist.";
     }
 
+    $isExists = InsOmvMetric::where('line', $validated['line'])->where('start_at', $validated['start_at'])->exists();
+
+    if($isExists) {
+        $errors[] = "A metric for line '{$validated['line']}' already exists at '{$validated['start_at']}'.";
+    }    
+
      if (!empty($errors)) {
         return response()->json([
             'status' => 'invalid',

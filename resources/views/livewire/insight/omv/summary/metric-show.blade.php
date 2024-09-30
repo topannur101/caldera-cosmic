@@ -9,6 +9,7 @@ use App\InsOmv;
 new #[Layout('layouts.app')] 
 class extends Component {
     public int $id;
+    public bool $showChart;
 
     #[On('metric-show')]
     public function showMetric(int $id)
@@ -47,6 +48,9 @@ class extends Component {
                     modalChart.render();
                 ",
                 );
+                $this->showChart = true;
+            } else {
+                $this->showChart = false;
             }
 
         } else {
@@ -76,9 +80,20 @@ class extends Component {
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
+        @if($showChart)
         <div class="h-80 bg-white dark:brightness-75 text-neutral-900 rounded overflow-hidden my-8"
             id="modal-chart-container" wire:key="modal-chart-container" wire:ignore>
         </div>
+        @else
+        <div wire:key="no-range" class="py-20">
+            <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                <i class="fa fa-line-chart relative"><i
+                        class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+            </div>
+            <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada data arus listrik') }}
+            </div>
+        </div>
+        @endif
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>

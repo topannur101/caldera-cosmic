@@ -41,7 +41,7 @@ class extends Component {
 
         $metrics = InsOmvMetric::join('ins_omv_recipes', 'ins_omv_metrics.ins_omv_recipe_id', '=', 'ins_omv_recipes.id')
         ->join('users as user1', 'ins_omv_metrics.user_1_id', '=', 'user1.id')
-        ->join('users as user2', 'ins_omv_metrics.user_2_id', '=', 'user2.id')
+        ->leftJoin('users as user2', 'ins_omv_metrics.user_2_id', '=', 'user2.id')
         ->select(
             'ins_omv_metrics.*',
             'ins_omv_metrics.start_at as start_at',

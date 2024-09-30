@@ -76,6 +76,8 @@ class InsOmv
                 ],
             ],
             'yaxis' => [
+                'min' => 0,
+                'max' => 300,
                 'title' => [
                     'text' => __('Arus listrik'),
                 ]
