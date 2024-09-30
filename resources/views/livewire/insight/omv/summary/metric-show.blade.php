@@ -80,12 +80,12 @@ class extends Component {
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
-        @if($showChart)
-        <div class="h-80 bg-white dark:brightness-75 text-neutral-900 rounded overflow-hidden my-8"
-            id="modal-chart-container" wire:key="modal-chart-container" wire:ignore>
+        <div wire:key="amps-exists" class="{{ $showChart ? '' : 'hidden' }} ">
+            <div wire:key="modal-chart-container" wire:ignore class="h-80 bg-white dark:brightness-75 text-neutral-900 rounded overflow-hidden my-8"
+                id="modal-chart-container">
+            </div>
         </div>
-        @else
-        <div wire:key="no-range" class="py-20">
+        <div wire:key="amps-none" class="{{ $showChart ? 'hidden' : '' }} py-20">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
                 <i class="fa fa-line-chart relative"><i
                         class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
@@ -93,7 +93,6 @@ class extends Component {
             <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada data arus listrik') }}
             </div>
         </div>
-        @endif
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
