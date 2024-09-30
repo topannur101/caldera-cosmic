@@ -47,7 +47,7 @@ class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Model') . ' — ' . __('PINTU') }}</x-slot>
+<x-slot name="title">{{ __('Model') . ' — ' . __('Admin') }}</x-slot>
 <x-slot name="header">
     <x-nav-sh-sub />
 </x-slot>
