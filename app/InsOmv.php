@@ -18,19 +18,19 @@ class InsOmv
             ];
         }, $amps);
 
-            // Create x-axis annotations based on step_durations
-        $x_annos = array_map(function($duration, $index) use ($start_at) {
+        $x_annos = array_map(function($duration, $index) use ($start_at, $step_durations) {
             $timestamp = $start_at->copy()->addSeconds($duration)->getTimestamp() * 1000; // ApexCharts expects time in milliseconds
+            $isLast = $index === array_key_last($step_durations); // Check if it's the last iteration
             return [
                 'x' => $timestamp,
-                'borderColor' => '#008080',
+                'borderColor' => $isLast ? '#FF0000' : '#008080', // Red border for the last iteration
                 'label' => [
                     'borderWidth' => 0,
                     'style' => [
-                        'background' => '#008080',
+                        'background' => $isLast ? '#FF0000' : '#008080', // Red background for the last iteration
                         'color' => '#fff',
                     ],
-                    'text' => __('Langkah') . ' ' . ($index + 2),
+                    'text' => $isLast ? __('Selesai') : __('Langkah') . ' ' . ($index + 2),
                 ],
             ];
         }, $step_durations, array_keys($step_durations));
@@ -87,6 +87,11 @@ class InsOmv
             'annotations' => [
                 'xaxis' => $x_annos,
             ],
+            'tooltip' => [
+                'x' => [
+                    'format' => 'HH:mm:ss'
+                ]
+            ]
         ];
     }  
     
