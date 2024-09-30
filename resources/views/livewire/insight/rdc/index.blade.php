@@ -61,11 +61,8 @@ class extends Component {
                 rdc_tests_count: "' . $batch->ins_rdc_tests->count() . '"
             })');
             $this->reset(['code']);
-
         }
-
     }
-
 };
 
 ?>
@@ -89,13 +86,13 @@ class extends Component {
     </div>
     <div wire:key="batch-info">
         <x-modal name="batch-info">
-            <livewire:insight.rdc.index-batch-info  />
+            <livewire:insight.rdc.index-batch-info />
         </x-modal>
     </div>
     @can('manage', InsRdcTest::class)
     <div wire:key="batch-test-create">
         <x-modal name="batch-test-create">
-            <livewire:insight.rdc.index-batch-test-create  />
+            <livewire:insight.rdc.index-batch-test-create />
         </x-modal>
     </div>
     @endcan

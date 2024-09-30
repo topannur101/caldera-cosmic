@@ -177,7 +177,7 @@ class extends Component {
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
                     <table class="table table-sm table-truncate text-sm text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
-                            <th>{{ __('Waktu antri') }}</th>
+                            <th>{{ __('Diperbarui') }}</th>
                             <th>{{ __('Kode') }}</th>
                             <th>{{ __('Alt') }}</th>
                             <th>{{ __('Model') }}</th>
@@ -187,12 +187,12 @@ class extends Component {
                             <th>{{ __('M') }}</th>
                             <th>{{ __('Tag') }}</th>
                             <th>{{ __('Nama') }}</th>
-                            <th>{{ __('Diperbarui') }}</th>
+                            <th>{{ __('Waktu antri') }}</th>
                         </tr>
                         @foreach ($tests as $test)
                         <tr wire:key="test-tr-{{ $test->id . $loop->index }}" tabindex="0"
                             x-on:click="$dispatch('open-modal', 'test-show'); $dispatch('test-show', { id: '{{ $test->id }}'})">
-                            <td>{{ $test->test_queued_at }}</td>
+                            <td>{{ $test->test_updated_at }}</td>
                             <td>{{ $test->batch_code }}</td>
                             <td>{{ $test->batch_code_alt }}</td>
                             <td>{{ $test->batch_model ? $test->batch_model : '-' }}</td>
@@ -206,7 +206,7 @@ class extends Component {
                             <td>{{ $test->machine_number }}</td>
                             <td>{{ $test->tag }}</td>
                             <td>{{ $test->user_name }}</td>
-                            <td>{{ $test->test_updated_at }}</td>
+                            <td>{{ $test->test_queued_at }}</td>
                         </tr>
                     @endforeach
                     </table>
