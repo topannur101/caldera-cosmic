@@ -30,7 +30,7 @@ class InsOmv
                         'background' => '#008080',
                         'color' => '#fff',
                     ],
-                    'text' => __('Langkah') . ' ' . ($index + 1),
+                    'text' => __('Langkah') . ' ' . ($index + 2),
                 ],
             ];
         }, $step_durations, array_keys($step_durations));

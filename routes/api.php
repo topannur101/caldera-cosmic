@@ -100,6 +100,26 @@ Route::post('/omv-metric', function (Request $request) {
         }
     }
 
+    $amps = $validated['amps']; 
+    $filteredAmps = [];
+
+    // limit the array if it's too big then just return empty filteredamps altogether
+    if (count($amps) < 3000) {
+        $maxTakenAt = null;
+        // Traverse the array from the last element to the first
+        for ($i = count($amps) - 1; $i >= 0; $i--) {
+            $current = $amps[$i];
+            if ($maxTakenAt === null || $current['taken_at'] <= $maxTakenAt) {
+                $filteredAmps[] = $current;
+                $maxTakenAt = $current['taken_at'];
+            } else {
+                // We found an increase in `taken_at`, discard everything before this point
+                break;
+            }
+        }
+    }
+    $filteredAmps = array_reverse($filteredAmps);
+
     $omvMetric = new InsOmvMetric();
     $omvMetric->ins_omv_recipe_id = $validated['recipe_id'];
     $omvMetric->line = $validated['line'];
@@ -109,7 +129,7 @@ Route::post('/omv-metric', function (Request $request) {
     $omvMetric->eval = strtolower($validated['eval']); // converting eval to lowercase
     $omvMetric->start_at = $validated['start_at'];
     $omvMetric->end_at = $validated['end_at'];
-    $omvMetric->data = json_encode(['amps' => $validated['amps']]);
+    $omvMetric->data = json_encode(['amps' => $filteredAmps]);
     $omvMetric->ins_rubber_batch_id = ($batch->id ?? false) ?: null;
     $omvMetric->save();
     
