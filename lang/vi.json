@@ -647,6 +647,12 @@
 "untuk mengelola model.": "để quản lý các mẫu.",
 "Mengelola tag": "Quản lý thẻ",
 "Terjadi galat ketika mencoba mencetak. Periksa console": "Đã xảy ra lỗi khi cố gắng in. Kiểm tra bảng điều khiển.",
-"Kombinasi mesin, mcs, dan tag tersebut sudah ada.": "Kết hợp máy, mcs và thẻ này đã tồn tại."
-
+"Kombinasi mesin, mcs, dan tag tersebut sudah ada.": "Kết hợp máy, mcs và thẻ này đã tồn tại.",
+"Harap lengkapi Tim dan Mitra kerja sebelum timer berhenti agar data sah dan dapat tersimpan.": "Vui lòng hoàn thành thông tin Đội và Đối tác trước khi bộ đếm thời gian dừng lại để dữ liệu hợp lệ và có thể được lưu.",
+"Tidak ada data arus listrik": "Không có dữ liệu dòng điện.",
+"Kelalaian dalam melengkapi informasi tersebut dapat menyebabkan datamu diabaikan oleh sistem.": "Việc không hoàn thành thông tin này có thể khiến dữ liệu của bạn bị hệ thống bỏ qua.",
+"Belum ada resep yang dipilih": "Chưa có công thức nào được chọn",
+"Tim atau Mitra kerja masih kosong": "Thông tin Đội hoặc Đối tác vẫn trống",
+"Tak ada riwayat terakhir": "Không có lịch sử gần đây",
+"Tanpa kode": "Không có mã"
 }

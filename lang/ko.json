@@ -647,6 +647,12 @@
 "untuk mengelola model.": "모델을 관리하기 위해.",
 "Mengelola tag": "태그 관리",
 "Terjadi galat ketika mencoba mencetak. Periksa console": "인쇄를 시도하는 동안 오류가 발생했습니다. 콘솔을 확인하세요.",
-"Kombinasi mesin, mcs, dan tag tersebut sudah ada.": "해당 기계, mcs 및 태그 조합이 이미 존재합니다."
-
+"Kombinasi mesin, mcs, dan tag tersebut sudah ada.": "해당 기계, mcs 및 태그 조합이 이미 존재합니다.",
+"Harap lengkapi Tim dan Mitra kerja sebelum timer berhenti agar data sah dan dapat tersimpan.": "타이머가 멈추기 전에 팀과 파트너 정보를 완성해 주십시오. 그래야 데이터가 유효하며 저장될 수 있습니다.",
+"Tidak ada data arus listrik": "전류 데이터가 없습니다",
+"Kelalaian dalam melengkapi informasi tersebut dapat menyebabkan datamu diabaikan oleh sistem.": "해당 정보를 완료하지 않으면 데이터가 시스템에 의해 무시될 수 있습니다.",
+"Belum ada resep yang dipilih": "아직 선택된 레시피가 없습니다",
+"Tim atau Mitra kerja masih kosong": "팀 또는 파트너 정보가 비어 있습니다",
+"Tak ada riwayat terakhir": "최근 기록이 없습니다",
+"Tanpa kode": "코드가 없습니다"
 }

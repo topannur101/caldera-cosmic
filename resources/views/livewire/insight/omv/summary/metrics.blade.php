@@ -180,7 +180,7 @@ class extends Component {
                                 <td>{{ $metric->line }}</td>
                                 <td>{{ $metric->team }}</td>
                                 <td title="{{ __('Operator 2') . ': ' . ($metric->user_2->emp_id ?? '') . ' - ' . ($metric->user_2->name ?? '') }}">{{ ($metric->user_1->emp_id ?? '') . ' - ' . ($metric->user_1->name ?? '') }}</td>
-                                <td>{{ $metric->evalFriendly() }}</td>
+                                <td>{{ $metric->evalHuman() }}</td>
                                 <td>{{ $metric->duration() }}</td>
                                 <td>{{ $metric->capturesCount() }}</td>
                                 <td>{{ $metric->start_at }}</td>

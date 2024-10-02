@@ -45,291 +45,308 @@ class extends Component {
             </div>
         </div>
     @else
-        <div x-data="{
-            ...app(),
-            userq: @entangle('userq').live
-        }" x-init="loadRecipes();
-        fetchLine()">
-            <div :class="!timerIsRunning && recipeSelected ? 'cal-glowing z-10' : (timerIsRunning ? 'cal-glow z-10' : '')"
-                :style="'--cal-glow-pos: -' + (timerProgressPosition * 100) + '%'">
-                <div class="bg-white dark:bg-neutral-800 bg-opacity-80 dark:bg-opacity-80 shadow rounded-lg flex w-full items-stretch">
-                    <div class="flex justify-between grow mx-6 my-4">
-                        <div class="flex flex-col justify-center">
-                            <div class="flex items-center gap-x-3">
-                                <div x-show="recipeSelected" x-cloak>
-                                    <x-pill class="uppercase"><span class="uppercase" x-text="batchType"></span></x-pill>
-                                </div>
-                                <div class="text-2xl" x-text="recipeSelected ? recipeSelected.name : '{{ __('Menunggu...') }}'"></div>
-                            </div>
-                            <div class="flex gap-x-3 text-neutral-500">
-                                <div><span>{{ __('Kode') }}</span><span>{{ ': ' }}</span><span
-                                    x-text="batchCode ? batchCode.toUpperCase() : '{{ __('Tak ada') }}'"></span>
-                                </div>
-                                <div>|</div>
-                                <div x-cloak x-show="!batchLine" x-on:click="$dispatch('open-modal', 'omv-worker-unavailable');" class="text-red-500 cursor-pointer">
-                                    <span>{{ __('Line') }}</span><span>{{ ': ' }}</span>
-                                    <span>
-                                        <i class="fa fa-exclamation-circle"></i>
-                                    </span>
-                                </div>
-                                <div x-cloak x-show="batchLine">
-                                    <span>{{ __('Line') }}</span><span>{{ ': ' }}</span>
-                                    <span x-show="batchLine" x-text="batchLine"></span>
-                                </div>
-                                <div>|</div>
-                                <div @click="start()">
-                                    <span>{{ __('Evaluasi terakhir') }}</span><span>{{ ': ' }}</span><span
-                                        x-text="batchEval == 'on_time' ? '{{ __('Tepat waktu') }}' : ( batchEval == 'too_soon' ? '{{ __('Terlalu awal') }}' : ( batchEval == 'too_late' ? '{{ __('Terlambat') }}' : '{{ __('Tak ada') }}' ))"></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center">
-                            <div class="text-2xl font-mono" x-text="formatTime(timerRemainingTime)" x-show="timerIsRunning"
-                                :class="timerRemainingTime == 0 ? 'text-red-500' : ''"></div>
-                        </div>
-                    </div>
-                    <div class="flex">
-                        <div class="px-2 py-4"
-                            :class="!batchTeam && timerIsRunning ? 'bg-red-200 dark:bg-red-900 dark:text-white fa-fade' : ''">
-                            <label for="batchTeam"
-                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
-                            <x-select id="batchTeam" x-model="batchTeam">
-                                <option value=""></option>
-                                <option value="A">A</option>
-                                <option value="B">B</option>
-                                <option value="C">C</option>
-                            </x-select>
-                        </div>
-                        <div class="px-2 py-4 w-48"
-                            :class="!userq && timerIsRunning ? 'bg-red-200 dark:bg-red-900 dark:text-white fa-fade' : ''"
-                            wire:key="user-select" x-data="{ open: false }"
-                            x-on:user-selected="userq = $event.detail; open = false">
-                            <div x-on:click.away="open = false">
-                                <label for="omv-user"
-                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
-                                <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
-                                    x-ref="userq" x-on:focus="open = true" id="omv-user" type="text"
-                                    autocomplete="off" placeholder="{{ __('Pengguna') }}" />
-                                <div class="relative" x-show="open" x-cloak>
-                                    <div class="absolute top-1 left-0 w-full z-10">
-                                        <livewire:layout.user-select />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <x-primary-button class="m-4" type="button" size="lg" @click="openWizard()"
-                        x-show="!timerIsRunning && !recipeSelected"><i
-                            class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
-                    <x-primary-button class="m-4" type="button" size="lg" @click="resetRecipeSelection()"
-                        x-show="!timerIsRunning && recipeSelected"><i
-                            class="fa fa-undo mr-2"></i>{{ __('Ulangi') }}</x-primary-button>
-                    <x-primary-button class="m-4" type="button" size="lg" @click="stop(true, true)" x-cloak
-                        x-show="timerIsRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
-                </div>
+        <div class="flex flex-col gap-x-2 sm:flex-row">
+            <div class="p-1">
+                <livewire:insight.omv.index-batches />
             </div>
-
-            <x-modal name="omv-worker-unavailable" maxWidth="sm">
-                <div class="text-center pt-6">
-                    <i class="fa fa-exclamation-triangle text-4xl "></i>
-                    <h2 class="mt-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        {{ __('omv-worker tidak merespon') }}
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                        {{ __('Caldera perlu bersandingan dengan aplikasi omv-worker untuk berkomunikasi dengan sensor dan kamera.') }}
-                    </p>
-                    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                        {{ __('Kamu dapat mengabaikan pesan ini dan lanjut menggunakan aplikasi, namun data tidak akan terkirim ke server.') }}
-                    </p>
-                    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                        {{ __('Hubungi penanggung jawab/PIC Caldera untuk memperbaiki masalah ini.') }}
-                    </p>
-                    <div class="mt-6 flex justify-end">
-                        <x-primary-button type="button" x-on:click="$dispatch('close')">
-                            {{ __('Oke') }}
-                        </x-primary-button>
+            <div class="w-full overflow-hidden p-1">
+                <div class="flex flex-col h-full" x-data="{
+                    ...app(),
+                    userq: @entangle('userq').live
+                }" x-init="loadRecipes();
+                fetchLine()">
+                <div :class="!timerIsRunning && recipeSelected ? 'cal-glowing z-10' : (timerIsRunning ? 'cal-glow z-10' : '')"
+                    :style="'--cal-glow-pos: -' + (timerProgressPosition * 100) + '%'">
+                    <div class="bg-white dark:bg-neutral-800 bg-opacity-80 dark:bg-opacity-80 shadow rounded-lg flex w-full items-stretch">
+                        <div class="flex justify-between grow mx-6 my-4">
+                            <div class="flex flex-col justify-center">
+                                <div class="flex items-center gap-x-3">
+                                    <div x-show="recipeSelected" x-cloak>
+                                        <x-pill class="uppercase"><span class="uppercase" x-text="batchType"></span></x-pill>
+                                    </div>
+                                    <div class="text-2xl" x-text="recipeSelected ? recipeSelected.name : '{{ __('Menunggu...') }}'"></div>
+                                </div>
+                                <div class="flex gap-x-3 text-neutral-500">
+                                    <div @click="start()"><span>{{ __('Kode') }}</span><span>{{ ': ' }}</span><span
+                                        x-text="batchCode ? batchCode.toUpperCase() : '{{ __('Tak ada') }}'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="text-2xl font-mono" x-text="formatTime(timerRemainingTime)" x-show="timerIsRunning"
+                                    :class="timerRemainingTime == 0 ? 'text-red-500' : ''"></div>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="px-2 py-4"
+                                :class="!batchTeam && timerIsRunning ? 'bg-red-200 dark:bg-red-900 dark:text-white fa-fade' : ''">
+                                <label for="batchTeam"
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
+                                <x-select id="batchTeam" x-model="batchTeam">
+                                    <option value=""></option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                </x-select>
+                            </div>
+                            <div class="px-2 py-4 w-48"
+                                :class="!userq && timerIsRunning ? 'bg-red-200 dark:bg-red-900 dark:text-white fa-fade' : ''"
+                                wire:key="user-select" x-data="{ open: false }"
+                                x-on:user-selected="userq = $event.detail; open = false">
+                                <div x-on:click.away="open = false">
+                                    <label for="omv-user"
+                                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
+                                    <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
+                                        x-ref="userq" x-on:focus="open = true" id="omv-user" type="text"
+                                        autocomplete="off" placeholder="{{ __('Pengguna') }}" />
+                                    <div class="relative" x-show="open" x-cloak>
+                                        <div class="absolute top-1 left-0 w-full z-10">
+                                            <livewire:layout.user-select />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <x-primary-button class="m-4" type="button" size="lg" @click="openWizard()"
+                            x-show="!timerIsRunning && !recipeSelected"><i
+                                class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
+                        <x-primary-button class="m-4" type="button" size="lg" @click="resetRecipeSelection()"
+                            x-show="!timerIsRunning && recipeSelected"><i
+                                class="fa fa-undo mr-2"></i>{{ __('Ulangi') }}</x-primary-button>
+                        <x-primary-button class="m-4" type="button" size="lg" @click="stop(true, true)" x-cloak
+                            x-show="timerIsRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
                     </div>
                 </div>
-            </x-modal>
-
-            <x-modal name="recipes" focusable>
-                <div class="p-6">
-                    <!-- Step 1: Batch identity -->
-                    <div x-show="wizardCurrentStep === 1">
-                        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Identitas batch') }}
+    
+                <x-modal name="omv-worker-unavailable" maxWidth="sm">
+                    <div class="text-center pt-6">
+                        <i class="fa fa-exclamation-triangle text-4xl "></i>
+                        <h2 class="mt-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                            {{ __('omv-worker tidak merespon') }}
                         </h2>
-                        <div class="mt-6">
-                            <label for="batchCode"
-                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
-                            <x-text-input id="batchCode" x-model="batchCode" type="text" @keydown.enter="nextStep" />
+                    </div>
+                    <div class="p-6">
+                        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Caldera perlu bersandingan dengan aplikasi omv-worker untuk berkomunikasi dengan sensor dan kamera.') }}
+                        </p>
+                        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Kamu dapat mengabaikan pesan ini dan lanjut menggunakan aplikasi, namun data tidak akan terkirim ke server.') }}
+                        </p>
+                        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Hubungi penanggung jawab/PIC Caldera untuk memperbaiki masalah ini.') }}
+                        </p>
+                        <div class="mt-6 flex justify-end">
+                            <x-primary-button type="button" x-on:click="$dispatch('close')">
+                                {{ __('Oke') }}
+                            </x-primary-button>
                         </div>
                     </div>
-                    <!-- Step 2: Mixing Type -->
-                    <div x-show="wizardCurrentStep === 2">
-                        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Pilih tipe mixing') }}
-                        </h2>
-                        <fieldset class="grid gap-2 mt-6">
-                            <div>
-                                <input type="radio" name="batchType" id="batchTypeNew"
-                                    class="peer hidden [&:checked_+_label_svg]:block" value="new"
-                                    x-model="batchType" />
-                                <label for="batchTypeNew" @click="setTimeout(() => { nextStep() }, 200);"
-                                    class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
-                                    <div class="flex items-center justify-between">
-                                        <p>{{ __('Baru') }}</p>
-                                        <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd"
-                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" name="batchType" id="batchTypeRemixing"
-                                    class="peer hidden [&:checked_+_label_svg]:block" value="remixing"
-                                    x-model="batchType" />
-                                <label for="batchTypeRemixing" @click="setTimeout(() => { nextStep() }, 200);"
-                                    class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
-                                    <div class="flex items-center justify-between">
-                                        <p>{{ __('Remixing') }}</p>
-                                        <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd"
-                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" name="batchType" id="batchTypeScrap"
-                                    class="peer hidden [&:checked_+_label_svg]:block" value="scrap"
-                                    x-model="batchType" />
-                                <label for="batchTypeScrap" @click="setTimeout(() => { nextStep() }, 200);"
-                                    class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
-                                    <div class="flex items-center justify-between">
-                                        <p>{{ __('Scrap') }}</p>
-                                        <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd"
-                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </label>
-                            </div>
-                        </fieldset>
-                    </div>
+                </x-modal>
 
-                    <!-- Step 3: Recipe Selection -->
-                    <div x-show="wizardCurrentStep === 3">
-                        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Pilih resep') }}
+                <x-modal name="input-incomplete" maxWidth="sm">
+                    <div class="text-center pt-6">
+                        <i class="fa fa-exclamation-triangle text-4xl "></i>
+                        <h2 class="mt-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                            {{ __('Tim atau Mitra kerja masih kosong') }}
                         </h2>
-                        <fieldset class="grid gap-2 mt-6 max-h-96 overflow-y-scroll p-1">
-                            <template x-if="recipeFilteredList.length > 0">
-                                <template x-for="recipe in recipeFilteredList" :key="recipe.id">
-                                    <div>
-                                        <input type="radio" name="recipe" :id="'recipe-' + recipe.id"
-                                            class="peer hidden [&:checked_+_label_svg]:block" :value="recipe.id"
-                                            x-model="recipeSelectedId" />
-                                        <label :for="'recipe-' + recipe.id"
-                                            class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
-                                            <div class="flex items-center justify-between">
-                                                <p x-text="recipe.name"></p>
-                                                <svg class="hidden h-6 w-6 text-caldy-600"
-                                                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                                    fill="currentColor">
-                                                    <path fill-rule="evenodd"
-                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                            </div>
-                                        </label>
+                    </div>
+                    <div class="p-6">
+                        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Harap lengkapi Tim dan Mitra kerja sebelum timer berhenti agar data sah dan dapat tersimpan.') }}
+                        </p>
+                        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Kelalaian dalam melengkapi informasi tersebut dapat menyebabkan datamu diabaikan oleh sistem.') }}
+                        </p>
+                        <div class="mt-6 flex justify-end">
+                            <x-primary-button type="button" x-on:click="$dispatch('close')">
+                                {{ __('Paham') }}
+                            </x-primary-button>
+                        </div>
+                    </div>
+                </x-modal>
+    
+                <x-modal name="recipes" focusable>
+                    <div class="p-6">
+                        <!-- Step 1: Batch identity -->
+                        <div x-show="wizardCurrentStep === 1">
+                            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                                {{ __('Identitas batch') }}
+                            </h2>
+                            <div class="mt-6">
+                                <label for="batchCode"
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
+                                <x-text-input id="batchCode" x-model="batchCode" type="text" @keydown.enter="nextStep" />
+                            </div>
+                        </div>
+                        <!-- Step 2: Mixing Type -->
+                        <div x-show="wizardCurrentStep === 2">
+                            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                                {{ __('Pilih tipe mixing') }}
+                            </h2>
+                            <fieldset class="grid gap-2 mt-6">
+                                <div>
+                                    <input type="radio" name="batchType" id="batchTypeNew"
+                                        class="peer hidden [&:checked_+_label_svg]:block" value="new"
+                                        x-model="batchType" />
+                                    <label for="batchTypeNew" @click="setTimeout(() => { nextStep() }, 200);"
+                                        class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
+                                        <div class="flex items-center justify-between">
+                                            <p>{{ __('Baru') }}</p>
+                                            <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div>
+                                    <input type="radio" name="batchType" id="batchTypeRemixing"
+                                        class="peer hidden [&:checked_+_label_svg]:block" value="remixing"
+                                        x-model="batchType" />
+                                    <label for="batchTypeRemixing" @click="setTimeout(() => { nextStep() }, 200);"
+                                        class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
+                                        <div class="flex items-center justify-between">
+                                            <p>{{ __('Remixing') }}</p>
+                                            <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div>
+                                    <input type="radio" name="batchType" id="batchTypeScrap"
+                                        class="peer hidden [&:checked_+_label_svg]:block" value="scrap"
+                                        x-model="batchType" />
+                                    <label for="batchTypeScrap" @click="setTimeout(() => { nextStep() }, 200);"
+                                        class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
+                                        <div class="flex items-center justify-between">
+                                            <p>{{ __('Scrap') }}</p>
+                                            <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </label>
+                                </div>
+                            </fieldset>
+                        </div>
+    
+                        <!-- Step 3: Recipe Selection -->
+                        <div x-show="wizardCurrentStep === 3">
+                            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                                {{ __('Pilih resep') }}
+                            </h2>
+                            <fieldset class="grid gap-2 mt-6 max-h-96 overflow-y-scroll p-1">
+                                <template x-if="recipeFilteredList.length > 0">
+                                    <template x-for="recipe in recipeFilteredList" :key="recipe.id">
+                                        <div>
+                                            <input type="radio" name="recipe" :id="'recipe-' + recipe.id"
+                                                class="peer hidden [&:checked_+_label_svg]:block" :value="recipe.id"
+                                                x-model="recipeSelectedId" />
+                                            <label :for="'recipe-' + recipe.id"
+                                                class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
+                                                <div class="flex items-center justify-between">
+                                                    <p x-text="recipe.name"></p>
+                                                    <svg class="hidden h-6 w-6 text-caldy-600"
+                                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                                        fill="currentColor">
+                                                        <path fill-rule="evenodd"
+                                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                            clip-rule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </template>
+                                </template>
+                                <template x-if="recipeFilteredList.length === 0">
+                                    <div class="text-center text-neutral-500">
+                                        {{ __('Tidak ada resep untuk tipe ini') }}
                                     </div>
                                 </template>
-                            </template>
-                            <template x-if="recipeFilteredList.length === 0">
-                                <div class="text-center text-neutral-500">
-                                    {{ __('Tidak ada resep untuk tipe ini') }}
-                                </div>
-                            </template>
-                        </fieldset>
+                            </fieldset>
+                        </div>
+    
+                        <!-- Navigation buttons -->
+                        <div class="flex mt-8 justify-end gap-x-3">
+                            <x-secondary-button type="button" x-show="wizardCurrentStep > 1" @click="prevStep">
+                                {{ __('Mundur') }}
+                            </x-secondary-button>
+                            <x-secondary-button type="button" x-show="wizardCurrentStep < 3" @click="nextStep">
+                                {{ __('Maju') }}
+                            </x-secondary-button>
+                            <x-primary-button type="button" x-show="wizardCurrentStep === 3" @click="finishWizard">
+                                {{ __('Terapkan') }}
+                            </x-primary-button>
+                        </div>
                     </div>
-
-                    <!-- Navigation buttons -->
-                    <div class="flex mt-8 justify-end gap-x-3">
-                        <x-secondary-button type="button" x-show="wizardCurrentStep > 1" @click="prevStep">
-                            {{ __('Mundur') }}
-                        </x-secondary-button>
-                        <x-secondary-button type="button" x-show="wizardCurrentStep < 3" @click="nextStep">
-                            {{ __('Maju') }}
-                        </x-secondary-button>
-                        <x-primary-button type="button" x-show="wizardCurrentStep === 3" @click="finishWizard">
-                            {{ __('Terapkan') }}
-                        </x-primary-button>
+                </x-modal>
+    
+                <div x-show="!recipeSelected" class="grow mt-4">
+                    <div class="bg-white dark:bg-neutral-800 bg-opacity-80 dark:bg-opacity-80 shadow rounded-lg h-full flex items-center">
+                        <div class="grow py-20">
+                            <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                                <i class="fa fa-flask relative"><i
+                                        class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                            </div>
+                            <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Belum ada resep yang dipilih') }}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </x-modal>
-
-            <div x-show="!recipeSelected">
-                <div class="py-20">
-                    <div class="text-center text-neutral-500">
-                        <div class="text-2xl mb-2">{{ __('Hai,') . ' ' . Auth::user()->name . '!' }}</div>
-                        <div class="text-sm">{{ __('Jangan lupa pilih tim dan mitra kerjamu') }}</div>
-                    </div>
+    
+                <div x-show="recipeSelected" class="grid grid-cols-2 gap-3 mt-4">
+                    <template x-for="(step, index) in stepList" :key="index">
+                        <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4"
+                            :class="stepCurrentIndex == index && timerIsRunning ? 'cal-shimmer' : ''">
+                            <div class="flex gap-4  w-full mb-6">
+                                <div class="w-12 h-12 rounded-full flex items-center justify-center"
+                                    :class="(stepCurrentIndex > index && timerIsRunning) ? 'bg-green-500 text-neutral-800' : ((
+                                            stepCurrentIndex == index && timerIsRunning) ? 'bg-yellow-500 text-neutral-800' :
+                                        'bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800')">
+                                    <span class="text-2xl font-bold" x-text="index + 1"></span>
+                                </div>
+                                <div class="grow">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <div class="flex gap-x-3"
+                                            :class="stepCurrentIndex == index && timerIsRunning ? 'fa-fade' : ''">
+                                            <i x-show="stepCurrentIndex == index && timerIsRunning"
+                                                class="fa-solid fa-spinner fa-spin-pulse"></i>
+                                            <span class="text-xs uppercase"
+                                                x-text="(stepCurrentIndex > index && timerIsRunning) ? '{{ __('Selesai') }}' : ((stepCurrentIndex == index && timerIsRunning) ? '{{ __('Berjalan') }}' : '{{ __('Menunggu') }}')"></span>
+                                        </div>
+                                        <span class="text-xs font-mono"
+                                            x-text="formatTime(stepRemainingTimes[index])"></span>
+                                    </div>
+                                    <div class="relative w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                                        <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
+                                            :style="'width: ' + stepProgressPercentages[index] + '%'"></div>
+                                        <!-- Capture points -->
+                                        <template
+                                            x-for="point in recipeCapturePoints.filter(p => p >= getTotalPreviousStepsDuration(index) && p < getTotalPreviousStepsDuration(index + 1))"
+                                            :key="point">
+                                            <div class="absolute w-2 h-2 bg-caldy-500 rounded-full top-4 transform -translate-y-1/2"
+                                                :style="'left: ' + ((point - getTotalPreviousStepsDuration(index)) / step.duration *
+                                                    100) + '%'"
+                                                :class="timerElapsedSeconds >= point ? 'opacity-30' : ''"></div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="text-2xl" x-text="step.description"></span><span class="opacity-30"></span>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
-
-            <div x-show="recipeSelected" class="grid grid-cols-2 gap-3 mt-10">
-                <template x-for="(step, index) in stepList" :key="index">
-                    <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4"
-                        :class="stepCurrentIndex == index && timerIsRunning ? 'cal-shimmer' : ''">
-                        <div class="flex gap-4  w-full mb-6">
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center"
-                                :class="(stepCurrentIndex > index && timerIsRunning) ? 'bg-green-500 text-neutral-800' : ((
-                                        stepCurrentIndex == index && timerIsRunning) ? 'bg-yellow-500 text-neutral-800' :
-                                    'bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800')">
-                                <span class="text-2xl font-bold" x-text="index + 1"></span>
-                            </div>
-                            <div class="grow">
-                                <div class="flex justify-between items-center mb-2">
-                                    <div class="flex gap-x-3"
-                                        :class="stepCurrentIndex == index && timerIsRunning ? 'fa-fade' : ''">
-                                        <i x-show="stepCurrentIndex == index && timerIsRunning"
-                                            class="fa-solid fa-spinner fa-spin-pulse"></i>
-                                        <span class="text-xs uppercase"
-                                            x-text="(stepCurrentIndex > index && timerIsRunning) ? '{{ __('Selesai') }}' : ((stepCurrentIndex == index && timerIsRunning) ? '{{ __('Berjalan') }}' : '{{ __('Menunggu') }}')"></span>
-                                    </div>
-                                    <span class="text-xs font-mono"
-                                        x-text="formatTime(stepRemainingTimes[index])"></span>
-                                </div>
-                                <div class="relative w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
-                                    <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
-                                        :style="'width: ' + stepProgressPercentages[index] + '%'"></div>
-                                    <!-- Capture points -->
-                                    <template
-                                        x-for="point in recipeCapturePoints.filter(p => p >= getTotalPreviousStepsDuration(index) && p < getTotalPreviousStepsDuration(index + 1))"
-                                        :key="point">
-                                        <div class="absolute w-2 h-2 bg-caldy-500 rounded-full top-4 transform -translate-y-1/2"
-                                            :style="'left: ' + ((point - getTotalPreviousStepsDuration(index)) / step.duration *
-                                                100) + '%'"
-                                            :class="timerElapsedSeconds >= point ? 'opacity-30' : ''"></div>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <span class="text-2xl" x-text="step.description"></span><span class="opacity-30"></span>
-                        </div>
-                    </div>
-                </template>
             </div>
         </div>
         <script>
@@ -384,7 +401,7 @@ class extends Component {
                                     throw new Error('Failed to get line');
                                 }
                                 this.batchLine = await response.text();
-                                console.log('Line fetched:', this.batchLine);
+                                this.$wire.dispatch('line-fetched', {line: this.batchLine});
                             } catch (error) {
                                 console.error('Failed to fetch line:', error);
                             }
@@ -537,6 +554,10 @@ class extends Component {
                             this.recipeCapturePointsDone = []; // Reset processed capture points
                             this.batchImages = []; // Reset captured images
                             this.tick();
+
+                            if (!this.batchTeam || !this.userq) {
+                                this.$dispatch('open-modal', 'input-incomplete');
+                            }
 
                             if (this.pollingAId) {
                                 clearInterval(this.pollingAId);

@@ -73,7 +73,7 @@ class InsOmvMetric extends Model
         return sprintf("%02d:%02d", $minutes, $seconds);
     }
 
-    public function evalFriendly()
+    public function evalHuman()
     {
         $eval = '';
         switch ($this->eval) {

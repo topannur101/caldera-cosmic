@@ -37,7 +37,7 @@ new class extends Component {
     @elseif($hides->isEmpty())
         <div class="flex min-h-20">
             <div class="my-auto px-6 text-sm text-center w-full">
-                {{ __('Tak ada riwayat kulit terakhir') }}
+                {{ __('Tak ada riwayat terakhir') }}
             </div>
         </div>
     @else
