@@ -45,6 +45,7 @@ class extends Component {
             </div>
         </div>
     @else
+        @vite(['resources/js/apexcharts.js'])
         <div class="flex flex-col sm:flex-row">
             <div class="px-1 py-4">
                 <livewire:insight.omv.index-batches />
