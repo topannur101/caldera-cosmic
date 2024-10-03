@@ -61,13 +61,13 @@ class extends Component {
                         <div class="flex justify-between grow mx-6 my-4">
                             <div class="flex flex-col justify-center">
                                 <div class="flex items-center gap-x-3">
-                                    <div x-show="recipeSelected" x-cloak>
-                                        <x-pill class="uppercase"><span class="uppercase" x-text="batchType"></span></x-pill>
-                                    </div>
                                     <div class="text-2xl" x-text="recipeSelected ? recipeSelected.name : '{{ __('Menunggu...') }}'"></div>
                                 </div>
                                 <div class="flex gap-x-3 text-neutral-500">
-                                    <div @click="start()"><span>{{ __('Kode') }}</span><span>{{ ': ' }}</span><span
+                                    <div x-show="recipeSelected" x-cloak>
+                                        <x-pill class="uppercase"><span class="uppercase" x-text="batchType"></span></x-pill>
+                                    </div>
+                                    <div class="text-sm uppercase mt-1" @click="start()"><span>{{ __('Kode') }}</span><span>{{ ': ' }}</span><span
                                         x-text="batchCode ? batchCode.toUpperCase() : '{{ __('Tak ada') }}'"></span>
                                     </div>
                                 </div>

@@ -40,35 +40,38 @@ new class extends Component {
         </div>
         @endif
     </div>   
-    <hr class="border-neutral-200 dark:border-neutral-700" />     
-    @if($metrics->isEmpty())
-        <div class="flex min-h-20">
-            <div class="my-auto px-6 text-sm text-center w-full">
-                {{ __('Tak ada riwayat terakhir') }}
+    <hr class="border-neutral-200 dark:border-neutral-700" />   
+    <div class="pt-6 pb-3">
+        <div class="px-6 text-sm text-neutral-500 uppercase">{{ __('Riwayat') }}</div>
+        @if($metrics->isEmpty())
+            <div class="flex">
+                <div class="my-auto py-6 text-sm text-center w-full">
+                    {{ __('Tak ada riwayat terakhir') }}
+                </div>
             </div>
-        </div>
-    @else
-        <ul>
-            @foreach ($metrics as $metric)
-                <li class="w-full hover:bg-caldy-500 hover:bg-opacity-10">
-                    <div class="grid gap-y-1 px-6 py-3">
-                        <div class="text-sm text-neutral-500">
-                            {{ $metric->updated_at->diffForHumans() }}
-                        </div>
-                        <div>
-                            <div class="uppercase">{{ $metric->ins_rubber_batch->code ?? __('Tanpa kode') }}</div>
-                            <div class="flex flex-wrap gap-1 -mx-2 text-sm">
-                                <x-pill class="inline-block uppercase" 
-                                    color="{{ $metric->eval === 'on_time' ? 'green' : ($metric->eval === 'too_late' || $metric->eval === 'too_soon' ? 'red' : 'neutral') }}">{{ $metric->evalHuman() }}</x-pill>
-                                @if($metric->ins_rubber_batch)
-                                <x-pill class="inline-block uppercase"
-                                color="{{ $metric->ins_rubber_batch->rdc_eval === 'queue' ? 'yellow' : ($metric->ins_rubber_batch->rdc_eval === 'pass' ? 'green' : ($metric->ins_rubber_batch->rdc_eval === 'fail' ? 'red' : 'neutral')) }}">{{ 'RHEO: ' . $metric->ins_rubber_batch->rdcEvalHuman() }}</x-pill>                             
-                                @endif
+        @else
+            <ul class="py-3">
+                @foreach ($metrics as $metric)
+                    <li class="w-full hover:bg-caldy-500 hover:bg-opacity-10">
+                        <div class="grid gap-y-1 px-6 py-3">
+                            <div class="text-sm text-neutral-500">
+                                {{ $metric->updated_at->diffForHumans() }}
+                            </div>
+                            <div>
+                                <div class="uppercase">{{ $metric->ins_rubber_batch->code ?? __('Tanpa kode') }}</div>
+                                <div class="flex flex-wrap gap-1 -mx-2 text-sm">
+                                    <x-pill class="inline-block uppercase" 
+                                        color="{{ $metric->eval === 'on_time' ? 'green' : ($metric->eval === 'too_late' || $metric->eval === 'too_soon' ? 'red' : 'neutral') }}">{{ $metric->evalHuman() }}</x-pill>
+                                    @if($metric->ins_rubber_batch)
+                                    <x-pill class="inline-block uppercase"
+                                    color="{{ $metric->ins_rubber_batch->rdc_eval === 'queue' ? 'yellow' : ($metric->ins_rubber_batch->rdc_eval === 'pass' ? 'green' : ($metric->ins_rubber_batch->rdc_eval === 'fail' ? 'red' : 'neutral')) }}">{{ 'RHEO: ' . $metric->ins_rubber_batch->rdcEvalHuman() }}</x-pill>                             
+                                    @endif
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </li>
-            @endforeach
-        </ul>
-    @endif
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </div> 
 </div>
