@@ -11,6 +11,23 @@ class extends Component {
     public int $id;
     public bool $showChart;
 
+    public string $batch_code;
+    public string $rdc_eval;
+    public string $rdc_eval_human;
+    public string $recipe_type;
+    public string $recipe_name;
+    public string $duration;
+    public string $eval;
+    public string $eval_human;
+    public int $line;
+    public string $team;
+    public string $user_1_emp_id;
+    public string $user_1_name;
+    public string $user_2_emp_id;
+    public string $user_2_name;
+    public string $start_at;
+    public string $end_at;
+
     #[On('metric-show')]
     public function showMetric(int $id)
     {
@@ -18,7 +35,30 @@ class extends Component {
         
         if ($metric) {
 
-            $this->id = $metric->id;
+            $this->id           = $metric->id;
+            $this->recipe_type  = $metric->ins_omv_recipe->type;
+            $this->recipe_name  = $metric->ins_omv_recipe->name;
+            $this->duration     = $metric->duration();
+            $this->eval         = $metric->eval;
+            $this->eval_human   = $metric->evalHuman();
+            $this->line         = $metric->line;
+            $this->team         = $metric->team;
+            $this->user_1_emp_id = $metric->user_1->emp_id;
+            $this->user_1_name  = $metric->user_1->name;
+            $this->user_2_emp_id = $metric->user_2->emp_id ?? '-';
+            $this->user_2_name  = $metric->user_2->name ?? '-';
+            $this->start_at     = $metric->start_at;
+            $this->end_at       = $metric->end_at;
+
+            if ($metric->ins_rubber_batch) {
+                $this->batch_code       = $metric->ins_rubber_batch->code ?: '-';
+                $this->rdc_eval         = $metric->ins_rubber_batch->rdc_eval ?: '-';
+                $this->rdc_eval_human   = $metric->ins_rubber_batch->rdcEvalHuman() ?: '-';
+            } else {
+                $this->rdc_eval         = '-';
+                $this->rdc_eval_human   = '-';
+            }
+
             $data = json_decode($metric->data, true) ?: [ 'amps' => [] ];
             
             if ($data['amps']) {
@@ -60,7 +100,26 @@ class extends Component {
 
     public function customReset()
     {
-        $this->reset(['id', 'amps']);
+        $this->reset([
+            'id', 
+            'showChart', 
+            'rdc_eval', 
+            'rdc_eval_human', 
+            'batch_code', 
+            'recipe_type', 
+            'recipe_name', 
+            'duration', 
+            'eval', 
+            'eval_human', 
+            'line', 
+            'team', 
+            'user_1_emp_id', 
+            'user_1_name', 
+            'user_2_emp_id', 
+            'user_2_name', 
+            'start_at', 
+            'end_at'
+        ]);
     }
 
     public function handleNotFound()
@@ -93,6 +152,114 @@ class extends Component {
             <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada data arus listrik') }}
             </div>
         </div>
+        <div class="flex gap-6">
+            <div class="flex flex-col pt-6">
+                <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi batch') }}</dt>
+                <dd>
+                    <div>
+                        <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                            {{ __('Kode') . ': ' }}
+                        </span>
+                        <span>
+                            {{ $batch_code ?? __('Tak ada kode') }}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                            {{ __('Hasil rheo') . ': ' }}
+                        </span>
+                        <x-pill class="uppercase"
+                        color="{{ $rdc_eval === 'queue' ? 'yellow' : ($rdc_eval === 'pass' ? 'green' : ($rdc_eval === 'fail' ? 'red' : 'neutral')) }}">{{ $rdc_eval_human }}</x-pill> 
+                    </div>
+                </dd>
+            </div>
+            <div class="flex flex-col pt-6">
+                <div class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi OMV') }}</div>
+                <div class="flex gap-6">
+                    <div>
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Operator') . ': ' }}
+                            </span>
+                        </div>
+                        <div>
+                            <span>
+                                {{ $user_1_emp_id . ' - ' . $user_1_name }}
+                            </span>
+                        </div>
+                        <div>
+                            <span>
+                                {{ $user_2_emp_id . ' - ' . $user_2_name }}
+                            </span>
+                        </div>
+                        <div class="mt-3">
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Tipe') . ': ' }}
+                            </span>
+                            <span class="uppercase">
+                                {{ $recipe_type }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Resep') . ': ' }}
+                            </span>
+                            <span class="uppercase">
+                                {{ $recipe_name }}
+                            </span>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Tim') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $team }}
+                            </span>                            
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Line') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $line }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Awal') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $start_at }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Akhir') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $end_at }}
+                            </span>
+                        </div>
+                        <div class="mt-3">
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Durasi') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $duration }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Hasil') . ': ' }}
+                            </span>
+                            <x-pill class="uppercase"
+                        color="{{ $eval === 'on_time' ? 'green' : ($eval === 'too_late' || $eval === 'too_soon' ? 'red' : 'neutral') }}">{{ $eval_human }}</x-pill>    
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
