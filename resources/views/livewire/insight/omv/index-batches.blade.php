@@ -29,31 +29,25 @@ new class extends Component {
 ?>
 
 <div wire:poll.5s class="w-64 bg-white dark:bg-neutral-800  bg-opacity-80 dark:bg-opacity-80 shadow overflow-hidden rounded-lg">
-    @if (!Auth::user())
-        <div class="py-8 px-4">
-            <div class="text-center text-xl"><i class="fa fa-exclamation-circle"></i></div>
-            <div class="text-center text-sm mt-3">{{ __('Kamu belum masuk') }}</div>
+    <div class="px-6 py-4 text-2xl uppercase">
+        @if($line)
+        <div>
+            {{ __('Line') . ' ' . $line }}
         </div>
-    @else
-        <div class="px-6 py-4 text-2xl uppercase">
-            @if($line)
-            <div>
-                {{ __('Line') . ' ' . $line }}
-            </div>
-            @else
-            <div x-on:click="$dispatch('open-modal', 'omv-worker-unavailable');" class="text-red-500 cursor-pointer">
-                {{ __('Line') }}<i class="fa fa-exclamation-circle ms-2"></i>
-            </div>
-            @endif
-        </div>   
-        <hr class="border-neutral-200 dark:border-neutral-700" />     
-        @if($metrics->isEmpty())
+        @else
+        <div x-on:click="$dispatch('open-modal', 'omv-worker-unavailable');" class="text-red-500 cursor-pointer">
+            {{ __('Line') }}<i class="fa fa-exclamation-circle ms-2"></i>
+        </div>
+        @endif
+    </div>   
+    <hr class="border-neutral-200 dark:border-neutral-700" />     
+    @if($metrics->isEmpty())
         <div class="flex min-h-20">
             <div class="my-auto px-6 text-sm text-center w-full">
                 {{ __('Tak ada riwayat terakhir') }}
             </div>
         </div>
-        @else
+    @else
         <ul>
             @foreach ($metrics as $metric)
                 <li class="w-full hover:bg-caldy-500 hover:bg-opacity-10">
@@ -76,6 +70,5 @@ new class extends Component {
                 </li>
             @endforeach
         </ul>
-        @endif
     @endif
 </div>

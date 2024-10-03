@@ -29,12 +29,7 @@ new class extends Component {
 ?>
 
 <div class="w-64 bg-white dark:bg-neutral-800 shadow overflow-hidden rounded-lg">
-    @if (!Auth::user())
-        <div class=" py-8 px-4">
-            <div class="text-center text-xl"><i class="fa fa-exclamation-circle"></i></div>
-            <div class="text-center text-sm mt-3">{{ __('Kamu belum masuk') }}</div>
-        </div>
-    @elseif($hides->isEmpty())
+    @if($hides->isEmpty())
         <div class="flex min-h-20">
             <div class="my-auto px-6 text-sm text-center w-full">
                 {{ __('Tak ada riwayat terakhir') }}

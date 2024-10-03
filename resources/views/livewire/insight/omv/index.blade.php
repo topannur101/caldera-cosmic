@@ -22,7 +22,7 @@ class extends Component {
     <x-nav-insights-omv></x-nav-insights-omv>
 </x-slot>
 
-<div id="content" class="pt-12 pb-3 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="pt-8 pb-3 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     @if (!Auth::user())
         <div class="flex flex-col items-center gap-y-6 px-6 py-20">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl">
@@ -45,11 +45,11 @@ class extends Component {
             </div>
         </div>
     @else
-        <div class="flex flex-col gap-x-2 sm:flex-row">
-            <div class="p-1">
+        <div class="flex flex-col sm:flex-row">
+            <div class="px-1 py-4">
                 <livewire:insight.omv.index-batches />
             </div>
-            <div class="w-full overflow-hidden p-1">
+            <div class="w-full overflow-hidden p-4">
                 <div class="flex flex-col h-full" x-data="{
                     ...app(),
                     userq: @entangle('userq').live
@@ -289,7 +289,7 @@ class extends Component {
                     </div>
                 </x-modal>
     
-                <div x-show="!recipeSelected" class="grow mt-4">
+                <div x-show="!recipeSelected" class="grow mt-6">
                     <div class="bg-white dark:bg-neutral-800 bg-opacity-80 dark:bg-opacity-80 shadow rounded-lg h-full flex items-center">
                         <div class="grow py-20">
                             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -302,7 +302,7 @@ class extends Component {
                     </div>
                 </div>
     
-                <div x-show="recipeSelected" class="grid grid-cols-2 gap-3 mt-4">
+                <div x-show="recipeSelected" class="grid grid-cols-2 gap-3 mt-6">
                     <template x-for="(step, index) in stepList" :key="index">
                         <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4"
                             :class="stepCurrentIndex == index && timerIsRunning ? 'cal-shimmer' : ''">
