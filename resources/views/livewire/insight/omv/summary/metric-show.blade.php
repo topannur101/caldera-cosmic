@@ -55,6 +55,7 @@ class extends Component {
                 $this->rdc_eval         = $metric->ins_rubber_batch->rdc_eval ?: '-';
                 $this->rdc_eval_human   = $metric->ins_rubber_batch->rdcEvalHuman() ?: '-';
             } else {
+                $this->batch_code       = '-';
                 $this->rdc_eval         = '-';
                 $this->rdc_eval_human   = '-';
             }
