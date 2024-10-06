@@ -111,7 +111,7 @@ class extends Component {
                         <x-primary-button class="m-4" type="button" size="lg" @click="wizardOpen()"
                             x-show="!timerIsRunning && !recipe"><i
                                 class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
-                        <x-primary-button class="m-4" type="button" size="lg" @click="reset(['timer', 'recipe', 'batch', 'poll'])"
+                        <x-primary-button class="m-4" type="button" size="lg" @click="reset(['timer', 'recipe', 'batch', 'poll', 'recipesFiltered', 'slider'])"
                             x-show="!timerIsRunning && recipe">{{ __('Batal') }}</x-primary-button>
                         <x-primary-button class="m-4" type="button" size="lg" @click="$dispatch('open-spotlight', 'manual-stop')" x-cloak
                             x-show="timerIsRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
@@ -144,18 +144,18 @@ class extends Component {
                         <div>
                             {{ __('Disarankan untuk tidak menghentikan timer secara manual karena akan mempengaruhi evaluasi kerjamu. Jika ingin tetap menghentikan timer, geser ke kanan.') }}
                         </div>
-                        <div class="w-full relative">
-                            <div class="bg-neutral-500 bg-opacity-20 h-14 rounded-full relative overflow-hidden">
-                                <div class="absolute inset-0 flex items-center justify-center opacity-50 cal-shimmer" >{{ __('Geser untuk menghentikan') }}</div>
-                                <div class="absolute top-0 left-0 w-14 h-14 bg-neutral-500 text-white rounded-full shadow-md flex items-center justify-center transition-all duration-300 ease-out"
-                                        :style="`transform: translateX(${timerManualStopSliderPercentage * 3.3}px)`"><i class="fa fa-arrow-right"></i>
+                        <div class="flex items-center justify-center select-none">
+                            <div class="relative w-80 h-14 bg-neutral-300 dark:bg-neutral-700 rounded-full shadow-inner overflow-hidden">
+                                <div class="ml-8 absolute text-sm inset-0 flex items-center justify-center text-neutral-600 dark:text-neutral-400 cal-shimmer">
+                                    {{ __('geser untuk menghentikan') }}
                                 </div>
-                                <input type="range" 
-                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                       x-model="timerManualStopSliderPercentage" 
-                                       @input="sliderUnlock"
-                                       @change="sliderSnapBack"
-                                       min="0" max="100" step="1">
+                                <div x-show="!sliderUnlocked"
+                                     @mousedown="sliderStartDrag"
+                                     @touchstart="sliderStartDrag"
+                                     :style="`transform: translateX(${sliderCurrentX}px)`"
+                                     class="absolute left-[.3rem] top-1 w-12 h-12 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-white rounded-full shadow cursor-pointer transition-transform duration-100 ease-out flex items-center justify-center">
+                                     <i class="fa fa-arrow-right"></i>
+                                </div>
                             </div>
                         </div>
                         <div class="flex justify-center">
@@ -433,8 +433,6 @@ class extends Component {
                 timerEvalFalseCount: 0,
                 timerIntervalId: null,
                 timerIsRunning: false,
-                timerManualStopSliderUnlocked: false,
-                timerManualStopSliderPercentage: 0,
                 timerOvertime: false,
                 timerOvertimeElapsed: 0,
                 timerProgressPosition: 0, // glow
@@ -444,6 +442,13 @@ class extends Component {
                 timerStepRemainingTimes: [],
             };
 
+            const sliderDefaults = {
+                sliderUnlocked: false,
+                sliderStartX: 0,
+                sliderCurrentX: 0,
+                sliderIsDragging: false,
+            };
+
             function app() {
                 return {
                     ...configDefaults,
@@ -451,6 +456,7 @@ class extends Component {
                     ...pollDefaults,          
                     ...recipeDefaults,
                     ...timerDefaults,
+                    ...sliderDefaults,
                     batchLine: '',
                     batchTeam: '',
                     recipes: [],
@@ -501,19 +507,22 @@ class extends Component {
 
                     reset(groups) {
                         if (groups.includes('batch')) {
-                            Object.assign(this, batchDefaults); // Reset batch-related properties
+                            Object.assign(this, batchDefaults);
                         }
                         if (groups.includes('poll')) {
                             clearInterval(this.pollingAId);
                             clearInterval(this.pollingBId);
-                            Object.assign(this, pollDefaults); // Reset batch-related properties
+                            Object.assign(this, pollDefaults);
                         }
                         if (groups.includes('recipe')) {
-                            Object.assign(this, recipeDefaults); // Reset recipe-related properties
+                            Object.assign(this, recipeDefaults); 
                         }
                         if (groups.includes('timer')) {
                             cancelAnimationFrame(this.timerIntervalId);
                             Object.assign(this, timerDefaults);
+                        }
+                        if (groups.includes('slider')) {
+                            Object.assign(this, sliderDefaults); 
                         }
                         if (groups.includes('recipesFiltered')) {
                             this.recipesFiltered = [];
@@ -679,25 +688,13 @@ class extends Component {
                                 });
                         }, this.pollingBInterval);
                     },     
-                    
-                    sliderUnlock() {
-                        this.timerManualStopSliderUnlocked = this.timerManualStopSliderPercentage >= 100;
-                        if (this.timerManualStopSliderUnlocked) {
-                            window.dispatchEvent(escKey);
-                            this.stopTimer();
-                        }
-                    },
-                    sliderSnapBack() {
-                        if (!this.timerManualStopSliderUnlocked) {
-                            this.timerManualStopSliderPercentage = 0;
-                        }
-                    },
 
                     stopTimer(isAutomatic = false) {
                         let batchEndTime = new Date();
                         let adjustedElapsedSeconds = this.timerElapsedSeconds;
 
                         if (isAutomatic) {
+                            window.dispatchEvent(escKey);
                             const adjustmentTime = this.evalFalseLimit * (this.pollingBInterval / 1000);
                             adjustedElapsedSeconds -= adjustmentTime;
                             batchEndTime = new Date(batchEndTime.getTime() - (adjustmentTime * 1000));
@@ -732,7 +729,7 @@ class extends Component {
                         };
                         console.log(jsonData);                            
                         this.sendData(jsonData);
-                        this.reset(['timer', 'poll', 'recipe', 'recipeFiltered', 'batch'])
+                        this.reset(['timer', 'recipe', 'batch', 'poll', 'recipesFiltered', 'slider'])
                     },
 
                     tick() {
@@ -883,6 +880,47 @@ class extends Component {
                         }
                         return this.recipeSteps.length - 1; // Return last step if elapsed time exceeds total duration
                     },
+
+                    sliderStartDrag(event) {
+                        if (this.unlocked) return;
+                        this.sliderIsDragging = true;
+                        this.sliderStartX = (event.clientX || event.touches[0].clientX) - this.sliderCurrentX;
+                        
+                        document.addEventListener('mousemove', this.sliderDrag.bind(this));
+                        document.addEventListener('touchmove', this.sliderDrag.bind(this));
+                        document.addEventListener('mouseup', this.sliderEndDrag.bind(this));
+                        document.addEventListener('touchend', this.sliderEndDrag.bind(this));
+                    },
+
+                    sliderDrag(event) {
+                        if (!this.sliderIsDragging || this.sliderUnlocked) return;
+                        const clientX = event.clientX || (event.touches && event.touches[0].clientX);
+                        if (clientX) {
+                            this.sliderCurrentX = Math.max(0, Math.min(clientX - this.sliderStartX, 262));
+                        }
+                    },
+                    sliderEndDrag() {
+                        if (this.sliderIsDragging) {
+                            this.sliderIsDragging = false;
+                            if (this.sliderCurrentX >= 262) {
+                                this.sliderUnlocked = true;
+                                window.dispatchEvent(escKey);
+                                this.stopTimer();
+                            } else {
+                                this.sliderCurrentX = 0;
+                            }
+                        }
+                        
+                        document.removeEventListener('mousemove', this.sliderDrag.bind(this));
+                        document.removeEventListener('touchmove', this.sliderDrag.bind(this));
+                        document.removeEventListener('mouseup', this.sliderEndDrag.bind(this));
+                        document.removeEventListener('touchend', this.sliderEndDrag.bind(this));
+                    },
+                    sliderReset() {
+                        this.sliderUnlocked = false;
+                        this.sliderCurrentX = 0;
+                        this.sliderIsDragging = false;
+                    }
                 };
             }
         </script>
