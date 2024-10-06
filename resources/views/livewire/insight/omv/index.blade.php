@@ -658,13 +658,6 @@ class extends Component {
                                 .then(response => response.json())
                                 .then(data => {
                                     console.log('Polling B:', data);
-                                                                            // Auto stop
-                                                                            if (data.eval === false) {
-                                            this.timerEvalFalseCount++;
-                                            if (this.timerEvalFalseCount > this.evalFalseLimit) {
-                                                this.stopTimer(true); // Pass true to indicate automatic stop
-                                            }
-                                        }
                                     if (data.error) {
                                         console.error('Polling B server error:', data.error);
                                     } else {
@@ -672,6 +665,13 @@ class extends Component {
                                             taken_at: this.timerElapsedSeconds,
                                             value: data.raw
                                         });
+                                        // Auto stop
+                                        if (data.eval === false) {
+                                            this.timerEvalFalseCount++;
+                                            if (this.timerEvalFalseCount > this.evalFalseLimit) {
+                                                this.stopTimer(true); // Pass true to indicate automatic stop
+                                            }
+                                        }
                                     }
                                 })
                                 .catch(error => {
