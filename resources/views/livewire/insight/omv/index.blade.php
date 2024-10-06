@@ -56,19 +56,19 @@ class extends Component {
                     userq: @entangle('userq').live
                 }" x-init="loadRecipes();
                 fetchLine()">
-                <div :class="!timerIsRunning && recipeSelected ? 'cal-glowing z-10' : (timerIsRunning ? 'cal-glow z-10' : '')"
+                <div :class="!timerIsRunning && recipe ? 'cal-glowing z-10' : (timerIsRunning ? 'cal-glow z-10' : '')"
                     :style="'--cal-glow-pos: -' + (timerProgressPosition * 100) + '%'">
                     <div class="bg-white dark:bg-neutral-800 bg-opacity-80 dark:bg-opacity-80 shadow rounded-lg flex w-full items-stretch">
                         <div class="flex justify-between grow mx-6 my-4">
                             <div class="flex flex-col justify-center">
                                 <div class="flex items-center gap-x-3">
-                                    <div class="text-2xl" x-text="recipeSelected ? recipeSelected.name : '{{ __('Menunggu...') }}'"></div>
+                                    <div class="text-2xl" x-text="recipe ? recipe.name : '{{ __('Menunggu...') }}'"></div>
                                 </div>
                                 <div class="flex gap-x-3 text-neutral-500">
-                                    <div x-show="recipeSelected" x-cloak>
+                                    <div x-show="recipe" x-cloak>
                                         <x-pill class="uppercase"><span class="uppercase" x-text="batchType"></span></x-pill>
                                     </div>
-                                    <div class="text-sm uppercase mt-1" @click="start()"><span>{{ __('Kode') }}</span><span>{{ ': ' }}</span><span
+                                    <div class="text-sm uppercase mt-1" @click="startTimer()"><span>{{ __('Kode') }}</span><span>{{ ': ' }}</span><span
                                         x-text="batchCode ? batchCode.toUpperCase() : '{{ __('Tak ada') }}'"></span>
                                     </div>
                                 </div>
@@ -108,16 +108,28 @@ class extends Component {
                                 </div>
                             </div>
                         </div>
-                        <x-primary-button class="m-4" type="button" size="lg" @click="openWizard()"
-                            x-show="!timerIsRunning && !recipeSelected"><i
+                        <x-primary-button class="m-4" type="button" size="lg" @click="wizardOpen()"
+                            x-show="!timerIsRunning && !recipe"><i
                                 class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
-                        <x-primary-button class="m-4" type="button" size="lg" @click="resetRecipeSelection()"
-                            x-show="!timerIsRunning && recipeSelected"><i
-                                class="fa fa-undo mr-2"></i>{{ __('Ulangi') }}</x-primary-button>
-                        <x-primary-button class="m-4" type="button" size="lg" @click="stop(true, true)" x-cloak
+                        <x-primary-button class="m-4" type="button" size="lg" @click="reset(['timer', 'recipe', 'batch', 'poll'])"
+                            x-show="!timerIsRunning && recipe">{{ __('Batal') }}</x-primary-button>
+                        <x-primary-button class="m-4" type="button" size="lg" @click="stopTimer()" x-cloak
                             x-show="timerIsRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
                     </div>
                 </div>
+
+                <x-spotlight name="sending" maxWidth="sm">
+                    <div class="w-full flex flex-col gap-y-6 pb-10 text-center ">
+                        <div>
+                            <i class="text-4xl fa-solid fa-spinner fa-spin-pulse"></i>
+                        </div>
+                        <header>
+                            <h2 class="text-xl font-medium">
+                                {{ __('Mengirim data ke server...')}}
+                            </h2>
+                        </header>
+                    </div>
+                </x-spotlight>
     
                 <x-modal name="omv-worker-unavailable" maxWidth="sm">
                     <div class="text-center pt-6">
@@ -169,18 +181,18 @@ class extends Component {
                 <x-modal name="recipes" focusable>
                     <div class="p-6">
                         <!-- Step 1: Batch identity -->
-                        <div x-show="wizardCurrentStep === 1">
+                        <div x-show="wizardStep === 1">
                             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ __('Identitas batch') }}
                             </h2>
                             <div class="mt-6">
                                 <label for="batchCode"
                                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
-                                <x-text-input id="batchCode" x-model="batchCode" type="text" @keydown.enter="nextStep" />
+                                <x-text-input id="batchCode" x-model="batchCode" type="text" @keydown.enter="wizardNextStep" />
                             </div>
                         </div>
                         <!-- Step 2: Mixing Type -->
-                        <div x-show="wizardCurrentStep === 2">
+                        <div x-show="wizardStep === 2">
                             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ __('Pilih tipe mixing') }}
                             </h2>
@@ -189,7 +201,7 @@ class extends Component {
                                     <input type="radio" name="batchType" id="batchTypeNew"
                                         class="peer hidden [&:checked_+_label_svg]:block" value="new"
                                         x-model="batchType" />
-                                    <label for="batchTypeNew" @click="setTimeout(() => { nextStep() }, 200);"
+                                    <label for="batchTypeNew" @click="setTimeout(() => { wizardNextStep() }, 200);"
                                         class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                         <div class="flex items-center justify-between">
                                             <p>{{ __('Baru') }}</p>
@@ -206,7 +218,7 @@ class extends Component {
                                     <input type="radio" name="batchType" id="batchTypeRemixing"
                                         class="peer hidden [&:checked_+_label_svg]:block" value="remixing"
                                         x-model="batchType" />
-                                    <label for="batchTypeRemixing" @click="setTimeout(() => { nextStep() }, 200);"
+                                    <label for="batchTypeRemixing" @click="setTimeout(() => { wizardNextStep() }, 200);"
                                         class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                         <div class="flex items-center justify-between">
                                             <p>{{ __('Remixing') }}</p>
@@ -223,7 +235,7 @@ class extends Component {
                                     <input type="radio" name="batchType" id="batchTypeScrap"
                                         class="peer hidden [&:checked_+_label_svg]:block" value="scrap"
                                         x-model="batchType" />
-                                    <label for="batchTypeScrap" @click="setTimeout(() => { nextStep() }, 200);"
+                                    <label for="batchTypeScrap" @click="setTimeout(() => { wizardNextStep() }, 200);"
                                         class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                         <div class="flex items-center justify-between">
                                             <p>{{ __('Scrap') }}</p>
@@ -240,17 +252,17 @@ class extends Component {
                         </div>
     
                         <!-- Step 3: Recipe Selection -->
-                        <div x-show="wizardCurrentStep === 3">
+                        <div x-show="wizardStep === 3">
                             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ __('Pilih resep') }}
                             </h2>
                             <fieldset class="grid gap-2 mt-6 max-h-96 overflow-y-scroll p-1">
-                                <template x-if="recipeFilteredList.length > 0">
-                                    <template x-for="recipe in recipeFilteredList" :key="recipe.id">
+                                <template x-if="recipesFiltered.length > 0">
+                                    <template x-for="recipe in recipesFiltered" :key="recipe.id">
                                         <div>
                                             <input type="radio" name="recipe" :id="'recipe-' + recipe.id"
                                                 class="peer hidden [&:checked_+_label_svg]:block" :value="recipe.id"
-                                                x-model="recipeSelectedId" />
+                                                x-model="recipeId" />
                                             <label :for="'recipe-' + recipe.id"
                                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                                 <div class="flex items-center justify-between">
@@ -267,7 +279,7 @@ class extends Component {
                                         </div>
                                     </template>
                                 </template>
-                                <template x-if="recipeFilteredList.length === 0">
+                                <template x-if="recipesFiltered.length === 0">
                                     <div class="text-center text-neutral-500">
                                         {{ __('Tidak ada resep untuk tipe ini') }}
                                     </div>
@@ -277,20 +289,20 @@ class extends Component {
     
                         <!-- Navigation buttons -->
                         <div class="flex mt-8 justify-end gap-x-3">
-                            <x-secondary-button type="button" x-show="wizardCurrentStep > 1" @click="prevStep">
+                            <x-secondary-button type="button" x-show="wizardStep > 1" @click="wizardPrevStep">
                                 {{ __('Mundur') }}
                             </x-secondary-button>
-                            <x-secondary-button type="button" x-show="wizardCurrentStep < 3" @click="nextStep">
+                            <x-secondary-button type="button" x-show="wizardStep < 3" @click="wizardNextStep">
                                 {{ __('Maju') }}
                             </x-secondary-button>
-                            <x-primary-button type="button" x-show="wizardCurrentStep === 3" @click="finishWizard">
+                            <x-primary-button type="button" x-show="wizardStep === 3 && recipeId" @click="wizardFinish">
                                 {{ __('Terapkan') }}
                             </x-primary-button>
                         </div>
                     </div>
                 </x-modal>
     
-                <div x-show="!recipeSelected" class="grow mt-6">
+                <div x-show="!recipe" class="grow mt-6">
                     <div class="bg-white dark:bg-neutral-800 bg-opacity-80 dark:bg-opacity-80 shadow rounded-lg h-full flex items-center">
                         <div class="grow py-20">
                             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -303,38 +315,38 @@ class extends Component {
                     </div>
                 </div>
     
-                <div x-show="recipeSelected" class="grid grid-cols-2 gap-3 mt-6">
-                    <template x-for="(step, index) in stepList" :key="index">
+                <div x-show="recipe" class="grid grid-cols-2 gap-3 mt-6">
+                    <template x-for="(step, index) in recipeSteps" :key="index">
                         <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4"
-                            :class="stepCurrentIndex == index && timerIsRunning ? 'cal-shimmer' : ''">
+                            :class="timerStepIndex == index && timerIsRunning ? 'cal-shimmer' : ''">
                             <div class="flex gap-4  w-full mb-6">
                                 <div class="w-12 h-12 rounded-full flex items-center justify-center"
-                                    :class="(stepCurrentIndex > index && timerIsRunning) ? 'bg-green-500 text-neutral-800' : ((
-                                            stepCurrentIndex == index && timerIsRunning) ? 'bg-yellow-500 text-neutral-800' :
+                                    :class="(timerStepIndex > index && timerIsRunning) ? 'bg-green-500 text-neutral-800' : ((
+                                            timerStepIndex == index && timerIsRunning) ? 'bg-yellow-500 text-neutral-800' :
                                         'bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800')">
                                     <span class="text-2xl font-bold" x-text="index + 1"></span>
                                 </div>
                                 <div class="grow">
                                     <div class="flex justify-between items-center mb-2">
                                         <div class="flex gap-x-3"
-                                            :class="stepCurrentIndex == index && timerIsRunning ? 'fa-fade' : ''">
-                                            <i x-show="stepCurrentIndex == index && timerIsRunning"
+                                            :class="timerStepIndex == index && timerIsRunning ? 'fa-fade' : ''">
+                                            <i x-show="timerStepIndex == index && timerIsRunning"
                                                 class="fa-solid fa-spinner fa-spin-pulse"></i>
                                             <span class="text-xs uppercase"
-                                                x-text="(stepCurrentIndex > index && timerIsRunning) ? '{{ __('Selesai') }}' : ((stepCurrentIndex == index && timerIsRunning) ? '{{ __('Berjalan') }}' : '{{ __('Menunggu') }}')"></span>
+                                                x-text="(timerStepIndex > index && timerIsRunning) ? '{{ __('Selesai') }}' : ((timerStepIndex == index && timerIsRunning) ? '{{ __('Berjalan') }}' : '{{ __('Menunggu') }}')"></span>
                                         </div>
                                         <span class="text-xs font-mono"
-                                            x-text="formatTime(stepRemainingTimes[index])"></span>
+                                            x-text="formatTime(timerStepRemainingTimes[index])"></span>
                                     </div>
                                     <div class="relative w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
                                         <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
-                                            :style="'width: ' + stepProgressPercentages[index] + '%'"></div>
+                                            :style="'width: ' + timerStepPercentages[index] + '%'"></div>
                                         <!-- Capture points -->
                                         <template
-                                            x-for="point in recipeCapturePoints.filter(p => p >= getTotalPreviousStepsDuration(index) && p < getTotalPreviousStepsDuration(index + 1))"
+                                            x-for="point in recipeCapturePoints.filter(p => p >= getPreviousStepsDuration(index) && p < getPreviousStepsDuration(index + 1))"
                                             :key="point">
                                             <div class="absolute w-2 h-2 bg-caldy-500 rounded-full top-4 transform -translate-y-1/2"
-                                                :style="'left: ' + ((point - getTotalPreviousStepsDuration(index)) / step.duration *
+                                                :style="'left: ' + ((point - getPreviousStepsDuration(index)) / step.duration *
                                                     100) + '%'"
                                                 :class="timerElapsedSeconds >= point ? 'opacity-30' : ''"></div>
                                         </template>
@@ -351,48 +363,65 @@ class extends Component {
             </div>
         </div>
         <script>
+            const configDefaults = {
+                captureThreshold: 1,
+                evalTolerance: 120,
+                evalFalseLimit: 30, // auto stop
+                overtimeMaxDuration: 900,
+                pollingAInterval: 4000,
+                pollingBInterval: 4000,
+            };
+            
+            const batchDefaults = {
+                batchCode: '',
+                batchEval: '',
+                batchType: '',
+                batchAmps: [],
+                batchImages: [],
+                batchStartTime: null,
+            };
+
+            const pollDefaults = { 
+                pollingAId: null,
+                pollingBId: null,
+            };
+
+            const recipeDefaults = {
+                recipeId: null,
+                recipe: null,
+                recipeDuration: 0,
+                recipeCapturePoints: [],
+                recipeSteps: [],
+            };
+
+            const timerDefaults = {
+                timerCapturePoints: [], // timerCapturePoints
+                timerElapsedSeconds: 0,
+                timerEvalFalseCount: 0,
+                timerIntervalId: null,
+                timerIsRunning: false,
+                timerManuallyStopped: false,
+                timerOvertime: false, // timerOvertime
+                timerOvertimeElapsed: 0, // timerOvertimeElapsed
+                timerProgressPosition: 0, // glow
+                timerRemainingTime: 0,
+                timerStepIndex: 0, // timerStepIndex
+                timerStepPercentages: [], //timerStepPercentages
+                timerStepRemainingTimes: [], //timerStepRemainingTimes
+            };
+
             function app() {
                 return {
-                    batchCode: '',
-                    batchEval: '',
+                    ...configDefaults,
+                    ...batchDefaults,
+                    ...pollDefaults,          
+                    ...recipeDefaults,
+                    ...timerDefaults,
                     batchLine: '',
                     batchTeam: '',
-                    batchType: '',
-                    batchAmps: [],
-                    batchImages: [],
-                    batchStartTime: null,
-                    
-                    evalTolerance: 120,
-                    
-                    overtimeIsActive: false,
-                    overtimeElapsed: 0,
-                    overtimeMaxDuration: 900,
-
-                    pollingAId: null,
-                    pollingBId: null,
-                    
-                    recipeFilteredList: [],
-                    recipeList: [],
-                    recipeSelected: null,
-                    recipeSelectedDuration: 0,
-                    recipeSelectedId: null,
-
-                    recipeCapturePoints: [],
-                    recipeCapturePointsDone: [],
-                    recipeCaptureThreshold: 1,
-                    
-                    stepCurrentIndex: 0,
-                    stepList: [],
-                    stepProgressPercentages: [],
-                    stepRemainingTimes: [],
-                    
-                    timerElapsedSeconds: 0,
-                    timerIntervalId: null,
-                    timerIsRunning: false,
-                    timerProgressPosition: 0, // glow
-                    timerRemainingTime: 0,
-
-                    wizardCurrentStep: 1,
+                    recipes: [],
+                    recipesFiltered: [],
+                    wizardStep: 1,
 
                     async fetchLine() {
                         if (!this.batchLine) {
@@ -412,10 +441,10 @@ class extends Component {
                     async loadRecipes() {
                         try {
                             const response = await fetch('/api/omv-recipes');
-                            this.recipeList = await response.json();
+                            this.recipes = await response.json();
                         } catch (error) {
                             console.error('Failed to load recipes:', error);
-                            this.recipeList = [];
+                            this.recipes = [];
                         }
                         //     {
                         //         "id": 1,
@@ -436,45 +465,51 @@ class extends Component {
 
                     },
 
-                    resetRecipeSelection() {
-                        this.recipeSelectedId = null;
-                        this.recipeSelected = null;
-                        this.stepList = [];
-                        this.batchCode = '';
-                        this.batchType = '';
-                        this.recipeFilteredList = [];
-                    },
-
-                    applySelectedRecipe() {
-                        const selectedRecipe = this.recipeList.find(r => r.id == this.recipeSelectedId);
-                        if (selectedRecipe) {
-                            this.recipeSelected = selectedRecipe;
-                            this.stepList = selectedRecipe.steps;
-                            this.recipeCapturePoints = selectedRecipe.capture_points || [];
-                            this.calculateTotalDuration();
-                            this.reset(false);
-                            this.$dispatch('close');
-                            this.startPollingA();
-
-                            if (!this.batchLine) {
-                                this.$dispatch('open-modal', 'omv-worker-unavailable');
-                            }
+                    reset(groups) {
+                        if (groups.includes('batch')) {
+                            Object.assign(this, batchDefaults); // Reset batch-related properties
+                        }
+                        if (groups.includes('poll')) {
+                            clearInterval(this.pollingAId);
+                            clearInterval(this.pollingBId);
+                            Object.assign(this, pollDefaults); // Reset batch-related properties
+                        }
+                        if (groups.includes('recipe')) {
+                            Object.assign(this, recipeDefaults); // Reset recipe-related properties
+                        }
+                        if (groups.includes('timer')) {
+                            cancelAnimationFrame(this.timerIntervalId);
+                            Object.assign(this, timerDefaults);
+                        }
+                        if (groups.includes('recipesFiltered')) {
+                            this.recipesFiltered = [];
                         }
                     },
 
-                    calculateTotalDuration() {
-                        this.recipeSelectedDuration = this.stepList.reduce((sum, step) => {
-                            const duration = Number(step.duration);
-                            return sum + (isNaN(duration) ? 0 : duration);
-                        }, 0);
-
-                        // Subtract 1 from the total duration, ensuring it doesn't go below 0
-                        this.recipeSelectedDuration = Math.max(0, this.recipeSelectedDuration - 1);
+                    loadRecipe(recipe) {
+                        this.recipe = recipe;
+                        this.recipeCapturePoints = recipe.capture_points || [];
+                        this.recipeSteps = recipe.steps;
+                        this.recipeDuration = Math.max(0, this.recipeSteps.reduce((sum, step) => {
+                            const duration = parseFloat(step.duration) || 0; // Use parseFloat and handle NaN directly
+                            return sum + duration;
+                        }, 0) - 1);
+                        this.timerStepPercentages = this.recipeSteps.map(() => 0);
+                        this.timerStepRemainingTimes = this.recipeSteps.map(step => step.duration);
                     },
 
                     startPollingA() {
-                        if (this.pollingAId) {
-                            clearInterval(this.pollingAId);
+                        this.reset(['poll']);
+                        const recipe = this.recipes.find(r => r.id == this.recipeId);
+                        if (!recipe) {
+                            notyfError('{{ __('Resep yang dipilih tidak sah.') }}');
+                            return;
+                        } 
+                        this.loadRecipe(recipe);
+                        this.$dispatch('close');
+
+                        if (!this.batchLine) {
+                            this.$dispatch('open-modal', 'omv-worker-unavailable');
                         }
 
                         this.pollingAId = setInterval(() => {
@@ -486,53 +521,54 @@ class extends Component {
                                     if (data.error) {
                                         console.error('Polling A server error:', data.error);
                                     } else if (data.eval && !this.timerIsRunning) {
-                                        this.start();
+                                        this.startTimer();
                                         clearInterval(this.pollingAId);
                                     }
                                 })
                                 .catch(error => {
                                     console.error('Polling A error:', error);
                                 });
-                        }, 4000);
+                        }, this.pollingAInterval);
                     },
 
-                    nextStep() {
-                        if (this.wizardCurrentStep < 3) {
-                            this.wizardCurrentStep++;
-                            if (this.wizardCurrentStep === 3) {
+                    wizardOpen() {
+                        if (this.timerIsRunning) {
+                            notyfError('{{ __('Hentikan timer sebelum memilih resep baru.') }}');
+                            return;
+                        }
+
+                        this.wizardStep = 1;
+                        this.batchType = '';
+                        this.recipeId = null;
+                        this.$dispatch('open-modal', 'recipes')
+                    },
+
+                    wizardNextStep() {
+                        if (this.wizardStep < 3) {
+                            this.wizardStep++;
+                            if (this.wizardStep === 3) {
                                 this.filterRecipes();
                             }
                         }
                     },
 
-                    prevStep() {
-                        if (this.wizardCurrentStep > 1) {
-                            this.wizardCurrentStep--;
+                    wizardPrevStep() {
+                        if (this.wizardStep > 1) {
+                            this.wizardStep--;
                         }
                     },
 
-                    finishWizard() {
-                        if (this.batchType && this.recipeSelectedId) {
-                            this.applySelectedRecipe();
+                    wizardFinish() {
+                        if (this.batchType && this.recipeId) {
+                            this.startPollingA();
                         } else {
                             notyfError('{{ __('Tipe mixing dan resep wajib dipilih') }}');
                         }
                     },
 
-                    openWizard() {
-                        if (this.timerIsRunning) {
-                            notyfError('{{ __('Hentikan timer sebelum memilih resep baru.') }}');
-                            return;
-                        }
-                        this.wizardCurrentStep = 1;
-                        this.batchType = '';
-                        this.recipeSelectedId = null;
-                        this.$dispatch('open-modal', 'recipes')
-                    },
-
                     // Add this new method to filter recipes based on type
                     filterRecipes() {
-                        this.recipeFilteredList = this.recipeList.filter(recipe => recipe.type === this.batchType);
+                        this.recipesFiltered = this.recipes.filter(recipe => recipe.type === this.batchType);
                     },
 
                     modifyClass(id, action, className) {
@@ -546,37 +582,42 @@ class extends Component {
                         }
                     },
 
-                    start() {
-                        if (!this.timerIsRunning && this.stepList.length > 0) {
-                            this.timerIsRunning = true;
-                            this.batchStartTime = new Date(); // Change this to store the full date object
-                            this.timerElapsedSeconds = 0;
-                            this.timerRemainingTime = this.recipeSelectedDuration;
-                            this.recipeCapturePointsDone = []; // Reset processed capture points
-                            this.batchImages = []; // Reset captured images
-                            this.tick();
+                    startTimer() {
+                        if (this.timerIsRunning) {
+                            notyfError('{{ __('Timer sudah berjalan.') }}');
+                            return;
+                        } 
+                        
+                        if (!this.recipeSteps.length) {
+                            notyfError('{{ __('Belum ada resep yang di pilih.') }}');          
+                            return;                 
+                        } 
 
-                            if (!this.batchTeam || !this.userq) {
-                                this.$dispatch('open-modal', 'input-incomplete');
-                            }
+                        // Timer start
+                        this.batchStartTime = new Date();
+                        this.timerElapsedSeconds = 0;
+                        this.timerIsRunning = true;
+                        this.timerRemainingTime = this.recipeDuration;
 
-                            if (this.pollingAId) {
-                                clearInterval(this.pollingAId);
-                                this.pollingAId = null;
-                            }
+                        // Start tick and Polling B
+                        this.tick();
+                        this.startPollingB();
 
-                            this.startPollingB();
+                        // Activate focus mode interface
+                        this.modifyClass('cal-nav-main-links', 'remove', 'sm:flex');
+                        this.modifyClass('cal-nav-omv', 'add', 'hidden');
+                        this.modifyClass('cal-nav-main-links-alt', 'remove', 'hidden');
 
-                            this.modifyClass('cal-nav-main-links', 'remove', 'sm:flex');
-                            this.modifyClass('cal-nav-omv', 'add', 'hidden');
-                            this.modifyClass('cal-nav-main-links-alt', 'remove', 'hidden');
-
-                        } else if (this.stepList.length === 0) {
-                            notyfError('{{ __('Pilih resep terlebih dahulu sebelum menjalankan timer.') }}');
-                        }
+                        // Show warning if batch or user is empty
+                        if (!this.batchTeam || !this.userq) {
+                            this.$dispatch('open-modal', 'input-incomplete');
+                        }                            
+                        
                     },
 
                     startPollingB() {
+                        clearInterval(this.pollingAId);
+                        this.pollingAId = null;
                         this.pollingBId = setInterval(() => {
                             this.fetchLine();
                             fetch('http://127.0.0.1:92/get-data')
@@ -590,85 +631,97 @@ class extends Component {
                                             taken_at: this.timerElapsedSeconds,
                                             value: data.raw
                                         });
+                                        // Check if eval is false
+                                        if (data.eval === false) {
+                                            this.timerEvalFalseCount++;
+                                            if (this.timerEvalFalseCount > this.evalFalseLimit) {
+                                                this.stopTimer(true); // Pass true to indicate automatic stop
+                                            }
+                                        }
                                     }
                                 })
                                 .catch(error => {
                                     console.error('Polling B error:', error);
                                 });
-                        }, 4000);
-                    },                    
+                        }, this.pollingBInterval);
+                    },             
 
-                    stop(resetRecipe = true, sendData = false) {
-                        this.timerIsRunning = false;
+                    stopTimer(isAutomatic = false) {
+                        let batchEndTime = new Date();
+                        let adjustedElapsedSeconds = this.timerElapsedSeconds;
+
+                        if (isAutomatic) {
+                            const adjustmentTime = this.evalFalseLimit * (this.pollingBInterval / 1000);
+                            adjustedElapsedSeconds -= adjustmentTime;
+                            batchEndTime = new Date(batchEndTime.getTime() - (adjustmentTime * 1000));
+                        }
+
+                        const difference = Math.abs(adjustedElapsedSeconds - this.recipeDuration);
+
+                        if (difference <= this.evalTolerance && this.timerManuallyStopped) {
+                            this.batchEval = 'on_time_manual';
+                        } else if (difference <= this.evalTolerance) {
+                            this.batchEval = 'on_time';
+                        } else if (adjustedElapsedSeconds < this.recipeDuration) {
+                            this.batchEval = 'too_soon';
+                        } else {
+                            this.batchEval = 'too_late';
+                        }
+
+                        // Prepare and send the JSON data
+                        const jsonData = {
+                            server_url: '{{ route('home') }}',
+                            recipe_id: this.recipe.id.toString(),
+                            code: this.batchCode,
+                            line: this.batchLine,
+                            team: this.batchTeam,
+                            user_1_emp_id: '{{ Auth::user()->emp_id }}',
+                            user_2_emp_id: this.userq,
+                            eval: this.batchEval,
+                            start_at: this.formatDateTime(this.batchStartTime),
+                            end_at: this.formatDateTime(batchEndTime),
+                            images: this.batchImages,
+                            amps: this.batchAmps
+                        };
+                        console.log(jsonData);                            
+                        this.sendData(jsonData);
+                        this.reset(['timer', 'poll', 'recipe', 'recipeFiltered', 'batch'])
                         this.modifyClass('cal-nav-main-links', 'add', 'sm:flex');
                         this.modifyClass('cal-nav-omv', 'remove', 'hidden');
                         this.modifyClass('cal-nav-main-links-alt', 'add', 'hidden');
-
-                        if (this.timerIntervalId) {
-                            cancelAnimationFrame(this.timerIntervalId);
-                        }
-                        if (this.pollingAId) {
-                            clearInterval(this.pollingAId);
-                        }
-                        if (this.pollingBId) {
-                            clearInterval(this.pollingBId);
-                        }
-                        this.evaluateStop(sendData);
-
-                        if (resetRecipe) {
-                            this.resetRecipeSelection();
-                        }
-                    },
-
-                    reset(resetRecipe = true) {
-                        this.stop(resetRecipe); // This will also reset the recipe selection if resetRecipe is true
-                        this.stepCurrentIndex = 0;
-                        if (resetRecipe) {
-                            this.recipeSelectedDuration = 0;
-                            this.timerRemainingTime = 0;
-                            this.stepList = [];
-                        } else {
-                            this.calculateTotalDuration();
-                            this.timerRemainingTime = this.recipeSelectedDuration;
-                        }
-                        this.batchStartTime = null;
-                        this.stepProgressPercentages = this.stepList.map(() => 0);
-                        this.stepRemainingTimes = this.stepList.map(step => step.duration);
-                        this.overtimeIsActive = false;
-                        this.overtimeElapsed = 0;
                     },
 
                     tick() {
                         if (this.timerIsRunning) {
                             this.timerElapsedSeconds = (new Date() - this.batchStartTime) / 1000;
 
-                            if (this.timerElapsedSeconds < (this.recipeSelectedDuration + 1)) {
-                                this.timerRemainingTime = Math.max(0, this.recipeSelectedDuration - Math.floor(this.timerElapsedSeconds));
+                            if (this.timerElapsedSeconds < (this.recipeDuration + 1)) {
+                                this.timerRemainingTime = Math.max(0, this.recipeDuration - Math.floor(this.timerElapsedSeconds));
                                 this.updateProgress(this.timerElapsedSeconds);
                                 
                                 // Check for capture points
                                 this.recipeCapturePoints.forEach(point => {
 
-                                    if (Math.abs(this.timerElapsedSeconds - point) < this.recipeCaptureThreshold && !this
-                                        .recipeCapturePointsDone.includes(point)) {
+                                    if (Math.abs(this.timerElapsedSeconds - point) < this.captureThreshold && !this
+                                        .timerCapturePoints.includes(point)) {
                                         console.log(
                                             `Image capture point: ${point}, elapsed time: ${this.timerElapsedSeconds}`
                                             ); // Debug log
-                                        this.captureImage(this.getStepCurrentIndex(this.timerElapsedSeconds), point);
-                                        this.recipeCapturePointsDone.push(point);
+                                        this.captureImage(this.getTimerStepIndex(this.timerElapsedSeconds), point);
+                                        this.timerCapturePoints.push(point);
                                     }
                                 });
 
-                                this.timerProgressPosition = this.timerElapsedSeconds / this.recipeSelectedDuration;
+                                this.timerProgressPosition = this.timerElapsedSeconds / this.recipeDuration;
 
                             } else {
                                 this.timerRemainingTime = 0;
-                                this.overtimeIsActive = true;
-                                this.overtimeElapsed = Math.floor(this.timerElapsedSeconds - this.recipeSelectedDuration);
+                                this.timerOvertime = true;
+                                this.timerOvertimeElapsed = Math.floor(this.timerElapsedSeconds - this.recipeDuration);
                                 this.timerProgressPosition = 1;
 
-                                if (this.overtimeElapsed >= this.overtimeMaxDuration) {
-                                    this.stop(true, true); // This will reset the recipe selection when the timer completes
+                                if (this.timerOvertimeElapsed >= this.overtimeMaxDuration) {
+                                    this.stopTimer(true); // This will reset the recipe selection when the timer completes
                                     return;
                                 }
                             }
@@ -679,57 +732,22 @@ class extends Component {
 
                     updateProgress(elapsedSeconds) {
                         let stepStartTime = 0;
-                        for (let i = 0; i < this.stepList.length; i++) {
-                            let stepDuration = this.stepList[i].duration;
+                        for (let i = 0; i < this.recipeSteps.length; i++) {
+                            let stepDuration = this.recipeSteps[i].duration;
                             let stepEndTime = stepStartTime + stepDuration;
 
                             if (elapsedSeconds < stepEndTime) {
-                                this.stepCurrentIndex = i;
+                                this.timerStepIndex = i;
                                 let stepElapsedTime = elapsedSeconds - stepStartTime;
-                                this.stepProgressPercentages[i] = Math.min(100, ((stepElapsedTime + 2) / stepDuration) * 100);
-                                this.stepRemainingTimes[i] = Math.max(0, stepDuration - Math.ceil(stepElapsedTime));
+                                this.timerStepPercentages[i] = Math.min(100, ((stepElapsedTime + 2) / stepDuration) * 100);
+                                this.timerStepRemainingTimes[i] = Math.max(0, stepDuration - Math.ceil(stepElapsedTime));
                                 break;
                                 // } else {
                                 //     console.log('hehe');
-                                //     this.stepProgressPercentages[i] = 100;
-                                //     this.stepRemainingTimes[i] = 0;
+                                //     this.timerStepPercentages[i] = 100;
+                                //     this.timerStepRemainingTimes[i] = 0;
                             }
-
                             stepStartTime = stepEndTime;
-                        }
-                    },
-
-                    evaluateStop(sendData = false) {
-                        if (this.batchStartTime === null) return;
-
-                        const difference = Math.abs(this.timerElapsedSeconds - this.recipeSelectedDuration);
-
-                        if (difference <= this.evalTolerance) {
-                            this.batchEval = 'on_time';
-                        } else if (this.timerElapsedSeconds < this.recipeSelectedDuration) {
-                            this.batchEval = 'too_soon';
-                        } else {
-                            this.batchEval = 'too_late';
-                        }
-
-                        if (sendData) {
-                            // Prepare and send the JSON data
-                            const jsonData = {
-                                server_url: '{{ route('home') }}',
-                                recipe_id: this.recipeSelected.id.toString(),
-                                code: this.batchCode,
-                                line: this.batchLine,
-                                team: this.batchTeam,
-                                user_1_emp_id: '{{ Auth::user()->emp_id }}',
-                                user_2_emp_id: this.userq,
-                                eval: this.batchEval,
-                                start_at: this.formatDateTime(this.batchStartTime),
-                                end_at: this.formatDateTime(new Date()),
-                                images: this.batchImages,
-                                amps: this.batchAmps
-                            };
-                            console.log(jsonData);
-                            this.sendData(jsonData);
                         }
                     },
 
@@ -751,9 +769,7 @@ class extends Component {
                     },
 
                     sendData(jsonData) {
-                        // Add captured images to JSON payload
-                        // jsonData.captured_images = this.batchImages;
-
+                        this.$dispatch('open-spotlight', 'sending');
                         fetch('http://127.0.0.1:92/send-data', {
                                 method: 'POST',
                                 headers: {
@@ -774,6 +790,10 @@ class extends Component {
                             .catch((error) => {
                                 console.error('Error:', error);
                                 notyfError('{{ __('Data gagal terkirim') }}');
+                            })
+                            .finally(() => {
+                                // This will execute regardless of the outcome
+                                window.dispatchEvent(escKey);
                             });
                     },
 
@@ -803,19 +823,19 @@ class extends Component {
                             });
                     },
 
-                    getTotalPreviousStepsDuration(index) {
-                        return this.stepList.slice(0, index).reduce((sum, step) => sum + Number(step.duration), 0);
+                    getPreviousStepsDuration(index) {
+                        return this.recipeSteps.slice(0, index).reduce((sum, step) => sum + Number(step.duration), 0);
                     },
 
-                    getStepCurrentIndex(elapsedSeconds) {
-                        let recipeSelectedDuration = 0;
-                        for (let i = 0; i < this.stepList.length; i++) {
-                            recipeSelectedDuration += Number(this.stepList[i].duration);
-                            if (elapsedSeconds < recipeSelectedDuration) {
+                    getTimerStepIndex(elapsedSeconds) {
+                        let recipeDuration = 0;
+                        for (let i = 0; i < this.recipeSteps.length; i++) {
+                            recipeDuration += Number(this.recipeSteps[i].duration);
+                            if (elapsedSeconds < recipeDuration) {
                                 return i;
                             }
                         }
-                        return this.stepList.length - 1; // Return last step if elapsed time exceeds total duration
+                        return this.recipeSteps.length - 1; // Return last step if elapsed time exceeds total duration
                     },
                 };
             }

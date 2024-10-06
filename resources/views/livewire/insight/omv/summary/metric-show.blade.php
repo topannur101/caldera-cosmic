@@ -145,16 +145,16 @@ class extends Component {
                 id="modal-chart-container">
             </div>
         </div>
-        <div wire:key="amps-none" class="{{ $showChart ? 'hidden' : '' }} py-20">
+        <div wire:key="amps-none" class="{{ $showChart ? 'hidden' : '' }} py-20 rounded-lg border border-neutral-300 dark:border-neutral-600 my-6">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                <i class="fa fa-line-chart relative"><i
+                <i class="fa fa-bolt-lightning relative"><i
                         class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
             </div>
             <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada data arus listrik') }}
             </div>
         </div>
-        <div class="flex gap-6">
-            <div class="flex flex-col pt-6">
+        <div class="flex flex-col mb-6 gap-6">
+            <div class="flex flex-col grow">
                 <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi batch') }}</dt>
                 <dd>
                     <div>
@@ -174,24 +174,24 @@ class extends Component {
                     </div>
                 </dd>
             </div>
-            <div class="flex flex-col pt-6">
+            <div class="flex flex-col grow">
                 <div class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi OMV') }}</div>
-                <div class="flex gap-6">
-                    <div>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="grow">
                         <div>
                             <span class="text-neutral-500 dark:text-neutral-400 text-sm">
                                 {{ __('Operator') . ': ' }}
                             </span>
                         </div>
-                        <div>
-                            <span>
-                                {{ $user_1_emp_id . ' - ' . $user_1_name }}
-                            </span>
+                        <div class=>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm font-mono">1.</span>
+                            <span class="font-mono">{{ ' ' . $user_1_emp_id }}</span>
+                            <span>{{ ' - ' . $user_1_name }}</span>
                         </div>
                         <div>
-                            <span>
-                                {{ $user_2_emp_id . ' - ' . $user_2_name }}
-                            </span>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm font-mono">2.</span>
+                            <span class="font-mono">{{ ' ' . $user_2_emp_id }}</span>
+                            <span>{{ ' - ' . $user_2_name }}</span>
                         </div>
                         <div class="mt-3">
                             <span class="text-neutral-500 dark:text-neutral-400 text-sm">
@@ -210,7 +210,7 @@ class extends Component {
                             </span>
                         </div>
                     </div>
-                    <div>
+                    <div class="grow">
                         <div>
                             <span class="text-neutral-500 dark:text-neutral-400 text-sm">
                                 {{ __('Tim') . ': ' }}
@@ -225,22 +225,24 @@ class extends Component {
                                 {{ $line }}
                             </span>
                         </div>
-                        <div>
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Awal') . ': ' }}
-                            </span>
-                            <span>
-                                {{ $start_at }}
-                            </span>
-                        </div>
-                        <div>
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Akhir') . ': ' }}
-                            </span>
-                            <span>
-                                {{ $end_at }}
-                            </span>
-                        </div>
+                        <table class="table-auto">
+                            <tr>
+                                <td class="text-neutral-500 dark:text-neutral-400 text-sm pr-4">
+                                    {{ __('Awal') . ': ' }}
+                                </td>
+                                <td class="font-mono">
+                                    {{ $start_at }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500 dark:text-neutral-400 text-sm pr-4">
+                                    {{ __('Akhir') . ': ' }}
+                                </td>
+                                <td class="font-mono">
+                                    {{ $end_at }}
+                                </td>
+                            </tr>
+                        </table>                                           
                         <div class="mt-3">
                             <span class="text-neutral-500 dark:text-neutral-400 text-sm">
                                 {{ __('Durasi') . ': ' }}

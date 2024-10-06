@@ -23,6 +23,7 @@ class extends Component {
     public string $machine_name;
     public string $machine_code;
     public string $start_time;
+    public string $end_time;
     public string $duration;
     public string $logs_count;
     public string $position;
@@ -58,6 +59,7 @@ class extends Component {
             $this->machine_name     = $dSum->ins_stc_machine->name;
             $this->machine_code     = $dSum->ins_stc_machine->code;
             $this->start_time       = $dSum->start_time;
+            $this->end_time         = $dSum->end_time;
             $this->duration         = InsStc::duration($dSum->start_time, $dSum->end_time);
             $this->logs_count       = $dSum->ins_stc_d_logs->count();
             $this->position         = InsStc::positionHuman($dSum->position);
@@ -152,6 +154,102 @@ class extends Component {
         </div>
         <div class="h-80 bg-white dark:brightness-75 text-neutral-900 rounded overflow-hidden my-8"
             id="modal-chart-container" wire:key="modal-chart-container" wire:ignore>
+        </div>
+        <div class="flex flex-col mb-6 gap-6">
+            <div class="flex flex-col grow">
+                <div class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi pengukuran') }}</div>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="grow">
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Operator') . ': ' }}
+                            </span>
+                        </div>
+                        <div class=>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm font-mono">1.</span>
+                            <span class="font-mono">{{ ' ' . $user_1_emp_id }}</span>
+                            <span>{{ ' - ' . $user_1_name }}</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm font-mono">2.</span>
+                            <span class="font-mono">{{ ' ' . $user_2_emp_id }}</span>
+                            <span>{{ ' - ' . $user_2_name }}</span>
+                        </div>
+                        <div class="mt-3">
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Urutan') . ': ' }}
+                            </span>
+                            <span class="uppercase">
+                                {{ $sequence }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Kode alat ukur') . ': ' }}
+                            </span>
+                            <span class="uppercase">
+                                {{ $device_code }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="grow">
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Line') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $machine_line }}
+                            </span>                            
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Posisi') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $position }}
+                            </span>
+                        </div>
+                        <table class="table-auto">
+                            <tr>
+                                <td class="text-neutral-500 dark:text-neutral-400 text-sm pr-4">
+                                    {{ __('Awal') . ': ' }}
+                                </td>
+                                <td class="font-mono">
+                                    {{ $start_time }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500 dark:text-neutral-400 text-sm pr-4">
+                                    {{ __('Akhir') . ': ' }}
+                                </td>
+                                <td class="font-mono">
+                                    {{ $end_time }}
+                                </td>
+                            </tr>
+                        </table>                                           
+                        <div class="mt-3">
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Durasi') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $duration }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col grow">
+                <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Suhu diatur') }}</dt>
+                <dd>
+                    <div class="grid grid-cols-8 text-center gap-x-3">
+                        @foreach($set_temps as $set_temp)
+                        <div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">
+                                {{ __('S') . $loop->iteration }}</div>
+                            <div>{{ $set_temp }}</div>
+                        </div>
+                        @endforeach
+                    </div>
+                </dd>
+            </div>
         </div>
         <div class="flex justify-end">
             <x-primary-button type="button" wire:click="printPrepare"><i
