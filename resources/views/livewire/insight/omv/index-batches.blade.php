@@ -62,7 +62,7 @@ new class extends Component {
                                 <div class="uppercase">{{ $metric->ins_rubber_batch->code ?? __('Tanpa kode') }}</div>
                                 <div class="flex flex-wrap gap-1 -mx-2 text-sm">
                                     <x-pill class="inline-block uppercase" 
-                                        color="{{ $metric->eval === 'on_time' ? 'green' : ($metric->eval === 'too_late' || $metric->eval === 'too_soon' ? 'red' : 'neutral') }}">{{ $metric->evalHuman() }}</x-pill>
+                                        color="{{ $metric->eval === 'on_time' ? 'green' : ($metric->eval === 'on_time_manual' ? 'yellow' : ($metric->eval === 'too_late' || $metric->eval === 'too_soon' ? 'red' : 'neutral')) }}">{{ $metric->evalHuman() }}</x-pill>
                                     @if($metric->ins_rubber_batch)
                                     <x-pill class="inline-block uppercase"
                                     color="{{ $metric->ins_rubber_batch->rdc_eval === 'queue' ? 'yellow' : ($metric->ins_rubber_batch->rdc_eval === 'pass' ? 'green' : ($metric->ins_rubber_batch->rdc_eval === 'fail' ? 'red' : 'neutral')) }}">{{ 'RHEO: ' . $metric->ins_rubber_batch->rdcEvalHuman() }}</x-pill>                             

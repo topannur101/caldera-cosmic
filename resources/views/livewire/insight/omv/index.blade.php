@@ -62,7 +62,7 @@ class extends Component {
                         <div class="flex justify-between grow mx-6 my-4">
                             <div class="flex flex-col justify-center">
                                 <div class="flex items-center gap-x-3">
-                                    <div class="text-2xl" x-text="recipe ? recipe.name : '{{ __('Menunggu...') }}'"></div>
+                                    <div class="text-xl" x-text="recipe ? recipe.name : '{{ __('Menunggu...') }}'"></div>
                                 </div>
                                 <div class="flex gap-x-3 text-neutral-500">
                                     <div x-show="recipe" x-cloak>
@@ -113,7 +113,7 @@ class extends Component {
                                 class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
                         <x-primary-button class="m-4" type="button" size="lg" @click="reset(['timer', 'recipe', 'batch', 'poll'])"
                             x-show="!timerIsRunning && recipe">{{ __('Batal') }}</x-primary-button>
-                        <x-primary-button class="m-4" type="button" size="lg" @click="stopTimer()" x-cloak
+                        <x-primary-button class="m-4" type="button" size="lg" @click="$dispatch('open-spotlight', 'manual-stop')" x-cloak
                             x-show="timerIsRunning"><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
                     </div>
                 </div>
@@ -128,6 +128,39 @@ class extends Component {
                                 {{ __('Mengirim data ke server...')}}
                             </h2>
                         </header>
+                    </div>
+                </x-spotlight>
+
+                <x-spotlight name="manual-stop" maxWidth="sm">
+                    <div class="w-full flex flex-col gap-y-6 pb-10 text-center ">
+                        <div>
+                            <i class="text-4xl fa fa-exclamation-triangle"></i>
+                        </div>
+                        <header>
+                            <h2 class="text-xl font-medium uppercase">
+                                {{ __('Peringatan')}}
+                            </h2>
+                        </header>
+                        <div>
+                            {{ __('Disarankan untuk tidak menghentikan timer secara manual karena akan mempengaruhi evaluasi kerjamu. Jika ingin tetap menghentikan timer, geser ke kanan.') }}
+                        </div>
+                        <div class="w-full relative">
+                            <div class="bg-neutral-500 bg-opacity-20 h-14 rounded-full relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center opacity-50 cal-shimmer" >{{ __('Geser untuk menghentikan') }}</div>
+                                <div class="absolute top-0 left-0 w-14 h-14 bg-neutral-500 text-white rounded-full shadow-md flex items-center justify-center transition-all duration-300 ease-out"
+                                        :style="`transform: translateX(${timerManualStopSliderPercentage * 3.3}px)`"><i class="fa fa-arrow-right"></i>
+                                </div>
+                                <input type="range" 
+                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                       x-model="timerManualStopSliderPercentage" 
+                                       @input="sliderUnlock"
+                                       @change="sliderSnapBack"
+                                       min="0" max="100" step="1">
+                            </div>
+                        </div>
+                        <div class="flex justify-center">
+                            <x-secondary-button @click="window.dispatchEvent(escKey)" type="button">{{ __('Kembali') }}</x-secondary-button>
+                        </div>
                     </div>
                 </x-spotlight>
     
@@ -338,7 +371,7 @@ class extends Component {
                                         <span class="text-xs font-mono"
                                             x-text="formatTime(timerStepRemainingTimes[index])"></span>
                                     </div>
-                                    <div class="relative w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                                    <div class="relative w-full bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700">
                                         <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
                                             :style="'width: ' + timerStepPercentages[index] + '%'"></div>
                                         <!-- Capture points -->
@@ -366,7 +399,7 @@ class extends Component {
             const configDefaults = {
                 captureThreshold: 1,
                 evalTolerance: 120,
-                evalFalseLimit: 30, // auto stop
+                evalFalseLimit: 30, // Auto stop: e.g. pollingBInterval: 4000, evalFalseLimit: 30, then 4000*30/1000 = 120 seconds autostop
                 overtimeMaxDuration: 900,
                 pollingAInterval: 4000,
                 pollingBInterval: 4000,
@@ -395,19 +428,20 @@ class extends Component {
             };
 
             const timerDefaults = {
-                timerCapturePoints: [], // timerCapturePoints
+                timerCapturePoints: [], 
                 timerElapsedSeconds: 0,
                 timerEvalFalseCount: 0,
                 timerIntervalId: null,
                 timerIsRunning: false,
-                timerManuallyStopped: false,
-                timerOvertime: false, // timerOvertime
-                timerOvertimeElapsed: 0, // timerOvertimeElapsed
+                timerManualStopSliderUnlocked: false,
+                timerManualStopSliderPercentage: 0,
+                timerOvertime: false,
+                timerOvertimeElapsed: 0,
                 timerProgressPosition: 0, // glow
                 timerRemainingTime: 0,
-                timerStepIndex: 0, // timerStepIndex
-                timerStepPercentages: [], //timerStepPercentages
-                timerStepRemainingTimes: [], //timerStepRemainingTimes
+                timerStepIndex: 0,
+                timerStepPercentages: [],
+                timerStepRemainingTimes: [],
             };
 
             function app() {
@@ -624,6 +658,13 @@ class extends Component {
                                 .then(response => response.json())
                                 .then(data => {
                                     console.log('Polling B:', data);
+                                                                            // Auto stop
+                                                                            if (data.eval === false) {
+                                            this.timerEvalFalseCount++;
+                                            if (this.timerEvalFalseCount > this.evalFalseLimit) {
+                                                this.stopTimer(true); // Pass true to indicate automatic stop
+                                            }
+                                        }
                                     if (data.error) {
                                         console.error('Polling B server error:', data.error);
                                     } else {
@@ -631,20 +672,26 @@ class extends Component {
                                             taken_at: this.timerElapsedSeconds,
                                             value: data.raw
                                         });
-                                        // Check if eval is false
-                                        if (data.eval === false) {
-                                            this.timerEvalFalseCount++;
-                                            if (this.timerEvalFalseCount > this.evalFalseLimit) {
-                                                this.stopTimer(true); // Pass true to indicate automatic stop
-                                            }
-                                        }
                                     }
                                 })
                                 .catch(error => {
                                     console.error('Polling B error:', error);
                                 });
                         }, this.pollingBInterval);
-                    },             
+                    },     
+                    
+                    sliderUnlock() {
+                        this.timerManualStopSliderUnlocked = this.timerManualStopSliderPercentage >= 100;
+                        if (this.timerManualStopSliderUnlocked) {
+                            window.dispatchEvent(escKey);
+                            this.stopTimer();
+                        }
+                    },
+                    sliderSnapBack() {
+                        if (!this.timerManualStopSliderUnlocked) {
+                            this.timerManualStopSliderPercentage = 0;
+                        }
+                    },
 
                     stopTimer(isAutomatic = false) {
                         let batchEndTime = new Date();
@@ -658,10 +705,10 @@ class extends Component {
 
                         const difference = Math.abs(adjustedElapsedSeconds - this.recipeDuration);
 
-                        if (difference <= this.evalTolerance && this.timerManuallyStopped) {
-                            this.batchEval = 'on_time_manual';
-                        } else if (difference <= this.evalTolerance) {
+                        if (difference <= this.evalTolerance && isAutomatic) {
                             this.batchEval = 'on_time';
+                        } else if (difference <= this.evalTolerance && !isAutomatic) {
+                            this.batchEval = 'on_time_manual';
                         } else if (adjustedElapsedSeconds < this.recipeDuration) {
                             this.batchEval = 'too_soon';
                         } else {
@@ -686,9 +733,6 @@ class extends Component {
                         console.log(jsonData);                            
                         this.sendData(jsonData);
                         this.reset(['timer', 'poll', 'recipe', 'recipeFiltered', 'batch'])
-                        this.modifyClass('cal-nav-main-links', 'add', 'sm:flex');
-                        this.modifyClass('cal-nav-omv', 'remove', 'hidden');
-                        this.modifyClass('cal-nav-main-links-alt', 'add', 'hidden');
                     },
 
                     tick() {
@@ -792,7 +836,9 @@ class extends Component {
                                 notyfError('{{ __('Data gagal terkirim') }}');
                             })
                             .finally(() => {
-                                // This will execute regardless of the outcome
+                                this.modifyClass('cal-nav-main-links', 'add', 'sm:flex');
+                                this.modifyClass('cal-nav-omv', 'remove', 'hidden');
+                                this.modifyClass('cal-nav-main-links-alt', 'add', 'hidden');
                                 window.dispatchEvent(escKey);
                             });
                     },

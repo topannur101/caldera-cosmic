@@ -87,6 +87,9 @@ class InsOmvMetric extends Model
             case 'too_late':
                 $eval = __('Terlambat');
                 break;
+            case 'on_time_manual':
+                $eval = __('Tepat waktu');
+                break;
         }
         return $eval;
     }

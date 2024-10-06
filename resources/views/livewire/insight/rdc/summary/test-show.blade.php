@@ -106,7 +106,7 @@ class extends Component {
                                 <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
                                 <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('OMV')}}</div>
                                 <x-pill class="uppercase"
-                                color="{{ $batch_omv_eval === 'on_time' ? 'green' : ($batch_omv_eval === 'too_late' || $batch_omv_eval === 'too_soon' ? 'red' : 'neutral') }}">{{ $batch_omv_eval_human }}</x-pill>    
+                                color="{{ $batch_omv_eval === 'on_time' ? 'green' : ($batch_omv_eval === 'on_time_manual' ? 'yellow' : ($batch_omv_eval === 'too_late' || $batch_omv_eval === 'too_soon' ? 'red' : 'neutral')) }}">{{ $batch_omv_eval_human }}</x-pill>    
                             </li>
                             <li class="mb-6 ms-4">
                                 <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>

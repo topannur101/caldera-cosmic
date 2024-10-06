@@ -256,7 +256,7 @@ class extends Component {
                                 {{ __('Hasil') . ': ' }}
                             </span>
                             <x-pill class="uppercase"
-                        color="{{ $eval === 'on_time' ? 'green' : ($eval === 'too_late' || $eval === 'too_soon' ? 'red' : 'neutral') }}">{{ $eval_human }}</x-pill>    
+                        color="{{ $eval === 'on_time' ? 'green' : ($eval === 'on_time_manual' ? 'yellow' : ($eval === 'too_late' || $eval === 'too_soon' ? 'red' : 'neutral')) }}">{{ $eval_human }}</x-pill>    
                         </div>
                     </div>
                 </div>

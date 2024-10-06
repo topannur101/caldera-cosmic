@@ -48,6 +48,8 @@ class InsRubberBatch extends Model
                 return __('Terlalu awal');
             case 'too_late':
                 return __('Terlambat');
+            case 'on_time_manual':
+                return __('Tepat waktu');
             default:
                 return __('Baru');
         }

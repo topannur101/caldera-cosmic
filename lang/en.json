@@ -654,5 +654,18 @@
     "Belum ada resep yang dipilih": "No recipe selected yet",
     "Tim atau Mitra kerja masih kosong": "Team or Partner information is empty",
     "Tak ada riwayat terakhir": "No recent history",
-    "Tanpa kode": "No code"
+    "Tanpa kode": "No code",
+    "Peringatan": "Warning",
+    "Riwayat": "History",
+    "Belum ada resep yang di pilih.": "No recipe has been selected.",
+    "Batal": "Cancel",
+    "Disarankan untuk tidak menghentikan timer secara manual karena akan mempengaruhi evaluasi kerjamu. Jika ingin tetap menghentikan timer, geser ke kanan.": "It is recommended not to stop the timer manually as it will affect your work evaluation. If you still want to stop the timer, slide to the right.",
+    "Informasi OMV": "OMV Information",
+    "Resep yang dipilih tidak sah.": "The selected recipe is invalid.",
+    "Hasil rheo": "Rheo result",
+    "Area Midsole": "Midsole Area",
+    "Timer sudah berjalan.": "The timer is already running.",
+    "Geser untuk menghentikan": "Slide to stop",
+    "Mengirim data ke server...": "Sending data to the server...",
+    "Kembali" : "Back"
 }

@@ -654,5 +654,18 @@
 "Belum ada resep yang dipilih": "Chưa có công thức nào được chọn",
 "Tim atau Mitra kerja masih kosong": "Thông tin Đội hoặc Đối tác vẫn trống",
 "Tak ada riwayat terakhir": "Không có lịch sử gần đây",
-"Tanpa kode": "Không có mã"
+"Tanpa kode": "Không có mã",
+"Peringatan": "Cảnh báo",
+"Riwayat": "Lịch sử",
+"Belum ada resep yang di pilih.": "Chưa có công thức nào được chọn.",
+"Batal": "Hủy",
+"Disarankan untuk tidak menghentikan timer secara manual karena akan mempengaruhi evaluasi kerjamu. Jika ingin tetap menghentikan timer, geser ke kanan.": "Không nên dừng bộ đếm thời gian theo cách thủ công vì sẽ ảnh hưởng đến đánh giá công việc của bạn. Nếu vẫn muốn dừng, hãy trượt sang phải.",
+"Informasi OMV": "Thông tin OMV",
+"Resep yang dipilih tidak sah.": "Công thức đã chọn không hợp lệ.",
+"Hasil rheo": "Kết quả rheo",
+"Area Midsole": "Khu vực Midsole",
+"Timer sudah berjalan.": "Bộ đếm thời gian đang chạy.",
+"Geser untuk menghentikan": "Trượt để dừng",
+"Mengirim data ke server...": "Đang gửi dữ liệu đến máy chủ...",
+"Kembali" : "Quay lại"
 }

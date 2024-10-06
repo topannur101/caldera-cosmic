@@ -654,5 +654,18 @@
 "Belum ada resep yang dipilih": "아직 선택된 레시피가 없습니다",
 "Tim atau Mitra kerja masih kosong": "팀 또는 파트너 정보가 비어 있습니다",
 "Tak ada riwayat terakhir": "최근 기록이 없습니다",
-"Tanpa kode": "코드가 없습니다"
+"Tanpa kode": "코드가 없습니다",
+"Peringatan": "경고",
+"Riwayat": "기록",
+"Belum ada resep yang di pilih.": "선택된 레시피가 없습니다.",
+"Batal": "취소",
+"Disarankan untuk tidak menghentikan timer secara manual karena akan mempengaruhi evaluasi kerjamu. Jika ingin tetap menghentikan timer, geser ke kanan.": "타이머를 수동으로 멈추지 않는 것이 좋습니다. 이는 작업 평가에 영향을 줄 수 있습니다. 타이머를 멈추려면 오른쪽으로 슬라이드하세요.",
+"Informasi OMV": "OMV 정보",
+"Resep yang dipilih tidak sah.": "선택된 레시피가 유효하지 않습니다.",
+"Hasil rheo": "레오 결과",
+"Area Midsole": "미드솔 구역",
+"Timer sudah berjalan.": "타이머가 이미 실행 중입니다.",
+"Geser untuk menghentikan": "멈추려면 슬라이드하세요",
+"Mengirim data ke server...": "서버로 데이터 전송 중...",
+"Kembali" : "뒤로"
 }
