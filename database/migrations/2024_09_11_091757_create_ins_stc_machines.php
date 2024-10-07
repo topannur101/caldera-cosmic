@@ -21,7 +21,6 @@ return new class extends Migration
             $table->tinyInteger('line')->unsigned();
             $table->ipAddress('ip_address')->nullable();
 
-
             $table->index('code');
             $table->index('line');
         });
