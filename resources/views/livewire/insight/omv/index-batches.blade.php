@@ -38,7 +38,7 @@ new class extends Component {
     </div>
     <div class="pt-6">
         <div class="flex justify-between text-neutral-500 text-sm px-6 pb-6 uppercase">
-                <div><i class="fa fa-history me-2"></i>{{ __('Riwayat') }}</div>
+                <div>{{ __('Riwayat') }}</div>
             @if($line)
                 <div>{{ __('Line') . ' ' . $line }}</div>
             @else
@@ -48,9 +48,14 @@ new class extends Component {
         <hr class="border-neutral-200 dark:border-neutral-700 opacity-85" />
         <div class="overflow-y-scroll p-1 h-[520px]">
             @if($metrics->isEmpty())
-                <div class="flex h-full">
-                    <div class="my-auto py-6 text-sm text-center w-full">
-                        {{ __('Tak ada riwayat terakhir') }}
+                <div class="flex items-center justify-center h-full">
+                    <div>
+                        <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                            <i class="fa fa-history relative"><i
+                                    class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                        </div>
+                        <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tak ada riwayat') }}
+                        </div>
                     </div>
                 </div>
             @else
