@@ -225,10 +225,10 @@ class InsRtcFetch extends Command
 
                 try {
                     // Tarik data MODBUS
-                    $fc2_resposne = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc2);
+                    $fc2_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc2);
                     $fc3_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc3);
                     echo 'Response from: ' . $device->ip_address . ' (Line ' . $device->line . ')';
-                    $fc2_data = $fc2_resposne->getData();
+                    $fc2_data = $fc2_response->getData();
                     $fc3_data = $fc3_response->getData();
                     // print_r($fc3_data);
 

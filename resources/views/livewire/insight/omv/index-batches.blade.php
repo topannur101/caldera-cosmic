@@ -17,8 +17,10 @@ new class extends Component {
 
     public function with(): array
     {
-        $metrics = InsOmvMetric::where('updated_at', '>=', Carbon::now()->subDay())->where('line', $this->line);
-        $metrics = $metrics->orderBy('updated_at', 'desc')->limit(5)->get();
+        $metrics = InsOmvMetric::where('updated_at', '>=', Carbon::now()->subDay())
+                       ->where('line', $this->line)
+                       ->orderBy('updated_at', 'desc')
+                       ->get();
 
         return [
             'metrics' => $metrics,
@@ -44,21 +46,41 @@ new class extends Component {
             @endif
         </div>
         <hr class="border-neutral-200 dark:border-neutral-700 opacity-85" />
-        @if($metrics->isEmpty())
-            <div class="flex">
-                <div class="my-auto py-6 text-sm text-center w-full">
-                    {{ __('Tak ada riwayat terakhir') }}
+        <div class="overflow-y-scroll p-1 h-[520px]">
+            @if($metrics->isEmpty())
+                <div class="flex h-full">
+                    <div class="my-auto py-6 text-sm text-center w-full">
+                        {{ __('Tak ada riwayat terakhir') }}
+                    </div>
                 </div>
-            </div>
-        @else
-            <ul class="py-3">
-                @foreach ($metrics as $metric)
-                    <li class="w-full hover:bg-caldy-500 hover:bg-opacity-10">
-                        <x-link href="#" x-on:click.prevent="$dispatch('open-modal', 'metric-show'); $dispatch('metric-show', { id: '{{ $metric->id }}'})" class="grid gap-y-1 px-6 py-3">
-                            <div class="text-sm text-neutral-500">
-                                {{ $metric->updated_at->diffForHumans() }}
-                            </div>
-                            <div>
+            @else
+                <ul class="py-3">
+                    @foreach ($metrics as $metric)
+                        <li class="w-full hover:bg-caldy-500 hover:bg-opacity-10">
+                            <x-link href="#" x-on:click.prevent="$dispatch('open-modal', 'metric-show'); $dispatch('metric-show', { id: '{{ $metric->id }}'})" 
+                                class="grid gap-y-1 px-6 py-3">
+                                <div class="flex gap-x-1 text-sm text-neutral-500">                        
+                                    <div class="w-4 h-4 my-auto bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                        @if($metric->user_1->photo ?? false)
+                                        <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/'.$metric->user_1->photo }}" />
+                                        @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                                        @endif
+                                    </div>
+                                    @if($metric->user_2)
+                                        <div class="w-4 h-4 my-auto bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                            @if($metric->user_2->photo ?? false)
+                                            <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/'.$metric->user_2->photo }}" />
+                                            @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                                            @endif
+                                        </div>
+                                    @endif
+                                    <div>•</div> 
+                                    <div>{{ __('Tim') . ' ' . $metric->team }}</div>
+                                    <div class="grow"></div>                                
+                                    <div>{{ $metric->updated_at->diffForHumans(['short' => true, 'syntax' => Carbon::DIFF_ABSOLUTE]) }}</div>
+                                </div>
                                 <div class="uppercase">{{ $metric->ins_rubber_batch->code ?? __('Tanpa kode') }}</div>
                                 <div class="flex flex-wrap gap-1 -mx-2 text-sm">
                                     <x-pill class="inline-block uppercase" 
@@ -68,11 +90,11 @@ new class extends Component {
                                     color="{{ $metric->ins_rubber_batch->rdc_eval === 'queue' ? 'yellow' : ($metric->ins_rubber_batch->rdc_eval === 'pass' ? 'green' : ($metric->ins_rubber_batch->rdc_eval === 'fail' ? 'red' : 'neutral')) }}">{{ 'RHEO: ' . $metric->ins_rubber_batch->rdcEvalHuman() }}</x-pill>                             
                                     @endif
                                 </div>
-                            </div>
-                        </x-link>
-                    </li>
-                @endforeach
-            </ul>
-        @endif
+                            </x-link>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
     </div> 
 </div>

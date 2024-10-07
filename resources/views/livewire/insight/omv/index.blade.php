@@ -47,7 +47,7 @@ class extends Component {
     @else
         @vite(['resources/js/apexcharts.js'])
         <div class="flex flex-col sm:flex-row">
-            <div class="px-1 py-4">
+            <div class="py-4">
                 <livewire:insight.omv.index-batches />
             </div>
             <div class="w-full overflow-hidden p-4">
@@ -348,7 +348,7 @@ class extends Component {
                     </div>
                 </div>
     
-                <div x-show="recipe" class="grid grid-cols-2 gap-3 mt-6">
+                <div x-show="recipe" class="grid grid-cols-2 gap-4 mt-4">
                     <template x-for="(step, index) in recipeSteps" :key="index">
                         <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4"
                             :class="timerStepIndex == index && timerIsRunning ? 'cal-shimmer' : ''">
