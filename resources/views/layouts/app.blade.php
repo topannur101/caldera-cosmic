@@ -23,16 +23,16 @@
             {{ $header }}
             @endif
 
-            <!-- Page Printable -->
-            @if (isset($printable))
-            {{ $printable }}
-            @endif
-
             <!-- Page Content -->
             <main>
                 {{ $slot }}
             </main>
         </div>
+
+        <!-- Page Printable -->
+        @if (isset($printable))
+        {{ $printable }}
+        @endif
         
     </body>
 </html>

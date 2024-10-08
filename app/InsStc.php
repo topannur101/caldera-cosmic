@@ -7,7 +7,7 @@ use InvalidArgumentException;
 
 class InsStc
 {
-    public static function getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, $height)
+    public static function getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, $width, $height)
     {
         $chartData = array_map(function ($log) {
             return [Self::parseDate($log['taken_at']), $log['temp']];
@@ -17,6 +17,7 @@ class InsStc
         return [
             'chart' => [
                 'redrawOnParentResize' => true,
+                'width' => $width . '%',
                 'height' => $height .'%',
                 'type' => 'line',
                 'toolbar' => [

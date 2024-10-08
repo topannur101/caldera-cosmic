@@ -133,7 +133,7 @@ class extends Component {
                     </div>
                 </div>
             </x-modal>  
-            <x-modal name="d_sum-show" maxWidth="2xl">
+            <x-modal name="d_sum-show" maxWidth="xl">
                 <livewire:insight.stc.summary.d-sum-show />
             </x-modal>
         </div>

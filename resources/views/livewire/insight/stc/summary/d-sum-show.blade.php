@@ -75,7 +75,7 @@ class extends Component {
             $this->js(
                 "
                 let modalOptions = " .
-                    json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 100)) .
+                    json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 100, 100)) .
                     ";
 
                 // Render modal chart
@@ -85,7 +85,7 @@ class extends Component {
                 modalChart.render();
 
                 let printOptions = " .
-                    json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 85)) .
+                    json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 90, 85)) .
                     ";
 
                 // // Render hidden printable chart
@@ -139,12 +139,12 @@ class extends Component {
     #[On('print-execute')]
     public function printExecute()
     {
-        $this->js('window.print()');
+        $this->js("handlePrint()");
     }
 };
 
 ?>
-<div>
+<div x-data="{ ...app() }">
     <div class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
@@ -258,4 +258,23 @@ class extends Component {
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
+    <script>
+        function app() {
+            return {
+                togglePrintClass(shouldRemove) {
+                    const container = document.getElementById('print-container');
+                    if (shouldRemove) {
+                        container.classList.remove('cal-offscreen');
+                    } else {
+                        container.classList.add('cal-offscreen');
+                    }
+                },
+
+                handlePrint() {
+                    this.togglePrintClass(true);
+                    window.print();
+                }
+            }
+        }
+    </script>
 </div>
