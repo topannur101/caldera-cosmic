@@ -24,8 +24,8 @@ class extends Component {
     #[Url]
     public $ftype = 'any';
 
-    public $dateViews = ['d-sums'];
-    public $rangeViews = ['d-sums'];
+    public $dateViews = ['d-sums', 'm-logs'];
+    public $rangeViews = ['d-sums', 'm-logs'];
     public $filterViews = ['d-sums'];
 
     public $is_date;
@@ -105,20 +105,20 @@ class extends Component {
     <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row min-w-0">
         <div>
             <div class="w-full sm:w-44 md:w-64 px-3 sm:px-0 mb-5">
-                {{-- <div class="btn-group h-10 w-full">
-                    <x-radio-button wire:model.live="view" grow value="by-mcs" name="view" id="view-by-mcs">
+                <div class="btn-group h-10 w-full">
+                    <x-radio-button wire:model.live="view" grow value="m-logs" name="view" id="view-m-logs">
                         <div class="text-center my-auto">
-                            <i class="fa fa-fw fa-chart-line text-center m-auto"></i>
+                            <i class="fa fa-fw fa-tablet text-center m-auto"></i>
                         </div>
                     </x-radio-button>
                     <x-radio-button wire:model.live="view" grow value="d-sums" name="view" id="view-d-sums">
                         <div class="text-center my-auto">
-                            <i class="fa fa-fw fa-table text-center m-auto"></i>
+                            <i class="fa fa-fw fa-pager text-center m-auto"></i>
                         </div>
                     </x-radio-button>
-                </div> --}}
+                </div>
                 <div
-                    class="bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_date ? '' : 'hidden' }}">
+                    class="bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_date ? '' : 'hidden' }} mt-4">
                     <div class="flex items-start justify-between">
                         <div><i class="fa fa-calendar mr-3"></i>{{ $is_range ? __('Rentang') : __('Tanggal') }}</div>
                         <div class="flex items-center">
@@ -209,6 +209,10 @@ class extends Component {
         @switch($view)
             @case('d-sums')
                 <livewire:insight.stc.summary.d-sums :$start_at :$end_at :$fquery :$ftype />
+            @break
+
+            @case('m-logs')
+                <livewire:insight.stc.summary.m-logs :$start_at :$end_at :$fquery :$ftype />
             @break
 
             @default

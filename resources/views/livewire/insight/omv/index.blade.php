@@ -44,14 +44,48 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     @else
         @vite(['resources/js/apexcharts.js'])
-        <div x-data="{ ...app() }" x-init="loadRecipes(); fetchLine();">
-            <div x-show="statsVisible" x-cloak @keydown.window.ctrl.d.prevent="statsVisible = !statsVisible">Stats is being developed.</div>
-            <div class="flex flex-col sm:flex-row">
-                <div class="py-4">
+        <div x-data="{ ...app(), userq: @entangle('userq').live }" x-init="loadRecipes(); fetchLine();">
+            <div x-show="statsVisible" x-cloak @keydown.window.ctrl.d.prevent="statsVisible = !statsVisible" class="flex gap-2 px-4 mb-4">
+                <div class="text-sm">{{ __('Statistik') . ': ' }}</div>
+                <x-pill color="yellow">
+                    <span>batchTeam: </span>
+                    <span class="font-mono" x-text="batchTeam"></span>
+                </x-pill>
+                <x-pill color="yellow">
+                    <span>userq: </span>
+                    <span class="font-mono" x-text="userq"></span>
+                </x-pill>
+                <x-pill color="yellow">
+                    <span>evalTolerance: </span>
+                    <span class="font-mono" x-text="evalTolerance"></span>
+                </x-pill>                
+                <x-pill color="yellow">
+                    <span>evalFalseLimit: </span>
+                    <span class="font-mono" x-text="evalFalseLimit"></span>
+                </x-pill>                
+                <x-pill color="yellow">
+                    <span>timerElapsedSeconds: </span>
+                    <span class="font-mono" x-text="timerElapsedSeconds.toFixed(1)"></span>
+                </x-pill>                
+                <x-pill color="yellow">
+                    <span>timerEvalFalseCount: </span>
+                    <span class="font-mono" x-text="timerEvalFalseCount"></span>
+                </x-pill>                
+                <x-pill color="yellow">
+                    <span>timerOvertimeElapsed: </span>
+                    <span class="font-mono" x-text="timerOvertimeElapsed"></span>
+                </x-pill>    
+                <x-pill color="yellow">
+                    <span>batchAmp: </span>
+                    <span class="font-mono" x-text="batchAmps[batchAmps.length - 1]"></span>
+                </x-pill>               
+            </div>
+            <div class="flex flex-col sm:flex-row gap-x-4 p-2">
+                <div>
                     <livewire:insight.omv.index-batches />
                 </div>
-                <div class="w-full overflow-hidden p-4">
-                    <div class="flex flex-col h-full">
+                <div class="w-full">
+                    <div class="flex flex-col h-full gap-y-4">
                         <div :class="!timerIsRunning && recipe ? 'cal-glowing z-10' : (timerIsRunning ? 'cal-glow z-10' : '')"
                             :style="'--cal-glow-pos: -' + (timerProgressPosition * 100) + '%'">
                             <div
@@ -354,7 +388,7 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
                         </x-modal>
 
-                        <div x-show="!recipe" class="grow mt-6">
+                        <div x-show="!recipe" class="grow">
                             <div
                                 class="bg-white dark:bg-neutral-800 bg-opacity-80 dark:bg-opacity-80 shadow rounded-lg h-full flex items-center">
                                 <div class="grow py-20">
@@ -369,7 +403,7 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
                         </div>
 
-                        <div x-show="recipe" class="grid grid-cols-2 gap-4 mt-4">
+                        <div x-show="recipe" class="grid grid-cols-2 gap-4">
                             <template x-for="(step, index) in recipeSteps" :key="index">
                                 <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4"
                                     :class="timerStepIndex == index && timerIsRunning ? 'cal-shimmer' : ''">
@@ -428,7 +462,7 @@ new #[Layout('layouts.app')] class extends Component {
                 captureThreshold: 1,
                 evalTolerance: 120,
                 evalFalseLimit: 30, // Auto stop: e.g. pollingBInterval: 4000, evalFalseLimit: 30, then 4000*30/1000 = 120 seconds autostop
-                overtimeMaxDuration: 900,
+                overtimeMaxDuration: 600,
                 pollingAInterval: 4000,
                 pollingBInterval: 4000,
             };
@@ -490,7 +524,6 @@ new #[Layout('layouts.app')] class extends Component {
                     recipes: [],
                     recipesFiltered: [],
                     statsVisible: false,
-                    userq: @entangle('userq').live,
                     wizardStep: 1,
 
                     async fetchLine() {

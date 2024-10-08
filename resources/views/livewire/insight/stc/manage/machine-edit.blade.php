@@ -14,13 +14,15 @@ new class extends Component {
     public string $code;
     public string $name = '';
     public int $line;
+    public string $ip_address;
 
     public function rules()
     {
         return [
             'code' => ['required', 'string', 'min:1', 'max:20', Rule::unique('ins_stc_machines', 'code')->ignore($this->id ?? null)],
             'name' => ['required', 'string', 'min:1', 'max:20'], 
-            'line' => ['required', 'integer', 'min:1', 'max:99'],        
+            'line' => ['required', 'integer', 'min:1', 'max:99'],   
+            'ip_address' => ['required', 'ipv4', Rule::unique('ins_stc_machines', 'ip_address')->ignore($this->id ?? null)]     
         ];
     }
 
@@ -33,6 +35,7 @@ new class extends Component {
             $this->code     = $machine->code;
             $this->name     = $machine->name;
             $this->line     = $machine->line;
+            $this->ip_address   = $machine->ip_address;
         
             $this->resetValidation();
         } else {
@@ -67,7 +70,7 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['code', 'name', 'line']);
+        $this->reset(['code', 'name', 'line', 'ip_address']);
     }
 
     public function handleNotFound()
@@ -108,7 +111,14 @@ new class extends Component {
                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
             @enderror
         </div>  
-        
+        <div class="mt-6">
+            <label for="machine-ip-address"
+                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Alamat IP') }}</label>
+            <x-text-input id="machine-ip-address" wire:model="ip_address" :disabled="Gate::denies('manage', InsStcMachine::class)" type="text" />
+            @error('ip_address')
+                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+            @enderror
+        </div>
         @can('manage', InsStcMachine::class)
         <div class="mt-6 flex justify-end">
             <x-primary-button type="submit">

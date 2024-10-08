@@ -10,13 +10,15 @@ new class extends Component {
     public string $code = '';
     public string $name = '';
     public int $line;
+    public string $ip_address;
 
     public function rules()
     {
         return [
             'code' => ['required', 'string', 'min:1', 'max:20', 'unique:ins_stc_machines'],
             'name' => ['required', 'string', 'min:1', 'max:20'],
-            'line' => ['required', 'integer', 'min:1', 'max:99']
+            'line' => ['required', 'integer', 'min:1', 'max:99'],
+            'ip_address' => ['required', 'ipv4', 'unique:ins_stc_machines']
         ];
     }
 
@@ -31,7 +33,8 @@ new class extends Component {
         $machine->fill([
             'code' => $validated['code'],
             'name' => $validated['name'],
-            'line' => $validated['line']
+            'line' => $validated['line'],
+            'ip_address' => $validated['ip_address']
         ]);
 
         $machine->save();
@@ -45,7 +48,7 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['code', 'name', 'line']);
+        $this->reset(['code', 'name', 'line', 'ip_address']);
     }
 };
 
@@ -80,6 +83,14 @@ new class extends Component {
                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
             @enderror
         </div>  
+        <div class="mt-6">
+            <label for="device-ip-address"
+                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Alamat IP') }}</label>
+            <x-text-input id="device-ip-address" wire:model="ip_address" type="text" />
+            @error('ip_address')
+                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+            @enderror
+        </div>
         <div class="mt-6 flex justify-end">
             <x-primary-button type="submit">
                 {{ __('Simpan') }}
