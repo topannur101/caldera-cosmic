@@ -31,6 +31,8 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
+        Auth::user()->update(['seen_at' => now()]);
+
         $accountPref = Pref::where('user_id', Auth::user()->id)->where('name', 'account')->first();
         $accountPref ? $data = json_decode($accountPref->data, true) : $data = '';
 

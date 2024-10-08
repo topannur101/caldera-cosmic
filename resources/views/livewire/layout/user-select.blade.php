@@ -7,7 +7,8 @@ use App\Models\User;
 use Livewire\Attributes\On;
 use Illuminate\Database\Eloquent\Builder;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.app')] 
+class extends Component {
 
     public $users = [];
     
@@ -16,9 +17,13 @@ new #[Layout('layouts.app')] class extends Component {
     {
         if($userq) {
             $this->users = User::where(function (Builder $query) use ($userq) {
-                $query->orWhere('name', 'LIKE', '%'.$userq.'%')
-                      ->orWhere('emp_id', 'LIKE', '%'.$userq.'%');
-            })->where('is_active', 1)->get();
+                    $query->orWhere('name', 'LIKE', '%'.$userq.'%')
+                        ->orWhere('emp_id', 'LIKE', '%'.$userq.'%');
+                })
+                ->where('is_active', 1)
+                ->orderBy('seen_at', 'desc')
+                ->limit(10)
+                ->get();
         } else {
             $this->users = [];
         }

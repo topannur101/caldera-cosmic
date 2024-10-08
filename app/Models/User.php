@@ -29,7 +29,8 @@ class User extends Authenticatable
         'emp_id',
         'password',
         'photo',
-        'is_active'
+        'is_active',
+        'seen_at'
     ];
 
     /**
@@ -194,10 +195,5 @@ class User extends Authenticatable
     public function ins_stc_auths(): HasMany
     {
         return $this->hasMany(InsStcAuth::class);
-    }
-
-    public function sh_auths(): HasMany
-    {
-        return $this->hasMany(ShAuth::class);
     }
 }
