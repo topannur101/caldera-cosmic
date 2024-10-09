@@ -1,23 +1,856 @@
-2024-10-07 15:09:05,519 - INFO - 127.0.0.1 - - [07/Oct/2024 15:09:05] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:09:35,363 - INFO - 127.0.0.1 - - [07/Oct/2024 15:09:35] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:10:49,810 - INFO - 127.0.0.1 - - [07/Oct/2024 15:10:49] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:12:39,593 - INFO - 127.0.0.1 - - [07/Oct/2024 15:12:39] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:12:45,248 - INFO - 127.0.0.1 - - [07/Oct/2024 15:12:45] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:12:47,568 - INFO - 127.0.0.1 - - [07/Oct/2024 15:12:47] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:12:49,909 - INFO - 127.0.0.1 - - [07/Oct/2024 15:12:49] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:12:52,241 - INFO - 127.0.0.1 - - [07/Oct/2024 15:12:52] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:13:12,801 - INFO - 127.0.0.1 - - [07/Oct/2024 15:13:12] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:13:14,909 - INFO - 127.0.0.1 - - [07/Oct/2024 15:13:14] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:13:17,295 - INFO - 127.0.0.1 - - [07/Oct/2024 15:13:17] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:13:21,193 - INFO - 127.0.0.1 - - [07/Oct/2024 15:13:21] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:14:06,720 - INFO - 127.0.0.1 - - [07/Oct/2024 15:14:06] "GET /get-line HTTP/1.1" 200 -
-2024-10-07 15:14:22,518 - ERROR - Error reading from serial port: could not open port 'COM5': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
-2024-10-07 15:14:22,520 - ERROR - Unable to read valid data from Arduino
-2024-10-07 15:14:22,521 - INFO - 127.0.0.1 - - [07/Oct/2024 15:14:22] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-10-07 15:14:27,243 - ERROR - Error reading from serial port: could not open port 'COM5': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
-2024-10-07 15:14:27,244 - ERROR - Unable to read valid data from Arduino
-2024-10-07 15:14:27,246 - INFO - 127.0.0.1 - - [07/Oct/2024 15:14:27] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
-2024-10-07 15:14:28,622 - INFO - 127.0.0.1 - - [07/Oct/2024 15:14:28] "GET /get-photo HTTP/1.1" 200 -
-2024-10-07 15:14:29,788 - INFO - 127.0.0.1 - - [07/Oct/2024 15:14:29] "OPTIONS /send-data HTTP/1.1" 200 -
-2024-10-07 15:14:30,466 - INFO - 127.0.0.1 - - [07/Oct/2024 15:14:30] "POST /send-data HTTP/1.1" 200 -
-2024-10-07 15:15:04,244 - INFO - 127.0.0.1 - - [07/Oct/2024 15:15:04] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 16:27:38,258 - ERROR - Error sending data to server: HTTPConnectionPool(host='172.70.66.131', port=80): Max retries exceeded with url: /api/omv-metric (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x000001971E1E0BB0>, 'Connection to 172.70.66.131 timed out. (connect timeout=5)'))
+2024-10-06 16:28:00,139 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:28:00,140 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:28:00,141 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:00] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:28:19,734 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:28:19,737 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:28:19,738 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:28:24,869 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:28:24,869 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:28:24,870 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:24] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:28:30,001 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:28:30,001 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:28:30,003 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:30] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:28:35,134 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:28:35,135 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:28:35,137 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:35] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:28:36,779 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:36] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 16:28:40,269 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:28:40,269 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:28:40,271 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:28:42,612 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:42] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 16:28:45,406 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:28:45,407 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:28:45,408 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:45] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:28:45,604 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:45] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 16:28:50,544 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:28:50,545 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:28:50,547 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:50] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:28:55,678 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:28:55,679 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:28:55,679 - INFO - 127.0.0.1 - - [06/Oct/2024 16:28:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:00,814 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:00,814 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:00,815 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:00] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:05,946 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:05,947 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:05,948 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:05] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:10,954 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:10] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-10-06 16:29:11,079 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:11,080 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:11,080 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:11] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:11,538 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:11] "POST /send-data HTTP/1.1" 200 -
+2024-10-06 16:29:16,210 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:16,212 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:16,213 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:16] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:21,344 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:21,345 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:21,346 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:21] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:26,479 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:26,480 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:26,481 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:26] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:31,612 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:31,613 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:31,614 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:31] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:36,745 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:36,746 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:36,747 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:36] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:41,879 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:41,880 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:41,881 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:41] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:47,021 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:47,021 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:47,022 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:47] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:52,153 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:52,153 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:52,154 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:52] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:29:57,284 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:29:57,285 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:29:57,287 - INFO - 127.0.0.1 - - [06/Oct/2024 16:29:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:30:00,953 - INFO - 127.0.0.1 - - [06/Oct/2024 16:30:00] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-10-06 16:30:01,556 - INFO - 127.0.0.1 - - [06/Oct/2024 16:30:01] "POST /send-data HTTP/1.1" 200 -
+2024-10-06 16:30:02,421 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:30:02,421 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:30:02,422 - INFO - 127.0.0.1 - - [06/Oct/2024 16:30:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:30:07,563 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:30:07,564 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:30:07,564 - INFO - 127.0.0.1 - - [06/Oct/2024 16:30:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:30:12,695 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:30:12,695 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:30:12,697 - INFO - 127.0.0.1 - - [06/Oct/2024 16:30:12] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:31:56,393 - INFO - 127.0.0.1 - - [06/Oct/2024 16:31:56] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 16:32:09,031 - INFO - 127.0.0.1 - - [06/Oct/2024 16:32:09] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 16:32:16,667 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom team wajib diisi."]}
+2024-10-06 16:32:32,065 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:32:32,066 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:32:32,067 - INFO - 127.0.0.1 - - [06/Oct/2024 16:32:32] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:32:37,197 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:32:37,197 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:32:37,198 - INFO - 127.0.0.1 - - [06/Oct/2024 16:32:37] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:32:41,440 - INFO - 127.0.0.1 - - [06/Oct/2024 16:32:41] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 16:32:42,327 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:32:42,328 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:32:42,330 - INFO - 127.0.0.1 - - [06/Oct/2024 16:32:42] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:32:43,310 - ERROR - Error sending data to server: HTTPConnectionPool(host='172.70.66.131', port=80): Max retries exceeded with url: /api/omv-metric (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x000001971E1E1480>, 'Connection to 172.70.66.131 timed out. (connect timeout=5)'))
+2024-10-06 16:32:47,335 - INFO - 127.0.0.1 - - [06/Oct/2024 16:32:47] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 16:32:47,461 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:32:47,461 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:32:47,462 - INFO - 127.0.0.1 - - [06/Oct/2024 16:32:47] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:32:50,319 - INFO - 127.0.0.1 - - [06/Oct/2024 16:32:50] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 16:32:52,597 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:32:52,597 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:32:52,598 - INFO - 127.0.0.1 - - [06/Oct/2024 16:32:52] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:32:57,733 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:32:57,734 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:32:57,735 - INFO - 127.0.0.1 - - [06/Oct/2024 16:32:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:33:02,870 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:33:02,870 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:33:02,871 - INFO - 127.0.0.1 - - [06/Oct/2024 16:33:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:33:05,618 - INFO - 127.0.0.1 - - [06/Oct/2024 16:33:05] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-10-06 16:33:05,947 - INFO - 127.0.0.1 - - [06/Oct/2024 16:33:05] "POST /send-data HTTP/1.1" 200 -
+2024-10-06 16:33:08,004 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:33:08,005 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:33:08,007 - INFO - 127.0.0.1 - - [06/Oct/2024 16:33:08] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:33:13,139 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:33:13,141 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:33:13,143 - INFO - 127.0.0.1 - - [06/Oct/2024 16:33:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:33:18,272 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:33:18,272 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:33:18,273 - INFO - 127.0.0.1 - - [06/Oct/2024 16:33:18] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:33:24,930 - INFO - 127.0.0.1 - - [06/Oct/2024 16:33:24] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 16:33:44,873 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:33:44,873 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:33:44,874 - INFO - 127.0.0.1 - - [06/Oct/2024 16:33:44] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:33:50,006 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:33:50,007 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:33:50,007 - INFO - 127.0.0.1 - - [06/Oct/2024 16:33:50] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:33:57,680 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:33:57,680 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:33:57,681 - INFO - 127.0.0.1 - - [06/Oct/2024 16:33:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:34:02,810 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:34:02,811 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:34:02,812 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:34:07,943 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:34:07,944 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:34:07,944 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:34:13,076 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:34:13,076 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:34:13,077 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:34:18,206 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:34:18,207 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:34:18,207 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:18] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:34:22,887 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:22] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 16:34:23,341 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:34:23,341 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:34:23,342 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:23] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:34:35,295 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:34:35,296 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:34:35,297 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:35] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:34:40,426 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:34:40,427 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:34:40,428 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:34:45,556 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:34:45,556 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:34:45,557 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:45] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:34:50,687 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:34:50,688 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:34:50,689 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:50] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:34:55,435 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:55] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 16:34:55,823 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:34:55,823 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:34:55,824 - INFO - 127.0.0.1 - - [06/Oct/2024 16:34:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:35:07,825 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:35:07,825 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:35:07,827 - INFO - 127.0.0.1 - - [06/Oct/2024 16:35:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:35:12,965 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:35:12,965 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:35:12,966 - INFO - 127.0.0.1 - - [06/Oct/2024 16:35:12] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:35:18,094 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:35:18,094 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:35:18,096 - INFO - 127.0.0.1 - - [06/Oct/2024 16:35:18] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:35:23,236 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:35:23,236 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:35:23,237 - INFO - 127.0.0.1 - - [06/Oct/2024 16:35:23] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:35:28,382 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:35:28,382 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:35:28,383 - INFO - 127.0.0.1 - - [06/Oct/2024 16:35:28] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:35:33,512 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:35:33,512 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:35:33,513 - INFO - 127.0.0.1 - - [06/Oct/2024 16:35:33] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:35:38,645 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:35:38,646 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:35:38,647 - INFO - 127.0.0.1 - - [06/Oct/2024 16:35:38] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:35:43,798 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:35:43,800 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:35:43,800 - INFO - 127.0.0.1 - - [06/Oct/2024 16:35:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:35:52,584 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:35:52,585 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:35:52,585 - INFO - 127.0.0.1 - - [06/Oct/2024 16:35:52] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:35:57,737 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:35:57,738 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:35:57,738 - INFO - 127.0.0.1 - - [06/Oct/2024 16:35:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:36:02,866 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:36:02,867 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:36:02,868 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:36:07,998 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:36:07,998 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:36:08,000 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:08] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:36:13,137 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:36:13,137 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:36:13,138 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:36:18,268 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:36:18,268 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:36:18,270 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:18] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:36:19,464 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:19] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 16:36:31,954 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:36:31,955 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:36:31,958 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:31] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:36:37,097 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:36:37,098 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:36:37,098 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:37] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:36:42,227 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:36:42,229 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:36:42,230 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:42] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:36:47,363 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:36:47,363 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:36:47,364 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:47] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:36:52,492 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:36:52,492 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:36:52,494 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:52] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:36:57,623 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:36:57,623 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:36:57,624 - INFO - 127.0.0.1 - - [06/Oct/2024 16:36:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:02,753 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:02,753 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:02,754 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:07,886 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:07,886 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:07,887 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:13,017 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:13,017 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:13,018 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:18,146 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:18,147 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:18,148 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:18] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:23,277 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:23,277 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:23,278 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:23] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:28,414 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:28,415 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:28,415 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:28] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:33,545 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:33,545 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:33,547 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:33] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:38,678 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:38,679 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:38,680 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:38] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:43,810 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:43,810 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:43,812 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:48,372 - ERROR - Error sending data to server: HTTPConnectionPool(host='172.70.66.131', port=80): Max retries exceeded with url: /api/omv-metric (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x000001971E18A710>, 'Connection to 172.70.66.131 timed out. (connect timeout=5)'))
+2024-10-06 16:37:48,950 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:48,951 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:48,954 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:48] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:54,084 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:54,084 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:54,085 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:54] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:37:59,220 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:37:59,220 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:37:59,221 - INFO - 127.0.0.1 - - [06/Oct/2024 16:37:59] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:38:04,350 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:38:04,351 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:38:04,353 - INFO - 127.0.0.1 - - [06/Oct/2024 16:38:04] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:39:01,440 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:39:01,440 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:39:01,441 - INFO - 127.0.0.1 - - [06/Oct/2024 16:39:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:40:01,367 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:40:01,368 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:40:01,368 - INFO - 127.0.0.1 - - [06/Oct/2024 16:40:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:41:01,365 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:41:01,365 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:41:01,366 - INFO - 127.0.0.1 - - [06/Oct/2024 16:41:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:42:01,423 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:42:01,424 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:42:01,425 - INFO - 127.0.0.1 - - [06/Oct/2024 16:42:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:42:53,431 - ERROR - Error sending data to server: HTTPConnectionPool(host='172.70.66.131', port=80): Max retries exceeded with url: /api/omv-metric (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x000001971E18B460>, 'Connection to 172.70.66.131 timed out. (connect timeout=5)'))
+2024-10-06 16:43:01,364 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:43:01,364 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:43:01,365 - INFO - 127.0.0.1 - - [06/Oct/2024 16:43:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:44:01,367 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:44:01,369 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:44:01,369 - INFO - 127.0.0.1 - - [06/Oct/2024 16:44:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:45:01,370 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:45:01,371 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:45:01,371 - INFO - 127.0.0.1 - - [06/Oct/2024 16:45:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:46:01,459 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:46:01,459 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:46:01,460 - INFO - 127.0.0.1 - - [06/Oct/2024 16:46:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:47:01,431 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:47:01,432 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:47:01,433 - INFO - 127.0.0.1 - - [06/Oct/2024 16:47:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:48:01,431 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:48:01,432 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:48:01,432 - INFO - 127.0.0.1 - - [06/Oct/2024 16:48:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:49:01,360 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:49:01,360 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:49:01,361 - INFO - 127.0.0.1 - - [06/Oct/2024 16:49:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:50:01,362 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:50:01,363 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:50:01,364 - INFO - 127.0.0.1 - - [06/Oct/2024 16:50:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:51:01,359 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:51:01,359 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:51:01,360 - INFO - 127.0.0.1 - - [06/Oct/2024 16:51:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:52:01,376 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:52:01,376 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:52:01,377 - INFO - 127.0.0.1 - - [06/Oct/2024 16:52:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:52:16,991 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom team wajib diisi."]}
+2024-10-06 16:52:58,468 - ERROR - Error sending data to server: HTTPConnectionPool(host='172.70.66.131', port=80): Max retries exceeded with url: /api/omv-metric (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x000001971E1E1480>, 'Connection to 172.70.66.131 timed out. (connect timeout=5)'))
+2024-10-06 16:53:01,433 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:53:01,433 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:53:01,434 - INFO - 127.0.0.1 - - [06/Oct/2024 16:53:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:54:01,365 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:54:01,365 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:54:01,366 - INFO - 127.0.0.1 - - [06/Oct/2024 16:54:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:55:01,373 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:55:01,374 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:55:01,374 - INFO - 127.0.0.1 - - [06/Oct/2024 16:55:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:01,366 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:01,368 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:01,369 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:09,819 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:09,820 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:09,821 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:09] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:14,974 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:14,974 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:14,976 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:14] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:20,104 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:20,104 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:20,106 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:20] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:25,234 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:25,235 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:25,236 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:25] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:30,366 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:30,366 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:30,366 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:30] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:35,512 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:35,512 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:35,513 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:35] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:40,643 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:40,644 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:40,645 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:45,780 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:45,780 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:45,780 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:45] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:50,916 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:50,917 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:50,918 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:50] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:56:56,048 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:56:56,049 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:56:56,050 - INFO - 127.0.0.1 - - [06/Oct/2024 16:56:56] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:57:01,186 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:57:01,187 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:57:01,189 - INFO - 127.0.0.1 - - [06/Oct/2024 16:57:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:57:06,330 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:57:06,331 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:57:06,332 - INFO - 127.0.0.1 - - [06/Oct/2024 16:57:06] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:57:11,462 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:57:11,462 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:57:11,463 - INFO - 127.0.0.1 - - [06/Oct/2024 16:57:11] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:57:16,593 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:57:16,595 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:57:16,596 - INFO - 127.0.0.1 - - [06/Oct/2024 16:57:16] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:57:21,747 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:57:21,747 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:57:21,748 - INFO - 127.0.0.1 - - [06/Oct/2024 16:57:21] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:57:26,878 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:57:26,878 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:57:26,879 - INFO - 127.0.0.1 - - [06/Oct/2024 16:57:26] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:57:32,007 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:57:32,008 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:57:32,009 - INFO - 127.0.0.1 - - [06/Oct/2024 16:57:32] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:58:01,357 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:58:01,358 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:58:01,359 - INFO - 127.0.0.1 - - [06/Oct/2024 16:58:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 16:59:01,378 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 16:59:01,378 - ERROR - Unable to read valid data from Arduino
+2024-10-06 16:59:01,379 - INFO - 127.0.0.1 - - [06/Oct/2024 16:59:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:00:01,363 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:00:01,364 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:00:01,365 - INFO - 127.0.0.1 - - [06/Oct/2024 17:00:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:01:01,375 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:01:01,377 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:01:01,379 - INFO - 127.0.0.1 - - [06/Oct/2024 17:01:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:02:01,369 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:02:01,370 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:02:01,371 - INFO - 127.0.0.1 - - [06/Oct/2024 17:02:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:02:17,355 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom team wajib diisi."]}
+2024-10-06 17:03:01,460 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:03:01,460 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:03:01,461 - INFO - 127.0.0.1 - - [06/Oct/2024 17:03:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:03:03,508 - ERROR - Error sending data to server: HTTPConnectionPool(host='172.70.66.131', port=80): Max retries exceeded with url: /api/omv-metric (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x000001971E1E0B20>, 'Connection to 172.70.66.131 timed out. (connect timeout=5)'))
+2024-10-06 17:04:01,358 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:04:01,359 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:04:01,360 - INFO - 127.0.0.1 - - [06/Oct/2024 17:04:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:05:01,363 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:05:01,364 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:05:01,364 - INFO - 127.0.0.1 - - [06/Oct/2024 17:05:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:06:01,374 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:06:01,374 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:06:01,375 - INFO - 127.0.0.1 - - [06/Oct/2024 17:06:01] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:06:35,404 - INFO - 127.0.0.1 - - [06/Oct/2024 17:06:35] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 17:06:38,724 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:06:38,725 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:06:38,726 - INFO - 127.0.0.1 - - [06/Oct/2024 17:06:38] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:06:47,364 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:06:47,364 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:06:47,365 - INFO - 127.0.0.1 - - [06/Oct/2024 17:06:47] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:06:47,758 - INFO - 127.0.0.1 - - [06/Oct/2024 17:06:47] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 17:06:52,496 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:06:52,496 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:06:52,497 - INFO - 127.0.0.1 - - [06/Oct/2024 17:06:52] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:06:53,380 - INFO - 127.0.0.1 - - [06/Oct/2024 17:06:53] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 17:06:56,362 - INFO - 127.0.0.1 - - [06/Oct/2024 17:06:56] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 17:06:57,655 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:06:57,655 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:06:57,656 - INFO - 127.0.0.1 - - [06/Oct/2024 17:06:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:02,786 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:02,786 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:02,787 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:07,923 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:07,924 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:07,925 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:13,059 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:13,059 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:13,060 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:18,195 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:18,195 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:18,196 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:18] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:23,325 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:23,325 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:23,326 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:23] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:28,467 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:28,468 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:28,468 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:28] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:33,604 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:33,605 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:33,606 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:33] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:38,744 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:38,745 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:38,747 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:38] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:43,884 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:43,885 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:43,885 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:49,018 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:49,019 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:49,019 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:49] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:54,157 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:54,158 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:54,160 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:54] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:07:59,293 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:07:59,294 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:07:59,295 - INFO - 127.0.0.1 - - [06/Oct/2024 17:07:59] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:04,430 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:04,430 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:04,432 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:04] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:09,565 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:09,566 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:09,566 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:09] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:14,702 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:14,703 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:14,703 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:14] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:19,261 - ERROR - Error reading from serial port: could not open port 'COM6': PermissionError(13, 'Access is denied.', None, 5)
+2024-10-06 17:08:19,262 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:19,262 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:19,838 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:19,839 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:19,840 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:24,974 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:24,975 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:24,978 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:24] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:30,110 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:30,111 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:30,111 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:30] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:35,245 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:35,245 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:35,247 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:35] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:39,272 - ERROR - Error reading from serial port: could not open port 'COM6': PermissionError(13, 'Access is denied.', None, 5)
+2024-10-06 17:08:39,274 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:39,275 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:39] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:40,384 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:40,385 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:40,386 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:45,515 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:45,517 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:45,517 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:45] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:50,646 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:50,647 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:50,648 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:50] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:55,261 - ERROR - Error reading from serial port: could not open port 'COM6': PermissionError(13, 'Access is denied.', None, 5)
+2024-10-06 17:08:55,261 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:55,262 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:08:55,778 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:08:55,779 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:08:55,780 - INFO - 127.0.0.1 - - [06/Oct/2024 17:08:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:00,913 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:00,914 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:00,915 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:00] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:06,046 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:06,047 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:06,048 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:06] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:11,180 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:11,180 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:11,182 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:11] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:15,263 - ERROR - Error reading from serial port: could not open port 'COM6': PermissionError(13, 'Access is denied.', None, 5)
+2024-10-06 17:09:15,264 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:15,265 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:15] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:16,314 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:16,315 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:16,316 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:16] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:21,465 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:21,465 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:21,467 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:21] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:26,601 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:26,602 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:26,603 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:26] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:31,268 - ERROR - Error reading from serial port: could not open port 'COM6': PermissionError(13, 'Access is denied.', None, 5)
+2024-10-06 17:09:31,268 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:31,269 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:31] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:31,733 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:31,734 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:31,735 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:31] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:36,874 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:36,874 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:36,875 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:36] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:42,006 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:42,006 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:42,006 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:42] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:47,137 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:47,138 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:47,139 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:47] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:51,256 - ERROR - Error reading from serial port: could not open port 'COM6': PermissionError(13, 'Access is denied.', None, 5)
+2024-10-06 17:09:51,256 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:51,257 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:51] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:52,271 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:52,271 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:52,272 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:52] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:09:57,409 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:09:57,409 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:09:57,410 - INFO - 127.0.0.1 - - [06/Oct/2024 17:09:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:02,541 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:02,541 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:02,542 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:03,422 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:03] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 17:10:07,683 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:07,684 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:07,686 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:12,550 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:12] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 17:10:17,154 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:17,156 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:17,157 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:17] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:19,370 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:19] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 17:10:21,551 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:21] "GET /get-photo HTTP/1.1" 200 -
+2024-10-06 17:10:22,286 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:22,287 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:22,289 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:22] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:27,421 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:27,421 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:27,423 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:27] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:32,558 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:32,559 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:32,559 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:32] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:37,694 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:37,694 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:37,695 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:37] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:42,826 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:42,826 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:42,827 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:42] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:47,961 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:47,962 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:47,962 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:47] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:53,095 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:53,095 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:53,096 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:53] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:10:58,251 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:10:58,252 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:10:58,253 - INFO - 127.0.0.1 - - [06/Oct/2024 17:10:58] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:11:03,385 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:11:03,386 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:11:03,387 - INFO - 127.0.0.1 - - [06/Oct/2024 17:11:03] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:11:08,520 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:11:08,521 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:11:08,522 - INFO - 127.0.0.1 - - [06/Oct/2024 17:11:08] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:11:08,539 - INFO - 127.0.0.1 - - [06/Oct/2024 17:11:08] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-10-06 17:11:09,137 - INFO - 127.0.0.1 - - [06/Oct/2024 17:11:09] "POST /send-data HTTP/1.1" 200 -
+2024-10-06 17:11:13,654 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:11:13,654 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:11:13,655 - INFO - 127.0.0.1 - - [06/Oct/2024 17:11:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:11:18,784 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:11:18,784 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:11:18,786 - INFO - 127.0.0.1 - - [06/Oct/2024 17:11:18] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:11:23,929 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:11:23,930 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:11:23,931 - INFO - 127.0.0.1 - - [06/Oct/2024 17:11:23] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:11:29,074 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-06 17:11:29,075 - ERROR - Unable to read valid data from Arduino
+2024-10-06 17:11:29,075 - INFO - 127.0.0.1 - - [06/Oct/2024 17:11:29] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-06 17:12:00,311 - INFO - 127.0.0.1 - - [06/Oct/2024 17:12:00] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 17:12:17,662 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom line wajib diisi.","Kolom team wajib diisi."]}
+2024-10-06 17:13:08,560 - ERROR - Error sending data to server: HTTPConnectionPool(host='172.70.66.131', port=80): Max retries exceeded with url: /api/omv-metric (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x000001971E1E0220>, 'Connection to 172.70.66.131 timed out. (connect timeout=5)'))
+2024-10-06 17:13:30,823 - INFO - 127.0.0.1 - - [06/Oct/2024 17:13:30] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 17:13:37,777 - INFO - 127.0.0.1 - - [06/Oct/2024 17:13:37] "GET /get-line HTTP/1.1" 200 -
+2024-10-06 17:14:30,668 - INFO - 127.0.0.1 - - [06/Oct/2024 17:14:30] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:12:30,584 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-10-08 00:12:30,585 - INFO - [33mPress CTRL+C to quit[0m
+2024-10-08 00:12:30,590 - INFO -  * Restarting with stat
+2024-10-08 00:12:31,108 - WARNING -  * Debugger is active!
+2024-10-08 00:12:31,118 - INFO -  * Debugger PIN: 368-624-324
+2024-10-08 00:12:31,315 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom recipe id yang dipilih tidak valid.","Kolom user 1 emp id yang dipilih tidak valid."]}
+2024-10-08 00:12:31,527 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom recipe id yang dipilih tidak valid.","Kolom user 1 emp id yang dipilih tidak valid."]}
+2024-10-08 00:13:00,302 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-10-08 00:13:00,302 - INFO - [33mPress CTRL+C to quit[0m
+2024-10-08 00:13:00,303 - INFO -  * Restarting with stat
+2024-10-08 00:13:00,681 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom recipe id yang dipilih tidak valid.","Kolom user 1 emp id yang dipilih tidak valid."]}
+2024-10-08 00:13:00,910 - WARNING -  * Debugger is active!
+2024-10-08 00:13:00,913 - INFO -  * Debugger PIN: 368-624-324
+2024-10-08 00:13:06,395 - INFO - 127.0.0.1 - - [08/Oct/2024 00:13:06] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:16:39,355 - INFO - 127.0.0.1 - - [08/Oct/2024 00:16:39] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:17:10,463 - INFO - 127.0.0.1 - - [08/Oct/2024 00:17:10] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:17:30,660 - INFO - 127.0.0.1 - - [08/Oct/2024 00:17:30] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:17:47,522 - INFO - 127.0.0.1 - - [08/Oct/2024 00:17:47] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:17:52,787 - INFO - 127.0.0.1 - - [08/Oct/2024 00:17:52] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:17:54,359 - INFO - 127.0.0.1 - - [08/Oct/2024 00:17:54] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:18:37,284 - INFO - 127.0.0.1 - - [08/Oct/2024 00:18:37] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:18:48,441 - INFO - 127.0.0.1 - - [08/Oct/2024 00:18:48] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:19:34,990 - INFO - 127.0.0.1 - - [08/Oct/2024 00:19:34] "GET /get-line HTTP/1.1" 200 -
+2024-10-08 00:20:03,728 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-08 00:20:03,728 - ERROR - Unable to read valid data from Arduino
+2024-10-08 00:20:03,729 - INFO - 127.0.0.1 - - [08/Oct/2024 00:20:03] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-08 00:20:08,876 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-08 00:20:08,876 - ERROR - Unable to read valid data from Arduino
+2024-10-08 00:20:08,876 - INFO - 127.0.0.1 - - [08/Oct/2024 00:20:08] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-08 00:20:14,005 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-08 00:20:14,006 - ERROR - Unable to read valid data from Arduino
+2024-10-08 00:20:14,007 - INFO - 127.0.0.1 - - [08/Oct/2024 00:20:14] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-08 00:20:19,138 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-08 00:20:19,138 - ERROR - Unable to read valid data from Arduino
+2024-10-08 00:20:19,140 - INFO - 127.0.0.1 - - [08/Oct/2024 00:20:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-08 00:20:24,279 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-08 00:20:24,280 - ERROR - Unable to read valid data from Arduino
+2024-10-08 00:20:24,280 - INFO - 127.0.0.1 - - [08/Oct/2024 00:20:24] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-08 00:20:29,409 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-08 00:20:29,410 - ERROR - Unable to read valid data from Arduino
+2024-10-08 00:20:29,411 - INFO - 127.0.0.1 - - [08/Oct/2024 00:20:29] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-08 00:20:34,540 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-08 00:20:34,541 - ERROR - Unable to read valid data from Arduino
+2024-10-08 00:20:34,542 - INFO - 127.0.0.1 - - [08/Oct/2024 00:20:34] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:54:41,679 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-10-09 22:54:41,680 - INFO - [33mPress CTRL+C to quit[0m
+2024-10-09 22:54:41,690 - INFO -  * Restarting with stat
+2024-10-09 22:54:42,950 - WARNING -  * Debugger is active!
+2024-10-09 22:54:42,986 - INFO -  * Debugger PIN: 368-624-324
+2024-10-09 22:54:48,579 - INFO - 127.0.0.1 - - [09/Oct/2024 22:54:48] "GET /get-line HTTP/1.1" 200 -
+2024-10-09 22:55:09,259 - INFO - 127.0.0.1 - - [09/Oct/2024 22:55:09] "GET /get-photo HTTP/1.1" 200 -
+2024-10-09 22:55:11,095 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:55:11,096 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:55:11,097 - INFO - 127.0.0.1 - - [09/Oct/2024 22:55:11] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:55:14,353 - INFO - 127.0.0.1 - - [09/Oct/2024 22:55:14] "GET /get-photo HTTP/1.1" 200 -
+2024-10-09 22:55:16,232 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:55:16,233 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:55:16,234 - INFO - 127.0.0.1 - - [09/Oct/2024 22:55:16] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:55:18,852 - INFO - 127.0.0.1 - - [09/Oct/2024 22:55:18] "GET /get-photo HTTP/1.1" 200 -
+2024-10-09 22:55:21,367 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:55:21,368 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:55:21,372 - INFO - 127.0.0.1 - - [09/Oct/2024 22:55:21] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:55:23,282 - INFO - 127.0.0.1 - - [09/Oct/2024 22:55:23] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-10-09 22:55:24,101 - INFO - 127.0.0.1 - - [09/Oct/2024 22:55:24] "POST /send-data HTTP/1.1" 200 -
+2024-10-09 22:55:26,507 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:55:26,507 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:55:26,508 - INFO - 127.0.0.1 - - [09/Oct/2024 22:55:26] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:55:31,639 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:55:31,639 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:55:31,640 - INFO - 127.0.0.1 - - [09/Oct/2024 22:55:31] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:56:35,937 - INFO - 127.0.0.1 - - [09/Oct/2024 22:56:35] "GET /get-line HTTP/1.1" 200 -
+2024-10-09 22:56:42,357 - INFO - 127.0.0.1 - - [09/Oct/2024 22:56:42] "GET /get-line HTTP/1.1" 200 -
+2024-10-09 22:57:40,396 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:57:40,397 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:57:40,398 - INFO - 127.0.0.1 - - [09/Oct/2024 22:57:40] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:57:44,593 - INFO - 127.0.0.1 - - [09/Oct/2024 22:57:44] "GET /get-photo HTTP/1.1" 200 -
+2024-10-09 22:57:46,626 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:57:46,627 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:57:46,634 - INFO - 127.0.0.1 - - [09/Oct/2024 22:57:46] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:57:50,184 - INFO - 127.0.0.1 - - [09/Oct/2024 22:57:50] "GET /get-photo HTTP/1.1" 200 -
+2024-10-09 22:57:51,772 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:57:51,773 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:57:51,775 - INFO - 127.0.0.1 - - [09/Oct/2024 22:57:51] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:57:54,827 - INFO - 127.0.0.1 - - [09/Oct/2024 22:57:54] "GET /get-photo HTTP/1.1" 200 -
+2024-10-09 22:57:56,911 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:57:56,917 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:57:56,920 - INFO - 127.0.0.1 - - [09/Oct/2024 22:57:56] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:02,064 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:02,065 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:02,066 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:07,196 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:07,197 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:07,199 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:12,332 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:12,333 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:12,334 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:12] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:17,467 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:17,467 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:17,469 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:17] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:22,603 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:22,604 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:22,606 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:22] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:27,741 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:27,741 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:27,742 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:27] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:32,880 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:32,880 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:32,884 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:32] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:38,021 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:38,022 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:38,023 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:38] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:43,156 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:43,157 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:43,158 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:43] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:48,293 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:48,294 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:48,295 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:48] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:53,431 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:53,431 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:53,433 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:53] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:58:58,580 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:58:58,588 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:58:58,590 - INFO - 127.0.0.1 - - [09/Oct/2024 22:58:58] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:03,756 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:03,757 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:03,758 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:03] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:08,889 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:08,890 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:08,891 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:08] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:13,530 - ERROR - Error reading from serial port: could not open port 'COM6': PermissionError(13, 'Access is denied.', None, 5)
+2024-10-09 22:59:13,530 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:13,531 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:14,021 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:14,022 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:14,023 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:14] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:19,156 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:19,156 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:19,156 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:19] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:24,287 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:24,288 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:24,288 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:24] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:29,420 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:29,420 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:29,421 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:29] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:33,505 - ERROR - Error reading from serial port: could not open port 'COM6': PermissionError(13, 'Access is denied.', None, 5)
+2024-10-09 22:59:33,506 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:33,507 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:33] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:34,554 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:34,554 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:34,555 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:34] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:39,687 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:39,688 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:39,690 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:39] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:44,820 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:44,820 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:44,821 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:44] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:49,506 - ERROR - Error reading from serial port: could not open port 'COM6': PermissionError(13, 'Access is denied.', None, 5)
+2024-10-09 22:59:49,507 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:49,507 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:49] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:49,951 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:49,952 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:49,953 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:49] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 22:59:55,084 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 22:59:55,085 - ERROR - Unable to read valid data from Arduino
+2024-10-09 22:59:55,090 - INFO - 127.0.0.1 - - [09/Oct/2024 22:59:55] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:00:00,224 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:00:00,225 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:00:00,225 - INFO - 127.0.0.1 - - [09/Oct/2024 23:00:00] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:00:03,355 - INFO - 127.0.0.1 - - [09/Oct/2024 23:00:03] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-10-09 23:00:04,065 - INFO - 127.0.0.1 - - [09/Oct/2024 23:00:04] "POST /send-data HTTP/1.1" 200 -
+2024-10-09 23:00:05,356 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:00:05,356 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:00:05,357 - INFO - 127.0.0.1 - - [09/Oct/2024 23:00:05] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:00:09,513 - ERROR - Error reading from serial port: could not open port 'COM6': PermissionError(13, 'Access is denied.', None, 5)
+2024-10-09 23:00:09,513 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:00:09,514 - INFO - 127.0.0.1 - - [09/Oct/2024 23:00:09] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:00:10,486 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:00:10,486 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:00:10,489 - INFO - 127.0.0.1 - - [09/Oct/2024 23:00:10] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:00:15,620 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:00:15,621 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:00:15,621 - INFO - 127.0.0.1 - - [09/Oct/2024 23:00:15] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:00:59,782 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:92
+2024-10-09 23:00:59,783 - INFO - [33mPress CTRL+C to quit[0m
+2024-10-09 23:00:59,786 - INFO -  * Restarting with stat
+2024-10-09 23:01:00,556 - WARNING -  * Debugger is active!
+2024-10-09 23:01:00,561 - INFO -  * Debugger PIN: 368-624-324
+2024-10-09 23:01:05,957 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:05] "GET /get-line HTTP/1.1" 200 -
+2024-10-09 23:01:12,668 - ERROR - Error capturing photo: Cannot open webcam
+2024-10-09 23:01:12,670 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:12] "[35m[1mGET /get-photo HTTP/1.1[0m" 500 -
+2024-10-09 23:01:13,101 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:13] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2024-10-09 23:01:29,475 - ERROR - Error capturing photo: Cannot open webcam
+2024-10-09 23:01:29,476 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:29] "[35m[1mGET /get-photo HTTP/1.1[0m" 500 -
+2024-10-09 23:01:35,489 - ERROR - Error capturing photo: Cannot open webcam
+2024-10-09 23:01:35,491 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:35] "[35m[1mGET /get-photo HTTP/1.1[0m" 500 -
+2024-10-09 23:01:36,572 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:01:36,573 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:01:36,575 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:36] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:01:38,480 - ERROR - Error capturing photo: Cannot open webcam
+2024-10-09 23:01:38,481 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:38] "[35m[1mGET /get-photo HTTP/1.1[0m" 500 -
+2024-10-09 23:01:41,716 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:01:41,718 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:01:41,719 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:41] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:01:46,851 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:01:46,851 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:01:46,852 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:46] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:01:51,984 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:01:51,985 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:01:51,985 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:51] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:01:57,119 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:01:57,120 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:01:57,123 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:57] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:01:58,292 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:58] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-10-09 23:01:58,810 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom team wajib diisi."]}
+2024-10-09 23:01:58,833 - ERROR - Data queued. Server message: Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom team wajib diisi."]}
+2024-10-09 23:01:58,834 - INFO - 127.0.0.1 - - [09/Oct/2024 23:01:58] "[35m[1mPOST /send-data HTTP/1.1[0m" 202 -
+2024-10-09 23:02:02,261 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:02:02,262 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:02:02,262 - INFO - 127.0.0.1 - - [09/Oct/2024 23:02:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:02:07,393 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:02:07,394 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:02:07,395 - INFO - 127.0.0.1 - - [09/Oct/2024 23:02:07] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:02:51,794 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:02:51,795 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:02:51,796 - INFO - 127.0.0.1 - - [09/Oct/2024 23:02:51] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:02:56,926 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:02:56,926 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:02:56,927 - INFO - 127.0.0.1 - - [09/Oct/2024 23:02:56] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:03:02,959 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:03:02,959 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:03:02,960 - INFO - 127.0.0.1 - - [09/Oct/2024 23:03:02] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:03:06,427 - INFO - 127.0.0.1 - - [09/Oct/2024 23:03:06] "OPTIONS /send-data HTTP/1.1" 200 -
+2024-10-09 23:03:06,960 - INFO - 127.0.0.1 - - [09/Oct/2024 23:03:06] "POST /send-data HTTP/1.1" 200 -
+2024-10-09 23:03:08,091 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:03:08,091 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:03:08,092 - INFO - 127.0.0.1 - - [09/Oct/2024 23:03:08] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:03:13,222 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:03:13,222 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:03:13,223 - INFO - 127.0.0.1 - - [09/Oct/2024 23:03:13] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:06:00,645 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom team wajib diisi."]}
+2024-10-09 23:06:00,999 - ERROR - Server returned non-200 status code: 400. Message: {"status":"invalid","msg":["Kolom team wajib diisi."]}
+2024-10-09 23:06:51,277 - INFO - 127.0.0.1 - - [09/Oct/2024 23:06:51] "GET /get-line HTTP/1.1" 200 -
+2024-10-09 23:07:04,190 - ERROR - Error capturing photo: Cannot open webcam
+2024-10-09 23:07:04,193 - INFO - 127.0.0.1 - - [09/Oct/2024 23:07:04] "[35m[1mGET /get-photo HTTP/1.1[0m" 500 -
+2024-10-09 23:07:10,178 - ERROR - Error capturing photo: Cannot open webcam
+2024-10-09 23:07:10,179 - INFO - 127.0.0.1 - - [09/Oct/2024 23:07:10] "[35m[1mGET /get-photo HTTP/1.1[0m" 500 -
+2024-10-09 23:07:11,338 - ERROR - Error reading from serial port: could not open port 'COM6': OSError(22, 'The semaphore timeout period has expired.', None, 121)
+2024-10-09 23:07:11,339 - ERROR - Unable to read valid data from Arduino
+2024-10-09 23:07:11,340 - INFO - 127.0.0.1 - - [09/Oct/2024 23:07:11] "[35m[1mGET /get-data HTTP/1.1[0m" 500 -
+2024-10-09 23:07:13,175 - ERROR - Error capturing photo: Cannot open webcam
+2024-10-09 23:07:16,547 - ERROR - Unable to read valid data from Arduino

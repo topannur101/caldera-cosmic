@@ -49,18 +49,7 @@ Route::post('/omv-metric', function (Request $request) {
         'images'            => 'nullable|array',
         'images.*.step_index' => 'required|integer',
         'images.*.taken_at' => 'required|numeric',
-        'images.*.image'    => [
-            'required',
-            'string',
-            'regex:/^data:image\/(?:jpeg|png|jpg|gif);base64,/',
-            function ($attribute, $value, $fail) {
-                $imageData = base64_decode(explode(',', $value)[1]);
-                $image = imagecreatefromstring($imageData);
-                if (!$image) {
-                    $fail('The '.$attribute.' must be a valid base64 encoded image.');
-                }
-            },
-        ],
+        'images.*.image'    => 'required|string',
         'amps'              => 'nullable|array',
         'amps.*.taken_at'   => 'required|numeric',
         'amps.*.value'      => 'required|integer',
@@ -143,29 +132,50 @@ Route::post('/omv-metric', function (Request $request) {
     
     foreach ($validated['images'] as $index => $image) {
         try {
-            $imageData = base64_decode(explode(',', $image['image'])[1]);
-            $extension = explode('/', mime_content_type($image['image']))[1];
-            
+            if (!isset($image['image'])) {
+                throw new Exception("Image data is missing.");
+            }
+
+            $parts = explode(',', $image['image']);
+            if (count($parts) != 2) {
+                throw new Exception("Invalid image format.");
+            }
+        
+            $imageData = base64_decode($parts[1], true);
+            if ($imageData === false) {
+                throw new Exception("Invalid base64 encoding.");
+            }
+
+            $imageInfo = getimagesizefromstring($imageData);
+            if ($imageInfo === false) {
+                throw new Exception("Invalid image data.");
+            }
+        
+            $mimeType = $imageInfo['mime'];
+            $extension = explode('/', $mimeType)[1] ?? 'png'; // Default to png if mime type is unexpected
+        
             $fileName = sprintf(
                 '%s_%s_%s_%s.%s',
                 $omvMetric->id,
-                $image['step_index'],
-                $image['taken_at'],
+                $image['step_index'] ?? 'unknown',
+                $image['taken_at'] ?? 'unknown',
                 Str::random(8),
                 $extension
             );
-            
+        
             if (!Storage::put('/public/omv-captures/'.$fileName, $imageData)) {
                 throw new Exception("Failed to save image file.");
             }
-    
+        
             $omvCapture = new InsOmvCapture();
             $omvCapture->ins_omv_metric_id = $omvMetric->id;
             $omvCapture->file_name = $fileName;
             $omvCapture->save();
-    
+        
         } catch (Exception $e) {
             $captureMessages[] = "Error saving capture {$index}: " . $e->getMessage();
+            // You might want to log the full exception details here
+            // Log::error('Image capture error: ' . $e->getMessage(), ['exception' => $e]);
         }
     }
     

@@ -77,7 +77,7 @@ new #[Layout('layouts.app')] class extends Component {
                 </x-pill>    
                 <x-pill color="yellow">
                     <span>batchAmp: </span>
-                    <span class="font-mono" x-text="batchAmps[batchAmps.length - 1]"></span>
+                    <span class="font-mono" x-text="batchAmps[batchAmps.length - 1].value"></span>
                 </x-pill>               
             </div>
             <div class="flex flex-col sm:flex-row gap-x-4 p-2">
@@ -407,7 +407,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <template x-for="(step, index) in recipeSteps" :key="index">
                                 <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4"
                                     :class="timerStepIndex == index && timerIsRunning ? 'cal-shimmer' : ''">
-                                    <div class="flex gap-4  w-full mb-6">
+                                    <div class="flex gap-4 w-full mb-6">
                                         <div class="w-12 h-12 rounded-full flex items-center justify-center"
                                             :class="(timerStepIndex > index && timerIsRunning) ?
                                             'bg-green-500 text-neutral-800' : ((
@@ -934,6 +934,7 @@ new #[Layout('layouts.app')] class extends Component {
                             .catch(error => {
                                 console.error('Error capturing image:', error);
                             });
+                            // should do check if (data.error) exists
                     },
 
                     getPreviousStepsDuration(index) {

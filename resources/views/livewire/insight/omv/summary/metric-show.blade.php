@@ -47,7 +47,7 @@ class extends Component {
             $this->team         = $metric->team;
             $this->user_1_emp_id = $metric->user_1->emp_id;
             $this->user_1_name  = $metric->user_1->name;
-            $this->user_1_photo  = $metric->user_1->photo;
+            $this->user_1_photo  = $metric->user_1->photo ?? '';
             $this->user_2_emp_id = $metric->user_2->emp_id ?? '';
             $this->user_2_name  = $metric->user_2->name ?? '';
             $this->user_2_photo  = $metric->user_2->photo ?? '';
