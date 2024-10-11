@@ -21,7 +21,7 @@ new class extends Component {
         $this->logs = $logs;
 
         $this->js("
-            let options = " . json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 100)) . ";
+            let options = " . json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 100, 100)) . ";
 
             const parent = \$wire.\$el.querySelector('#chart-container');
             parent.innerHTML = '';
