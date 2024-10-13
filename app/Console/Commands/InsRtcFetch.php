@@ -27,7 +27,7 @@ class InsRtcFetch extends Command
      *
      * @var string
      */
-    protected $description = 'Fetch rubber thickness data from Modbus server installed in HMI';
+    protected $description = 'Poll rubber thickness data from Modbus server installed in HMI';
 
     function convertToDecimal($value)
     {

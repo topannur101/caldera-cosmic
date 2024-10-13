@@ -40,9 +40,9 @@ class extends Component {
     public float $s_max;
     public float $s_min;
     public string $eval;
-    public float $tc10;
-    public float $tc50;
-    public float $tc90;
+    public float $tc10 = 0;
+    public float $tc50 = 0;
+    public float $tc90 = 0;
 
     public int $machine_id;
     public bool $update_batch = false;

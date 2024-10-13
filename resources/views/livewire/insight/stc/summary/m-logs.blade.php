@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\InsStcDSum;
+use App\Models\InsStcMLog;
 use App\InsStc;
 
 new #[Layout('layouts.app')] 
@@ -112,7 +112,7 @@ class extends Component {
     <div>
         <div class="flex justify-between items-center mb-6 px-5 py-1">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
-                {{ __('Suhu mesin') }}</h1>
+                {{ __('Metrik mesin') }}</h1>
             <div class="flex gap-x-2 items-center">
                 <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>

@@ -23,7 +23,7 @@ class InsStcPoll extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Poll IP STC temperature and speed metrics from Modbus server installed in HMI';
 
     /**
      * Execute the console command.
