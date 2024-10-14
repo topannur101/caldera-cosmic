@@ -18,6 +18,11 @@
         <div class="min-h-screen bg-neutral-100 dark:bg-neutral-900 overflow-hidden">
             <livewire:layout.navigation />
 
+            <!-- Page Printable -->
+            @if (isset($printable))
+            {{ $printable }}
+            @endif
+
             <!-- Page Header -->
             @if (isset($header))
             {{ $header }}
@@ -28,11 +33,6 @@
                 {{ $slot }}
             </main>
         </div>
-
-        <!-- Page Printable -->
-        @if (isset($printable))
-        {{ $printable }}
-        @endif
         
     </body>
 </html>

@@ -139,7 +139,7 @@ class extends Component {
     #[On('print-execute')]
     public function printExecute()
     {
-        $this->js("handlePrint()");
+        $this->js("window.print()");
     }
 };
 
@@ -258,23 +258,4 @@ class extends Component {
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
-    <script>
-        function app() {
-            return {
-                togglePrintClass(shouldRemove) {
-                    const container = document.getElementById('print-container');
-                    if (shouldRemove) {
-                        container.classList.remove('cal-offscreen');
-                    } else {
-                        container.classList.add('cal-offscreen');
-                    }
-                },
-
-                handlePrint() {
-                    this.togglePrintClass(true);
-                    window.print();
-                }
-            }
-        }
-    </script>
 </div>
