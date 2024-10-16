@@ -54,7 +54,7 @@ class extends Component {
 
 ?>
 
-<div wire:key="d-sum-print" id="print-container" class="w-[1200px] mx-auto p-8 aspect-[297/210] bg-white text-neutral-900 cal-offscreen">
+<div id="print-container" class="w-[1200px] mx-auto p-8 aspect-[297/210] bg-white text-neutral-900 cal-offscreen">
     <div class="flex flex-col gap-6 w-full h-full">
         <div class="grow-0">
             <div id="print-container-header">

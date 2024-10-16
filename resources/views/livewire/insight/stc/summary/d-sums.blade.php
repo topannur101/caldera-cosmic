@@ -104,15 +104,11 @@ class extends Component {
 
 ?>
 
-<x-slot name="printable">
-    <livewire:insight.stc.summary.d-sum-print />
-</x-slot>
-
-<div wire:key="d-sums" class="overflow-auto w-full">
+<div class="overflow-auto w-full">
     <div>
         <div class="flex justify-between items-center mb-6 px-5 py-1">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
-                {{ __('Hasil Ukur') }}</h1>
+                {{ __('Pencatatan') }}</h1>
             <div class="flex gap-x-2 items-center">
                 <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>

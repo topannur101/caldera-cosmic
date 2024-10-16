@@ -34,8 +34,7 @@ class extends Component {
 
     public function mount()
     {
-        if(!$this->start_at || !$this->end_at)
-        {
+        if (!$this->start_at || !$this->end_at) {
             $this->setToday();
         }
     }
@@ -98,6 +97,10 @@ class extends Component {
 
 <x-slot name="header">
     <x-nav-insights-stc></x-nav-insights-stc>
+</x-slot>
+
+<x-slot name="printable">
+    <livewire:insight.stc.summary.d-sum-print />
 </x-slot>
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
@@ -169,12 +172,12 @@ class extends Component {
                                     <x-dropdown-link href="#" wire:click.prevent="filterFail">
                                         <x-pill class="uppercase" color="red">{{ __('FAIL') }}</x-pill>
                                     </x-dropdown-link>
-                                    @if(Auth::user())
-                                    <x-dropdown-link href="#" wire:click.prevent="filterByMe">
-                                        {{ __('Oleh aku') }}
-                                    </x-dropdown-link>
-                                    <hr
-                                    class="border-neutral-300 dark:border-neutral-600 {{ $is_range ? '' : 'hidden' }}" />
+                                    @if (Auth::user())
+                                        <x-dropdown-link href="#" wire:click.prevent="filterByMe">
+                                            {{ __('Oleh aku') }}
+                                        </x-dropdown-link>
+                                        <hr
+                                            class="border-neutral-300 dark:border-neutral-600 {{ $is_range ? '' : 'hidden' }}" />
                                     @endif
                                     <x-dropdown-link href="#" wire:click.prevent="resetFilter">
                                         {{ __('Kosongkan filter') }}
@@ -187,19 +190,19 @@ class extends Component {
                         <x-select class="w-full" id="hides-ftype" wire:model.live="ftype">
                             <option value="any">{{ __('Apapun') }}</option>
                             <option value="emp_id">{{ __('Nomor karyawan') }}</option>
-                        </x-select>                        
+                        </x-select>
                     </div>
                     <div>
                         <x-text-input wire:model.live="fquery" class="mt-4" type="search"
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
-                    </div>              
+                    </div>
                 </div>
                 @if ($view == 'd-sums')
                     <div wire:key="d-sums-panel">
                         <div class="m-3">
                             <div class="py-4">
                                 <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                    class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
+                                        class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
                             </div>
                         </div>
                     </div>
@@ -228,22 +231,22 @@ class extends Component {
     </div>
 </div>
 @script
-<script>
-    Livewire.on('printChart', () => {
-        const hdEl = document.getElementById('print-container-header-dynamic');
-        const hsEl = document.getElementById('print-container-header');
-        const fdEl = document.getElementById('print-container-footer-dynamic');
-        const fsEl = document.getElementById('print-container-footer');
+    <script>
+        Livewire.on('printChart', () => {
+            const hdEl = document.getElementById('print-container-header-dynamic');
+            const hsEl = document.getElementById('print-container-header');
+            const fdEl = document.getElementById('print-container-footer-dynamic');
+            const fsEl = document.getElementById('print-container-footer');
 
-        if (!hdEl || !hsEl || !fdEl || !fsEl) {
-            notyfError("{{ __('Terjadi galat ketika mencoba mencetak. Periksa console') }}");
-            console.error('One of the elements not found. All 4 elements exist in the DOM for printing.');
-        } else {
-            // Transfer content then print
-            hsEl.innerHTML = hdEl.innerHTML;
-            fsEl.innerHTML = fdEl.innerHTML;
-            window.print();      
-        }          
-    });
-</script>
+            if (!hdEl || !hsEl || !fdEl || !fsEl) {
+                notyfError("{{ __('Terjadi galat ketika mencoba mencetak. Periksa console') }}");
+                console.error('One of the elements not found. All 4 elements exist in the DOM for printing.');
+            } else {
+                // Transfer content then print
+                hsEl.innerHTML = hdEl.innerHTML;
+                fsEl.innerHTML = fdEl.innerHTML;
+                window.print();
+            }
+        });
+    </script>
 @endscript

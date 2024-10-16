@@ -37,17 +37,17 @@ class extends Component {
         $end = Carbon::parse($this->end_at)->endOfDay();
 
         $MlogsQuery = InsStcMlog::join('ins_stc_machines', 'ins_stc_m_logs.ins_stc_machine_id', '=', 'ins_stc_machines.id')
-        // ->join('users as user1', 'ins_stc_m_logs.user_1_id', '=', 'user1.id')
-        // ->leftjoin('users as user2', 'ins_stc_m_logs.user_2_id', '=', 'user2.id') // leftjoin cause user2 can be null
-        ->select(
-            'ins_stc_m_logs.*',
-            'ins_stc_m_logs.created_at as m_log_created_at',
-            // 'ins_stc_machines.line as machine_line',
-            // 'user1.emp_id as user1_emp_id',
-            // 'user1.name as user1_name',
-            // 'user2.emp_id as user2_emp_id',
-            // 'user2.name as user2_name'
-        );
+            // ->join('users as user1', 'ins_stc_m_logs.user_1_id', '=', 'user1.id')
+            // ->leftjoin('users as user2', 'ins_stc_m_logs.user_2_id', '=', 'user2.id') // leftjoin cause user2 can be null
+            ->select(
+                'ins_stc_m_logs.*',
+                'ins_stc_m_logs.created_at as m_log_created_at',
+                // 'ins_stc_machines.line as machine_line',
+                // 'user1.emp_id as user1_emp_id',
+                // 'user1.name as user1_name',
+                // 'user2.emp_id as user2_emp_id',
+                // 'user2.name as user2_name'
+            );
 
         $MlogsQuery->whereBetween('ins_stc_m_logs.created_at', [$start, $end]);
 
@@ -59,7 +59,7 @@ class extends Component {
         //             ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
         //         });
         //         break;
-            
+
         //     default:
         //         $MlogsQuery->where(function (Builder $query) {
         //         $query
@@ -79,7 +79,7 @@ class extends Component {
         //             $MlogsQuery->orderBy('ins_stc_groups.workdate', 'DESC');
         //         }
         //         break;
-            
+
         //     case 'sf_low':
         //     $MlogsQuery->orderBy(DB::raw('ins_stc_m_logs.area_vn + ins_stc_m_logs.area_ab + ins_stc_m_logs.area_qt'), 'ASC');
         //         break;
@@ -104,16 +104,18 @@ class extends Component {
 
 ?>
 
-<div wire:key="m-logs" class="overflow-auto w-full">
+<div class="overflow-auto w-full">
     <div>
         <div class="flex justify-between items-center mb-6 px-5 py-1">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
-                {{ __('Metrik mesin') }}</h1>
+                {{ __('Pemantauan') }}</h1>
             <div class="flex gap-x-2 items-center">
-                <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
+                <x-secondary-button type="button" x-data=""
+                    x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i
+                        class="fa fa-fw fa-question"></i></x-secondary-button>
             </div>
         </div>
-        <div wire:key="modals"> 
+        <div wire:key="modals">
             <x-modal name="raw-stats-info">
                 <div class="p-6">
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
@@ -128,7 +130,7 @@ class extends Component {
                         </x-primary-button>
                     </div>
                 </div>
-            </x-modal>  
+            </x-modal>
             <x-modal name="m_log-show" maxWidth="xl">
                 Hi, please replace me
             </x-modal>
@@ -163,14 +165,16 @@ class extends Component {
                             <th>{{ __('Suhu SV') }}</th>
                         </tr>
                         @foreach ($m_logs as $m_log)
-                        <tr wire:key="m_log-tr-{{ $m_log->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'm_log-show'); $dispatch('m_log-show', { id: '{{ $m_log->id }}'})">
-                            <td>{{ $m_log->created_at }}</td>
-                            <td>{{ $m_log->position }}</td>
-                            <td>{{ $m_log->pv_1 . ' | ' . $m_log->pv_2 . ' | ' . $m_log->pv_3 . ' | ' . $m_log->pv_4 . ' | ' . $m_log->pv_5 . ' | ' . $m_log->pv_6 . ' | ' . $m_log->pv_7 . ' | ' . $m_log->pv_8 }}</td>
-                            <td>{{ $m_log->sv_1 . ' | ' . $m_log->sv_2 . ' | ' . $m_log->sv_3 . ' | ' . $m_log->sv_4 . ' | ' . $m_log->sv_5 . ' | ' . $m_log->sv_6 . ' | ' . $m_log->sv_7 . ' | ' . $m_log->sv_8 }}</td>
-                        </tr>
-                    @endforeach
+                            <tr wire:key="m_log-tr-{{ $m_log->id . $loop->index }}" tabindex="0"
+                                x-on:click="$dispatch('open-modal', 'm_log-show'); $dispatch('m_log-show', { id: '{{ $m_log->id }}'})">
+                                <td>{{ $m_log->created_at }}</td>
+                                <td>{{ $m_log->position }}</td>
+                                <td>{{ $m_log->pv_1 . ' | ' . $m_log->pv_2 . ' | ' . $m_log->pv_3 . ' | ' . $m_log->pv_4 . ' | ' . $m_log->pv_5 . ' | ' . $m_log->pv_6 . ' | ' . $m_log->pv_7 . ' | ' . $m_log->pv_8 }}
+                                </td>
+                                <td>{{ $m_log->sv_1 . ' | ' . $m_log->sv_2 . ' | ' . $m_log->sv_3 . ' | ' . $m_log->sv_4 . ' | ' . $m_log->sv_5 . ' | ' . $m_log->sv_6 . ' | ' . $m_log->sv_7 . ' | ' . $m_log->sv_8 }}
+                                </td>
+                            </tr>
+                        @endforeach
                     </table>
                 </div>
             </div>
@@ -198,4 +202,3 @@ class extends Component {
         @endif
     </div>
 </div>
-
