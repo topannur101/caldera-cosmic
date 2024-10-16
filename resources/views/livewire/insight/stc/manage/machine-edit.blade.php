@@ -56,7 +56,8 @@ new class extends Component {
             $machine->update([
                 'code' => $validated['code'],
                 'name' => $validated['name'],
-                'line' => $validated['line']
+                'line' => $validated['line'],
+                'ip_address' => $validated['ip_address']
             ]);
 
             $this->js('$dispatch("close")');

@@ -38,19 +38,19 @@ class InsStcPoll extends Command
         
         while (true) {
             foreach ($machines as $machine) {
-                $fc2 = $this->buildCoilRequest($machine->ip_address, $port, $unit_id);
+                // $fc2 = $this->buildCoilRequest($machine->ip_address, $port, $unit_id);
                 $fc3 = $this->buildRegisterRequest($machine->ip_address, $port, $unit_id);
 
                 try {
-                    $fc2_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc2);
-                    $fc3_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc3); 
-                    $this->logResponse($machine, $fc2_response, $fc3_response);
+                    // $fc2_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc2);
+                    $fc3_response = (new NonBlockingClient(['readTimeoutSec' => 5]))->sendRequests($fc3); 
+                    $this->logResponse($machine, $fc3_response);
 
                 } catch (\Throwable $th) {
                     $this->error('Exception: ' . $th->getMessage());
                 }
             }
-            sleep(60);
+            sleep(1);
         }
     }
 
@@ -64,52 +64,54 @@ class InsStcPoll extends Command
     private function buildRegisterRequest($ip, $port, $unit_id)
     {
         return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
-            ->int16(110, 'lower_pv_1')
-            ->int16(111, 'lower_pv_2')
-            ->int16(112, 'lower_pv_3')
-            ->int16(113, 'lower_pv_4')
-            ->int16(114, 'lower_pv_5')
-            ->int16(115, 'lower_pv_6')
-            ->int16(116, 'lower_pv_7')
-            ->int16(117, 'lower_pv_8')
-            ->int16(120, 'lower_sv_1')
-            ->int16(121, 'lower_sv_2')
-            ->int16(122, 'lower_sv_3')
-            ->int16(123, 'lower_sv_4')
-            ->int16(124, 'lower_sv_5')
-            ->int16(125, 'lower_sv_6')
-            ->int16(126, 'lower_sv_7')
-            ->int16(127, 'lower_sv_8')
-            ->int16(130, 'lower_speed')
-            ->int16(210, 'upper_pv_1')
-            ->int16(211, 'upper_pv_2')
-            ->int16(212, 'upper_pv_3')
-            ->int16(213, 'upper_pv_4')
-            ->int16(214, 'upper_pv_5')
-            ->int16(215, 'upper_pv_6')
-            ->int16(216, 'upper_pv_7')
-            ->int16(217, 'upper_pv_8')
-            ->int16(220, 'upper_sv_1')
-            ->int16(221, 'upper_sv_2')
-            ->int16(222, 'upper_sv_3')
-            ->int16(223, 'upper_sv_4')
-            ->int16(224, 'upper_sv_5')
-            ->int16(225, 'upper_sv_6')
-            ->int16(226, 'upper_sv_7')
-            ->int16(227, 'upper_sv_8')
-            ->int16(230, 'upper_speed')
+
+            ->int16(120, 'lower_pv_1')
+            // ->int16(121, 'lower_pv_2')
+            // ->int16(122, 'lower_pv_3')
+            // ->int16(123, 'lower_pv_4')
+            // ->int16(124, 'lower_pv_5')
+            // ->int16(125, 'lower_pv_6')
+            // ->int16(126, 'lower_pv_7')
+            // ->int16(127, 'lower_pv_8')
+            // ->int16(128, 'lower_speed') // RUN
+            ->int16(140, 'lower_sv_1')
+            // ->int16(141, 'lower_sv_2')
+            // ->int16(142, 'lower_sv_3')
+            // ->int16(143, 'lower_sv_4')
+            // ->int16(144, 'lower_sv_5')
+            // ->int16(145, 'lower_sv_6')
+            // ->int16(146, 'lower_sv_7')
+            // ->int16(147, 'lower_sv_8')
+
+            // ->int16(220, 'upper_pv_1')
+            // ->int16(221, 'upper_pv_2')
+            // ->int16(222, 'upper_pv_3')
+            // ->int16(223, 'upper_pv_4')
+            // ->int16(224, 'upper_pv_5')
+            // ->int16(225, 'upper_pv_6')
+            // ->int16(226, 'upper_pv_7')
+            // ->int16(227, 'upper_pv_8')
+            // ->int16(228, 'upper_speed') // RUN
+            // ->int16(240, 'upper_sv_1')
+            // ->int16(241, 'upper_sv_2')
+            // ->int16(242, 'upper_sv_3')
+            // ->int16(243, 'upper_sv_4')
+            // ->int16(244, 'upper_sv_5')
+            // ->int16(245, 'upper_sv_6')
+            // ->int16(246, 'upper_sv_7')
+            // ->int16(247, 'upper_sv_8')
             ->build();
     }
 
-    private function logResponse($machine, $fc2_response, $fc3_response)
+    private function logResponse($machine, $fc3_response)
     {
         $this->info("Response from: {$machine->ip_address} (Line {$machine->line})");
         
-        $fc2_data = $fc2_response->getData();
+        // $fc2_data = $fc2_response->getData();
         $fc3_data = $fc3_response->getData();
 
         $metricLower = [
-            'pv_01'         => $fc3_data['lower_pv_1'] ?? null,
+            'pv_1'         => $fc3_data['lower_pv_1'] ?? null,
             'pv_2'         => $fc3_data['lower_pv_2'] ?? null,
             'pv_3'         => $fc3_data['lower_pv_3'] ?? null,
             'pv_4'         => $fc3_data['lower_pv_4'] ?? null,
