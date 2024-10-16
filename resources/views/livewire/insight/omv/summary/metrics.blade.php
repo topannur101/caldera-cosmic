@@ -63,10 +63,10 @@ class extends Component {
                 $metrics->where('ins_omv_recipes.name', 'LIKE', '%' . $this->fquery . '%');
             break;
             case 'line':
-                $metric->where('ins_omv_metrics.line', 'LIKE', '%' . $this->fquery . '%');
+                $metrics->where('ins_omv_metrics.line', 'LIKE', '%' . $this->fquery . '%');
             break;
             case 'team':
-                $metric->where('ins_omv_metrics.team', 'LIKE', '%' . $this->fquery . '%');
+                $metrics->where('ins_omv_metrics.team', 'LIKE', '%' . $this->fquery . '%');
             break;
             case 'emp_id':
             $metrics->where(function (Builder $query) {

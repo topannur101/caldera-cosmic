@@ -108,7 +108,7 @@ class extends Component {
     <livewire:insight.stc.summary.d-sum-print />
 </x-slot>
 
-<div class="overflow-auto w-full">
+<div wire:key="d-sums" class="overflow-auto w-full">
     <div>
         <div class="flex justify-between items-center mb-6 px-5 py-1">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">

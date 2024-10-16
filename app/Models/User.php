@@ -162,14 +162,20 @@ class User extends Authenticatable
         return $this->id === 1 ? InvArea::all()->pluck('id')->toArray() : $this->inv_areas->pluck('id')->toArray();
     }
 
-    public function kpi_areas() : BelongsToMany
-    {
-        return $this->belongsToMany(KpiArea::class, 'kpi_auths', 'user_id', 'kpi_area_id');
-    }
+    // public function kpi_areas() : BelongsToMany
+    // {
+    //     return $this->belongsToMany(KpiArea::class, 'kpi_auths', 'user_id', 'kpi_area_id');
+    // }
 
-    public function kpiAreaIds(): array
+    // public function kpiAreaIds(): array
+    // {
+    //     return $this->id === 1 ? InvArea::all()->pluck('id')->toArray() : $this->kpi_areas->pluck('id')->toArray();
+    // }
+
+    public function ins_omv_metrics(): HasMany
     {
-        return $this->id === 1 ? InvArea::all()->pluck('id')->toArray() : $this->kpi_areas->pluck('id')->toArray();
+        return $this->hasMany(InsOmvMetric::class, 'user_1_id')
+                    ->orWhere('user_2_id', $this->id);
     }
 
     public function ins_rtc_auths(): HasMany

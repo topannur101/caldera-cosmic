@@ -86,6 +86,17 @@ Route::prefix('insight')->group(function () {
 
     });
 
+    Route::name('insight.erd.')->group(function () {
+
+        Volt::route('/erd/manage/authorizations',   'insight.erd.manage.auths')     ->name('manage.auths');
+        Volt::route('/erd/manage/machines',         'insight.erd.manage.machines')  ->name('manage.machines');
+        Volt::route('/erd/manage/devices',          'insight.erd.manage.devices')   ->name('manage.devices');
+        Volt::route('/erd/manage',                  'insight.erd.manage.index')     ->name('manage.index');
+        Volt::route('/erd/summary',                 'insight.erd.summary.index')    ->name('summary.index');
+        Volt::route('/erd',                         'insight.erd.index')            ->name('index');
+
+    });
+
     Route::view('/', 'livewire.insight.index')->name('insight');
 });
 

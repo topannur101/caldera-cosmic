@@ -19,9 +19,11 @@
             <livewire:layout.navigation />
 
             <!-- Page Printable -->
-            @if (isset($printable))
-            {{ $printable }}
-            @endif
+            <div wire:key="printable">
+                @if (isset($printable))
+                {{ $printable }}
+                @endif
+            </div>
 
             <!-- Page Header -->
             @if (isset($header))

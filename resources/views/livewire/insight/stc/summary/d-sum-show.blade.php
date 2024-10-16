@@ -144,7 +144,7 @@ class extends Component {
 };
 
 ?>
-<div x-data="{ ...app() }">
+<div>
     <div class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">

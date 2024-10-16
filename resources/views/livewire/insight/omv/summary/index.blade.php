@@ -46,6 +46,15 @@ new #[Layout('layouts.app')] class extends Component {
         {
             $this->setToday();
         }
+
+        if ($this->view == 'metrics' && !$this->fquery && $this->ftype == 'any' && Auth::user()) {
+            $latestMetric = Auth::user()->ins_omv_metrics()->latest()->first();
+            
+            if ($latestMetric) {
+                $this->ftype = 'line';
+                $this->fquery = $latestMetric->line;
+            }
+        }
         
         $this->olines = InsRtcMetric::join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
             ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
