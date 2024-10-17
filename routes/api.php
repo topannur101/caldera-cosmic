@@ -1,5 +1,6 @@
 <?php
 
+use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Support\Str;
 use App\Models\InsOmvMetric;
@@ -14,6 +15,14 @@ use Illuminate\Support\Facades\Validator;
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
 // })->middleware('auth:sanctum');
+
+Route::get('/time', function() {
+    $currentTime = Carbon::now('UTC');
+    return response()->json([
+        'timestamp' => $currentTime->timestamp,
+        'formatted' => $currentTime->toIso8601String(),
+    ]);
+});
 
 Route::get('/omv-recipes', function() {
     $recipes = InsOmvRecipe::all()->map(function($recipe) {

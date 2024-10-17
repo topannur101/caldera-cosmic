@@ -1,16 +1,18 @@
 {
     "app": {
-        "host": "localhost",
+        "host": "127.0.0.1",
         "port": 92,
-        "debug": true,
+        "debug": false,
         "database_file": "database.db",
         "remote_server_url": "http://localhost",
         "line": 99
     },
     "serial": {
-        "port": "COM6",
+        "port": "COM5",
         "baud_rate": 9600,
-        "threshold": 700
+        "threshold": 100,
+        "auto_connect": false,
+        "interval": 2000
     },
     "capture": {
         "camera_index": 0,

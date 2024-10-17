@@ -1,46 +1,98 @@
-import serial
-from flask import Flask, jsonify, send_file, request
-import time
 import cv2
 import io
 import json
-import sqlite3
-import requests
-from datetime import datetime, timedelta
-import threading
-from flask_cors import CORS
-import os
 import logging
+import os
+import requests
+import serial
+import shutil
+import sqlite3
+import sys
+import threading
+import time
+import win32api
+
+from datetime import datetime, timedelta, timezone
+from flask import Flask, jsonify, request, send_file
+from flask_cors import CORS
 from logging.handlers import RotatingFileHandler
 from urllib.parse import urlparse
 
+# Set up flask server
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Load configuration
-config_file_path = 'config.json'
-with open(config_file_path, 'r') as config_file:
-    config = json.load(config_file)
 
 # Set up logging
 log_file = 'debug.log'
-log_handler = RotatingFileHandler(log_file, maxBytes=100000, backupCount=1)
+log_handler = RotatingFileHandler(log_file, maxBytes=100000, backupCount=0)
 log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger = logging.getLogger()
 logger.addHandler(log_handler)
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.INFO)
+
+# set up logging handler
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+logger.info("OMV Worker is starting...")
+
+# Set up config
+config_file_path = 'config.json'
+config_example_path = 'config.json.example'
+
+def load_configuration():
+    if os.path.exists(config_file_path):
+        # config.json exists, load it
+        with open(config_file_path, 'r') as config_file:
+            logger.info(f"Configuration succesfully loaded.")
+            return json.load(config_file)
+    elif os.path.exists(config_example_path):
+        # config.json doesn't exist, but config.json.example does
+        try:
+            # Copy config.json.example to config.json
+            shutil.copy2(config_example_path, config_file_path)
+            logger.warning(f"Configuration is missing, creating a new one from example...")
+            
+            # Load the newly created config.json
+            with open(config_file_path, 'r') as config_file:
+                return json.load(config_file)
+        except Exception as e:
+            logger.error(f"Configuration from example file can't be created: {str(e)}")
+            raise
+    else:
+        # Neither config.json nor config.json.example exists
+        error_message = f"Configuration file {config_file_path} is missing and {config_example_path} is not available."
+        logger.error(error_message)
+        raise FileNotFoundError(error_message)
+
+# Load configuration
+try:
+    logger.info("Loading configuration...")
+    config = load_configuration()
+except Exception as e:
+    logger.error(f"Failed to load configuration: {str(e)}")
+    quit()
 
 # Database setup
-conn = sqlite3.connect(config['app']['database_file'], check_same_thread=False)
-cursor = conn.cursor()
-cursor.execute('''CREATE TABLE IF NOT EXISTS queue
-                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                   data TEXT,
-                   attempts INTEGER,
-                   created_at TIMESTAMP,
-                   last_tried_at TIMESTAMP,
-                   last_tried_msg TEXT)''')
-conn.commit()
+logger.info(f"Setting up database...")
+try:
+    conn = sqlite3.connect(config['app']['database_file'], check_same_thread=False)
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS queue
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    data TEXT,
+                    attempts INTEGER,
+                    created_at TIMESTAMP,
+                    last_tried_at TIMESTAMP,
+                    last_tried_msg TEXT)''')
+    conn.commit()
+    logger.info(f"Database succesfully loaded.")
+except Exception as e:
+    logger.error(f"Failed to load database: {str(e)}")
+    quit()
 
 # Global variables
 start_time = time.time()
@@ -63,6 +115,51 @@ def update_config(new_server):
         with open(config_file_path, 'w') as config_file:
             json.dump(config, config_file, indent=4)
         logger.info(f"Updated remote server configuration to: {new_server}")
+
+def get_server_time(url):
+    try:
+        logger.info(f"Retrieving server time...")
+        response = requests.get(url)
+        response.raise_for_status()
+        # Parse the ISO 8601 string and ensure it's UTC
+        return datetime.fromisoformat(response.json()['formatted']).replace(tzinfo=timezone.utc)
+    except requests.RequestException as e:
+        logger.error(f"Server time can't be retrieved as the server isn't responding")
+        return None
+
+def set_system_time(server_time):
+    try:
+        # Convert UTC time to local time for Windows
+        local_time = server_time.astimezone()
+        win32api.SetSystemTime(local_time.year, local_time.month,
+                               local_time.weekday(), local_time.day,
+                               local_time.hour, local_time.minute,
+                               local_time.second, local_time.microsecond // 1000)
+        logger.info(f"System time updated to {local_time}")
+    except Exception as e:
+        logger.error(f"Error setting system time: {e}")
+
+def sync_time():
+    server_url = f"{config['app']['remote_server_url']}/api/time"
+    server_time = get_server_time(server_url)
+    
+    if server_time is None:
+        return
+    
+    # Ensure local_time is also UTC aware
+    local_time = datetime.now(timezone.utc)
+    time_difference = abs((server_time - local_time).total_seconds())
+    
+    logger.info(f"Server time     : {server_time}")
+    logger.info(f"Local time      : {local_time}")
+    logger.info(f"Time difference : {time_difference} seconds")
+    
+    if time_difference > 60:  # 1 minute
+        set_system_time(server_time)
+    else:
+        logger.info("Time difference is within acceptable range. No update needed.")
+
+sync_time()
 
 @app.route('/get-line')
 def get_line():
@@ -99,7 +196,7 @@ def send_to_server(data):
         response = requests.post(server_url, json=data, timeout=5)
         server_message = response.text
         if response.status_code != 200:
-            error_message = f"Server returned non-200 status code: {response.status_code}. Message: {server_message}"
+            error_message = f"Server returned non-200 status code: {response.status_code}."
             logger.error(error_message)
             return False, error_message
         return True, server_message
