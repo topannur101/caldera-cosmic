@@ -66,6 +66,11 @@ class InsStcDSum extends Model
         return InsStc::duration($this->start_time, $this->end_time);
     }
 
+    public function uploadLatency(): string
+    {
+        return InsStc::duration($this->end_time, $this->updated_at);
+    }
+
     public function ins_stc_d_logs(): HasMany
     {
         return $this->hasMany(InsStcDlog::class);

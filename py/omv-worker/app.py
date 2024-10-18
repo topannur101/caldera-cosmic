@@ -130,7 +130,7 @@ def get_server_time(url):
 def set_system_time(server_time):
     try:
         # Convert UTC time to local time for Windows
-        local_time = server_time.astimezone()
+        local_time = server_time
         win32api.SetSystemTime(local_time.year, local_time.month,
                                local_time.weekday(), local_time.day,
                                local_time.hour, local_time.minute,

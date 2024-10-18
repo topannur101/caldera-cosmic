@@ -25,6 +25,7 @@ class extends Component {
     public string $start_time;
     public string $end_time;
     public string $duration;
+    public string $upload_latency;
     public string $logs_count;
     public string $position;
     public string $speed;
@@ -61,6 +62,7 @@ class extends Component {
             $this->start_time       = $dSum->start_time;
             $this->end_time         = $dSum->end_time;
             $this->duration         = InsStc::duration($dSum->start_time, $dSum->end_time);
+            $this->upload_latency   = InsStc::duration($dSum->end_time, $dSum->updated_at);
             $this->logs_count       = $dSum->ins_stc_d_logs->count();
             $this->position         = InsStc::positionHuman($dSum->position);
             $this->speed            = $dSum->speed;
@@ -128,6 +130,7 @@ class extends Component {
             'machine_code'  => $this->machine_code,
             'start_time'    => $this->start_time,
             'duration'      => $this->duration,
+            'upload_latency'=> $this->upload_latency,
             'logs_count'    => $this->logs_count,
             'position'      => $this->position,
             'speed'         => $this->speed,
@@ -231,6 +234,14 @@ class extends Component {
                             </span>
                             <span>
                                 {{ $duration }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                {{ __('Latensi unggah') . ': ' }}
+                            </span>
+                            <span>
+                                {{ $upload_latency }}
                             </span>
                         </div>
                     </div>

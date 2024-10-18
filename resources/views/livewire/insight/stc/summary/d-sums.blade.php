@@ -157,26 +157,28 @@ class extends Component {
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
                     <table class="table table-sm table-truncate text-sm text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
-                            <th>{{ __('Waktu mulai') }}</th>
-                            <th>{{ __('Durasi') }}</th>
+                            <th>{{ __('Diperbarui pada') }}</th> 
                             <th>{{ __('Line') }}</th>
                             <th>{{ __('Posisi') }}</th>  
                             <th>{{ __('RPM') }}</th>   
                             <th>{{ __('Median suhu') }}</th>
                             <th>{{ __('Pengukur') }}</th>
-                            <th>{{ __('Diperbarui pada') }}</th> 
+                            <th>{{ __('Waktu mulai') }}</th>
+                            <th>{{ __('Durasi') }}</th>
+                            <th>{{ __('Latensi unggah') }}</th>
                         </tr>
                         @foreach ($d_sums as $d_sum)
                         <tr wire:key="d_sum-tr-{{ $d_sum->id . $loop->index }}" tabindex="0"
                             x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $d_sum->id }}'})">
-                            <td>{{ $d_sum->start_time }}</td>
-                            <td>{{ $d_sum->duration() }}</td>
+                            <td>{{ $d_sum->d_sum_updated_at }}</td>
                             <td>{{ $d_sum->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($d_sum->position) }}</td>
                             <td>{{ $d_sum->speed }}</td>
                             <td>{{ $d_sum->z_1_temp . ' | ' . $d_sum->z_2_temp . ' | ' . $d_sum->z_3_temp . ' | ' . $d_sum->z_4_temp  }}</td>
                             <td>{{ $d_sum->user1_name }}</td>
-                            <td>{{ $d_sum->d_sum_updated_at }}</td>
+                            <td>{{ $d_sum->start_time }}</td>
+                            <td>{{ $d_sum->duration() }}</td>
+                            <td>{{ $d_sum->uploadLatency() }}</td>
                         </tr>
                     @endforeach
                     </table>

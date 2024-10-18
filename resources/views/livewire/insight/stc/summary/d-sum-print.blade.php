@@ -23,6 +23,7 @@ class extends Component {
     public string $machine_code;
     public string $start_time;
     public string $duration;
+    public string $upload_latency;
     public string $logs_count;
     public string $position;
     public string $speed;
@@ -44,6 +45,7 @@ class extends Component {
         $this->machine_code  = $data['machine_code'];
         $this->start_time    = $data['start_time'];
         $this->duration      = $data['duration'];
+        $this->upload_latency= $data['upload_latency'];
         $this->logs_count    = $data['logs_count'];
         $this->position      = $data['position'];
         $this->speed         = $data['speed'];
@@ -174,6 +176,15 @@ class extends Component {
                                     <td class="px-1">:</td>
                                     <td class="truncate">
                                         {{ $duration . ' ' . __('dari') . ' ' . $logs_count . ' ' . __('baris data') }}                                      
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-xs">
+                                        {{ __('Latensi unggah') }}
+                                    </td>
+                                    <td class="px-1">:</td>
+                                    <td class="truncate">
+                                        {{ $upload_latency }}                                      
                                     </td>
                                 </tr>
                             </table>
