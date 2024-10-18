@@ -7,7 +7,8 @@ use App\Models\InsRtcMetric;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Response;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.app')] 
+class extends Component {
     #[Url]
     public $view = 'metrics';
 
@@ -102,22 +103,6 @@ new #[Layout('layouts.app')] class extends Component {
     public function resetFilter()
     {
         $this->reset('fquery', 'ftype');
-    }
-
-    public function download()
-    {
-        switch ($this->view) {
-            case 'metrics':
-                $this->redirectRoute('download.ins-rtc-metrics', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
-                $this->js('$dispatch("close")');
-                $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
-                break;
-            case 'clumps':
-                $this->redirectRoute('download.ins-rtc-clumps', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
-                $this->js('$dispatch("close")');
-                $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
-                break;
-        }
     }
 };
 
@@ -227,18 +212,6 @@ new #[Layout('layouts.app')] class extends Component {
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
                     </div>
                 </div>
-                @if ($view == 'metrics' || $view == 'clumps')
-                    <div wire:key="metrics-panel">
-                        <div class="m-3">
-                            @can('download', InsRtcMetric::class)
-                                <div class="py-4">
-                                    <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                        class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
-                                </div>
-                            @endcan
-                        </div>
-                    </div>
-                @endif
             </div>
         </div>
         @switch($view)

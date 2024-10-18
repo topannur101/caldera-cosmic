@@ -9,6 +9,8 @@ use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\InsRdcTest;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -30,95 +32,118 @@ class extends Component {
 
     // public $sort = 'updated';
 
-    public function with(): array
+    private function getTestsQuery()
     {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $testsQuery = InsRdcTest::join('ins_rubber_batches', 'ins_rdc_tests.ins_rubber_batch_id', '=', 'ins_rubber_batches.id')
-        ->join('ins_rdc_machines', 'ins_rdc_tests.ins_rdc_machine_id', '=', 'ins_rdc_machines.id')
-        ->join('users', 'ins_rdc_tests.user_id', '=', 'users.id')
-        ->select(
-        'ins_rdc_tests.*',
-        'ins_rdc_tests.queued_at as test_queued_at',
-        'ins_rdc_tests.updated_at as test_updated_at',
-        'ins_rubber_batches.code as batch_code',
-        'ins_rubber_batches.code_alt as batch_code_alt',
-        'ins_rubber_batches.model as batch_model',
-        'ins_rubber_batches.color as batch_color',
-        'ins_rubber_batches.mcs as batch_mcs',
-        'ins_rdc_machines.number as machine_number',
-        'users.emp_id as user_emp_id',
-        'users.name as user_name');
-
-        $testsQuery->whereBetween('ins_rdc_tests.updated_at', [$start, $end]);
+        $query = InsRdcTest::join('ins_rubber_batches', 'ins_rdc_tests.ins_rubber_batch_id', '=', 'ins_rubber_batches.id')
+            ->join('ins_rdc_machines', 'ins_rdc_tests.ins_rdc_machine_id', '=', 'ins_rdc_machines.id')
+            ->join('users', 'ins_rdc_tests.user_id', '=', 'users.id')
+            ->select(
+                'ins_rdc_tests.*',
+                'ins_rdc_tests.queued_at as test_queued_at',
+                'ins_rdc_tests.updated_at as test_updated_at',
+                'ins_rubber_batches.code as batch_code',
+                'ins_rubber_batches.code_alt as batch_code_alt',
+                'ins_rubber_batches.model as batch_model',
+                'ins_rubber_batches.color as batch_color',
+                'ins_rubber_batches.mcs as batch_mcs',
+                'ins_rdc_machines.number as machine_number',
+                'users.emp_id as user_emp_id',
+                'users.name as user_name'
+            )
+            ->whereBetween('ins_rdc_tests.updated_at', [$start, $end]);
 
         switch ($this->ftype) {
             case 'code':
-                $testsQuery->where('ins_rubber_batches.code', 'LIKE', '%' . $this->fquery . '%');
-            break;
+                $query->where('ins_rubber_batches.code', 'LIKE', '%' . $this->fquery . '%');
+                break;
             case 'model':
-                $testsQuery->where('ins_rubber_batches.model', 'LIKE', '%' . $this->fquery . '%');
+                $query->where('ins_rubber_batches.model', 'LIKE', '%' . $this->fquery . '%');
                 break;
             case 'color':
-                $testsQuery->where('ins_rubber_batches.color', 'LIKE', '%' . $this->fquery . '%');
-            break;
+                $query->where('ins_rubber_batches.color', 'LIKE', '%' . $this->fquery . '%');
+                break;
             case 'mcs':
-                $testsQuery->where('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%');
-            break;
+                $query->where('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%');
+                break;
             case 'eval':
-                $testsQuery->where('ins_rdc_tests.eval', 'LIKE', '%' . $this->fquery . '%');
-            break;
+                $query->where('ins_rdc_tests.eval', 'LIKE', '%' . $this->fquery . '%');
+                break;
             case 'emp_id':
-                $testsQuery->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
-            break;
-            
+                $query->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
+                break;
             default:
-                $testsQuery->where(function (Builder $query) {
-                $query
-                    ->orWhere('ins_rubber_batches.code', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('ins_rubber_batches.model', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('ins_rubber_batches.color', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
+                $query->where(function (Builder $query) {
+                    $query->orWhere('ins_rubber_batches.code', 'LIKE', '%' . $this->fquery . '%')
+                        ->orWhere('ins_rubber_batches.model', 'LIKE', '%' . $this->fquery . '%')
+                        ->orWhere('ins_rubber_batches.color', 'LIKE', '%' . $this->fquery . '%')
+                        ->orWhere('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%')
+                        ->orWhere('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
                 });
                 break;
         }
 
-        $testsQuery->orderBy('ins_rdc_tests.updated_at', 'DESC');
+        return $query->orderBy('ins_rdc_tests.updated_at', 'DESC');
+    }
 
-        // switch ($this->sort) {
-        //     case 'updated':
-        //         if (!$this->is_workdate) {
-        //             $testsQuery->orderBy('ins_rdc_tests.updated_at', 'DESC');
-        //         } else {
-        //             $testsQuery->orderBy('ins_rdc_groups.workdate', 'DESC');
-        //         }
-        //         break;
-            
-        //     case 'sf_low':
-        //     $testsQuery->orderBy(DB::raw('ins_rdc_tests.area_vn + ins_rdc_tests.area_ab + ins_rdc_tests.area_qt'), 'ASC');
-        //         break;
-
-        //     case 'sf_high':
-        //     $testsQuery->orderBy(DB::raw('ins_rdc_tests.area_vn + ins_rdc_tests.area_ab + ins_rdc_tests.area_qt'), 'DESC');
-        //         break;
-        // }
-
-        $tests = $testsQuery->paginate($this->perPage);
-        // $sum_area_vn = $testsQuery->sum('area_vn');
-        // $sum_area_ab = $testsQuery->sum('area_ab');
+    public function with(): array
+    {
+        $tests = $this->getTestsQuery()->paginate($this->perPage);
 
         return [
             'tests' => $tests,
-            // 'sum_area_vn' => $sum_area_vn,
-            // 'sum_area_ab' => $sum_area_ab
         ];
     }
 
     public function loadMore()
     {
         $this->perPage += 10;
+    }
+
+    public function download()
+    {
+        $filename = 'rdc_tests_export_' . now()->format('Y-m-d_His') . '.csv';
+
+        $headers = [
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$filename",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $columns = [
+            __('Diperbarui'), __('Kode'), __('Kode alternatif'), __('Model'), __('Warna'), __('MCS'), __('Hasil'), __('Mesin'), __('Tag'), __('Nama'), __('Waktu antri')
+        ];
+
+        $callback = function () use ($columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            $this->getTestsQuery()->chunk(1000, function ($tests) use ($file) {
+                foreach ($tests as $test) {
+                    fputcsv($file, [
+                        $test->test_updated_at,
+                        $test->batch_code,
+                        $test->batch_code_alt,
+                        $test->batch_model ?? '-',
+                        $test->batch_color ?? '-',
+                        $test->batch_mcs ?? '-',
+                        $test->evalHuman(),
+                        $test->machine_number,
+                        $test->tag,
+                        $test->user_name,
+                        $test->test_queued_at,
+                    ]);
+                }
+            });
+
+            fclose($file);
+        };
+
+        return new StreamedResponse($callback, 200, $headers);
     }
 };
 
@@ -130,7 +155,21 @@ class extends Component {
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
                 {{ __('Hasil Uji') }}</h1>
             <div class="flex gap-x-2 items-center">
-                <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
+                <x-dropdown align="right" width="48">
+                    <x-slot name="trigger">
+                        <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                    </x-slot>
+                    <x-slot name="content">
+                        {{-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
+                            {{ __('Statistik ')}}
+                        </x-dropdown-link> --}}
+                        {{-- <hr
+                            class="border-neutral-300 dark:border-neutral-600" /> --}}
+                        <x-dropdown-link href="#" wire:click.prevent="download">
+                            <i class="fa fa-download me-2"></i>{{ __('Unduh') }}
+                        </x-dropdown-link>
+                    </x-slot>
+                </x-dropdown>
             </div>
         </div>
         <div wire:key="modals"> 

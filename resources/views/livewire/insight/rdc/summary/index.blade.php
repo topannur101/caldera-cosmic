@@ -97,24 +97,6 @@ class extends Component {
             $this->fquery = Auth::user()->emp_id;
         }
     }
-
-    public function download()
-    {
-        switch ($this->view) {
-            case 'tests':
-                $this->redirectRoute('download.ins-rdc-hides', 
-                [
-                    'start_at'      => $this->start_at, 
-                    'end_at'        => $this->end_at, 
-                    'is_workdate'   => $this->is_workdate, 
-                    'fquery'        => $this->fquery,
-                    'ftype'         => $this->ftype,
-                ]);
-                $this->js('$dispatch("close")');
-                $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
-                break;
-        }
-    }
 };
 
 ?>
@@ -235,16 +217,6 @@ class extends Component {
                         <div class="m-3">
                             <div class="py-4">
                                 <x-secondary-button type="button" x-on:click="$dispatch('by-mcs-update', { start_at: '{{ $start_at }}', end_at: '{{ $end_at }}' })">{{ __('Perbarui') }}</x-secondary-button>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-                @if ($view == 'tests')
-                    <div wire:key="tests-panel">
-                        <div class="m-3">
-                            <div class="py-4">
-                                <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                    class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
                             </div>
                         </div>
                     </div>

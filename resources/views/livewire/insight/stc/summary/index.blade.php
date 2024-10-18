@@ -84,11 +84,6 @@ class extends Component {
             $this->fquery = Auth::user()->emp_id;
         }
     }
-
-    public function download()
-    {
-        $this->js('alert("' . __('Fitur dalam pengembangan') . '")');
-    }
 };
 
 ?>
@@ -197,16 +192,6 @@ class extends Component {
                             placeholder="{{ __('Kata kunci') }}" name="fquery" />
                     </div>
                 </div>
-                @if ($view == 'd-sums')
-                    <div wire:key="d-sums-panel">
-                        <div class="m-3">
-                            <div class="py-4">
-                                <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                        class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
-                            </div>
-                        </div>
-                    </div>
-                @endif
             </div>
         </div>
         @switch($view)

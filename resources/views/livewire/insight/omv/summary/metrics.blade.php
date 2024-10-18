@@ -9,6 +9,7 @@ use App\Models\InsOmvMetric;
 use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -34,59 +35,58 @@ class extends Component {
 
     public $perPage = 20;
 
-    public function with(): array
+    private function getMetricsQuery()
     {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $metrics = InsOmvMetric::join('ins_omv_recipes', 'ins_omv_metrics.ins_omv_recipe_id', '=', 'ins_omv_recipes.id')
-        ->join('users as user1', 'ins_omv_metrics.user_1_id', '=', 'user1.id')
-        ->leftJoin('users as user2', 'ins_omv_metrics.user_2_id', '=', 'user2.id')
-        ->select(
-            'ins_omv_metrics.*',
-            'ins_omv_metrics.start_at as start_at',
-            'ins_omv_metrics.end_at as end_at',
-            'ins_omv_recipes.name as recipe_name',
-            'user1.name as user_1_name',
-            'user2.name as user_2_name',
-            'user1.emp_id as user_1_emp_id',
-            'user2.emp_id as user_2_emp_id'
-        )
-        ->whereBetween('ins_omv_metrics.start_at', [$start, $end]);
-
-        // if ($this->device_id) {
-        //     $metrics->where('device_id', $this->device_id);
-        // }
+        $query = InsOmvMetric::join('ins_omv_recipes', 'ins_omv_metrics.ins_omv_recipe_id', '=', 'ins_omv_recipes.id')
+            ->join('users as user1', 'ins_omv_metrics.user_1_id', '=', 'user1.id')
+            ->leftJoin('users as user2', 'ins_omv_metrics.user_2_id', '=', 'user2.id')
+            ->select(
+                'ins_omv_metrics.*',
+                'ins_omv_metrics.start_at as start_at',
+                'ins_omv_metrics.end_at as end_at',
+                'ins_omv_recipes.name as recipe_name',
+                'ins_omv_recipes.type as recipe_type',
+                'user1.name as user_1_name',
+                'user2.name as user_2_name',
+                'user1.emp_id as user_1_emp_id',
+                'user2.emp_id as user_2_emp_id'
+            )
+            ->whereBetween('ins_omv_metrics.start_at', [$start, $end]);
 
         switch ($this->ftype) {
             case 'recipe':
-                $metrics->where('ins_omv_recipes.name', 'LIKE', '%' . $this->fquery . '%');
-            break;
+                $query->where('ins_omv_recipes.name', 'LIKE', '%' . $this->fquery . '%');
+                break;
             case 'line':
-                $metrics->where('ins_omv_metrics.line', 'LIKE', '%' . $this->fquery . '%');
-            break;
+                $query->where('ins_omv_metrics.line', 'LIKE', '%' . $this->fquery . '%');
+                break;
             case 'team':
-                $metrics->where('ins_omv_metrics.team', 'LIKE', '%' . $this->fquery . '%');
-            break;
+                $query->where('ins_omv_metrics.team', 'LIKE', '%' . $this->fquery . '%');
+                break;
             case 'emp_id':
-            $metrics->where(function (Builder $query) {
-                $query
-                    ->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
-            });
-            break;
-            
+                $query->where(function (Builder $query) {
+                    $query->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
+                        ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
+                });
+                break;
             default:
-                $metrics->where(function (Builder $query) {
-                $query
-                    ->orWhere('ins_omv_recipes.name', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
-                    ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
+                $query->where(function (Builder $query) {
+                    $query->orWhere('ins_omv_recipes.name', 'LIKE', '%' . $this->fquery . '%')
+                        ->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
+                        ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
                 });
                 break;
         }
 
-        $metrics = $metrics->orderBy('start_at', 'DESC')->paginate($this->perPage);
+        return $query->orderBy('start_at', 'DESC');
+    }
+
+    public function with(): array
+    {
+        $metrics = $this->getMetricsQuery()->paginate($this->perPage);
 
         return [
             'metrics' => $metrics,
@@ -96,6 +96,52 @@ class extends Component {
     public function loadMore()
     {
         $this->perPage += 10;
+    }
+
+    public function download()
+    {
+        $filename = 'omv_metrics_export_' . now()->format('Y-m-d_His') . '.csv';
+
+        $headers = [
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$filename",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $columns = [
+            'ID', __('Kode'), __('Tipe'), __('Resep'), __('Line'), __('Team'), __('Operator 1'), __('Operator 2'), __('Evaluasi'), __('Durasi'), __('Jumlah Gambar'), __('Awal'), __('Akhir')
+        ];
+
+        $callback = function () use ($columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            $this->getMetricsQuery()->chunk(1000, function ($metrics) use ($file) {
+                foreach ($metrics as $metric) {
+                    fputcsv($file, [
+                        $metric->id,
+                        $metric->ins_rubber_batch->code ?? '',
+                        strtoupper($metric->recipe_type),
+                        $metric->recipe_name,
+                        $metric->line,
+                        $metric->team,
+                        $metric->user_1_emp_id . ' - ' . $metric->user_1_name,
+                        $metric->user_2_emp_id . ' - ' . $metric->user_2_name,
+                        $metric->evalHuman(),
+                        $metric->duration(),
+                        $metric->capturesCount(),
+                        $metric->start_at,
+                        $metric->end_at,
+                    ]);
+                }
+            });
+
+            fclose($file);
+        };
+
+        return new StreamedResponse($callback, 200, $headers);
     }
 };
 
@@ -107,7 +153,21 @@ class extends Component {
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
                 {{ __('Data Mentah') }}</h1>
             <div class="flex gap-x-2 items-center">
-                <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
+                <x-dropdown align="right" width="48">
+                    <x-slot name="trigger">
+                        <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                    </x-slot>
+                    <x-slot name="content">
+                        {{-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
+                            {{ __('Statistik ')}}
+                        </x-dropdown-link> --}}
+                        {{-- <hr
+                            class="border-neutral-300 dark:border-neutral-600" /> --}}
+                        <x-dropdown-link href="#" wire:click.prevent="download">
+                            <i class="fa fa-download me-2"></i>{{ __('Unduh') }}
+                        </x-dropdown-link>
+                    </x-slot>
+                </x-dropdown>
             </div>
         </div>
         <div wire:key="modals"> 
