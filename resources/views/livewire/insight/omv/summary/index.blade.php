@@ -41,6 +41,18 @@ class extends Component {
     public $is_range;
     public $is_filter;
 
+    public function getViewTitle(): string
+    {
+        $viewTitles = [
+            'daily'     => __('Ringkasan harian'),
+            'line'      => __('Ringkasan line'),
+            'team'      => __('Ringkasan tim'),
+            'metrics'   => __('Data mentah'),
+        ];
+
+        return $viewTitles[$this->view] ?? '';
+    }
+
     public function mount()
     {
         if(!$this->start_at || !$this->end_at)
@@ -116,6 +128,45 @@ class extends Component {
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
     @vite(['resources/js/apexcharts.js'])
+    <div wire:key="omv-summary-index-nav" class="flex px-8 mb-6">
+        <x-dropdown align="left">
+            <x-slot name="trigger">
+                <x-text-button type="button" class="flex gap-2 items-center m-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="fa fa-fw fa-chevron-down"></i></x-text-button>
+            </x-slot>
+            <x-slot name="content">
+                <x-dropdown-link href="#" wire:click.prevent="$set('view', 'daily')">
+                    {{ __('Ringkasan harian') }}
+                </x-dropdown-link>
+                <x-dropdown-link href="#" wire:click.prevent="$set('view', 'line')">
+                    {{ __('Ringkasan line') }}
+                </x-dropdown-link>
+                <x-dropdown-link href="#" wire:click.prevent="$set('view', 'team')">
+                    {{ __('Ringkasan tim') }}
+                </x-dropdown-link>
+                <hr class="border-neutral-300 dark:border-neutral-600" />
+                <x-dropdown-link href="#" wire:click.prevent="$set('view', 'metrics')">
+                    {{ __('Data mentah') }}
+                </x-dropdown-link>
+            </x-slot>
+        </x-dropdown>
+    </div>
+    <div wire:key="omv-summary-index-container">
+        @switch($view)
+            @case('daily')
+                        
+                @break
+            @case('line')
+            
+                @break
+            @case('team')
+                
+                @break
+            @case('metrics')
+                <livewire:insight.omv.summary.metrics />
+                @break
+                
+        @endswitch
+    </div>
     <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row min-w-0">
         <div>
             <div class="w-full sm:w-44 md:w-64 px-3 sm:px-0 mb-5">
@@ -145,42 +196,7 @@ class extends Component {
                         </x-select>
                     </div>
                 </div>
-                <div
-                    class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_date ? '' : 'hidden' }}">
-                    <div class="flex items-start justify-between">
-                        <div><i class="fa fa-calendar mr-3"></i>{{ $is_range ? __('Rentang') : __('Tanggal') }}</div>
-                        <div class="flex items-center">
-                            <x-dropdown align="right" width="48">
-                                <x-slot name="trigger">
-                                    <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
-                                </x-slot>
-                                <x-slot name="content">
-                                    <x-dropdown-link href="#" wire:click.prevent="setToday">
-                                        {{ __('Hari ini') }}
-                                    </x-dropdown-link>
-                                    <x-dropdown-link href="#" wire:click.prevent="setYesterday">
-                                        {{ __('Kemarin') }}
-                                    </x-dropdown-link>
-                                    <hr
-                                        class="border-neutral-300 dark:border-neutral-600 {{ $is_range ? '' : 'hidden' }}" />
-                                    <x-dropdown-link href="#" wire:click.prevent="setThisMonth"
-                                        class="{{ $is_range ? '' : 'hidden' }}">
-                                        {{ __('Bulan ini') }}
-                                    </x-dropdown-link>
-                                    <x-dropdown-link href="#" wire:click.prevent="setLastMonth"
-                                        class="{{ $is_range ? '' : 'hidden' }}">
-                                        {{ __('Bulan kemarin') }}
-                                    </x-dropdown-link>
-                                </x-slot>
-                            </x-dropdown>
-                        </div>
-                    </div>
-                    <div class="mt-5">
-                        <x-text-input wire:model.live="start_at" id="inv-date-start" type="date"></x-text-input>
-                        <x-text-input wire:model.live="end_at"  id="inv-date-end" type="date"
-                            class="mt-3 mb-1 {{ $is_range ? '' : 'hidden' }}"></x-text-input>
-                    </div>
-                </div>
+
                 <div
                     class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_filter ? '' : 'hidden' }}">
                     <div class="flex items-start justify-between">
@@ -216,7 +232,7 @@ class extends Component {
         </div>
         @switch($view)
             @case('metrics')
-                <livewire:insight.omv.summary.metrics :$start_at :$end_at :$fquery :$ftype />
+                
             @break
 
             @default

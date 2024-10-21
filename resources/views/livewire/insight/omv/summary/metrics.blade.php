@@ -149,9 +149,40 @@ class extends Component {
 
 <div wire:poll class="overflow-auto w-full">
     <div>
-        <div class="flex justify-between items-center mb-6 px-5 py-1">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
-                {{ __('Data Mentah') }}</h1>
+        <div class="flex justify-between items-center">
+            <div class="flex">
+                <div class="bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div><i class="fa fa-calendar mr-3"></i>{{ __('Rentang') }}</div>
+                        <div class="flex items-center">
+                            <x-dropdown align="right" width="48">
+                                <x-slot name="trigger">
+                                    <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                                </x-slot>
+                                <x-slot name="content">
+                                    <x-dropdown-link href="#" wire:click.prevent="setToday">
+                                        {{ __('Hari ini') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link href="#" wire:click.prevent="setYesterday">
+                                        {{ __('Kemarin') }}
+                                    </x-dropdown-link>
+                                    <hr class="border-neutral-300 dark:border-neutral-600" />
+                                    <x-dropdown-link href="#" wire:click.prevent="setThisMonth">
+                                        {{ __('Bulan ini') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link href="#" wire:click.prevent="setLastMonth">
+                                        {{ __('Bulan kemarin') }}
+                                    </x-dropdown-link>
+                                </x-slot>
+                            </x-dropdown>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <x-text-input wire:model.live="start_at" id="inv-date-start" type="date"></x-text-input>
+                        <x-text-input wire:model.live="end_at"  id="inv-date-end" type="date"></x-text-input>
+                    </div>
+                </div>
+            </div>
             <div class="flex gap-x-2 items-center">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">

@@ -16,9 +16,6 @@ Route::prefix('insight')->group(function () {
     Route::name('insight.')->group(function () {
 
         Volt::route('/ss/{id}', 'insight.ss.index')->name('ss'); // slideshow
-        Volt::route('/acm',     'insight.acm.index')->name('acm.index');
-        Volt::route('/ldc',     'insight.ldc.index')->name('ldc.index');
-
     });
 
     Route::name('insight.rtc.')->group(function () {

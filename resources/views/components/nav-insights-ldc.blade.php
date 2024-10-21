@@ -6,7 +6,7 @@
             </h2>
         </div>
         <div class="space-x-6 -my-px ml-10 flex">
-            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.ldc.create.index') }}" :active="request()->routeIs('insight.ldc.index')" wire:navigate>
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.ldc.create.index') }}" :active="request()->routeIs('insight.ldc.create.index')" wire:navigate>
                 <i class="fa fa-pen text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Buat') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.ldc.summary.index') }}" :active="request()->routeIs('insight.ldc.summary.index')" wire:navigate>

@@ -266,7 +266,7 @@
                 <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                     {{ __('Area OKC') }}</h1>
                 <div class="grid gap-2 grid-cols-1 lg:grid-cols-2">
-                    <x-card-link href="{{ route('insight.ldc.index') }}" wire:navigate>
+                    <x-card-link href="{{ route('insight.ldc.create.index') }}" wire:navigate>
                         <div class="flex">
                             <div>
                                 <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">
