@@ -170,6 +170,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('AB') }}</th>
                             <th>{{ __('QT') }}</th>
                             <th>{{ __('G') }}</th>
+                            <th>{{ __('M') }}</th>
                             <th>{{ __('S') }}</th>
                             <th>{{ __('WO') }}</th>
                             <th>{{ __('Style') }}</th>
@@ -188,6 +189,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <td>{{ $hide->area_ab }}</td>
                             <td>{{ $hide->area_qt }}</td>
                             <td>{{ $hide->grade }}</td>
+                            <td>{{ $hide->machine }}</td>
                             <td>{{ $hide->shift }}</td>
                             <td>{{ $hide->group_workdate }}</td>
                             <td>{{ $hide->group_style }}</td>

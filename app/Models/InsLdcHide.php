@@ -16,6 +16,7 @@ class InsLdcHide extends Model
         'area_ab',
         'area_qt',
         'grade',
+        'machine',
         'shift',
         'user_id',
         'ins_ldc_group_id'

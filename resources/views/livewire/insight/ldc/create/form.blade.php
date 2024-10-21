@@ -24,6 +24,7 @@ new class extends Component {
     public $area_qt;
 
     public $grade;
+    public $machine;
     public $code;
     public $shift;
 
@@ -38,6 +39,7 @@ new class extends Component {
             'area_ab'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'area_qt'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'grade'     => ['nullable', 'integer', 'min:1', 'max:5'],
+            'machine'   => ['nullable', 'integer', 'min:1', 'max:20'],
             'code'      => ['required', 'alpha_num', 'min:7', 'max:10'],
             'shift'     => ['required', 'integer', 'min:1', 'max:3']
         ];
@@ -49,7 +51,7 @@ new class extends Component {
     }
 
     #[On('set-hide')]
-    public function setHide($is_editing, $line, $workdate, $style, $material, $area_vn, $area_ab, $area_qt, $grade, $code)
+    public function setHide($is_editing, $line, $workdate, $style, $material, $area_vn, $area_ab, $area_qt, $grade, $machine, $code)
     {
         $this->is_editing = $is_editing;
 
@@ -61,6 +63,7 @@ new class extends Component {
         $this->area_ab  = $area_ab;
         $this->area_qt  = $area_qt;
         $this->grade    = $grade;
+        $this->machine  = $machine;
         $this->code     = $code;
 
         $this->resetValidation();
@@ -126,6 +129,7 @@ new class extends Component {
                     'area_ab'       => $this->area_ab,
                     'area_qt'       => $this->area_qt,
                     'grade'         => $this->grade ? $this->grade : null,
+                    'machine'       => $this->machine ? $this->machine : null,
                     'shift'         => $this->shift,
                     'user_id'       => Auth::user()->id
                 ]);
@@ -139,7 +143,7 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['is_editing', 'line', 'workdate', 'style', 'material', 'area_vn', 'area_ab', 'area_qt', 'grade', 'code']);
+        $this->reset(['is_editing', 'line', 'workdate', 'style', 'material', 'area_vn', 'area_ab', 'area_qt', 'grade', 'machine', 'code']);
     }
 
     public function delete()
@@ -196,25 +200,39 @@ new class extends Component {
         this.$refs.hidecode.focus(); 
         this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); 
     }
-}" x-on:set-group.window="line = $event.detail.line; workdate = $event.detail.workdate; style = $event.detail.style; material = $event.detail.material" class="px-6 py-8 flex gap-x-6">
+}" x-on:set-form-group.window="line = $event.detail.line; workdate = $event.detail.workdate; style = $event.detail.style; material = $event.detail.material" class="px-6 py-8 flex gap-x-6">
     <form id="ldc-index-form-element" wire:submit="save">
-        <div class="grid grid-cols-3 gap-3">
-            <div>
+        <div class="grid grid-cols-1 gap-6">
+            <div class="grid grid-cols-3 gap-3">
                 <div>
                     <label for="hide-area_vn"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('VN') }}</label>
                     <x-text-input-suffix suffix="SF" id="hide-area_vn" x-model="area_vn" type="number" step=".01" autocomplete="off" />
-                    @error('area_vn')
-                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                    @enderror
                 </div>
-                <div class="mt-3">
+                <div>
+                    <div class="flex">
+                        <label for="hide-area_ab"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('AB')  }}</label>
+                        <div class="text-neutral-500 text-xs pr-3">|</div>
+                        <div class="text-neutral-500 text-xs"><span class="uppercase">{{ __('Selisih') .': ' }}</span><span x-text="diff.toFixed(1) + '%'"></span></div>
+                    </div>
+                    <x-text-input-suffix suffix="SF" id="hide-area_ab" x-model="area_ab" type="number" step=".01" autocomplete="off" />
+                </div>
+                <div>
+                    <div class="flex">
+                        <label for="hide-area_qt"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('QT') }}</label>
+                        <div class="text-neutral-500 text-xs pr-3">|</div>
+                        <div class="text-neutral-500 text-xs"><span class="uppercase">{{ __('Defect') . ': ' }}</span><span x-text="defect.toFixed(1) + '%'"></span></div>
+                    </div>
+                    <x-text-input-suffix suffix="SF" id="hide-area_qt" x-model="area_qt" type="number" step=".01" autocomplete="off" x-on:keydown="if ($event.key === '+' || $event.key === '-') { $dispatch('open-spotlight', 'calculate-qt'); console.log(area_qt); area_qt_string = area_qt + $event.key }"  />
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <div>
                     <label for="hide-grade"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Grade') }}</label>
                     <x-text-input id="hide-grade" wire:model="grade" type="number" list="hide-grades" step="1" />
-                    @error('grade')
-                        <x-input-error messages="{{ $message }}" class="px-3" />
-                    @enderror
                     <datalist id="hide-grades">
                         <option value="1"></option>
                         <option value="2"></option>
@@ -223,74 +241,97 @@ new class extends Component {
                         <option value="5"></option>
                     </datalist>
                 </div>
-            </div>
-            <div class="col-span-2">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <div class="flex">
-                            <label for="hide-area_ab"
-                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('AB')  }}</label>
-                            <div class="text-neutral-500 text-xs pr-3">|</div>
-                            <div class="text-neutral-500 text-xs"><span class="uppercase">{{ __('Selisih') .': ' }}</span><span x-text="diff.toFixed(1) + '%'"></span></div>
-                        </div>
-                        <x-text-input-suffix suffix="SF" id="hide-area_ab" x-model="area_ab" type="number" step=".01" autocomplete="off" />
-                        @error('area_ab')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
-                    </div>
-                    <div>
-                        <div class="flex">
-                            <label for="hide-area_qt"
-                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('QT') }}</label>
-                            <div class="text-neutral-500 text-xs pr-3">|</div>
-                            <div class="text-neutral-500 text-xs"><span class="uppercase">{{ __('Defect') . ': ' }}</span><span x-text="defect.toFixed(1) + '%'"></span></div>
-                        </div>
-                        <x-text-input-suffix suffix="SF" id="hide-area_qt" x-model="area_qt" type="number" step=".01" autocomplete="off" x-on:keydown="if ($event.key === '+' || $event.key === '-') { $dispatch('open-spotlight', 'calculate-qt'); console.log(area_qt); area_qt_string = area_qt + $event.key }"  />
-                        @error('area_qt')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
-                    </div>
-                    <div>
-                        <label for="hide-code"
-                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Barcode') }}</label>
-                        <x-text-input id="hide-code" x-model="code" x-ref="hidecode" type="text" autocomplete="off" :disabled="$is_editing ? 'disabled' : false" />
-                        <div class="flex w-full justify-between items-center text-neutral-500 px-3 mt-2 text-xs">
-                            <x-text-button @click="code = 'XA'; $nextTick(() => setCursorToEnd())" type="button">XA</x-text-button>
-                            <x-text-button @click="code = 'XB'; $nextTick(() => setCursorToEnd())" type="button">XB</x-text-button>
-                            <x-text-button @click="code = 'XC'; $nextTick(() => setCursorToEnd())" type="button">XC</x-text-button>
-                            <x-text-button @click="code = 'XD'; $nextTick(() => setCursorToEnd())" type="button">XD</x-text-button>
-                        </div>
-                        @error('code')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
-                    </div>
-                    <div>
-                        <label for="hide-shift"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
-                        <x-select class="w-full" id="hide-shift" wire:model="shift">
-                            <option value=""></option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                        </x-select>
-                        @error('shift')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
+                <div>
+                    <label for="hide-machine"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin') }}</label>
+                    <x-text-input id="hide-machine" wire:model="machine" type="number" list="hide-machines" step="1" placeholder="{{ __('Lewati') }}" disabled />
+                    <datalist id="hide-machines">
+                        <option value="1"></option>
+                        <option value="2"></option>
+                        <option value="3"></option>
+                        <option value="4"></option>
+                        <option value="5"></option>
+                        <option value="6"></option>
+                        <option value="7"></option>
+                        <option value="8"></option>
+                        <option value="9"></option>
+                        <option value="10"></option>
+                        <option value="11"></option>
+                        <option value="12"></option>
+                        <option value="13"></option>
+                        <option value="14"></option>
+                        <option value="15"></option>
+                        <option value="16"></option>
+                        <option value="17"></option>
+                        <option value="18"></option>
+                        <option value="19"></option>
+                        <option value="20"></option>
+                    </datalist>
+                </div>
+                <div>
+                    <label for="hide-code"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Barcode') }}</label>
+                    <x-text-input id="hide-code" x-model="code" x-ref="hidecode" type="text" autocomplete="off" :disabled="$is_editing ? 'disabled' : false" />
+                    <div class="flex w-full justify-between items-center text-neutral-500 px-3 mt-2 text-xs">
+                        <x-text-button @click="code = 'XA'; $nextTick(() => setCursorToEnd())" type="button">XA</x-text-button>
+                        <x-text-button @click="code = 'XB'; $nextTick(() => setCursorToEnd())" type="button">XB</x-text-button>
+                        <x-text-button @click="code = 'XC'; $nextTick(() => setCursorToEnd())" type="button">XC</x-text-button>
+                        <x-text-button @click="code = 'XD'; $nextTick(() => setCursorToEnd())" type="button">XD</x-text-button>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="flex justify-between mt-6">
-            <div>
-                <div class="text-sm">{{ __('Material') .': ' }}<span x-text="material ? material : ''"></span></div>
-                <div class="text-xs text-neutral-500">{{ __('Waktu server') .': ' . Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMMM YYYY, HH:mm'); }}</div>
+        @if ($errors->has('area_vn') || $errors->has('area_ab') || $errors->has('area_qt') || $errors->has('grade') || $errors->has('machine') || $errors->has('code') || $errors->has('shift'))
+            <div class="mb-3">
+                @error('area_vn')
+                <x-input-error messages="{{ $message }}" />
+                @enderror
+                @error('area_ab')
+                    <x-input-error messages="{{ $message }}" />
+                @enderror
+                @error('area_qt')
+                    <x-input-error messages="{{ $message }}" />
+                @enderror
+                @error('grade')
+                    <x-input-error messages="{{ $message }}" />
+                @enderror
+                @error('machine')
+                    <x-input-error messages="{{ $message }}" />
+                @enderror
+                @error('code')
+                    <x-input-error messages="{{ $message }}" />
+                @enderror
+                @error('shift')
+                    <x-input-error messages="{{ $message }}" />
+                @enderror
+            </div>
+        @endif
+        <div class="flex justify-between items-end">
+            <div class="flex gap-3">
+                <div>
+                    <label for="hide-shift"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
+                    <x-select class="w-full" id="hide-shift" wire:model="shift">
+                        <option value=""></option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </x-select>
+                </div>
+                <div>
+                    <label for="hide-material"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Material') }}</label>
+                    <div x-text="material ? material : '{{ __('Tak ada nama material') }}'" class="px-3 py-2"></div>
+                </div>
             </div>
             <div class="flex gap-x-6">
                 <x-text-button type="button" class="uppercase text-xs text-red-500 {{ $is_editing ? '' : 'hidden' }}" wire:click="delete"
-                wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
-                {{ __('Hapus') }}
-            </x-text-button>
-                <x-primary-button type="submit">{{ __('Simpan') }}</x-primary-button>
+                    wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
+                    {{ __('Hapus') }}
+                </x-text-button>
+                <div>
+                    <x-primary-button type="submit">{{ __('Simpan') }}</x-primary-button>
+                </div>                
             </div>
         </div>
     </form>
@@ -320,6 +361,10 @@ new class extends Component {
             <div x-cloak x-show="defect < 0 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Abnormal') }}</span></div>
             <div x-show="!area_vn || !area_qt"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
         </div>
+        <div class="text-xs text-neutral-500 text-center">
+            <div>{{ Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMM YYYY'); }}</div>
+            <div>{{ Carbon::now()->locale(app()->getLocale())->isoFormat('HH:mm'); }}</div>
+        </div>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
@@ -332,6 +377,11 @@ new class extends Component {
   if (form) {
     const inputs = form.querySelectorAll('input');
     const hideCodeInput = form.querySelector('#hide-code');
+    const hideAreaVnInput = form.querySelector('#hide-area_vn');
+    const hideGradeInput = form.querySelector('#hide-grade');
+    const hideAreaAbInput = form.querySelector('#hide-area_ab');
+    const hideAreaQtInput = form.querySelector('#hide-area_qt');
+    const hideMachineInput = form.querySelector('#hide-machine');
     const submitButton = form.querySelector('button[type="submit"]');
 
     inputs.forEach((input, index) => {
@@ -346,6 +396,12 @@ new class extends Component {
                 submitButton.focus();
                 $wire.save();
             }
+          } else if (input === hideAreaVnInput) {
+            hideGradeInput.focus();
+          } else if (input === hideGradeInput) {
+            hideAreaAbInput.focus();
+          } else if (input === hideAreaQtInput) {
+            hideCodeInput.focus();
           } else if (nextInput) {
             nextInput.focus();
           }

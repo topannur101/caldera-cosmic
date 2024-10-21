@@ -81,7 +81,7 @@ new class extends Component {
         $this->material = $this->clean($this->material);
         $this->validate();
         $this->js('window.dispatchEvent(escKey)');
-        $this->dispatch('set-group', line: $this->line, workdate: $this->workdate, style: $this->style, material: $this->material);        
+        $this->dispatch('set-form-group', line: $this->line, workdate: $this->workdate, style: $this->style, material: $this->material);        
     }
 
     #[On('hide-saved')]
@@ -169,9 +169,9 @@ new class extends Component {
         <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
         <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
     </x-modal>
-    <div class="{{ $sgid === 0 ? '' : 'hidden' }}">
+    <div id="ldc-create-groups" class="{{ $sgid === 0 ? '' : 'hidden' }}">
         <input type="radio" name="sgid" id="sgid-0" value="0" wire:model="sgid"
-            @click="$dispatch('set-group', { line: '{{ $line }}', workdate: '{{ $workdate }}', style: '{{ $style }}', material: '{{ $material }}' })"
+            @click="$dispatch('set-form-group', { line: '{{ $line }}', workdate: '{{ $workdate }}', style: '{{ $style }}', material: '{{ $material }}' })"
             :checked="{{ $sgid == 0 ? 'true' : 'false' }}" class="peer hidden" />
         <label for="sgid-0"
             class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-20 dark:hover:bg-opacity-20">
@@ -200,7 +200,7 @@ new class extends Component {
             <div>
                 <input type="radio" name="sgid" id="sgid-{{ $loop->iteration }}" value="{{ $group->id }}"
                     wire:model="sgid"
-                    @click="$dispatch('set-group', { line: '{{ $group->line }}', workdate: '{{ $group->workdate }}', style: '{{ $group->style }}', material: '{{ $group->material }}' })"
+                    @click="$dispatch('set-form-group', { line: '{{ $group->line }}', workdate: '{{ $group->workdate }}', style: '{{ $group->style }}', material: '{{ $group->material }}' })"
                     :checked="{{ $group->id == $sgid ? 'true' : 'false' }}" class="peer hidden" />
                 <label for="sgid-{{ $loop->iteration }}"
                     class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-10 dark:hover:bg-opacity-10">

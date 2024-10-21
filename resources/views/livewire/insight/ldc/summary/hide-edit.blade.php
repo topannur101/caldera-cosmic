@@ -22,6 +22,7 @@ new class extends Component {
     public $area_qt;
 
     public $grade;
+    public $machine;
     public $code;
     public $shift;
 
@@ -36,6 +37,7 @@ new class extends Component {
             'area_ab'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'area_qt'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'grade'     => ['nullable', 'integer', 'min:1', 'max:5'],
+            'machine'   => ['nullable', 'integer', 'min:1', 'max:20'],
             // 'code'      => ['required', 'alpha_num', 'min:7', 'max:10'],
             'shift'     => ['required', 'integer', 'min:1', 'max:3']
         ];
@@ -60,6 +62,7 @@ new class extends Component {
             $this->area_ab  = $hide->area_ab;
             $this->area_qt  = $hide->area_qt;
             $this->grade    = $hide->grade;
+            $this->machine  = $hide->machine;
             $this->code     = $hide->code;
             $this->shift    = $hide->shift;
             $this->resetValidation();
@@ -130,6 +133,7 @@ new class extends Component {
                     'area_ab'       => $this->area_ab,
                     'area_qt'       => $this->area_qt,
                     'grade'         => $this->grade ? $this->grade : null,
+                    'machine'       => $this->machine ? $this->machine : null,
                     'shift'         => $this->shift,
                 ]);
 
@@ -146,7 +150,7 @@ new class extends Component {
     public function customReset()
     {
         $this->resetValidation();
-        $this->reset(['id', 'line', 'workdate', 'style', 'material', 'area_vn', 'area_ab', 'area_qt', 'grade', 'code', 'shift']);
+        $this->reset(['id', 'line', 'workdate', 'style', 'material', 'area_vn', 'area_ab', 'area_qt', 'grade', 'machine', 'code', 'shift']);
     }
 
     public function handleNotFound()
@@ -259,11 +263,16 @@ new class extends Component {
                         <x-text-input id="hide-area_qt" wire:model="area_qt" type="number" step=".01" autocomplete="off" :disabled="Gate::denies('manage', InsLdcHide::class)"  />
                     </div>
                     <div>
+                        <label for="hide-machine"
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin') }}</label>
+                        <x-text-input id="hide-machine" wire:model="machine" x-ref="hidemachine" type="number" autocomplete="off" disabled="disabled" />
+                    </div>
+                    <div>
                         <label for="hide-code"
                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Barcode') }}</label>
                         <x-text-input id="hide-code" wire:model="code" x-ref="hidecode" type="text" autocomplete="off" disabled="disabled" />
                     </div>
-                    <div>
+                    {{-- <div>
                         <label for="hide-shift"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
                         <x-select class="w-full" id="hide-shift" wire:model="shift" :disabled="Gate::denies('manage', InsLdcHide::class)">
@@ -272,7 +281,7 @@ new class extends Component {
                             <option value="2">2</option>
                             <option value="3">3</option>
                         </x-select>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>

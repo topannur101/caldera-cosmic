@@ -40,7 +40,7 @@ new class extends Component {
             <li class="w-full hover:bg-caldy-500 hover:bg-opacity-10">
                 <div class="flex items-center">
                     <input id="hs-new" type="radio" value="0" name="shid" wire:model.live="shid"
-                        @click="$dispatch('set-hide', { is_editing:  false, line: '', workdate: '', style: '', material: '', area_vn: '', area_ab: '', area_qt: '', grade: '', code: '' });"
+                        @click="$dispatch('set-hide', { is_editing:  false, line: '', workdate: '', style: '', material: '', area_vn: '', area_ab: '', area_qt: '', grade: '', machine: '', code: '' });"
                         class="peer hidden">
                     <label for="hs-new"
                         class="w-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-10"><i
@@ -54,7 +54,7 @@ new class extends Component {
                             name="shid" wire:model.live="shid" class="peer hidden">
                         <label for="hs-id-{{ $loop->iteration }}"
                             class="w-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-10"
-                            @click="$dispatch('set-hide', { is_editing: true, line: '{{ $hide->ins_ldc_group->line }}', workdate: '{{ $hide->ins_ldc_group->workdate }}', style: '{{ $hide->ins_ldc_group->style }}', material: '{{ $hide->ins_ldc_group->material }}', area_vn: '{{ $hide->area_vn }}', area_ab: '{{ $hide->area_ab }}', area_qt: '{{ $hide->area_qt }}', grade: '{{ $hide->grade }}', code: '{{ $hide->code }}' })">
+                            @click="$dispatch('set-hide', { is_editing: true, line: '{{ $hide->ins_ldc_group->line }}', workdate: '{{ $hide->ins_ldc_group->workdate }}', style: '{{ $hide->ins_ldc_group->style }}', material: '{{ $hide->ins_ldc_group->material }}', area_vn: '{{ $hide->area_vn }}', area_ab: '{{ $hide->area_ab }}', area_qt: '{{ $hide->area_qt }}', grade: '{{ $hide->grade }}', machine: '{{ $hide->machine }}', code: '{{ $hide->code }}' })">
                             <div>{{ $hide->code }}</div>
                             <div class="text-xs">VN: {{ $hide->area_vn }}<span class="mx-2">|</span>AB:
                                 {{ $hide->area_ab }}<span class="mx-2">|</span>D:

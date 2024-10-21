@@ -38,15 +38,15 @@ new #[Layout('layouts.app')] class extends Component {};
     @else
         <div class="flex flex-col gap-x-2 sm:flex-row">
             <div class="p-1">
-                <livewire:insight.ldc.index-hides />
+                <livewire:insight.ldc.create.hides />
             </div>
             <div class="w-full overflow-hidden p-1">
                 <div class="relative bg-white dark:bg-neutral-800 shadow rounded-lg overflow-hidden">
-                    <div id="ldc-index-groups" class="border-b border-neutral-100 dark:border-neutral-700 overflow-x-auto">
-                        <livewire:insight.ldc.index-groups />
+                    <div id="ldc-create.groups" class="border-b border-neutral-100 dark:border-neutral-700 overflow-x-auto">
+                        <livewire:insight.ldc.create.groups />
                     </div>
                     <div class="flex w-full">
-                        <livewire:insight.ldc.index-form />
+                        <livewire:insight.ldc.create.form />
                     </div>
                 </div>
             </div>
