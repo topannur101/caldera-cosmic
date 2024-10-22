@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 
 use Carbon\Carbon;
@@ -17,10 +18,13 @@ class extends Component {
     use WithPagination;
     use HasDateRangeFilter;
 
+    #[Url]
     public $start_at;
+    #[Url]
     public $end_at;
-
+    #[Url]
     public $line;
+    #[Url]
     public $team;
 
     public $perPage = 20;
@@ -206,7 +210,7 @@ class extends Component {
                 <div class="w-32">
                     <label for="metrics-line"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                    <x-text-input id="metrics-line" wire:model="line" type="number" list="metrics-lines" step="1" />
+                    <x-text-input id="metrics-line" wire:model.live="line" type="number" list="metrics-lines" step="1" />
                     <datalist id="metrics-lines">
                         <option value="1"></option>
                         <option value="2"></option>
@@ -222,7 +226,7 @@ class extends Component {
                 <div class="w-32">
                     <label for="metrics-team"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
-                    <x-text-input id="metrics-team" wire:model="team" type="text" list="metrics-teams" />
+                    <x-text-input id="metrics-team" wire:model.live="team" type="text" list="metrics-teams" />
                     <datalist id="metrics-teams">
                         <option value="A"></option>
                         <option value="B"></option>

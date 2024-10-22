@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Response;
 
 new #[Layout('layouts.app')] 
 class extends Component {
+    
     #[Url]
     public $view = 'metrics';
 
