@@ -12,35 +12,6 @@ class extends Component {
     #[Url]
     public $view = 'metrics';
 
-    #[Url]
-    public $start_at;
-
-    #[Url]
-    public $end_at;
-
-    #[Url]
-    public $fquery;
-
-    #[Url]
-    public $ftype = 'any';
-
-    #[Url]
-    public $sline;
-    public $olines = [];
-
-    public $dateViews = ['metrics', 'daily'];
-    public $rangeViews = ['metrics'];
-    public $filterViews = ['metrics'];
-
-    public $dataIntegrity = 0;
-    public $dataAccuracy = 0;
-    public $dayCount = 0;
-
-    public $is_line;
-    public $is_date;
-    public $is_range;
-    public $is_filter;
-
     public function getViewTitle(): string
     {
         $viewTitles = [
@@ -51,70 +22,6 @@ class extends Component {
         ];
 
         return $viewTitles[$this->view] ?? '';
-    }
-
-    public function mount()
-    {
-        if(!$this->start_at || !$this->end_at)
-        {
-            $this->setToday();
-        }
-
-        if ($this->view == 'metrics' && !$this->fquery && $this->ftype == 'any' && Auth::user()) {
-            $latestMetric = Auth::user()->ins_omv_metrics()->latest()->first();
-            
-            if ($latestMetric) {
-                $this->ftype = 'line';
-                $this->fquery = $latestMetric->line;
-            }
-        }
-        
-        $this->olines = InsRtcMetric::join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
-            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
-            ->select('ins_rtc_devices.line')
-            ->distinct()
-            ->orderBy('ins_rtc_devices.line')
-            ->get()
-            ->pluck('line')
-            ->toArray();
-    }
-
-    public function with(): array
-    {
-        $this->is_date = in_array($this->view, $this->dateViews);
-        $this->is_range = in_array($this->view, $this->rangeViews);
-        $this->is_filter = in_array($this->view, $this->filterViews);
-
-        return [];
-    }
-
-    public function setToday()
-    {
-        $this->start_at = Carbon::now()->startOfDay()->format('Y-m-d');
-        $this->end_at = Carbon::now()->endOfDay()->format('Y-m-d');
-    }
-
-    public function setYesterday()
-    {
-        $this->start_at = Carbon::yesterday()->startOfDay()->format('Y-m-d');
-        $this->end_at = Carbon::yesterday()->endOfDay()->format('Y-m-d');
-    }
-
-    public function setThisMonth()
-    {
-        $this->start_at = Carbon::now()->startOfMonth()->format('Y-m-d');
-        $this->end_at = Carbon::now()->endOfMonth()->format('Y-m-d');
-    }
-
-    public function setLastMonth()
-    {
-        $this->start_at = Carbon::now()->subMonthNoOverflow()->startOfMonth()->format('Y-m-d');
-        $this->end_at = Carbon::now()->subMonthNoOverflow()->endOfMonth()->format('Y-m-d');
-    }
-
-    public function resetFilter()
-    {
-        $this->reset('fquery', 'ftype');
     }
 };
 
@@ -128,10 +35,13 @@ class extends Component {
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
     @vite(['resources/js/apexcharts.js'])
-    <div wire:key="omv-summary-index-nav" class="flex px-8 mb-6">
+    <div wire:key="omv-summary-index-nav" class="flex items-center gap-3 px-8 mb-6">
+        <div class="hidden opacity-50" wire:loading.class.remove="hidden">
+            <i class="fa fa-fw fa-circle-notch fa-spin"></i>
+        </div>
         <x-dropdown align="left">
             <x-slot name="trigger">
-                <x-text-button type="button" class="flex gap-2 items-center m-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="fa fa-fw fa-chevron-down"></i></x-text-button>
+                <x-text-button type="button" class="flex gap-2 items-center ml-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="fa fa-fw fa-chevron-down"></i></x-text-button>
             </x-slot>
             <x-slot name="content">
                 <x-dropdown-link href="#" wire:click.prevent="$set('view', 'daily')">
@@ -153,88 +63,38 @@ class extends Component {
     <div wire:key="omv-summary-index-container">
         @switch($view)
             @case('daily')
-                        
+                <div class="w-full py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-hammer relative"><i
+                                class="fa fa-exclamation-triangle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Dalam tahap pengembangan') }}
+                    </div>
+                </div>                        
                 @break
             @case('line')
-            
+                <div class="w-full py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-hammer relative"><i
+                                class="fa fa-exclamation-triangle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Dalam tahap pengembangan') }}
+                    </div>
+                </div>            
                 @break
             @case('team')
-                
+                <div class="w-full py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-hammer relative"><i
+                                class="fa fa-exclamation-triangle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Dalam tahap pengembangan') }}
+                    </div>
+                </div>                  
                 @break
             @case('metrics')
                 <livewire:insight.omv.summary.metrics />
                 @break
-                
-        @endswitch
-    </div>
-    <div class="flex flex-col gap-x-2 md:gap-x-4 sm:flex-row min-w-0">
-        <div>
-            <div class="w-full sm:w-44 md:w-64 px-3 sm:px-0 mb-5">
-                <div class="btn-group h-10 w-full">
-                    <x-radio-button wire:model.live="view" grow value="daily" name="view" id="view-daily">
-                        <div class="text-center my-auto">
-                            <i class="fa fa-fw fa-calendar-day text-center m-auto"></i>
-                        </div>
-                    </x-radio-button>
-                    <x-radio-button wire:model.live="view" grow value="metrics" name="view" id="view-metrics">
-                        <div class="text-center my-auto">
-                            <i class="fa fa-fw fa-table text-center m-auto"></i>
-                        </div>
-                    </x-radio-button>
-                </div>
-                <div
-                    class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_line ? '' : 'hidden' }}">
-                    <div class="flex items-start justify-between">
-                        <div><i class="fa fa-ruler-horizontal mr-3"></i>{{ __('Line') }}</div>
-                    </div>
-                    <div class="mt-5">
-                        <x-select wire:model.live="sline">
-                            <option value=""></option>
-                            @foreach ($olines as $oline)
-                                <option value="{{ $oline }}">{{ $oline }}</option>
-                            @endforeach
-                        </x-select>
-                    </div>
-                </div>
-
-                <div
-                    class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_filter ? '' : 'hidden' }}">
-                    <div class="flex items-start justify-between">
-                        <div><i class="fa fa-filter mr-3"></i>{{ __('Filter') }}</div>
-                        <div class="flex items-center">
-                            <x-dropdown align="right" width="48">
-                                <x-slot name="trigger">
-                                    <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
-                                </x-slot>
-                                <x-slot name="content">
-                                    <x-dropdown-link href="#" wire:click.prevent="resetFilter">
-                                        {{ __('Kosongkan filter') }}
-                                    </x-dropdown-link>
-                                </x-slot>
-                            </x-dropdown>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <x-select class="w-full" id="hides-ftype" wire:model.live="ftype">
-                            <option value="any">{{ __('Apapun') }}</option>
-                            <option value="recipe">{{ __('Resep') }}</option>
-                            <option value="line">{{ __('Line') }}</option>
-                            <option value="team">{{ __('Tim') }}</option>
-                            <option value="emp_id">{{ __('Nomor karyawan') }}</option>
-                        </x-select>                        
-                    </div>
-                    <div>
-                        <x-text-input wire:model.live="fquery" class="mt-4" type="search"
-                            placeholder="{{ __('Kata kunci') }}" name="fquery" />
-                    </div>
-                </div>
-            </div>
-        </div>
-        @switch($view)
-            @case('metrics')
-                
-            @break
-
             @default
                 <div wire:key="no-view" class="w-full py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -243,7 +103,7 @@ class extends Component {
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih tampilan') }}
                     </div>
-                </div>
+                </div>                
         @endswitch
     </div>
 </div>
