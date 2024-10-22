@@ -112,7 +112,6 @@ class extends Component {
     public function with(): array
     {
         $metrics = $this->getMetricsQuery()->paginate($this->perPage);
-
         return [
             'metrics' => $metrics,
         ];
@@ -172,9 +171,9 @@ class extends Component {
 
 ?>
 
-<div class="overflow-auto w-full">
-    <div class="flex gap-3 p-0 sm:p-1 mb-3">
-        <div class="flex gap-3 w-full bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4">
+<div>
+    <div class="p-0 sm:p-1 mb-3">
+        <div class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <div>
                 <div class="flex mb-2 text-xs text-neutral-500">
                     <div class="flex">
@@ -205,9 +204,9 @@ class extends Component {
                     <x-text-input wire:model.live="end_at"  id="inv-date-end" type="date"></x-text-input>
                 </div>
             </div>
-            <div class="border-l border-neutral-300 dark:border-neutral-700 h-full mx-3"></div>
+            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="flex gap-3">
-                <div class="w-32">
+                <div class="w-full lg:w-32">
                     <label for="metrics-line"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
                     <x-text-input id="metrics-line" wire:model.live="line" type="number" list="metrics-lines" step="1" />
@@ -223,7 +222,7 @@ class extends Component {
                         <option value="9"></option>
                     </datalist>
                 </div>
-                <div class="w-32">
+                <div class="w-full lg:w-32">
                     <label for="metrics-team"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
                     <x-text-input id="metrics-team" wire:model.live="team" type="text" list="metrics-teams" />
@@ -234,9 +233,21 @@ class extends Component {
                     </datalist>
                 </div>
             </div>
-            <div class="border-l border-neutral-300 dark:border-neutral-700 h-full mx-3"></div>
-            <div class="grow"></div>
-            <div class="flex gap-x-2 items-center">
+            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="grow flex justify-between gap-x-2 items-center">
+                <div>
+                    <div class="px-3">
+                        <div wire:loading.class="hidden">{{ $metrics->total() . ' ditemukan' }}</div>
+                        <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
+                            <div class="relative w-3">
+                                <x-spinner class="sm"></x-spinner>
+                            </div>
+                            <div class="text-neutral-500">
+                                {{ __('Memuat...') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
@@ -298,8 +309,8 @@ class extends Component {
             </div>
         @endif
     @else
-        <div wire:key="raw-metrics" class="p-0 sm:p-1 overflow-auto">
-            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
+        <div wire:key="raw-metrics" class="overflow-auto p-0 sm:p-1">
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                 <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
                         <th>{{ __('ID') }}</th>

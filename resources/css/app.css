@@ -407,7 +407,7 @@ input[type="checkbox"]:checked + label.custom-checkbox {
     left: 50%;
     margin-top: -50%;
     margin-left: -50%;
-    animation: spinner-linspin 1568.23529647ms linear infinite;
+    animation: spinner-linspin 1568ms linear infinite;
   }
   
   .spinner-rotator {

@@ -34,12 +34,9 @@ class extends Component {
     <x-nav-insights-omv></x-nav-insights-omv>
 </x-slot>
 
-<div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 grid gap-1">
+<div id="content" class="relative py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     @vite(['resources/js/apexcharts.js'])
-    <div wire:key="omv-summary-index-nav" class="flex items-center gap-3 px-8 mb-6">
-        <div class="hidden opacity-50" wire:loading.class.remove="hidden">
-            <i class="fa fa-fw fa-circle-notch fa-spin"></i>
-        </div>
+    <div wire:key="omv-summary-index-nav" class="px-8 mb-6">
         <x-dropdown align="left">
             <x-slot name="trigger">
                 <x-text-button type="button" class="flex gap-2 items-center ml-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="fa fa-fw fa-chevron-down"></i></x-text-button>
@@ -61,7 +58,10 @@ class extends Component {
             </x-slot>
         </x-dropdown>
     </div>
-    <div wire:key="omv-summary-index-container">
+    <div wire:loading.class.remove="hidden" class="hidden h-96">
+        <x-spinner></x-spinner>
+    </div>
+    <div wire:key="omv-summary-index-container" wire:loading.class="hidden">
         @switch($view)
             @case('daily')
                 <div class="w-full py-20">
