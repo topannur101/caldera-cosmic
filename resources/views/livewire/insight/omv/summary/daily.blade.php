@@ -194,7 +194,8 @@ class extends Component {
     </div>
     <div wire:key="omv-summary-daily" class="grid grid-cols-4 gap-3">
         <div>
-            <h2 class="text-xl px-6 mb-6">{{ __('Target') }}</h2>
+            <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
+                {{ __('Target') }}</h1>
             <div class="flex flex-col gap-y-3">
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
                     <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Produksi/hari') }}</label>
@@ -213,8 +214,9 @@ class extends Component {
             </div>
         </div>
         <div class="col-span-3">
-            <h2 class="text-xl px-6 mb-6">{{ __('Waktu operasi mesin') }}</h2>
-            <div wire:key="omv-summary-daily-chart" class="h-96 bg-white dark:brightness-75 text-neutral-900 rounded overflow-hidden"
+            <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
+                {{ __('Waktu operasi') }}</h1>
+            <div wire:key="omv-summary-daily-chart" class="h-96 bg-white dark:brightness-75 text-neutral-900 rounded shadow overflow-hidden"
                 id="omv-summary-daily-chart-container" wire:key="omv-summary-daily-chart-container" wire:ignore>
             </div>  
         </div>

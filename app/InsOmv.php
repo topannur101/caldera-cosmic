@@ -15,7 +15,7 @@ class InsOmv
         return [
             'series' => [
                 [
-                    'name' => __('Terlalu Cepat'),
+                    'name' => __('Terlalu Awal'),
                     'data' => $data->pluck('too_soon')->values(),
                     'color' => '#FFB3B3',
                 ],
