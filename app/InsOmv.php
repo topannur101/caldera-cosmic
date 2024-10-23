@@ -15,29 +15,29 @@ class InsOmv
         return [
             'series' => [
                 [
-                    'name' => 'Terlalu Cepat',
+                    'name' => __('Terlalu Cepat'),
                     'data' => $data->pluck('too_soon')->values(),
                     'color' => '#FFB3B3',
                 ],
                 [
-                    'name' => 'Tepat Waktu',
+                    'name' => __('Tepat Waktu'),
                     'data' => $data->pluck('on_time')->values(),
                     'color' => '#B3FFB3',
                 ],
                 [
-                    'name' => 'Tepat Waktu (Manual)',
+                    'name' => __('Tepat Waktu (Manual)'),
                     'data' => $data->pluck('on_time_manual')->values(),
                     'color' => '#FFD9B3',
                 ],
                 [
-                    'name' => 'Terlalu Lambat',
+                    'name' => __('Terlambat'),
                     'data' => $data->pluck('too_late')->values(),
                     'color' => '#FFB3B3',
                 ],
             ],
             'chart' => [
                 'type' => 'bar',
-                'height' => 350,
+                'height' => '100%',
                 'stacked' => true,
                 'toolbar' => [
                     'show' => true,
@@ -70,6 +70,11 @@ class InsOmv
                 'width' => 1,
                 'colors' => ['#fff'],
             ],
+            'tooltip' => [
+                'y'=> [
+                    'formatter' => null
+                ],
+            ],
             'xaxis' => [
                 'categories' => $lines,
                 'title' => [
@@ -81,7 +86,7 @@ class InsOmv
             ],
             'yaxis' => [
                 'title' => [
-                    'text' => 'Line Produksi',
+                    'text' => __('Line Produksi'),
                 ],
             ],
             'fill' => [

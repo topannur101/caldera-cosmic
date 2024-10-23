@@ -2,9 +2,9 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
-use Carbon\Carbon;
-use App\Models\InsRtcMetric;
 use Livewire\Attributes\Url;
+
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Response;
 
 new #[Layout('layouts.app')] 

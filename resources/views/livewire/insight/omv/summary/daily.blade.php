@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 
 use App\InsOmv;
 use App\Models\InsOmvMetric;
@@ -79,11 +80,19 @@ class extends Component {
                 
             // Fix the formatters
             options.xaxis.labels.formatter = function(val) { 
-                return val.toFixed(1) + ' jam'; 
+                return val.toFixed(0); 
             };
             
             options.plotOptions.bar.dataLabels.total.formatter = function(val) {
                 return val.toFixed(1) + ' jam';
+            };
+
+            options.dataLabels.formatter = function(val) {
+                return val.toFixed(1);             
+            };
+
+            options.tooltip.y.formatter = function(val) {
+                return val.toFixed(1) + ' jam';             
             };
 
             // Render chart
