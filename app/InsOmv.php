@@ -51,6 +51,9 @@ class InsOmv
                     ],
                 ],
             ],
+            'dataLabels' => [
+                'formatter' => null,
+            ],
             'plotOptions' => [
                 'bar' => [
                     'horizontal' => true,
