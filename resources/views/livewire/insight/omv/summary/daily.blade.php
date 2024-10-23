@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\On;
 
 use App\InsOmv;
 use App\Models\InsOmvMetric;
@@ -33,6 +34,7 @@ class extends Component {
         }
     }
 
+    #[On('update')]
     public function update()
     {
         $start = Carbon::parse($this->start_at);
@@ -103,6 +105,11 @@ class extends Component {
             ",
         );
     }
+
+    public function updated()
+    {
+        $this->update();
+    }
 };
 
 ?>
@@ -170,27 +177,15 @@ class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="grow flex justify-between gap-x-2 items-center">
-                <div>
-                    <div class="px-3">
-                        <x-secondary-button type="button" wire:click="update">{{ __('Perbarui') }}</x-secondary-button>
+            <div class="grow flex justify-center gap-x-2 items-center">
+                <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
+                    <div class="relative w-3">
+                        <x-spinner class="sm"></x-spinner>
+                    </div>
+                    <div class="text-neutral-500">
+                        {{ __('Memuat...') }}
                     </div>
                 </div>
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
-                    </x-slot>
-                    <x-slot name="content">
-                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                            <i class="fa fa-fw me-2"></i>{{ __('Statistik ')}}
-                        </x-dropdown-link>
-                        <hr
-                            class="border-neutral-300 dark:border-neutral-600" />
-                        <x-dropdown-link href="#" wire:click.prevent="download">
-                            <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
-                        </x-dropdown-link>
-                    </x-slot>
-                </x-dropdown>
             </div>
         </div>
     </div>
@@ -224,5 +219,10 @@ class extends Component {
             </div>  
         </div>
     </div>
-
 </div>
+
+@script
+<script>
+    $wire.$dispatch('update');
+</script>
+@endscript

@@ -11,7 +11,7 @@ new #[Layout('layouts.app')]
 class extends Component {
     
     #[Url]
-    public $view = 'metrics';
+    public $view = 'daily';
 
     public function getViewTitle(): string
     {

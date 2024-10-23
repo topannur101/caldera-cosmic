@@ -11,23 +11,27 @@ trait HasDateRangeFilter
     {
         $this->start_at = Carbon::now()->startOfDay()->format('Y-m-d');
         $this->end_at = Carbon::now()->endOfDay()->format('Y-m-d');
+        $this->dispatch('update');
     }
 
     public function setYesterday()
     {
         $this->start_at = Carbon::yesterday()->startOfDay()->format('Y-m-d');
         $this->end_at = Carbon::yesterday()->endOfDay()->format('Y-m-d');
+        $this->dispatch('update');
     }
 
     public function setThisMonth()
     {
         $this->start_at = Carbon::now()->startOfMonth()->format('Y-m-d');
         $this->end_at = Carbon::now()->endOfMonth()->format('Y-m-d');
+        $this->dispatch('update');
     }
 
     public function setLastMonth()
     {
         $this->start_at = Carbon::now()->subMonthNoOverflow()->startOfMonth()->format('Y-m-d');
         $this->end_at = Carbon::now()->subMonthNoOverflow()->endOfMonth()->format('Y-m-d');
+        $this->dispatch('update');
     }
 }
