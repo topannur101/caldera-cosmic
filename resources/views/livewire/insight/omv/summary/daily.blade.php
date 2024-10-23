@@ -38,44 +38,49 @@ class extends Component {
         $end = Carbon::parse($this->end_at)->endOfDay();
 
         $data = InsOmvMetric::query()
-        ->when($this->line, function (Builder $query) {
-            $query->where('line', $this->line);
-        })
-        ->when($this->team, function (Builder $query) {
-            $query->where('team', $this->team);
-        })
-        ->whereBetween('start_at', [$start, $end])
-        ->get()
-        ->groupBy('line')
-        ->map(function ($lineMetrics) {
-            return [
-                'too_soon' => $lineMetrics->where('eval', 'too_soon')
-                    ->sum(function ($metric) {
-                        return round(Carbon::parse($metric->end_at)->diffInMinutes(Carbon::parse($metric->start_at)) / 60, 1);
-                    }),
-                'on_time' => $lineMetrics->where('eval', 'on_time')
-                    ->sum(function ($metric) {
-                        return round(Carbon::parse($metric->end_at)->diffInMinutes(Carbon::parse($metric->start_at)) / 60, 1);
-                    }),
-                'on_time_manual' => $lineMetrics->where('eval', 'on_time_manual')
-                    ->sum(function ($metric) {
-                        return round(Carbon::parse($metric->end_at)->diffInMinutes(Carbon::parse($metric->start_at)) / 60, 1);
-                    }),
-                'too_late' => $lineMetrics->where('eval', 'too_late')
-                    ->sum(function ($metric) {
-                        return round(Carbon::parse($metric->end_at)->diffInMinutes(Carbon::parse($metric->start_at)) / 60, 1);
-                    })
-            ];
-        });
+            ->when($this->line, function (Builder $query) {
+                $query->where('line', $this->line);
+            })
+            ->when($this->team, function (Builder $query) {
+                $query->where('team', $this->team);
+            })
+            ->whereBetween('start_at', [$start, $end])
+            ->get()
+            ->groupBy('line')
+            ->map(function ($lineMetrics) {
+                return [
+                    'too_soon' => $lineMetrics->where('eval', 'too_soon')
+                        ->sum(function ($metric) {
+                            return round(Carbon::parse($metric->start_at)->diffInMinutes(Carbon::parse($metric->end_at)) / 60, 1);
+                        }),
+                    'on_time' => $lineMetrics->where('eval', 'on_time')
+                        ->sum(function ($metric) {
+                            return round(Carbon::parse($metric->start_at)->diffInMinutes(Carbon::parse($metric->end_at)) / 60, 1);
+                        }),
+                    'on_time_manual' => $lineMetrics->where('eval', 'on_time_manual')
+                        ->sum(function ($metric) {
+                            return round(Carbon::parse($metric->start_at)->diffInMinutes(Carbon::parse($metric->end_at)) / 60, 1);
+                        }),
+                    'too_late' => $lineMetrics->where('eval', 'too_late')
+                        ->sum(function ($metric) {
+                            return round(Carbon::parse($metric->start_at)->diffInMinutes(Carbon::parse($metric->end_at)) / 60, 1);
+                        })
+                ];
+            })
+            ->sortByDesc(function ($value, $key) {
+                return $key;  // Sort by line number in descending order
+            });
 
         $this->js(
-                "
+            "
                 let options = " .
-                    json_encode(InsOmv::getDailyChartOptions($data)) .
-                    ";
-
+                json_encode(InsOmv::getDailyChartOptions($data)) .
+                ";
+                
                 // Fix the formatter function
-                options.xaxis.labels.formatter = function(val) { return val + ' jam'; };
+                options.xaxis.labels.formatter = function(val) { 
+                    return val.toFixed(1) + ' jam'; 
+                };
 
                 // Render chart
                 const chartContainer = \$wire.\$el.querySelector('#omv-summary-daily-chart-container');

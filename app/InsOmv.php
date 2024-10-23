@@ -8,7 +8,9 @@ class InsOmv
 {
     public static function getDailyChartOptions($data)
     {
-        $lines = array_keys($data->toArray());
+        $lines = array_map(function($line) {
+            return "Line " . intval($line);  // Convert to whole number and add "Line" prefix
+        }, array_keys($data->toArray()));
         
         return [
             'series' => [
@@ -60,6 +62,9 @@ class InsOmv
                                 'fontSize' => '13px',
                                 'fontWeight' => 900,
                             ],
+                            'formatter' => function ($val) {
+                                return $val->toFixed(1);
+                            },
                         ],
                     ],
                 ],
@@ -74,13 +79,14 @@ class InsOmv
                     'text' => 'Jam',
                 ],
                 'labels' => [
-                    'formatter' => null  // We'll set this in JavaScript
+                    'formatter' => null,  // We'll set this in JavaScript
                 ],
             ],
             'yaxis' => [
                 'title' => [
                     'text' => 'Line Produksi',
                 ],
+                'reversed' => true,  // This will make the lowest line appear at the top
             ],
             'fill' => [
                 'opacity' => 1,
