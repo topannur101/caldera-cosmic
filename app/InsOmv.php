@@ -9,7 +9,7 @@ class InsOmv
     public static function getDailyChartOptions($data)
     {
         $lines = array_map(function($line) {
-            return "Line " . intval($line);  // Convert to whole number and add "Line" prefix
+            return "Line " . intval($line);
         }, array_keys($data->toArray()));
         
         return [
@@ -17,22 +17,22 @@ class InsOmv
                 [
                     'name' => 'Terlalu Cepat',
                     'data' => $data->pluck('too_soon')->values(),
-                    'color' => '#FFB3B3', // pastel red
+                    'color' => '#FFB3B3',
                 ],
                 [
                     'name' => 'Tepat Waktu',
                     'data' => $data->pluck('on_time')->values(),
-                    'color' => '#B3FFB3', // pastel green
+                    'color' => '#B3FFB3',
                 ],
                 [
                     'name' => 'Tepat Waktu (Manual)',
                     'data' => $data->pluck('on_time_manual')->values(),
-                    'color' => '#FFD9B3', // pastel orange
+                    'color' => '#FFD9B3',
                 ],
                 [
                     'name' => 'Terlalu Lambat',
                     'data' => $data->pluck('too_late')->values(),
-                    'color' => '#FFB3B3', // pastel red
+                    'color' => '#FFB3B3',
                 ],
             ],
             'chart' => [
@@ -62,9 +62,6 @@ class InsOmv
                                 'fontSize' => '13px',
                                 'fontWeight' => 900,
                             ],
-                            'formatter' => function ($val) {
-                                return $val->toFixed(1);
-                            },
                         ],
                     ],
                 ],
@@ -79,14 +76,13 @@ class InsOmv
                     'text' => 'Jam',
                 ],
                 'labels' => [
-                    'formatter' => null,  // We'll set this in JavaScript
+                    'formatter' => null,
                 ],
             ],
             'yaxis' => [
                 'title' => [
                     'text' => 'Line Produksi',
                 ],
-                'reversed' => true,  // This will make the lowest line appear at the top
             ],
             'fill' => [
                 'opacity' => 1,

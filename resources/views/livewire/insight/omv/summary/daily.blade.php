@@ -68,25 +68,29 @@ class extends Component {
                 ];
             })
             ->sortByDesc(function ($value, $key) {
-                return $key;  // Sort by line number in descending order
+                return $key;
             });
 
         $this->js(
             "
-                let options = " .
+            let options = " .
                 json_encode(InsOmv::getDailyChartOptions($data)) .
                 ";
                 
-                // Fix the formatter function
-                options.xaxis.labels.formatter = function(val) { 
-                    return val.toFixed(1) + ' jam'; 
-                };
+            // Fix the formatters
+            options.xaxis.labels.formatter = function(val) { 
+                return val.toFixed(1) + ' jam'; 
+            };
+            
+            options.plotOptions.bar.dataLabels.total.formatter = function(val) {
+                return val.toFixed(1) + ' jam';
+            };
 
-                // Render chart
-                const chartContainer = \$wire.\$el.querySelector('#omv-summary-daily-chart-container');
-                chartContainer.innerHTML = '<div class=\"chart\"></div>';
-                let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
-                chart.render();
+            // Render chart
+            const chartContainer = \$wire.\$el.querySelector('#omv-summary-daily-chart-container');
+            chartContainer.innerHTML = '<div class=\"chart\"></div>';
+            let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
+            chart.render();
             ",
         );
     }
