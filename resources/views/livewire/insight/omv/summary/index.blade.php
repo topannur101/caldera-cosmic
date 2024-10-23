@@ -64,14 +64,7 @@ class extends Component {
     <div wire:key="omv-summary-index-container" wire:loading.class="hidden">
         @switch($view)
             @case('daily')
-                <div class="w-full py-20">
-                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-hammer relative"><i
-                                class="fa fa-exclamation-triangle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
-                    </div>
-                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Dalam tahap pengembangan') }}
-                    </div>
-                </div>                        
+            <livewire:insight.omv.summary.daily />                       
                 @break
             @case('line')
                 <div class="w-full py-20">

@@ -6,6 +6,93 @@ use Illuminate\Support\Carbon;
 
 class InsOmv
 {
+    public static function getDailyChartOptions($data)
+    {
+        $lines = array_keys($data->toArray());
+        
+        return [
+            'series' => [
+                [
+                    'name' => 'Terlalu Cepat',
+                    'data' => $data->pluck('too_soon')->values(),
+                    'color' => '#FFB3B3', // pastel red
+                ],
+                [
+                    'name' => 'Tepat Waktu',
+                    'data' => $data->pluck('on_time')->values(),
+                    'color' => '#B3FFB3', // pastel green
+                ],
+                [
+                    'name' => 'Tepat Waktu (Manual)',
+                    'data' => $data->pluck('on_time_manual')->values(),
+                    'color' => '#FFD9B3', // pastel orange
+                ],
+                [
+                    'name' => 'Terlalu Lambat',
+                    'data' => $data->pluck('too_late')->values(),
+                    'color' => '#FFB3B3', // pastel red
+                ],
+            ],
+            'chart' => [
+                'type' => 'bar',
+                'height' => 350,
+                'stacked' => true,
+                'toolbar' => [
+                    'show' => true,
+                    'tools' => [
+                        'download' => '<img src="/icon-download.svg" width="18">',
+                        'zoom' => '<img src="/icon-zoom-in.svg" width="18">',
+                        'zoomin' => false,
+                        'zoomout' => false,
+                        'pan' => '<img src="/icon-hand.svg" width="20">',
+                        'reset' => '<img src="/icon-zoom-out.svg" width="18">',
+                    ],
+                ],
+            ],
+            'plotOptions' => [
+                'bar' => [
+                    'horizontal' => true,
+                    'dataLabels' => [
+                        'total' => [
+                            'enabled' => true,
+                            'offsetX' => 0,
+                            'style' => [
+                                'fontSize' => '13px',
+                                'fontWeight' => 900,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'stroke' => [
+                'width' => 1,
+                'colors' => ['#fff'],
+            ],
+            'xaxis' => [
+                'categories' => $lines,
+                'title' => [
+                    'text' => 'Jam',
+                ],
+                'labels' => [
+                    'formatter' => null  // We'll set this in JavaScript
+                ],
+            ],
+            'yaxis' => [
+                'title' => [
+                    'text' => 'Line Produksi',
+                ],
+            ],
+            'fill' => [
+                'opacity' => 1,
+            ],
+            'legend' => [
+                'position' => 'top',
+                'horizontalAlign' => 'left',
+                'offsetX' => 40,
+            ],
+        ];
+    }
+
     public static function getChartOptions(array $amps, Carbon $start_at, array $step_durations, array $capture_points, int $height)
     {
         $chart_data = array_map(function ($amp) use ($start_at) {

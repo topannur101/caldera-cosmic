@@ -7,7 +7,6 @@ use Livewire\WithPagination;
 
 use Carbon\Carbon;
 use App\Models\InsOmvMetric;
-use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -15,6 +14,7 @@ use App\Traits\HasDateRangeFilter;
 
 new #[Layout('layouts.app')] 
 class extends Component {
+
     use WithPagination;
     use HasDateRangeFilter;
 
@@ -172,7 +172,7 @@ class extends Component {
 ?>
 
 <div>
-    <div class="p-0 sm:p-1 mb-3">
+    <div class="p-0 sm:p-1 mb-6">
         <div class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <div>
                 <div class="flex mb-2 text-xs text-neutral-500">
