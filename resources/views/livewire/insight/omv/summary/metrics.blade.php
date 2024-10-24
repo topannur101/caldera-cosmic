@@ -237,7 +237,7 @@ class extends Component {
             <div class="grow flex justify-between gap-x-2 items-center">
                 <div>
                     <div class="px-3">
-                        <div wire:loading.class="hidden">{{ $metrics->total() . ' ditemukan' }}</div>
+                        <div wire:loading.class="hidden">{{ $metrics->total() . ' ' . __('ditemukan') }}</div>
                         <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
                             <div class="relative w-3">
                                 <x-spinner class="sm"></x-spinner>

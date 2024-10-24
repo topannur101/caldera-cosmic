@@ -58,9 +58,7 @@ class extends Component {
             return Carbon::parse($metric->start_at)->diffInMinutes(Carbon::parse($metric->end_at));
         }), 1);
 
-        $data = $metrics
-            ->get()
-            ->groupBy('line')
+        $data = $metrics->get()->groupBy('line')
             ->map(function ($lineMetrics) {
                 return [
                     'too_soon' => $lineMetrics->where('eval', 'too_soon')
