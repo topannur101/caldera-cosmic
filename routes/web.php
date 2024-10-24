@@ -93,8 +93,7 @@ Route::prefix('insight')->group(function () {
         Volt::route('/erd',                         'insight.erd.index')            ->name('index');
 
     });
-
-    Route::view('/', 'livewire.insight.index')->name('insight');
+    Volt::route('/', 'insight.index')->name('insight');
 });
 
 // Route::view('kpi', 'kpi')->name('kpi');

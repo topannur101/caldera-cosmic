@@ -12,17 +12,19 @@ class extends Component {
     
     #[Url]
     public $view = 'daily';
+    public array $view_titles = [];
+
+    public function mount()
+    {
+        $this->view_titles = [        
+            'daily'     => __('Waktu Jalan'),
+            'metrics'   => __('Data mentah'),    
+        ];
+    }
 
     public function getViewTitle(): string
     {
-        $viewTitles = [
-            'daily'     => __('Waktu Jalan'),
-            'line'      => __('Ringkasan line'),
-            'team'      => __('Ringkasan tim'),
-            'metrics'   => __('Data mentah'),
-        ];
-
-        return $viewTitles[$this->view] ?? '';
+        return $this->view_titles[$this->view] ?? '';
     }
 };
 
@@ -42,19 +44,10 @@ class extends Component {
                 <x-text-button type="button" class="flex gap-2 items-center ml-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="fa fa-fw fa-chevron-down"></i></x-text-button>
             </x-slot>
             <x-slot name="content">
-                <x-dropdown-link href="#" wire:click.prevent="$set('view', 'daily')">
-                    {{ __('Waktu Jalan') }}
-                </x-dropdown-link>
-                <x-dropdown-link href="#" wire:click.prevent="$set('view', 'line')">
-                    {{ __('Ringkasan line') }}
-                </x-dropdown-link>
-                <x-dropdown-link href="#" wire:click.prevent="$set('view', 'team')">
-                    {{ __('Ringkasan tim') }}
-                </x-dropdown-link>
-                <hr class="border-neutral-300 dark:border-neutral-600" />
-                <x-dropdown-link href="#" wire:click.prevent="$set('view', 'metrics')">
-                    {{ __('Data mentah') }}
-                </x-dropdown-link>
+                @foreach ($view_titles as $view_key => $view_title)
+                <x-dropdown-link href="#" wire:click.prevent="$set('view', '{{ $view_key }}')">{{ $view_title }}</x-dropdown-link>
+                @endforeach
+                {{-- <hr class="border-neutral-300 dark:border-neutral-600" /> --}}
             </x-slot>
         </x-dropdown>
     </div>
