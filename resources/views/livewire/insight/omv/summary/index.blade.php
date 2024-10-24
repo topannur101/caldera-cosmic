@@ -16,7 +16,7 @@ class extends Component {
     public function getViewTitle(): string
     {
         $viewTitles = [
-            'daily'     => __('Target dan Waktu Jalan'),
+            'daily'     => __('Waktu Jalan'),
             'line'      => __('Ringkasan line'),
             'team'      => __('Ringkasan tim'),
             'metrics'   => __('Data mentah'),
@@ -43,7 +43,7 @@ class extends Component {
             </x-slot>
             <x-slot name="content">
                 <x-dropdown-link href="#" wire:click.prevent="$set('view', 'daily')">
-                    {{ __('Target dan Waktu Jalan') }}
+                    {{ __('Waktu Jalan') }}
                 </x-dropdown-link>
                 <x-dropdown-link href="#" wire:click.prevent="$set('view', 'line')">
                     {{ __('Ringkasan line') }}

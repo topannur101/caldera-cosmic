@@ -26,7 +26,9 @@ class extends Component {
     #[Url]
     public $team;
 
-    public float $total_hour = 0;
+    public int $batch_total = 0;
+    public float $duration_avg = 0;
+    public float $line_avg = 0;
 
     public function mount()
     {
@@ -42,14 +44,21 @@ class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $data = InsOmvMetric::query()
+        $metrics = InsOmvMetric::query()
             ->when($this->line, function (Builder $query) {
                 $query->where('line', $this->line);
             })
             ->when($this->team, function (Builder $query) {
                 $query->where('team', $this->team);
             })
-            ->whereBetween('start_at', [$start, $end])
+            ->whereBetween('start_at', [$start, $end]);
+
+        $this->batch_total = $metrics->count();
+        $this->duration_avg = round($metrics->get()->average(function ($metric) {
+            return Carbon::parse($metric->start_at)->diffInMinutes(Carbon::parse($metric->end_at));
+        }), 1);
+
+        $data = $metrics
             ->get()
             ->groupBy('line')
             ->map(function ($lineMetrics) {
@@ -76,7 +85,11 @@ class extends Component {
                 return $key;
             });
 
-            $this->total_hour = number_format($data->flatten(1)->sum(), 1);
+            $sumPerLine = $data->map(function ($childValues) {
+                return array_sum($childValues);
+            });
+
+            $this->line_avg = number_format($sumPerLine->avg(), 1);
 
         $this->js(
             "
@@ -206,27 +219,27 @@ class extends Component {
     <div wire:key="omv-summary-daily" class="grid grid-cols-4 gap-3">
         <div>
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
-                {{ __('Target') }}</h1>
+                {{ __('Ikhtisar') }}</h1>
             <div class="flex flex-col gap-y-3">
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Produksi/hari') }}</label>
+                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Produksi') }}</label>
                     <div class="flex items-end gap-x-1">
-                        <div class="text-2xl">000/000</div>
+                        <div class="text-2xl">{{ $batch_total }}</div>
                         <div>{{ __('batch') }}</div>
                     </div>
                 </div>
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Performa qty') }}</label>
+                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Rerata waktu batch') }}</label>
                     <div class="flex items-end gap-x-1">
-                        <div class="text-2xl">0</div>
-                        <div>%</div>
+                        <div class="text-2xl">{{ $duration_avg }}</div>
+                        <div>{{ __('menit') .'/' . __('batch')}}</div>
                     </div>
                 </div>
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Total waktu') }}</label>
+                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Rerata waktu jalan') }}</label>
                     <div class="flex items-end gap-x-1">
-                        <div class="text-2xl">{{ $total_hour }}</div>
-                        <div>jam</div>
+                        <div class="text-2xl">{{ $line_avg }}</div>
+                        <div>{{ __('jam') .'/' . __('line')}}</div>
                     </div>
                 </div>
             </div>
