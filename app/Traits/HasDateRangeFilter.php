@@ -21,6 +21,20 @@ trait HasDateRangeFilter
         $this->dispatch('update');
     }
 
+    public function setThisWeek()
+    {
+        $this->start_at = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $this->end_at = Carbon::now()->endOfWeek()->format('Y-m-d');
+        $this->dispatch('update');
+    }
+
+    public function setLastWeek()
+    {
+        $this->start_at = Carbon::now()->subWeek()->startOfWeek()->format('Y-m-d');
+        $this->end_at = Carbon::now()->subWeek()->endOfWeek()->format('Y-m-d');
+        $this->dispatch('update');
+    }
+
     public function setThisMonth()
     {
         $this->start_at = Carbon::now()->startOfMonth()->format('Y-m-d');

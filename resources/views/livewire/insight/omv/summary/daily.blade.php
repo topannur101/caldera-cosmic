@@ -26,11 +26,13 @@ class extends Component {
     #[Url]
     public $team;
 
+    public float $total_hour = 0;
+
     public function mount()
     {
         if(!$this->start_at || !$this->end_at)
         {
-            $this->setToday();
+            $this->setThisWeek();
         }
     }
 
@@ -73,6 +75,8 @@ class extends Component {
             ->sortByDesc(function ($value, $key) {
                 return $key;
             });
+
+            $this->total_hour = number_format($data->flatten(1)->sum(), 1);
 
         $this->js(
             "
@@ -130,6 +134,13 @@ class extends Component {
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" wire:click.prevent="setYesterday">
                                     {{ __('Kemarin') }}
+                                </x-dropdown-link>
+                                <hr class="border-neutral-300 dark:border-neutral-600" />
+                                <x-dropdown-link href="#" wire:click.prevent="setThisWeek">
+                                    {{ __('Minggu ini') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setLastWeek">
+                                    {{ __('Minggu kemarin') }}
                                 </x-dropdown-link>
                                 <hr class="border-neutral-300 dark:border-neutral-600" />
                                 <x-dropdown-link href="#" wire:click.prevent="setThisMonth">
@@ -199,23 +210,30 @@ class extends Component {
             <div class="flex flex-col gap-y-3">
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
                     <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Produksi/hari') }}</label>
-                    <div class="flex items-end gap-x-2">
+                    <div class="flex items-end gap-x-1">
                         <div class="text-2xl">000/000</div>
                         <div>{{ __('batch') }}</div>
                     </div>
                 </div>
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
                     <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Performa qty') }}</label>
-                    <div class="flex items-end gap-x-2">
+                    <div class="flex items-end gap-x-1">
                         <div class="text-2xl">0</div>
                         <div>%</div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Total waktu') }}</label>
+                    <div class="flex items-end gap-x-1">
+                        <div class="text-2xl">{{ $total_hour }}</div>
+                        <div>jam</div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-span-3">
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
-                {{ __('Waktu operasi') }}</h1>
+                {{ __('Waktu jalan') }}</h1>
             <div wire:key="omv-summary-daily-chart" class="h-96 bg-white dark:brightness-75 text-neutral-900 rounded shadow overflow-hidden"
                 id="omv-summary-daily-chart-container" wire:key="omv-summary-daily-chart-container" wire:ignore>
             </div>  
