@@ -15,17 +15,17 @@ class InsOmv
         return [
             'series' => [
                 [
-                    'name' => __('Terlalu Awal'),
+                    'name' => __('Terlalu awal'),
                     'data' => $data->pluck('too_soon')->values(),
                     'color' => '#FFB3B3',
                 ],
                 [
-                    'name' => __('Tepat Waktu'),
+                    'name' => __('Tepat waktu'),
                     'data' => $data->pluck('on_time')->values(),
                     'color' => '#B3FFB3',
                 ],
                 [
-                    'name' => __('Tepat Waktu (Manual)'),
+                    'name' => __('Tepat waktu') . ' (' . __('manual') .')',
                     'data' => $data->pluck('on_time_manual')->values(),
                     'color' => '#FFD9B3',
                 ],
@@ -81,7 +81,7 @@ class InsOmv
             'xaxis' => [
                 'categories' => $lines,
                 'title' => [
-                    'text' => 'Jam',
+                    'text' => __('Jam'),
                 ],
                 'labels' => [
                     'formatter' => null,

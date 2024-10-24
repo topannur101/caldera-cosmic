@@ -101,7 +101,7 @@ class extends Component {
             };
             
             options.plotOptions.bar.dataLabels.total.formatter = function(val) {
-                return val.toFixed(1) + ' jam';
+                return val.toFixed(1);
             };
 
             options.dataLabels.formatter = function(val) {
@@ -109,7 +109,7 @@ class extends Component {
             };
 
             options.tooltip.y.formatter = function(val) {
-                return val.toFixed(1) + ' jam';             
+                return val.toFixed(1) + ' " . __('jam') . "';       
             };
 
             // Render chart
