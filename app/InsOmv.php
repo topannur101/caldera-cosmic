@@ -87,11 +87,6 @@ class InsOmv
                     'formatter' => null,
                 ],
             ],
-            'yaxis' => [
-                'title' => [
-                    'text' => __('Line Produksi'),
-                ],
-            ],
             'fill' => [
                 'opacity' => 1,
             ],

@@ -456,6 +456,10 @@ input[type="checkbox"]:checked + label.custom-checkbox {
   .spinner-circle.sm {
     border-width: 2px;
   }
+
+  .spinner-circle.white {
+    @apply border-t-white border-r-white border-l-white;
+  }
   
   .spinner-left .spinner-circle {
     left: 0;
@@ -599,7 +603,7 @@ input[type="checkbox"]:checked + label.custom-checkbox {
   }
 
   .cal-includes {
-    @apply bg-green-500 text-neutral-800 bg-red-200 dark:bg-red-900 bg-yellow-500 text-neutral-800 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800;
+    @apply bg-green-500 bg-red-500 text-neutral-800 bg-red-200 dark:bg-red-900 bg-yellow-500 text-neutral-800 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800;
   }
 
   .cal-offscreen {

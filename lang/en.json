@@ -708,7 +708,21 @@
     "Latensi unggah": "Upload latency",
     "Dalam tahap pengembangan": "In development",
     "Unduh": "Download",
-    "ditemukan" : "found",
+    "ditemukan": "found",
     "manual": "manual",
-    "Jam": "Hours"
+    "Jam": "Hours",
+    "line daring": "online lines",
+    "Catat hasil uji rheometer": "Record rheometer test results",
+    "Pengukuran dimensi IP": "IP dimension measurement",
+    "Daring": "Online",
+    "Kendali temperatur chamber IP": "Control IP chamber temperature",
+    "Kendali tebal calendar": "Control calendar thickness",
+    "luring": "Offline",
+    "Catat area kulit": "Record hide area",
+    "Pantau perubahan ketebalan": "Monitor thickness changes",
+    "mesin daring": "online machines",
+    "Validasi proses open-roll mixing": "Validate open-roll mixing process",
+    "Kinerja dan Konsumsi CZ/NEK": "CZ/NEK performance and consumption",
+    "Luring": "Offline",
+    "Perbarui status": "Update status"
 }

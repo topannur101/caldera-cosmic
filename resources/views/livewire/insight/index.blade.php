@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Http;
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -29,15 +30,12 @@ class extends Component {
     private function pingAureliaService()
     {
         try {
-            // Perform a simple HTTP GET request to the server
-            $response = Http::withoutVerifying()->timeout(2)->get('https://taekwang-id.comelz.cloud');
 
-            // Check if the status is successful
+            $response = Http::withoutVerifying()->timeout(2)->get('https://taekwang-id.comelz.cloud');
             if ($response->successful()) {
                 return true;
             }
         } catch (\Exception $e) {
-            // Handle any connection exceptions (e.g. timeout, DNS failure, etc.)
             return false;
         }
 
@@ -116,6 +114,18 @@ class extends Component {
             return $this->pingAureliaService();
         });
     }
+
+    #[On('recalculate')]
+    public function recalculate()
+    {
+        Cache::forget('stc_lines_recent');
+        Cache::forget('omv_lines_recent');
+        Cache::forget('rtc_lines_recent');
+        Cache::forget('rdc_machines_recent');
+        Cache::forget('ldc_codes_recent');
+        Cache::forget('is_aurelia_up');
+        $this->calculateMetrics();
+    }
 };
 
 ?>
@@ -123,16 +133,28 @@ class extends Component {
 <x-slot name="title">{{ __('Wawasan') }}</x-slot>
 <x-slot name="header">
     <header class="bg-white dark:bg-neutral-800 shadow">
-        <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div>
                 <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
                     <div class="inline-block py-6">{{ __('Wawasan') }}</div>
                 </h2>
             </div>
+            <div class="text-neutral-800 dark:text-neutral-200">
+                <x-dropdown align="right" width="48">
+                    <x-slot name="trigger">
+                        <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                    </x-slot>
+                    <x-slot name="content">
+                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('recalculate')">
+                            {{ __('Perbarui status') }}
+                        </x-dropdown-link>
+                    </x-slot>
+                </x-dropdown>
+            </div>
         </div>
     </header>
 </x-slot>
-<div wire:poll.900s id="content" class="py-12 max-w-4xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+<div wire:poll.900s id="content" wire:loading.class="cal-shimmer" class="relative py-12 max-w-4xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     <div class="grid gap-6">
         <div>
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
@@ -167,7 +189,7 @@ class extends Component {
                                 </div>
                                 <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                     <div class="text-sm">{{ __('Kendali temperatur chamber IP') }}</div>
-                                    <hr class="border-neutral-300 dark:border-neutral-700" />
+                                    <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $stc_lines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
                                         <div class="">{{ $stc_lines_recent > 0 ? $stc_lines_recent . ' ' . __('line daring') : __('luring') }}</div>
@@ -205,8 +227,8 @@ class extends Component {
                                     {{ __('Pendataan IP ER')  }}
                                 </div>
                                 <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
-                                    <div class="text-sm">{{ __('Ukur dimensi IP') }}</div>
-                                    <hr class="border-neutral-300 dark:border-neutral-700" />
+                                    <div class="text-sm">{{ __('Pengukuran dimensi IP') }}</div>
+                                    <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         {{-- <div class="w-2 h-2 bg-green-500 rounded-full"></div> --}}
                                         <div class="">{{ __('Dalam tahap pengembangan') }}</div>
@@ -282,8 +304,8 @@ class extends Component {
                                     {{ __('Open Mill Validator') }}
                                 </div>
                                 <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
-                                    <div class="text-sm">{{ __('Validasi proses open mill') }}</div>
-                                    <hr class="border-neutral-300 dark:border-neutral-700" />
+                                    <div class="text-sm">{{ __('Validasi proses open-roll mixing') }}</div>
+                                    <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $omv_lines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
                                         <div class="">{{ $omv_lines_recent > 0 ? $omv_lines_recent . ' ' . __('line daring') : __('luring') }}</div>
@@ -322,7 +344,7 @@ class extends Component {
                                 </div>
                                 <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                     <div class="text-sm">{{ __('Kendali tebal calendar') }}</div>
-                                    <hr class="border-neutral-300 dark:border-neutral-700" />
+                                    <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $rtc_lines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
                                         <div class="">{{ $rtc_lines_recent > 0 ? $rtc_lines_recent . ' ' . __('line daring') : __('luring') }}</div>
@@ -361,7 +383,7 @@ class extends Component {
                                 </div>
                                 <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                     <div class="text-sm">{{ __('Catat hasil uji rheometer') }}</div>
-                                    <hr class="border-neutral-300 dark:border-neutral-700" />
+                                    <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $rdc_machines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
                                         <div class="">{{ $rdc_machines_recent > 0 ? $rdc_machines_recent . ' ' . __('mesin daring') : __('luring') }}</div>
@@ -400,7 +422,7 @@ class extends Component {
                                 </div>
                                 <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                     <div class="text-sm">{{ __('Pantau perubahan ketebalan') }}</div>
-                                    <hr class="border-neutral-300 dark:border-neutral-700" />
+                                    <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         {{-- <div class="w-2 h-2 bg-green-500 rounded-full"></div> --}}
                                         <div class="">{{ __('Dalam tahap pengembangan') }}</div>
@@ -445,7 +467,7 @@ class extends Component {
                                 </div>
                                 <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                     <div class="text-sm">{{ __('Catat area kulit') }}</div>
-                                    <hr class="border-neutral-300 dark:border-neutral-700" />
+                                    <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $ldc_codes_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
                                         <div class="">{{ $ldc_codes_recent > 0 ? $ldc_codes_recent . ' ' . __('mesin daring') : __('luring') }}</div>
@@ -484,7 +506,7 @@ class extends Component {
                                 </div>
                                 <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                     <div class="text-sm">{{ __('Kinerja dan Konsumsi CZ/NEK') }}</div>
-                                    <hr class="border-neutral-300 dark:border-neutral-700" />
+                                    <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $is_aurelia_up ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
                                         <div class="">{{ $is_aurelia_up ? __('Daring') : __('Luring') }}</div>

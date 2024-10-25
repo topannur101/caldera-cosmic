@@ -202,9 +202,9 @@ class extends Component {
             <div class="grow flex justify-center gap-x-2 items-center">
                 <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
                     <div class="relative w-3">
-                        <x-spinner class="sm"></x-spinner>
+                        <x-spinner class="sm white"></x-spinner>
                     </div>
-                    <div class="text-neutral-500">
+                    <div>
                         {{ __('Memuat...') }}
                     </div>
                 </div>

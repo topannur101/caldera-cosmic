@@ -710,5 +710,19 @@
 "Unduh": "다운로드",
 "ditemukan" : "발견됨",
 "manual": "수동으로",
-"Jam": "시간들"
+"Jam": "시간들",
+"line daring": "온라인 라인",
+"Catat hasil uji rheometer": "레오미터 테스트 결과 기록",
+"Pengukuran dimensi IP": "IP 치수 측정",
+"Daring": "온라인",
+"Kendali temperatur chamber IP": "IP 챔버 온도 제어",
+"Kendali tebal calendar": "캘린더 두께 제어",
+"luring": "오프라인",
+"Catat area kulit": "피부 면적 기록",
+"Pantau perubahan ketebalan": "두께 변화를 모니터링",
+"mesin daring": "온라인 기계",
+"Validasi proses open-roll mixing": "오픈 롤 믹싱 프로세스 검증",
+"Kinerja dan Konsumsi CZ/NEK": "CZ/NEK 성능 및 소비",
+"Luring": "오프라인",
+"Perbarui status": "상태 업데이트"
 }

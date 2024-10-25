@@ -240,9 +240,9 @@ class extends Component {
                         <div wire:loading.class="hidden">{{ $metrics->total() . ' ' . __('ditemukan') }}</div>
                         <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
                             <div class="relative w-3">
-                                <x-spinner class="sm"></x-spinner>
+                                <x-spinner class="sm white"></x-spinner>
                             </div>
-                            <div class="text-neutral-500">
+                            <div>
                                 {{ __('Memuat...') }}
                             </div>
                         </div>
