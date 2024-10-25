@@ -45,7 +45,7 @@ class extends Component {
     private function getCachedStcLines(): int 
     {
         return Cache::remember('stc_lines_recent', now()->addMinutes(30), function () {
-            $timeWindow = Carbon::now()->subMinutes(60);
+            $timeWindow = Carbon::now()->subHours(5);
             return InsStcDSum::where('updated_at', '>=', $timeWindow)
                 ->distinct('ins_stc_machine_id')
                 ->count('ins_stc_machine_id');
