@@ -9,7 +9,7 @@ use App\InsOmv;
 new #[Layout('layouts.app')] 
 class extends Component {
     public int $id;
-    public bool $showChart;
+    public bool $amps_exists;
 
     public string $batch_code;
     public string $rdc_eval;
@@ -17,6 +17,7 @@ class extends Component {
     public string $recipe_type;
     public string $recipe_name;
     public string $duration;
+    public int $duration_seconds;
     public string $eval;
     public string $eval_human;
     public int $line;
@@ -30,9 +31,13 @@ class extends Component {
     public string $start_at;
     public string $end_at;
 
+    public $captures = [];
+    public int $capture_selected = 0;
+
     #[On('metric-show')]
     public function showMetric(int $id)
     {
+        $this->customReset();
         $metric = InsOmvMetric::find($id);
         
         if ($metric) {
@@ -41,6 +46,7 @@ class extends Component {
             $this->recipe_type  = $metric->ins_omv_recipe->type;
             $this->recipe_name  = $metric->ins_omv_recipe->name;
             $this->duration     = $metric->duration();
+            $this->duration_seconds = $metric->durationSeconds();
             $this->eval         = $metric->eval;
             $this->eval_human   = $metric->evalHuman();
             $this->line         = $metric->line;
@@ -65,6 +71,7 @@ class extends Component {
             }
 
             $data = json_decode($metric->data, true) ?: [ 'amps' => [] ];
+            $this->captures = $metric->ins_omv_captures ?: [];
             
             if ($data['amps']) {
                 // Koleksi durasi di setiap step resep dan di inkrementalkan
@@ -93,9 +100,9 @@ class extends Component {
                     modalChart.render();
                 ",
                 );
-                $this->showChart = true;
+                $this->amps_exists = true;
             } else {
-                $this->showChart = false;
+                $this->amps_exists = false;
             }
 
         } else {
@@ -103,17 +110,57 @@ class extends Component {
         }
     }
 
+    public function getCurrentIndex()
+    {
+        if (!$this->captures || !$this->capture_selected) {
+            return -1;
+        }
+        
+        $index = $this->captures->search(function($capture) {
+            return $capture->id === $this->capture_selected;
+        });
+        
+        return $index === false ? -1 : $index;
+    }
+
+    public function previousCapture()
+    {
+        $currentIndex = $this->getCurrentIndex();
+        if ($currentIndex > 0) {
+            $this->capture_selected = $this->captures[$currentIndex - 1]->id;
+        }
+    }
+
+    public function nextCapture()
+    {
+        $currentIndex = $this->getCurrentIndex();
+        if ($currentIndex < $this->captures->count() - 1) {
+            $this->capture_selected = $this->captures[$currentIndex + 1]->id;
+        }
+    }
+
+    public function toggleView()
+    {
+        $this->capture_selected = $this->capture_selected ? 0 : $this->captures->first()->id ?? 0;
+    }
+
+    public function selectCapture($id)
+    {
+        $this->capture_selected = $id;
+    }
+
     public function customReset()
     {
         $this->reset([
             'id', 
-            'showChart', 
+            'amps_exists', 
             'rdc_eval', 
             'rdc_eval_human', 
             'batch_code', 
             'recipe_type', 
             'recipe_name', 
             'duration', 
+            'duration_seconds',
             'eval', 
             'eval_human', 
             'line', 
@@ -125,7 +172,9 @@ class extends Component {
             'user_2_name', 
             'user_2_photo',
             'start_at', 
-            'end_at'
+            'end_at',
+            'captures',
+            'capture_selected'
         ]);
     }
 
@@ -146,20 +195,81 @@ class extends Component {
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
-        <div wire:key="amps-exists" class="{{ $showChart ? '' : 'hidden' }} ">
-            <div wire:key="modal-chart-container" wire:ignore class="h-96 overflow-hidden my-8"
-                id="modal-chart-container">
+        <div wire:key="capture-selected-none" class="{{ $capture_selected ? 'hidden' : '' }}">
+            <div wire:key="amps-exists" class="{{ $amps_exists ? '' : 'hidden' }} ">
+                <div wire:key="modal-chart-container" wire:ignore class="h-96 mt-8 overflow-hidden"
+                    id="modal-chart-container">
+                </div>
+            </div>
+            <div wire:key="amps-none" class="{{ $amps_exists ? 'hidden' : '' }} py-6 rounded-lg my-6">
+                <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                    <i class="fa fa-bolt-lightning relative"><i
+                            class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                </div>
+                <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada data arus listrik') }}
+                </div>
             </div>
         </div>
-        <div wire:key="amps-none" class="{{ $showChart ? 'hidden' : '' }} py-6 rounded-lg my-6">
-            <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                <i class="fa fa-bolt-lightning relative"><i
-                        class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
-            </div>
-            <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada data arus listrik') }}
+        <div wire:key="capture-selected-any" class="{{ $capture_selected ? '' : 'hidden' }}">
+            <div class="w-full h-96 mt-8 overflow-hidden rounded-lg flex items-center justify-center relative group">
+                @if($this->getCurrentIndex() > -1)
+                    @if($this->getCurrentIndex() > 0)
+                        <button
+                            wire:click="previousCapture"
+                            class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex justify-center items-center bg-black/50 rounded-full text-white 
+                                opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
+                            <i class="fa fa-fw fa-chevron-left"></i>
+                        </button>
+                    @endif
+
+                    @if($this->getCurrentIndex() < $captures->count() - 1)
+                        <button
+                            wire:click="nextCapture"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex justify-center items-center bg-black/50 rounded-full text-white 
+                                opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
+                            <i class="fa fa-fw fa-chevron-right"></i>
+                        </button>
+                    @endif
+                @endif
+                @if($captures)
+                    @if($captures->firstWhere('id', $capture_selected))
+                    <img
+                        src="{{ asset('storage/omv-captures/' . $captures->firstWhere('id', $capture_selected)->file_name) }}"
+                        class="object-cover w-full h-full" />
+                    @endif
+                @endif
+            </div>            
+        </div>
+        <div wire:key="captures-exists" class="{{ count($captures) ? '' : 'hidden' }} mt-8">
+            <div class="flex items-center gap-3">
+                <div>
+                    <x-secondary-button type="button"
+                        wire:click="toggleView">
+                        @if(!$capture_selected)
+                            <i class="fa fa-fw fa-images"></i>
+                        @else
+                            <i class="fa fa-fw fa-line-chart"></i>
+                        @endif
+                    </x-secondary-button>
+                </div>                
+                {{-- Timeline --}}
+                <div class="flex-grow">
+                    <div class="relative w-full h-8">
+                        <div class="absolute top-1/2 w-full h-px bg-neutral-300 dark:bg-neutral-700"></div>
+                        @foreach($captures as $capture)
+                            <button
+                                wire:click="selectCapture({{ $capture->id }})"
+                                class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full transition-colors
+                                    {{ $capture_selected == $capture->id ? 'bg-caldy-500 z-10 opacity-100' : 'bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-600 dark:hover:bg-neutral-700 opacity-50' }}"
+                                style="left: {{ ($capture->taken_at / $duration_seconds) * 100 }}%"
+                            ></button>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="flex flex-col mb-6 gap-6">
+
+        <div class="flex flex-col mt-8 mb-6 gap-6">
             <div class="flex flex-col grow">
                 <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi batch') }}</dt>
                 <dd>

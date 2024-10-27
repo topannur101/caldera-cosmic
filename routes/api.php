@@ -165,9 +165,6 @@ Route::post('/omv-metric', function (Request $request) {
         
             $fileName = sprintf(
                 '%s_%s_%s_%s.%s',
-                $omvMetric->id,
-                $image['step_index'] ?? 'unknown',
-                $image['taken_at'] ?? 'unknown',
                 Str::random(8),
                 $extension
             );
@@ -179,6 +176,7 @@ Route::post('/omv-metric', function (Request $request) {
             $omvCapture = new InsOmvCapture();
             $omvCapture->ins_omv_metric_id = $omvMetric->id;
             $omvCapture->file_name = $fileName;
+            $omvCapture->taken_at = $image['taken_at'];
             $omvCapture->save();
         
         } catch (Exception $e) {

@@ -60,15 +60,19 @@ class InsOmvMetric extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function duration()
+    public function durationSeconds(): int
     {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at);
         
-        $duration = $start->diffInSeconds($end);
-        
-        $minutes = floor($duration / 60);
-        $seconds = $duration % 60;
+        return $start->diffInSeconds($end);
+    }
+
+    public function duration()
+    {
+        $duration_seconds = $this->durationSeconds();
+        $minutes = floor($duration_seconds / 60);
+        $seconds = $duration_seconds % 60;
         
         return sprintf("%02d:%02d", $minutes, $seconds);
     }
