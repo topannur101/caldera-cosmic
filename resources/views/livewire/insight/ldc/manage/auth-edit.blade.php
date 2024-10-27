@@ -134,10 +134,10 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
-            {{-- <x-checkbox id="device-manage" :disabled="!$is_superuser" wire:model="actions"
-                value="device-manage">{{ __('Kelola perangkat ') }}</x-checkbox> --}}
             <x-checkbox id="hide-edit" :disabled="!$is_superuser" wire:model="actions"
                 value="hide-edit">{{ __('Menyunting data kulit') }}</x-checkbox>
+            <x-checkbox id="machine-manage" :disabled="!$is_superuser" wire:model="actions"
+                value="machine-manage">{{ __('Kelola mesin ') }}</x-checkbox>
         </div>
         @can('superuser')
             <div class="mt-6 flex justify-between items-end">

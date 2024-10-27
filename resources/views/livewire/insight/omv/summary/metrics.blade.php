@@ -189,11 +189,18 @@ class extends Component {
                                     {{ __('Kemarin') }}
                                 </x-dropdown-link>
                                 <hr class="border-neutral-300 dark:border-neutral-600" />
+                                <x-dropdown-link href="#" wire:click.prevent="setThisWeek">
+                                    {{ __('Minggu ini') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setLastWeek">
+                                    {{ __('Minggu lalu') }}
+                                </x-dropdown-link>
+                                <hr class="border-neutral-300 dark:border-neutral-600" />
                                 <x-dropdown-link href="#" wire:click.prevent="setThisMonth">
                                     {{ __('Bulan ini') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" wire:click.prevent="setLastMonth">
-                                    {{ __('Bulan kemarin') }}
+                                    {{ __('Bulan lalu') }}
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>

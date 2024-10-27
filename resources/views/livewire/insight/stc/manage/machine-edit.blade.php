@@ -92,7 +92,7 @@ new class extends Component {
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
         <div class="mt-6">
-            <label for="machine-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nomor') }}</label>
+            <label for="machine-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
             <x-text-input id="machine-code" wire:model="code" type="text" :disabled="Gate::denies('manage', InsStcMachine::class)" />
             @error('code')
                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />

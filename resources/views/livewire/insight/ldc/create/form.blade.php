@@ -6,6 +6,7 @@ use Illuminate\Validation\Rule;
 
 use App\Models\InsLdcGroup;
 use App\Models\InsLdcHide;
+use App\Models\InsLdcMachine;
 use Carbon\Carbon;
 use App\Caldera;
 use Illuminate\Support\Facades\Cache;
@@ -28,8 +29,16 @@ new class extends Component {
     public $code;
     public $shift;
 
+    public $ins_ldc_machines;
+
+    public function mount()
+    {
+        $this->ins_ldc_machines = InsLdcMachine::orderBy('code')->get();
+    }
+
     public function rules()
     {
+        $codes = $this->ins_ldc_machines->pluck('code')->implode(',');
         return [
             'line'      => ['required', 'string', 'min:2', 'max:3', 'regex:/^[a-zA-Z]+[0-9]+$/'],
             'workdate'  => ['required', 'date'],
@@ -40,7 +49,7 @@ new class extends Component {
             'area_qt'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'grade'     => ['nullable', 'integer', 'min:1', 'max:5'],
             'machine'   => ['nullable', 'integer', 'min:1', 'max:20'],
-            'code'      => ['required', 'alpha_num', 'min:7', 'max:10'],
+            'code'      => ['required', 'alpha_num', 'min:7', 'max:10', "starts_with:$codes"],
             'shift'     => ['required', 'integer', 'min:1', 'max:3']
         ];
     }
@@ -273,10 +282,9 @@ new class extends Component {
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Barcode') }}</label>
                     <x-text-input id="hide-code" x-model="code" x-ref="hidecode" type="text" autocomplete="off" :disabled="$is_editing ? 'disabled' : false" />
                     <div class="flex w-full justify-between items-center text-neutral-500 px-3 mt-2 text-xs">
-                        <x-text-button @click="code = 'XA'; $nextTick(() => setCursorToEnd())" type="button">XA</x-text-button>
-                        <x-text-button @click="code = 'XB'; $nextTick(() => setCursorToEnd())" type="button">XB</x-text-button>
-                        <x-text-button @click="code = 'XC'; $nextTick(() => setCursorToEnd())" type="button">XC</x-text-button>
-                        <x-text-button @click="code = 'XD'; $nextTick(() => setCursorToEnd())" type="button">XD</x-text-button>
+                        @foreach($ins_ldc_machines as $ins_ldc_machine)
+                            <x-text-button x-on:click="code = '{{ $ins_ldc_machine->code }}'; $nextTick(() => setCursorToEnd())" type="button">{{ $ins_ldc_machine->code }}</x-text-button>
+                        @endforeach
                     </div>
                 </div>
             </div>

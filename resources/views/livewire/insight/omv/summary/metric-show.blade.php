@@ -147,7 +147,7 @@ class extends Component {
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
         <div wire:key="amps-exists" class="{{ $showChart ? '' : 'hidden' }} ">
-            <div wire:key="modal-chart-container" wire:ignore class="h-80 bg-white dark:brightness-75 text-neutral-900 rounded overflow-hidden my-8"
+            <div wire:key="modal-chart-container" wire:ignore class="h-96 overflow-hidden my-8"
                 id="modal-chart-container">
             </div>
         </div>

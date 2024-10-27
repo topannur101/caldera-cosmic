@@ -92,7 +92,7 @@ class extends Component {
         $this->js(
             "
             let options = " .
-                json_encode(InsOmv::getDailyChartOptions($data)) .
+                json_encode(InsOmv::getRunningTimeChartOptions($data)) .
                 ";
                 
             // Fix the formatters
@@ -113,7 +113,7 @@ class extends Component {
             };
 
             // Render chart
-            const chartContainer = \$wire.\$el.querySelector('#omv-summary-daily-chart-container');
+            const chartContainer = \$wire.\$el.querySelector('#omv-summary-running-time-chart-container');
             chartContainer.innerHTML = '<div class=\"chart\"></div>';
             let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
             chart.render();
@@ -151,14 +151,14 @@ class extends Component {
                                     {{ __('Minggu ini') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" wire:click.prevent="setLastWeek">
-                                    {{ __('Minggu kemarin') }}
+                                    {{ __('Minggu lalu') }}
                                 </x-dropdown-link>
                                 <hr class="border-neutral-300 dark:border-neutral-600" />
                                 <x-dropdown-link href="#" wire:click.prevent="setThisMonth">
                                     {{ __('Bulan ini') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" wire:click.prevent="setLastMonth">
-                                    {{ __('Bulan kemarin') }}
+                                    {{ __('Bulan lalu') }}
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
@@ -214,11 +214,11 @@ class extends Component {
     <div wire:key="modals"> 
 
     </div>
-    <div wire:key="omv-summary-daily" class="grid grid-cols-4 gap-3">
+    <div wire:key="omv-summary-running-time" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-x-3">
         <div>
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                 {{ __('Ikhtisar') }}</h1>
-            <div class="flex flex-col gap-y-3">
+            <div class="flex flex-col gap-y-3 pb-6">
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
                     <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Produksi') }}</label>
                     <div class="flex items-end gap-x-1">
@@ -242,11 +242,11 @@ class extends Component {
                 </div>
             </div>
         </div>
-        <div class="col-span-3">
+        <div class="sm:col-span-2 lg:col-span-3">
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                 {{ __('Waktu jalan') }}</h1>
-            <div wire:key="omv-summary-daily-chart" class="h-96 bg-white dark:brightness-75 text-neutral-900 rounded shadow overflow-hidden"
-                id="omv-summary-daily-chart-container" wire:key="omv-summary-daily-chart-container" wire:ignore>
+            <div wire:key="omv-summary-running-time-chart" class="h-[32rem] bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
+                id="omv-summary-running-time-chart-container" wire:key="omv-summary-running-time-chart-container" wire:ignore>
             </div>  
         </div>
     </div>

@@ -34,6 +34,23 @@ new #[Layout('layouts.app')] class extends Component {};
                     </div>
                 </div>
             </x-card-link>
+            <x-card-link href="{{ route('insight.ldc.manage.machines') }}" wire:navigate>
+                <div class="flex px-8">
+                    <div>
+                        <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
+                            <div class="m-auto"><i class="fa fa-fw fa-tablet"></i></div>
+                        </div>
+                    </div>
+                    <div class="grow truncate py-4">
+                        <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                            {{ __('Kelola mesin') }}
+                        </div>
+                        <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Kelola kode mesin NT/NEK') }}
+                        </div>
+                    </div>
+                </div>
+            </x-card-link>
         </div>
     </div>
 </div>

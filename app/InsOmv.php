@@ -6,7 +6,7 @@ use Illuminate\Support\Carbon;
 
 class InsOmv
 {
-    public static function getDailyChartOptions($data)
+    public static function getRunningTimeChartOptions($data)
     {
         $lines = array_map(function($line) {
             return "Line " . intval($line);
@@ -17,27 +17,28 @@ class InsOmv
                 [
                     'name' => __('Terlalu awal'),
                     'data' => $data->pluck('too_soon')->values(),
-                    'color' => '#FFB3B3',
+                    'color' => '#FF8080',  // Darker shade of pastel red
                 ],
                 [
                     'name' => __('Tepat waktu'),
                     'data' => $data->pluck('on_time')->values(),
-                    'color' => '#B3FFB3',
+                    'color' => '#80CC80',  // Darker shade of pastel green
                 ],
                 [
                     'name' => __('Tepat waktu') . ' (' . __('manual') .')',
                     'data' => $data->pluck('on_time_manual')->values(),
-                    'color' => '#FFD9B3',
+                    'color' => '#FFB366',  // Darker shade of pastel orange
                 ],
                 [
                     'name' => __('Terlambat'),
                     'data' => $data->pluck('too_late')->values(),
-                    'color' => '#FFB3B3',
+                    'color' => '#FF8080',  // Same darker shade of pastel red
                 ],
             ],
             'chart' => [
                 'type' => 'bar',
                 'height' => '100%',
+                'background' => 'transparent',
                 'stacked' => true,
                 'toolbar' => [
                     'show' => true,
@@ -53,6 +54,9 @@ class InsOmv
             ],
             'dataLabels' => [
                 'formatter' => null,
+                'background' => [
+                    'enabled' => false,
+                ]
             ],
             'plotOptions' => [
                 'bar' => [
@@ -64,14 +68,17 @@ class InsOmv
                             'style' => [
                                 'fontSize' => '13px',
                                 'fontWeight' => 900,
+                                'color' => session('bg') == 'dark' ? '#FFF' : null
                             ],
                         ],
                     ],
                 ],
             ],
             'stroke' => [
-                'width' => 1,
-                'colors' => ['#fff'],
+                'width' => 0
+            ],
+            'theme' => [
+                'mode' => session('bg'),
             ],
             'tooltip' => [
                 'y'=> [
@@ -94,42 +101,51 @@ class InsOmv
                 'position' => 'top',
                 'horizontalAlign' => 'left',
                 'offsetX' => 40,
+                'markers' => [
+                    'strokeWidth' => 0,
+                ]
             ],
         ];
     }
 
-    public static function getChartOptions(array $amps, Carbon $start_at, array $step_durations, array $capture_points, int $height)
+    public static function getChartOptions(array $amps, Carbon $start_at, array $step_durations, array $capture_points, int $height) 
     {
-        $chart_data = array_map(function ($amp) use ($start_at) {
-            // Add the 'taken_at' seconds to the start_at
-            $taken_at = $start_at->copy()->addSeconds($amp['taken_at'])->toDateTimeString();
-        
+        $chart_data = array_map(function ($amp) {
+            // Convert seconds to mm:ss format
+            $minutes = floor($amp['taken_at'] / 60);
+            $seconds = $amp['taken_at'] % 60;
+            $relative_time = sprintf("%02d:%02d", $minutes, $seconds);
+            
             return [
-                'taken_at' => $taken_at,
+                'taken_at' => $relative_time,
                 'value' => $amp['value'],
             ];
         }, $amps);
-
-        $x_annos = array_map(function($duration, $index) use ($start_at, $step_durations) {
-            $timestamp = $start_at->copy()->addSeconds($duration)->getTimestamp() * 1000; // ApexCharts expects time in milliseconds
-            $isLast = $index === array_key_last($step_durations); // Check if it's the last iteration
+    
+        $x_annos = array_map(function($duration, $index) use($step_durations) {
+            $minutes = floor($duration / 60);
+            $seconds = $duration % 60;
+            $relative_time = sprintf("%02d:%02d", $minutes, $seconds);
+            
+            $isLast = $index === array_key_last($step_durations);
             return [
-                'x' => $timestamp,
-                'borderColor' => $isLast ? '#FF0000' : '#008080', // Red border for the last iteration
+                'x' => $relative_time,
+                'borderColor' => $isLast ? '#FF0000' : '#008080',
                 'label' => [
                     'borderWidth' => 0,
                     'style' => [
-                        'background' => $isLast ? '#FF0000' : '#008080', // Red background for the last iteration
+                        'background' => $isLast ? '#FF0000' : '#008080',
                         'color' => '#fff',
                     ],
-                    'text' => $isLast ? __('Selesai') : __('Langkah') . ' ' . ($index + 2),
+                    'text' => $isLast ? __('Standar') : __('Langkah') . ' ' . ($index + 2),
                 ],
             ];
         }, $step_durations, array_keys($step_durations));
-
+    
         return [
             'chart' => [
                 'redrawOnParentResize' => true,
+                'background' => 'transparent',
                 'height' => $height .'%',
                 'type' => 'line',
                 'toolbar' => [
@@ -161,10 +177,15 @@ class InsOmv
                     'color' => '#D64550',
                 ],
             ],
+            'theme' => [
+                'mode' => session('bg'),
+            ],
             'xaxis' => [
-                'type' => 'datetime',
+                'type' => 'category', // Changed from 'datetime' to 'category'
+                'tickAmount' => 10, // Adjust this value based on how many ticks you want to show
                 'labels' => [
-                    'datetimeUTC' => false,
+                    'rotate' => 0,
+                    'trim' => true
                 ],
             ],
             'yaxis' => [
@@ -183,10 +204,12 @@ class InsOmv
             ],
             'tooltip' => [
                 'x' => [
-                    'format' => 'HH:mm:ss'
+                    'formatter' => function($value) {
+                        return $value; // The value is already in mm:ss format
+                    }
                 ]
             ]
         ];
-    }  
+    }
     
 }

@@ -11,14 +11,14 @@ new #[Layout('layouts.app')]
 class extends Component {
     
     #[Url]
-    public $view = 'daily';
+    public $view = 'running-time';
     public array $view_titles = [];
 
     public function mount()
     {
         $this->view_titles = [        
-            'daily'     => __('Waktu Jalan'),
-            'metrics'   => __('Data mentah'),    
+            'running-time'  => __('Waktu Jalan'),
+            'metrics'       => __('Data mentah'),    
         ];
     }
 
@@ -38,7 +38,7 @@ class extends Component {
 
 <div id="content" class="relative py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     @vite(['resources/js/apexcharts.js'])
-    <div wire:key="omv-summary-index-nav" class="px-8 mb-6">
+    <div wire:key="omv-summary-index-nav" class="flex px-8 mb-6">
         <x-dropdown align="left">
             <x-slot name="trigger">
                 <x-text-button type="button" class="flex gap-2 items-center ml-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="fa fa-fw fa-chevron-down"></i></x-text-button>
@@ -56,8 +56,8 @@ class extends Component {
     </div>
     <div wire:key="omv-summary-index-container" wire:loading.class="hidden">
         @switch($view)
-            @case('daily')
-            <livewire:insight.omv.summary.daily />                       
+            @case('running-time')
+            <livewire:insight.omv.summary.running-time />                       
                 @break
             @case('line')
                 <div class="w-full py-20">
