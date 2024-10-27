@@ -110,26 +110,34 @@ class InsOmv
 
     public static function getChartOptions(array $amps, Carbon $start_at, array $step_durations, array $capture_points, int $height) 
     {
-        $chart_data = array_map(function ($amp) {
-            // Convert seconds to mm:ss format
-            $minutes = floor($amp['taken_at'] / 60);
-            $seconds = $amp['taken_at'] % 60;
-            $relative_time = sprintf("%02d:%02d", $minutes, $seconds);
-            
-            return [
-                'taken_at' => $relative_time,
-                'value' => $amp['value'],
-            ];
-        }, $amps);
+        // Create a base datetime at 00:00:00
+        $base_time = Carbon::today();
+        
+        $initial_data = [
+            'taken_at' => $base_time->timestamp * 1000, 
+            'value' => 0,
+        ];
+
+        $chart_data = array_merge(
+            [$initial_data],
+            array_map(function ($amp) use ($base_time) {
+                // Add the seconds to 00:00:00
+                $taken_at = $base_time->copy()->addSeconds($amp['taken_at'])->timestamp * 1000;
+                
+                return [
+                    'taken_at' => $taken_at,
+                    'value' => $amp['value'],
+                ];
+            }, $amps)
+        );
+        array_unshift($step_durations, 0);
     
-        $x_annos = array_map(function($duration, $index) use($step_durations) {
-            $minutes = floor($duration / 60);
-            $seconds = $duration % 60;
-            $relative_time = sprintf("%02d:%02d", $minutes, $seconds);
-            
+        $x_annos = array_map(function($duration, $index) use ($base_time, $step_durations) {
+            $timestamp = $base_time->copy()->addSeconds($duration)->timestamp * 1000;
             $isLast = $index === array_key_last($step_durations);
+            
             return [
-                'x' => $relative_time,
+                'x' => $timestamp,
                 'borderColor' => $isLast ? '#FF0000' : '#008080',
                 'label' => [
                     'borderWidth' => 0,
@@ -137,7 +145,7 @@ class InsOmv
                         'background' => $isLast ? '#FF0000' : '#008080',
                         'color' => '#fff',
                     ],
-                    'text' => $isLast ? __('Standar') : __('Langkah') . ' ' . ($index + 2),
+                    'text' => $isLast ? __('Standar') : __('Langkah') . ' ' . ($index + 1),
                 ],
             ];
         }, $step_durations, array_keys($step_durations));
@@ -181,11 +189,17 @@ class InsOmv
                 'mode' => session('bg'),
             ],
             'xaxis' => [
-                'type' => 'category', // Changed from 'datetime' to 'category'
-                'tickAmount' => 10, // Adjust this value based on how many ticks you want to show
+                'type' => 'datetime',
                 'labels' => [
-                    'rotate' => 0,
-                    'trim' => true
+                    'datetimeUTC' => true,
+                    'datetimeFormatter' => [
+                        'year' => 'yyyy',
+                        'month' => "MMM 'yy",
+                        'day' => 'dd MMM',
+                        'hour' => 'mm:ss',  // Changed to show minutes:seconds
+                        'minute' => 'mm:ss', // Changed to show minutes:seconds
+                        'second' => 'mm:ss'  // Changed to show minutes:seconds
+                    ],
                 ],
             ],
             'yaxis' => [
@@ -204,9 +218,7 @@ class InsOmv
             ],
             'tooltip' => [
                 'x' => [
-                    'formatter' => function($value) {
-                        return $value; // The value is already in mm:ss format
-                    }
+                    'format' => 'mm:ss'
                 ]
             ]
         ];

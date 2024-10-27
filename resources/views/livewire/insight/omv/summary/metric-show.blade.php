@@ -151,7 +151,7 @@ class extends Component {
                 id="modal-chart-container">
             </div>
         </div>
-        <div wire:key="amps-none" class="{{ $showChart ? 'hidden' : '' }} py-20 rounded-lg border border-neutral-300 dark:border-neutral-600 my-6">
+        <div wire:key="amps-none" class="{{ $showChart ? 'hidden' : '' }} py-6 rounded-lg my-6">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
                 <i class="fa fa-bolt-lightning relative"><i
                         class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
