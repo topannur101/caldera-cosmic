@@ -41,13 +41,13 @@ class InsOmvCleanup extends Command
         foreach ($oldRecords as $record) {
             try {
                 // Delete the associated file
-                $filePath = 'public/omv-metrics/' . $record->filename;
+                $filePath = 'public/omv-captures/' . $record->file_name;
                 if (Storage::exists($filePath)) {
                     Storage::delete($filePath);
                 }
 
                 // Delete the database record
-                DB::table('ins_omv_metrics')
+                DB::table('ins_omv_captures')
                     ->where('id', $record->id)
                     ->delete();
 
@@ -62,6 +62,7 @@ class InsOmvCleanup extends Command
                 ]);
                 */
             } catch (\Exception $e) {
+                $this->error($e->getMessage());
                 $errorCount++;
                 // Logging (commented out for now)
                 /*
