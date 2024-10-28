@@ -7,6 +7,67 @@ use InvalidArgumentException;
 
 class InsStc
 {
+    public static function getDLogsChartOptions($data) 
+    {
+        return [
+            'chart' => [
+                'type' => 'line',
+                'animations' => [
+                    'enabled' => false, // Disable animations for better performance with multiple series
+                ],
+                'toolbar' => [
+                    'show' => true,
+                    'tools' => [
+                        'download' => true,
+                        'selection' => true,
+                        'zoom' => true,
+                        'zoomin' => true,
+                        'zoomout' => true,
+                        'pan' => true,
+                        'reset' => true,
+                    ],
+                ],
+            ],
+            'series' => $data,
+            'xaxis' => [
+                'type' => 'numeric',
+                'labels' => [
+                    'datetimeUTC' => false,
+                ],
+                'title' => [
+                    'text' => 'Time (HH:MM)'
+                ],
+                'tickAmount' => 10,
+            ],
+            'yaxis' => [
+                'title' => [
+                    'text' => 'Temperature (°C)',
+                ],
+                'decimalsInFloat' => 1,
+            ],
+            'tooltip' => [
+                'enabled' => true,
+                'shared' => false,
+            ],
+            'stroke' => [
+                'curve' => 'smooth',
+                'width' => 2,
+            ],
+            'legend' => [
+                'show' => true,
+                'position' => 'top',
+                'horizontalAlign' => 'center',
+            ],
+            'grid' => [
+                'borderColor' => '#e7e7e7',
+                'row' => [
+                    'colors' => ['#f3f3f3', 'transparent'],
+                    'opacity' => 0.5
+                ],
+            ],
+        ];
+    }
+
     public static function getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, $width, $height)
     {
         $chartData = array_map(function ($log) {

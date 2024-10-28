@@ -292,9 +292,6 @@ class extends Component {
         <x-modal name="metric-show" maxWidth="2xl">
             <livewire:insight.omv.summary.metric-show />
         </x-modal>
-        <x-modal name="captures">
-            <livewire:insight.omv.summary.metric-captures />
-        </x-modal>
     </div>
     @if (!$metrics->count())
         @if (!$start_at || !$end_at)
