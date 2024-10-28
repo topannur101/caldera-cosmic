@@ -108,7 +108,7 @@ Route::post('/omv-metric', function (Request $request) {
     $filteredAmps = [];
 
     // limit the array if it's too big then just return empty filteredamps altogether
-    if (count($amps) < 3000) {
+    if (count($amps) < 10000) {
         $maxTakenAt = null;
         // Traverse the array from the last element to the first
         for ($i = count($amps) - 1; $i >= 0; $i--) {

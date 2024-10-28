@@ -111,24 +111,28 @@ class extends Component {
         }
     }
 
-    public function nextCapture()
+    public function capturesNavigate($action)
     {
-        if ($this->capture_n < count($this->captures)) {
-            $this->capture_n++;
+        switch ($action) {
+            case 'next':
+                if ($this->capture_n < count($this->captures)) {
+                    $this->capture_n++;
+                }
+                break;
+            
+            case 'prev':
+                if ($this->capture_n > 1) {
+                    $this->capture_n--;
+                }
+                break;
+            
+            case 'toggle':
+                $this->capture_n = $this->capture_n ? 0 : 1;
+                break;
         }
     }
 
-    public function previousCapture()
-    {
-        if ($this->capture_n > 1) {
-            $this->capture_n--;
-        }
-    }
 
-    public function toggleView()
-    {
-        $this->capture_n = $this->capture_n ? 0 : 1;
-    }
 
     public function customReset()
     {
@@ -206,7 +210,7 @@ class extends Component {
                         {{-- Previous Button --}}
                         @if($capture_n > 1)
                             <button
-                                wire:click="previousCapture"
+                                wire:click="capturesNavigate('prev')"
                                 class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex justify-center items-center bg-black/50 rounded-full text-white 
                                     opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
                                 <i class="fa fa-fw fa-chevron-left"></i>
@@ -216,7 +220,7 @@ class extends Component {
                         {{-- Next Button --}}
                         @if($capture_n < count($captures))
                             <button
-                                wire:click="nextCapture"
+                                wire:click="capturesNavigate('next')"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex justify-center items-center bg-black/50 rounded-full text-white 
                                     opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
                                 <i class="fa fa-fw fa-chevron-right"></i>
@@ -236,7 +240,7 @@ class extends Component {
         <div wire:key="captures-exists" class="{{ count($captures) ? '' : 'hidden' }} mt-8">
             <div class="flex items-center gap-3">
                 <div>
-                    <x-secondary-button type="button" wire:click="toggleView">
+                    <x-secondary-button type="button" wire:click="capturesNavigate('toggle')">
                         @if($capture_n)
                             <i class="fa fa-fw fa-line-chart"></i>
                         @else
@@ -387,6 +391,6 @@ class extends Component {
         </div>
         
     </div>
-    <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
-    <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
+    <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="capturesNavigate"></x-spinner-bg>
+    <x-spinner wire:loading.class.remove="hidden" wire:target.except="capturesNavigate" class="hidden"></x-spinner>
 </div>
