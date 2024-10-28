@@ -164,8 +164,9 @@ Route::post('/omv-metric', function (Request $request) {
             $extension = explode('/', $mimeType)[1] ?? 'png'; // Default to png if mime type is unexpected
         
             $fileName = sprintf(
-                '%s_%s_%s_%s.%s',
-                Str::random(8),
+                '$s_%s.%s',
+                $omvMetric->id,
+                Str::random(6),
                 $extension
             );
         

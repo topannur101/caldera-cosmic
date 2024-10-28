@@ -11,28 +11,28 @@ class extends Component {
     public int $id;
     public bool $amps_exists;
 
-    public string $batch_code;
-    public string $rdc_eval;
-    public string $rdc_eval_human;
-    public string $recipe_type;
-    public string $recipe_name;
-    public string $duration;
-    public int $duration_seconds;
-    public string $eval;
-    public string $eval_human;
-    public int $line;
-    public string $team;
-    public string $user_1_emp_id;
-    public string $user_1_name;
-    public string $user_1_photo;
-    public string $user_2_emp_id;
-    public string $user_2_name;
-    public string $user_2_photo;
-    public string $start_at;
-    public string $end_at;
+    public string   $batch_code;
+    public string   $rdc_eval;
+    public string   $rdc_eval_human;
+    public string   $recipe_type;
+    public string   $recipe_name;
+    public string   $duration;
+    public int      $duration_seconds;
+    public string   $eval;
+    public string   $eval_human;
+    public int      $line;
+    public string   $team;
+    public string   $user_1_emp_id;
+    public string   $user_1_name;
+    public string   $user_1_photo;
+    public string   $user_2_emp_id;
+    public string   $user_2_name;
+    public string   $user_2_photo;
+    public string   $start_at;
+    public string   $end_at;
 
-    public $captures = [];
-    public int $capture_selected = 0;
+    public array    $captures = [];
+    public int      $capture_n = 0;
 
     #[On('metric-show')]
     public function showMetric(int $id)
@@ -71,7 +71,8 @@ class extends Component {
             }
 
             $data = json_decode($metric->data, true) ?: [ 'amps' => [] ];
-            $this->captures = $metric->ins_omv_captures ?: [];
+            $this->captures = $metric->ins_omv_captures->toArray() ?: [];
+            $this->capture_n = 0;
             
             if ($data['amps']) {
                 // Koleksi durasi di setiap step resep dan di inkrementalkan
@@ -110,43 +111,23 @@ class extends Component {
         }
     }
 
-    public function getCurrentIndex()
+    public function nextCapture()
     {
-        if (!$this->captures || !$this->capture_selected) {
-            return -1;
+        if ($this->capture_n < count($this->captures)) {
+            $this->capture_n++;
         }
-        
-        $index = $this->captures->search(function($capture) {
-            return $capture->id === $this->capture_selected;
-        });
-        
-        return $index === false ? -1 : $index;
     }
 
     public function previousCapture()
     {
-        $currentIndex = $this->getCurrentIndex();
-        if ($currentIndex > 0) {
-            $this->capture_selected = $this->captures[$currentIndex - 1]->id;
-        }
-    }
-
-    public function nextCapture()
-    {
-        $currentIndex = $this->getCurrentIndex();
-        if ($currentIndex < $this->captures->count() - 1) {
-            $this->capture_selected = $this->captures[$currentIndex + 1]->id;
+        if ($this->capture_n > 1) {
+            $this->capture_n--;
         }
     }
 
     public function toggleView()
     {
-        $this->capture_selected = $this->capture_selected ? 0 : $this->captures->first()->id ?? 0;
-    }
-
-    public function selectCapture($id)
-    {
-        $this->capture_selected = $id;
+        $this->capture_n = $this->capture_n ? 0 : 1;
     }
 
     public function customReset()
@@ -174,7 +155,7 @@ class extends Component {
             'start_at', 
             'end_at',
             'captures',
-            'capture_selected'
+            'capture_n'
         ]);
     }
 
@@ -195,7 +176,8 @@ class extends Component {
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
-        <div wire:key="capture-selected-none" class="{{ $capture_selected ? 'hidden' : '' }}">
+        {{-- Chart View --}}
+        <div wire:key="capture-selected-none" class="{{ $capture_n ? 'hidden' : '' }}">
             <div wire:key="amps-exists" class="{{ $amps_exists ? '' : 'hidden' }} ">
                 <div wire:key="modal-chart-container" wire:ignore class="h-96 mt-8 overflow-hidden"
                     id="modal-chart-container">
@@ -206,62 +188,71 @@ class extends Component {
                     <i class="fa fa-bolt-lightning relative"><i
                             class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                 </div>
-                <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada data arus listrik') }}
-                </div>
+                <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada data arus listrik') }}</div>
             </div>
         </div>
-        <div wire:key="capture-selected-any" class="{{ $capture_selected ? '' : 'hidden' }}">
-            <div class="w-full h-96 mt-8 overflow-hidden rounded-lg flex items-center justify-center relative group">
-                @if($this->getCurrentIndex() > -1)
-                    @if($this->getCurrentIndex() > 0)
-                        <button
-                            wire:click="previousCapture"
-                            class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex justify-center items-center bg-black/50 rounded-full text-white 
-                                opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
-                            <i class="fa fa-fw fa-chevron-left"></i>
-                        </button>
-                    @endif
 
-                    @if($this->getCurrentIndex() < $captures->count() - 1)
-                        <button
-                            wire:click="nextCapture"
-                            class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex justify-center items-center bg-black/50 rounded-full text-white 
-                                opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
-                            <i class="fa fa-fw fa-chevron-right"></i>
-                        </button>
-                    @endif
-                @endif
-                @if($captures)
-                    @if($captures->firstWhere('id', $capture_selected))
+        {{-- Image View --}}
+        <div wire:key="capture-selected-any" class="{{ $capture_n ? '' : 'hidden' }}">
+            <div class="w-full h-96 mt-8 overflow-hidden rounded-lg flex items-center justify-center relative group">
+                @if(count($captures) && $capture_n > 0)
                     <img
-                        src="{{ asset('storage/omv-captures/' . $captures->firstWhere('id', $capture_selected)->file_name) }}"
-                        class="object-cover w-full h-full" />
+                        src="{{ asset('storage/omv-captures/' . $captures[$capture_n - 1]['file_name']) }}"
+                        class="object-cover w-full h-full" 
+                        alt="Capture {{ $capture_n }}"
+                    />
+                    
+                    @if(count($captures) > 1)
+                        {{-- Previous Button --}}
+                        @if($capture_n > 1)
+                            <button
+                                wire:click="previousCapture"
+                                class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex justify-center items-center bg-black/50 rounded-full text-white 
+                                    opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
+                                <i class="fa fa-fw fa-chevron-left"></i>
+                            </button>
+                        @endif
+
+                        {{-- Next Button --}}
+                        @if($capture_n < count($captures))
+                            <button
+                                wire:click="nextCapture"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex justify-center items-center bg-black/50 rounded-full text-white 
+                                    opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
+                                <i class="fa fa-fw fa-chevron-right"></i>
+                            </button>
+                        @endif
+
+                        {{-- Image Counter --}}
+                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                            {{ $capture_n }} / {{ count($captures) }}
+                        </div>
                     @endif
                 @endif
             </div>            
         </div>
+
+        {{-- Timeline Navigation --}}
         <div wire:key="captures-exists" class="{{ count($captures) ? '' : 'hidden' }} mt-8">
             <div class="flex items-center gap-3">
                 <div>
-                    <x-secondary-button type="button"
-                        wire:click="toggleView">
-                        @if(!$capture_selected)
-                            <i class="fa fa-fw fa-images"></i>
-                        @else
+                    <x-secondary-button type="button" wire:click="toggleView">
+                        @if($capture_n)
                             <i class="fa fa-fw fa-line-chart"></i>
+                        @else
+                            <i class="fa fa-fw fa-images"></i>
                         @endif
                     </x-secondary-button>
                 </div>                
-                {{-- Timeline --}}
                 <div class="flex-grow">
                     <div class="relative w-full h-8">
                         <div class="absolute top-1/2 w-full h-px bg-neutral-300 dark:bg-neutral-700"></div>
-                        @foreach($captures as $capture)
+                        @foreach($captures as $capture_i => $capture)
                             <button
-                                wire:click="selectCapture({{ $capture->id }})"
+                                wire:click="$set('capture_n', {{ $capture_i + 1 }})"
                                 class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full transition-colors
-                                    {{ $capture_selected == $capture->id ? 'bg-caldy-500 z-10 opacity-100' : 'bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-600 dark:hover:bg-neutral-700 opacity-50' }}"
-                                style="left: {{ ($capture->taken_at / $duration_seconds) * 100 }}%"
+                                    {{ $capture_i == ($capture_n - 1) ? 'bg-caldy-500 z-10 opacity-100' : 'bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-600 dark:hover:bg-neutral-700 opacity-50' }}"
+                                style="left: {{ ($capture['taken_at'] / $duration_seconds) * 100 }}%"
                             ></button>
                         @endforeach
                     </div>

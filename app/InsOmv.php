@@ -112,14 +112,8 @@ class InsOmv
     {
         // Create a base datetime at 00:00:00
         $base_time = Carbon::today();
-        
-        $initial_data = [
-            'taken_at' => $base_time->timestamp * 1000, 
-            'value' => 0,
-        ];
 
         $chart_data = array_merge(
-            [$initial_data],
             array_map(function ($amp) use ($base_time) {
                 // Add the seconds to 00:00:00
                 $taken_at = $base_time->copy()->addSeconds($amp['taken_at'])->timestamp * 1000;

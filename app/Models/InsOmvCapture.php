@@ -13,6 +13,7 @@ class InsOmvCapture extends Model
     protected $fillable = [
         'ins_omv_metric_id',
         'file_name',
+        'taken_at'
     ];
 
     public function ins_omv_metric(): BelongsTo

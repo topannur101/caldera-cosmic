@@ -77,7 +77,7 @@ new #[Layout('layouts.app')] class extends Component {
                 </x-pill>    
                 <x-pill color="yellow">
                     <span>batchAmp: </span>
-                    <span class="font-mono" x-text="batchAmps[batchAmps.length - 1].value"></span>
+                    <span class="font-mono" x-text="batchAmps[batchAmps.length - 1]?.value ?? 0"></span>
                 </x-pill>               
             </div>
             <div class="flex flex-col sm:flex-row gap-x-4 p-2">
@@ -461,7 +461,7 @@ new #[Layout('layouts.app')] class extends Component {
             const configDefaults = {
                 captureThreshold: 1,
                 evalTolerance: 120,
-                evalFalseLimit: 30, // Auto stop: e.g. pollingBInterval: 4000, evalFalseLimit: 30, then 4000*30/1000 = 120 seconds autostop
+                evalFalseLimit: 20, // Auto stop: e.g. pollingBInterval: 4000, evalFalseLimit: 30, then 4000*30/1000 = 120 seconds autostop
                 overtimeMaxDuration: 600,
                 pollingAInterval: 4000,
                 pollingBInterval: 4000,
@@ -708,6 +708,25 @@ new #[Layout('layouts.app')] class extends Component {
                         this.timerIsRunning = true;
                         this.timerRemainingTime = this.recipeDuration;
 
+                        // Initial data fetch for time 0
+                        fetch('http://127.0.0.1:92/get-data')
+                            .then(response => response.json())
+                            .then(data => {
+                                // Set the very first data point at time 0
+                                console.log('Polling B initial:', data);
+                                this.batchAmps = [{
+                                    taken_at: 0,
+                                    value: data.raw
+                                }];
+                            })
+                            .catch(error => {
+                                console.error('Error getting initial data:', error);
+                                this.batchAmps = [{
+                                    taken_at: 0,
+                                    value: 0  // fallback value if fetch fails
+                                }];
+                            });
+
                         // Start tick and Polling B
                         this.tick();
                         this.startPollingB();
@@ -741,6 +760,7 @@ new #[Layout('layouts.app')] class extends Component {
                                             taken_at: this.timerElapsedSeconds,
                                             value: data.raw
                                         });
+                                        
                                         // Auto stop
                                         if (data.eval === false) {
                                             this.timerEvalFalseCount++;
@@ -796,7 +816,6 @@ new #[Layout('layouts.app')] class extends Component {
                             images: this.batchImages,
                             amps: this.batchAmps
                         };
-                        console.log(jsonData);
                         this.sendData(jsonData);
                         this.reset(['timer', 'recipe', 'batch', 'poll', 'recipesFiltered', 'slider'])
                     },

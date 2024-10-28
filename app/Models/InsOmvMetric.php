@@ -42,7 +42,7 @@ class InsOmvMetric extends Model
 
     public function ins_omv_captures(): HasMany
     {
-        return $this->hasMany(InsOmvCapture::class);
+        return $this->hasMany(InsOmvCapture::class)->orderBy('taken_at', 'asc');;
     }
 
     public function capturesCount()
