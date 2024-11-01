@@ -220,7 +220,7 @@ class extends Component {
                                         {{ __('Bulan ini') }}
                                     </x-dropdown-link>
                                     <x-dropdown-link href="#" wire:click.prevent="setLastMonth">
-                                        {{ __('Bulan kemarin') }}
+                                        {{ __('Bulan lalu') }}
                                     </x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>

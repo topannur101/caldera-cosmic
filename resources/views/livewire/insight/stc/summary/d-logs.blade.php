@@ -27,8 +27,9 @@ class extends Component {
     public $line;
 
     public $lines;
-    
-    const MAX_SERIES = 500; // Limit to prevent overcrowding
+
+    public int $d_sums_count = 0;
+    public int $d_sums_max = 100; // Limit to prevent overcrowding
 
     // #[Url]
     // public $team;
@@ -50,7 +51,7 @@ class extends Component {
     protected function getData()
     {
         // Start with sums query
-        $sumsQuery = InsStcDSum::query()
+        $dSumsQuery = InsStcDSum::query()
             ->whereBetween('start_time', [
                 Carbon::parse($this->start_at)->startOfDay(),
                 Carbon::parse($this->end_at)->endOfDay()
@@ -58,14 +59,15 @@ class extends Component {
             ->when($this->line, function($query) {
                 return $query->where('line', $this->line);
             })
-            ->latest('start_time')
-            ->limit(self::MAX_SERIES)
-            ->get();
+            ->latest('start_time');
+        
+        $this->d_sums_count = $dSumsQuery->count();
+        $dSumsQuery = $dSumsQuery->limit($this->d_sums_max)->get();
 
         // Get all relevant logs
         $logsData = [];
-        foreach ($sumsQuery as $sum) {
-            $logs = InsStcDLog::where('ins_stc_d_sum_id', $sum->id)
+        foreach ($dSumsQuery as $dSum) {
+            $logs = InsStcDLog::where('ins_stc_d_sum_id', $dSum->id)
                 ->orderBy('taken_at')
                 ->get();
 
@@ -85,7 +87,6 @@ class extends Component {
             })->toArray();
 
             $logsData[] = [
-                'name' => "Batch " . $sum->id . " (" . Carbon::parse($sum->start_time)->format('d/m H:i') . ")",
                 'data' => $seriesData
             ];
         }

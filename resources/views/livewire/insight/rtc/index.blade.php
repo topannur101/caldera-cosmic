@@ -176,7 +176,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     </x-dropdown-link>
                                     <x-dropdown-link href="#" wire:click.prevent="setLastMonth"
                                         class="{{ $is_range ? '' : 'hidden' }}">
-                                        {{ __('Bulan kemarin') }}
+                                        {{ __('Bulan lalu') }}
                                     </x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
