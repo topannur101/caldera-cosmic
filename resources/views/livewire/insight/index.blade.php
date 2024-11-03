@@ -199,7 +199,7 @@ class extends Component {
                         </div>
                     </div>
                 </x-card-link>
-                <x-card-link href="#" x-data x-on:click.prevent="alert('Sedang dalam tahap pengembangan')">
+                {{-- <x-card-link href="#" x-data x-on:click.prevent="alert('Sedang dalam tahap pengembangan')">
                     <div class="flex">
                         <div>
                             <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">
@@ -237,7 +237,7 @@ class extends Component {
                             </div>
                         </div>
                     </div>
-                </x-card-link>
+                </x-card-link> --}}
             </div>
         </div>
         <div>
