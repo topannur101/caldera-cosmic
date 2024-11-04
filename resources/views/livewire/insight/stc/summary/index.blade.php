@@ -68,15 +68,7 @@ class extends Component {
             <livewire:insight.stc.summary.d-sums />                       
                 @break
             @case('m-sums')
-                {{-- <livewire:insight.stc.summary.m-sums />                        --}}
-                <div class="w-full py-20">
-                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-hammer relative"><i
-                                class="fa fa-exclamation-triangle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
-                    </div>
-                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Dalam tahap pengembangan') }}
-                    </div>
-                </div>
+                <livewire:insight.stc.summary.m-logs />                       
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">

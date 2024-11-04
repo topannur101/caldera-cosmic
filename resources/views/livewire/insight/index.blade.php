@@ -231,7 +231,7 @@ class extends Component {
                                     <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         {{-- <div class="w-2 h-2 bg-green-500 rounded-full"></div> --}}
-                                        <div class="">{{ __('Dalam tahap pengembangan') }}</div>
+                                        {{-- <div class="">{{ __('Dalam tahap pengembangan') }}</div>
                                     </div>
                                 </div>
                             </div>
