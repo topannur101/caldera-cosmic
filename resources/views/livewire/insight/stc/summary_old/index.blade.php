@@ -146,8 +146,8 @@ class extends Component {
                         </div>
                     </div>
                     <div class="mt-5">
-                        <x-text-input wire:model.live="start_at" id="inv-date-start" type="date"></x-text-input>
-                        <x-text-input wire:model.live="end_at" id="inv-date-end" type="date"
+                        <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
+                        <x-text-input wire:model.live="end_at" id="cal-date-end" type="date"
                             class="mt-3 mb-1 {{ $is_range ? '' : 'hidden' }}"></x-text-input>
                     </div>
                 </div>

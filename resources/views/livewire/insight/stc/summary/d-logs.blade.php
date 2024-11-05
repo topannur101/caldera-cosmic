@@ -161,8 +161,8 @@ class extends Component {
                     </div>
                 </div>
                 <div class="flex gap-3">
-                    <x-text-input wire:model.live="start_at" id="inv-date-start" type="date"></x-text-input>
-                    <x-text-input wire:model.live="end_at"  id="inv-date-end" type="date"></x-text-input>
+                    <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
+                    <x-text-input wire:model.live="end_at"  id="cal-date-end" type="date"></x-text-input>
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
