@@ -118,11 +118,43 @@ class extends Component {
         $hides = $query->paginate($this->perPage);
         $sum_area_vn = $query->sum('area_vn');
         $sum_area_ab = $query->sum('area_ab');
+        $sum_area_qt = $query->sum('area_qt');
+
+        $query_g0 = $this->getHidesQuery();
+        $query_g1 = $this->getHidesQuery();
+        $query_g2 = $this->getHidesQuery();
+        $query_g3 = $this->getHidesQuery();
+        $query_g4 = $this->getHidesQuery();
+        $query_g5 = $this->getHidesQuery();
+
+        $count_g0 = $query_g0->whereNull('grade')->count();
+        $count_g1 = $query_g1->where('grade', 1)->count();
+        $count_g2 = $query_g2->where('grade', 2)->count();
+        $count_g3 = $query_g3->where('grade', 3)->count();
+        $count_g4 = $query_g4->where('grade', 4)->count();
+        $count_g5 = $query_g5->where('grade', 5)->count();
+
+        $diff_area = 0;
+        $defect_area = 0;
+
+        if ($sum_area_vn > 0) {
+            $diff_area = number_format((($sum_area_vn - $sum_area_ab) / $sum_area_vn) * 100, 1);
+            $defect_area = number_format((($sum_area_vn - $sum_area_qt) / $sum_area_vn) * 100, 1);
+        }
 
         return [
             'hides' => $hides,
-            'sum_area_vn' => $sum_area_vn,
-            'sum_area_ab' => $sum_area_ab
+            'sum_area_vn'   => $sum_area_vn,
+            'sum_area_ab'   => $sum_area_ab,
+            'sum_area_qt'   => $sum_area_qt,
+            'diff_area'     => $diff_area,
+            'defect_area'   => $defect_area,
+            'count_g0'      => $count_g0,
+            'count_g1'      => $count_g1,
+            'count_g2'      => $count_g2,
+            'count_g3'      => $count_g3,
+            'count_g4'      => $count_g4,
+            'count_g5'      => $count_g5
         ];
     }
 
@@ -133,7 +165,60 @@ class extends Component {
 
     public function download()
     {
+        $filename = 'ldc_hides_export_' . now()->format('Y-m-d_His') . '.csv';
 
+        $headers = [
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$filename",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $columns = [
+            __('Diperbarui'), 
+            __('Kode'),
+            __('VN'),
+            __('AB'),
+            __('QT'),
+            __('G'),
+            __('S'),
+            __('WO'),
+            __('Style'),
+            __('Line'),
+            __('Material'),
+            __('NIK'),
+            __('Nama'),
+        ];
+
+        $callback = function () use ($columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            $this->getHidesQuery()->chunk(1000, function ($hides) use ($file) {
+                foreach ($hides as $hide) {
+                    fputcsv($file, [
+                        $hide->hide_updated_at,
+                        $hide->code,
+                        $hide->area_vn,
+                        $hide->area_ab,
+                        $hide->area_qt,
+                        $hide->grade ?? '',
+                        $hide->shift,
+                        $hide->group_workdate,
+                        $hide->group_style,
+                        $hide->group_line,
+                        $hide->group_material ?? '',
+                        $hide->user_emp_id,
+                        $hide->user_name,
+                    ]);
+                }
+            });
+
+            fclose($file);
+        };
+
+        return new StreamedResponse($callback, 200, $headers);
     }
 };
 
@@ -172,29 +257,34 @@ class extends Component {
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
+
                     </div>
                 </div>
-                <div class="flex gap-3">
+                <div class="grid gap-3">
                     <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
                     <x-text-input wire:model.live="end_at"  id="cal-date-end" type="date"></x-text-input>
+                    <div class="px-3">
+                        <x-checkbox id="hides_is_workdate" wire:model.live="is_workdate"
+                            value="is_workdate"><span class="uppercase text-xs">{{ __('Workdate') }}</span></x-checkbox>
+                    </div>
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="flex gap-3">
+            <div class="grid grid-cols-2 gap-3">
                 <div class="w-full lg:w-32">
                     <label for="hides-code"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
                     <x-text-input id="hides-code" wire:model.live="code" type="text" />
                 </div>
                 <div class="w-full lg:w-32">
-                    <label for="hides-style"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Style') }}</label>
-                    <x-text-input id="hides-style" wire:model.live="style" type="text" />
-                </div>
-                <div class="w-full lg:w-32">
                     <label for="hides-line"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
                     <x-text-input id="hides-line" wire:model.live="line" type="text" />
+                </div>
+                <div class="w-full lg:w-32">
+                    <label for="hides-style"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Style') }}</label>
+                    <x-text-input id="hides-style" wire:model.live="style" type="text" />
                 </div>
                 <div class="w-full lg:w-32">
                     <label for="hides-material"
@@ -203,18 +293,85 @@ class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="flex justify-between gap-x-2 items-center">
+                <div class="flex gap-3 text-sm">
+                    <div class="flex flex-col justify-around">
+                        <table>
+                            <tr>
+                                <td class="text-neutral-500">{{ 'VN:' . ' ' }}</td>
+                                <td>{{ $sum_area_vn }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500">{{ 'AB:' . ' ' }}</td>
+                                <td>{{ $sum_area_ab }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500">{{ 'QT:' . ' ' }}</td>
+                                <td>{{ $sum_area_qt }}</td>
+                            </tr>
+                        </table>
+                        <table>
+                            <tr>
+                                <td class="text-neutral-500">{{ 'Selisih:' . ' ' }}</td>
+                                <td>{{ $diff_area . '%' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500">{{ 'Defect:' . ' ' }}</td>
+                                <td>{{ $defect_area . '%' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <table>
+                            <tr>
+                                <td class="text-neutral-500">{{ __('Tanpa grade') . ': ' }}</td>
+                                <td>{{ $count_g0 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500">{{ __('Grade'). ' 1' . ': ' }}</td>
+                                <td>{{ $count_g1 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500">{{ __('Grade'). ' 2' . ': ' }}</td>
+                                <td>{{ $count_g2 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500">{{ __('Grade'). ' 3' . ': ' }}</td>
+                                <td>{{ $count_g3 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500">{{ __('Grade'). ' 4' . ': ' }}</td>
+                                <td>{{ $count_g4 }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500">{{ __('Grade'). ' 5' . ': ' }}</td>
+                                <td>{{ $count_g5 }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grow flex justify-between gap-x-2 items-center">
-                <div>
-                    <div class="px-3">
-                        <div wire:loading.class="hidden">{{ $hides->total() . ' ' . __('ditemukan') }}</div>
-                        <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-                            <div class="relative w-3">
-                                <x-spinner class="sm white"></x-spinner>
-                            </div>
-                            <div>
-                                {{ __('Memuat...') }}
-                            </div>
+                <div class="flex flex-col h-full">
+                    <div wire:loading.class="hidden">{{ $hides->total() . ' ' . __('ditemukan') }}</div>
+                    <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
+                        <div class="relative w-3">
+                            <x-spinner class="sm white"></x-spinner>
                         </div>
+                        <div>
+                            {{ __('Memuat...') }}
+                        </div>
+                    </div>
+                    <div class="grow"></div>
+                    <div class="mb-1">
+                        <label for="hides-sort"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Urut') }}</label>
+                        <x-select id="hides-sort" wire:model.live="sort">
+                            <option value="updated">{{ __('Diperbarui') }}</option>
+                            <option value="sf_low">{{ __('SF Terkecil') }}</option>
+                            <option value="sf_high">{{ __('SF Terbesar') }}</option>
+                        </x-select>
                     </div>
                 </div>
                 <x-dropdown align="right" width="48">

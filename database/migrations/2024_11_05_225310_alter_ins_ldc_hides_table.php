@@ -23,6 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::table('ins_ldc_hides', function (Blueprint $table) {
+            $table->dropColumn('ins_ldc_quota_id'); 
+        });
     }
 };
