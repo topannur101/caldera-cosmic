@@ -270,32 +270,45 @@ class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="w-full lg:w-32">
-                    <label for="hides-code"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
-                    <x-text-input id="hides-code" wire:model.live="code" type="text" />
+            <div class="grid gap-3">
+                <div class="flex gap-3">
+                    <div class="w-full lg:w-32">
+                        <label for="hides-machine"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin') }}</label>
+                        <x-text-input id="hides-machine" wire:model.live="style" type="number" />
+                    </div>
+                    <div class="w-full lg:w-32">
+                        <label for="hides-line"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                        <x-text-input id="hides-line" wire:model.live="line" type="text" />
+                    </div>
+                    <div class="w-full lg:w-32">
+                        <label for="hides-style"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Style') }}</label>
+                        <x-text-input id="hides-style" wire:model.live="style" type="text" />
+                    </div>
                 </div>
-                <div class="w-full lg:w-32">
-                    <label for="hides-line"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                    <x-text-input id="hides-line" wire:model.live="line" type="text" />
+                <div>
+                    <table class="text-sm">
+                        <tr>
+                            <td class="text-neutral-500">{{ __('Jatah') . ': ' }}</td>
+                            <td class="px-2">{{ 0 }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-neutral-500">{{ __('Terpenuhi') . ': ' }}</td>
+                            <td class="px-2">{{ 0 }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-neutral-500">{{ __('Tersisa') . ': ' }}</td>
+                            <td class="px-2">{{ 0 }}</td>
+                        </tr>
+                    </table>
                 </div>
-                <div class="w-full lg:w-32">
-                    <label for="hides-style"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Style') }}</label>
-                    <x-text-input id="hides-style" wire:model.live="style" type="text" />
-                </div>
-                <div class="w-full lg:w-32">
-                    <label for="hides-material"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Material') }}</label>
-                    <x-text-input id="hides-material" wire:model.live="material" type="text" />
-                </div>
-            </div>
-            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="flex justify-between gap-x-2 items-center">
+            </div>            
+            {{-- <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+             <div class="flex justify-between gap-x-2 items-center">
                 <div class="flex gap-3 text-sm">
-                    <div class="flex flex-col justify-around">
+                    {{-- <div class="flex flex-col justify-around">
                         <table>
                             <tr>
                                 <td class="text-neutral-500">{{ 'VN:' . ' ' }}</td>
@@ -322,57 +335,35 @@ class extends Component {
                         </table>
                     </div>
                     <div>
-                        <table>
-                            <tr>
-                                <td class="text-neutral-500">{{ __('Tanpa grade') . ': ' }}</td>
-                                <td>{{ $count_g0 }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500">{{ __('Grade'). ' 1' . ': ' }}</td>
-                                <td>{{ $count_g1 }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500">{{ __('Grade'). ' 2' . ': ' }}</td>
-                                <td>{{ $count_g2 }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500">{{ __('Grade'). ' 3' . ': ' }}</td>
-                                <td>{{ $count_g3 }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500">{{ __('Grade'). ' 4' . ': ' }}</td>
-                                <td>{{ $count_g4 }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500">{{ __('Grade'). ' 5' . ': ' }}</td>
-                                <td>{{ $count_g5 }}</td>
-                            </tr>
-                        </table>
+
+                    </div>
+                </div>
+            </div> --}}
+            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="flex flex-col">                <div class="mb-1">
+                <label for="hides-sort"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Urut') }}</label>
+                    <x-select id="hides-sort" wire:model.live="sort">
+                        <option value="updated">{{ __('Diperbarui') }}</option>
+                        <option value="sf_low">{{ __('SF Terkecil') }}</option>
+                        <option value="sf_high">{{ __('SF Terbesar') }}</option>
+                    </x-select>
+                </div>
+                <div class="grow"></div>
+                <div class="text-center" wire:loading.class="hidden">{{ $hides->total() . ' ' . __('ditemukan') }}</div>
+                <div wire:loading.class.remove="hidden" class="flex text-center gap-3 hidden">
+                    <div class="relative w-3">
+                        <x-spinner class="sm white"></x-spinner>
+                    </div>
+                    <div>
+                        {{ __('Memuat...') }}
                     </div>
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grow flex justify-between gap-x-2 items-center">
-                <div class="flex flex-col h-full">
-                    <div>
-                        <label for="hides-sort"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Urut') }}</label>
-                        <x-select id="hides-sort" wire:model.live="sort">
-                            <option value="updated">{{ __('Diperbarui') }}</option>
-                            <option value="sf_low">{{ __('SF Terkecil') }}</option>
-                            <option value="sf_high">{{ __('SF Terbesar') }}</option>
-                        </x-select>
-                    </div>
-                    <div class="grow"></div>
-                    <div wire:loading.class="hidden">{{ $hides->total() . ' ' . __('ditemukan') }}</div>
-                    <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-                        <div class="relative w-3">
-                            <x-spinner class="sm white"></x-spinner>
-                        </div>
-                        <div>
-                            {{ __('Memuat...') }}
-                        </div>
-                    </div>
+                <div class="flex w-full justify-center">
+                    <x-primary-button type="button">{{ __('Buat jatah') }}</x-primary-button>
                 </div>
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -437,17 +428,14 @@ class extends Component {
                 <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
                         <th>{{ __('Diperbarui') }}</th>
-                        <th>{{ __('Kode')}}</th>
-                        <th>{{ __('VN') }}</th>
-                        <th>{{ __('AB') }}</th>
-                        <th>{{ __('QT') }}</th>
-                        <th>{{ __('G') }}</th>
-                        <th>{{ __('J') }}</th>
-                        <th>{{ __('S') }}</th>
+                        <th>M</th>
                         <th>{{ __('WO') }}</th>
                         <th>{{ __('Style') }}</th>
                         <th>{{ __('Line') }}</th>
-                        <th>{{ __('Material') }}</th>
+                        <th>{{ __('Jatah') }}</th>
+                        <th>{{ __('Terpenuhi')}}</th>
+                        <th>{{ __('Tersisa') }}</th>
+                        <th>{{ __('Persentase') }}</th>
                         <th>{{ __('NIK') }}</th>
                         <th>{{ __('Nama') }}</th>
                     </tr>
@@ -455,17 +443,22 @@ class extends Component {
                         <tr wire:key="hide-tr-{{ $hide->id . $loop->index }}" tabindex="0"
                             x-on:click="$dispatch('open-modal', 'hide-edit'); $dispatch('hide-edit', { id: '{{ $hide->id }}'})">
                             <td>{{ $hide->hide_updated_at }}</td>
-                            <td>{{ $hide->code }}</td>
-                            <td>{{ $hide->area_vn }}</td>
-                            <td>{{ $hide->area_ab }}</td>
-                            <td>{{ $hide->area_qt }}</td>
-                            <td>{{ $hide->grade }}</td>
-                            <td></td>
-                            <td>{{ $hide->shift }}</td>
+                            <td>20</td>
                             <td>{{ $hide->group_workdate }}</td>
                             <td>{{ $hide->group_style }}</td>
                             <td>{{ $hide->group_line }}</td>
-                            <td>{{ $hide->group_material }}</td>
+                            <td>1200</td>
+                            <td>600</td>
+                            <td>600</td>
+                            <td>
+                                <div class="flex items-center">
+                                    <div class="relative bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700 w-16">
+                                        <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
+                                        style="width: 50%"></div>
+                                    </div>
+                                    <div class="ml-2">50%</div>
+                                </div>
+                            </td>
                             <td>{{ $hide->user_emp_id }}</td>
                             <td>{{ $hide->user_name }}</td>
                         </tr>

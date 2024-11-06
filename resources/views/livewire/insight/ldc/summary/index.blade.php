@@ -11,14 +11,14 @@ new #[Layout('layouts.app')]
 class extends Component {
     
     #[Url]
-    public $view = 'hides';
+    public $view = 'quotas';
     public array $view_titles = [];
 
     public function mount()
     {
         $this->view_titles = [       
             'quotas'    => __('Jatah'), 
-            'hides'     => __('Data mentah'),
+            'hides'     => __('Kulit'),
         ];
     }
 
