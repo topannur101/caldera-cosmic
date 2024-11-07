@@ -9,6 +9,8 @@ use App\Caldera;
 use Illuminate\Support\Facades\Cache;
 
 new class extends Component {
+    public $has_material;
+
     public $line;
     public $workdate;
     public $style;

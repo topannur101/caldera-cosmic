@@ -269,7 +269,7 @@ class extends Component {
                     </div>
                 </div>
             </div>
-            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
             <div class="grid grid-cols-2 gap-3">
                 <div class="w-full lg:w-32">
                     <label for="hides-code"
@@ -292,7 +292,7 @@ class extends Component {
                     <x-text-input id="hides-material" wire:model.live="material" type="text" />
                 </div>
             </div>
-            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
             <div class="flex justify-between gap-x-2 items-center">
                 <div class="flex gap-3 text-sm">
                     <div class="flex flex-col justify-around">
@@ -351,9 +351,9 @@ class extends Component {
                     </div>
                 </div>
             </div>
-            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
             <div class="grow flex justify-between gap-x-2 items-center">
-                <div class="flex flex-col h-full">
+                <div class="flex flex-row lg:flex-col items-center lg:items-start w-full h-full">
                     <div>
                         <label for="hides-sort"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Urut') }}</label>
@@ -364,7 +364,7 @@ class extends Component {
                         </x-select>
                     </div>
                     <div class="grow"></div>
-                    <div wire:loading.class="hidden">{{ $hides->total() . ' ' . __('ditemukan') }}</div>
+                    <div class="px-3" wire:loading.class="hidden">{{ $hides->total() . ' ' . __('ditemukan') }}</div>
                     <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
                         <div class="relative w-3">
                             <x-spinner class="sm white"></x-spinner>

@@ -39,6 +39,8 @@ class extends Component {
     #[Url]
     public $material;
 
+    public $has_material = false;
+
     public $perPage = 20;
 
     public $sort = 'updated';
@@ -225,8 +227,8 @@ class extends Component {
 ?>
 
 <div>
-    <div class="p-0 sm:p-1 mb-6">
-        <div class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+    <div x-data="{ show: false }" class="p-0 sm:p-1 mb-6">
+        <div x-show="!show" class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <div>
                 <div class="flex mb-2 text-xs text-neutral-500">
                     <div class="flex">
@@ -269,7 +271,7 @@ class extends Component {
                     </div>
                 </div>
             </div>
-            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
             <div class="grid gap-3">
                 <div class="flex gap-3">
                     <div class="w-full lg:w-32">
@@ -305,42 +307,9 @@ class extends Component {
                     </table>
                 </div>
             </div>            
-            {{-- <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-             <div class="flex justify-between gap-x-2 items-center">
-                <div class="flex gap-3 text-sm">
-                    {{-- <div class="flex flex-col justify-around">
-                        <table>
-                            <tr>
-                                <td class="text-neutral-500">{{ 'VN:' . ' ' }}</td>
-                                <td>{{ $sum_area_vn }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500">{{ 'AB:' . ' ' }}</td>
-                                <td>{{ $sum_area_ab }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500">{{ 'QT:' . ' ' }}</td>
-                                <td>{{ $sum_area_qt }}</td>
-                            </tr>
-                        </table>
-                        <table>
-                            <tr>
-                                <td class="text-neutral-500">{{ 'Selisih:' . ' ' }}</td>
-                                <td>{{ $diff_area . '%' }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500">{{ 'Defect:' . ' ' }}</td>
-                                <td>{{ $defect_area . '%' }}</td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div>
-
-                    </div>
-                </div>
-            </div> --}}
-            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="flex flex-col">                <div class="mb-1">
+            <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
+            <div class="flex flex-row lg:flex-col">                
+                <div class="mb-1">
                 <label for="hides-sort"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Urut') }}</label>
                     <x-select id="hides-sort" wire:model.live="sort">
@@ -350,7 +319,7 @@ class extends Component {
                     </x-select>
                 </div>
                 <div class="grow"></div>
-                <div class="text-center" wire:loading.class="hidden">{{ $hides->total() . ' ' . __('ditemukan') }}</div>
+                <div class="px-3" wire:loading.class="hidden">{{ $hides->total() . ' ' . __('ditemukan') }}</div>
                 <div wire:loading.class.remove="hidden" class="flex text-center gap-3 hidden">
                     <div class="relative w-3">
                         <x-spinner class="sm white"></x-spinner>
@@ -360,10 +329,10 @@ class extends Component {
                     </div>
                 </div>
             </div>
-            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
             <div class="grow flex justify-between gap-x-2 items-center">
                 <div class="flex w-full justify-center">
-                    <x-primary-button type="button">{{ __('Buat jatah') }}</x-primary-button>
+                    <x-primary-button type="button" x-on:click="show = !show">{{ __('Buat jatah') }}</x-primary-button>
                 </div>
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -380,6 +349,18 @@ class extends Component {
                         </x-dropdown-link>
                     </x-slot>
                 </x-dropdown>
+            </div>
+        </div>
+        <div x-show="show" x-cloak class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
+            <div class="flex w-full">
+                <livewire:insight.ldc.create.groups :$has_material />
+                <div class="grow">
+
+                </div>
+                <div>
+                    <x-primary-button type="button" x-on:click="show = !show">{{ __('Buat jatah') }}</x-primary-button>
+                    <x-secondary-button type="button" x-on:click="show = !show">{{ __('Selesai') }}</x-secondary-button>
+                </div>
             </div>
         </div>
     </div>
