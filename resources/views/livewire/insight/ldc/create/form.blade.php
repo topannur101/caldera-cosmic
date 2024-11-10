@@ -15,9 +15,7 @@ new class extends Component {
 
     public $is_editing = 0;
 
-    public $line;
-    public $workdate;
-    public $style;
+    public $group_id;
     public $material;
 
     public $area_vn;
@@ -40,15 +38,12 @@ new class extends Component {
     {
         $codes = $this->ins_ldc_machines->pluck('code')->implode(',');
         return [
-            'line'      => ['required', 'string', 'min:2', 'max:3', 'regex:/^[a-zA-Z]+[0-9]+$/'],
-            'workdate'  => ['required', 'date'],
-            'style'     => ['required', 'string', 'min:9', 'max:11'],
-            'material'  => ['nullable', 'string', 'max:140'],
+            'group_id'  => ['required', 'exists:ins_ldc_groups,id'],
             'area_vn'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'area_ab'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'area_qt'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'grade'     => ['nullable', 'integer', 'min:1', 'max:5'],
-            'quota_id'  => ['nullable', 'exists:ins_lds_quotas,id'],
+            'quota_id'  => ['nullable', 'exists:ins_ldc_quotas,id'],
             'code'      => ['required', 'alpha_num', 'min:7', 'max:10', "starts_with:$codes"],
             'shift'     => ['required', 'integer', 'min:1', 'max:3']
         ];
@@ -60,13 +55,11 @@ new class extends Component {
     }
 
     #[On('set-hide')]
-    public function setHide($is_editing, $line, $workdate, $style, $material, $area_vn, $area_ab, $area_qt, $grade, $quota_id, $code)
+    public function setHide($is_editing, $group_id, $material, $area_vn, $area_ab, $area_qt, $grade, $quota_id, $code)
     {
         $this->is_editing = $is_editing;
 
-        $this->line     = $line;
-        $this->workdate = $workdate;
-        $this->style    = $style;
+        $this->group_id = $group_id;
         $this->material = $material;
         $this->area_vn  = $area_vn;
         $this->area_ab  = $area_ab;
@@ -84,49 +77,32 @@ new class extends Component {
             $this->js('notyfError("' . __('Kamu belum masuk') . '")');
         } else {
 
-            $this->line     = $this->clean($this->line);
-            $this->style    = $this->clean($this->style);
-            $this->material = $this->clean($this->material);
             $this->code     = $this->clean($this->code);
-
             $this->code     = preg_replace('/[^a-zA-Z0-9]/', '', $this->code);
-
-            if (!$this->line || !$this->workdate || !$this->style) {
-                $this->js('notyfError("' . __('Info grup tidak sah') . '")');
-            }
 
             $validated = $this->validate();
 
-            $group = InsLdcGroup::firstOrCreate([
-                'line'      => $this->line,
-                'workdate'  => $this->workdate,
-                'style'     => $this->style,
-                'material'  => $this->material,
-            ]);
-            $group->updated_at = now();
-            $group->save();
+            $group = InsLdcGroup::find($this->group_id);
 
             $styles = Cache::get('styles', collect([
-                        ['name' => $this->style, 'updated_at' => now() ]
+                        ['name' => $group->style, 'updated_at' => now() ]
                     ]));
-            $styles = Caldera::manageCollection($styles, $this->style);
+            $styles = Caldera::manageCollection($styles, $group->style);
             Cache::put('styles', $styles);
 
             $lines = Cache::get('lines', collect([
-                        ['name' => $this->line, 'updated_at' => now() ]
+                        ['name' => $group->line, 'updated_at' => now() ]
                     ]));
-            $lines = Caldera::manageCollection($lines, $this->line);
+            $lines = Caldera::manageCollection($lines, $group->line);
             Cache::put('lines', $lines);
 
-            if($this->material) {
-                $materials = Cache::get('materials', collect([
-                        ['name' => $this->material, 'updated_at' => now() ]
-                        ]));
-                $materials = Caldera::manageCollection($materials, $this->material, 50);
-                Cache::put('materials', $materials);
-            }        
+            $materials = Cache::get('materials', collect([
+                    ['name' => $group->material, 'updated_at' => now() ]
+                    ]));
+            $materials = Caldera::manageCollection($materials, $group->material, 50);
+            Cache::put('materials', $materials);     
 
-            $this->js('document.getElementById("ldc-index-groups").scrollLeft = 0;');
+            // $this->js('document.getElementById("ldc-index-groups").scrollLeft = 0;');
 
             $hide = InsLdcHide::updateOrCreate(
                 [ 
@@ -152,7 +128,7 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['is_editing', 'line', 'workdate', 'style', 'material', 'area_vn', 'area_ab', 'area_qt', 'grade', 'quota_id', 'code']);
+        $this->reset(['is_editing', 'group_id', 'area_vn', 'area_ab', 'area_qt', 'grade', 'quota_id', 'code']);
     }
 
     public function delete()
@@ -178,10 +154,8 @@ new class extends Component {
 ?>
 
 <div x-data="{ 
-    line: $wire.entangle('line'), 
-    workdate: $wire.entangle('workdate'), 
-    style: $wire.entangle('style'), 
-    material: $wire.entangle('material'), 
+    group_id: $wire.entangle('group_id'),
+    material: $wire.entangle('material'),
     area_vn: $wire.entangle('area_vn'), 
     area_ab: $wire.entangle('area_ab'),
     area_qt: $wire.entangle('area_qt'),
@@ -210,7 +184,7 @@ new class extends Component {
         this.$refs.hidecode.focus(); 
         this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); 
     }
-}" x-on:set-form-group.window="line = $event.detail.line; workdate = $event.detail.workdate; style = $event.detail.style; material = $event.detail.material" class="px-6 py-8 flex gap-x-6">
+}" x-on:set-form-group.window="group_id = $event.detail.group_id; material = $event.detail.material" class="px-6 py-8 flex gap-x-6">
     <form id="ldc-index-form-element" wire:submit="save">
         <div class="grid grid-cols-1 gap-6">
             <div class="grid grid-cols-3 gap-3">
@@ -276,29 +250,9 @@ new class extends Component {
                 </div>
             </div>
         </div>
-        @if ($errors->has('area_vn') || $errors->has('area_ab') || $errors->has('area_qt') || $errors->has('grade') || $errors->has('machine') || $errors->has('code') || $errors->has('shift'))
+        @if ($errors->any())
             <div class="mb-3">
-                @error('area_vn')
-                <x-input-error messages="{{ $message }}" />
-                @enderror
-                @error('area_ab')
-                    <x-input-error messages="{{ $message }}" />
-                @enderror
-                @error('area_qt')
-                    <x-input-error messages="{{ $message }}" />
-                @enderror
-                @error('grade')
-                    <x-input-error messages="{{ $message }}" />
-                @enderror
-                @error('machine')
-                    <x-input-error messages="{{ $message }}" />
-                @enderror
-                @error('code')
-                    <x-input-error messages="{{ $message }}" />
-                @enderror
-                @error('shift')
-                    <x-input-error messages="{{ $message }}" />
-                @enderror
+                <x-input-error :messages="$errors->first()" />
             </div>
         @endif
         <div class="flex justify-between items-end">
@@ -316,7 +270,7 @@ new class extends Component {
                 <div>
                     <label for="hide-material"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Material') }}</label>
-                    <div x-text="material ? material : '{{ __('Tak ada nama material') }}'" class="px-3 py-2"></div>
+                    <div x-text="material ? material : '{{ __('Belum ada grup yang dipilih') }}'" class="px-3 py-2 text-sm uppercase"></div>
                 </div>
             </div>
             <div class="flex gap-x-6">

@@ -39,8 +39,6 @@ class extends Component {
     #[Url]
     public $material;
 
-    public $has_material = false;
-
     public $perPage = 20;
 
     public $sort = 'updated';
@@ -351,17 +349,31 @@ class extends Component {
                 </x-dropdown>
             </div>
         </div>
-        <div x-show="show" x-cloak class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
-            <div class="flex w-full">
-                <livewire:insight.ldc.create.groups :$has_material />
-                <div class="grow">
-
+        <div x-show="show" x-cloak class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
+            <div id="ldc-create-groups" class="border-b border-neutral-100 dark:border-neutral-700 overflow-x-auto">
+                <livewire:insight.ldc.create.groups />
+            </div>
+            <div class="px-6 py-8 flex gap-6">
+                <div class="flex gap-6 items-end">
+                    <div class="w-full lg:w-32">
+                        <label for="quota-machine"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin') }}</label>
+                        <x-text-input id="quota-machine" wire:model.live="style" type="number" />
+                    </div>
+                    <div class="w-full lg:w-48">
+                        <label for="quota-value"
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Jatah') }}</label>
+                        <x-text-input-suffix suffix="SF" id="quota-value" type="number" step=".01" autocomplete="off" />
+                    </div>
+                    <div class="pb-1">
+                        <x-primary-button type="button" x-on:click="show = !show">{{ __('Buat') }}</x-primary-button>
+                    </div>
                 </div>
+                <div class="grow"></div>
                 <div>
-                    <x-primary-button type="button" x-on:click="show = !show">{{ __('Buat jatah') }}</x-primary-button>
                     <x-secondary-button type="button" x-on:click="show = !show">{{ __('Selesai') }}</x-secondary-button>
                 </div>
-            </div>
+            </div>            
         </div>
     </div>
     <div wire:key="modals"> 

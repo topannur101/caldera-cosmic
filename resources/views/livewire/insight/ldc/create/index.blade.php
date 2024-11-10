@@ -6,8 +6,6 @@ use Livewire\Attributes\Layout;
 new #[Layout('layouts.app')] 
 class extends Component {
 
-    public bool $has_material = false;
-
 };
 
 
@@ -49,8 +47,8 @@ class extends Component {
             </div>
             <div class="w-full overflow-hidden p-1">
                 <div class="relative bg-white dark:bg-neutral-800 shadow rounded-lg overflow-hidden">
-                    <div id="ldc-create.groups" class="border-b border-neutral-100 dark:border-neutral-700 overflow-x-auto">
-                        <livewire:insight.ldc.create.groups :$has_material />
+                    <div id="ldc-create-groups" class="border-b border-neutral-100 dark:border-neutral-700 overflow-x-auto">
+                        <livewire:insight.ldc.create.groups />
                     </div>
                     <div class="flex w-full">
                         <livewire:insight.ldc.create.form />

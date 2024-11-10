@@ -9,66 +9,51 @@ use App\Caldera;
 use Illuminate\Support\Facades\Cache;
 
 new class extends Component {
-    public $has_material;
 
-    public $line;
-    public $workdate;
-    public $style;
-    public $material;
+    public array $groups = [];
 
-    public $sgid;
+    public int $sgid        = 0;
+    public string $line     = '';
+    public string $workdate = '';
+    public string $style    = '';
+    public string $material = '';
 
     public function rules()
     {
         return [
-            'line' => ['required', 'string', 'min:2', 'max:3', 'regex:/^[a-zA-Z]+[0-9]+$/'],
-            'workdate' => ['required', 'date'],
-            'style' => ['required', 'string', 'min:9', 'max:11', 'regex:/^[a-zA-Z0-9]+-[a-zA-Z0-9]+$/'],
-            'material' => ['nullable', 'string', 'max:140'],
+            'line'      => ['required', 'string', 'min:2', 'max:3', 'regex:/^[a-zA-Z]+[0-9]+$/'],
+            'workdate'  => ['required', 'date'],
+            'style'     => ['required', 'string', 'min:9', 'max:11', 'regex:/^[a-zA-Z0-9]+-[a-zA-Z0-9]+$/'],
+            'material'  => ['required', 'string', 'max:140'],
         ];
     }
 
     public function with(): array
     {
-        $groups = InsLdcGroup::where('updated_at', '>=', Carbon::now()->subDay())->orderBy('updated_at', 'desc')->get();
+        $this->groups = InsLdcGroup::where('updated_at', '>=', Carbon::now()->subDay())
+        ->orderBy('updated_at', 'desc')
+        ->get()->toArray();
 
-        $cached_styles = Cache::get('styles', collect([]));
-        $cached_lines = Cache::get('lines', collect([]));
-        $cached_materials = Cache::get('materials', collect([]));
-
-        // Filter the records to find a specific group and get the IDs
-        $sgid = $groups
-            ->filter(function ($group) {
-                return $group->line == $this->line && $group->workdate == $this->workdate && $group->style == $this->style && $group->material == $this->material;
-            })
-            ->first();
-
-        $countError = count($this->getErrorBag()->messages());
-
-        if ($sgid) {
-            $this->sgid = $sgid->id;
-        } elseif ($this->line && $this->workdate && $this->style && $countError == 0) {
-            $this->sgid = 0;
-        } else {
-            $this->reset(['sgid']);
-        }
+        $cached_styles      = Cache::get('styles', collect([]));
+        $cached_lines       = Cache::get('lines', collect([]));
+        $cached_materials   = Cache::get('materials', collect([]));
 
         return [
-            'groups' => $groups,
-            'cached_styles' => $cached_styles->sortBy('name')->values(),
-            'cached_lines' => $cached_lines->sortBy('name')->values(),
-            'cached_materials' => $cached_materials->sortBy('name')->values(),
+            'cached_styles'     => $cached_styles->sortBy('name')->values(),
+            'cached_lines'      => $cached_lines->sortBy('name')->values(),
+            'cached_materials'  => $cached_materials->sortBy('name')->values(),
         ];
     }
 
-    #[On('set-hide')]
-    public function setGroup($line, $workdate, $style, $material)
+
+    public function setGroup($group_id)
     {
-        $this->customReset();
-        $this->line = $line;
+
+        $this->line     = $line;
         $this->workdate = $workdate;
-        $this->style = $style;
+        $this->style    = $style;
         $this->material = $material;
+        $this->applyGroup();
     }
 
     public function clean($string): string
@@ -76,14 +61,38 @@ new class extends Component {
         return trim(strtoupper($string));
     }
 
-    public function applyGroup()
+    #[On('set-hide')]
+    public function applyGroup(int $group_id = null)
     {
-        $this->line = $this->clean($this->line);
-        $this->style = $this->clean($this->style);
-        $this->material = $this->clean($this->material);
-        $this->validate();
-        $this->js('window.dispatchEvent(escKey)');
-        $this->dispatch('set-form-group', line: $this->line, workdate: $this->workdate, style: $this->style, material: $this->material);        
+        $group;
+        $this->reset(['sgid']);
+        $this->dispatch('set-form-group', group_id: '', material: '');  
+
+        if ($group_id === null) {
+            $this->line     = $this->clean($this->line);
+            $this->style    = $this->clean($this->style);
+            $this->material = $this->clean($this->material);
+            $this->validate();
+
+            $group = InsLdcGroup::firstOrCreate([
+                'line'      => $this->line,
+                'workdate'  => $this->workdate,
+                'style'     => $this->style,
+                'material'  => $this->material,
+            ]); 
+        } else {
+            $group = InsLdcGroup::find($group_id);
+        }
+
+        if ($group) {
+            $group->updated_at = now();
+            $group->save();
+            $this->sgid = $group->id;
+            
+            $this->dispatch('set-form-group', group_id: $group->id, material: $group->material);        
+            $this->js('window.dispatchEvent(escKey)');
+            $this->reset(['line', 'workdate', 'style', 'material']);
+        }
     }
 
     #[On('hide-saved')]
@@ -171,27 +180,7 @@ new class extends Component {
         <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
         <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
     </x-modal>
-    <div id="ldc-create-groups" class="{{ $sgid === 0 ? '' : 'hidden' }}">
-        <input type="radio" name="sgid" id="sgid-0" value="0" wire:model="sgid"
-            @click="$dispatch('set-form-group', { line: '{{ $line }}', workdate: '{{ $workdate }}', style: '{{ $style }}', material: '{{ $material }}' })"
-            :checked="{{ $sgid == 0 ? 'true' : 'false' }}" class="peer hidden" />
-        <label for="sgid-0"
-            class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-20 dark:hover:bg-opacity-20">
-            <div class="flex items-center justify-between text-lg">
-                <div>{{ $line }} <span
-                        class="text-xs uppercase ml-1 mr-2">{{ Carbon::parse($workdate)->format('d M') }}</span></div>
-                <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                    fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd" />
-                </svg>
-            </div>
-            <div class="mt-1">{{ $style }}</div>
-            <div class="mt-1 max-w-32 truncate text-xs">{{ $material }}</div>
-        </label>
-    </div>
-    @if($groups->isEmpty() && $sgid === null)
+    @if(!count($groups) && !$sgid)
         <div>
             <div class="h-full flex items-center">
                 <div>{{ __('Tak ada riwayat grup ditemukan') }}</div>
@@ -199,20 +188,20 @@ new class extends Component {
         </div>
     @else
         @foreach ($groups as $group)
-            <div>
-                <input type="radio" name="sgid" id="sgid-{{ $loop->iteration }}" value="{{ $group->id }}"
+            <div wire:key="{{ $loop->iteration . $group['id'] }}">
+                <input type="radio" name="sgid" id="sgid-{{ $loop->iteration }}" value="{{ $group['id'] }}"
                     wire:model="sgid"
-                    @click="$dispatch('set-form-group', { line: '{{ $group->line }}', workdate: '{{ $group->workdate }}', style: '{{ $group->style }}', material: '{{ $group->material }}' })"
-                    :checked="{{ $group->id == $sgid ? 'true' : 'false' }}" class="peer hidden" />
+                    @click="$dispatch('set-form-group', { group_id: '{{ $group['id'] }}', material: '{{ $group['material'] }}' })"
+                    :checked="{{ $group['id'] == $sgid ? 'true' : 'false' }}" class="peer hidden" />
                 <label for="sgid-{{ $loop->iteration }}"
                     class="block h-full cursor-pointer px-6 py-3 bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 peer-checked:bg-opacity-100 dark:peer-checked:bg-opacity-100 peer-checked:text-white hover:bg-opacity-10 dark:hover:bg-opacity-10">
                     <div class="flex items-center justify-between text-lg">
-                        <div>{{ $group->line }} <span
-                                class="text-xs uppercase ml-1 mr-2">{{ Carbon::parse($group->workdate)->format('d M') }}</span>
+                        <div>{{ $group['line'] }} <span
+                                class="text-xs uppercase ml-1 mr-2">{{ Carbon::parse($group['workdate'])->format('d M') }}</span>
                         </div>
                     </div>
-                    <div class="mt-1">{{ $group->style }}</div>
-                    <div class="my-1 max-w-32 truncate text-xs">{{ $group->material }}</div>
+                    <div class="mt-1">{{ $group['style'] }}</div>
+                    <div class="my-1 max-w-32 truncate text-xs">{{ $group['material'] }}</div>
                 </label>
             </div>
         @endforeach

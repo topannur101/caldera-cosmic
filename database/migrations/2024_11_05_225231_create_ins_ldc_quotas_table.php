@@ -16,14 +16,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->decimal('value', 8, 2);
-
-            $table->date('workdate');
-            $table->string('style');
-            $table->string('line');
-
-            $table->index('workdate');
-            $table->index('style');
-            $table->index('line');
+            $table->foreignId('ins_ldc_group_id');
         });
     }
 
