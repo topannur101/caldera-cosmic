@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->decimal('value', 8, 2);
             $table->foreignId('ins_ldc_group_id');
+            $table->integer('machine');
+            $table->decimal('value', 8, 2);
         });
     }
 
