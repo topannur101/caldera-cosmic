@@ -21,6 +21,7 @@ class InsStcMLog extends Model
         'pv_6',
         'pv_7',
         'pv_8',
+        
         'sv_1',
         'sv_2',
         'sv_3',
