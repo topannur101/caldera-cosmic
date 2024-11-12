@@ -716,7 +716,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 console.log('Polling B initial:', data);
                                 this.batchAmps = [{
                                     taken_at: 0,
-                                    value: data.raw
+                                    value: data.raw || 0
                                 }];
                             })
                             .catch(error => {
@@ -804,6 +804,7 @@ new #[Layout('layouts.app')] class extends Component {
                         // Prepare and send the JSON data
                         const jsonData = {
                             server_url: '{{ route('home') }}',
+                            server_ip: '{{ parse_url(url('/'), PHP_URL_HOST) }}',
                             recipe_id: this.recipe.id.toString(),
                             code: this.batchCode,
                             line: this.batchLine,
