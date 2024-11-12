@@ -37,7 +37,11 @@ console_handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(levelname)s - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
-logger.info("OMV Worker is starting...")
+print()
+print("Aplikasi omv-worker v.1.1")
+print("-------------------------")
+print()
+logger.info("Mejalankan aplikasi...")
 
 # Set up config
 config_file_path = 'config.json'
@@ -47,37 +51,37 @@ def load_configuration():
     if os.path.exists(config_file_path):
         # config.json exists, load it
         with open(config_file_path, 'r') as config_file:
-            logger.info(f"Configuration succesfully loaded.")
+            logger.info(f"Konfigurasi berhasil dimuat.")
             return json.load(config_file)
     elif os.path.exists(config_example_path):
         # config.json doesn't exist, but config.json.example does
         try:
             # Copy config.json.example to config.json
             shutil.copy2(config_example_path, config_file_path)
-            logger.warning(f"Configuration is missing, creating a new one from example...")
+            logger.warning(f"Konfigurasi hilang, membuat baru dari config.json.example")
             
             # Load the newly created config.json
             with open(config_file_path, 'r') as config_file:
                 return json.load(config_file)
         except Exception as e:
-            logger.error(f"Configuration from example file can't be created: {str(e)}")
+            logger.error(f"Tidak dapat membuat konfigurasi dari config.json.example: {str(e)}")
             raise
     else:
         # Neither config.json nor config.json.example exists
-        error_message = f"Configuration file {config_file_path} is missing and {config_example_path} is not available."
+        error_message = f"Berkas konfigurasi {config_file_path} hilang dan {config_example_path} tidak tersedia."
         logger.error(error_message)
         raise FileNotFoundError(error_message)
 
 # Load configuration
 try:
-    logger.info("Loading configuration...")
+    logger.info("Memuat konfigurasi...")
     config = load_configuration()
 except Exception as e:
-    logger.error(f"Failed to load configuration: {str(e)}")
+    logger.error(f"Gagal memuat konfigurasi: {str(e)}")
     quit()
 
 # Database setup
-logger.info(f"Setting up database...")
+logger.info(f"Mempersiapkan database...")
 try:
     conn = sqlite3.connect(config['app']['database_file'], check_same_thread=False)
     cursor = conn.cursor()
@@ -89,9 +93,9 @@ try:
                     last_tried_at TIMESTAMP,
                     last_tried_msg TEXT)''')
     conn.commit()
-    logger.info(f"Database succesfully loaded.")
+    logger.info(f"Database berhasil dimuat.")
 except Exception as e:
-    logger.error(f"Failed to load database: {str(e)}")
+    logger.error(f"Gagal memuat database: {str(e)}")
     quit()
 
 # Global variables
@@ -99,32 +103,22 @@ start_time = time.time()
 request_count = 0
 error_count = 0
 
-def is_valid_url(url):
-    try:
-        result = urlparse(url)
-        return all([result.scheme, result.netloc])
-    except ValueError:
-        return False
-
-def validate_server_url(server):
-    return is_valid_url(server)
-
-def update_config(new_server):
-    if config['app']['remote_server_url'] != new_server:
-        config['app']['remote_server_url'] = new_server
+def update_config(new_ip):
+    if config['remote_server']['ip'] != new_ip:
+        config['remote_server']['ip'] = new_ip
         with open(config_file_path, 'w') as config_file:
             json.dump(config, config_file, indent=4)
-        logger.info(f"Updated remote server configuration to: {new_server}")
+        logger.info(f"IP remote server diperbarui ke: {new_ip}")
 
 def get_server_time(url):
     try:
-        logger.info(f"Retrieving server time...")
+        logger.info(f"Mengambil waktu server...")
         response = requests.get(url)
         response.raise_for_status()
         # Parse the ISO 8601 string and ensure it's UTC
         return datetime.fromisoformat(response.json()['formatted']).replace(tzinfo=timezone.utc)
     except requests.RequestException as e:
-        logger.error(f"Server time can't be retrieved as the server isn't responding")
+        logger.error(f"Waktu tidak dapat diambil karena tidak ada respon dari server")
         return None
 
 def set_system_time(server_time):
@@ -135,12 +129,12 @@ def set_system_time(server_time):
                                local_time.weekday(), local_time.day,
                                local_time.hour, local_time.minute,
                                local_time.second, local_time.microsecond // 1000)
-        logger.info(f"System time updated to {local_time}")
+        logger.info(f"Waktu perangkat diperbarui ke {local_time}")
     except Exception as e:
-        logger.error(f"Error setting system time: {e}")
+        logger.error(f"Gagal menyetel waktu perangkat: {e}")
 
 def sync_time():
-    server_url = f"{config['app']['remote_server_url']}/api/time"
+    server_url = f"{config['remote_server']['protocol']}://{config['remote_server']['ip']}/api/time"
     server_time = get_server_time(server_url)
     
     if server_time is None:
@@ -150,14 +144,14 @@ def sync_time():
     local_time = datetime.now(timezone.utc)
     time_difference = abs((server_time - local_time).total_seconds())
     
-    logger.info(f"Server time     : {server_time}")
-    logger.info(f"Local time      : {local_time}")
-    logger.info(f"Time difference : {time_difference} seconds")
+    logger.info(f"Waktu server    : {server_time}")
+    logger.info(f"Waktu perangkat : {local_time}")
+    logger.info(f"Perbedaan       : {time_difference} detik")
     
     if time_difference > 60:  # 1 minute
         set_system_time(server_time)
     else:
-        logger.info("Time difference is within acceptable range. No update needed.")
+        logger.info("Perbedaan waktu dalam batas wajar (di bawah 60 detik). Waktu perangkat tidak diperbarui.")
 
 sync_time()
 
@@ -172,14 +166,11 @@ def get_line():
 @app.route('/send-data', methods=['POST'])
 def send_data():
     data = request.json
-    if 'server_url' not in data:
-        return jsonify({"status": "error", "message": "server_url parameter is missing"}), 400
+    if 'server_ip' not in data:
+        return jsonify({"status": "error", "message": "Parameter server_ip hilang"}), 400
     
-    server_url = data['server_url']
-    if not validate_server_url(server_url):
-        return jsonify({"status": "error", "message": "Invalid server_url parameter value"}), 400
-    
-    update_config(server_url)
+    server_ip = data['server_ip']    
+    update_config(server_ip)
     
     success, server_message = send_to_server(data)
     if success:
@@ -192,16 +183,16 @@ def send_data():
 
 def send_to_server(data):
     try:
-        server_url = f"{config['app']['remote_server_url']}/api/omv-metric"
-        response = requests.post(server_url, json=data, timeout=5)
+        url = f"{config['remote_server']['protocol']}://{config['remote_server']['ip']}/api/omv-metric"
+        response = requests.post(url, json=data, timeout=5)
         server_message = response.text
         if response.status_code != 200:
-            error_message = f"Server returned non-200 status code: {response.status_code}."
+            error_message = f"Remove server memberi kode non-200: {response.status_code}."
             logger.error(error_message)
             return False, error_message
         return True, server_message
     except requests.RequestException as e:
-        error_message = f"Error sending data to server: {str(e)}"
+        error_message = f"Galat saat mengirimkan data ke remote server: {str(e)}"
         logger.error(error_message)
         return False, error_message
 
@@ -214,7 +205,7 @@ def queue_data(data, server_message):
         """, (json.dumps(data), 0, current_time, current_time, server_message))
         conn.commit()
     except sqlite3.Error as e:
-        error_message = f"Error queueing data: {str(e)}"
+        error_message = f"Galat saat mengantrikan data: {str(e)}"
         logger.error(error_message)
 
 def retry_queued_data():
@@ -268,7 +259,7 @@ def read_serial_data():
             time.sleep(0.2)
         return None
     except serial.SerialException as e:
-        error_message = f"Error reading from serial port: {e}"
+        error_message = f"Galat saat membaca port serial: {e}"
         logger.error(error_message)
         error_count += 1
         return None
@@ -286,7 +277,7 @@ def get_data():
         eval_result = raw_data >= config['serial']['threshold']
         return jsonify({"eval": eval_result, "raw": raw_data})
     else:
-        error_message = "Unable to read valid data from Arduino"
+        error_message = "Tak ada data yang sah dari Arduino"
         logger.error(error_message)
         return jsonify({"error": error_message, "eval": False, "raw": None}), 500
 
@@ -311,7 +302,7 @@ def get_photo():
     try:
         cap = cv2.VideoCapture(config['capture']['camera_index'], cv2.CAP_DSHOW)
         if not cap.isOpened():
-            raise IOError("Cannot open webcam")
+            raise IOError("Tak dapat mengakses kamera")
         
         for i in range(config['capture']['frame']):
             ret, frame = cap.read()
@@ -324,7 +315,7 @@ def get_photo():
         image_bytes = io.BytesIO(buffer)
         return send_file(image_bytes, mimetype='image/jpeg')
     except Exception as e:
-        error_message = f"Error capturing photo: {str(e)}"
+        error_message = f"Galat saat mengambil foto: {str(e)}"
         logger.error(error_message)
         return jsonify({"error": error_message}), 500
 
@@ -342,4 +333,4 @@ def debug_info():
 
 if __name__ == '__main__':
     threading.Thread(target=retry_queued_data, daemon=True).start()
-    app.run(host=config['app']['host'], port=config['app']['port'], debug=config['app']['debug'])
+    app.run(host=config['local_server']['host'], port=config['local_server']['port'], debug=False)

@@ -1,17 +1,20 @@
 {
     "app": {
-        "host": "127.0.0.1",
-        "port": 92,
-        "debug": false,
         "database_file": "database.db",
-        "remote_server_url": "http://localhost",
         "line": 99
+    },
+    "local_server": {
+        "host": "127.0.0.1",
+        "port": 92
+    },
+    "remote_server": {
+        "protocol": "http",
+        "ip": "localhost"
     },
     "serial": {
         "port": "COM5",
         "baud_rate": 9600,
         "threshold": 100,
-        "auto_connect": false,
         "interval": 2000
     },
     "capture": {

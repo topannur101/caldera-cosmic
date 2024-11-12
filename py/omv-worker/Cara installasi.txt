@@ -1,0 +1,14 @@
+## Salin aplikasi
+1. Taruh folder omv-worker ini di C:\ sehingga tercipta C:\omv-worker\app.py
+
+## Buat menu di Start Menu
+2. Copy omv-worker.lnk (shortcut) lalu paste ke %ProgramData%\Microsoft\Windows\Start Menu\Programs
+3. Item baru akan muncul di start menu, klik kanan dan pin to Start untuk memudahkan akses.
+
+## Buat task di Task Scheduler
+4. Buka Task Scheduler 
+5. Klik "Import Task..." di panel sebelah kanan
+6. Pilih file omv-worker.xml 
+7. Pilih "Change User or Group..."
+8. Masukkan SYSTEM lalu klik OK dan klik OK lagi untuk menutup semua kotak dialog
+9. Verifikasi task "omv-worker" berjalan dengan semestinya dengan menjalankan task "Run" atau merestart komputer
