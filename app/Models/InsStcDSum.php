@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\InsStc;
+use App\InsStcTempControl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -94,6 +95,60 @@ class InsStcDSum extends Model
     public function ins_stc_device(): BelongsTo
     {
         return $this->belongsTo(InsStcDevice::class);
+    }
+
+    public function logTemps(): array
+    {
+        $dlogs = $this->ins_stc_d_logs->sortBy('taken_at');
+        
+        // Skip preheat (first 5)
+        // Each section has 6 logs, starting from index 5
+        $medians = [];
+        
+        for ($section = 0; $section < 8; $section++) {
+            $startIndex = 5 + ($section * 6);
+            $sectionLogs = $dlogs->slice($startIndex, 6);
+            
+            // If section has no logs, return 0
+            if ($sectionLogs->isEmpty()) {
+                $medians[] = 0;
+                continue;
+            }
+            
+            // Get valid temperatures
+            $temps = $sectionLogs->pluck('temp')
+                ->filter()  // Remove null/empty values
+                ->map(function($temp) {
+                    return floatval($temp);
+                })
+                ->values()  // Re-index array
+                ->all();
+                
+            // Calculate median
+            if (empty($temps)) {
+                $medians[] = 0;
+            } else {
+                sort($temps);
+                $count = count($temps);
+                $middle = floor(($count - 1) / 2);
+                
+                if ($count % 2) {
+                    // Odd number of temperatures
+                    $medians[] = number_format($temps[$middle], 0);
+                } else {
+                    // Even number of temperatures
+                    $medians[] = number_format((($temps[$middle] + $temps[$middle + 1]) / 2), 0);
+                }
+            }
+        }
+        return $medians;
+    }
+
+    public function corTemps(): array
+    {
+        $set_temps = json_decode($this->set_temps, true);
+        $x = new InsStcTempControl;
+        return $x->calculateNewSetValues($set_temps, $this->logTemps());
     }
 
 }

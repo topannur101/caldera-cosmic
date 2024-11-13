@@ -324,6 +324,33 @@ class InsStc
         return $positionHuman;
     }
 
+    public static function sections(string $axis): array
+    {
+        switch ($axis) {
+            case 'x':
+                return [
+                    'preheat'   => 5,
+                    'section_1' => 6,
+                    'section_2' => 6,
+                    'section_3' => 6,
+                    'section_4' => 6,
+                    'section_5' => 6,
+                    'section_6' => 6,
+                    'section_7' => 6,
+                    'section_8' => 6,
+                    'postheat'  => 5
+                ];
+                break;
+            case 'y':
+                return [ 40, 50, 60, 70, 80 ];
+                break;
+            
+            default:
+                return [];
+                break;
+        }        
+    }
+
     public static function zones(string $axis): array
     {
         switch ($axis) {
