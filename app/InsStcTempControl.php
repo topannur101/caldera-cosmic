@@ -4,26 +4,26 @@ namespace App;
 
 class InsStcTempControl
 {
-    private const K = 0.5; // Base adjustment coefficient
-    private const INFLUENCE_FACTOR = 0.3; // Adjacent section influence factor
-    private const ACCEPTABLE_ERROR = 2.0; // ±2°C acceptable margin
+    private const K = 0.5; // Global sensitivity
+    private const INFLUENCE_FACTOR = 0; // Adjacent section influence factor
+    private const ACCEPTABLE_ERROR = 2.0; // °C acceptable margin
     
     private array $targetValues = [
         77.5, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 42.5
     ];
 
-    // Default linearity factors for each section
-    // Values > 1 mean we need larger SV changes to achieve MV changes
-    // Values < 1 mean we need smaller SV changes to achieve MV changes
+    // Linearity factor is sensitivity for each section
+    // Values > 1 mean aggressive, larger SV correction
+    // Values < 1 mean delicate, smaller SV correction
     private array $linearityFactors = [
-        1.0,  // Section 1 (77.5°C) might need larger adjustments
-        1.0,  // Section 2 (72.5°C)
-        1.0,  // Section 3 (67.5°C)
-        1.0,  // Section 4 (62.5°C)
-        1.0,  // Section 5 (57.5°C)
-        1.0,  // Section 6 (52.5°C)
-        1.0,  // Section 7 (47.5°C)
-        1.0   // Section 8 (42.5°C) might need smaller adjustments
+        1.0,  // Section 1 
+        1.0,  // Section 2 
+        1.0,  // Section 3 
+        1.0,  // Section 4 
+        1.0,  // Section 5 
+        1.0,  // Section 6 
+        1.0,  // Section 7 
+        1.0   // Section 8
     ];
 
     /**
