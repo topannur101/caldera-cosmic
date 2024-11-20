@@ -59,7 +59,7 @@ new class extends Component
         </p>
         <div class="mt-6">
             <x-text-input wire:model="code" class="mt-4" type="text" placeholder="{{ __('Kode item') }}" />
-            <x-select wire:model="inv_area_id" class="mt-4">
+            <x-select wire:model="inv_area_id" class="w-full mt-4">
                 <option value=""></option>
                 @foreach ($areas as $area)
                     <option value="{{ $area->id }}">{{ $area->name }}</option>

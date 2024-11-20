@@ -37,12 +37,12 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         <div wire:key="area-create">
             <x-modal name="area-create">
-                <livewire:inventory.admin.area-create />
+                <livewire:inventory.manage.area-create />
             </x-modal>
         </div>
         <div wire:key="area-edit">
             <x-modal name="area-edit">
-                <livewire:inventory.admin.area-edit  />                    
+                <livewire:inventory.manage.area-edit  />                    
             </x-modal> 
         </div>
         <div class="overflow-auto w-full my-8">

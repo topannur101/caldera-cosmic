@@ -1,15 +1,16 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Illuminate\Validation\Rule;
 
 use App\Models\User;
-use App\Models\InsStcAuth;
+use App\Models\InsOmvAuth;
 use Livewire\Attributes\Renderless;
 use Illuminate\Support\Facades\Gate;
 
-new class extends Component {
+new #[Layout('layouts.app')] class extends Component {
     public int $id;
     public string $user_name;
     public string $user_emp_id;
@@ -27,7 +28,7 @@ new class extends Component {
     #[On('auth-edit')]
     public function loadAuth(int $id)
     {
-        $auth = InsStcAuth::find($id);
+        $auth = InsOmvAuth::find($id);
         if ($auth) {
             $this->id           = $auth->id;
             $this->user_name    = $auth->user->name;
@@ -52,7 +53,7 @@ new class extends Component {
         Gate::authorize('superuser');
         $this->validate();
 
-        $auth = InsStcAuth::find($this->id);
+        $auth = InsOmvAuth::find($this->id);
         if ($auth) {
             $auth->actions = json_encode($this->actions, true);
             $auth->update();
@@ -70,7 +71,7 @@ new class extends Component {
     {
         Gate::authorize('superuser');
 
-        $auth = InsStcAuth::find($this->id);
+        $auth = InsOmvAuth::find($this->id);
         if ($auth) {
             $auth->delete();
 
@@ -133,8 +134,12 @@ new class extends Component {
             </div>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
-            <x-checkbox id="d-sum-manage" :disabled="!$is_superuser" wire:model="actions"
-                value="d-sum-manage">{{ __('Mengelola hasil ukur') }}</x-checkbox>
+            {{-- <x-checkbox id="device-manage" :disabled="!$is_superuser" wire:model="actions"
+                value="device-manage">{{ __('Kelola perangkat ') }}</x-checkbox> --}}
+            <x-checkbox id="recipe-manage" :disabled="!$is_superuser" wire:model="actions"
+                value="recipe-manage">{{ __('Kelola resep ') }}</x-checkbox>
+            <x-checkbox id="csv-download" :disabled="!$is_superuser" wire:model="actions"
+                value="csv-download">{{ __('Unduh CSV') }}</x-checkbox>
         </div>
         @can('superuser')
             <div class="mt-6 flex justify-between items-end">

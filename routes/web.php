@@ -150,17 +150,17 @@ Route::middleware('auth')->group(function () {
 
         });
 
-        Route::name('inventory.admin.')->group(function () {
+        Route::name('inventory.manage.')->group(function () {
 
-            Volt::route('/admin/areas',             'inventory.admin.areas')        ->name('areas');
-            Volt::route('/admin/authorizations',    'inventory.admin.auths')        ->name('auths');
-            Volt::route('/admin/currencies',        'inventory.admin.currs')        ->name('currs');
-            Volt::route('/admin/locations',         'inventory.admin.locs')         ->name('locs');
-            Volt::route('/admin/tags',              'inventory.admin.tags')         ->name('tags');
-            Volt::route('/admin/uoms',              'inventory.admin.uoms')         ->name('uoms');
-            Volt::route('/admin/circs-create',      'inventory.admin.circs-create') ->name('circs-create');
-            Volt::route('/admin/items-update',      'inventory.admin.items-update') ->name('items-update');
-            Volt::route('/admin',                   'inventory.admin.index')        ->name('index');
+            Volt::route('/manage/areas',             'inventory.manage.areas')        ->name('areas');
+            Volt::route('/manage/authorizations',    'inventory.manage.auths')        ->name('auths');
+            Volt::route('/manage/currencies',        'inventory.manage.currs')        ->name('currs');
+            Volt::route('/manage/locations',         'inventory.manage.locs')         ->name('locs');
+            Volt::route('/manage/tags',              'inventory.manage.tags')         ->name('tags');
+            Volt::route('/manage/uoms',              'inventory.manage.uoms')         ->name('uoms');
+            Volt::route('/manage/circs-create',      'inventory.manage.circs-create') ->name('circs-create');
+            Volt::route('/manage/items-update',      'inventory.manage.items-update') ->name('items-update');
+            Volt::route('/manage',                   'inventory.manage.index')        ->name('index');
             
         });
 

@@ -1,7 +1,6 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +9,7 @@ use App\Models\InsRtcAuth;
 use Livewire\Attributes\Renderless;
 use Illuminate\Support\Facades\Gate;
 
-new #[Layout('layouts.app')] class extends Component {
+new class extends Component {
     public string       $userq = '';
     public int          $user_id = 0;
     public array        $actions = [];

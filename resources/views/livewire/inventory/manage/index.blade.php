@@ -22,8 +22,8 @@ class extends Component {
 
 <div id="content" class="py-12 max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
   <div class="grid grid-cols-2">
-      <x-tab href="{{ route('inventory.admin.index', [ 'nav' => 'inventory' ])}}" wire:navigate :active="!$view" class="text-center">{{__('Inventaris')}}</x-tab>
-      <x-tab href="{{ route('inventory.admin.index', [ 'nav' => 'inventory', 'view' => 'administration' ])}}" wire:navigate :active="$view == 'administration'" class="text-center">{{__('Administrasi')}}</x-tab>
+      <x-tab href="{{ route('inventory.manage.index', [ 'nav' => 'inventory' ])}}" wire:navigate :active="!$view" class="text-center">{{__('Inventaris')}}</x-tab>
+      <x-tab href="{{ route('inventory.manage.index', [ 'nav' => 'inventory', 'view' => 'administration' ])}}" wire:navigate :active="$view == 'administration'" class="text-center">{{__('Administrasi')}}</x-tab>
   </div>
   @if(!$view)
   <div class="grid grid-cols-1 gap-1 my-8 ">
@@ -60,7 +60,7 @@ class extends Component {
           </div>
           @endif
       </x-modal>
-      <x-card-link href="{{ route('inventory.admin.circs-create')}}" wire:navigate>
+      <x-card-link href="{{ route('inventory.manage.circs-create')}}" wire:navigate>
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
@@ -77,7 +77,7 @@ class extends Component {
               </div>
           </div>
       </x-card-link>
-      <x-card-link href="{{ route('inventory.admin.items-update')}}" wire:navigate>
+      <x-card-link href="{{ route('inventory.manage.items-update')}}" wire:navigate>
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
@@ -94,7 +94,7 @@ class extends Component {
               </div>
           </div>
       </x-card-link>
-      <x-card-link href="{{ route('inventory.admin.locs')}}" wire:navigate>
+      <x-card-link href="{{ route('inventory.manage.locs')}}" wire:navigate>
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
@@ -111,7 +111,7 @@ class extends Component {
               </div>
           </div>
       </x-card-link>
-      <x-card-link href="{{ route('inventory.admin.tags') }}" wire:navigate>
+      <x-card-link href="{{ route('inventory.manage.tags') }}" wire:navigate>
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
@@ -150,7 +150,7 @@ class extends Component {
   </x-modal>
   @endcannot
   <div class="grid grid-cols-1 gap-1 my-8">
-      <x-card-link href="{{ route('inventory.admin.auths') }}" wire:navigate>
+      <x-card-link href="{{ route('inventory.manage.auths') }}" wire:navigate>
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
@@ -167,7 +167,7 @@ class extends Component {
               </div>
           </div>
       </x-card-link>
-      <x-card-link href="{{ route('inventory.admin.areas') }}" wire:navigate>
+      <x-card-link href="{{ route('inventory.manage.areas') }}" wire:navigate>
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
@@ -184,7 +184,7 @@ class extends Component {
               </div>
           </div>
       </x-card-link>
-      <x-card-link href="{{ route('inventory.admin.currs') }}" wire:navigate>
+      <x-card-link href="{{ route('inventory.manage.currs') }}" wire:navigate>
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
@@ -201,7 +201,7 @@ class extends Component {
               </div>
           </div>
       </x-card-link>
-      <x-card-link href="{{ route('inventory.admin.uoms') }}" wire:navigate>
+      <x-card-link href="{{ route('inventory.manage.uoms') }}" wire:navigate>
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
