@@ -8,6 +8,7 @@ use Livewire\WithPagination;
 use Carbon\Carbon;
 use App\InsStc;
 use App\Models\InsStcDSum;
+use App\Models\InsStcDLog;
 use App\Models\InsStcMachine;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
@@ -55,31 +56,37 @@ class extends Component {
                 $query->where('ins_stc_machines.line', 'LIKE', '%' . $this->line . '%');
             }
 
-    
-        // switch ($this->ftype) {
-        //     case 'recipe':
-        //         $query->where('ins_stc_recipes.name', 'LIKE', '%' . $this->fquery . '%');
-        //         break;
-        //     case 'line':
-        //         $query->where('ins_stc_d_sums.line', 'LIKE', '%' . $this->fquery . '%');
-        //         break;
-        //     case 'team':
-        //         $query->where('ins_stc_d_sums.team', 'LIKE', '%' . $this->fquery . '%');
-        //         break;
-        //     case 'emp_id':
-        //         $query->where(function (Builder $query) {
-        //             $query->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
-        //                 ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
-        //         });
-        //         break;
-        //     default:
-        //         $query->where(function (Builder $query) {
-        //             $query->orWhere('ins_stc_recipes.name', 'LIKE', '%' . $this->fquery . '%')
-        //                 ->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
-        //                 ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
-        //         });
-        //         break;
-        // }
+        return $query->orderBy('start_time', 'DESC');
+    }
+
+    private function getDLogsQuery()
+    {
+        $start = Carbon::parse($this->start_at);
+        $end = Carbon::parse($this->end_at)->endOfDay();
+
+        $query = InsStcDLog::join('ins_stc_d_sums', 'ins_stc_d_logs.ins_stc_d_sum_id', '=', 'ins_stc_d_sums.id')
+            ->join('ins_stc_machines', 'ins_stc_d_sums.ins_stc_machine_id', '=', 'ins_stc_machines.id')
+            ->join('users as user1', 'ins_stc_d_sums.user_1_id', '=', 'user1.id')
+            ->leftjoin('users as user2', 'ins_stc_d_sums.user_2_id', '=', 'user2.id')
+            ->select(
+                'ins_stc_d_logs.*',
+                'ins_stc_d_sums.*',
+                'ins_stc_d_sums.id as d_sum_id',
+                'ins_stc_d_sums.updated_at as d_sum_updated_at',
+                'ins_stc_machines.line as machine_line',
+                'user1.emp_id as user1_emp_id',
+                'user1.name as user1_name',
+                'user2.emp_id as user2_emp_id',
+                'user2.name as user2_name',
+                'ins_stc_d_logs.taken_at as d_log_taken_at',
+                'ins_stc_d_logs.temp as d_log_temp',
+            )
+            ->whereBetween('ins_stc_d_sums.updated_at', [$start, $end]);
+
+            if ($this->line)
+            {
+                $query->where('ins_stc_machines.line', 'LIKE', '%' . $this->line . '%');
+            }
 
         return $query->orderBy('start_time', 'DESC');
     }
@@ -93,13 +100,6 @@ class extends Component {
 
         $this->lines = InsStcMachine::orderBy('line')->get()->pluck('line')->toArray();
 
-        // if (!$this->line && !$this->team && Auth::user()) {
-        //     $latestDsum = Auth::user()->ins_stc_d_sums()->latest()->first();
-            
-        //     if ($latestDsum) {
-        //         $this->line = $latestDsum->line;
-        //     }
-        // }
     }
 
     public function with(): array
@@ -116,52 +116,100 @@ class extends Component {
         $this->perPage += 10;
     }
 
-    public function download()
+    public function download($type)
     {
-        $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
-        $filename = 'd_sums_export_' . now()->format('Y-m-d_His') . '.csv';
+        switch ($type) {
+            case 'dsums':
+                $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
+                $filename = 'd_sums_export_' . now()->format('Y-m-d_His') . '.csv';
 
-        $headers = [
-            'Content-type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=$filename",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
+                $headers = [
+                    'Content-type' => 'text/csv',
+                    'Content-Disposition' => "attachment; filename=$filename",
+                    'Pragma' => 'no-cache',
+                    'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                    'Expires' => '0',
+                ];
 
-        $columns = [
-            __('Diperbarui pada'), __('Line'), __('Posisi'), __('RPM'), 'Z1 Temp', 'Z2 Temp', 'Z3 Temp', 'Z4 Temp',
-            __('Operator') . ' 1' , __('Operator') . ' 2', __('Awal'), __('Durasi'), __('Latensi unggah')
-        ];
+                $columns = [
+                    __('Diperbarui pada'), __('Line'), __('Posisi'), __('RPM'), 'Z1 Temp', 'Z2 Temp', 'Z3 Temp', 'Z4 Temp',
+                    __('Operator') . ' 1' , __('Operator') . ' 2', __('Awal'), __('Durasi'), __('Latensi unggah')
+                ];
 
-        $callback = function () use ($columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
+                $callback = function () use ($columns) {
+                    $file = fopen('php://output', 'w');
+                    fputcsv($file, $columns);
 
-            $this->getDSumsQuery()->chunk(1000, function ($dSums) use ($file) {
-                foreach ($dSums as $dSum) {
-                    fputcsv($file, [
-                        $dSum->d_sum_updated_at,
-                        $dSum->machine_line,
-                        InsStc::positionHuman($dSum->position),
-                        $dSum->speed,
-                        $dSum->z_1_temp,
-                        $dSum->z_2_temp,
-                        $dSum->z_3_temp,
-                        $dSum->z_4_temp,
-                        $dSum->user1_name . ' - ' . $dSum->user1_emp_id,
-                        $dSum->user2_name . ' - ' . $dSum->user2_emp_id,
-                        $dSum->start_time,
-                        $dSum->duration(),
-                        $dSum->uploadLatency(),
-                    ]);
-                }
-            });
+                    $this->getDSumsQuery()->chunk(1000, function ($dSums) use ($file) {
+                        foreach ($dSums as $dSum) {
+                            fputcsv($file, [
+                                $dSum->d_sum_updated_at,
+                                $dSum->machine_line,
+                                InsStc::positionHuman($dSum->position),
+                                $dSum->speed,
+                                $dSum->z_1_temp,
+                                $dSum->z_2_temp,
+                                $dSum->z_3_temp,
+                                $dSum->z_4_temp,
+                                $dSum->user1_name . ' - ' . $dSum->user1_emp_id,
+                                $dSum->user2_name . ' - ' . $dSum->user2_emp_id,
+                                $dSum->start_time,
+                                $dSum->duration(),
+                                $dSum->uploadLatency(),
+                            ]);
+                        }
+                    });
 
-            fclose($file);
-        };
+                    fclose($file);
+                };
 
-        return new StreamedResponse($callback, 200, $headers);
+                return new StreamedResponse($callback, 200, $headers);
+                break;
+
+            case 'dlogs':
+                $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
+                $filename = 'd_logs_export_' . now()->format('Y-m-d_His') . '.csv';
+
+                $headers = [
+                    'Content-type' => 'text/csv',
+                    'Content-Disposition' => "attachment; filename=$filename",
+                    'Pragma' => 'no-cache',
+                    'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                    'Expires' => '0',
+                ];
+
+                $columns = [
+                    __('ID'), __('Diperbarui pada'), __('Line'), __('Posisi'), __('RPM'),
+                    __('Operator') . ' 1' , __('Operator') . ' 2', __('Diambil pada'), __('Suhu')
+                ];
+
+                $callback = function () use ($columns) {
+                    $file = fopen('php://output', 'w');
+                    fputcsv($file, $columns);
+
+                    $this->getDLogsQuery()->chunk(1000, function ($dLogs) use ($file) {
+                        foreach ($dLogs as $dLog) {
+                            fputcsv($file, [
+                                $dLog->d_sum_id,
+                                $dLog->d_sum_updated_at,
+                                $dLog->machine_line,
+                                InsStc::positionHuman($dLog->position),
+                                $dLog->speed,
+                                $dLog->user1_name . ' - ' . $dLog->user1_emp_id,
+                                $dLog->user2_name . ' - ' . $dLog->user2_emp_id,
+                                $dLog->d_log_taken_at,
+                                $dLog->d_log_temp
+                            ]);
+                        }
+                    });
+
+                    fclose($file);
+                };
+
+                return new StreamedResponse($callback, 200, $headers);
+                break;
+        }
+
     }
 };
 
@@ -255,8 +303,11 @@ class extends Component {
                         </x-dropdown-link>
                         <hr
                             class="border-neutral-300 dark:border-neutral-600" />
-                        <x-dropdown-link href="#" wire:click.prevent="download">
-                            <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
+                        <x-dropdown-link href="#" wire:click.prevent="download('dsums')">
+                            <i class="fa fa-fw fa-download me-2"></i>{{ __('CSV Ringkasan') }}
+                        </x-dropdown-link>
+                        <x-dropdown-link href="#" wire:click.prevent="download('dlogs')">
+                            <i class="fa fa-fw fa-download me-2"></i>{{ __('CSV Rinci') }}
                         </x-dropdown-link>
                     </x-slot>
                 </x-dropdown>

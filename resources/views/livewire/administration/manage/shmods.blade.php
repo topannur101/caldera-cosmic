@@ -49,7 +49,7 @@ class extends Component {
 ?>
 <x-slot name="title">{{ __('Model') . ' — ' . __('Admin') }}</x-slot>
 <x-slot name="header">
-    <x-nav-sh-sub />
+    <x-nav-administration-sub />
 </x-slot>
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
@@ -69,12 +69,12 @@ class extends Component {
         </div>
         <div wire:key="mod-create">
             <x-modal name="mod-create">
-                <livewire:sh.manage.mod-create />
+                <livewire:administration.manage.shmod-create />
             </x-modal>
         </div>
         <div wire:key="mod-edit">   
             <x-modal name="mod-edit">
-                <livewire:sh.manage.mod-edit />
+                <livewire:administration.manage.shmod-edit />
             </x-modal>
         </div>
         <div class="overflow-auto w-full my-8">

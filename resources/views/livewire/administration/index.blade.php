@@ -1,15 +1,15 @@
 <x-app-layout>
 
-   <x-slot name="title">{{ __('Pemadanan Informasi Sepatu') }}</x-slot>
+   <x-slot name="title">{{ __('Administrasi') }}</x-slot>
 
    <x-slot name="header">
-     <x-nav-sh></x-nav-sh>
+     <x-nav-administration></x-nav-administration>
    </x-slot>
 
    <div class="max-w-xl lg:max-w-2xl mx-auto px-4 py-16">
        <h2 class="text-4xl font-extrabold dark:text-white">{{ __('Selamat datang') }}</h2>
        <p class="mt-4 mb-12 text-lg text-neutral-500">{{ __('Administrasi adalah tempat bagi superuser untuk mengelola akun pengguna Caldera atau mengelola informasi sepatu seperti model dan style. ') }}</p>
-       <p class="mt-4 mb-12 text-lg text-neutral-500">{{ __('Administrasi saat ini hanya dapat mengelola model sepatu.') }}</p>
+       {{-- <p class="mt-4 mb-12 text-lg text-neutral-500">{{ __('Administrasi saat ini hanya dapat mengelola model sepatu.') }}</p> --}}
        <p class="mb-4 text-lg font-normal text-neutral-500 dark:text-neutral-400">
            {{ __('Mulai dengan mengklik menu navigasi di pojok kanan atas.') }}</p>
 

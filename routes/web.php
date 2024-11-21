@@ -169,16 +169,18 @@ Route::middleware('auth')->group(function () {
     });
 
     // SH routes
-    Route::prefix('sh')->group(function () {
+    Route::prefix('administration')->group(function () {
 
-        Route::name('sh.')->group(function () {
+        Route::name('administration.')->group(function () {
 
-            Volt::route('/manage/models',    'sh.manage.mods')  ->name('manage.mods');
-            Volt::route('/manage',           'sh.manage.index') ->name('manage.index');
+            Volt::route('/account',         'administration.account.index')         ->name('account.index');
+            Volt::route('/authorization',   'administration.authorization.index')   ->name('authorization.index');
+            Volt::route('/manage/shmods',   'administration.manage.shmods')         ->name('manage.shmods');
+            Volt::route('/manage',          'administration.manage.index')          ->name('manage.index');
         
         });
 
-        Route::view('/', 'livewire.sh.index')->name('sh');
+        Route::view('/', 'livewire.administration.index')->name('administration');
     });
 
 });

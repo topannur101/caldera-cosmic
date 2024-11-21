@@ -36,6 +36,16 @@ new class extends Component
 
     }
 
+    public function exception($e, $stopPropagation) {
+
+        if($e instanceof League\Flysystem\UnableToRetrieveMetadata) {
+            $this->js('notyfError("' . __('Berkas tidak sah') . '")');
+        } else {
+            $this->js('notyfError("' . __('Terjadi kesalahan') . '")');
+        }
+        $stopPropagation();
+    }
+
     public function removeTemp()
     {
         $this->dispatch('user-photo-updated', '');
@@ -79,7 +89,7 @@ new class extends Component
             <div wire:key="discard">
                 @if($url)
                 <div class="mb-3">
-                    <x-text-button type="button" wire:click="removeTemp"><i class="fa fa-times mr-2"></i>{{ __('Buang foto') }}</x-text-button>
+                    <x-text-button type="button" wire:click="removeTemp"><i class="fa fa-minus-circle mr-2"></i>{{ __('Buang foto') }}</x-text-button>
                 </div>
                 @endif
             </div>

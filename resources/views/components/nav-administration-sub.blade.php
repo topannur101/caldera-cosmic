@@ -4,7 +4,7 @@
    <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
        <div>
            <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
-               <x-link href="{{ route('sh.manage.index') }}" class="inline-block py-6"
+               <x-link href="{{ route('administration.manage.index') }}" class="inline-block py-6"
                    wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span>{{ __('Kelola') }}</span></span>
            </h2>
        </div>

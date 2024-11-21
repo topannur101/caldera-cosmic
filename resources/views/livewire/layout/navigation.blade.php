@@ -38,11 +38,6 @@ new class extends Component {
                     {{-- <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link> --}}
-                    @can('viewAny', App\Models\InvItem::class)
-                        <x-nav-link :href="route('inventory')" :active="request()->routeIs('inventory*')" wire:navigate>
-                            {{ __('Inventaris') }}
-                        </x-nav-link>
-                    @endcan
                     {{-- @can('viewAny', App\Models\KpiItem::class)
                         <x-nav-link :href="route('kpi')" :active="request()->routeIs('kpi*')" wire:navigate>
                             {{ __('KPI') }}
@@ -51,12 +46,17 @@ new class extends Component {
                     <x-nav-link :href="route('insight')" :active="request()->is('insight*')" wire:navigate>
                         {{ __('Wawasan') }}
                     </x-nav-link>
+                    @can('viewAny', App\Models\InvItem::class)
+                        <x-nav-link :href="route('inventory')" :active="request()->routeIs('inventory*')" wire:navigate>
+                            {{ __('Inventaris') }}
+                        </x-nav-link>
+                    @endcan
                     {{-- <x-nav-link :href="route('help')" :active="request()->is('help*')" wire:navigate>
                         {{ __('Bantuan') }}
                     </x-nav-link> --}}
                     @if((Auth::user()->id ?? false) == 1)
-                        <x-nav-link :href="route('sh')" :active="request()->routeIs('sh*')" wire:navigate>
-                            {{ __('Admin') }}
+                        <x-nav-link :href="route('administration')" :active="request()->routeIs('administration*')" wire:navigate>
+                            {{ __('Administrasi') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -148,11 +148,7 @@ new class extends Component {
             {{-- <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </x-responsive-nav-link> --}}
-            @can('viewAny', App\Models\InvItem::class)
-                <x-responsive-nav-link :href="route('inventory')" :active="request()->routeIs('inventory*')" wire:navigate>
-                    {{ __('Inventaris') }}
-                </x-responsive-nav-link>
-            @endcan
+
             {{-- @can('viewAny', App\Models\KpiItem::class)
                 <x-responsive-nav-link :href="route('kpi')" :active="request()->routeIs('kpi*')" wire:navigate>
                     {{ __('KPI') }}
@@ -161,12 +157,17 @@ new class extends Component {
             <x-responsive-nav-link :href="route('insight')" :active="request()->routeIs('insight*')" wire:navigate>
                 {{ __('Wawasan') }}
             </x-responsive-nav-link>
+            @can('viewAny', App\Models\InvItem::class)
+                <x-responsive-nav-link :href="route('inventory')" :active="request()->routeIs('inventory*')" wire:navigate>
+                    {{ __('Inventaris') }}
+                </x-responsive-nav-link>
+            @endcan
             {{-- <x-responsive-nav-link :href="route('help')" :active="request()->routeIs('help*')" wire:navigate>
                 {{ __('Bantuan') }}
             </x-responsive-nav-link> --}}
             @if((Auth::user()->id ?? false) == 1)
-            <x-responsive-nav-link :href="route('sh')" :active="request()->routeIs('sh*')" wire:navigate>
-                {{ __('Admin') }}
+            <x-responsive-nav-link :href="route('administration')" :active="request()->routeIs('administration*')" wire:navigate>
+                {{ __('Administrasi') }}
             </x-responsive-nav-link>
             @endif
         </div>

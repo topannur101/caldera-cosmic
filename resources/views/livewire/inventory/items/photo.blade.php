@@ -107,7 +107,7 @@ class extends Component {
             <div wire:key="discard">
                 @if($url)
                 <div class="mb-4">
-                    <x-text-button type="button" wire:click="removePhoto"><i class="fa fa-fw fa-times mr-3"></i>{{ __('Buang foto') }}</x-text-button>
+                    <x-text-button type="button" wire:click="removePhoto"><i class="fa fa-fw fa-minus-circle mr-3"></i>{{ __('Buang foto') }}</x-text-button>
                 </div>
                 @endif
             </div>
