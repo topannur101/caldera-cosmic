@@ -89,11 +89,28 @@ class extends Component {
     public function updatedFile()
     {
         $this->validate([
-            'file' => 'file|mimes:xls,xlsx|max:1024'
+            'file' => 'file|mimes:txt,xls,xlsx|max:1024'
         ]);
 
-        $this->extractData();
-        $this->view = 'review';
+        $type = $this->file->getMimeType();
+
+        switch ($type) {
+            case 'application/vnd.ms-excel':
+            case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                $this->extractDataExcel();
+                $this->view = 'review';
+                break;
+
+            case 'text':
+                $this->extractDataText();
+                $this->view = 'review';
+                break;
+
+            default:
+                $this->js('notyfError("' . __('Mime tidak didukung') . '")');
+                break;
+        }
+
     }
 
     public function updatedUpdateBatch()
@@ -106,7 +123,13 @@ class extends Component {
         return !empty($matches[1]) ? end($matches[1]) : null;
     }
 
-    private function extractData()
+    private function extractDataText()
+    {
+        // tambah logic disini
+        $this->js('notyfError("' . __('Logic untuk ekstrat txt belum siap') . '")');
+    }
+
+    private function extractDataExcel()
     {
         try {
             // Fetch the machine data based on the selected machine_id
