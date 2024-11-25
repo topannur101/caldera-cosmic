@@ -41,54 +41,63 @@ class InsStcPoll extends Command
         
         while (true) {
             foreach ($machines as $machine) {
+
+                $ip = $machine->ip_address;
                 // $fc2 = $this->buildCoilRequest($machine->ip_address, $port, $unit_id);
-                $lower_pv_r = $this->buildRegisterRequest('lower_pv_r', $machine->ip_address, $port, $unit_id);
-                $lower_sv_w = $this->buildRegisterRequest('lower_sv_w', $machine->ip_address, $port, $unit_id);
-                $lower_sv_r = $this->buildRegisterRequest('lower_sv_r', $machine->ip_address, $port, $unit_id);
-                $lower_sv_c = $this->buildRegisterRequest('lower_sv_c', $machine->ip_address, $port, $unit_id);
 
-                $upper_pv_r = $this->buildRegisterRequest('upper_pv_r', $machine->ip_address, $port, $unit_id);
-                $upper_sv_w = $this->buildRegisterRequest('upper_sv_w', $machine->ip_address, $port, $unit_id);
-                $upper_sv_r = $this->buildRegisterRequest('upper_sv_r', $machine->ip_address, $port, $unit_id);
-                $upper_sv_c = $this->buildRegisterRequest('upper_sv_c', $machine->ip_address, $port, $unit_id);
+                $lower_pv_r = $this->buildRegisterRequest('lower_pv_r', $ip, $port, $unit_id);
+                $lower_sv_w = $this->buildRegisterRequest('lower_sv_w', $ip, $port, $unit_id);
+                $lower_sv_r = $this->buildRegisterRequest('lower_sv_r', $ip, $port, $unit_id);
+                $lower_sv_c = $this->buildRegisterRequest('lower_sv_c', $ip, $port, $unit_id);
 
-                try {
-                    // $fc2_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc2);
-                    $lower_pv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_pv_r);
-                    $lower_sv_w_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_sv_w);
-                    $lower_sv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_sv_r);
-                    $lower_sv_c_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_sv_c);
+                $upper_pv_r = $this->buildRegisterRequest('upper_pv_r', $ip, $port, $unit_id);
+                $upper_sv_w = $this->buildRegisterRequest('upper_sv_w', $ip, $port, $unit_id);
+                $upper_sv_r = $this->buildRegisterRequest('upper_sv_r', $ip, $port, $unit_id);
+                $upper_sv_c = $this->buildRegisterRequest('upper_sv_c', $ip, $port, $unit_id);
 
-                    $upper_pv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_pv_r);
-                    $upper_sv_w_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_sv_w);
-                    $upper_sv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_sv_r);
-                    $upper_sv_c_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_sv_c);
+                if (strpos($ip, '127.') !== 0) {
 
-                    $lower_pv_r_data = $lower_pv_r_response->getData();
-                    $lower_sv_w_data = $lower_sv_w_response->getData();
-                    $lower_sv_r_data = $lower_sv_r_response->getData();
-                    $lower_sv_c_data = $lower_sv_c_response->getData();
-
-                    $upper_pv_r_data = $upper_pv_r_response->getData();
-                    $upper_sv_w_data = $upper_sv_w_response->getData();
-                    $upper_sv_r_data = $upper_sv_r_response->getData();
-                    $upper_sv_c_data = $upper_sv_c_response->getData();
-
-                    $data = array_merge(
-                        $lower_pv_r_data,
-                        $lower_sv_w_data,
-                        $lower_sv_r_data,
-                        $lower_sv_c_data,
+                    try {
+                        // $fc2_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc2);
+                        $lower_pv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_pv_r);
+                        $lower_sv_w_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_sv_w);
+                        $lower_sv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_sv_r);
+                        $lower_sv_c_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_sv_c);
     
-                        $upper_pv_r_data,
-                        $upper_sv_w_data,
-                        $upper_sv_r_data,
-                        $upper_sv_c_data
-                    );
-                    $this->logResponse($machine, $data);
+                        $upper_pv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_pv_r);
+                        $upper_sv_w_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_sv_w);
+                        $upper_sv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_sv_r);
+                        $upper_sv_c_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_sv_c);
+    
+                        $lower_pv_r_data = $lower_pv_r_response->getData();
+                        $lower_sv_w_data = $lower_sv_w_response->getData();
+                        $lower_sv_r_data = $lower_sv_r_response->getData();
+                        $lower_sv_c_data = $lower_sv_c_response->getData();
+    
+                        $upper_pv_r_data = $upper_pv_r_response->getData();
+                        $upper_sv_w_data = $upper_sv_w_response->getData();
+                        $upper_sv_r_data = $upper_sv_r_response->getData();
+                        $upper_sv_c_data = $upper_sv_c_response->getData();
+    
+                        $data = array_merge(
+                            $lower_pv_r_data,
+                            $lower_sv_w_data,
+                            $lower_sv_r_data,
+                            $lower_sv_c_data,
+        
+                            $upper_pv_r_data,
+                            $upper_sv_w_data,
+                            $upper_sv_r_data,
+                            $upper_sv_c_data
+                        );
+                        $this->logResponse($machine, $data);
+    
+                    } catch (\Throwable $th) {
+                        $this->error('Exception: ' . $th->getMessage());
+                    }
 
-                } catch (\Throwable $th) {
-                    $this->error('Exception: ' . $th->getMessage());
+                } else {
+                    $this->warn("The IP " . $ip . " (Line " . $machine->line .") is a loopback address. Ignored");
                 }
             }
             sleep($interval);
@@ -315,87 +324,90 @@ class InsStcPoll extends Command
                 'machine_id' => $machine_id,
                 'data' => $data,
             ]);
+
+            // print_r($validatedData);
+            
             $logLower = InsStcMLog::create([
                 'ins_stc_machine_id'    => $validatedData['machine_id'],
                 'position'              => 'lower',
-                'pv_r_1'                  => $validatedData['data']['lower_pv_r_1'],
-                'pv_r_2'                  => $validatedData['data']['lower_pv_r_2'],
-                'pv_r_3'                  => $validatedData['data']['lower_pv_r_3'],
-                'pv_r_4'                  => $validatedData['data']['lower_pv_r_4'],
-                'pv_r_5'                  => $validatedData['data']['lower_pv_r_5'],
-                'pv_r_6'                  => $validatedData['data']['lower_pv_r_6'],
-                'pv_r_7'                  => $validatedData['data']['lower_pv_r_7'],
-                'pv_r_8'                  => $validatedData['data']['lower_pv_r_8'],
+                'pv_r_1'                => $validatedData['data']['lower_pv_r_1'],
+                'pv_r_2'                => $validatedData['data']['lower_pv_r_2'],
+                'pv_r_3'                => $validatedData['data']['lower_pv_r_3'],
+                'pv_r_4'                => $validatedData['data']['lower_pv_r_4'],
+                'pv_r_5'                => $validatedData['data']['lower_pv_r_5'],
+                'pv_r_6'                => $validatedData['data']['lower_pv_r_6'],
+                'pv_r_7'                => $validatedData['data']['lower_pv_r_7'],
+                'pv_r_8'                => $validatedData['data']['lower_pv_r_8'],
 
-                'sv_w_1'                  => $validatedData['data']['lower_sv_w_1'],
-                'sv_w_2'                  => $validatedData['data']['lower_sv_w_2'],
-                'sv_w_3'                  => $validatedData['data']['lower_sv_w_3'],
-                'sv_w_4'                  => $validatedData['data']['lower_sv_w_4'],
-                'sv_w_5'                  => $validatedData['data']['lower_sv_w_5'],
-                'sv_w_6'                  => $validatedData['data']['lower_sv_w_6'],
-                'sv_w_7'                  => $validatedData['data']['lower_sv_w_7'],
-                'sv_w_8'                  => $validatedData['data']['lower_sv_w_8'],
+                'sv_w_1'                => $validatedData['data']['lower_sv_w_1'],
+                'sv_w_2'                => $validatedData['data']['lower_sv_w_2'],
+                'sv_w_3'                => $validatedData['data']['lower_sv_w_3'],
+                'sv_w_4'                => $validatedData['data']['lower_sv_w_4'],
+                'sv_w_5'                => $validatedData['data']['lower_sv_w_5'],
+                'sv_w_6'                => $validatedData['data']['lower_sv_w_6'],
+                'sv_w_7'                => $validatedData['data']['lower_sv_w_7'],
+                'sv_w_8'                => $validatedData['data']['lower_sv_w_8'],
 
-                'sv_r_1'                  => $validatedData['data']['lower_sv_r_1'],
-                'sv_r_2'                  => $validatedData['data']['lower_sv_r_2'],
-                'sv_r_3'                  => $validatedData['data']['lower_sv_r_3'],
-                'sv_r_4'                  => $validatedData['data']['lower_sv_r_4'],
-                'sv_r_5'                  => $validatedData['data']['lower_sv_r_5'],
-                'sv_r_6'                  => $validatedData['data']['lower_sv_r_6'],
-                'sv_r_7'                  => $validatedData['data']['lower_sv_r_7'],
-                'sv_r_8'                  => $validatedData['data']['lower_sv_r_8'],
+                'sv_r_1'                => $validatedData['data']['lower_sv_r_1'],
+                'sv_r_2'                => $validatedData['data']['lower_sv_r_2'],
+                'sv_r_3'                => $validatedData['data']['lower_sv_r_3'],
+                'sv_r_4'                => $validatedData['data']['lower_sv_r_4'],
+                'sv_r_5'                => $validatedData['data']['lower_sv_r_5'],
+                'sv_r_6'                => $validatedData['data']['lower_sv_r_6'],
+                'sv_r_7'                => $validatedData['data']['lower_sv_r_7'],
+                'sv_r_8'                => $validatedData['data']['lower_sv_r_8'],
 
-                'sv_c_1'                  => $validatedData['data']['lower_sv_c_1'],
-                'sv_c_2'                  => $validatedData['data']['lower_sv_c_2'],
-                'sv_c_3'                  => $validatedData['data']['lower_sv_c_3'],
-                'sv_c_4'                  => $validatedData['data']['lower_sv_c_4'],
-                'sv_c_5'                  => $validatedData['data']['lower_sv_c_5'],
-                'sv_c_6'                  => $validatedData['data']['lower_sv_c_6'],
-                'sv_c_7'                  => $validatedData['data']['lower_sv_c_7'],
-                'sv_c_8'                  => $validatedData['data']['lower_sv_c_8'],
+                'sv_c_1'                => $validatedData['data']['lower_sv_c_1'],
+                'sv_c_2'                => $validatedData['data']['lower_sv_c_2'],
+                'sv_c_3'                => $validatedData['data']['lower_sv_c_3'],
+                'sv_c_4'                => $validatedData['data']['lower_sv_c_4'],
+                'sv_c_5'                => $validatedData['data']['lower_sv_c_5'],
+                'sv_c_6'                => $validatedData['data']['lower_sv_c_6'],
+                'sv_c_7'                => $validatedData['data']['lower_sv_c_7'],
+                'sv_c_8'                => $validatedData['data']['lower_sv_c_8'],
             ]);
 
             $logUpper = InsStcMLog::create([
                 'ins_stc_machine_id'    => $validatedData['machine_id'],
                 'position'              => 'upper',
-                'pv_r_1'                  => $validatedData['data']['upper_pv_r_1'],
-                'pv_r_2'                  => $validatedData['data']['upper_pv_r_2'],
-                'pv_r_3'                  => $validatedData['data']['upper_pv_r_3'],
-                'pv_r_4'                  => $validatedData['data']['upper_pv_r_4'],
-                'pv_r_5'                  => $validatedData['data']['upper_pv_r_5'],
-                'pv_r_6'                  => $validatedData['data']['upper_pv_r_6'],
-                'pv_r_7'                  => $validatedData['data']['upper_pv_r_7'],
-                'pv_r_8'                  => $validatedData['data']['upper_pv_r_8'],
+                'pv_r_1'                => $validatedData['data']['upper_pv_r_1'],
+                'pv_r_2'                => $validatedData['data']['upper_pv_r_2'],
+                'pv_r_3'                => $validatedData['data']['upper_pv_r_3'],
+                'pv_r_4'                => $validatedData['data']['upper_pv_r_4'],
+                'pv_r_5'                => $validatedData['data']['upper_pv_r_5'],
+                'pv_r_6'                => $validatedData['data']['upper_pv_r_6'],
+                'pv_r_7'                => $validatedData['data']['upper_pv_r_7'],
+                'pv_r_8'                => $validatedData['data']['upper_pv_r_8'],
 
-                'sv_w_1'                  => $validatedData['data']['upper_sv_w_1'],
-                'sv_w_2'                  => $validatedData['data']['upper_sv_w_2'],
-                'sv_w_3'                  => $validatedData['data']['upper_sv_w_3'],
-                'sv_w_4'                  => $validatedData['data']['upper_sv_w_4'],
-                'sv_w_5'                  => $validatedData['data']['upper_sv_w_5'],
-                'sv_w_6'                  => $validatedData['data']['upper_sv_w_6'],
-                'sv_w_7'                  => $validatedData['data']['upper_sv_w_7'],
-                'sv_w_8'                  => $validatedData['data']['upper_sv_w_8'],
+                'sv_w_1'                => $validatedData['data']['upper_sv_w_1'],
+                'sv_w_2'                => $validatedData['data']['upper_sv_w_2'],
+                'sv_w_3'                => $validatedData['data']['upper_sv_w_3'],
+                'sv_w_4'                => $validatedData['data']['upper_sv_w_4'],
+                'sv_w_5'                => $validatedData['data']['upper_sv_w_5'],
+                'sv_w_6'                => $validatedData['data']['upper_sv_w_6'],
+                'sv_w_7'                => $validatedData['data']['upper_sv_w_7'],
+                'sv_w_8'                => $validatedData['data']['upper_sv_w_8'],
 
-                'sv_r_1'                  => $validatedData['data']['upper_sv_r_1'],
-                'sv_r_2'                  => $validatedData['data']['upper_sv_r_2'],
-                'sv_r_3'                  => $validatedData['data']['upper_sv_r_3'],
-                'sv_r_4'                  => $validatedData['data']['upper_sv_r_4'],
-                'sv_r_5'                  => $validatedData['data']['upper_sv_r_5'],
-                'sv_r_6'                  => $validatedData['data']['upper_sv_r_6'],
-                'sv_r_7'                  => $validatedData['data']['upper_sv_r_7'],
-                'sv_r_8'                  => $validatedData['data']['upper_sv_r_8'],
+                'sv_r_1'                => $validatedData['data']['upper_sv_r_1'],
+                'sv_r_2'                => $validatedData['data']['upper_sv_r_2'],
+                'sv_r_3'                => $validatedData['data']['upper_sv_r_3'],
+                'sv_r_4'                => $validatedData['data']['upper_sv_r_4'],
+                'sv_r_5'                => $validatedData['data']['upper_sv_r_5'],
+                'sv_r_6'                => $validatedData['data']['upper_sv_r_6'],
+                'sv_r_7'                => $validatedData['data']['upper_sv_r_7'],
+                'sv_r_8'                => $validatedData['data']['upper_sv_r_8'],
 
-                'sv_c_1'                  => $validatedData['data']['upper_sv_c_1'],
-                'sv_c_2'                  => $validatedData['data']['upper_sv_c_2'],
-                'sv_c_3'                  => $validatedData['data']['upper_sv_c_3'],
-                'sv_c_4'                  => $validatedData['data']['upper_sv_c_4'],
-                'sv_c_5'                  => $validatedData['data']['upper_sv_c_5'],
-                'sv_c_6'                  => $validatedData['data']['upper_sv_c_6'],
-                'sv_c_7'                  => $validatedData['data']['upper_sv_c_7'],
-                'sv_c_8'                  => $validatedData['data']['upper_sv_c_8'],
+                'sv_c_1'                => $validatedData['data']['upper_sv_c_1'],
+                'sv_c_2'                => $validatedData['data']['upper_sv_c_2'],
+                'sv_c_3'                => $validatedData['data']['upper_sv_c_3'],
+                'sv_c_4'                => $validatedData['data']['upper_sv_c_4'],
+                'sv_c_5'                => $validatedData['data']['upper_sv_c_5'],
+                'sv_c_6'                => $validatedData['data']['upper_sv_c_6'],
+                'sv_c_7'                => $validatedData['data']['upper_sv_c_7'],
+                'sv_c_8'                => $validatedData['data']['upper_sv_c_8'],
             ]);
     
-            $this->info("Metric saved successfully for machine ID: {$machine_id}");
+            $this->info("Metric saved successfully.");
             return [$logLower, $logUpper];
         } catch (\Illuminate\Database\QueryException $e) {
             $this->error("Database error while saving metric for machine ID: {$machine_id}");
@@ -449,41 +461,41 @@ class InsStcPoll extends Command
             'data.lower_sv_c_7' => 'nullable|numeric',
             'data.lower_sv_c_8' => 'nullable|numeric',
 
-            'data.lower_pv_r_1' => 'nullable|numeric',
-            'data.lower_pv_r_2' => 'nullable|numeric',
-            'data.lower_pv_r_3' => 'nullable|numeric',
-            'data.lower_pv_r_4' => 'nullable|numeric',
-            'data.lower_pv_r_5' => 'nullable|numeric',
-            'data.lower_pv_r_6' => 'nullable|numeric',
-            'data.lower_pv_r_7' => 'nullable|numeric',
-            'data.lower_pv_r_8' => 'nullable|numeric',
+            'data.upper_pv_r_1' => 'nullable|numeric',
+            'data.upper_pv_r_2' => 'nullable|numeric',
+            'data.upper_pv_r_3' => 'nullable|numeric',
+            'data.upper_pv_r_4' => 'nullable|numeric',
+            'data.upper_pv_r_5' => 'nullable|numeric',
+            'data.upper_pv_r_6' => 'nullable|numeric',
+            'data.upper_pv_r_7' => 'nullable|numeric',
+            'data.upper_pv_r_8' => 'nullable|numeric',
 
-            'data.lower_sv_w_1' => 'nullable|numeric',
-            'data.lower_sv_w_2' => 'nullable|numeric',
-            'data.lower_sv_w_3' => 'nullable|numeric',
-            'data.lower_sv_w_4' => 'nullable|numeric',
-            'data.lower_sv_w_5' => 'nullable|numeric',
-            'data.lower_sv_w_6' => 'nullable|numeric',
-            'data.lower_sv_w_7' => 'nullable|numeric',
-            'data.lower_sv_w_8' => 'nullable|numeric',
+            'data.upper_sv_w_1' => 'nullable|numeric',
+            'data.upper_sv_w_2' => 'nullable|numeric',
+            'data.upper_sv_w_3' => 'nullable|numeric',
+            'data.upper_sv_w_4' => 'nullable|numeric',
+            'data.upper_sv_w_5' => 'nullable|numeric',
+            'data.upper_sv_w_6' => 'nullable|numeric',
+            'data.upper_sv_w_7' => 'nullable|numeric',
+            'data.upper_sv_w_8' => 'nullable|numeric',
 
-            'data.lower_sv_r_1' => 'nullable|numeric',
-            'data.lower_sv_r_2' => 'nullable|numeric',
-            'data.lower_sv_r_3' => 'nullable|numeric',
-            'data.lower_sv_r_4' => 'nullable|numeric',
-            'data.lower_sv_r_5' => 'nullable|numeric',
-            'data.lower_sv_r_6' => 'nullable|numeric',
-            'data.lower_sv_r_7' => 'nullable|numeric',
-            'data.lower_sv_r_8' => 'nullable|numeric',
+            'data.upper_sv_r_1' => 'nullable|numeric',
+            'data.upper_sv_r_2' => 'nullable|numeric',
+            'data.upper_sv_r_3' => 'nullable|numeric',
+            'data.upper_sv_r_4' => 'nullable|numeric',
+            'data.upper_sv_r_5' => 'nullable|numeric',
+            'data.upper_sv_r_6' => 'nullable|numeric',
+            'data.upper_sv_r_7' => 'nullable|numeric',
+            'data.upper_sv_r_8' => 'nullable|numeric',
 
-            'data.lower_sv_c_1' => 'nullable|numeric',
-            'data.lower_sv_c_2' => 'nullable|numeric',
-            'data.lower_sv_c_3' => 'nullable|numeric',
-            'data.lower_sv_c_4' => 'nullable|numeric',
-            'data.lower_sv_c_5' => 'nullable|numeric',
-            'data.lower_sv_c_6' => 'nullable|numeric',
-            'data.lower_sv_c_7' => 'nullable|numeric',
-            'data.lower_sv_c_8' => 'nullable|numeric',
+            'data.upper_sv_c_1' => 'nullable|numeric',
+            'data.upper_sv_c_2' => 'nullable|numeric',
+            'data.upper_sv_c_3' => 'nullable|numeric',
+            'data.upper_sv_c_4' => 'nullable|numeric',
+            'data.upper_sv_c_5' => 'nullable|numeric',
+            'data.upper_sv_c_6' => 'nullable|numeric',
+            'data.upper_sv_c_7' => 'nullable|numeric',
+            'data.upper_sv_c_8' => 'nullable|numeric',
         ];
     
         $validator = Validator::make($metric, $rules);
