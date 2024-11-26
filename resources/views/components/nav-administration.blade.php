@@ -22,7 +22,7 @@
         <x-nav-link class="text-sm px-6 uppercase" href="{{ route('administration.account.index') }}" :active="request()->routeIs('administration.account.index')" wire:navigate>
             <i class="fa fa-circle-user text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Akun') }}</span>
         </x-nav-link>
-        <x-nav-link class="text-sm px-6 uppercase" href="{{ route('administration.authorization.index') }}" :active="request()->routeIs('administration.authorizations.index')" wire:navigate>
+        <x-nav-link class="text-sm px-6 uppercase" href="{{ route('administration.authorization.index') }}" :active="request()->routeIs('administration.authorization.index')" wire:navigate>
             <i class="fa fa-user-lock text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Wewenang') }}</span>
         </x-nav-link>
         <x-nav-link class="text-sm px-6 uppercase"  href="{{ route('administration.manage.index') }}" :active="request()->is('administration/manage*')" wire:navigate>

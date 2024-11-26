@@ -370,7 +370,7 @@ class extends Component {
                                     </x-select>
                                 </div>
                                 <div x-data="{ open: false, userq: @entangle('userq').live }"
-                                    x-on:user-selected="userq = $event.detail; open = false">
+                                    x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
                                     <div x-on:click.away="open = false">
                                         <label for="stc-user"
                                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>

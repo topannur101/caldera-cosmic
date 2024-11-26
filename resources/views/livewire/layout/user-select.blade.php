@@ -37,7 +37,15 @@ class extends Component {
     @if(count($users))
     <div class="bg-white dark:bg-neutral-800 shadow-lg sm:rounded-lg overflow-y-scroll max-h-72">
         @foreach($users as $user)
-        <button type=button class="flex p-3 text-left w-full hover:bg-caldy-500/10 active:bg-caldy-500/30" x-on:click="$dispatch('user-selected', '{{ $user->emp_id }}')">
+        <button type=button class="flex p-3 text-left w-full hover:bg-caldy-500/10 active:bg-caldy-500/30"
+            x-on:click="$dispatch('user-selected', { 
+                user_id: '{{ $user->id }}', 
+                user_name: '{{ $user->name }}',
+                user_emp_id: '{{ $user->emp_id }}',
+                user_photo: '{{ $user->photo }}', 
+                user_is_active: '{{ $user->is_active }}', 
+                user_seen_at: '{{ $user->seen_at }}' 
+            })">
             <div>
                 <div class="w-8 h-8 my-auto mr-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                     @if($user->photo)

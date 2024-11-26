@@ -130,7 +130,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         :class="!userq && timerIsRunning ?
                                             'bg-red-200 dark:bg-red-900 dark:text-white fa-fade' : ''"
                                         wire:key="user-select" x-data="{ open: false }"
-                                        x-on:user-selected="userq = $event.detail; open = false">
+                                        x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
                                         <div x-on:click.away="open = false">
                                             <label for="omv-user"
                                                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
