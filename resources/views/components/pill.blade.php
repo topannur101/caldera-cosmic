@@ -19,6 +19,10 @@ switch ($color) {
     case 'neutral':
         $classes = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-300';
         break;
+
+    case 'neutral-lighter':
+        $classes = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-neutral-200 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-300';
+        break;
     
     default:
         $classes = 'text-xs font-medium px-2.5 py-0.5 rounded-full  bg-caldy-100 text-caldy-800 dark:bg-caldy-900 dark:text-caldy-200';

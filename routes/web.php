@@ -97,9 +97,10 @@ Route::prefix('insight')->group(function () {
     Volt::route('/', 'insight.index')->name('insight');
 });
 
+Route::view('/inventory', 'livewire.inventory.index')->name('inventory');
 // Route::view('kpi', 'kpi')->name('kpi');
-Route::view('profile', 'profile')->name('profile');
-Route::view('help', 'help')->name('help');
+// Route::view('profile', 'profile')->name('profile');
+// Route::view('help', 'help')->name('help');
 
 // DOWNLOAD download
 Route::name('download.')->group(function () {
@@ -138,7 +139,7 @@ Route::middleware('auth')->group(function () {
             Volt::route('/items/create',    'inventory.items.create')   ->name('create');
             Volt::route('/items/{id}',      'inventory.items.show')     ->name('show');
             Volt::route('/items/{id}/edit', 'inventory.items.edit')     ->name('edit');
-            Volt::route('/items',           'inventory.items.index')    ->name('index');
+            Volt::route('/items/',          'inventory.items.index')    ->name('index');
 
         });
 
@@ -163,8 +164,6 @@ Route::middleware('auth')->group(function () {
             Volt::route('/manage',                   'inventory.manage.index')        ->name('index');
             
         });
-
-        Route::view('/', 'livewire.inventory.index')->name('inventory');
 
     });
 
