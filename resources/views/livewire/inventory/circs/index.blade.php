@@ -351,7 +351,7 @@ class extends Component {
                                     class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                         </div>
                         <div class="text-center text-neutral-400 dark:text-neutral-600">
-                            {{ __('Tentukan rentang tanggal') }}
+                            {{ __('Pilih rentang tanggal') }}
                         </div>
                     </div>
                 @else

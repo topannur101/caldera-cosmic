@@ -17,6 +17,7 @@ class extends Component {
     public function mount()
     {
         $this->view_titles = [        
+            'batch-count'   => __('Jumlah batch'),
             'running-time'  => __('Waktu Jalan'),
             'metrics'       => __('Data mentah'),    
         ];
@@ -56,6 +57,9 @@ class extends Component {
     </div>
     <div wire:key="omv-summary-index-container" wire:loading.class="hidden">
         @switch($view)
+            @case('batch-count')
+            <livewire:insight.omv.summary.batch-count />                       
+                @break
             @case('running-time')
             <livewire:insight.omv.summary.running-time />                       
                 @break

@@ -134,7 +134,7 @@ new class extends Component {
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
             {{-- <x-checkbox id="device-manage" :disabled="!$is_superuser" wire:model="actions"
-                value="device-manage">{{ __('Kelola perangkat ') }}</x-checkbox> --}}
+                value="device-manage">{{ __('Kelola alat ') }}</x-checkbox> --}}
             <x-checkbox id="recipe-manage" :disabled="!$is_superuser" wire:model="actions"
                 value="recipe-manage">{{ __('Kelola resep ') }}</x-checkbox>
             <x-checkbox id="csv-download" :disabled="!$is_superuser" wire:model="actions"

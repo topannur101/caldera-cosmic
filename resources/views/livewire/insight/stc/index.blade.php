@@ -462,7 +462,7 @@ class extends Component {
                             </div>
                         <div class="mb-6">
                             <label for="d-log-device_code"
-                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode alat') }}</label>
+                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode alat ukur') }}</label>
                             <x-text-input id="d-log-device_code" wire:model="device_code" type="text" placeholder="Scan atau ketik di sini..." />
                             @error('device_code')
                                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />

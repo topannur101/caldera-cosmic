@@ -17,9 +17,9 @@ class extends Component {
     public function mount()
     {
         $this->view_titles = [       
-            'd-logs'    => __('Ringkasan suhu alat'), 
-            'd-sums'    => __('Data mentah alat'),    
-            'm-sums'    => __('Data mentah mesin'),   
+            'd-logs'    => __('Ringkasan'), 
+            'd-sums'    => __('Pembacaan alat'),    
+            'm-sums'    => __('Pembacaan mesin'),   
         ];
     }
 
