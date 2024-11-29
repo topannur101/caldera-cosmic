@@ -25,9 +25,9 @@ class extends Component {
     #[Url]
     public $team;
 
-    public int $batch_total = 0;
-    public float $duration_avg = 0;
-    public float $line_avg = 0;
+    // public int $batch_total = 0;
+    // public float $duration_avg = 0;
+    // public float $line_avg = 0;
 
     public function mount()
     {
@@ -52,34 +52,28 @@ class extends Component {
             })
             ->whereBetween('start_at', [$start, $end]);
 
-        $this->batch_total = $metrics->count();
-        $this->duration_avg = round($metrics->get()->average(function ($metric) {
-            return Carbon::parse($metric->start_at)->diffInMinutes(Carbon::parse($metric->end_at));
-        }), 1);
+        // $this->batch_total = $metrics->count();
+        // $this->duration_avg = round($metrics->get()->average(function ($metric) {
+        //     return Carbon::parse($metric->start_at)->diffInMinutes(Carbon::parse($metric->end_at));
+        // }), 1);
 
-        $data = $metrics->get()->groupBy('line')
+        $dataByLine = $metrics->get()->groupBy('line')
             ->map(function ($lineMetrics) {
                 return [
-                    'too_soon' => $lineMetrics->where('eval', 'too_soon')->count(),
-                    'on_time' => $lineMetrics->where('eval', 'on_time')->count(), 
-                    'on_time_manual' => $lineMetrics->where('eval', 'on_time_manual')->count(),
-                    'too_late' => $lineMetrics->where('eval', 'too_late')->count(),
+                    'too_soon'          => $lineMetrics->where('eval', 'too_soon')->count(),
+                    'on_time'           => $lineMetrics->where('eval', 'on_time')->count(), 
+                    'on_time_manual'    => $lineMetrics->where('eval', 'on_time_manual')->count(),
+                    'too_late'          => $lineMetrics->where('eval', 'too_late')->count(),
                 ];
             })
             ->sortByDesc(function ($value, $key) {
                 return $key;
             });
 
-            $sumPerLine = $data->map(function ($childValues) {
-                return array_sum($childValues);
-            });
-
-            $this->line_avg = number_format($sumPerLine->avg(), 1);
-
         $this->js(
             "
             let options = " .
-                json_encode(InsOmv::getBatchCountChartOptions($data)) .
+                json_encode(InsOmv::getBatchCountChartOptions($dataByLine, __('Line'))) .
                 ";
                 
             // Fix the formatters
@@ -100,7 +94,51 @@ class extends Component {
             };
 
             // Render chart
-            const chartContainer = \$wire.\$el.querySelector('#omv-summary-batch-count-chart-container');
+            const chartContainer = \$wire.\$el.querySelector('#omv-summary-batch-count-by-line-chart-container');
+            chartContainer.innerHTML = '<div class=\"chart\"></div>';
+            let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
+            chart.render();
+            ",
+        );
+
+        $dataByTeam = $metrics->get()->groupBy('team')
+            ->map(function ($teamMetrics) {
+                return [
+                    'too_soon'          => $teamMetrics->where('eval', 'too_soon')->count(),
+                    'on_time'           => $teamMetrics->where('eval', 'on_time')->count(), 
+                    'on_time_manual'    => $teamMetrics->where('eval', 'on_time_manual')->count(),
+                    'too_late'          => $teamMetrics->where('eval', 'too_late')->count(),
+                ];
+            })
+            ->sortByDesc(function ($value, $key) {
+                return $key;
+            });
+
+        $this->js(
+            "
+            let options = " .
+                json_encode(InsOmv::getBatchCountChartOptions($dataByTeam, __('Tim'))) .
+                ";
+                
+            // Fix the formatters
+            options.xaxis.labels.formatter = function(val) { 
+                return val; 
+            };
+            
+            options.plotOptions.bar.dataLabels.total.formatter = function(val) {
+                return val;
+            };
+
+            options.dataLabels.formatter = function(val) {
+                return val;             
+            };
+
+            options.tooltip.y.formatter = function(val) {
+                return val + ' " . __('batch') . "';       
+            };
+
+            // Render chart
+            const chartContainer = \$wire.\$el.querySelector('#omv-summary-batch-count-by-team-chart-container');
             chartContainer.innerHTML = '<div class=\"chart\"></div>';
             let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
             chart.render();
@@ -201,39 +239,19 @@ class extends Component {
     <div wire:key="modals"> 
 
     </div>
-    <div wire:key="omv-summary-batch-count" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-x-3">
+    <div wire:key="omv-summary-batch-count" class="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
         <div>
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
-                {{ __('Ikhtisar') }}</h1>
-            <div class="flex flex-col gap-y-3 pb-6">
-                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Produksi') }}</label>
-                    <div class="flex items-end gap-x-1">
-                        <div class="text-2xl">{{ $batch_total }}</div>
-                        <div>{{ __('batch') }}</div>
-                    </div>
-                </div>
-                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Rerata waktu batch') }}</label>
-                    <div class="flex items-end gap-x-1">
-                        <div class="text-2xl">{{ $duration_avg }}</div>
-                        <div>{{ __('menit') .'/' . __('batch')}}</div>
-                    </div>
-                </div>
-                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Rerata waktu jalan') }}</label>
-                    <div class="flex items-end gap-x-1">
-                        <div class="text-2xl">{{ $line_avg }}</div>
-                        <div>{{ __('jam') .'/' . __('line')}}</div>
-                    </div>
-                </div>
+                {{ __('Berdasarkan tim') }}</h1>
+                <div wire:key="omv-summary-batch-count-by-team-chart" class="h-[32rem] bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
+                id="omv-summary-batch-count-by-team-chart-container" wire:key="omv-summary-batch-count-by-team-chart-container" wire:ignore> 
             </div>
         </div>
-        <div class="sm:col-span-2 lg:col-span-3">
+        <div>
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
-                {{ __('Jumlah batch') }}</h1>
-            <div wire:key="omv-summary-batch-count-chart" class="h-[32rem] bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
-                id="omv-summary-batch-count-chart-container" wire:key="omv-summary-batch-count-chart-container" wire:ignore>
+                {{ __('Berdasarkan line') }}</h1>
+            <div wire:key="omv-summary-batch-count-by-line-chart" class="h-[32rem] bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
+                id="omv-summary-batch-count-by-line-chart-container" wire:key="omv-summary-batch-count-by-line-chart-container" wire:ignore>
             </div>  
         </div>
     </div>

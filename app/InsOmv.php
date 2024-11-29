@@ -108,10 +108,10 @@ class InsOmv
         ];
     }
 
-    public static function getBatchCountChartOptions($data)
+    public static function getBatchCountChartOptions($data, string $groupBy)
     {
-        $lines = array_map(function($line) {
-            return "Line " . intval($line);
+        $groups = array_map(function($group) use ($groupBy) {
+            return $groupBy . " " . $group;
         }, array_keys($data->toArray()));
         
         return [
@@ -188,7 +188,7 @@ class InsOmv
                 ],
             ],
             'xaxis' => [
-                'categories' => $lines,
+                'categories' => $groups,
                 'title' => [
                     'text' => __('Jumlah batch'),
                 ],

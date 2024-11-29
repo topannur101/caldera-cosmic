@@ -11,7 +11,7 @@ new #[Layout('layouts.app')]
 class extends Component {
     
     #[Url]
-    public $view = 'running-time';
+    public $view = 'batch-count';
     public array $view_titles = [];
 
     public function mount()
