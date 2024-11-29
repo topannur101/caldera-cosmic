@@ -177,7 +177,7 @@ class InsOmv
                     'horizontal' => true,
                     'dataLabels' => [
                         'total' => [
-                            'enabled' => $groupBy == 'line' ? true : false,
+                            'enabled' => true,
                             'offsetX' => 0,
                             'style' => [
                                 'fontSize' => '13px',
@@ -202,7 +202,7 @@ class InsOmv
             'xaxis' => [
                 'categories' => $groups,
                 'title' => [
-                    'text' => __('Jumlah batch'),
+                    'text' => $groupBy == 'line' ? __('Jumlah batch') : __('Persentase evaluasi'),
                 ],
                 'labels' => [
                     'formatter' => null,

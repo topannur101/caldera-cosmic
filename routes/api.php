@@ -85,9 +85,9 @@ Route::post('/omv-metric', function (Request $request) {
 
     if($isExists) {
         $errors[] = "A metric for line '{$validated['line']}' already exists at '{$validated['start_at']}'.";
-    }    
+    }
 
-     if (!empty($errors)) {
+    if (!empty($errors)) {
         return response()->json([
             'status' => 'invalid',
             'msg' => $errors,

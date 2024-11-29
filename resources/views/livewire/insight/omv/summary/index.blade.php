@@ -18,6 +18,7 @@ class extends Component {
     {
         $this->view_titles = [        
             'batch-count'   => __('Jumlah batch'),
+            'worker-perf'   => __('Performa pekerja'),
             'running-time'  => __('Waktu Jalan'),
             'metrics'       => __('Data mentah'),    
         ];
@@ -59,6 +60,9 @@ class extends Component {
         @switch($view)
             @case('batch-count')
             <livewire:insight.omv.summary.batch-count />                       
+                @break
+            @case('worker-perf')
+            <livewire:insight.omv.summary.worker-perf />                       
                 @break
             @case('running-time')
             <livewire:insight.omv.summary.running-time />                       

@@ -81,6 +81,10 @@ class extends Component {
                 return val; 
             };
 
+            options.plotOptions.bar.dataLabels.total.formatter = function(val) {
+                return val.toFixed(0);
+            }
+
             options.dataLabels.formatter = function(val) {
                 return val.toFixed(1) + '%';            
             };
