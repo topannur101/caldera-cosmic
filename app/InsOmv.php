@@ -110,8 +110,19 @@ class InsOmv
 
     public static function getBatchCountChartOptions($data, string $groupBy)
     {
-        $groups = array_map(function($group) use ($groupBy) {
-            return $groupBy . " " . $group;
+        $groupByName = '';
+        switch ($groupBy) {
+            case 'line':
+                $groupByName = __('Line');
+                break;
+
+            case 'team':
+                $groupByName = __('Tim');
+                break;
+        }
+
+        $groups = array_map(function($group) use ($groupByName) {
+            return $groupByName . " " . $group;
         }, array_keys($data->toArray()));
         
         return [
@@ -142,6 +153,7 @@ class InsOmv
                 'height' => '100%',
                 'background' => 'transparent',
                 'stacked' => true,
+                'stackType' => $groupBy == 'team' ? '100%' : null,
                 'toolbar' => [
                     'show' => true,
                     'tools' => [
@@ -165,7 +177,7 @@ class InsOmv
                     'horizontal' => true,
                     'dataLabels' => [
                         'total' => [
-                            'enabled' => true,
+                            'enabled' => $groupBy == 'line' ? true : false,
                             'offsetX' => 0,
                             'style' => [
                                 'fontSize' => '13px',

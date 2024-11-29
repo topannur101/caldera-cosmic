@@ -57,6 +57,46 @@ class extends Component {
         //     return Carbon::parse($metric->start_at)->diffInMinutes(Carbon::parse($metric->end_at));
         // }), 1);
 
+        $dataByTeam = $metrics->get()->groupBy('team')
+            ->map(function ($teamMetrics) {
+                return [
+                    'too_soon'          => $teamMetrics->where('eval', 'too_soon')->count(),
+                    'on_time'           => $teamMetrics->where('eval', 'on_time')->count(), 
+                    'on_time_manual'    => $teamMetrics->where('eval', 'on_time_manual')->count(),
+                    'too_late'          => $teamMetrics->where('eval', 'too_late')->count(),
+                ];
+            })
+            ->sortBy(function ($value, $key) {
+                return $key;
+            });
+
+        $this->js(
+            "
+            let options = " .
+                json_encode(InsOmv::getBatchCountChartOptions($dataByTeam, 'team')) .
+                ";
+                
+            // Fix the formatters
+            options.xaxis.labels.formatter = function(val) { 
+                return val; 
+            };
+
+            options.dataLabels.formatter = function(val) {
+                return val.toFixed(1) + '%';            
+            };
+
+            options.tooltip.y.formatter = function(val) {
+                return val + ' " . __('batch') . "';       
+            };
+
+            // Render chart
+            const chartContainer = \$wire.\$el.querySelector('#omv-summary-batch-count-by-team-chart-container');
+            chartContainer.innerHTML = '<div class=\"chart\"></div>';
+            let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
+            chart.render();
+            ",
+        );
+
         $dataByLine = $metrics->get()->groupBy('line')
             ->map(function ($lineMetrics) {
                 return [
@@ -73,7 +113,7 @@ class extends Component {
         $this->js(
             "
             let options = " .
-                json_encode(InsOmv::getBatchCountChartOptions($dataByLine, __('Line'))) .
+                json_encode(InsOmv::getBatchCountChartOptions($dataByLine, 'line')) .
                 ";
                 
             // Fix the formatters
@@ -95,50 +135,6 @@ class extends Component {
 
             // Render chart
             const chartContainer = \$wire.\$el.querySelector('#omv-summary-batch-count-by-line-chart-container');
-            chartContainer.innerHTML = '<div class=\"chart\"></div>';
-            let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
-            chart.render();
-            ",
-        );
-
-        $dataByTeam = $metrics->get()->groupBy('team')
-            ->map(function ($teamMetrics) {
-                return [
-                    'too_soon'          => $teamMetrics->where('eval', 'too_soon')->count(),
-                    'on_time'           => $teamMetrics->where('eval', 'on_time')->count(), 
-                    'on_time_manual'    => $teamMetrics->where('eval', 'on_time_manual')->count(),
-                    'too_late'          => $teamMetrics->where('eval', 'too_late')->count(),
-                ];
-            })
-            ->sortByDesc(function ($value, $key) {
-                return $key;
-            });
-
-        $this->js(
-            "
-            let options = " .
-                json_encode(InsOmv::getBatchCountChartOptions($dataByTeam, __('Tim'))) .
-                ";
-                
-            // Fix the formatters
-            options.xaxis.labels.formatter = function(val) { 
-                return val; 
-            };
-            
-            options.plotOptions.bar.dataLabels.total.formatter = function(val) {
-                return val;
-            };
-
-            options.dataLabels.formatter = function(val) {
-                return val;             
-            };
-
-            options.tooltip.y.formatter = function(val) {
-                return val + ' " . __('batch') . "';       
-            };
-
-            // Render chart
-            const chartContainer = \$wire.\$el.querySelector('#omv-summary-batch-count-by-team-chart-container');
             chartContainer.innerHTML = '<div class=\"chart\"></div>';
             let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
             chart.render();
