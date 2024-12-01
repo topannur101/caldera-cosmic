@@ -87,7 +87,7 @@ class extends Component {
                     'users.photo'
                 )
                 // Join with users table to get emp_id, name, and photo
-                ->leftJoin('users', 'users.id', '=', 'user_id')
+                ->join('users', 'users.id', '=', 'user_id')
                 ->limit(10) // Limit to top 10 users
                 ->get();
 
@@ -120,7 +120,7 @@ class extends Component {
                         'users.photo'
                     )
                     // Join with users table to get emp_id, name, and photo
-                    ->leftJoin('users', 'users.id', '=', 'user_id')
+                    ->join('users', 'users.id', '=', 'user_id')
                     ->limit(10) // Limit to top 10 users
                     ->get();
 

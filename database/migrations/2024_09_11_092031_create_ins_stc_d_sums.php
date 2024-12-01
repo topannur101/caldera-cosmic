@@ -32,7 +32,7 @@ return new class extends Migration
             $table->decimal('speed', 3, 1);
             $table->tinyInteger('sequence')->unsigned();
             $table->enum('position', ['upper', 'lower']);
-            $table->json('set_temps');
+            $table->json('sv_temps');
 
             $table->index('ins_stc_device_id');
             $table->index('ins_stc_machine_id');

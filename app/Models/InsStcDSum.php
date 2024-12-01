@@ -29,7 +29,7 @@ class InsStcDSum extends Model
         'speed',
         'sequence',
         'position',
-        'set_temps',
+        'sv_temps',
     ];
     
     protected $casts = [
@@ -146,9 +146,9 @@ class InsStcDSum extends Model
 
     public function corTemps(): array
     {
-        $set_temps = json_decode($this->set_temps, true);
+        $sv_temps = json_decode($this->sv_temps, true);
         $x = new InsStcTempControl;
-        return $x->calculateNewSetValues($set_temps, $this->logTemps());
+        return $x->calculateNewSetValues($sv_temps, $this->logTemps());
     }
 
 }

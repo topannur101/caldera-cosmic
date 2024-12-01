@@ -18,8 +18,9 @@ class extends Component {
     {
         $this->view_titles = [       
             'd-logs'    => __('Ringkasan'), 
+            'adjs'      => __('Penyetelan'),  
             'd-sums'    => __('Pembacaan alat'),    
-            'm-sums'    => __('Pembacaan mesin'),   
+            'm-sums'    => __('Pembacaan mesin'), 
         ];
     }
 
@@ -63,6 +64,9 @@ class extends Component {
         @switch($view)
             @case('d-logs')
             <livewire:insight.stc.summary.d-logs />                       
+                @break
+            @case('adjs')
+            <livewire:insight.stc.summary.adjs />
                 @break
             @case('d-sums')
             <livewire:insight.stc.summary.d-sums />                       

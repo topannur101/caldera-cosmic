@@ -59,6 +59,9 @@ class extends Component {
                 user_is_active: '',
                 user_seen_at: '',
                 userFill(event) {
+                    this.open = false;
+                    this.userq = '';
+
                     this.user_id = event.detail.user_id;
                     this.user_name = event.detail.user_name;
                     this.user_emp_id = event.detail.user_emp_id;
@@ -80,7 +83,7 @@ class extends Component {
                     });
                 }
             }"
-            x-on:user-selected="userq = $event.detail.user_emp_id;open = false; userFill($event);"
+            x-on:user-selected="userFill($event);"
             x-init="userReset()">
             <div x-show="!user_id" x-on:click.away="open = false" class="px-3 sm:px-0">
                 {{-- <label for="cal-user"

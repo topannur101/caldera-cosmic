@@ -30,7 +30,7 @@ class extends Component {
     public string $position;
     public string $speed;
     public array $log_temps;
-    public array $set_temps;
+    public array $sv_temps;
     public array $cor_temps;
 
     public array $xzones = [];
@@ -69,7 +69,7 @@ class extends Component {
             $this->position         = InsStc::positionHuman($dSum->position);
             $this->speed            = $dSum->speed;
             $this->log_temps        = $dSum->logTemps();
-            $this->set_temps        = json_decode($dSum->set_temps, true);
+            $this->sv_temps        = json_decode($dSum->sv_temps, true);
             $this->cor_temps        = $dSum->corTemps();
 
             $logs = $dSum->ins_stc_d_logs->toArray();
@@ -138,7 +138,7 @@ class extends Component {
             'logs_count'    => $this->logs_count,
             'position'      => $this->position,
             'speed'         => $this->speed,
-            'set_temps'     => $this->set_temps
+            'sv_temps'     => $this->sv_temps
         ];
         $this->dispatch('print-prepare', $data);
     }
@@ -271,11 +271,11 @@ class extends Component {
                         @endforeach
 
                         <div>SV</div>
-                        @foreach($set_temps as $set_temp)
-                            <div>{{ $set_temp }}</div>
+                        @foreach($sv_temps as $sv_temp)
+                            <div>{{ $sv_temp }}</div>
                         @endforeach
 
-                        <div>SVC</div>
+                        <div>SVP</div>
                         @foreach($cor_temps as $cor_temp)
                             <div>{{ $cor_temp }}</div>
                         @endforeach

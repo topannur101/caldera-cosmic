@@ -27,7 +27,7 @@ class extends Component {
     public string $logs_count;
     public string $position;
     public string $speed;
-    public array $set_temps;
+    public array $sv_temps;
 
     #[On('print-prepare')]
     public function load($data)
@@ -49,7 +49,7 @@ class extends Component {
         $this->logs_count    = $data['logs_count'];
         $this->position      = $data['position'];
         $this->speed         = $data['speed'];
-        $this->set_temps     = $data['set_temps'];
+        $this->sv_temps     = $data['sv_temps'];
         $this->dispatch('print-execute');
     }
 };
@@ -151,11 +151,11 @@ class extends Component {
                         <dt class="mb-3 text-neutral-500 text-xs uppercase">{{ __('Suhu diatur') }}</dt>
                         <dd>
                             <div class="grid grid-cols-8 text-center gap-x-3">
-                                @foreach($set_temps as $set_temp)
+                                @foreach($sv_temps as $sv_temp)
                                 <div>
                                     <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">
                                         {{ __('S') . $loop->iteration }}</div>
-                                    <div>{{ $set_temp }}</div>
+                                    <div>{{ $sv_temp }}</div>
                                 </div>
                                 @endforeach
                             </div>

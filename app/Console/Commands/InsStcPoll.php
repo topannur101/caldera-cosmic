@@ -48,12 +48,12 @@ class InsStcPoll extends Command
                 $lower_pv_r = $this->buildRegisterRequest('lower_pv_r', $ip, $port, $unit_id);
                 $lower_sv_w = $this->buildRegisterRequest('lower_sv_w', $ip, $port, $unit_id);
                 $lower_sv_r = $this->buildRegisterRequest('lower_sv_r', $ip, $port, $unit_id);
-                $lower_sv_c = $this->buildRegisterRequest('lower_sv_c', $ip, $port, $unit_id);
+                $lower_sv_p = $this->buildRegisterRequest('lower_sv_p', $ip, $port, $unit_id);
 
                 $upper_pv_r = $this->buildRegisterRequest('upper_pv_r', $ip, $port, $unit_id);
                 $upper_sv_w = $this->buildRegisterRequest('upper_sv_w', $ip, $port, $unit_id);
                 $upper_sv_r = $this->buildRegisterRequest('upper_sv_r', $ip, $port, $unit_id);
-                $upper_sv_c = $this->buildRegisterRequest('upper_sv_c', $ip, $port, $unit_id);
+                $upper_sv_p = $this->buildRegisterRequest('upper_sv_p', $ip, $port, $unit_id);
 
                 if (strpos($ip, '127.') !== 0) {
 
@@ -62,33 +62,33 @@ class InsStcPoll extends Command
                         $lower_pv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_pv_r);
                         $lower_sv_w_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_sv_w);
                         $lower_sv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_sv_r);
-                        $lower_sv_c_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_sv_c);
+                        $lower_sv_p_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($lower_sv_p);
     
                         $upper_pv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_pv_r);
                         $upper_sv_w_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_sv_w);
                         $upper_sv_r_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_sv_r);
-                        $upper_sv_c_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_sv_c);
+                        $upper_sv_p_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($upper_sv_p);
     
                         $lower_pv_r_data = $lower_pv_r_response->getData();
                         $lower_sv_w_data = $lower_sv_w_response->getData();
                         $lower_sv_r_data = $lower_sv_r_response->getData();
-                        $lower_sv_c_data = $lower_sv_c_response->getData();
+                        $lower_sv_p_data = $lower_sv_p_response->getData();
     
                         $upper_pv_r_data = $upper_pv_r_response->getData();
                         $upper_sv_w_data = $upper_sv_w_response->getData();
                         $upper_sv_r_data = $upper_sv_r_response->getData();
-                        $upper_sv_c_data = $upper_sv_c_response->getData();
+                        $upper_sv_p_data = $upper_sv_p_response->getData();
     
                         $data = array_merge(
                             $lower_pv_r_data,
                             $lower_sv_w_data,
                             $lower_sv_r_data,
-                            $lower_sv_c_data,
+                            $lower_sv_p_data,
         
                             $upper_pv_r_data,
                             $upper_sv_w_data,
                             $upper_sv_r_data,
-                            $upper_sv_c_data
+                            $upper_sv_p_data
                         );
                         $this->logResponse($machine, $data);
     
@@ -157,16 +157,16 @@ class InsStcPoll extends Command
                     ->int16(147, 'lower_sv_r_8')
                     ->build();
                 break;
-            case 'lower_sv_c':
+            case 'lower_sv_p':
                 return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
-                    ->int16(130, 'lower_sv_c_1')
-                    ->int16(131, 'lower_sv_c_2')
-                    ->int16(132, 'lower_sv_c_3')
-                    ->int16(133, 'lower_sv_c_4')
-                    ->int16(134, 'lower_sv_c_5')
-                    ->int16(135, 'lower_sv_c_6')
-                    ->int16(136, 'lower_sv_c_7')
-                    ->int16(137, 'lower_sv_c_8')
+                    ->int16(130, 'lower_sv_p_1')
+                    ->int16(131, 'lower_sv_p_2')
+                    ->int16(132, 'lower_sv_p_3')
+                    ->int16(133, 'lower_sv_p_4')
+                    ->int16(134, 'lower_sv_p_5')
+                    ->int16(135, 'lower_sv_p_6')
+                    ->int16(136, 'lower_sv_p_7')
+                    ->int16(137, 'lower_sv_p_8')
                     ->build();
                 break;
 
@@ -206,16 +206,16 @@ class InsStcPoll extends Command
                     ->int16(247, 'upper_sv_r_8')
                     ->build();
                 break;
-            case 'upper_sv_c':
+            case 'upper_sv_p':
                 return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
-                    ->int16(230, 'upper_sv_c_1')
-                    ->int16(231, 'upper_sv_c_2')
-                    ->int16(232, 'upper_sv_c_3')
-                    ->int16(233, 'upper_sv_c_4')
-                    ->int16(234, 'upper_sv_c_5')
-                    ->int16(235, 'upper_sv_c_6')
-                    ->int16(236, 'upper_sv_c_7')
-                    ->int16(237, 'upper_sv_c_8')
+                    ->int16(230, 'upper_sv_p_1')
+                    ->int16(231, 'upper_sv_p_2')
+                    ->int16(232, 'upper_sv_p_3')
+                    ->int16(233, 'upper_sv_p_4')
+                    ->int16(234, 'upper_sv_p_5')
+                    ->int16(235, 'upper_sv_p_6')
+                    ->int16(236, 'upper_sv_p_7')
+                    ->int16(237, 'upper_sv_p_8')
                     ->build();
                 break;
         }
@@ -253,14 +253,14 @@ class InsStcPoll extends Command
             'sv_r_7'         => $data['lower_sv_r_7'] ?? null,
             'sv_r_8'         => $data['lower_sv_r_8'] ?? null,
 
-            'sv_c_1'         => $data['lower_sv_c_1'] ?? null,
-            'sv_c_2'         => $data['lower_sv_c_2'] ?? null,
-            'sv_c_3'         => $data['lower_sv_c_3'] ?? null,
-            'sv_c_4'         => $data['lower_sv_c_4'] ?? null,
-            'sv_c_5'         => $data['lower_sv_c_5'] ?? null,
-            'sv_c_6'         => $data['lower_sv_c_6'] ?? null,
-            'sv_c_7'         => $data['lower_sv_c_7'] ?? null,
-            'sv_c_8'         => $data['lower_sv_c_8'] ?? null,
+            'sv_p_1'         => $data['lower_sv_p_1'] ?? null,
+            'sv_p_2'         => $data['lower_sv_p_2'] ?? null,
+            'sv_p_3'         => $data['lower_sv_p_3'] ?? null,
+            'sv_p_4'         => $data['lower_sv_p_4'] ?? null,
+            'sv_p_5'         => $data['lower_sv_p_5'] ?? null,
+            'sv_p_6'         => $data['lower_sv_p_6'] ?? null,
+            'sv_p_7'         => $data['lower_sv_p_7'] ?? null,
+            'sv_p_8'         => $data['lower_sv_p_8'] ?? null,
         ];
     
         $metricUpper = [
@@ -291,14 +291,14 @@ class InsStcPoll extends Command
             'sv_r_7'         => $data['upper_sv_r_7'] ?? null,
             'sv_r_8'         => $data['upper_sv_r_8'] ?? null,
 
-            'sv_c_1'         => $data['upper_sv_c_1'] ?? null,
-            'sv_c_2'         => $data['upper_sv_c_2'] ?? null,
-            'sv_c_3'         => $data['upper_sv_c_3'] ?? null,
-            'sv_c_4'         => $data['upper_sv_c_4'] ?? null,
-            'sv_c_5'         => $data['upper_sv_c_5'] ?? null,
-            'sv_c_6'         => $data['upper_sv_c_6'] ?? null,
-            'sv_c_7'         => $data['upper_sv_c_7'] ?? null,
-            'sv_c_8'         => $data['upper_sv_c_8'] ?? null,
+            'sv_p_1'         => $data['upper_sv_p_1'] ?? null,
+            'sv_p_2'         => $data['upper_sv_p_2'] ?? null,
+            'sv_p_3'         => $data['upper_sv_p_3'] ?? null,
+            'sv_p_4'         => $data['upper_sv_p_4'] ?? null,
+            'sv_p_5'         => $data['upper_sv_p_5'] ?? null,
+            'sv_p_6'         => $data['upper_sv_p_6'] ?? null,
+            'sv_p_7'         => $data['upper_sv_p_7'] ?? null,
+            'sv_p_8'         => $data['upper_sv_p_8'] ?? null,
         ];
 
         $tableData = [];
@@ -357,14 +357,14 @@ class InsStcPoll extends Command
                 'sv_r_7'                => $validatedData['data']['lower_sv_r_7'],
                 'sv_r_8'                => $validatedData['data']['lower_sv_r_8'],
 
-                'sv_c_1'                => $validatedData['data']['lower_sv_c_1'],
-                'sv_c_2'                => $validatedData['data']['lower_sv_c_2'],
-                'sv_c_3'                => $validatedData['data']['lower_sv_c_3'],
-                'sv_c_4'                => $validatedData['data']['lower_sv_c_4'],
-                'sv_c_5'                => $validatedData['data']['lower_sv_c_5'],
-                'sv_c_6'                => $validatedData['data']['lower_sv_c_6'],
-                'sv_c_7'                => $validatedData['data']['lower_sv_c_7'],
-                'sv_c_8'                => $validatedData['data']['lower_sv_c_8'],
+                'sv_p_1'                => $validatedData['data']['lower_sv_p_1'],
+                'sv_p_2'                => $validatedData['data']['lower_sv_p_2'],
+                'sv_p_3'                => $validatedData['data']['lower_sv_p_3'],
+                'sv_p_4'                => $validatedData['data']['lower_sv_p_4'],
+                'sv_p_5'                => $validatedData['data']['lower_sv_p_5'],
+                'sv_p_6'                => $validatedData['data']['lower_sv_p_6'],
+                'sv_p_7'                => $validatedData['data']['lower_sv_p_7'],
+                'sv_p_8'                => $validatedData['data']['lower_sv_p_8'],
             ]);
 
             $logUpper = InsStcMLog::create([
@@ -397,14 +397,14 @@ class InsStcPoll extends Command
                 'sv_r_7'                => $validatedData['data']['upper_sv_r_7'],
                 'sv_r_8'                => $validatedData['data']['upper_sv_r_8'],
 
-                'sv_c_1'                => $validatedData['data']['upper_sv_c_1'],
-                'sv_c_2'                => $validatedData['data']['upper_sv_c_2'],
-                'sv_c_3'                => $validatedData['data']['upper_sv_c_3'],
-                'sv_c_4'                => $validatedData['data']['upper_sv_c_4'],
-                'sv_c_5'                => $validatedData['data']['upper_sv_c_5'],
-                'sv_c_6'                => $validatedData['data']['upper_sv_c_6'],
-                'sv_c_7'                => $validatedData['data']['upper_sv_c_7'],
-                'sv_c_8'                => $validatedData['data']['upper_sv_c_8'],
+                'sv_p_1'                => $validatedData['data']['upper_sv_p_1'],
+                'sv_p_2'                => $validatedData['data']['upper_sv_p_2'],
+                'sv_p_3'                => $validatedData['data']['upper_sv_p_3'],
+                'sv_p_4'                => $validatedData['data']['upper_sv_p_4'],
+                'sv_p_5'                => $validatedData['data']['upper_sv_p_5'],
+                'sv_p_6'                => $validatedData['data']['upper_sv_p_6'],
+                'sv_p_7'                => $validatedData['data']['upper_sv_p_7'],
+                'sv_p_8'                => $validatedData['data']['upper_sv_p_8'],
             ]);
     
             $this->info("Metric saved successfully.");
@@ -452,14 +452,14 @@ class InsStcPoll extends Command
             'data.lower_sv_r_7' => 'nullable|numeric',
             'data.lower_sv_r_8' => 'nullable|numeric',
 
-            'data.lower_sv_c_1' => 'nullable|numeric',
-            'data.lower_sv_c_2' => 'nullable|numeric',
-            'data.lower_sv_c_3' => 'nullable|numeric',
-            'data.lower_sv_c_4' => 'nullable|numeric',
-            'data.lower_sv_c_5' => 'nullable|numeric',
-            'data.lower_sv_c_6' => 'nullable|numeric',
-            'data.lower_sv_c_7' => 'nullable|numeric',
-            'data.lower_sv_c_8' => 'nullable|numeric',
+            'data.lower_sv_p_1' => 'nullable|numeric',
+            'data.lower_sv_p_2' => 'nullable|numeric',
+            'data.lower_sv_p_3' => 'nullable|numeric',
+            'data.lower_sv_p_4' => 'nullable|numeric',
+            'data.lower_sv_p_5' => 'nullable|numeric',
+            'data.lower_sv_p_6' => 'nullable|numeric',
+            'data.lower_sv_p_7' => 'nullable|numeric',
+            'data.lower_sv_p_8' => 'nullable|numeric',
 
             'data.upper_pv_r_1' => 'nullable|numeric',
             'data.upper_pv_r_2' => 'nullable|numeric',
@@ -488,14 +488,14 @@ class InsStcPoll extends Command
             'data.upper_sv_r_7' => 'nullable|numeric',
             'data.upper_sv_r_8' => 'nullable|numeric',
 
-            'data.upper_sv_c_1' => 'nullable|numeric',
-            'data.upper_sv_c_2' => 'nullable|numeric',
-            'data.upper_sv_c_3' => 'nullable|numeric',
-            'data.upper_sv_c_4' => 'nullable|numeric',
-            'data.upper_sv_c_5' => 'nullable|numeric',
-            'data.upper_sv_c_6' => 'nullable|numeric',
-            'data.upper_sv_c_7' => 'nullable|numeric',
-            'data.upper_sv_c_8' => 'nullable|numeric',
+            'data.upper_sv_p_1' => 'nullable|numeric',
+            'data.upper_sv_p_2' => 'nullable|numeric',
+            'data.upper_sv_p_3' => 'nullable|numeric',
+            'data.upper_sv_p_4' => 'nullable|numeric',
+            'data.upper_sv_p_5' => 'nullable|numeric',
+            'data.upper_sv_p_6' => 'nullable|numeric',
+            'data.upper_sv_p_7' => 'nullable|numeric',
+            'data.upper_sv_p_8' => 'nullable|numeric',
         ];
     
         $validator = Validator::make($metric, $rules);

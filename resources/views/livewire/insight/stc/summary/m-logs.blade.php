@@ -316,7 +316,7 @@ class extends Component {
                             <td>{{ $m_log->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($m_log->position) }}</td>
                             <td> {{ $m_log->pv_r_1 . '|' . $m_log->pv_r_2 . '|' . $m_log->pv_r_3 . '|' . $m_log->pv_r_4 . '|' . $m_log->pv_r_5 . '|' . $m_log->pv_r_6 . '|' . $m_log->pv_r_7 . '|' . $m_log->pv_r_8 }}</td>
-                            <td> {{ $m_log->sv_c_1 . '|' . $m_log->sv_c_2 . '|' . $m_log->sv_c_3 . '|' . $m_log->sv_c_4 . '|' . $m_log->sv_c_5 . '|' . $m_log->sv_c_6 . '|' . $m_log->sv_c_7 . '|' . $m_log->sv_c_8 }}</td>
+                            <td> {{ $m_log->sv_p_1 . '|' . $m_log->sv_p_2 . '|' . $m_log->sv_p_3 . '|' . $m_log->sv_p_4 . '|' . $m_log->sv_p_5 . '|' . $m_log->sv_p_6 . '|' . $m_log->sv_p_7 . '|' . $m_log->sv_p_8 }}</td>
                             <td> {{ $m_log->sv_w_1 . '|' . $m_log->sv_w_2 . '|' . $m_log->sv_w_3 . '|' . $m_log->sv_w_4 . '|' . $m_log->sv_w_5 . '|' . $m_log->sv_w_6 . '|' . $m_log->sv_w_7 . '|' . $m_log->sv_w_8 }}</td>
                             <td> {{ $m_log->sv_r_1 . '|' . $m_log->sv_r_2 . '|' . $m_log->sv_r_3 . '|' . $m_log->sv_r_4 . '|' . $m_log->sv_r_5 . '|' . $m_log->sv_r_6 . '|' . $m_log->sv_r_7 . '|' . $m_log->sv_r_8 }}</td>
                         </tr>

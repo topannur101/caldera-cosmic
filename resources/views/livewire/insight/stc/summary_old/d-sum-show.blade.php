@@ -29,7 +29,7 @@ class extends Component {
     public string $logs_count;
     public string $position;
     public string $speed;
-    public array $set_temps;
+    public array $sv_temps;
 
     public array $xzones = [];
     public array $yzones = [];
@@ -66,7 +66,7 @@ class extends Component {
             $this->logs_count       = $dSum->ins_stc_d_logs->count();
             $this->position         = InsStc::positionHuman($dSum->position);
             $this->speed            = $dSum->speed;
-            $this->set_temps        = json_decode($dSum->set_temps, true);
+            $this->sv_temps        = json_decode($dSum->sv_temps, true);
 
             $logs = $dSum->ins_stc_d_logs->toArray();
             $xzones = $this->xzones;
@@ -134,7 +134,7 @@ class extends Component {
             'logs_count'    => $this->logs_count,
             'position'      => $this->position,
             'speed'         => $this->speed,
-            'set_temps'     => $this->set_temps
+            'sv_temps'     => $this->sv_temps
         ];
         $this->dispatch('print-prepare', $data);
     }
@@ -251,11 +251,11 @@ class extends Component {
                 <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Suhu diatur') }}</dt>
                 <dd>
                     <div class="grid grid-cols-8 text-center gap-x-3">
-                        @foreach($set_temps as $set_temp)
+                        @foreach($sv_temps as $sv_temp)
                         <div>
                             <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">
                                 {{ __('S') . $loop->iteration }}</div>
-                            <div>{{ $set_temp }}</div>
+                            <div>{{ $sv_temp }}</div>
                         </div>
                         @endforeach
                     </div>
