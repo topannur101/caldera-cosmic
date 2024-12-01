@@ -16,6 +16,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreignId('ins_stc_machine_id');
+            $table->enum('position', ['upper', 'lower']);
             
             $table->foreignId('ins_stc_d_sum_id');
             $table->foreignId('ins_stc_m_log_id');

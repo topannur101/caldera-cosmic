@@ -40,7 +40,7 @@ class extends Component {
         </div>
     @else
     @vite(['resources/js/apexcharts.js'])
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <livewire:insight.stc.create-adj />
         <livewire:insight.stc.create-d-sum />
     </div>

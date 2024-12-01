@@ -148,7 +148,7 @@ class extends Component {
                         </dd>
                     </div>
                     <div class="flex flex-col">
-                        <dt class="mb-3 text-neutral-500 text-xs uppercase">{{ __('Suhu diatur') }}</dt>
+                        <dt class="mb-3 text-neutral-500 text-xs uppercase">{{ __('SV') }}</dt>
                         <dd>
                             <div class="grid grid-cols-8 text-center gap-x-3">
                                 @foreach($sv_temps as $sv_temp)
