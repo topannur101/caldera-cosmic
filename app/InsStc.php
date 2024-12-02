@@ -20,6 +20,8 @@ class InsStc
         'postheat' => 0.09,
     ];
 
+    private static array $HBTargets = [ 77.5, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 42.5 ];
+
     public static function getMediansbySection(array $values): array
     {
         // Validate input values
@@ -81,6 +83,47 @@ class InsStc
         $flattenedDLogs = self::flattenDLogs($dLogs);
         $medians = self::getMediansBySection($flattenedDLogs);
         return $medians;
+    }
+
+    public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id): array
+    {
+        // Validate input arrays have same length
+        if (count($hb_values) !== count(self::$HBTargets) || count($sv_values) !== count(self::$HBTargets)) {
+            throw new \InvalidArgumentException('Input arrays must match HB Targets length');
+        }
+
+        $svp_results = [];
+
+        foreach ($hb_values as $index => $hb_value) {
+            $hb_target = self::$HBTargets[$index];
+            $sv_value = $sv_values[$index];
+
+            // Handle special case for zero SV values
+            if ($sv_value === 0) {
+                $svp_results[] = [
+                    'absolute' => 0,
+                    'relative' => '0'
+                ];
+                continue;
+            }
+
+            // Calculate difference
+            $diff = $hb_value - $hb_target;
+
+            // Apply adjustment to SV
+            $adjusted_sv = max(0, $sv_value - $diff);
+
+            // Calculate relative difference between adjusted and original SV
+            $relative = $adjusted_sv - $sv_value;
+            $relative = $relative > 0 ? '+' . abs($relative) : '-' . abs($relative);
+
+            $svp_results[] = [
+                'absolute' => round($adjusted_sv, 1),
+                'relative' => $relative
+            ];
+        }
+
+        return $svp_results;
     }
 
     public static function getDLogsChartOptions($data) 

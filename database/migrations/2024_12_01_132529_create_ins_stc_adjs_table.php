@@ -17,6 +17,7 @@ return new class extends Migration
 
             $table->foreignId('ins_stc_machine_id');
             $table->enum('position', ['upper', 'lower']);
+            $table->boolean('use_m_log_sv');
             
             $table->foreignId('ins_stc_d_sum_id');
             $table->foreignId('ins_stc_m_log_id');

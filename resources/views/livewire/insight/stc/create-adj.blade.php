@@ -9,13 +9,17 @@ use App\Models\InsStcDLog;
 use App\Models\InsStcMLog;
 
 new class extends Component {
+
     public int $machine_id = 0;
     public string $position = '';
 
     public array $m_log = [];
+
     public array $d_sum = [];
     public array $d_logs = [];
     public array $hb_values = [];
+
+    public array $sv_values = [];
     public array $svp_values = [];
 
     public int $formula_id = 0;
@@ -23,7 +27,15 @@ new class extends Component {
 
     public function with(): array
     {
+        $this->m_log = [];
+        $this->d_sum = [];
+        $this->d_logs = [];
+        $this->hb_values = [];
+        $this->sv_values = [];
+        $this->svp_values = [];
+
         if ($this->machine_id && $this->position) {
+
             $m_log = InsStcMLog::where('ins_stc_machine_id', $this->machine_id)
                 ->where('position', $this->position)
                 ->latest()
@@ -31,8 +43,6 @@ new class extends Component {
 
             if ($m_log) {
                 $this->m_log = $m_log->toArray();
-            } else {
-                $this->m_log = [];
             }
 
             $d_sum = InsStcDSum::where('ins_stc_machine_id', $this->machine_id)
@@ -44,51 +54,29 @@ new class extends Component {
             if ($d_sum && $d_logs) {
                 $this->d_sum = $d_sum->toArray();
                 $this->d_logs = $d_logs->toArray();
-                $this->hb_values = InsStc::getMediansfromDLogs($this->d_logs);
-            } else {
-                $this->d_sum = [];
-                $this->d_logs = [];
-                $this->hb_values = [];
-            }
-        }
 
-        if ($this->formula_id && $this->d_sum && $this->d_logs && ($this->m_log || !$this->use_m_log_sv)) {
-            $this->svp_values = [
-                [
-                    'absolute'  => 71,
-                    'relative'  => '-1',
-                ],
-                [
-                    'absolute'  => 70,
-                    'relative'  => '-1',
-                ],
-                [
-                    'absolute'  => 60,
-                    'relative'  => '-1',
-                ],
-                [
-                    'absolute'  => 71,
-                    'relative'  => null,
-                ],
-                [
-                    'absolute'  => 70,
-                    'relative'  => '1',
-                ],
-                [
-                    'absolute'  => 60,
-                    'relative'  => '-1',
-                ],
-                [
-                    'absolute'  => 70,
-                    'relative'  => '-1',
-                ],
-                [
-                    'absolute'  => 60,
-                    'relative'  => '+1',
-                ],
-            ];
-        } else {
-            $this->svp_values = [];
+                $medians = InsStc::getMediansfromDLogs($this->d_logs);
+                for ($i = 1; $i <= 8; $i++) {
+                    $key = "section_$i";
+                    $this->hb_values[] = $medians[$key];
+                }
+            }
+
+            if ($this->m_log && $this->use_m_log_sv) {
+                for ($i = 1; $i <= 8; $i++) {
+                    $key = "sv_r_$i";
+                    $this->sv_values[] = $m_log[$key];
+                }
+            } else if ($this->d_sum && !$this->use_m_log_sv) {
+                $this->sv_values = json_decode($this->d_sum['sv_temps'], true);
+            }
+
+            if ($this->formula_id && $this->hb_values && $this->sv_values) {
+                $this->svp_values = InsStc::calculateSVP($this->hb_values, $this->sv_values, $this->formula_id);
+            } else {
+                $this->svp_values = [];
+            }
+
         }
 
         return [
@@ -96,11 +84,21 @@ new class extends Component {
         ];
     }
 
-    public function updated($property)
+    public function customReset()
     {
-        if ($property == 'machine_id' || $property == 'position') {
-            //
-        }
+        $this->reset(['machine_id', 'position']);
+    }
+
+    public function send()
+    {
+        $this->customReset();
+        $this->js('notyfSuccess("' . __('Mengirim ke HMI...') . '")');
+    }
+
+    public function save()
+    {
+        $this->customReset();
+        $this->js('notyfSuccess("' . __('Penyetelan tersimpan') . '")');
     }
 };
 ?>
@@ -158,7 +156,7 @@ new class extends Component {
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end">
-                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')" wire:click="save">
                         {{ __('Simpan') }}
                     </x-primary-button>
                 </div>
@@ -192,7 +190,7 @@ new class extends Component {
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end">
-                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')" wire:click="send">
                         {{ __('Kirim SVP ke HMI') }}
                     </x-primary-button>
                 </div>
@@ -243,36 +241,36 @@ new class extends Component {
                             @endif
                         </label>
                         <div class="grid grid-cols-9 text-center gap-x-3">
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">S</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">1</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">2</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">3</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">4</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">5</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">6</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">7</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">8</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">S</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">1</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">2</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">3</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">4</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">5</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">6</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">7</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">8</div>
 
                             <div>HB</div>
-                            <div>{{ $hb_values['section_1'] ?? '-' }}</div>
-                            <div>{{ $hb_values['section_2'] ?? '-' }}</div>
-                            <div>{{ $hb_values['section_3'] ?? '-' }}</div>
-                            <div>{{ $hb_values['section_4'] ?? '-' }}</div>
-                            <div>{{ $hb_values['section_5'] ?? '-' }}</div>
-                            <div>{{ $hb_values['section_6'] ?? '-' }}</div>
-                            <div>{{ $hb_values['section_7'] ?? '-' }}</div>
-                            <div>{{ $hb_values['section_8'] ?? '-' }}</div>
+                            <div>{{ $hb_values[0] ?? '-' }}</div>
+                            <div>{{ $hb_values[1] ?? '-' }}</div>
+                            <div>{{ $hb_values[2] ?? '-' }}</div>
+                            <div>{{ $hb_values[3] ?? '-' }}</div>
+                            <div>{{ $hb_values[4] ?? '-' }}</div>
+                            <div>{{ $hb_values[5] ?? '-' }}</div>
+                            <div>{{ $hb_values[6] ?? '-' }}</div>
+                            <div>{{ $hb_values[7] ?? '-' }}</div>
 
                             @if (!$use_m_log_sv)
-                                <div>SV</div>
-                                <div>01</div>
-                                <div>02</div>
-                                <div>03</div>
-                                <div>04</div>
-                                <div>05</div>
-                                <div>06</div>
-                                <div>07</div>
-                                <div>08</div>
+                            <div>SV</div>
+                            <div>{{ $sv_values[0] ?? '-' }}</div>
+                            <div>{{ $sv_values[1] ?? '-' }}</div>
+                            <div>{{ $sv_values[2] ?? '-' }}</div>
+                            <div>{{ $sv_values[3] ?? '-' }}</div>
+                            <div>{{ $sv_values[4] ?? '-' }}</div>
+                            <div>{{ $sv_values[5] ?? '-' }}</div>
+                            <div>{{ $sv_values[6] ?? '-' }}</div>
+                            <div>{{ $sv_values[7] ?? '-' }}</div>
                             @endif
 
                         </div>
@@ -289,23 +287,30 @@ new class extends Component {
                             @endif
                         </label>                        
                         <div class="grid grid-cols-9 text-center gap-x-3">
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">S</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">1</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">2</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">3</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">4</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">5</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">6</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">7</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">8</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">S</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">1</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">2</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">3</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">4</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">5</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">6</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">7</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">8</div>
                             {{-- <div>PV</div>
                             @for ($i = 1; $i <= 8; $i++)
                                 <div>{{ $m_log['pv_r_' . $i] ?? '-' }}</div>
                             @endfor --}}
                             <div>SV</div>
-                            @for ($i = 1; $i <= 8; $i++)
-                                <div>{{ $m_log['sv_r_' . $i] ?? '-' }}</div>
-                            @endfor
+                            @if ($use_m_log_sv)
+                            <div>{{ $sv_values[0] ?? '-' }}</div>
+                            <div>{{ $sv_values[1] ?? '-' }}</div>
+                            <div>{{ $sv_values[2] ?? '-' }}</div>
+                            <div>{{ $sv_values[3] ?? '-' }}</div>
+                            <div>{{ $sv_values[4] ?? '-' }}</div>
+                            <div>{{ $sv_values[5] ?? '-' }}</div>
+                            <div>{{ $sv_values[6] ?? '-' }}</div>
+                            <div>{{ $sv_values[7] ?? '-' }}</div>
+                            @endif
                         </div>                        
                     </div>
                     @endif
@@ -339,15 +344,15 @@ new class extends Component {
 
                     <div>
                         <div class="grid grid-cols-9 text-center gap-x-3">
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">S</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">1</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">2</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">3</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">4</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">5</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">6</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">7</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">8</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">S</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">1</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">2</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">3</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">4</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">5</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">6</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">7</div>
+                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">8</div>
 
                             <div>SVP</div>
                             <div>{{ $this->svp_values[0]['absolute'] ?? '-' }}</div>
@@ -359,15 +364,15 @@ new class extends Component {
                             <div>{{ $this->svp_values[6]['absolute'] ?? '-' }}</div>
                             <div>{{ $this->svp_values[7]['absolute'] ?? '-' }}</div>
 
-                            <div class="text-xs">+/-</div>
-                            <div class="text-xs">{{ $this->svp_values[0]['relative'] ?? '' }}</div>
-                            <div class="text-xs">{{ $this->svp_values[1]['relative'] ?? '' }}</div>
-                            <div class="text-xs">{{ $this->svp_values[2]['relative'] ?? '' }}</div>
-                            <div class="text-xs">{{ $this->svp_values[3]['relative'] ?? '' }}</div>
-                            <div class="text-xs">{{ $this->svp_values[4]['relative'] ?? '' }}</div>
-                            <div class="text-xs">{{ $this->svp_values[5]['relative'] ?? '' }}</div>
-                            <div class="text-xs">{{ $this->svp_values[6]['relative'] ?? '' }}</div>
-                            <div class="text-xs">{{ $this->svp_values[7]['relative'] ?? '' }}</div>
+                            <div class="text-xs text-neutral-500">+/-</div>
+                            <div class="text-xs text-neutral-500">{{ $this->svp_values[0]['relative'] ?? '' }}</div>
+                            <div class="text-xs text-neutral-500">{{ $this->svp_values[1]['relative'] ?? '' }}</div>
+                            <div class="text-xs text-neutral-500">{{ $this->svp_values[2]['relative'] ?? '' }}</div>
+                            <div class="text-xs text-neutral-500">{{ $this->svp_values[3]['relative'] ?? '' }}</div>
+                            <div class="text-xs text-neutral-500">{{ $this->svp_values[4]['relative'] ?? '' }}</div>
+                            <div class="text-xs text-neutral-500">{{ $this->svp_values[5]['relative'] ?? '' }}</div>
+                            <div class="text-xs text-neutral-500">{{ $this->svp_values[6]['relative'] ?? '' }}</div>
+                            <div class="text-xs text-neutral-500">{{ $this->svp_values[7]['relative'] ?? '' }}</div>
                         </div>
                     </div>
                     <div class="flex gap-x-2">
