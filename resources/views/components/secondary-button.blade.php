@@ -1,7 +1,8 @@
-@props(['type', 'size'])
+@props(['type', 'size', 'disabled'])
 
 @php
 $size = isset($size) ? $size : false;
+$disabled = isset($disabled) ? $disabled : false;
 
 switch ($size) {
     case 'lg':
@@ -14,6 +15,6 @@ switch ($size) {
 }
 @endphp
 
-<button type="{{ $type }}" {{ $attributes->merge(['class' => $classes]) }}>
+<button type="{{ $type }}" {{ $attributes->merge(['class' => $classes]) }} {{ $disabled ? 'disabled' : '' }}>
     {{ $slot }}
 </button>

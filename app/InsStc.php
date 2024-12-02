@@ -7,6 +7,82 @@ use InvalidArgumentException;
 
 class InsStc
 {
+    private static array $sectionRatios = [
+        'preheat' => 0.09,
+        'section_1' => 0.10,
+        'section_2' => 0.10,
+        'section_3' => 0.10,
+        'section_4' => 0.10,
+        'section_5' => 0.10,
+        'section_6' => 0.10,
+        'section_7' => 0.10,
+        'section_8' => 0.10,
+        'postheat' => 0.09,
+    ];
+
+    public static function getMediansbySection(array $values): array
+    {
+        // Validate input values
+        if (empty($values)) {
+            throw new InvalidArgumentException('Values array cannot be empty.');
+        }
+
+        $totalValues = count($values);
+        $sections = [];
+        $startIndex = 0;
+
+        // Divide values into sections based on default ratios
+        foreach (self::$sectionRatios as $section => $sectionRatio) {
+            $sectionCount = (int) floor($totalValues * $sectionRatio);
+            $sections[$section] = array_slice($values, $startIndex, $sectionCount);
+            $startIndex += $sectionCount;
+        }
+
+        // Calculate medians for each section
+        $medians = [];
+        foreach ($sections as $section => $sectionValues) {
+            if (!empty($sectionValues)) {
+                sort($sectionValues); // Sort the section values to calculate median
+                $count = count($sectionValues);
+                $middle = (int) floor($count / 2);
+
+                if ($count % 2 === 0) {
+                    // Even count: Average the two middle values
+                    $median = ($sectionValues[$middle - 1] + $sectionValues[$middle]) / 2;
+                } else {
+                    // Odd count: Take the middle value
+                    $median = $sectionValues[$middle];
+                }
+
+                $medians[$section] = $median;
+            } else {
+                $medians[$section] = null; // No data in this section
+            }
+        }
+        return $medians;
+    }
+
+    public static function flattenDLogs(array $dLogs): array
+    {
+        // Sort the dlogs array by the 'taken_at' field
+        usort($dLogs, function ($a, $b) {
+            return strtotime($a['taken_at']) <=> strtotime($b['taken_at']);
+        });
+
+        // Extract the 'temp' values from the sorted array
+        return array_map(function ($dLog) {
+            return $dLog['temp'];
+        }, $dLogs);
+
+    }
+
+    public static function getMediansfromDLogs(array $dLogs): array
+    {
+        $flattenedDLogs = self::flattenDLogs($dLogs);
+        $medians = self::getMediansBySection($flattenedDLogs);
+        return $medians;
+    }
+
     public static function getDLogsChartOptions($data) 
     {
         return [

@@ -37,7 +37,7 @@ class InsStcPoll extends Command
         $machines   = InsStcMachine::all();
         $port       = 503;
         $unit_id    = 1;
-        $interval   = 60; // seconds
+        $interval   = 300; // seconds
         
         while (true) {
             foreach ($machines as $machine) {
