@@ -20,8 +20,6 @@ class InsStc
         'postheat' => 0.09,
     ];
 
-    private static array $HBTargets = [ 77.5, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 42.5 ];
-
     public static function getMediansbySection(array $values): array
     {
         // Validate input values
@@ -87,15 +85,17 @@ class InsStc
 
     public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id): array
     {
+        $HBTargets = [ 75, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 42.5 ];
+
         // Validate input arrays have same length
-        if (count($hb_values) !== count(self::$HBTargets) || count($sv_values) !== count(self::$HBTargets)) {
+        if (count($hb_values) !== count($HBTargets) || count($sv_values) !== count($HBTargets)) {
             throw new \InvalidArgumentException('Input arrays must match HB Targets length');
         }
 
         $svp_results = [];
 
         foreach ($hb_values as $index => $hb_value) {
-            $hb_target = self::$HBTargets[$index];
+            $hb_target = $HBTargets[$index];
             $sv_value = (int) $sv_values[$index];
 
             // Handle special case for zero SV values
@@ -107,19 +107,38 @@ class InsStc
                 continue;
             }
 
-            // Calculate difference
-            $diff = $hb_value - $hb_target;
+            $adjusted_sv = $sv_value;
+            $relative = 0;
 
-            // Apply adjustment to SV
-            $adjusted_sv = (int) max(0, round($sv_value - $diff, 0));
+            switch ($formula_id) {
+                case '411':
+                    $diff = $hb_value - $hb_target;
+                    $adjusted_sv = (int) max(0, round($sv_value - $diff, 0));
+                    break;
+                case '412':
+                    $diff = ($hb_value - $hb_target) / 2;
+                    $adjusted_sv = (int) max(0, round($sv_value - $diff, 0));
+                    break;
+                
+                case '421':
+                    if ($hb_value < $hb_target) {
+                        $ratio = $hb_value > 0 ? ($hb_value / ($hb_target > 0 ? $hb_target : $hb_value)) : 0;
+                        $adjusted_sv = (int) max(0, round($sv_value + ($sv_value * (1 - $ratio))));
+                    } else if ($hb_value > $hb_target) {
+                        $ratio = $hb_target > 0 ? ($hb_target / ($hb_value > 0 ? $hb_value : $hb_target)) : 0;
+                        $adjusted_sv = (int) max(0, round($sv_value - ($sv_value * (1 - $ratio))));
+                    }
+                    
+                    break;
+            }
 
             // Calculate relative difference between adjusted and original SV
             $relative = $adjusted_sv - $sv_value;
-            $relative = $relative > 0 ? '+' . abs($relative) : '-' . abs($relative);
+            $relative = $relative > 0 ? '+' . abs($relative) : ( $relative < 0 ? '-' . abs($relative) : '' );
 
             $svp_results[] = [
                 'absolute' => $adjusted_sv,
-                'relative' => $relative
+                'relative' => $relative ?: null
             ];
         }
 

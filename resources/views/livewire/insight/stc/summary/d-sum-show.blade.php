@@ -31,7 +31,6 @@ class extends Component {
     public string $speed;
     public array $log_temps;
     public array $sv_temps;
-    public array $cor_temps;
 
     public array $xzones = [];
     public array $yzones = [];
@@ -70,7 +69,6 @@ class extends Component {
             $this->speed            = $dSum->speed;
             $this->log_temps        = $dSum->logTemps();
             $this->sv_temps        = json_decode($dSum->sv_temps, true);
-            $this->cor_temps        = $dSum->corTemps();
 
             $logs = $dSum->ins_stc_d_logs->toArray();
             $xzones = $this->xzones;
@@ -252,7 +250,6 @@ class extends Component {
                 </div>
             </div>
             <div class="flex flex-col grow">
-                <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Suhu') }}</dt>
                 <dd>
                     <div class="grid grid-cols-9 text-center gap-x-3">
                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">S</div>
@@ -273,11 +270,6 @@ class extends Component {
                         <div>SV</div>
                         @foreach($sv_temps as $sv_temp)
                             <div>{{ $sv_temp }}</div>
-                        @endforeach
-
-                        <div>SVP</div>
-                        @foreach($cor_temps as $cor_temp)
-                            <div>{{ $cor_temp }}</div>
                         @endforeach
                     </div>
                 </dd>

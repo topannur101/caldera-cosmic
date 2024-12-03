@@ -106,6 +106,9 @@ new class extends Component {
 <div>
     <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">{{ __('Penyetelan') }}</h1>
     <div wire:key="modals">
+        <x-modal name="d_sum-show" maxWidth="xl">
+            <livewire:insight.stc.summary.d-sum-show />
+        </x-modal>
         <x-modal name="use_m_log_sv-help">
             <div class="p-6">
                 <div class="flex justify-between items-start">
@@ -231,13 +234,20 @@ new class extends Component {
             @if ($machine_id && $position)
                 <div class="grid grid-cols-1 gap-y-6 mt-6">
                     <div>
-                        <label class="flex gap-x-2 px-3 mb-2 uppercase text-xs text-neutral-500">
+                        <label class="flex gap-x-2 px-3 mb-4 uppercase text-xs text-neutral-500">
                             <div>{{ __('Pembacaan alat') }}</div>
                             <div>•</div>
                             @if ($d_sum)
-                                <div>{{ Carbon\Carbon::parse($d_sum['end_time'])->diffForHumans() }}</div>
+                            <x-text-button type="button" x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $d_sum['id'] ?? 0 }}'})">
+                            <div class="flex gap-x-2 uppercase">
+                                <div>
+                                   {{ Carbon\Carbon::parse($d_sum['end_time'])->diffForHumans() }} 
+                                </div>                                
+                                <i class="fa fa-arrow-up-right-from-square"></i>
+                            </div>
+                            </x-text-button>
                             @else
-                                <div class="text-red-500">{{ __('Tak ditemukan') }}</div>
+                                <div class="text-red-500"><i class="fa fa-exclamation-circle mr-2"></i>{{ __('Tak ditemukan') }}</div>
                             @endif
                         </label>
                         <div class="grid grid-cols-9 text-center gap-x-3">
@@ -277,13 +287,13 @@ new class extends Component {
                     </div>
                     @if ($use_m_log_sv)
                     <div>
-                        <label class="flex gap-x-2 px-3 mb-2 uppercase text-xs text-neutral-500">
+                        <label class="flex gap-x-2 px-3 mb-4 uppercase text-xs text-neutral-500">
                             <div>{{ __('Pembacaan mesin') }}</div>
                             <div>•</div>
                             @if ($m_log)
                                 <div>{{ Carbon\Carbon::parse($m_log['created_at'])->diffForHumans() }}</div>
                             @else
-                                <div class="text-red-500">{{ __('Tak ditemukan') }}</div>
+                                <div class="text-red-500"><i class="fa fa-exclamation-circle mr-2"></i>{{ __('Tak ditemukan') }}</div>
                             @endif
                         </label>                        
                         <div class="grid grid-cols-9 text-center gap-x-3">
@@ -321,7 +331,9 @@ new class extends Component {
                                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Formula') }}</label>
                                 <x-select class="w-full" id="adj-formula_id" wire:model.live="formula_id">
                                     <option value="0"></option>
-                                    <option value="4">{{ __('Versi 4') }}</option>
+                                    <option value="411">{{ __('v4.1.1 - Diff aggresive') }}</option>
+                                    <option value="412">{{ __('v4.1.2 - Diff delicate') }}</option>
+                                    <option value="421">{{ __('v4.2.1 - Ratio') }}</option>
                                 </x-select>
                                 @error('formula_id')
                                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />

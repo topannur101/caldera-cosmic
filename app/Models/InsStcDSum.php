@@ -144,11 +144,4 @@ class InsStcDSum extends Model
         return $medians;
     }
 
-    public function corTemps(): array
-    {
-        $sv_temps = json_decode($this->sv_temps, true);
-        $x = new InsStcTempControl;
-        return $x->calculateNewSetValues($sv_temps, $this->logTemps());
-    }
-
 }
