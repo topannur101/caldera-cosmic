@@ -14,47 +14,39 @@ use Carbon\Carbon;
 use App\InsStc;
 
 new class extends Component {
+
     use WithFileUploads;
 
-    public $file;
-    public array $logs = [['taken_at' => '', 'temp' => '']];
+    public          $file;
+    public array    $logs = [['taken_at' => '', 'temp' => '']];
 
-    public int $sequence;
-    public string $userq = '';
-    public int $user_2_id;
-    public string $user_2_name;
-    public string $user_2_emp_id;
-    public int $machine_id;
-    public string $position;
-    public float $speed;
-    public string $sv_temps_raw;
-    public array $sv_temps = [];
-    public string $device_code = '';
+    public int      $sequence;
+    public string   $userq = '';
+    public int      $user_2_id;
+    public string   $user_2_name;
+    public string   $user_2_emp_id;
+    public int      $machine_id;
+    public string   $position;
+    public float    $speed;
+    public string   $sv_temps_raw;
+    public array    $sv_temps = [];
+    public string   $device_code = '';
 
-    public string $start_time;
-    public string $end_time;
-    public float $preheat_temp = 0;
-    public float $z_1_temp = 0;
-    public float $z_2_temp = 0;
-    public float $z_3_temp = 0;
-    public float $z_4_temp = 0;
-    public float $postheat_temp = 0;
+    public string   $started_at;
+    public string   $ended_at;
+    public float    $preheat = 0;
+    public float    $section_1 = 0;
+    public float    $section_2 = 0;
+    public float    $section_3 = 0;
+    public float    $section_4 = 0;
+    public float    $section_5 = 0;
+    public float    $section_6 = 0;
+    public float    $section_7 = 0;
+    public float    $section_8 = 0;
+    public float    $postheat = 0;
 
     public string $view = 'initial';
-    public string $logs_count_eval;
-    public string $logs_count_eval_human;
     public string $duration;
-
-    public array $xzones = [];
-    public array $yzones = [];
-
-    public const COUNT_TOLERANCE = 5;
-
-    public function mount()
-    {
-        $this->xzones = InsStc::zones('x');
-        $this->yzones = InsStc::zones('y');
-    }
 
     public function with(): array
     {
@@ -68,6 +60,7 @@ new class extends Component {
         $this->device_code = strtoupper(trim($this->device_code));
 
         $this->userq = trim($this->userq);
+        $this->reset(['user_2_id', 'user_2_name', 'user_2_emp_id']);
         if ($this->userq) {
             $user_2 = User::where('emp_id', $this->userq)->first();
             if ($user_2) {
@@ -75,51 +68,57 @@ new class extends Component {
                 $this->user_2_name = $user_2->name;
                 $this->user_2_emp_id = $user_2->emp_id;
             } else {
-                $this->user_2_id = null;
+                $this->reset(['userq']);
             }
-        } else {
-            $this->reset(['user_2_id', 'user_2_name', 'user_2_emp_id']);
         }
 
         $this->validate([
-            'sequence' => ['required', 'integer', 'min:1', 'max:2'],
-            'user_2_id' => ['nullable', 'exists:users,id'],
-            'machine_id' => ['required', 'integer', 'exists:ins_stc_machines,id'],
-            'position' => ['required', 'in:upper,lower'],
-            'speed' => ['required', 'numeric', 'min:0.1', 'max:99'],
-            'sv_temps' => ['required', 'array', 'size:8'],
-            'sv_temps.*' => ['required', 'numeric', 'min:1', 'max:99'],
-            'device_code' => ['required', 'exists:ins_stc_devices,code'],
+            'sequence'      => ['required', 'integer', 'min:1', 'max:2'],
+            'user_2_id'     => ['nullable', 'exists:users,id'],
+            'machine_id'    => ['required', 'integer', 'exists:ins_stc_machines,id'],
+            'position'      => ['required', 'in:upper,lower'],
+            'speed'         => ['required', 'numeric', 'min:0.1', 'max:99'],
+            'sv_temps'      => ['required', 'array', 'size:8'],
+            'sv_temps.*'    => ['required', 'numeric', 'min:1', 'max:99'],
+            'device_code'   => ['required', 'exists:ins_stc_devices,code'],
         ]);
         $this->view = 'upload';
     }
 
     public function save()
     {
-        // make sure gone through validation
+
         if ($this->view == 'review') {
             $d_sum = new InsStcDsum();
             Gate::authorize('manage', $d_sum);
 
             $device = InsStcDevice::where('code', $this->device_code)->first();
+
             $d_sum->fill([
                 'ins_stc_device_id' => $device->id,
                 'ins_stc_machine_id' => $this->machine_id,
                 'user_1_id' => Auth::user()->id,
                 'user_2_id' => $this->user_2_id ?? null,
-                'start_time' => $this->start_time,
-                'end_time' => $this->end_time,
-                'preheat_temp' => $this->preheat_temp,
-                'z_1_temp' => $this->z_1_temp,
-                'z_2_temp' => $this->z_2_temp,
-                'z_3_temp' => $this->z_3_temp,
-                'z_4_temp' => $this->z_4_temp,
-                'postheat_temp' => $this->postheat_temp,
+                'started_at' => $this->started_at,
+                'ended_at' => $this->ended_at,
+
+                'preheat' => $this->preheat,
+                'section_1' => $this->section_1,
+                'section_2' => $this->section_2,
+                'section_3' => $this->section_3,
+                'section_4' => $this->section_4,
+                'section_5' => $this->section_5,
+                'section_6' => $this->section_6,
+                'section_7' => $this->section_7,
+                'section_8' => $this->section_8,
+                'postheat' => $this->postheat,
+
                 'speed' => $this->speed,
                 'sequence' => $this->sequence,
                 'position' => $this->position,
                 'sv_temps' => json_encode($this->sv_temps),
             ]);
+
             $d_sum->save();
 
             foreach ($this->logs as $log) {
@@ -156,85 +155,82 @@ new class extends Component {
         $tempColumn = 3;
 
         for ($i = 0; $i < $skipRows; $i++) {
+
             array_shift($rows);
+
         }
 
         $logs = [];
 
         foreach ($rows as $row) {
+
             if (isset($row[0]) && isset($row[$tempColumn]) && $row[0] !== '' && $row[$tempColumn] !== '') {
-                $timestamp = strtotime($row[0]);
-                if ($timestamp !== false) {
-                    // Ensure valid date/time
+
+                $excel_ts   = (float) (($row[1]- 25569) * 86400);
+                $taken_at   = Carbon::createFromTimestamp($excel_ts)->format('Y-m-d H:i');
+                $temp       = (float) $row[$tempColumn];
+                $timestamp  = (float) $row[1];
+
+                if ($timestamp && $temp) {
+
                     $logs[] = [
-                        'taken_at' => $row[0],
-                        'temp' => $row[$tempColumn],
-                        'timestamp' => $timestamp, // Adding timestamp for sorting
+                        'taken_at'  => $taken_at,
+                        'temp'      => $temp,
+                        'timestamp' => $timestamp,
                     ];
+
                 }
+
             }
         }
 
         usort($logs, function ($a, $b) {
+
             return $a['timestamp'] <=> $b['timestamp'];
+
         });
 
-        $logsCount = min(count($logs), array_sum($this->xzones));
-
-        // Evaluate logs count
-        if ($logsCount < array_sum($this->xzones) - self::COUNT_TOLERANCE) {
-            $this->logs_count_eval = 'too_few';
-        } elseif ($logsCount > array_sum($this->xzones) + self::COUNT_TOLERANCE) {
-            $this->logs_count_eval = 'too_many';
-        } else {
-            $this->logs_count_eval = 'optimal';
-        }
-        $this->logs_count_eval_human = InsStcDSum::logsCountEvalHuman($this->logs_count_eval);
-
+        $max = 55;
+        $logsCount = min(count($logs), $max);
         $logs = array_slice($logs, 0, $logsCount);
 
         if (empty($logs)) {
+
             $this->js('notyfError("' . __('Tak ada data yang sah ditemukan') . '")');
+
         } else {
-            $slicedPr = InsStc::sliceZoneData($logs, $this->xzones, 'preheat');
-            $slicedZ1 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_1');
-            $slicedZ2 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_2');
-            $slicedZ3 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_3');
-            $slicedZ4 = InsStc::sliceZoneData($logs, $this->xzones, 'zone_4');
-            $slicedPs = InsStc::sliceZoneData($logs, $this->xzones, 'postheat');
+            
+            $temps = array_map(fn($item) => $item['temp'], $logs);
+            $medians = InsStc::getMediansBySection($temps);
 
             $validator = Validator::make(
                 [
-                    'start_time' => $logs[0]['taken_at'],
-                    'end_time' => $logs[array_key_last($logs)]['taken_at'],
-                    'pr' => $slicedPr,
-                    'z_1' => $slicedZ1,
-                    'z_2' => $slicedZ2,
-                    'z_3' => $slicedZ3,
-                    'z_4' => $slicedZ4,
-                    'ps' => $slicedPs,
+                    'started_at'    => $logs[0]['taken_at'],
+                    'ended_at'      => $logs[array_key_last($logs)]['taken_at'],
+                    'preheat'       => $medians['preheat'],
+                    'section_1'     => $medians['section_1'],
+                    'section_2'     => $medians['section_2'],
+                    'section_3'     => $medians['section_3'],
+                    'section_4'     => $medians['section_4'],
+                    'section_5'     => $medians['section_5'],
+                    'section_6'     => $medians['section_6'],
+                    'section_7'     => $medians['section_7'],
+                    'section_8'     => $medians['section_8'],
+                    'postheat'      => $medians['postheat'],
                 ],
                 [
-                    'start_time' => 'required|date',
-                    'end_time' => 'required|date|after:start_time',
-                    // 'pr'                => 'required|array|min:1',
-                    // 'z_1'               => 'required|array|min:1',
-                    // 'z_2'               => 'required|array|min:1',
-                    // 'z_3'               => 'required|array|min:1',
-                    // 'z_4'               => 'required|array|min:1',
-                    // 'ps'                => 'required|array|min:1',
-                    'pr.*.taken_at' => 'required|date',
-                    'z_1.*.taken_at' => 'required|date',
-                    'z_2.*.taken_at' => 'required|date',
-                    'z_3.*.taken_at' => 'required|date',
-                    'z_4.*.taken_at' => 'required|date',
-                    'ps.*.taken_at' => 'required|date',
-                    'pr.*.temp' => 'required|numeric|min:1|max:99',
-                    'z_1.*.temp' => 'required|numeric|min:1|max:99',
-                    'z_2.*.temp' => 'required|numeric|min:1|max:99',
-                    'z_3.*.temp' => 'required|numeric|min:1|max:99',
-                    'z_4.*.temp' => 'required|numeric|min:1|max:99',
-                    'ps.*.temp' => 'required|numeric|min:1|max:99',
+                    'started_at'    => 'required|date',
+                    'ended_at'      => 'required|date|after:started_at',
+                    'preheat'       => 'required|numeric|min:1|max:99',
+                    'section_1'     => 'required|numeric|min:1|max:99',
+                    'section_2'     => 'required|numeric|min:1|max:99',
+                    'section_3'     => 'required|numeric|min:1|max:99',
+                    'section_4'     => 'required|numeric|min:1|max:99',
+                    'section_5'     => 'required|numeric|min:1|max:99',
+                    'section_6'     => 'required|numeric|min:1|max:99',
+                    'section_7'     => 'required|numeric|min:1|max:99',
+                    'section_8'     => 'required|numeric|min:1|max:99',
+                    'postheat'      => 'required|numeric|min:1|max:99',
                 ],
             );
 
@@ -242,18 +238,23 @@ new class extends Component {
                 $error = $validator->errors()->first();
                 $this->js('notyfError("' . $error . '")');
                 $this->reset(['file']);
+
             } else {
-                $this->logs = $logs;
-                $validatedData = $validator->validated();
-                $this->start_time = $validatedData['start_time'];
-                $this->end_time = $validatedData['end_time'];
-                $this->preheat_temp = InsStc::medianTemp($validatedData['pr'] ?? []);
-                $this->z_1_temp = InsStc::medianTemp($validatedData['z_1'] ?? []);
-                $this->z_2_temp = InsStc::medianTemp($validatedData['z_2'] ?? []);
-                $this->z_3_temp = InsStc::medianTemp($validatedData['z_3'] ?? []);
-                $this->z_4_temp = InsStc::medianTemp($validatedData['z_4'] ?? []);
-                $this->postheat_temp = InsStc::medianTemp($validatedData['ps'] ?? []);
-                $this->duration = InsStc::duration($validatedData['start_time'], $validatedData['end_time']);
+                $this->logs         = $logs;
+                $validatedData      = $validator->validated();
+                $this->started_at   = $validatedData['started_at'];
+                $this->ended_at     = $validatedData['ended_at'];
+                $this->preheat      = $validatedData['preheat'];
+                $this->section_1    = $validatedData['section_1'];
+                $this->section_2    = $validatedData['section_2'];
+                $this->section_3    = $validatedData['section_3'];
+                $this->section_4    = $validatedData['section_4'];
+                $this->section_5    = $validatedData['section_5'];
+                $this->section_6    = $validatedData['section_6'];
+                $this->section_7    = $validatedData['section_7'];
+                $this->section_8    = $validatedData['section_8'];
+                $this->postheat     = $validatedData['postheat'];
+                $this->duration     = InsStc::duration($validatedData['started_at'], $validatedData['ended_at']);
 
                 $this->view = 'review';
             }
@@ -262,7 +263,33 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['file', 'logs', 'sequence', 'userq', 'user_2_id', 'machine_id', 'position', 'speed', 'sv_temps_raw', 'sv_temps', 'device_code', 'start_time', 'end_time', 'preheat_temp', 'z_1_temp', 'z_2_temp', 'z_3_temp', 'z_4_temp', 'postheat_temp', 'view', 'logs_count_eval', 'logs_count_eval_human', 'duration']);
+        $this->reset([
+            'file', 
+            'logs', 
+            'sequence', 
+            'userq', 
+            'user_2_id', 
+            'machine_id', 
+            'position', 
+            'speed', 
+            'sv_temps_raw', 
+            'sv_temps', 
+            'device_code', 
+            'started_at', 
+            'ended_at', 
+            'preheat', 
+            'section_1', 
+            'section_2', 
+            'section_3', 
+            'section_4', 
+            'section_5', 
+            'section_6', 
+            'section_7', 
+            'section_8', 
+            'postheat', 
+            'view', 
+            'duration'
+        ]);
     }
 
     public function downloadCSV()
@@ -560,7 +587,7 @@ new class extends Component {
                                             {{ __('Pengukur 2') . ': ' }}
                                         </td>
                                         <td>
-                                            {{ $user_2_name . ' (' . $user_2_emp_id . ')' }}
+                                            {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -639,7 +666,7 @@ new class extends Component {
                                             {{ __('Waktu awal') . ': ' }}
                                         </td>
                                         <td>
-                                            {{ $start_time }}
+                                            {{ $started_at }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -647,7 +674,7 @@ new class extends Component {
                                             {{ __('Waktu akhir') . ': ' }}
                                         </td>
                                         <td>
-                                            {{ $end_time }}
+                                            {{ $ended_at }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -660,47 +687,43 @@ new class extends Component {
                                     </tr>
                                     <tr>
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Suhu median') . ': ' }}
+                                            {{ __('HB') . ': ' }}
                                         </td>
-                                        <td>
+                                        <td class="flex gap-x-3">
+                                            <div>
+                                                {{ $section_1 }}
+                                            </div>
+                                            <div class="text-neutral-300 dark:text-neutral-600">|</div>
+                                            <div>
+                                                {{ $section_2 }}
+                                            </div>
+                                            <div class="text-neutral-300 dark:text-neutral-600">|</div>
+                                            <div>
+                                                {{ $section_3 }}
+                                            </div>
+                                            <div class="text-neutral-300 dark:text-neutral-600">|</div>
+                                            <div>
+                                                {{ $section_4 }}
+                                            </div>
+                                            <div class="text-neutral-300 dark:text-neutral-600">|</div>
+                                            <div>
+                                                {{ $section_5 }}
+                                            </div>
+                                            <div class="text-neutral-300 dark:text-neutral-600">|</div>
+                                            <div>
+                                                {{ $section_6 }}
+                                            </div>
+                                            <div class="text-neutral-300 dark:text-neutral-600">|</div>
+                                            <div>
+                                                {{ $section_7 }}
+                                            </div>
+                                            <div class="text-neutral-300 dark:text-neutral-600">|</div>
+                                            <div>
+                                                {{ $section_8 }}
+                                            </div>
                                         </td>
                                     </tr>
                                 </table>
-                                <div class="grid grid-cols-4 mt-3 text-center">
-                                    {{-- <div>
-                                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Preheat')}}</div>
-                                        <div>{{ $preheat_temp }}</div>
-                                    </div> --}}
-                                    <div>
-                                        <div
-                                            class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">
-                                            {{ __('Zona 1') }}</div>
-                                        <div>{{ $z_1_temp }}</div>
-                                    </div>
-                                    <div>
-                                        <div
-                                            class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">
-                                            {{ __('Zona 2') }}</div>
-                                        <div>{{ $z_2_temp }}</div>
-                                    </div>
-                                    <div>
-                                        <div
-                                            class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">
-                                            {{ __('Zona 3') }}</div>
-                                        <div>{{ $z_3_temp }}</div>
-                                    </div>
-                                    <div>
-                                        <div
-                                            class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">
-                                            {{ __('Zona 4') }}</div>
-                                        <div>{{ $z_4_temp }}</div>
-                                    </div>
-                                    {{-- <div>
-                                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Postheat')}}</div>
-                                        <div>{{ $postheat_temp }}</div>
-                                    </div> --}}
-                                </div>
-
                             </dd>
                         </div>
                     </dl>
@@ -740,7 +763,7 @@ new class extends Component {
                         <x-secondary-button type="button"
                             wire:click="$set('view', 'upload'), $">{{ __('Mundur') }}</x-secondary-button>
                         <x-secondary-button type="button"
-                            x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}', xzones: '{{ json_encode($xzones) }}', yzones: '{{ json_encode($yzones) }}' })">{{ __('Tinjau data') }}</x-secondary-button>
+                            x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}' })">{{ __('Tinjau data') }}</x-secondary-button>
                         <x-primary-button type="button" wire:click="save">{{ __('Simpan') }}</x-primary-button>
                     @endif
                 </div>

@@ -35,12 +35,6 @@ class extends Component {
     public array $xzones = [];
     public array $yzones = [];
 
-    public function mount()
-    {
-        $this->xzones = InsStc::zones('x');
-        $this->yzones = InsStc::zones('y');
-    }
-
     #[On('d_sum-show')]
     public function showDSum(int $id)
     {

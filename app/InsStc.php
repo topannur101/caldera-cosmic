@@ -20,13 +20,8 @@ class InsStc
         'postheat' => 0.09,
     ];
 
-    public static function getMediansbySection(array $values): array
+    public static function groupValuesBySection($values): array
     {
-        // Validate input values
-        if (empty($values)) {
-            throw new InvalidArgumentException('Values array cannot be empty.');
-        }
-
         $totalValues = count($values);
         $sections = [];
         $startIndex = 0;
@@ -37,6 +32,18 @@ class InsStc
             $sections[$section] = array_slice($values, $startIndex, $sectionCount);
             $startIndex += $sectionCount;
         }
+
+        return $sections;
+    }
+
+    public static function getMediansBySection(array $values): array
+    {
+        // Validate input values
+        if (empty($values)) {
+            throw new InvalidArgumentException('Values array cannot be empty.');
+        }
+        
+        $sections = self::groupValuesBySection($values);
 
         // Calculate medians for each section
         $medians = [];
@@ -85,7 +92,7 @@ class InsStc
 
     public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id): array
     {
-        $HBTargets = [ 75, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 42.5 ];
+        $HBTargets = [ 75, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 45 ];
 
         // Validate input arrays have same length
         if (count($hb_values) !== count($HBTargets) || count($sv_values) !== count($HBTargets)) {
@@ -206,11 +213,27 @@ class InsStc
         ];
     }
 
-    public static function getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, $width, $height)
+    public static function getChartOptions($logs, $width, $height)
     {
+
         $chartData = array_map(function ($log) {
             return [Self::parseDate($log['taken_at']), $log['temp']];
         }, $logs);
+
+        $temps = array_map(fn($item) => $item['temp'], $logs);
+        $sections = Self::groupValuesBySection($temps);
+
+        $zones = [
+            'zone_1' => ['section_1', 'section_2'],
+            'zone_2' => ['section_3', 'section_4'],
+            'zone_3' => ['section_5', 'section_6'],
+            'zone_4' => ['section_7', 'section_8'],
+        ];
+
+        $xzones = array_map('count', $sections);
+        $yzones = [ 40, 50, 60, 70, 80 ];
+        $ymax = 85;
+        $ymin = 35;
         $chartDataJs = json_encode($chartData);
 
         return [
@@ -269,9 +292,9 @@ class InsStc
                 ],
             ],
             'annotations' => [
-                'xaxis' => self::generateXAnnotations($xzones, $logs),
+                'xaxis' => self::generateXAnnotations($zones, $xzones, $logs),
                 'yaxis' => self::generateYAnnotations($yzones),
-                'points' => self::generatePointAnnotations($xzones, $yzones, $logs),
+                'points' => self::generatePointAnnotations($zones, $yzones, $logs),
             ],
             'grid' => [
                 'yaxis' => [
@@ -283,33 +306,62 @@ class InsStc
         ];
     }  
 
-    private static function generateXAnnotations($xzones, $logs)
+    private static function generateXAnnotations($zones, $xzones, $logs)
     {
         $annotations = [];
-        $previousCount = 0;
-
-        foreach ($xzones as $zone => $count) {
-            if ($count > 0) {
-                $position = $previousCount + $count;
-
-                if (isset($logs[$position])) {
-                    $annotations[] = [
-                        'x' => self::parseDate($logs[$position]['taken_at']),
-                        'borderColor' => '#bcbcbc',
-                        'label' => [
-                            'style' => [
-                                'color' => 'transparent',
-                                'background' => 'transparent',
-                            ],
-                            'text' => '',
-                        ],
-                    ];
-                }
-
-                $previousCount += $count;
+        $previousCount = $xzones['preheat']; // Start after preheat
+    
+        foreach ($zones as $zoneName => $zoneSections) {
+            // First section in the zone
+            $firstSection = $zoneSections[0];
+            
+            // Last section in the zone
+            $lastSection = $zoneSections[count($zoneSections) - 1];
+    
+            // Calculate the position of the first section's start
+            $firstSectionPosition = $previousCount + 1;
+    
+            // Calculate the position of the last section's end
+            $lastSectionPosition = $previousCount;
+            foreach ($zoneSections as $section) {
+                $lastSectionPosition += $xzones[$section];
             }
+            $lastSectionPosition += 1;
+    
+            // // First border: start of the first section in the zone
+            // if (isset($logs[$firstSectionPosition])) {
+            //     $annotations[] = [
+            //         'x' => self::parseDate($logs[$firstSectionPosition]['taken_at']),
+            //         'borderColor' => '#bcbcbc',
+            //         'label' => [
+            //             'style' => [
+            //                 'color' => 'transparent',
+            //                 'background' => 'transparent',
+            //             ],
+            //             'text' => '',
+            //         ],
+            //     ];
+            // }
+    
+            // Last border: end of the last section in the zone
+            if (isset($logs[$lastSectionPosition])) {
+                $annotations[] = [
+                    'x' => self::parseDate($logs[$lastSectionPosition]['taken_at']),
+                    'borderColor' => '#bcbcbc',
+                    'label' => [
+                        'style' => [
+                            'color' => 'transparent',
+                            'background' => 'transparent',
+                        ],
+                        'text' => '',
+                    ],
+                ];
+            }
+    
+            // Update previous count for next iteration
+            $previousCount = $lastSectionPosition;
         }
-
+    
         return $annotations;
     }
 
@@ -333,82 +385,98 @@ class InsStc
         return $annotations;
     }
 
-    private static function generatePointAnnotations($xzones, $yzones, $logs)
+    private static function generatePointAnnotations($zones, $yzones, $logs)
     {
         $pointAnnotations = [];
-        $preheatCount = $xzones['preheat'];
-        $currentIndex = $preheatCount;
-        $zoneNames = ['zone_1', 'zone_2', 'zone_3', 'zone_4'];
-        $yzonesReversed = array_reverse($yzones);
+        $temps = array_map(fn($item) => $item['temp'], $logs);
+        $medians = Self::getMediansBySection($temps);
+    
+        $counts = array_map('count', Self::groupValuesBySection($temps));
+    
+        // Calculate cumulative counts to determine x-coordinates
+        $cumulativeCounts = [];
+        $total = $counts['preheat']; // Start with full preheat count
 
-        foreach ($zoneNames as $index => $zoneName) {
-            $zoneCount = $xzones[$zoneName];
-            $midpointIndex = $currentIndex + floor($zoneCount / 2);
-            $slicedZone = InsStc::sliceZoneData($logs, $xzones, $zoneName);
-
-            if (isset($logs[$midpointIndex])) {
-                $yValue = ($yzonesReversed[$index] + $yzonesReversed[$index + 1]) / 2;
-
-                $pointAnnotations[] = [
-                    'x' => self::parseDate($logs[$midpointIndex]['taken_at']),
-                    'y' => $yValue,
-                    'marker' => [
-                        'size' => 0,
-                        'strokeWidth' => 0,
-                    ],
-                    'label' => [
-                        'borderWidth' => 0,
-                        'text' => 'Z' . ($index + 1) . ': ' . InsStc::medianTemp($slicedZone),
-                        'style' => [
-                            'background' => '#D64550',
-                            'color' => '#ffffff',
-                        ],
-                    ],
-                ];
-            }
-
-            $currentIndex += $zoneCount;
+        foreach (['section_1', 'section_2', 'section_3', 'section_4', 'section_5', 'section_6', 'section_7', 'section_8'] as $section) {
+            $total += $counts[$section];
+            $cumulativeCounts[$section] = $total;
         }
-
+    
+        $i = 1;
+        foreach ($zones as $zoneName => $zoneSections) {
+            // Calculate index as the last log entry in the cumulative count
+            $firstSection = $zoneSections[0];
+            $index = $cumulativeCounts[$firstSection] + $i++; // subtract 1 to get correct zero-based index
+    
+            // Get the 'taken_at' timestamp for this index
+            $x = self::parseDate($logs[$index]['taken_at']);
+    
+            // Calculate y as the middle of the y-zones
+            $zoneIndex = array_search($zoneName, array_keys($zones));
+            $y = $yzones[count($yzones) - $zoneIndex - 2];
+    
+            // Calculate zone value (average of two sections' median temperatures)
+            $zoneValue = round(
+                ($medians[$zoneSections[0]] + $medians[$zoneSections[1]]) / 2, 
+                2
+            );
+    
+            $pointAnnotations[] = [
+                'x' => $x,
+                'y' => $y,
+                'marker' => [
+                    'size' => 0,
+                    'strokeWidth' => 0,
+                ],
+                'label' => [
+                    'borderWidth' => 0,
+                    'text' => sprintf('%s: %.2f', __('Z') . + $i - 1, $zoneValue),
+                    'style' => [
+                        'background' => '#D64550',
+                        'color' => '#ffffff',
+                    ],
+                ],
+            ];
+        }
+    
         return $pointAnnotations;
     }
-
     public static function parseDate($dateString)
     {
         return Carbon::parse($dateString)->timestamp * 1000;
     }
 
-    public static function sliceZoneData(array $logs, array $xzones, string $selectedZone): array
-    {
-        $zoneOrder = ['preheat', 'zone_1', 'zone_2', 'zone_3', 'zone_4', 'postheat'];
+    // public static function sliceZoneData(array $logs, array $xzones, string $selectedZone): array
+    // {
+    //     $zoneOrder = ['preheat', 'zone_1', 'zone_2', 'zone_3', 'zone_4', 'postheat'];
         
-        if (!in_array($selectedZone, $zoneOrder)) {
-            throw new InvalidArgumentException("Invalid zone selected: $selectedZone");
-        }
+    //     if (!in_array($selectedZone, $zoneOrder)) {
+    //         throw new InvalidArgumentException("Invalid zone selected: $selectedZone");
+    //     }
         
-        $startIndex = 0;
-        $endIndex = 0;
+    //     $startIndex = 0;
+    //     $endIndex = 0;
         
-        foreach ($zoneOrder as $zone) {
-            if (!isset($xzones[$zone])) {
-                continue;
-            }
+    //     foreach ($zoneOrder as $zone) {
+    //         if (!isset($xzones[$zone])) {
+    //             continue;
+    //         }
             
-            $zoneSize = $xzones[$zone];
-            $endIndex = $startIndex + $zoneSize;
+    //         $zoneSize = $xzones[$zone];
+    //         $endIndex = $startIndex + $zoneSize;
             
-            if ($zone === $selectedZone) {
-                // Ensure we don't exceed the array bounds
-                $endIndex = min($endIndex, count($logs));
-                return array_slice($logs, $startIndex, $endIndex - $startIndex);
-            }
+    //         if ($zone === $selectedZone) {
+    //             // Ensure we don't exceed the array bounds
+    //             $endIndex = min($endIndex, count($logs));
+    //             return array_slice($logs, $startIndex, $endIndex - $startIndex);
+    //         }
             
-            $startIndex = $endIndex;
-        }
+    //         $startIndex = $endIndex;
+    //     }
         
-        // If we get here, the selected zone wasn't found or had no logs
-        return [];
-    }
+    //     // If we get here, the selected zone wasn't found or had no logs
+    //     return [];
+    // }
 
     public static function medianTemp(array $data): float
     {
@@ -462,54 +530,54 @@ class InsStc
         return $positionHuman;
     }
 
-    public static function sections(string $axis): array
-    {
-        switch ($axis) {
-            case 'x':
-                return [
-                    'preheat'   => 5,
-                    'section_1' => 6,
-                    'section_2' => 6,
-                    'section_3' => 6,
-                    'section_4' => 6,
-                    'section_5' => 6,
-                    'section_6' => 6,
-                    'section_7' => 6,
-                    'section_8' => 6,
-                    'postheat'  => 5
-                ];
-                break;
-            case 'y':
-                return [ 40, 50, 60, 70, 80 ];
-                break;
+    // public static function sections(string $axis): array
+    // {
+    //     switch ($axis) {
+    //         case 'x':
+    //             return [
+    //                 'preheat'   => 5,
+    //                 'section_1' => 6,
+    //                 'section_2' => 6,
+    //                 'section_3' => 6,
+    //                 'section_4' => 6,
+    //                 'section_5' => 6,
+    //                 'section_6' => 6,
+    //                 'section_7' => 6,
+    //                 'section_8' => 6,
+    //                 'postheat'  => 5
+    //             ];
+    //             break;
+    //         case 'y':
+    //             return [ 40, 50, 60, 70, 80 ];
+    //             break;
             
-            default:
-                return [];
-                break;
-        }        
-    }
+    //         default:
+    //             return [];
+    //             break;
+    //     }        
+    // }
 
-    public static function zones(string $axis): array
-    {
-        switch ($axis) {
-            case 'x':
-                return [
-                    'preheat'   => 5,
-                    'zone_1'    => 12,
-                    'zone_2'    => 12,
-                    'zone_3'    => 12,
-                    'zone_4'    => 12,
-                    'postheat'  => 5
-                ];
-                break;
-            case 'y':
-                return [ 40, 50, 60, 70, 80 ];
-                break;
+    // public static function zones(string $axis): array
+    // {
+    //     switch ($axis) {
+    //         case 'x':
+    //             return [
+    //                 'preheat'   => 5,
+    //                 'zone_1'    => 12,
+    //                 'zone_2'    => 12,
+    //                 'zone_3'    => 12,
+    //                 'zone_4'    => 12,
+    //                 'postheat'  => 5
+    //             ];
+    //             break;
+    //         case 'y':
+    //             return [ 40, 50, 60, 70, 80 ];
+    //             break;
             
-            default:
-                return [];
-                break;
-        }
-    }
+    //         default:
+    //             return [];
+    //             break;
+    //     }
+    // }
     
 }

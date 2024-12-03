@@ -56,7 +56,7 @@ class extends Component {
                 $query->where('ins_stc_machines.line', 'LIKE', '%' . $this->line . '%');
             }
 
-        return $query->orderBy('start_time', 'DESC');
+        return $query->orderBy('started_at', 'DESC');
     }
 
     private function getDLogsQuery()
@@ -88,7 +88,7 @@ class extends Component {
                 $query->where('ins_stc_machines.line', 'LIKE', '%' . $this->line . '%');
             }
 
-        return $query->orderBy('start_time', 'DESC');
+        return $query->orderBy('started_at', 'DESC');
     }
 
     public function mount()
@@ -132,7 +132,7 @@ class extends Component {
                 ];
 
                 $columns = [
-                    __('Diperbarui pada'), __('Line'), __('Posisi'), __('RPM'), 'Z1 Temp', 'Z2 Temp', 'Z3 Temp', 'Z4 Temp',
+                    __('Diperbarui pada'), __('Line'), __('Posisi'), __('RPM'), 'HB S1', 'HB S2', 'HB S3', 'HB S4', 'HB S5', 'HB S6', 'HB S7', 'HB S8',
                     __('Operator') . ' 1' , __('Operator') . ' 2', __('Awal'), __('Durasi'), __('Latensi unggah')
                 ];
 
@@ -147,13 +147,17 @@ class extends Component {
                                 $dSum->machine_line,
                                 InsStc::positionHuman($dSum->position),
                                 $dSum->speed,
-                                $dSum->z_1_temp,
-                                $dSum->z_2_temp,
-                                $dSum->z_3_temp,
-                                $dSum->z_4_temp,
+                                $dSum->section_1,
+                                $dSum->section_2,
+                                $dSum->section_3,
+                                $dSum->section_4,
+                                $dSum->section_5,
+                                $dSum->section_6,
+                                $dSum->section_7,
+                                $dSum->section_8,
                                 $dSum->user1_name . ' - ' . $dSum->user1_emp_id,
                                 $dSum->user2_name . ' - ' . $dSum->user2_emp_id,
-                                $dSum->start_time,
+                                $dSum->started_at,
                                 $dSum->duration(),
                                 $dSum->uploadLatency(),
                             ]);
@@ -375,9 +379,9 @@ class extends Component {
                             <td>{{ $d_sum->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($d_sum->position) }}</td>
                             <td>{{ $d_sum->speed }}</td>
-                            <td>{{ $d_sum->z_1_temp . ' | ' . $d_sum->z_2_temp . ' | ' . $d_sum->z_3_temp . ' | ' . $d_sum->z_4_temp  }}</td>
+                            <td>{{ $d_sum->section_1 . ' | ' . $d_sum->section_2 . ' | ' . $d_sum->section_3 . ' | ' . $d_sum->section_4 . ' | ' . $d_sum->section_5 . ' | ' . $d_sum->section_6 . ' | ' . $d_sum->section_7 . ' | ' . $d_sum->section_8  }}</td>
                             <td>{{ $d_sum->user1_name }}</td>
-                            <td>{{ $d_sum->start_time }}</td>
+                            <td>{{ $d_sum->started_at }}</td>
                             <td>{{ $d_sum->duration() }}</td>
                             <td>{{ $d_sum->uploadLatency() }}</td>
                         </tr>

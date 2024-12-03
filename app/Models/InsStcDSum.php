@@ -16,16 +16,23 @@ class InsStcDSum extends Model
     protected $fillable = [
         'ins_stc_device_id',
         'ins_stc_machine_id',
+
         'user_1_id',
         'user_2_id',
-        'start_time',
-        'end_time',
-        'preheat_temp',
-        'z_1_temp',
-        'z_2_temp',
-        'z_3_temp',
-        'z_4_temp',
-        'postheat_temp',
+        'started_at',
+        'ended_at',
+
+        'preheat',
+        'section_1',
+        'section_2',
+        'section_3',
+        'section_4',
+        'section_5',
+        'section_6',
+        'section_7',
+        'section_8',
+        'postheat',
+
         'speed',
         'sequence',
         'position',
@@ -33,43 +40,31 @@ class InsStcDSum extends Model
     ];
     
     protected $casts = [
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
-        'preheat_temp' => 'float',
-        'z_1_temp' => 'float',
-        'z_2_temp' => 'float',
-        'z_3_temp' => 'float',
-        'z_4_temp' => 'float',
-        'postheat_temp' => 'float',
+        'started_at'    => 'datetime',
+        'ended_at'      => 'datetime',
+
+        'preheat'       => 'float',
+        'section_1'     => 'float',
+        'section_2'     => 'float',
+        'section_3'     => 'float',
+        'section_4'     => 'float',
+        'section_5'     => 'float',
+        'section_6'     => 'float',
+        'section_7'     => 'float',
+        'section_8'     => 'float',
+        'postheat'      => 'float',
+
         'speed' => 'float',
     ];
 
-    public static function logsCountEvalHuman($logsCountEval): string
-    {
-        switch ($logsCountEval) {
-            case 'optimal':
-                return __('Optimal');
-                break;
-            
-            case 'too_many':
-                return __('Terlalu banyak');
-                break;
-            case 'too_few':
-                return __('Terlalu sedikit');
-                break;
-            default:
-                return __('Tak diketahui');
-        }
-    }
-
     public function duration(): string
     {
-        return InsStc::duration($this->start_time, $this->end_time);
+        return InsStc::duration($this->started_at, $this->ended_at);
     }
 
     public function uploadLatency(): string
     {
-        return InsStc::duration($this->end_time, $this->updated_at);
+        return InsStc::duration($this->ended_at, $this->updated_at);
     }
 
     public function ins_stc_d_logs(): HasMany
