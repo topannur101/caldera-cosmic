@@ -56,7 +56,7 @@ class InsStc
                     $median = $sectionValues[$middle];
                 }
 
-                $medians[$section] = $median;
+                $medians[$section] = (int) round($median, 0);
             } else {
                 $medians[$section] = null; // No data in this section
             }
@@ -96,13 +96,13 @@ class InsStc
 
         foreach ($hb_values as $index => $hb_value) {
             $hb_target = self::$HBTargets[$index];
-            $sv_value = $sv_values[$index];
+            $sv_value = (int) $sv_values[$index];
 
             // Handle special case for zero SV values
-            if ($sv_value === 0) {
+            if ($sv_value == 0) {
                 $svp_results[] = [
                     'absolute' => 0,
-                    'relative' => '0'
+                    'relative' => ''
                 ];
                 continue;
             }
@@ -111,14 +111,14 @@ class InsStc
             $diff = $hb_value - $hb_target;
 
             // Apply adjustment to SV
-            $adjusted_sv = max(0, $sv_value - $diff);
+            $adjusted_sv = (int) round(max(0, $sv_value - $diff), 0);
 
             // Calculate relative difference between adjusted and original SV
             $relative = $adjusted_sv - $sv_value;
             $relative = $relative > 0 ? '+' . abs($relative) : '-' . abs($relative);
 
             $svp_results[] = [
-                'absolute' => round($adjusted_sv, 1),
+                'absolute' => $adjusted_sv,
                 'relative' => $relative
             ];
         }
