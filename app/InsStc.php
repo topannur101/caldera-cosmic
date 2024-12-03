@@ -111,7 +111,7 @@ class InsStc
             $diff = $hb_value - $hb_target;
 
             // Apply adjustment to SV
-            $adjusted_sv = (int) round(max(0, $sv_value - $diff), 0);
+            $adjusted_sv = (int) max(0, round($sv_value - $diff, 0));
 
             // Calculate relative difference between adjusted and original SV
             $relative = $adjusted_sv - $sv_value;
