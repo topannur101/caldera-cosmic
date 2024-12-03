@@ -28,7 +28,7 @@ class InsStc
 
         // Divide values into sections based on default ratios
         foreach (self::$sectionRatios as $section => $sectionRatio) {
-            $sectionCount = (int) floor($totalValues * $sectionRatio);
+            $sectionCount = (int) round($totalValues * $sectionRatio, 0);
             $sections[$section] = array_slice($values, $startIndex, $sectionCount);
             $startIndex += $sectionCount;
         }
@@ -310,38 +310,26 @@ class InsStc
     {
         $annotations = [];
         $previousCount = $xzones['preheat']; // Start after preheat
+
+        $annotations[] = [
+            'x' => self::parseDate($logs[$previousCount]['taken_at']),
+            'borderColor' => '#bcbcbc',
+            'label' => [
+                'style' => [
+                    'color' => 'transparent',
+                    'background' => 'transparent',
+                ],
+                'text' => '',
+            ],
+        ];
     
         foreach ($zones as $zoneName => $zoneSections) {
-            // First section in the zone
-            $firstSection = $zoneSections[0];
-            
-            // Last section in the zone
-            $lastSection = $zoneSections[count($zoneSections) - 1];
-    
-            // Calculate the position of the first section's start
-            $firstSectionPosition = $previousCount + 1;
     
             // Calculate the position of the last section's end
             $lastSectionPosition = $previousCount;
             foreach ($zoneSections as $section) {
                 $lastSectionPosition += $xzones[$section];
             }
-            $lastSectionPosition += 1;
-    
-            // // First border: start of the first section in the zone
-            // if (isset($logs[$firstSectionPosition])) {
-            //     $annotations[] = [
-            //         'x' => self::parseDate($logs[$firstSectionPosition]['taken_at']),
-            //         'borderColor' => '#bcbcbc',
-            //         'label' => [
-            //             'style' => [
-            //                 'color' => 'transparent',
-            //                 'background' => 'transparent',
-            //             ],
-            //             'text' => '',
-            //         ],
-            //     ];
-            // }
     
             // Last border: end of the last section in the zone
             if (isset($logs[$lastSectionPosition])) {
@@ -402,11 +390,11 @@ class InsStc
             $cumulativeCounts[$section] = $total;
         }
     
-        $i = 1;
+        $i = 0;
         foreach ($zones as $zoneName => $zoneSections) {
             // Calculate index as the last log entry in the cumulative count
             $firstSection = $zoneSections[0];
-            $index = $cumulativeCounts[$firstSection] + $i++; // subtract 1 to get correct zero-based index
+            $index = $cumulativeCounts[$firstSection]; // subtract 1 to get correct zero-based index
     
             // Get the 'taken_at' timestamp for this index
             $x = self::parseDate($logs[$index]['taken_at']);
@@ -430,7 +418,7 @@ class InsStc
                 ],
                 'label' => [
                     'borderWidth' => 0,
-                    'text' => sprintf('%s: %.2f', __('Z') . + $i - 1, $zoneValue),
+                    'text' => sprintf('%s: %.2f', __('Z') . + ++$i, $zoneValue),
                     'style' => [
                         'background' => '#D64550',
                         'color' => '#ffffff',

@@ -7,7 +7,7 @@ use Livewire\WithPagination;
 
 use Carbon\Carbon;
 use App\InsStc;
-use App\Models\InsStcMlog;
+use App\Models\InsStcAdj;
 use App\Models\InsStcMachine;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,22 +27,25 @@ class extends Component {
     #[Url]
     public $line;
 
-    public $lines;
+   public $lines;
 
     public $perPage = 20;
 
-    private function getMlogsQuery()
+    private function getAdjsQuery()
     {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $query = InsStcMlog::join('ins_stc_machines', 'ins_stc_m_logs.ins_stc_machine_id', '=', 'ins_stc_machines.id')
-            ->select(
-                'ins_stc_m_logs.*',
-                'ins_stc_m_logs.updated_at as m_log_updated_at',
+        $query = InsStcAdj::join('ins_stc_machines', 'ins_stc_adjs.ins_stc_machine_id', '=', 'ins_stc_machines.id')
+        ->join('users', 'ins_stc_adjs.user_id', '=', 'users.id')
+         ->select(
+                'ins_stc_adjs.*',
+                'ins_stc_adjs.created_at as adj_created_at',
                 'ins_stc_machines.line as machine_line',
+                'users.name as user_name',
+                'users.emp_id as user_emp_id'
             )
-            ->whereBetween('ins_stc_m_logs.updated_at', [$start, $end]);
+            ->whereBetween('ins_stc_adjs.created_at', [$start, $end]);
 
             if ($this->line)
             {
@@ -62,20 +65,20 @@ class extends Component {
         $this->lines = InsStcMachine::orderBy('line')->get()->pluck('line')->toArray();
 
         // if (!$this->line && !$this->team && Auth::user()) {
-        //     $latestMlog = Auth::user()->ins_stc_m_logs()->latest()->first();
+        //     $latestAdj = Auth::user()->ins_stc_adjs()->latest()->first();
             
-        //     if ($latestMlog) {
-        //         $this->line = $latestMlog->line;
+        //     if ($latestAdj) {
+        //         $this->line = $latestAdj->line;
         //     }
         // }
     }
 
     public function with(): array
     {
-        $mlogs = $this->getMlogsQuery()->paginate($this->perPage);
+        $adjs = $this->getAdjsQuery()->paginate($this->perPage);
 
         return [
-            'm_logs' => $mlogs,
+            'adjs' => $adjs,
         ];
     }
 
@@ -87,7 +90,7 @@ class extends Component {
     public function download()
     {
         $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
-        $filename = 'm_logs_export_' . now()->format('Y-m-d_His') . '.csv';
+        $filename = 'adjs_export_' . now()->format('Y-m-d_His') . '.csv';
 
         $headers = [
             'Content-type' => 'text/csv',
@@ -106,22 +109,22 @@ class extends Component {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
-            $this->getMlogsQuery()->chunk(1000, function ($mlogs) use ($file) {
-                foreach ($mlogs as $mlog) {
+            $this->getAdjsQuery()->chunk(1000, function ($adjs) use ($file) {
+                foreach ($adjs as $adj) {
                     fputcsv($file, [
-                        $mlog->m_log_updated_at,
-                        $mlog->machine_line,
-                        InsStc::positionHuman($mlog->position),
-                        $mlog->speed,
-                        $mlog->z_1_temp,
-                        $mlog->z_2_temp,
-                        $mlog->z_3_temp,
-                        $mlog->z_4_temp,
-                        $mlog->user1_name . ' - ' . $mlog->user1_emp_id,
-                        $mlog->user2_name . ' - ' . $mlog->user2_emp_id,
-                        $mlog->start_time,
-                        $mlog->duration(),
-                        $mlog->uploadLatency(),
+                        $adj->adj_created_at,
+                        $adj->machine_line,
+                        InsStc::positionHuman($adj->position),
+                        $adj->speed,
+                        $adj->z_1_temp,
+                        $adj->z_2_temp,
+                        $adj->z_3_temp,
+                        $adj->z_4_temp,
+                        $adj->user1_name . ' - ' . $adj->user1_emp_id,
+                        $adj->user2_name . ' - ' . $adj->user2_emp_id,
+                        $adj->start_time,
+                        $adj->duration(),
+                        $adj->uploadLatency(),
                     ]);
                 }
             });
@@ -178,20 +181,20 @@ class extends Component {
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="flex gap-3">
                 <div class="w-full lg:w-32">
-                    <label for="m_logs-line"
+                    <label for="adjs-line"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                    <x-text-input id="m_logs-line" wire:model.live="line" type="number" list="m_logs-lines" step="1" />
-                    <datalist id="m_logs-lines">
+                    <x-text-input id="adjs-line" wire:model.live="line" type="number" list="adjs-lines" step="1" />
+                    <datalist id="adjs-lines">
                         @foreach($lines as $line)
                         <option value="{{ $line }}"></option>
                         @endforeach
                     </datalist>
                 </div>
                 {{-- <div class="w-full lg:w-32">
-                    <label for="m_logs-team"
+                    <label for="adjs-team"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
-                    <x-text-input id="m_logs-team" wire:model.live="team" type="text" list="m_logs-teams" />
-                    <datalist id="m_logs-teams">
+                    <x-text-input id="adjs-team" wire:model.live="team" type="text" list="adjs-teams" />
+                    <datalist id="adjs-teams">
                         <option value="A"></option>
                         <option value="B"></option>
                         <option value="C"></option>
@@ -202,7 +205,7 @@ class extends Component {
             <div class="grow flex justify-between gap-x-2 items-center">
                 <div>
                     <div class="px-3">
-                        <div wire:loading.class="hidden">{{ $m_logs->total() . ' ' . __('ditemukan') }}</div>
+                        <div wire:loading.class="hidden">{{ $adjs->total() . ' ' . __('ditemukan') }}</div>
                         <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
                             <div class="relative w-3">
                                 <x-spinner class="sm white"></x-spinner>
@@ -247,11 +250,11 @@ class extends Component {
                 </div>
             </div>
         </x-modal> 
-        <x-modal name="m_log-show" maxWidth="xl">
+        <x-modal name="adj-show" maxWidth="xl">
             {{-- <livewire:insight.stc.summary.m-log-show /> --}}
         </x-modal>
     </div>
-    @if (!$m_logs->count())
+    @if (!$adjs->count())
         @if (!$start_at || !$end_at)
             <div wire:key="no-range" class="py-20">
                 <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -271,41 +274,43 @@ class extends Component {
             </div>
         @endif
     @else
-        <div wire:key="raw-m_logs" class="overflow-auto p-0 sm:p-1">
+        <div wire:key="raw-adjs" class="overflow-auto p-0 sm:p-1">
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                 <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
-                        <th>{{ __('Diperbarui pada') }}</th> 
+                        <th>{{ __('Dibuat pada') }}</th> 
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('Posisi') }}</th>
-                        <th>PV R</th>
-                        <th>SV C</th>
-                        <th>SV W</th>
-                        <th>SV R</th>
+                        <th>{{ __('SVP') }}</th>
+                        <th>{{ __('FID')}}</th>
+                        <th>{{ __('Dikirim?') }}</th>
+                        <th>{{ __('NIK') }}</th>
+                        <th>{{ __('Nama') }}</th>
                     </tr>
-                    @foreach ($m_logs as $m_log)
-                        <tr wire:key="m_log-tr-{{ $m_log->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'm_log-show'); $dispatch('m_log-show', { id: '{{ $m_log->id }}'})">
-                            <td>{{ $m_log->m_log_updated_at }}</td>
-                            <td>{{ $m_log->machine_line }}</td>
-                            <td>{{ InsStc::positionHuman($m_log->position) }}</td>
-                            <td> {{ $m_log->pv_r_1 . '|' . $m_log->pv_r_2 . '|' . $m_log->pv_r_3 . '|' . $m_log->pv_r_4 . '|' . $m_log->pv_r_5 . '|' . $m_log->pv_r_6 . '|' . $m_log->pv_r_7 . '|' . $m_log->pv_r_8 }}</td>
-                            <td> {{ $m_log->sv_p_1 . '|' . $m_log->sv_p_2 . '|' . $m_log->sv_p_3 . '|' . $m_log->sv_p_4 . '|' . $m_log->sv_p_5 . '|' . $m_log->sv_p_6 . '|' . $m_log->sv_p_7 . '|' . $m_log->sv_p_8 }}</td>
-                            <td> {{ $m_log->sv_w_1 . '|' . $m_log->sv_w_2 . '|' . $m_log->sv_w_3 . '|' . $m_log->sv_w_4 . '|' . $m_log->sv_w_5 . '|' . $m_log->sv_w_6 . '|' . $m_log->sv_w_7 . '|' . $m_log->sv_w_8 }}</td>
-                            <td> {{ $m_log->sv_r_1 . '|' . $m_log->sv_r_2 . '|' . $m_log->sv_r_3 . '|' . $m_log->sv_r_4 . '|' . $m_log->sv_r_5 . '|' . $m_log->sv_r_6 . '|' . $m_log->sv_r_7 . '|' . $m_log->sv_r_8 }}</td>
-                        </tr>
+                    @foreach ($adjs as $adj)
+                        <tr wire:key="adj-tr-{{ $adj->id . $loop->index }}" tabindex="0"
+                            x-on:click="$dispatch('open-modal', 'adj-show'); $dispatch('adj-show', { id: '{{ $adj->id }}'})">
+                            <td>{{ $adj->adj_created_at }}</td>
+                            <td>{{ $adj->machine_line }}</td>
+                            <td>{{ InsStc::positionHuman($adj->position) }}</td>
+                            <td>{{ $adj->sv_p_1 . '|' . $adj->sv_p_2 . '|' . $adj->sv_p_3 . '|' . $adj->sv_p_4 . '|' . $adj->sv_p_5 . '|' . $adj->sv_p_6 . '|' . $adj->sv_p_7 . '|' . $adj->sv_p_8 }}</td>
+                            <td>{{ $adj->formula_id }}</td>
+                            <td>{{ $adj->is_sent ? '•' : '' }}</td>
+                            <td>{{ $adj->user_emp_id }}</td>
+                            <td>{{ $adj->user_name }}</td>
+                           </tr>
                     @endforeach
                 </table>
             </div>
         </div>
         <div class="flex items-center relative h-16">
-            @if (!$m_logs->isEmpty())
-                @if ($m_logs->hasMorePages())
+            @if (!$adjs->isEmpty())
+                @if ($adjs->hasMorePages())
                     <div wire:key="more" x-data="{
                         observe() {
-                            const observer = new IntersectionObserver((m_logs) => {
-                                m_logs.forEach(m_log => {
-                                    if (m_log.isIntersecting) {
+                            const observer = new IntersectionObserver((adjs) => {
+                                adjs.forEach(adj => {
+                                    if (adj.isIntersecting) {
                                         @this.loadMore()
                                     }
                                 })

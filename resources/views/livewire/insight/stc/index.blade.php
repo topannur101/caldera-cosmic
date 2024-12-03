@@ -16,6 +16,10 @@ class extends Component {
     <x-nav-insights-stc></x-nav-insights-stc>
 </x-slot>
 
+<x-slot name="printable">
+    <livewire:insight.stc.summary.d-sum-print />
+</x-slot>
+
 <div id="content" class="py-12 max-w-6xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     @if (!Auth::user())
         <div class="flex flex-col items-center gap-y-6 px-6 py-20">

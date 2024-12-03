@@ -21,7 +21,7 @@ class extends Component {
     public string $machine_line;
     public string $machine_name;
     public string $machine_code;
-    public string $start_time;
+    public string $started_at;
     public string $duration;
     public string $upload_latency;
     public string $logs_count;
@@ -43,7 +43,7 @@ class extends Component {
         $this->machine_line  = $data['machine_line'];
         $this->machine_name  = $data['machine_name'];
         $this->machine_code  = $data['machine_code'];
-        $this->start_time    = $data['start_time'];
+        $this->started_at    = $data['started_at'];
         $this->duration      = $data['duration'];
         $this->upload_latency= $data['upload_latency'];
         $this->logs_count    = $data['logs_count'];
@@ -166,7 +166,7 @@ class extends Component {
                                     </td>
                                     <td class="px-1">:</td>
                                     <td>
-                                        {{ $start_time }}
+                                        {{ $started_at }}
                                     </td>
                                 </tr>
                                 <tr>

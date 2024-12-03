@@ -77,7 +77,7 @@ new class extends Component {
             'user_2_id'     => ['nullable', 'exists:users,id'],
             'machine_id'    => ['required', 'integer', 'exists:ins_stc_machines,id'],
             'position'      => ['required', 'in:upper,lower'],
-            'speed'         => ['required', 'numeric', 'min:0.1', 'max:99'],
+            'speed'         => ['required', 'numeric', 'min:0.1', 'max:1'],
             'sv_temps'      => ['required', 'array', 'size:8'],
             'sv_temps.*'    => ['required', 'numeric', 'min:1', 'max:99'],
             'device_code'   => ['required', 'exists:ins_stc_devices,code'],

@@ -52,14 +52,14 @@ class extends Component {
     {
         // Start with sums query
         $dSumsQuery = InsStcDSum::query()
-            ->whereBetween('start_time', [
+            ->whereBetween('started_at', [
                 Carbon::parse($this->start_at)->startOfDay(),
                 Carbon::parse($this->end_at)->endOfDay()
             ])
             ->when($this->line, function($query) {
                 return $query->where('line', $this->line);
             })
-            ->latest('start_time');
+            ->latest('started_at');
         
         $this->d_sums_count = $dSumsQuery->count();
         $dSumsQuery = $dSumsQuery->limit($this->d_sums_max)->get();
@@ -102,19 +102,19 @@ class extends Component {
 
         $data = $this->getData();
 
-        $this->js(
-            "
-            let options = " .
-                json_encode(InsStc::getDLogsChartOptions($data)) .
-                ";
+        // $this->js(
+        //     "
+        //     let options = " .
+        //         json_encode(InsStc::getDLogsChartOptions($data)) .
+        //         ";
 
-            // Render chart
-            const chartContainer = \$wire.\$el.querySelector('#stc-summary-d-logs-sum-chart-container');
-            chartContainer.innerHTML = '<div class=\"chart\"></div>';
-            let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
-            chart.render();
-            ",
-        );
+        //     // Render chart
+        //     const chartContainer = \$wire.\$el.querySelector('#stc-summary-d-logs-sum-chart-container');
+        //     chartContainer.innerHTML = '<div class=\"chart\"></div>';
+        //     let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
+        //     chart.render();
+        //     ",
+        // );
     }
 
     public function updated()

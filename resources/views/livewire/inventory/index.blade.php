@@ -69,9 +69,9 @@
                                     <div class="mb-1">{{ __('Telah diterapkan di:') }}</div>
                                 </div>
                                 <div class="flex flex-wrap gap-3">
-                                    <x-pill color="neutral-lighter">{{ __('MM') }}</x-pill>
-                                    <x-pill color="neutral-lighter">{{ __('Maintenance') }}</x-pill>
-                                    <x-pill color="neutral-lighter">{{ __('CE') }}</x-pill>
+                                    <x-pill color="neutral-lighter">MM</x-pill>
+                                    <x-pill color="neutral-lighter">Maintenance</x-pill>
+                                    <x-pill color="neutral-lighter">CE</x-pill>
                                     {{-- <x-link href="#">Terapkan di departemenmu</x-link> --}}
                                 </div>
                              </div>

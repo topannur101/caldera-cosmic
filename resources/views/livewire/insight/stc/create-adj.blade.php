@@ -7,6 +7,7 @@ use App\Models\InsStcMachine;
 use App\Models\InsStcDSum;
 use App\Models\InsStcDLog;
 use App\Models\InsStcMLog;
+use App\Models\InsStcAdj;
 
 new class extends Component {
 
@@ -24,6 +25,49 @@ new class extends Component {
 
     public int $formula_id = 0;
     public bool $use_m_log_sv = false;
+
+    public string $remarks = '';
+    public bool $is_sent = false;
+
+    public function rules()
+    {
+        return [
+            'machine_id'            => ['required', 'integer', 'exists:ins_stc_machines,id'],
+            'position'              => ['required', 'in:upper,lower'],
+            'use_m_log_sv'          => ['required', 'boolean'],
+            'd_sum.id'              => ['required', 'integer', 'exists:ins_stc_d_sums,id'],
+            'm_log.id'              => ['required_if:use_m_log_sv,true', 'integer', 'exists:ins_stc_m_logs,id'],
+            'formula_id'            => ['required', 'integer'],
+            'svp_values.*.absolute' => ['required', 'integer'],
+            'remarks'               => ['nullable', 'string']
+        ];
+    }
+
+    private function saveAdj()
+    {
+        $this->validate();
+        InsStcAdj::create([
+            'user_id'               => Auth::user()->id,
+            'ins_stc_machine_id'    => $this->machine_id,
+            'position'              => $this->position,
+            'use_m_log_sv'          => $this->use_m_log_sv,
+            'ins_stc_d_sum_id'      => $this->d_sum['id'],
+            'ins_stc_m_log_id'      => $this->m_log ? $this->m_log['id'] : null,
+            'formula_id'            => $this->formula_id,
+            'sv_p_1'                => $this->svp_values[0]['absolute'],
+            'sv_p_2'                => $this->svp_values[1]['absolute'],
+            'sv_p_3'                => $this->svp_values[2]['absolute'],
+            'sv_p_4'                => $this->svp_values[3]['absolute'],
+            'sv_p_5'                => $this->svp_values[4]['absolute'],
+            'sv_p_6'                => $this->svp_values[5]['absolute'],
+            'sv_p_7'                => $this->svp_values[6]['absolute'],
+            'sv_p_8'                => $this->svp_values[7]['absolute'],
+            'remarks'               => $this->remarks,
+            'is_sent'               => $this->is_sent,
+        ]);
+        $this->customReset();
+        
+    }
 
     public function with(): array
     {
@@ -47,7 +91,7 @@ new class extends Component {
 
             $d_sum = InsStcDSum::where('ins_stc_machine_id', $this->machine_id)
                 ->where('position', $this->position)
-                ->orderBy('end_time', 'desc')
+                ->orderBy('ended_at', 'desc')
                 ->first();
             $d_logs = InsStcDLog::where('ins_stc_d_sum_id', $d_sum->id ?? 0)->get();
 
@@ -73,6 +117,7 @@ new class extends Component {
 
             if ($this->formula_id && $this->hb_values && $this->sv_values) {
                 $this->svp_values = InsStc::calculateSVP($this->hb_values, $this->sv_values, $this->formula_id);
+
             } else {
                 $this->svp_values = [];
             }
@@ -86,20 +131,27 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['machine_id', 'position']);
+        $this->reset(['machine_id', 'position', 'is_sent']);
     }
 
     public function send()
     {
-        $this->customReset();
+        $this->sendToHMI();
+        $this->saveAdj();
         $this->js('notyfSuccess("' . __('Mengirim ke HMI...') . '")');
     }
 
     public function save()
     {
-        $this->customReset();
+        $this->saveAdj();
         $this->js('notyfSuccess("' . __('Penyetelan tersimpan') . '")');
     }
+
+    private function sendToHMI()
+    {
+        $this->is_sent = true;
+    }
+
 };
 ?>
 
@@ -113,7 +165,7 @@ new class extends Component {
             <div class="p-6">
                 <div class="flex justify-between items-start">
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        {{ __('Pemilihan SV') }}
+                        {{ __('Referensi SV') }}
                     </h2>
                     <x-text-button type="button" x-on:click="$dispatch('close')"><i
                             class="fa fa-times"></i></x-text-button>
@@ -241,7 +293,7 @@ new class extends Component {
                             <x-text-button type="button" x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $d_sum['id'] ?? 0 }}'})">
                             <div class="flex gap-x-2 uppercase">
                                 <div>
-                                   {{ Carbon\Carbon::parse($d_sum['end_time'])->diffForHumans() }} 
+                                   {{ Carbon\Carbon::parse($d_sum['ended_at'])->diffForHumans() }} 
                                 </div>                                
                                 <i class="fa fa-arrow-up-right-from-square"></i>
                             </div>
@@ -250,17 +302,18 @@ new class extends Component {
                                 <div class="text-red-500"><i class="fa fa-exclamation-circle mr-2"></i>{{ __('Tak ditemukan') }}</div>
                             @endif
                         </label>
+                        <div class="grid grid-cols-9 text-center gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
+                            <div>S</div>
+                            <div>1</div>
+                            <div>2</div>
+                            <div>3</div>
+                            <div>4</div>
+                            <div>5</div>
+                            <div>6</div>
+                            <div>7</div>
+                            <div>8</div>
+                        </div>
                         <div class="grid grid-cols-9 text-center gap-x-3">
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">S</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">1</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">2</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">3</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">4</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">5</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">6</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">7</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">8</div>
-
                             <div>HB</div>
                             <div>{{ $hb_values[0] ?? '-' }}</div>
                             <div>{{ $hb_values[1] ?? '-' }}</div>
@@ -296,20 +349,18 @@ new class extends Component {
                                 <div class="text-red-500"><i class="fa fa-exclamation-circle mr-2"></i>{{ __('Tak ditemukan') }}</div>
                             @endif
                         </label>                        
+                        <div class="grid grid-cols-9 text-center gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
+                            <div>S</div>
+                            <div>1</div>
+                            <div>2</div>
+                            <div>3</div>
+                            <div>4</div>
+                            <div>5</div>
+                            <div>6</div>
+                            <div>7</div>
+                            <div>8</div>
+                        </div>
                         <div class="grid grid-cols-9 text-center gap-x-3">
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">S</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">1</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">2</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">3</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">4</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">5</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">6</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">7</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">8</div>
-                            {{-- <div>PV</div>
-                            @for ($i = 1; $i <= 8; $i++)
-                                <div>{{ $m_log['pv_r_' . $i] ?? '-' }}</div>
-                            @endfor --}}
                             <div>SV</div>
                             @if ($use_m_log_sv)
                             <div>{{ $sv_values[0] ?? '-' }}</div>
@@ -341,7 +392,7 @@ new class extends Component {
                             </div>
                             <div>
                                 <label for="adj-use_m_log_sv"
-                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pemilihan SV') }}</label>
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Referensi SV') }}</label>
                                 <div class="p-2">
                                     <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv"
                                         :checked="$use_m_log_sv ? true : false">{{ __('Gunakan SV mesin') }}<x-text-button type="button"
@@ -355,17 +406,18 @@ new class extends Component {
                     </div>
 
                     <div>
+                        <div class="grid grid-cols-9 text-center gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
+                            <div>S</div>
+                            <div>1</div>
+                            <div>2</div>
+                            <div>3</div>
+                            <div>4</div>
+                            <div>5</div>
+                            <div>6</div>
+                            <div>7</div>
+                            <div>8</div>
+                        </div>
                         <div class="grid grid-cols-9 text-center gap-x-3">
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">S</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">1</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">2</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">3</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">4</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">5</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">6</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">7</div>
-                            <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-500">8</div>
-
                             <div>SVP</div>
                             <div>{{ $this->svp_values[0]['absolute'] ?? '-' }}</div>
                             <div>{{ $this->svp_values[1]['absolute'] ?? '-' }}</div>
@@ -375,20 +427,25 @@ new class extends Component {
                             <div>{{ $this->svp_values[5]['absolute'] ?? '-' }}</div>
                             <div>{{ $this->svp_values[6]['absolute'] ?? '-' }}</div>
                             <div>{{ $this->svp_values[7]['absolute'] ?? '-' }}</div>
-
-                            <div class="text-xs text-neutral-500">+/-</div>
-                            <div class="text-xs text-neutral-500">{{ $this->svp_values[0]['relative'] ?? '' }}</div>
-                            <div class="text-xs text-neutral-500">{{ $this->svp_values[1]['relative'] ?? '' }}</div>
-                            <div class="text-xs text-neutral-500">{{ $this->svp_values[2]['relative'] ?? '' }}</div>
-                            <div class="text-xs text-neutral-500">{{ $this->svp_values[3]['relative'] ?? '' }}</div>
-                            <div class="text-xs text-neutral-500">{{ $this->svp_values[4]['relative'] ?? '' }}</div>
-                            <div class="text-xs text-neutral-500">{{ $this->svp_values[5]['relative'] ?? '' }}</div>
-                            <div class="text-xs text-neutral-500">{{ $this->svp_values[6]['relative'] ?? '' }}</div>
-                            <div class="text-xs text-neutral-500">{{ $this->svp_values[7]['relative'] ?? '' }}</div>
+                        </div>
+                        <div class="grid grid-cols-9 text-center gap-x-3 text-xs text-neutral-500">
+                            <div>+/-</div>
+                            <div>{{ $this->svp_values[0]['relative'] ?? '' }}</div>
+                            <div>{{ $this->svp_values[1]['relative'] ?? '' }}</div>
+                            <div>{{ $this->svp_values[2]['relative'] ?? '' }}</div>
+                            <div>{{ $this->svp_values[3]['relative'] ?? '' }}</div>
+                            <div>{{ $this->svp_values[4]['relative'] ?? '' }}</div>
+                            <div>{{ $this->svp_values[5]['relative'] ?? '' }}</div>
+                            <div>{{ $this->svp_values[6]['relative'] ?? '' }}</div>
+                            <div>{{ $this->svp_values[7]['relative'] ?? '' }}</div>
                         </div>
                     </div>
                     <div class="flex gap-x-2">
-                        <div></div>
+                        <div>
+                            @if ($errors->any())
+                                <x-input-error :messages="$errors->first()" />
+                            @endif
+                        </div>
                         <div class="grow"></div>
                         <x-secondary-button type="button" :disabled="!$svp_values"
                             x-on:click="$dispatch('open-modal', 'adj-save')">{{ __('Simpan saja') }}</x-secondary-button>

@@ -16,9 +16,10 @@ class extends Component {
 
     public function mount()
     {
-        $this->view_titles = [       
+        $this->view_titles = [   
             'd-logs'    => __('Ringkasan'), 
-            'adjs'      => __('Penyetelan'),  
+            'adjs'      => __('Penyetelan '),  
+            'recents'   => __('Pembacaan terkini'),    
             'd-sums'    => __('Pembacaan alat'),    
             'm-sums'    => __('Pembacaan mesin'), 
         ];
@@ -67,6 +68,9 @@ class extends Component {
                 @break
             @case('adjs')
             <livewire:insight.stc.summary.adjs />
+                @break
+            @case('recents')
+            <livewire:insight.stc.summary.recents />
                 @break
             @case('d-sums')
             <livewire:insight.stc.summary.d-sums />                       
