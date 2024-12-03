@@ -198,6 +198,9 @@ class InsStc
                 'curve' => 'smooth',
                 'width' => 2,
             ],
+            'theme' => [
+                'mode' => session('bg'),
+            ],
             'legend' => [
                 'show' => true,
                 'position' => 'top',
@@ -211,6 +214,100 @@ class InsStc
                 ],
             ],
         ];
+    }
+
+    public static function getRecentChartOptions($chartData, $width, $height)
+    {
+        $ymax = 85;
+        $ymin = 35;
+
+        $chartData = $chartData->map(function ($group) {
+            // Sort the group by taken_at to ensure chronological order
+            $sortedGroup = $group->sortBy('taken_at');
+            
+            // Get the first timestamp as the reference point
+            $firstTimestamp = strtotime($sortedGroup->first()['taken_at']);
+    
+            return [
+                'name' => 'Series ' . $sortedGroup->first()['ins_stc_d_sum_id'],
+                'data' => $sortedGroup->map(function ($item) use ($firstTimestamp) {
+                    return [
+                        'x' => (strtotime($item['taken_at']) - $firstTimestamp) * 1000, // Convert to milliseconds
+                        'y' => $item['temp']
+                    ];
+                })->toArray()
+            ];
+        })->values()->toArray();
+
+        return [
+            'chart' => [
+                'redrawOnParentResize' => true,
+                'width' => $width . '%',
+                'height' => $height .'%',
+                'type' => 'line',
+                'toolbar' => [
+                    'show' => true,
+                    'tools' => [
+                        'download' => '<img src="/icon-download.svg" width="18">',
+                        'zoom' => '<img src="/icon-zoom-in.svg" width="18">',
+                        'zoomin' => false,
+                        'zoomout' => false,
+                        'pan' => '<img src="/icon-hand.svg" width="20">',
+                        'reset' => '<img src="/icon-zoom-out.svg" width="18">',
+                    ],
+                ],
+                'animations' => [
+                    'enabled' => true,
+                    'easing' => 'easeout',
+                    'speed' => 400,
+                    'animateGradually' => [
+                        'enabled' => false,
+                    ],
+                ],
+            ],
+            'series' => $chartData,
+            'xaxis' => [
+                'type' => 'datetime',
+                'labels' => [
+                    'show' => false,
+                    'datetimeUTC' => false
+                ],
+            ],
+            'yaxis' => [
+                'title' => [
+                    'text' => '°C',
+                    'style' => [
+                        'color' => session('bg') == 'dark' ? '#FFF' : null,
+                    ],
+                ],
+                'max' => $ymax,
+                'min' => $ymin,
+                'labels' => [
+                    'datetimeUTC' => false,
+                    'style' => [
+                        'colors' => session('bg') == 'dark' ? '#FFF' : null,
+                    ],
+                ],
+            ],
+            'stroke' => [
+                'curve' => 'smooth',
+                'width' => 1,
+            ],
+            'legend' => [
+                'show' => false,
+            ],
+            'tooltip' => [
+                'enabled' => false,
+            ],
+            'grid' => [
+                'yaxis' => [
+                    'lines' => [
+                        'show' => false,
+                    ],
+                ],
+            ],
+        ];
+
     }
 
     public static function getChartOptions($logs, $width, $height)

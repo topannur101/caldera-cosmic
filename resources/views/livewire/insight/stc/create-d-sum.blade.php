@@ -472,7 +472,7 @@ new class extends Component {
                                         </tr>
                                         <tr>
                                             <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Pengukur 1') . ': ' }}
+                                                {{ __('Operator') . ' 1' . ': ' }}
                                             </td>
                                             <td>
                                                 {{ Auth::user()->name . ' (' . Auth::user()->emp_id . ')' }}
@@ -480,7 +480,7 @@ new class extends Component {
                                         </tr>
                                         <tr>
                                             <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Pengukur 2') . ': ' }}
+                                                {{ __('Operator') . ' 2' . ': ' }}
                                             </td>
                                             <td>
                                                 {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}
@@ -576,7 +576,7 @@ new class extends Component {
                                     </tr>
                                     <tr>
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Pengukur 1') . ': ' }}
+                                            {{ __('Pengguna') . ' 1' . ': ' }}
                                         </td>
                                         <td>
                                             {{ Auth::user()->name . ' (' . Auth::user()->emp_id . ')' }}
@@ -584,7 +584,7 @@ new class extends Component {
                                     </tr>
                                     <tr>
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Pengukur 2') . ': ' }}
+                                            {{ __('Pengguna') . ' 2' . ': ' }}
                                         </td>
                                         <td>
                                             {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}

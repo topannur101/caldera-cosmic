@@ -198,7 +198,7 @@ class extends Component {
                             <th>{{ __('Posisi') }}</th>  
                             <th>{{ __('RPM') }}</th>   
                             <th>{{ __('Median suhu') }}</th>
-                            <th>{{ __('Pengukur') }}</th>
+                            <th>{{ __('Operator') }}</th>
                             <th>{{ __('Waktu mulai') }}</th>
                             <th>{{ __('Durasi') }}</th>
                             <th>{{ __('Latensi unggah') }}</th>

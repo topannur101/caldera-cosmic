@@ -42,14 +42,14 @@ class extends Component {
             ->leftjoin('users as user2', 'ins_stc_d_sums.user_2_id', '=', 'user2.id')
             ->select(
                 'ins_stc_d_sums.*',
-                'ins_stc_d_sums.updated_at as d_sum_updated_at',
+                'ins_stc_d_sums.created_at as d_sum_created_at',
                 'ins_stc_machines.line as machine_line',
                 'user1.emp_id as user1_emp_id',
                 'user1.name as user1_name',
                 'user2.emp_id as user2_emp_id',
                 'user2.name as user2_name'
             )
-            ->whereBetween('ins_stc_d_sums.updated_at', [$start, $end]);
+            ->whereBetween('ins_stc_d_sums.created_at', [$start, $end]);
 
             if ($this->line)
             {
@@ -72,7 +72,7 @@ class extends Component {
                 'ins_stc_d_logs.*',
                 'ins_stc_d_sums.*',
                 'ins_stc_d_sums.id as d_sum_id',
-                'ins_stc_d_sums.updated_at as d_sum_updated_at',
+                'ins_stc_d_sums.created_at as d_sum_created_at',
                 'ins_stc_machines.line as machine_line',
                 'user1.emp_id as user1_emp_id',
                 'user1.name as user1_name',
@@ -81,7 +81,7 @@ class extends Component {
                 'ins_stc_d_logs.taken_at as d_log_taken_at',
                 'ins_stc_d_logs.temp as d_log_temp',
             )
-            ->whereBetween('ins_stc_d_sums.updated_at', [$start, $end]);
+            ->whereBetween('ins_stc_d_sums.created_at', [$start, $end]);
 
             if ($this->line)
             {
@@ -143,7 +143,7 @@ class extends Component {
                     $this->getDSumsQuery()->chunk(1000, function ($dSums) use ($file) {
                         foreach ($dSums as $dSum) {
                             fputcsv($file, [
-                                $dSum->d_sum_updated_at,
+                                $dSum->d_sum_created_at,
                                 $dSum->machine_line,
                                 InsStc::positionHuman($dSum->position),
                                 $dSum->speed,
@@ -195,7 +195,7 @@ class extends Component {
                         foreach ($dLogs as $dLog) {
                             fputcsv($file, [
                                 $dLog->d_sum_id,
-                                $dLog->d_sum_updated_at,
+                                $dLog->d_sum_created_at,
                                 $dLog->machine_line,
                                 InsStc::positionHuman($dLog->position),
                                 $dLog->speed,
@@ -362,12 +362,12 @@ class extends Component {
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                 <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
-                        <th>{{ __('Diperbarui pada') }}</th> 
+                        <th>{{ __('Dibuat pada') }}</th> 
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('Posisi') }}</th>  
                         <th>{{ __('RPM') }}</th>   
                         <th>{{ __('Median suhu') }}</th>
-                        <th>{{ __('Pengukur') }}</th>
+                        <th>{{ __('Operator') }}</th>
                         <th>{{ __('Waktu mulai') }}</th>
                         <th>{{ __('Durasi') }}</th>
                         <th>{{ __('Latensi unggah') }}</th>
@@ -375,7 +375,7 @@ class extends Component {
                     @foreach ($d_sums as $d_sum)
                         <tr wire:key="d_sum-tr-{{ $d_sum->id . $loop->index }}" tabindex="0"
                             x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $d_sum->id }}'})">
-                            <td>{{ $d_sum->d_sum_updated_at }}</td>
+                            <td>{{ $d_sum->d_sum_created_at }}</td>
                             <td>{{ $d_sum->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($d_sum->position) }}</td>
                             <td>{{ $d_sum->speed }}</td>

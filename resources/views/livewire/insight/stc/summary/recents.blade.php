@@ -1,12 +1,40 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\Attributes\On;
 
 use App\Models\InsStcMachine;
 use App\Models\InsStcDSum;
 use App\Models\InsStcMLog;
+use App\Models\InsStcDLog;
+use App\InsStc;
 
 new class extends Component {
+
+    public array $d_sum_ids = [];
+
+    #[On('update')]
+    public function update()
+    {
+        $d_sums = InsStcDLog::whereIn('ins_stc_d_sum_id', $this->d_sum_ids)
+            ->get()
+            ->groupBy('ins_stc_d_sum_id');
+
+        $this->js(
+                "
+                let recentsOptions = " .
+                    json_encode(InsStc::getRecentChartOptions($d_sums, 100, 100)) .
+                    ";
+
+                // Render recents chart
+                const recentsChartContainer = \$wire.\$el.querySelector('#recents-chart-container');
+                recentsChartContainer.innerHTML = '<div id=\"recents-chart\"></div>';
+                let recentsChart = new ApexCharts(recentsChartContainer.querySelector('#recents-chart'), recentsOptions);
+                recentsChart.render();
+            ",
+            );        
+    }
+
     public function with(): array
     {
         $machines = InsStcMachine::orderBy('line')->get()->toArray();
@@ -39,9 +67,35 @@ new class extends Component {
             $machines[$key]['lower']['m_log'] = $lower_m_log ? $lower_m_log->toArray() : [];
         }
 
+        $this->d_sum_ids = $this->extractDSumIds($machines);
+
         return [
             'machines' => $machines,
         ];
+    }
+
+    private function extractDSumIds($data)
+    {
+        $ids = [];
+            
+            foreach ($data as $key => $value) {
+                if (is_array($value)) {
+                    if (isset($value['d_sum']['id'])) {
+                        $ids[] = $value['d_sum']['id'];
+                    }
+                    
+                    // Recursively search nested arrays
+                    $nestedIds = $this->extractDSumIds($value);
+                    $ids = array_merge($ids, $nestedIds);
+                }
+            }
+            
+            return $ids;
+    }
+
+    public function updated()
+    {
+        $this->update();
     }
 };
 
@@ -52,6 +106,9 @@ new class extends Component {
         <x-modal name="d_sum-show" maxWidth="xl">
             <livewire:insight.stc.summary.d-sum-show />
         </x-modal>
+    </div>
+    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg h-80 p-4 mb-4"
+    id="recents-chart-container" wire:key="recents-chart-container" wire:ignore>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         @foreach ($machines as $machine)
@@ -266,5 +323,10 @@ new class extends Component {
             </div>
         @endforeach
     </div>
-
 </div>
+
+@script
+<script>
+    $wire.$dispatch('update');
+</script>
+@endscript

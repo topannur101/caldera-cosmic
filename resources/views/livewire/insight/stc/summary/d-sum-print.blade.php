@@ -76,7 +76,7 @@ class extends Component {
                                 </tr>
                                 <tr>
                                     <td class="text-neutral-500 text-xs">
-                                        {{ __('Pengukur 1') }}
+                                        {{ __('Operator') . ' 1' }}
                                     </td>
                                     <td class="px-1">:</td>
                                     <td class="truncate">
@@ -85,7 +85,7 @@ class extends Component {
                                 </tr>
                                 <tr>
                                     <td class="text-neutral-500 text-xs">
-                                        {{ __('Pengukur 2') }}
+                                        {{ __('Operator') . ' 2' }}
                                     </td>
                                     <td class="px-1">:</td>
                                     <td class="truncate">
