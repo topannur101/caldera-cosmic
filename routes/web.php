@@ -9,6 +9,7 @@ use App\Http\Resources\InsRtcMetricResource;
 use App\Http\Resources\InsRtcRecipeResource;
 
 Volt::route('/', 'home')->name('home');
+Volt::route('/latihan', 'latihan-test');
 
 // Insight routes
 Route::prefix('insight')->group(function () {

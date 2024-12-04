@@ -10,10 +10,9 @@ use App\Models\InsOmvMetric;
 use App\Traits\HasDateRangeFilter;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\User;
 
-new #[Layout('layouts.app')] 
-class extends Component {
-
+new #[Layout('layouts.app')] class extends Component {
     use HasDateRangeFilter;
 
     #[Url]
@@ -31,8 +30,7 @@ class extends Component {
 
     public function mount()
     {
-        if(!$this->start_at || !$this->end_at)
-        {
+        if (!$this->start_at || !$this->end_at) {
             $this->setThisWeek();
         }
     }
@@ -42,7 +40,7 @@ class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $onTimeMetrics = InsOmvMetric::query()
+        $metrics = InsOmvMetric::query()
             ->when($this->line, function (Builder $query) {
                 $query->where('line', $this->line);
             })
@@ -50,83 +48,119 @@ class extends Component {
                 $query->where('team', $this->team);
             })
             ->whereBetween('start_at', [$start, $end])
-            ->whereIn('eval', ['on_time', 'on_time_manual'])
-            ->get();
+            ->get()
+            ->toArray();
 
-        $mostOnTimeUsers = DB::table(function ($query) use ($onTimeMetrics, $start, $end) {
-            $query->select(
-                    'user_id',
-                    DB::raw('COUNT(CASE WHEN eval = "on_time" THEN 1 END) as count_on_time'),
-                    DB::raw('COUNT(CASE WHEN eval = "on_time_manual" THEN 1 END) as count_on_time_manual'),
-                    DB::raw('COUNT(CASE WHEN eval IN ("on_time", "on_time_manual") THEN 1 END) as total_on_time')
-                )
-                ->from(function ($subQuery) use ($onTimeMetrics, $start, $end) {
-                    $subQuery->from('ins_omv_metrics')
-                        ->select('user_1_id as user_id', 'eval')
-                        ->unionAll(
-                            DB::table('ins_omv_metrics')->select('user_2_id as user_id', 'eval')
-                        )
-                        ->whereIn('eval', ['on_time', 'on_time_manual'])
-                        ->whereBetween('start_at', [$start, $end])
-                        ->when($this->line, function (Builder $query) {
-                            $query->where('line', $this->line);
-                        })
-                        ->when($this->team, function (Builder $query) {
-                            $query->where('team', $this->team);
-                        });
-                }, 'user_data')
-                ->groupBy('user_id');
-            })->select(
-                    'user_id', 
-                    'total_on_time', 
-                    'count_on_time', 
-                    'count_on_time_manual', 
-                    DB::raw('RANK() OVER (ORDER BY total_on_time DESC) as user_rank'),
-                    'users.emp_id', 
-                    'users.name', 
-                    'users.photo'
-                )
-                // Join with users table to get emp_id, name, and photo
-                ->join('users', 'users.id', '=', 'user_id')
-                ->limit(10) // Limit to top 10 users
-                ->get();
+        $highOnTimeUsers = [];
 
-                $highestBatchUsers = DB::table(function ($query) use ($start, $end) {
-                    $query->select(
-                            'user_id',
-                            DB::raw('COUNT(*) as total_batch')
-                        )
-                        ->from(function ($subQuery) use ($start, $end) {
-                            $subQuery->from('ins_omv_metrics')
-                                ->select('user_1_id as user_id')
-                                ->unionAll(
-                                    DB::table('ins_omv_metrics')->select('user_2_id as user_id')
-                                )
-                                ->whereBetween('start_at', [$start, $end])
-                                ->when($this->line, function (Builder $query) {
-                                    $query->where('line', $this->line);
-                                })
-                                ->when($this->team, function (Builder $query) {
-                                    $query->where('team', $this->team);
-                                });
-                        }, 'user_data')
-                        ->groupBy('user_id');
-                    })->select(
-                        'user_id',
-                        'total_batch',
-                        DB::raw('RANK() OVER (ORDER BY total_batch DESC) as user_rank'),
-                        'users.emp_id',
-                        'users.name',
-                        'users.photo'
-                    )
-                    // Join with users table to get emp_id, name, and photo
-                    ->join('users', 'users.id', '=', 'user_id')
-                    ->limit(10) // Limit to top 10 users
-                    ->get();
+        foreach ($metrics as $metric) {
+            $user1Id = $metric['user_1_id'];
+            $user2Id = $metric['user_2_id'];
+
+            // Skip if either user_id is null
+            if ($user1Id === null || $user2Id === null) {
+                continue;
+            }
+
+            // Initialize users if not already in the array
+            foreach ([$user1Id, $user2Id] as $userId) {
+                if (!isset($highOnTimeUsers[$userId])) {
+                    $user = User::find($userId);
+
+                    // Skip if user not found
+                    if (!$user) {
+                        continue;
+                    }
+
+                    $highOnTimeUsers[$userId] = [
+                        'id' => $userId,
+                        'name' => $user->name,
+                        'photo' => $user->photo,
+                        'emp_id' => $user->emp_id,
+                        'count_on_time' => 0,
+                        'count_on_time_manual' => 0,
+                        'count_too_soon' => 0,
+                        'count_too_late' => 0,
+                        'total_count_on_time' => 0,
+                        'total_count' => 0,
+                        'on_time_ratio' => 0,
+                    ];
+                }
+            }
+
+            // Increment counts based on eval
+            if ($metric['eval'] === 'on_time') {
+                $highOnTimeUsers[$user1Id]['count_on_time']++;
+                $highOnTimeUsers[$user2Id]['count_on_time']++;
+            } elseif ($metric['eval'] === 'on_time_manual') {
+                $highOnTimeUsers[$user1Id]['count_on_time_manual']++;
+                $highOnTimeUsers[$user2Id]['count_on_time_manual']++;
+            } elseif ($metric['eval'] === 'too_soon') {
+                $highOnTimeUsers[$user1Id]['count_too_soon']++;
+                $highOnTimeUsers[$user2Id]['count_too_soon']++;
+            } elseif ($metric['eval'] === 'too_late') {
+                $highOnTimeUsers[$user1Id]['count_too_late']++;
+                $highOnTimeUsers[$user2Id]['count_too_late']++;
+            }
+        }
+
+        // Calculate total counts and on_time_ratio for each user
+        foreach ($highOnTimeUsers as &$user) {
+            $user['total_count_on_time'] = $user['count_on_time'] + $user['count_on_time_manual'];
+            $user['total_count'] = $user['count_on_time'] + $user['count_on_time_manual'] + $user['count_too_soon'] + $user['count_too_late'];
+
+            $user['on_time_ratio'] = $user['total_count'] > 0 ? round(($user['total_count_on_time'] / $user['total_count']) * 100, 1) : 0;
+        }
+
+        usort($highOnTimeUsers, function ($a, $b) {
+            if ($b['on_time_ratio'] !== $a['on_time_ratio']) {
+                return $b['on_time_ratio'] <=> $a['on_time_ratio'];
+            }
+
+            return $b['total_count'] <=> $a['total_count'];
+        });
+
+        $highBatchUsers = [];
+
+        foreach ($metrics as $metric) {
+            $user1Id = $metric['user_1_id'];
+            $user2Id = $metric['user_2_id'];
+
+            // Skip if either user_id is null
+            if ($user1Id === null || $user2Id === null) {
+                continue;
+            }
+
+            // Initialize users if not already in the array
+            foreach ([$user1Id, $user2Id] as $userId) {
+                if (!isset($highBatchUsers[$userId])) {
+                    $user = User::find($userId);
+
+                    // Skip if user not found
+                    if (!$user) {
+                        continue;
+                    }
+
+                    $highBatchUsers[$userId] = [
+                        'id' => $userId,
+                        'name' => $user->name,
+                        'photo' => $user->photo,
+                        'emp_id' => $user->emp_id,
+                        'total_batch' => 0,
+                    ];
+                }
+            }
+
+            $highBatchUsers[$user1Id]['total_batch']++;
+            $highBatchUsers[$user2Id]['total_batch']++;
+        }
+        usort($highBatchUsers, function ($a, $b) {
+            return $b['total_batch'] <=> $a['total_batch'];
+        });
 
         return [
-            'mostOnTimeUsers' => $mostOnTimeUsers,
-            'highestBatchUsers' => $highestBatchUsers,
+            'highOnTimeUsers' => $highOnTimeUsers,
+            'highBatchUsers' => $highBatchUsers,
         ];
     }
 };
@@ -141,7 +175,8 @@ class extends Component {
                     <div class="flex">
                         <x-dropdown align="left" width="48">
                             <x-slot name="trigger">
-                                <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="fa fa-fw fa-chevron-down ms-1"></i></x-text-button>
+                                <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i
+                                        class="fa fa-fw fa-chevron-down ms-1"></i></x-text-button>
                             </x-slot>
                             <x-slot name="content">
                                 <x-dropdown-link href="#" wire:click.prevent="setToday">
@@ -170,15 +205,16 @@ class extends Component {
                 </div>
                 <div class="flex gap-3">
                     <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
-                    <x-text-input wire:model.live="end_at"  id="cal-date-end" type="date"></x-text-input>
+                    <x-text-input wire:model.live="end_at" id="cal-date-end" type="date"></x-text-input>
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="flex gap-3">
                 <div class="w-full lg:w-32">
                     <label for="metrics-line"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                    <x-text-input id="metrics-line" wire:model.live="line" type="number" list="metrics-lines" step="1" />
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                    <x-text-input id="metrics-line" wire:model.live="line" type="number" list="metrics-lines"
+                        step="1" />
                     <datalist id="metrics-lines">
                         <option value="1"></option>
                         <option value="2"></option>
@@ -193,7 +229,7 @@ class extends Component {
                 </div>
                 <div class="w-full lg:w-32">
                     <label for="metrics-team"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
                     <x-text-input id="metrics-team" wire:model.live="team" type="text" list="metrics-teams" />
                     <datalist id="metrics-teams">
                         <option value="A"></option>
@@ -215,75 +251,112 @@ class extends Component {
             </div>
         </div>
     </div>
-    <div wire:key="modals"> 
+    <div wire:key="modals">
 
     </div>
     <div wire:key="omv-summary-worker-perf" class="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
         <div>
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
-                {{ __('Paling disiplin') }}</h1>
-            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
-                <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
-                    <tr class="uppercase text-xs">
-                        <th>{{ __('Peringkat') }}</th>
-                        <th>{{ __('Nama') }}</th>
-                        <th>{{ __('Nomor karyawan') }}</th>
-                        <th>{{ __('Batch tepat waktu') }}</th>
-                    </tr>
-                    @foreach ($mostOnTimeUsers as $mostOnTimeUser)
-                    <tr>
-                        <td>{{ $mostOnTimeUser->user_rank }}</td>
-                        <td>
-                            <div class="flex gap-x-2">
-                                <div class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                                    @if($mostOnTimeUser->photo ?? false)
-                                    <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/'. $mostOnTimeUser->photo }}" />
-                                    @else
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
-                                    @endif
-                                </div>
-                                <div>{{ $mostOnTimeUser->name }}</div>
-                            </div>
-                        </td>
-                        <td>{{ $mostOnTimeUser->emp_id }}</td>
-                        <td>{{ $mostOnTimeUser->count_on_time . '/' . $mostOnTimeUser->count_on_time_manual}}</td>
-                    </tr>
-                    @endforeach
-                </table>
-            </div>
+                {{ __('Tepat waktu tertinggi') }}</h1>
+            @if ($highOnTimeUsers)
+                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
+                    <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                        <tr class="uppercase text-xs">
+                            <th>{{ __('Peringkat') }}</th>
+                            <th>{{ __('Nama') }}</th>
+                            <th>{{ __('Nomor karyawan') }}</th>
+                            <th>{{ __('Rasio %') }}</th>
+                        </tr>
+                        @foreach ($highOnTimeUsers as $highOnTimeUser)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>
+                                    <div class="flex gap-x-2">
+                                        <div
+                                            class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                            @if ($highOnTimeUser['photo'] ?? false)
+                                                <img class="w-full h-full object-cover dark:brightness-75"
+                                                    src="{{ '/storage/users/' . $highOnTimeUser['photo'] }}" />
+                                            @else
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
+                                                    viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
+                                                    <path
+                                                        d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
+                                                </svg>
+                                            @endif
+                                        </div>
+                                        <div>{{ $highOnTimeUser['name'] }}</div>
+                                    </div>
+                                </td>
+                                <td>{{ $highOnTimeUser['emp_id'] }}</td>
+                                <td>{{ $highOnTimeUser['on_time_ratio'] . '%' . ' (' . $highOnTimeUser['total_count_on_time'] . '/' . $highOnTimeUser['total_count'] . ')' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                </div>
+            @else
+                <div class="py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-list relative"><i
+                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tak ada data') }}
+                    </div>
+                </div>
+            @endif
         </div>
         <div>
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
-                {{ __('Paling produktif') }}</h1>
-            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
-                <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
-                    <tr class="uppercase text-xs">
-                        <th>{{ __('Peringkat') }}</th>
-                        <th>{{ __('Nama') }}</th>
-                        <th>{{ __('Nomor karyawan') }}</th>
-                        <th>{{ __('Jumlah batch') }}</th>
-                    </tr>
-                    @foreach ($highestBatchUsers as $highestBatchUser)
-                    <tr>
-                        <td>{{ $highestBatchUser->user_rank }}</td>
-                        <td>
-                            <div class="flex gap-x-2">
-                                <div class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                                    @if($highestBatchUser->photo ?? false)
-                                    <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/'. $highestBatchUser->photo }}" />
-                                    @else
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
-                                    @endif
-                                </div>
-                                <div>{{ $highestBatchUser->name }}</div>
-                            </div>
-                        </td>
-                        <td>{{ $highestBatchUser->emp_id }}</td>
-                        <td>{{ $highestBatchUser->total_batch}}</td>
-                    </tr>
-                    @endforeach
-                </table>
-            </div> 
+                {{ __('Jumlah batch tertinggi') }}</h1>
+            @if ($highBatchUsers)
+                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
+                    <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                        <tr class="uppercase text-xs">
+                            <th>{{ __('Peringkat') }}</th>
+                            <th>{{ __('Nama') }}</th>
+                            <th>{{ __('Nomor karyawan') }}</th>
+                            <th>{{ __('Jumlah batch') }}</th>
+                        </tr>
+                        @foreach ($highBatchUsers as $highBatchUser)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>
+                                    <div class="flex gap-x-2">
+                                        <div
+                                            class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                            @if ($highBatchUser['photo'] ?? false)
+                                                <img class="w-full h-full object-cover dark:brightness-75"
+                                                    src="{{ '/storage/users/' . $highBatchUser['photo'] }}" />
+                                            @else
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
+                                                    viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
+                                                    <path
+                                                        d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
+                                                </svg>
+                                            @endif
+                                        </div>
+                                        <div>{{ $highBatchUser['name'] }}</div>
+                                    </div>
+                                </td>
+                                <td>{{ $highBatchUser['emp_id'] }}</td>
+                                <td>{{ $highBatchUser['total_batch'] }}</td>
+                            </tr>
+                        @endforeach
+                    </table>
+                </div>
+            @else
+                <div class="py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-list relative"><i
+                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tak ada data') }}
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>
