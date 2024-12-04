@@ -38,7 +38,7 @@ new class extends Component {
             'd_sum.id'              => ['required', 'integer', 'exists:ins_stc_d_sums,id'],
             'm_log.id'              => ['required_if:use_m_log_sv,true', 'integer', 'exists:ins_stc_m_logs,id'],
             'formula_id'            => ['required', 'integer'],
-            'svp_values.*.absolute' => ['required', 'integer'],
+            'svp_values.*.absolute' => ['required', 'integer', 'min:20', 'max:90'],
             'remarks'               => ['nullable', 'string']
         ];
     }
@@ -151,6 +151,14 @@ new class extends Component {
     {
         $this->is_sent = true;
     }
+    
+    public function exception($e, $stopPropagation) {
+
+        if($e instanceof Illuminate\Validation\ValidationException) {
+            $this->js('$dispatch("open-modal", "adj-error")');
+            $stopPropagation();
+        }
+    }
 
 };
 ?>
@@ -184,6 +192,28 @@ new class extends Component {
                 <div class="mt-6 flex justify-end">
                     <x-primary-button type="button" x-on:click="$dispatch('close')">
                         {{ __('Paham') }}
+                    </x-primary-button>
+                </div>
+            </div>
+        </x-modal>
+        <x-modal name="adj-error">
+            <div class="text-center pt-6">
+                <i class="fa fa-exclamation-triangle text-4xl "></i>
+                <h2 class="mt-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                    {{ __('Data tidak sah') }}
+                </h2>
+            </div>
+            <div class="p-6 text-sm text-neutral-600 dark:text-neutral-400">
+                @if ($errors->any())
+                    <ul class="mt-3 list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+                <div class="mt-6 flex justify-end">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                        {{ __('Oke') }}
                     </x-primary-button>
                 </div>
             </div>
@@ -443,7 +473,12 @@ new class extends Component {
                     <div class="flex gap-x-2">
                         <div>
                             @if ($errors->any())
-                                <x-input-error :messages="$errors->first()" />
+                                <x-text-button type="button" x-on:click="$dispatch('open-modal', 'adj-error')">
+                                    <div class="flex gap-x-2 items-center text-sm text-red-500">
+                                        <i class="fa fa-exclamation-circle"></i>
+                                        <div>{{ __('Data tidak sah') }}</div>
+                                    </div>
+                                </x-text-button>
                             @endif
                         </div>
                         <div class="grow"></div>
