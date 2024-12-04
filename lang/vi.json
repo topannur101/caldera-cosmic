@@ -835,5 +835,9 @@
 "Performa pekerja": "Hiệu suất công nhân",
 "SV mesin": "SV máy",
 "Kirim ke HMI": "Gửi tới HMI",
-"Batch tepat waktu": "Lô đúng hạn"
+"Batch tepat waktu": "Lô đúng hạn",
+"Jumlah batch tertinggi": "Số lượng lô cao nhất",
+"Data tidak sah": "Dữ liệu không hợp lệ",
+"Tepat waktu tertinggi": "Tỷ lệ đúng giờ cao nhất",
+"Rasio %": "Tỷ lệ phần trăm"
 }

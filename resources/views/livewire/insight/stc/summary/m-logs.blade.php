@@ -279,8 +279,8 @@ class extends Component {
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('Posisi') }}</th>
                         <th>PV R</th>
-                        <th>SV C</th>
-                        <th>SV W</th>
+                        {{-- <th>SV P</th>
+                        <th>SV W</th> --}}
                         <th>SV R</th>
                     </tr>
                     @foreach ($m_logs as $m_log)
@@ -289,10 +289,54 @@ class extends Component {
                             <td>{{ $m_log->m_log_updated_at }}</td>
                             <td>{{ $m_log->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($m_log->position) }}</td>
-                            <td class="font-mono"> {{ $m_log->pv_r_1 . ', ' . $m_log->pv_r_2 . ', ' . $m_log->pv_r_3 . ', ' . $m_log->pv_r_4 . ', ' . $m_log->pv_r_5 . ', ' . $m_log->pv_r_6 . ', ' . $m_log->pv_r_7 . ', ' . $m_log->pv_r_8 }}</td>
-                            <td class="font-mono"> {{ $m_log->sv_p_1 . ', ' . $m_log->sv_p_2 . ', ' . $m_log->sv_p_3 . ', ' . $m_log->sv_p_4 . ', ' . $m_log->sv_p_5 . ', ' . $m_log->sv_p_6 . ', ' . $m_log->sv_p_7 . ', ' . $m_log->sv_p_8 }}</td>
-                            <td class="font-mono"> {{ $m_log->sv_w_1 . ', ' . $m_log->sv_w_2 . ', ' . $m_log->sv_w_3 . ', ' . $m_log->sv_w_4 . ', ' . $m_log->sv_w_5 . ', ' . $m_log->sv_w_6 . ', ' . $m_log->sv_w_7 . ', ' . $m_log->sv_w_8 }}</td>
-                            <td class="font-mono"> {{ $m_log->sv_r_1 . ', ' . $m_log->sv_r_2 . ', ' . $m_log->sv_r_3 . ', ' . $m_log->sv_r_4 . ', ' . $m_log->sv_r_5 . ', ' . $m_log->sv_r_6 . ', ' . $m_log->sv_r_7 . ', ' . $m_log->sv_r_8 }}</td>
+                            <td class="font-mono"> 
+                                {{ 
+                                    sprintf('%02d', $m_log->pv_r_1) . ', ' . 
+                                    sprintf('%02d', $m_log->pv_r_2) . ', ' . 
+                                    sprintf('%02d', $m_log->pv_r_3) . ', ' . 
+                                    sprintf('%02d', $m_log->pv_r_4) . ', ' . 
+                                    sprintf('%02d', $m_log->pv_r_5) . ', ' . 
+                                    sprintf('%02d', $m_log->pv_r_6) . ', ' . 
+                                    sprintf('%02d', $m_log->pv_r_7) . ', ' . 
+                                    sprintf('%02d', $m_log->pv_r_8) 
+                                }}
+                            </td>
+                            {{-- <td class="font-mono"> 
+                                {{ 
+                                    sprintf('%02d', $m_log->sv_p_1) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_p_2) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_p_3) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_p_4) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_p_5) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_p_6) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_p_7) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_p_8) 
+                                }}
+                            </td>
+                            <td class="font-mono"> 
+                                {{ 
+                                    sprintf('%02d', $m_log->sv_w_1) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_w_2) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_w_3) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_w_4) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_w_5) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_w_6) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_w_7) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_w_8) 
+                                }}
+                            </td> --}}
+                            <td class="font-mono"> 
+                                {{ 
+                                    sprintf('%02d', $m_log->sv_r_1) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_r_2) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_r_3) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_r_4) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_r_5) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_r_6) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_r_7) . ', ' . 
+                                    sprintf('%02d', $m_log->sv_r_8) 
+                                }}
+                            </td>                            
                         </tr>
                     @endforeach
                 </table>

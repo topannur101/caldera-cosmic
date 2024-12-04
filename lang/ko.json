@@ -835,5 +835,9 @@
 "Performa pekerja": "작업자 성과",
 "SV mesin": "기계 SV",
 "Kirim ke HMI": "HMI로 전송",
-"Batch tepat waktu": "정시 배치"
+"Batch tepat waktu": "정시 배치",
+"Jumlah batch tertinggi": "최고 배치 수",
+"Data tidak sah": "유효하지 않은 데이터",
+"Tepat waktu tertinggi": "최고 정시율",
+"Rasio %": "비율 %"
 }

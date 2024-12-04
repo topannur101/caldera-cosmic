@@ -43,7 +43,4 @@ class extends Component {
     <div class="mx-auto w-32">
         <x-text-input wire:model="nama"></x-text-input>
     </div>
-    <span class="bg-red-500">
-        {{ __('Yang mau diterjemahkab')}}
-    </span>
 </div>

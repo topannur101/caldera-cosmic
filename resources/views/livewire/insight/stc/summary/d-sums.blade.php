@@ -366,7 +366,7 @@ class extends Component {
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('Posisi') }}</th>  
                         <th>{{ __('RPM') }}</th>   
-                        <th>{{ __('Median suhu') }}</th>
+                        <th>{{ __('HB') }}</th>
                         <th>{{ __('Operator') }}</th>
                         <th>{{ __('Waktu mulai') }}</th>
                         <th>{{ __('Durasi') }}</th>
@@ -379,7 +379,18 @@ class extends Component {
                             <td>{{ $d_sum->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($d_sum->position) }}</td>
                             <td>{{ $d_sum->speed }}</td>
-                            <td class="font-mono">{{ $d_sum->section_1 . ', ' . $d_sum->section_2 . ', ' . $d_sum->section_3 . ', ' . $d_sum->section_4 . ', ' . $d_sum->section_5 . ', ' . $d_sum->section_6 . ', ' . $d_sum->section_7 . ', ' . $d_sum->section_8  }}</td>
+                            <td class="font-mono">
+                                {{ 
+                                    sprintf('%02d', $d_sum->section_1) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_2) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_3) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_4) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_5) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_6) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_7) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_8) 
+                                }}
+                            </td>
                             <td>{{ $d_sum->user1_name }}</td>
                             <td>{{ $d_sum->started_at }}</td>
                             <td>{{ $d_sum->duration() }}</td>

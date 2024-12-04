@@ -112,6 +112,8 @@ new #[Layout('layouts.app')] class extends Component {
             $user['on_time_ratio'] = $user['total_count'] > 0 ? round(($user['total_count_on_time'] / $user['total_count']) * 100, 1) : 0;
         }
 
+        $highOnTimeUsers = array_map(fn($item) => $item, $highOnTimeUsers);
+
         usort($highOnTimeUsers, function ($a, $b) {
             if ($b['on_time_ratio'] !== $a['on_time_ratio']) {
                 return $b['on_time_ratio'] <=> $a['on_time_ratio'];

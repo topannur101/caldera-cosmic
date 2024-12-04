@@ -835,5 +835,9 @@
     "Performa pekerja": "Worker performance",
     "SV mesin": "Machine SV",
     "Kirim ke HMI": "Send to HMI",
-    "Batch tepat waktu": "On-time batch"
+    "Batch tepat waktu": "On-time batch",
+    "Jumlah batch tertinggi": "Highest batch count",
+    "Data tidak sah": "Invalid data",
+    "Tepat waktu tertinggi": "Highest on-time rate",
+    "Rasio %": "Percentage ratio"
 }
