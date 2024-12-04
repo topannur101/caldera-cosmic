@@ -172,7 +172,7 @@ new class extends Component {
                 </div>
                 <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
                     <div>
-                        {{ __('Ada dua rentetan nilai SV dan hanya satu rentetan SV yang  diambil untuk perhitungan SVP (SV Prediksi).') }}
+                        {{ __('Ada dua rentetan nilai SV dan hanya satu rentetan SV yang diambil untuk perhitungan SVP (SV Prediksi).') }}
                     </div>
                     <div>
                         <span class="font-bold">{{ __('SV manual') . ': ' }}</span>{{ __('SV didapat dari pencatatan manual yang dilakukan oleh pekerja ketika mengunggah hasil catatan alat ukur (HOBO).') }}

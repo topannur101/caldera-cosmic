@@ -284,6 +284,7 @@ class extends Component {
                         <th>{{ __('SVP') }}</th>
                         <th>{{ __('FID')}}</th>
                         <th>{{ __('Dikirim?') }}</th>
+                        <th>{{ __('Keterangan') }}</th>
                         <th>{{ __('NIK') }}</th>
                         <th>{{ __('Nama') }}</th>
                     </tr>
@@ -293,9 +294,14 @@ class extends Component {
                             <td>{{ $adj->adj_created_at }}</td>
                             <td>{{ $adj->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($adj->position) }}</td>
-                            <td>{{ $adj->sv_p_1 . '|' . $adj->sv_p_2 . '|' . $adj->sv_p_3 . '|' . $adj->sv_p_4 . '|' . $adj->sv_p_5 . '|' . $adj->sv_p_6 . '|' . $adj->sv_p_7 . '|' . $adj->sv_p_8 }}</td>
+                            <td class="font-mono">{{ $adj->sv_p_1 . ', ' . $adj->sv_p_2 . ', ' . $adj->sv_p_3 . ', ' . $adj->sv_p_4 . ', ' . $adj->sv_p_5 . ', ' . $adj->sv_p_6 . ', ' . $adj->sv_p_7 . ', ' . $adj->sv_p_8 }}</td>
                             <td>{{ $adj->formula_id }}</td>
-                            <td>{{ $adj->is_sent ? '•' : '' }}</td>
+                            <td>
+                                @if($adj->is_sent)
+                                <i class="fa fa-check-circle"></i>
+                                @endif
+                            </td>
+                            <td>{{ $adj->remarks }}</td>
                             <td>{{ $adj->user_emp_id }}</td>
                             <td>{{ $adj->user_name }}</td>
                            </tr>

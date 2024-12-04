@@ -379,7 +379,7 @@ class extends Component {
                             <td>{{ $d_sum->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($d_sum->position) }}</td>
                             <td>{{ $d_sum->speed }}</td>
-                            <td>{{ $d_sum->section_1 . ' | ' . $d_sum->section_2 . ' | ' . $d_sum->section_3 . ' | ' . $d_sum->section_4 . ' | ' . $d_sum->section_5 . ' | ' . $d_sum->section_6 . ' | ' . $d_sum->section_7 . ' | ' . $d_sum->section_8  }}</td>
+                            <td class="font-mono">{{ $d_sum->section_1 . ', ' . $d_sum->section_2 . ', ' . $d_sum->section_3 . ', ' . $d_sum->section_4 . ', ' . $d_sum->section_5 . ', ' . $d_sum->section_6 . ', ' . $d_sum->section_7 . ', ' . $d_sum->section_8  }}</td>
                             <td>{{ $d_sum->user1_name }}</td>
                             <td>{{ $d_sum->started_at }}</td>
                             <td>{{ $d_sum->duration() }}</td>
