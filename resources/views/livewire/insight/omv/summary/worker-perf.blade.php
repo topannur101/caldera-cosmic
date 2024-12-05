@@ -340,7 +340,8 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Nomor karyawan') }}</th>
                             <th>{{ __('Rasio %') }}</th>
                         </tr>
-                        @foreach ($highOnTimeUsers->skip(3) as $highOnTimeUser)
+                        @foreach ($highOnTimeUsers as $highOnTimeUser)
+                            @if ($loop->iteration > 3)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
@@ -366,6 +367,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td>{{ $highOnTimeUser['on_time_ratio'] . '%' . ' (' . $highOnTimeUser['total_count_on_time'] . '/' . $highOnTimeUser['total_count'] . ')' }}
                                 </td>
                             </tr>
+                            @endif
                         @endforeach
                     </table>
                 </div>
@@ -462,7 +464,8 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Nomor karyawan') }}</th>
                             <th>{{ __('Jumlah batch') }}</th>
                         </tr>
-                        @foreach ($highBatchUsers->skip(3) as $highBatchUser)
+                        @foreach ($highBatchUsers as $highBatchUser)
+                            @if ($loop->iteration > 3)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
@@ -487,6 +490,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td>{{ $highBatchUser['emp_id'] }}</td>
                                 <td>{{ $highBatchUser['total_batch'] }}</td>
                             </tr>
+                            @endif
                         @endforeach
                     </table>
                 </div>
