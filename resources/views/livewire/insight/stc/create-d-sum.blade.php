@@ -156,50 +156,60 @@ new class extends Component {
         $tempColumn = 3;
 
         for ($i = 0; $i < $skipRows; $i++) {
-
             array_shift($rows);
-
         }
 
         $logs = [];
-        $logTempMin = 40;
+        $logTempMinEnd = 45;
 
         foreach ($rows as $row) {
-
             if (isset($row[0]) && isset($row[$tempColumn]) && $row[0] !== '' && $row[$tempColumn] !== '') {
-
                 $excel_ts   = (float) (($row[1]- 25569) * 86400);
                 $taken_at   = Carbon::createFromTimestamp($excel_ts)->format('Y-m-d H:i');
                 $temp       = (float) $row[$tempColumn];
                 $timestamp  = (float) $row[1];
 
-                if ($timestamp && ($temp > $logTempMin)) {
-
-                    $logs[] = [
-                        'taken_at'  => $taken_at,
-                        'temp'      => $temp,
-                        'timestamp' => $timestamp,
-                    ];
-
-                }
-
+                $logs[] = [
+                    'taken_at'  => $taken_at,
+                    'temp'      => $temp,
+                    'timestamp' => $timestamp,
+                ];
             }
         }
 
+        // Sort logs by timestamp first
         usort($logs, function ($a, $b) {
-
             return $a['timestamp'] <=> $b['timestamp'];
-
         });
 
-        $logMax = 100;
-        $logCount = min(count($logs), $logMax);
-        $logs = array_slice($logs, 0, $logCount);
+        // Keep first 100 logs
+        $logs = array_slice($logs, 0, 100);
+
+        // If fewer than 4 logs, return empty
+        if (count($logs) < 4) {
+            $this->js('notyfError("' . __('Tidak cukup data yang sah ditemukan') . '")');
+            return;
+        }
+
+        // Filter out low temperatures in the last half
+        $halfIndex = floor(count($logs) / 2);
+        $logs = array_filter($logs, function($item) use ($halfIndex, $logTempMinEnd, $logs) {
+            $index = array_search($item, $logs);
+            
+            // For the last half, apply end temperature threshold
+            if ($index >= $halfIndex) {
+                return $item['temp'] >= $logTempMinEnd;
+            }
+            
+            // Keep all logs from first half as-is
+            return true;
+        });
+
+        // Reindex the logs
+        $logs = array_values($logs);
 
         if (empty($logs)) {
-
-            $this->js('notyfError("' . __('Tak ada data yang sah ditemukan') . '")');
-
+            $this->js('notyfError("' . __('Tidak ada data yang sah ditemukan') . '")');
         } else {
             
             $temps = array_map(fn($item) => $item['temp'], $logs);

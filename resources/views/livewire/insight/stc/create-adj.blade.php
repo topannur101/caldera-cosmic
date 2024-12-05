@@ -97,7 +97,7 @@ new class extends Component {
 
             $d_sum = InsStcDSum::where('ins_stc_machine_id', $this->machine_id)
                 ->where('position', $this->position)
-                ->orderBy('ended_at', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->first();
             $d_logs = InsStcDLog::where('ins_stc_d_sum_id', $d_sum->id ?? 0)->get();
 
@@ -156,7 +156,7 @@ new class extends Component {
                 $this->svp_values[6]['absolute'],
                 $this->svp_values[7]['absolute']
             ]);
-            
+
             $this->saveAdj();
             $this->js('notyfSuccess("' . __('SVP terkirim ke HMI') . '")');
 

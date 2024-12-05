@@ -56,7 +56,7 @@ class extends Component {
                 $query->where('ins_stc_machines.line', $this->line);
             }
 
-        return $query->orderBy('started_at', 'DESC');
+        return $query->orderBy('created_at', 'DESC');
     }
 
     private function getDLogsQuery()
