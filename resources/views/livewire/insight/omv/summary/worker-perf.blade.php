@@ -256,11 +256,82 @@ new #[Layout('layouts.app')] class extends Component {
     <div wire:key="modals">
 
     </div>
-    <div wire:key="omv-summary-worker-perf" class="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
+    <div wire:key="omv-summary-worker-perf" class="grid grid-cols-1 lg:grid-cols-2 gap-x-3 gap-y-8">
         <div>
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                 {{ __('Tepat waktu tertinggi') }}</h1>
             @if ($highOnTimeUsers)
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                <div class="mt-0 md:mt-6 order-2 md:order-1">
+                    @if(isset($highOnTimeUsers[1]))
+                    <div class="relative flex flex-col items-center text-neutral-600 dark:text-neutral-400">
+                        <div class="relative w-16 h-16 mb-2">
+                            <div class="absolute -top-1 -left-1 text-sm bg-gray-400 text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
+                                2
+                            </div>
+                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+
+                                @if($highOnTimeUsers[1]['photo'])
+                                    <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highOnTimeUsers[1]['photo'] }}" />
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="text-sm">{{ $highOnTimeUsers[1]['name'] }}</div>
+                        <div class="text-xs">{{ $highOnTimeUsers[1]['emp_id'] }}</div>
+                        <div class="mt-2">{{ $highOnTimeUsers[1]['on_time_ratio'] . '%' . ' (' . $highOnTimeUsers[1]['total_count_on_time'] . '/' . $highOnTimeUsers[1]['total_count'] . ')' }}</div>
+
+                    </div>
+                    @endif
+                </div>
+                <div class="order-1 md:order-2 mt-6 md:mt-0">
+                    @if(isset($highOnTimeUsers[0]))
+                    <div class="relative flex flex-col items-center text-neutral-600 dark:text-neutral-400">
+                        <div class="relative w-16 h-16 mb-2">
+                            <div class="absolute -top-1 -left-1 text-sm bg-yellow-400 text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
+                                1
+                            </div>
+                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+
+                                @if($highOnTimeUsers[0]['photo'])
+                                    <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highOnTimeUsers[0]['photo'] }}" />
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="text-sm">{{ $highOnTimeUsers[0]['name'] }}</div>
+                        <div class="text-xs">{{ $highOnTimeUsers[0]['emp_id'] }}</div>
+                        <div class="mt-2">{{ $highOnTimeUsers[0]['on_time_ratio'] . '%' . ' (' . $highOnTimeUsers[0]['total_count_on_time'] . '/' . $highOnTimeUsers[0]['total_count'] . ')' }}</div>
+                    </div>
+                    @endif
+                </div>
+                <div class="mt-0 md:mt-6 order-3">
+                    @if(isset($highOnTimeUsers[2]))
+                    <div class="relative flex flex-col items-center text-neutral-600 dark:text-neutral-400">
+                        <div class="relative w-16 h-16 mb-2">
+                            <div class="absolute -top-1 -left-1 text-sm bg-orange-300  text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
+                                3
+                            </div>
+                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+
+                                @if($highOnTimeUsers[1]['photo'])
+                                    <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highOnTimeUsers[0]['photo'] }}" />
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="text-sm">{{ $highOnTimeUsers[2]['name'] }}</div>
+                        <div class="text-xs">{{ $highOnTimeUsers[2]['emp_id'] }}</div>
+                        <div class="mt-2">{{ $highOnTimeUsers[2]['on_time_ratio'] . '%' . ' (' . $highOnTimeUsers[2]['total_count_on_time'] . '/' . $highOnTimeUsers[2]['total_count'] . ')' }}</div>
+
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @if(isset($highOnTimeUsers[3]))
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                     <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
@@ -269,7 +340,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Nomor karyawan') }}</th>
                             <th>{{ __('Rasio %') }}</th>
                         </tr>
-                        @foreach ($highOnTimeUsers as $highOnTimeUser)
+                        @foreach ($highOnTimeUsers->skip(3) as $highOnTimeUser)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
@@ -298,6 +369,7 @@ new #[Layout('layouts.app')] class extends Component {
                         @endforeach
                     </table>
                 </div>
+                @endif
             @else
                 <div class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -313,6 +385,75 @@ new #[Layout('layouts.app')] class extends Component {
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                 {{ __('Jumlah batch tertinggi') }}</h1>
             @if ($highBatchUsers)
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                <div class="mt-0 md:mt-6 order-2 md:order-1">
+                    @if(isset($highBatchUsers[1]))
+                    <div class="relative flex flex-col items-center text-neutral-600 dark:text-neutral-400">
+                        <div class="relative w-16 h-16 mb-2">
+                            <div class="absolute -top-1 -left-1 text-sm bg-gray-400 text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
+                                2
+                            </div>
+                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+
+                                @if($highBatchUsers[1]['photo'])
+                                    <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highBatchUsers[1]['photo'] }}" />
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="text-sm">{{ $highBatchUsers[1]['name'] }}</div>
+                        <div class="text-xs">{{ $highBatchUsers[1]['emp_id'] }}</div>
+                        <div class="mt-2">{{ $highBatchUsers[1]['total_batch'] }}</div>
+                    </div>
+                    @endif
+                </div>
+                <div class="order-1 md:order-2 mt-6 md:mt-0">
+                    @if(isset($highBatchUsers[0]))
+                    <div class="relative flex flex-col items-center text-neutral-600 dark:text-neutral-400">
+                        <div class="relative w-16 h-16 mb-2">
+                            <div class="absolute -top-1 -left-1 text-sm bg-yellow-400 text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
+                                1
+                            </div>
+                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+
+                                @if($highBatchUsers[0]['photo'])
+                                    <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highBatchUsers[0]['photo'] }}" />
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="text-sm">{{ $highBatchUsers[0]['name'] }}</div>
+                        <div class="text-xs">{{ $highBatchUsers[0]['emp_id'] }}</div>
+                        <div class="mt-2">{{ $highBatchUsers[0]['total_batch'] }}</div>
+                    </div>
+                    @endif
+                </div>
+                <div class="mt-0 md:mt-6 order-3">
+                    @if(isset($highBatchUsers[2]))
+                    <div class="relative flex flex-col items-center text-neutral-600 dark:text-neutral-400">
+                        <div class="relative w-16 h-16 mb-2">
+                            <div class="absolute -top-1 -left-1 text-sm bg-orange-300  text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
+                                3
+                            </div>
+                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+
+                                @if($highBatchUsers[1]['photo'])
+                                    <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highBatchUsers[0]['photo'] }}" />
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="text-sm">{{ $highBatchUsers[2]['name'] }}</div>
+                        <div class="text-xs">{{ $highBatchUsers[2]['emp_id'] }}</div>
+                        <div class="mt-2">{{ $highBatchUsers[2]['total_batch'] }}</div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @if(isset($highBatchUsers[3]))
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                     <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                         <tr class="uppercase text-xs">
@@ -321,7 +462,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Nomor karyawan') }}</th>
                             <th>{{ __('Jumlah batch') }}</th>
                         </tr>
-                        @foreach ($highBatchUsers as $highBatchUser)
+                        @foreach ($highBatchUsers->skip(3) as $highBatchUser)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
@@ -349,6 +490,7 @@ new #[Layout('layouts.app')] class extends Component {
                         @endforeach
                     </table>
                 </div>
+                @endif
             @else
                 <div class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
