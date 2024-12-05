@@ -261,7 +261,7 @@ new #[Layout('layouts.app')] class extends Component {
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                 {{ __('Tepat waktu tertinggi') }}</h1>
             @if ($highOnTimeUsers)
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-x-3 gap-y-6 mb-6">
                 <div class="mt-0 md:mt-6 order-2 md:order-1">
                     @if(isset($highOnTimeUsers[1]))
                     <div class="relative flex flex-col items-center text-neutral-600 dark:text-neutral-400">
@@ -385,7 +385,7 @@ new #[Layout('layouts.app')] class extends Component {
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                 {{ __('Jumlah batch tertinggi') }}</h1>
             @if ($highBatchUsers)
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-x-3 gap-y-6 mb-6">
                 <div class="mt-0 md:mt-6 order-2 md:order-1">
                     @if(isset($highBatchUsers[1]))
                     <div class="relative flex flex-col items-center text-neutral-600 dark:text-neutral-400">
