@@ -46,7 +46,7 @@ class extends Component {
 
             if ($this->line)
             {
-                $query->where('ins_stc_machines.line', 'LIKE', '%' . $this->line . '%');
+                $query->where('ins_stc_machines.line', $this->line);
             }
 
         return $query;

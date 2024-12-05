@@ -56,12 +56,12 @@ class extends Component {
 
             if ($this->line)
             {
-                $query->where('ins_omv_metrics.line', 'LIKE', '%' . $this->line . '%');
+                $query->where('ins_omv_metrics.line', $this->line);
             }
 
             if ($this->team)
             {
-                $query->where('ins_omv_metrics.team', 'LIKE', '%' . $this->team . '%');
+                $query->where('ins_omv_metrics.team', $this->team);
             }
 
     

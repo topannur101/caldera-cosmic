@@ -49,7 +49,7 @@ class extends Component {
 
             if ($this->line)
             {
-                $query->where('ins_stc_machines.line', 'LIKE', '%' . $this->line . '%');
+                $query->where('ins_stc_machines.line', $this->line);
             }
 
         return $query;
@@ -283,7 +283,7 @@ class extends Component {
                         <th>{{ __('Posisi') }}</th>
                         <th>{{ __('SVP') }}</th>
                         <th>{{ __('FID')}}</th>
-                        <th>{{ __('Dikirim?') }}</th>
+                        <th>{{ __('Diterapkan?') }}</th>
                         <th>{{ __('Keterangan') }}</th>
                         <th>{{ __('NIK') }}</th>
                         <th>{{ __('Nama') }}</th>
@@ -294,10 +294,21 @@ class extends Component {
                             <td>{{ $adj->adj_created_at }}</td>
                             <td>{{ $adj->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($adj->position) }}</td>
-                            <td class="font-mono">{{ $adj->sv_p_1 . ', ' . $adj->sv_p_2 . ', ' . $adj->sv_p_3 . ', ' . $adj->sv_p_4 . ', ' . $adj->sv_p_5 . ', ' . $adj->sv_p_6 . ', ' . $adj->sv_p_7 . ', ' . $adj->sv_p_8 }}</td>
+                            <td class="font-mono">
+                                {{ 
+                                    sprintf('%02d', $adj->sv_p_1) . ', ' . 
+                                    sprintf('%02d', $adj->sv_p_2) . ', ' . 
+                                    sprintf('%02d', $adj->sv_p_3) . ', ' . 
+                                    sprintf('%02d', $adj->sv_p_4) . ', ' . 
+                                    sprintf('%02d', $adj->sv_p_5) . ', ' . 
+                                    sprintf('%02d', $adj->sv_p_6) . ', ' . 
+                                    sprintf('%02d', $adj->sv_p_7) . ', ' . 
+                                    sprintf('%02d', $adj->sv_p_8) 
+                                }}
+                            </td>
                             <td>{{ $adj->formula_id }}</td>
                             <td>
-                                @if($adj->is_sent)
+                                @if($adj->is_applied)
                                 <i class="fa fa-check-circle"></i>
                                 @endif
                             </td>

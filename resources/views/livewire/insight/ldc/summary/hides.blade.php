@@ -75,7 +75,7 @@ class extends Component {
         }
 
         if ($this->line) {
-            $query->where('ins_ldc_groups.line', 'LIKE', '%' . $this->line . '%');
+            $query->where('ins_ldc_groups.line', $this->line);
         }
 
         if ($this->material) {

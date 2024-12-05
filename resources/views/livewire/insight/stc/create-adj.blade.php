@@ -1,8 +1,10 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\Attributes\On;
 
 use App\InsStc;
+use App\InsStcPush;
 use App\Models\InsStcMachine;
 use App\Models\InsStcDSum;
 use App\Models\InsStcDLog;
@@ -27,7 +29,6 @@ new class extends Component {
     public bool $use_m_log_sv = false;
 
     public string $remarks = '';
-    public bool $is_sent = false;
 
     public function rules()
     {
@@ -63,10 +64,15 @@ new class extends Component {
             'sv_p_7'                => $this->svp_values[6]['absolute'],
             'sv_p_8'                => $this->svp_values[7]['absolute'],
             'remarks'               => $this->remarks,
-            'is_sent'               => $this->is_sent,
         ]);
         $this->customReset();
-        
+    }
+
+    #[On('d_sum-created')]
+    public function dSumCreated($dSum)
+    {
+        $this->machine_id   = $dSum['ins_stc_machine_id'];
+        $this->position     = $dSum['position'];
     }
 
     public function with(): array
@@ -131,31 +137,48 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['machine_id', 'position', 'is_sent']);
+        $this->reset(['machine_id', 'position']);
     }
 
     public function send()
     {
-        $this->sendToHMI();
-        $this->saveAdj();
-        $this->js('notyfSuccess("' . __('Mengirim ke HMI...') . '")');
+        $machine   = InsStcMachine::find($this->machine_id);
+        $insStcPush = new InsStcPush();
+
+        try {
+            $response = $insStcPush->send($machine->ip_address, $this->position, [
+                $this->svp_values[0]['absolute'],
+                $this->svp_values[1]['absolute'],
+                $this->svp_values[2]['absolute'],
+                $this->svp_values[3]['absolute'],
+                $this->svp_values[4]['absolute'],
+                $this->svp_values[5]['absolute'],
+                $this->svp_values[6]['absolute'],
+                $this->svp_values[7]['absolute']
+            ]);
+            
+            $this->saveAdj();
+            $this->js('notyfSuccess("' . __('SVP terkirim ke HMI') . '")');
+
+        } catch (\InvalidArgumentException $e) {
+            // Handle validation errors
+            $this->js('notyfError("Invalid data: ' . $e->getMessage() . '")');
+        } catch (Exception $e) {
+            // Handle connection or other errors
+            $this->js('notyfError("' . $e->getMessage() . '")');
+        }
+        
     }
 
-    public function save()
-    {
-        $this->saveAdj();
-        $this->js('notyfSuccess("' . __('Penyetelan tersimpan') . '")');
-    }
 
-    private function sendToHMI()
-    {
-        $this->is_sent = true;
-    }
     
     public function exception($e, $stopPropagation) {
 
         if($e instanceof Illuminate\Validation\ValidationException) {
             $this->js('$dispatch("open-modal", "adj-error")');
+            $stopPropagation();
+        } else {
+            $this->js('notyfError("' . $e->getMessage() . '")');
             $stopPropagation();
         }
     }
@@ -214,35 +237,6 @@ new class extends Component {
                 <div class="mt-6 flex justify-end">
                     <x-primary-button type="button" x-on:click="$dispatch('close')">
                         {{ __('Oke') }}
-                    </x-primary-button>
-                </div>
-            </div>
-        </x-modal>
-        <x-modal name="adj-save">
-            <div class="p-6">
-                <div class="flex justify-between items-start">
-                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        {{ __('Simpan saja') }}
-                    </h2>
-                    <x-text-button type="button" x-on:click="$dispatch('close')"><i
-                            class="fa fa-times"></i></x-text-button>
-                </div>
-                <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
-                    <div>
-                        {{ __('Angka SV prediksi hanya akan di simpan sebagai catatan dan tidak akan di kirimkan ke HMI.') }}
-                    </div>
-                    <div>
-                        <label for="adj-remarks"
-                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keterangan') }}</label>
-                        <x-text-input id="adj-remarks" wire:model="remarks" type="text" />
-                        @error('remarks')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end">
-                    <x-primary-button type="button" x-on:click="$dispatch('close')" wire:click="save">
-                        {{ __('Simpan') }}
                     </x-primary-button>
                 </div>
             </div>
@@ -482,8 +476,6 @@ new class extends Component {
                             @endif
                         </div>
                         <div class="grow"></div>
-                        <x-secondary-button type="button" :disabled="!$svp_values"
-                            x-on:click="$dispatch('open-modal', 'adj-save')">{{ __('Simpan saja') }}</x-secondary-button>
                         <x-primary-button type="button" :disabled="!$svp_values"
                             x-on:click="$dispatch('open-modal', 'adj-send')">{{ __('Kirim') }}</x-primary-button>
                     </div>

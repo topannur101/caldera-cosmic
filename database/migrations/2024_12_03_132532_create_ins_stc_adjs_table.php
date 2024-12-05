@@ -38,7 +38,7 @@ return new class extends Migration
             $table->tinyInteger('sv_p_8');      
             
             $table->string('remarks')->nullable();
-            $table->boolean('is_sent');
+            $table->boolean('is_applied')->default(0);
 
             $table->index('ins_stc_machine_id');
             $table->index(['ins_stc_machine_id', 'position']);

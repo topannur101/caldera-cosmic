@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\InsStc;
-use App\InsStcTempControl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

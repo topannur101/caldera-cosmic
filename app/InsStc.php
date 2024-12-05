@@ -531,38 +531,6 @@ class InsStc
         return Carbon::parse($dateString)->timestamp * 1000;
     }
 
-    // public static function sliceZoneData(array $logs, array $xzones, string $selectedZone): array
-    // {
-    //     $zoneOrder = ['preheat', 'zone_1', 'zone_2', 'zone_3', 'zone_4', 'postheat'];
-        
-    //     if (!in_array($selectedZone, $zoneOrder)) {
-    //         throw new InvalidArgumentException("Invalid zone selected: $selectedZone");
-    //     }
-        
-    //     $startIndex = 0;
-    //     $endIndex = 0;
-        
-    //     foreach ($zoneOrder as $zone) {
-    //         if (!isset($xzones[$zone])) {
-    //             continue;
-    //         }
-            
-    //         $zoneSize = $xzones[$zone];
-    //         $endIndex = $startIndex + $zoneSize;
-            
-    //         if ($zone === $selectedZone) {
-    //             // Ensure we don't exceed the array bounds
-    //             $endIndex = min($endIndex, count($logs));
-    //             return array_slice($logs, $startIndex, $endIndex - $startIndex);
-    //         }
-            
-    //         $startIndex = $endIndex;
-    //     }
-        
-    //     // If we get here, the selected zone wasn't found or had no logs
-    //     return [];
-    // }
-
     public static function medianTemp(array $data): float
     {
         $temperatures = array_map(function($item) {
@@ -613,56 +581,5 @@ class InsStc
                 break;
         }
         return $positionHuman;
-    }
-
-    // public static function sections(string $axis): array
-    // {
-    //     switch ($axis) {
-    //         case 'x':
-    //             return [
-    //                 'preheat'   => 5,
-    //                 'section_1' => 6,
-    //                 'section_2' => 6,
-    //                 'section_3' => 6,
-    //                 'section_4' => 6,
-    //                 'section_5' => 6,
-    //                 'section_6' => 6,
-    //                 'section_7' => 6,
-    //                 'section_8' => 6,
-    //                 'postheat'  => 5
-    //             ];
-    //             break;
-    //         case 'y':
-    //             return [ 40, 50, 60, 70, 80 ];
-    //             break;
-            
-    //         default:
-    //             return [];
-    //             break;
-    //     }        
-    // }
-
-    // public static function zones(string $axis): array
-    // {
-    //     switch ($axis) {
-    //         case 'x':
-    //             return [
-    //                 'preheat'   => 5,
-    //                 'zone_1'    => 12,
-    //                 'zone_2'    => 12,
-    //                 'zone_3'    => 12,
-    //                 'zone_4'    => 12,
-    //                 'postheat'  => 5
-    //             ];
-    //             break;
-    //         case 'y':
-    //             return [ 40, 50, 60, 70, 80 ];
-    //             break;
-            
-    //         default:
-    //             return [];
-    //             break;
-    //     }
-    // }
-    
+    }    
 }

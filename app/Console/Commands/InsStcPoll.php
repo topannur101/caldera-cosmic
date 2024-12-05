@@ -134,7 +134,7 @@ class InsStcPoll extends Command
                     ->build();
                 break;
             case 'lower_sv_w':
-                return ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$port}", $unit_id)
+                return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
                     ->int16(150, 'lower_sv_w_1')
                     ->int16(151, 'lower_sv_w_2')
                     ->int16(152, 'lower_sv_w_3')
@@ -183,7 +183,7 @@ class InsStcPoll extends Command
                     ->build();
                 break;
             case 'upper_sv_w':
-                return ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$port}", $unit_id)
+                return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
                     ->int16(250, 'upper_sv_w_1')
                     ->int16(251, 'upper_sv_w_2')
                     ->int16(252, 'upper_sv_w_3')

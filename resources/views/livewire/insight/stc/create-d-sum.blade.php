@@ -130,6 +130,7 @@ new class extends Component {
             }
 
             $this->js('notyfSuccess("' . __('Disimpan') . '")');
+            $this->dispatch('d_sum-created', $d_sum);
             $this->customReset();
         }
     }
@@ -161,6 +162,7 @@ new class extends Component {
         }
 
         $logs = [];
+        $logTempMin = 40;
 
         foreach ($rows as $row) {
 
@@ -171,7 +173,7 @@ new class extends Component {
                 $temp       = (float) $row[$tempColumn];
                 $timestamp  = (float) $row[1];
 
-                if ($timestamp && $temp) {
+                if ($timestamp && ($temp > $logTempMin)) {
 
                     $logs[] = [
                         'taken_at'  => $taken_at,
@@ -190,9 +192,9 @@ new class extends Component {
 
         });
 
-        $max = 55;
-        $logsCount = min(count($logs), $max);
-        $logs = array_slice($logs, 0, $logsCount);
+        $logMax = 100;
+        $logCount = min(count($logs), $logMax);
+        $logs = array_slice($logs, 0, $logCount);
 
         if (empty($logs)) {
 
@@ -315,7 +317,7 @@ new class extends Component {
 ?>
 
 <div>
-    <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">{{ __('Pencatatan') }}</h1>
+    <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">{{ __('Pembacaan alat') }}</h1>
     <div class="w-full my-8">
         <x-modal name="d-logs-review" maxWidth="2xl">
             <livewire:insight.stc.create-d-sum-review />

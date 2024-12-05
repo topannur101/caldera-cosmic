@@ -27,7 +27,7 @@ class InsStcAdj extends Model
         'sv_p_7',        
         'sv_p_8',
         'remarks',
-        'is_sent'
+        'is_applied'
 
     ];
 }
