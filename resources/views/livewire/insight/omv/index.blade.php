@@ -44,8 +44,10 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     @else
         @vite(['resources/js/apexcharts.js'])
-        <div x-data="{ ...app(), userq: @entangle('userq').live }" x-init="loadRecipes(); fetchLine();">
-            <div x-show="statsVisible" x-cloak @keydown.window.ctrl.d.prevent="statsVisible = !statsVisible" class="flex gap-2 px-4 mb-4">
+        <div x-data="{ ...app(), userq: @entangle('userq').live }" x-init="loadRecipes();
+        fetchLine();">
+            <div x-show="statsVisible" x-cloak @keydown.window.ctrl.d.prevent="statsVisible = !statsVisible"
+                class="flex gap-2 px-4 mb-4">
                 <div class="text-sm">{{ __('Statistik') . ': ' }}</div>
                 <x-pill color="yellow">
                     <span>batchTeam: </span>
@@ -58,27 +60,27 @@ new #[Layout('layouts.app')] class extends Component {
                 <x-pill color="yellow">
                     <span>evalTolerance: </span>
                     <span class="font-mono" x-text="evalTolerance"></span>
-                </x-pill>                
+                </x-pill>
                 <x-pill color="yellow">
                     <span>evalFalseLimit: </span>
                     <span class="font-mono" x-text="evalFalseLimit"></span>
-                </x-pill>                
+                </x-pill>
                 <x-pill color="yellow">
                     <span>timerElapsedSeconds: </span>
                     <span class="font-mono" x-text="timerElapsedSeconds.toFixed(1)"></span>
-                </x-pill>                
+                </x-pill>
                 <x-pill color="yellow">
                     <span>timerEvalFalseCount: </span>
                     <span class="font-mono" x-text="timerEvalFalseCount"></span>
-                </x-pill>                
+                </x-pill>
                 <x-pill color="yellow">
                     <span>timerOvertimeElapsed: </span>
                     <span class="font-mono" x-text="timerOvertimeElapsed"></span>
-                </x-pill>    
+                </x-pill>
                 <x-pill color="yellow">
                     <span>batchAmp: </span>
                     <span class="font-mono" x-text="batchAmps[batchAmps.length - 1]?.value ?? 0"></span>
-                </x-pill>               
+                </x-pill>
             </div>
             <div class="flex flex-col sm:flex-row gap-x-4 p-2">
                 <div>
@@ -146,16 +148,24 @@ new #[Layout('layouts.app')] class extends Component {
                                         </div>
                                     </div>
                                 </div>
-                                <x-primary-button class="m-4" type="button" size="lg" @click="wizardOpen()"
-                                    x-show="!timerIsRunning && !recipe"><i
+                                <x-primary-button class="m-4" type="button" size="lg"
+                                    @click="wizardOpen()" x-show="!timerIsRunning && !recipe"><i
                                         class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
                                 <x-primary-button class="m-4" type="button" size="lg"
                                     @click="reset(['timer', 'recipe', 'batch', 'poll', 'recipesFiltered', 'slider'])"
                                     x-show="!timerIsRunning && recipe">{{ __('Batal') }}</x-primary-button>
                                 <x-primary-button class="m-4" type="button" size="lg"
                                     @click="$dispatch('open-spotlight', 'manual-stop')" x-cloak
-                                    x-show="timerIsRunning"><i
-                                        class="fa fa-stop mr-2"></i>{{ __('Stop') }}</x-primary-button>
+                                    x-show="timerIsRunning">
+                                    <div>
+                                    <div><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</div>
+                                        <div
+                                            class="relative bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700 mt-1">
+                                            <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
+                                            :style="'width: ' + Math.min(timerEvalFalseCount / evalFalseLimit * 100, 100) + '%'"></div>
+                                        </div>
+                                    </div>
+                                </x-primary-button>
                             </div>
                         </div>
 
@@ -388,6 +398,21 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
                         </x-modal>
 
+                        {{-- <div class=" rounded-lg">
+                            <div class="p-6">
+                                <div class="flex justify-between w-full">
+                                    <div class="flex gap-x-3">
+                                        <div>Threhsold actual</div>
+                                        <div>Threhsold setting</div>
+                                        <div>Timeout to stop</div>
+                                    </div>
+                                    <div>
+                                        Progress bar autostop
+                                    </div>
+                                </div>                     
+                            </div>
+                        </div> --}}
+
                         <div x-show="!recipe" class="grow">
                             <div
                                 class="bg-white dark:bg-neutral-800 bg-opacity-80 dark:bg-opacity-80 shadow rounded-lg h-full flex items-center">
@@ -600,7 +625,7 @@ new #[Layout('layouts.app')] class extends Component {
                         this.recipeSteps = recipe.steps;
                         this.recipeDuration = Math.max(0, this.recipeSteps.reduce((sum, step) => {
                             const duration = parseFloat(step.duration) ||
-                            0; // Use parseFloat and handle NaN directly
+                                0; // Use parseFloat and handle NaN directly
                             return sum + duration;
                         }, 0) - 1);
                         this.timerStepPercentages = this.recipeSteps.map(() => 0);
@@ -723,7 +748,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 console.error('Error getting initial data:', error);
                                 this.batchAmps = [{
                                     taken_at: 0,
-                                    value: 0  // fallback value if fetch fails
+                                    value: 0 // fallback value if fetch fails
                                 }];
                             });
 
@@ -760,7 +785,7 @@ new #[Layout('layouts.app')] class extends Component {
                                             taken_at: this.timerElapsedSeconds,
                                             value: data.raw
                                         });
-                                        
+
                                         // Auto stop
                                         if (data.eval === false) {
                                             this.timerEvalFalseCount++;
@@ -954,7 +979,7 @@ new #[Layout('layouts.app')] class extends Component {
                             .catch(error => {
                                 console.error('Error capturing image:', error);
                             });
-                            // should do check if (data.error) exists
+                        // should do check if (data.error) exists
                     },
 
                     getPreviousStepsDuration(index) {

@@ -269,7 +269,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="absolute -top-1 -left-1 text-sm bg-gray-400 text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
                                 2
                             </div>
-                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            <div class="w-16 h-16 shadow bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
 
                                 @if($highOnTimeUsers[1]['photo'])
                                     <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highOnTimeUsers[1]['photo'] }}" />
@@ -292,7 +292,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="absolute -top-1 -left-1 text-sm bg-yellow-400 text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
                                 1
                             </div>
-                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            <div class="w-16 h-16 shadow bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
 
                                 @if($highOnTimeUsers[0]['photo'])
                                     <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highOnTimeUsers[0]['photo'] }}" />
@@ -314,7 +314,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="absolute -top-1 -left-1 text-sm bg-orange-300  text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
                                 3
                             </div>
-                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            <div class="w-16 h-16 shadow bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
 
                                 @if($highOnTimeUsers[1]['photo'])
                                     <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highOnTimeUsers[2]['photo'] }}" />
@@ -395,7 +395,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="absolute -top-1 -left-1 text-sm bg-gray-400 text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
                                 2
                             </div>
-                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            <div class="w-16 h-16 shadow bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
 
                                 @if($highBatchUsers[1]['photo'])
                                     <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highBatchUsers[1]['photo'] }}" />
@@ -417,7 +417,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="absolute -top-1 -left-1 text-sm bg-yellow-400 text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
                                 1
                             </div>
-                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            <div class="w-16 h-16 shadow bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
 
                                 @if($highBatchUsers[0]['photo'])
                                     <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highBatchUsers[0]['photo'] }}" />
@@ -439,7 +439,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="absolute -top-1 -left-1 text-sm bg-orange-300  text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
                                 3
                             </div>
-                            <div class="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            <div class="w-16 h-16 shadow bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
 
                                 @if($highBatchUsers[1]['photo'])
                                     <img class="w-full h-full object-cover dark:brightness-80" src="/storage/users/{{ $highBatchUsers[2]['photo'] }}" />

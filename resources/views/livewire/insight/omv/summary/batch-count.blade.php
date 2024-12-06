@@ -243,7 +243,7 @@ class extends Component {
         <div>
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                 {{ __('Berdasarkan tim') }}</h1>
-                <div wire:key="omv-summary-batch-count-by-team-chart" class="h-[32rem] bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
+            <div wire:key="omv-summary-batch-count-by-team-chart" class="h-[32rem] bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
                 id="omv-summary-batch-count-by-team-chart-container" wire:key="omv-summary-batch-count-by-team-chart-container" wire:ignore> 
             </div>
         </div>

@@ -178,9 +178,8 @@ class InsOmv
                     'dataLabels' => [
                         'total' => [
                             'enabled' => true,
-                            'offsetX' => 0,
                             'style' => [
-                                'fontSize' => '13px',
+                                'fontSize' => '11px',
                                 'fontWeight' => 900,
                                 'color' => session('bg') == 'dark' ? '#FFF' : null
                             ],

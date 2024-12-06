@@ -28,9 +28,10 @@ class InsOmvCleanup extends Command
      */
     public function handle()
     {
+        // Deklarasikan sebulan yang lalu
         $oneMonthAgo = Carbon::now()->subMonth();
         
-        // Get records older than one month
+        // ambil foto omv yang lebih dari sebulan yang lalu
         $oldRecords = DB::table('ins_omv_captures')
             ->where('created_at', '<', $oneMonthAgo)
             ->get();
