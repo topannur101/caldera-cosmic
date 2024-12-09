@@ -12,6 +12,7 @@ use App\InsStc;
 new class extends Component {
 
     public array $d_sum_ids = [];
+    public bool $use_m_log_sv = false;
 
     #[On('update')]
     public function update()
@@ -106,13 +107,50 @@ new class extends Component {
         <x-modal name="d_sum-show" maxWidth="xl">
             <livewire:insight.stc.summary.d-sum-show />
         </x-modal>
+        <x-modal name="use_m_log_sv-help">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Referensi SV') }}
+                    </h2>
+                    <x-text-button type="button" x-on:click="$dispatch('close')"><i
+                            class="fa fa-times"></i></x-text-button>
+                </div>
+                <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
+                    <div>
+                        {{ __('Ada dua rentetan nilai SV dan hanya satu rentetan SV yang diambil untuk perhitungan SVP (SV Prediksi).') }}
+                    </div>
+                    <div>
+                        <span class="font-bold">{{ __('SV manual') . ': ' }}</span>{{ __('SV didapat dari pencatatan manual yang dilakukan oleh pekerja ketika mengunggah hasil catatan alat ukur (HOBO).') }}
+                    </div>
+                    <div>
+                        <span class="font-bold">{{ __('SV mesin') . ': ' }}</span>{{ __('SV didapat langsung dari mesin sehingga pilihan ini lebih akurat dan paling ideal.') }}
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                        {{ __('Paham') }}
+                    </x-primary-button>
+                </div>
+            </div>
+        </x-modal>
     </div>
     <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg h-80 p-4 mb-4"
     id="recents-chart-container" wire:key="recents-chart-container" wire:ignore>
     </div>
+    <div class="flex justify-end">
+        <div class="p-2">
+            <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv"
+                :checked="$use_m_log_sv ? true : false">{{ __('Gunakan SV mesin') }}<x-text-button type="button"
+                    class="ml-2" x-data=""
+                    x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')"><i
+                        class="far fa-question-circle"></i></x-text-button>
+            </x-toggle>
+        </div>   
+    </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         @foreach ($machines as $machine)
-            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg text-sm">
                 <div class="flex">
                     <div
                         class="flex items-center border-r border-neutral-100 dark:border-neutral-700 p-4 font-mono text-2xl">
@@ -120,31 +158,10 @@ new class extends Component {
                     </div>
                     <div class="grow">
                         <div
-                            class="flex items-center px-3 py-6 gap-x-3 border-b border-neutral-100 dark:border-neutral-700">
-                            <div>
-                                <i class="fa fa-chevron-up"></i>
-                            </div>
-                            <div class="grow grid grid-cols-1 gap-y-6">
+                            class="flex items-center py-6 border-b border-neutral-100 dark:border-neutral-700">
+                            <div class="px-3 py-2 -rotate-90">{{ __('Atas') }}</div>
+                            <div class="grow grid grid-cols-1">
                                 <div>
-                                    <label class="flex gap-x-2 px-3 mb-4 uppercase text-xs text-neutral-500">
-                                        <div>{{ __('Pembacaan alat') }}</div>
-                                        <div>•</div>
-                                        @if (isset($machine['upper']['d_sum']['ended_at']))
-                                            <x-text-button type="button"
-                                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['upper']['d_sum']['id'] ?? 0 }}'})">
-                                                <div class="flex gap-x-2 uppercase">
-                                                    <div>
-                                                        {{ Carbon\Carbon::parse($machine['upper']['d_sum']['ended_at'])->diffForHumans() }}
-                                                    </div>
-                                                    <i class="fa fa-arrow-up-right-from-square"></i>
-                                                </div>
-                                            </x-text-button>
-                                        @else
-                                            <div class="text-red-500"><i
-                                                    class="fa fa-exclamation-circle mr-2"></i>{{ __('Tak ditemukan') }}
-                                            </div>
-                                        @endif
-                                    </label>
                                     <div
                                         class="grid grid-cols-9 text-center gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
                                         <div>S</div>
@@ -158,6 +175,7 @@ new class extends Component {
                                         <div>8</div>
                                     </div>
                                     <div class="grid grid-cols-9 text-center gap-x-3">
+                                        
                                         <div>HB</div>
                                         <div>{{ $machine['upper']['d_sum']['section_1'] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['d_sum']['section_2'] ?? '-' }}</div>
@@ -167,7 +185,8 @@ new class extends Component {
                                         <div>{{ $machine['upper']['d_sum']['section_6'] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['d_sum']['section_7'] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['d_sum']['section_8'] ?? '-' }}</div>
-
+                                        
+                                        @if(!$use_m_log_sv)
                                         <div>SV</div>
                                         <div>{{ $machine['upper']['d_sum']['sv_temps'][0] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['d_sum']['sv_temps'][1] ?? '-' }}</div>
@@ -177,23 +196,10 @@ new class extends Component {
                                         <div>{{ $machine['upper']['d_sum']['sv_temps'][5] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['d_sum']['sv_temps'][6] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['d_sum']['sv_temps'][7] ?? '-' }}</div>
-
+                                        @endif
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="flex gap-x-2 px-3 mb-4 uppercase text-xs text-neutral-500">
-                                        <div>{{ __('Pembacaan mesin') }}</div>
-                                        <div>•</div>
-                                        @if (isset($machine['upper']['m_log']['created_at']))
-                                            <div>
-                                                {{ Carbon\Carbon::parse($machine['upper']['m_log']['created_at'])->diffForHumans() }}
-                                            </div>
-                                        @else
-                                            <div class="text-red-500"><i
-                                                    class="fa fa-exclamation-circle mr-2"></i>{{ __('Tak ditemukan') }}
-                                            </div>
-                                        @endif
-                                    </label>
                                     <div class="grid grid-cols-9 text-center gap-x-3">
                                         <div>PV</div>
                                         <div>{{ $machine['upper']['m_log']['pv_r_1'] ?? '-' }}</div>
@@ -205,6 +211,8 @@ new class extends Component {
                                         <div>{{ $machine['upper']['m_log']['pv_r_7'] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['m_log']['pv_r_8'] ?? '-' }}</div>
                                     </div>
+
+                                    @if($use_m_log_sv)
                                     <div class="grid grid-cols-9 text-center gap-x-3">
                                         <div>SV</div>
                                         <div>{{ $machine['upper']['m_log']['sv_r_1'] ?? '-' }}</div>
@@ -216,34 +224,25 @@ new class extends Component {
                                         <div>{{ $machine['upper']['m_log']['sv_r_7'] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['m_log']['sv_r_8'] ?? '-' }}</div>
                                     </div>
+                                    @endif
+                                    
                                 </div>
                             </div>
-                        </div>
-                        <div class="flex items-center px-3 py-6 gap-x-3">
-                            <div>
-                                <i class="fa fa-chevron-down"></i>
+                            <div class="flex px-2 flex-col">
+                                @if (isset($machine['upper']['d_sum']['ended_at']))
+                                <x-text-button type="button" x-data="" class="px-3 py-2" type="button"
+                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['upper']['d_sum']['id'] ?? 0 }}'})"><i class="fa-regular fa-eye"></i></x-text-button>
+                                @endif
+                                <x-link href="{{ route('insight.stc.summary.index', [ 'view' => 'history', 'mode' => 'recents', 'line' => $machine['line'], 'position' => 'upper' ])}}" class="px-3 py-2" wire:navigate>
+                                    <i class="fa-regular fa-clock"></i>
+                                </x-link>
                             </div>
-                            <div class="grow grid grid-cols-1 gap-y-6">
+                        </div>
+                        <div
+                            class="flex items-center py-6 border-b border-neutral-100 dark:border-neutral-700">
+                            <div class="px-3 py-2 -rotate-90">{{ __('Bawah') }}</div>
+                            <div class="grow grid grid-cols-1">
                                 <div>
-                                    <label class="flex gap-x-2 px-3 mb-4 uppercase text-xs text-neutral-500">
-                                        <div>{{ __('Pembacaan alat') }}</div>
-                                        <div>•</div>
-                                        @if (isset($machine['lower']['d_sum']['ended_at']))
-                                            <x-text-button type="button"
-                                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['lower']['d_sum']['id'] ?? 0 }}'})">
-                                                <div class="flex gap-x-2 uppercase">
-                                                    <div>
-                                                        {{ Carbon\Carbon::parse($machine['lower']['d_sum']['ended_at'])->diffForHumans() }}
-                                                    </div>
-                                                    <i class="fa fa-arrow-up-right-from-square"></i>
-                                                </div>
-                                            </x-text-button>
-                                        @else
-                                            <div class="text-red-500"><i
-                                                    class="fa fa-exclamation-circle mr-2"></i>{{ __('Tak ditemukan') }}
-                                            </div>
-                                        @endif
-                                    </label>
                                     <div
                                         class="grid grid-cols-9 text-center gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
                                         <div>S</div>
@@ -267,6 +266,7 @@ new class extends Component {
                                         <div>{{ $machine['lower']['d_sum']['section_7'] ?? '-' }}</div>
                                         <div>{{ $machine['lower']['d_sum']['section_8'] ?? '-' }}</div>
 
+                                        @if(!$use_m_log_sv)
                                         <div>SV</div>
                                         <div>{{ $machine['lower']['d_sum']['sv_temps'][0] ?? '-' }}</div>
                                         <div>{{ $machine['lower']['d_sum']['sv_temps'][1] ?? '-' }}</div>
@@ -276,23 +276,11 @@ new class extends Component {
                                         <div>{{ $machine['lower']['d_sum']['sv_temps'][5] ?? '-' }}</div>
                                         <div>{{ $machine['lower']['d_sum']['sv_temps'][6] ?? '-' }}</div>
                                         <div>{{ $machine['lower']['d_sum']['sv_temps'][7] ?? '-' }}</div>
+                                        @endif
 
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="flex gap-x-2 px-3 mb-4 uppercase text-xs text-neutral-500">
-                                        <div>{{ __('Pembacaan mesin') }}</div>
-                                        <div>•</div>
-                                        @if (isset($machine['lower']['m_log']['created_at']))
-                                            <div>
-                                                {{ Carbon\Carbon::parse($machine['lower']['m_log']['created_at'])->diffForHumans() }}
-                                            </div>
-                                        @else
-                                            <div class="text-red-500"><i
-                                                    class="fa fa-exclamation-circle mr-2"></i>{{ __('Tak ditemukan') }}
-                                            </div>
-                                        @endif
-                                    </label>
                                     <div class="grid grid-cols-9 text-center gap-x-3">
                                         <div>PV</div>
                                         <div>{{ $machine['lower']['m_log']['pv_r_1'] ?? '-' }}</div>
@@ -304,6 +292,7 @@ new class extends Component {
                                         <div>{{ $machine['lower']['m_log']['pv_r_7'] ?? '-' }}</div>
                                         <div>{{ $machine['lower']['m_log']['pv_r_8'] ?? '-' }}</div>
                                     </div>
+                                    @if($use_m_log_sv)
                                     <div class="grid grid-cols-9 text-center gap-x-3">
                                         <div>SV</div>
                                         <div>{{ $machine['lower']['m_log']['sv_r_1'] ?? '-' }}</div>
@@ -315,7 +304,17 @@ new class extends Component {
                                         <div>{{ $machine['lower']['m_log']['sv_r_7'] ?? '-' }}</div>
                                         <div>{{ $machine['lower']['m_log']['sv_r_8'] ?? '-' }}</div>
                                     </div>
+                                    @endif
                                 </div>
+                            </div>
+                            <div class="flex px-2 flex-col">
+                                @if (isset($machine['lower']['d_sum']['ended_at']))
+                                <x-text-button type="button" x-data="" class="px-3 py-2" type="button"
+                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['lower']['d_sum']['id'] ?? 0 }}'})"><i class="fa-regular fa-eye"></i></x-text-button>
+                                @endif
+                                <x-link href="{{ route('insight.stc.summary.index', [ 'view' => 'history', 'mode' => 'recents', 'line' => $machine['line'], 'position' => 'lower' ])}}" class="px-3 py-2" wire:navigate>
+                                    <i class="fa-regular fa-clock"></i>
+                                </x-link>
                             </div>
                         </div>
                     </div>

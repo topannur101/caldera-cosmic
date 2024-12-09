@@ -203,8 +203,8 @@ class extends Component {
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
                     <x-select class="w-full lg:w-auto" id="machine-position" wire:model.live="position">
                         <option value=""></option>
-                        <option value="lower">{{ __('Atas') }}</option>
-                        <option value="upper">{{ __('Bawah') }}</option>
+                        <option value="upper">{{ __('Atas') }}</option>
+                        <option value="lower">{{ __('Bawah') }}</option>
                     </x-select>
                 </div>
                 {{-- <div class="w-full lg:w-32">

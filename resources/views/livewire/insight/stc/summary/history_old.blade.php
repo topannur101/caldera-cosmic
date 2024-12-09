@@ -169,8 +169,8 @@ class extends Component {
                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
                 <x-select id="history-position" wire:model.live="position">
                     <option value=""></option>
-                    <option value="lower">{{ __('Atas') }}</option>
-                    <option value="upper">{{ __('Bawah') }}</option>
+                    <option value="upper">{{ __('Atas') }}</option>
+                    <option value="lower">{{ __('Bawah') }}</option>
                 </x-select>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>

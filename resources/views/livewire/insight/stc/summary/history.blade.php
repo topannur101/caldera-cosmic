@@ -39,7 +39,7 @@ class extends Component {
     public string $end_at = '';
 
     #[Url]
-    public int $count;
+    public int $count = 5;
 
     public int $d_sum_total = 0;
     public string $d_sum_latest_date = '';
@@ -86,7 +86,7 @@ class extends Component {
         // Get the filtered d_sum IDs
         $dSumIds = $dSumQuery->pluck('id');
         
-        $this->d_sum_total = $dSumQuery->count();
+        $this->d_sum_total = $dSumQuery->get()->count();
         $dSumLatest = $dSumQuery->latest()->first();
         $this->d_sum_latest_date = $dSumLatest ? $dSumLatest->created_at : '';
 
@@ -137,8 +137,8 @@ class extends Component {
                 class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
                 <x-select id="history-position" wire:model.live="position">
                     <option value=""></option>
-                    <option value="lower">{{ __('Atas') }}</option>
-                    <option value="upper">{{ __('Bawah') }}</option>
+                    <option value="upper">{{ __('Atas') }}</option>
+                    <option value="lower">{{ __('Bawah') }}</option>
                 </x-select>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
@@ -157,8 +157,9 @@ class extends Component {
                         <label for="history-count"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Batas') }}</label>
                         <x-select id="history-count" wire:model.live="count">
+                            <option value="5">5</option>
                             <option value="10">10</option>
-                            <option value="10">50</option>
+                            <option value="50">50</option>
                             <option value="100">100</option>
                         </x-select>
                     </div>
@@ -235,7 +236,7 @@ class extends Component {
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
                     <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Terakhir diukur') }}</label>
                     <div class="flex items-end gap-x-1">
-                        <div class="text-2xl">{{ Carbon::parse($d_sum_latest_date)->diffForHumans() }}</div>
+                        <div class="text-2xl">{{ ($d_sum_latest_date ? (Carbon::parse($d_sum_latest_date)->diffForHumans()) : __('Tidak ada') )  }}</div>
                         {{-- <div>{{ __('menit') .'/' . __('batch')}}</div> --}}
                     </div>
                 </div>
@@ -250,7 +251,7 @@ class extends Component {
         </div>
         <div class="sm:col-span-2 lg:col-span-3">
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
-                {{ __('Waktu jalan') }}</h1>
+                {{ __('Grafik') }}</h1>
             <div wire:key="stc-summary-history-chart" class="h-[32rem] bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
                 id="stc-summary-history-chart-container" wire:key="stc-summary-history-chart-container" wire:ignore>
             </div>  
