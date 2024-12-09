@@ -12,6 +12,7 @@ use App\Models\InsStcDSum;
 use App\Models\User;
 use Carbon\Carbon;
 use App\InsStc;
+use App\InsStcPush;
 
 new class extends Component {
 
@@ -129,8 +130,53 @@ new class extends Component {
                 ]);
             }
 
-            $this->js('notyfSuccess("' . __('Disimpan') . '")');
+            $insStcPush = new InsStcPush();
+            $pushStatus = [
+                'is_sent' => false,
+                'message' => ''
+            ];
+
+            try {
+                // Send section data
+                $insStcPush->send('section_hb', $d_sum->ins_stc_machine->ip_address, $this->position, [
+                    $d_sum->section_1,
+                    $d_sum->section_2,
+                    $d_sum->section_3,
+                    $d_sum->section_4,
+                    $d_sum->section_5,
+                    $d_sum->section_6,
+                    $d_sum->section_7,
+                    $d_sum->section_8
+                ]);
+
+                // Calculate zones by averaging adjacent sections
+                $zones = [
+                    // Zone 1: Average of section 1 and 2
+                    ($d_sum->section_1 + $d_sum->section_2) / 2,
+                    // Zone 2: Average of section 3 and 4
+                    ($d_sum->section_3 + $d_sum->section_4) / 2,
+                    // Zone 3: Average of section 5 and 6
+                    ($d_sum->section_5 + $d_sum->section_6) / 2,
+                    // Zone 4: Average of section 7 and 8
+                    ($d_sum->section_7 + $d_sum->section_8) / 2
+                ];
+
+                // Send zone data
+                $insStcPush->send('zone_hb', $d_sum->ins_stc_machine->ip_address, $this->position, $zones);
+                $pushStatus['is_sent'] = true;
+
+            } catch (\Exception $e) {
+                $pushStatus['is_sent'] = false;
+                $pushStatus['message'] = htmlspecialchars($e->getMessage(), ENT_QUOTES);
+            }
+            
             $this->dispatch('d_sum-created', $d_sum);
+            if ($pushStatus['is_sent']) {
+                $this->js('notyfSuccess("' . __('Nilai HB disimpan dan dikirim ke HMI') . '")');
+            } else {
+                $this->js('notyfSuccess("' . __('Nilai HB disimpan namun tidak dikirim ke HMI. Periksa console.') . '")');
+                $this->js('console.log("' . $pushStatus['message'] . '")');
+            }
             $this->customReset();
         }
     }
@@ -160,7 +206,7 @@ new class extends Component {
         }
 
         $logs = [];
-        $logTempMinEnd = 45;
+        $logTempMinEnd = 40;
 
         foreach ($rows as $row) {
             if (isset($row[0]) && isset($row[$tempColumn]) && $row[0] !== '' && $row[$tempColumn] !== '') {

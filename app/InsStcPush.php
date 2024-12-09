@@ -12,54 +12,75 @@ use Exception;
 class InsStcPush
 {
     /**
-     * Send SVP values to HMI via Modbus TCP
-     *
-     * @param string $ipAddress IP address of the HMI
-     * @param array $svpValues Array of SVP values from index 0 to 7
-     * @param int $port Port number (default 502 for Modbus TCP)
-     * @return WriteMultipleRegistersResponse
-     * @throws Exception
+     * Send section_svp, section_hb, or zone_hb to HMI through Modbus TCP
      */
-    public function send(string $ipAddress, string $position, array $svpValues, int $port = 503, int $unitID = 1): WriteMultipleRegistersResponse
+    public function send(string $type, string $ipAddress, string $position, array $values, int $port = 503, int $unitID = 1): WriteMultipleRegistersResponse
     {
-        // Validate input array
-        if (count($svpValues) !== 8) {
-            throw new \InvalidArgumentException("SVP values array must contain exactly 8 values");
+        // Validate type
+        $typeConfigs = [
+            'section_svp' => [
+                'valueCount' => 8,
+                'startAddresses' => [
+                    'upper' => 230,
+                    'lower' => 130
+                ]
+            ],
+            'section_hb' => [
+                'valueCount' => 8,
+                'startAddresses' => [
+                    'upper' => 270,
+                    'lower' => 170
+                ]
+            ],
+            'zone_hb' => [
+                'valueCount' => 4,
+                'startAddresses' => [
+                    'upper' => 260,
+                    'lower' => 160
+                ]
+            ]
+        ];
+    
+        // Check if type is valid
+        if (!isset($typeConfigs[$type])) {
+            throw new \InvalidArgumentException(__('Tipe yang diberikan tidak sah.'));
         }
-
+    
+        $config = $typeConfigs[$type];
+    
+        // Validate position
+        if (!in_array($position, ['upper', 'lower'])) {
+            throw new \InvalidArgumentException(__('Posisi harus berupa upper atau lower.'));
+        }
+    
+        // Validate input array count
+        if (count($values) !== $config['valueCount']) {
+            throw new \InvalidArgumentException(__('Jumlah nilai kurang dari persyaratan'));
+        }
+    
         // Validate and prepare registers
         $registers = array_map(function($value) {
             $intValue = (int)$value;
             if ($intValue < 20 || $intValue > 90) {
                 throw new \InvalidArgumentException(
-                    "Register value {$intValue} is out of range (20-90)"
+                    __('Nilai temperatur berada di luar jangkauan (20-90)')
                 );
             }
             return Types::toInt16($intValue);
-        }, $svpValues);
-
+        }, $values);
+    
         // Create connection
         $connection = BinaryStreamConnection::getBuilder()
             ->setPort($port)
             ->setHost($ipAddress)
             ->build();
-
-        switch ($position) {
-            case 'upper':
-                $startAddress = 230;
-                break;
-            
-            case 'lower':
-                $startAddress = 130;
-                break;
-            default:
-                throw new \InvalidArgumentException("Position must be either upper or lower.");
-        }
-
+    
+        // Get start address based on type and position
+        $startAddress = $config['startAddresses'][$position];
+    
         // Create Modbus request
-        
         $packet = new WriteMultipleRegistersRequest($startAddress, $registers, $unitID);
-
+    
         try {
             // Send and receive
             $binaryData = $connection->connect()->sendAndReceive($packet);

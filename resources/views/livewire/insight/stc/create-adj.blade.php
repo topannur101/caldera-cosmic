@@ -146,7 +146,7 @@ new class extends Component {
         $insStcPush = new InsStcPush();
 
         try {
-            $response = $insStcPush->send($machine->ip_address, $this->position, [
+            $response = $insStcPush->send('section_svp', $machine->ip_address, $this->position, [
                 $this->svp_values[0]['absolute'],
                 $this->svp_values[1]['absolute'],
                 $this->svp_values[2]['absolute'],
