@@ -252,7 +252,7 @@ class extends Component {
         <div class="sm:col-span-2 lg:col-span-3">
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                 {{ __('Grafik') }}</h1>
-            <div wire:key="stc-summary-history-chart" class="h-[32rem] bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
+            <div wire:key="stc-summary-history-chart" class="h-96 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
                 id="stc-summary-history-chart-container" wire:key="stc-summary-history-chart-container" wire:ignore>
             </div>  
         </div>

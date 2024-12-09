@@ -134,16 +134,47 @@ new class extends Component {
                 </div>
             </div>
         </x-modal>
+        <x-modal name="different-zoning-help">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Pembagian zona') }}
+                    </h2>
+                    <x-text-button type="button" x-on:click="$dispatch('close')"><i
+                            class="fa fa-times"></i></x-text-button>
+                </div>
+                <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
+                    <div>
+                        {{ __('Terdapat dua modus pembagian zona pada bagan.') }}
+                    </div>
+                    <div>
+                        <span class="font-bold">{{ __('Pembagian zona standar') . ': ' }}</span>{{ __('Halaman ini menggunakan metode pembagian zona standar yang artinya pengukuran seharusnya berdurasi 54 menit.') }}
+                    </div>
+                    <div>
+                        <span class="font-bold">{{ __('Pembagian zona adaptif') . ': ' }}</span>{{ __('Bila kecepatan konveyor diluar standar, maka durasi pengukuran akan kurang atau lebih dari 54 menit. Fitur zona adaptif akan mengabaikan titik data yang memiliki temperatur ruangan  (di bawah 40°C) agar SV prediksi akurat.') }}
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                        {{ __('Paham') }}
+                    </x-primary-button>
+                </div>
+            </div>
+        </x-modal>
     </div>
-    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg h-80 p-4 mb-4"
+    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg h-80 p-4"
     id="recents-chart-container" wire:key="recents-chart-container" wire:ignore>
     </div>
-    <div class="flex justify-end">
-        <div class="p-2">
+    <div class="flex justify-between flex-col lg:flex-row">
+        <div class="px-2 py-8 text-sm">
+            {{ __('Pembagian zona pada bagan di atas mungkin akan berbeda dengan bagan individu') }}<x-text-button type="button"
+            class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'different-zoning-help')"><i
+                class="far fa-question-circle"></i></x-text-button>
+        </div>
+        <div class="px-2 py-8">
             <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv"
                 :checked="$use_m_log_sv ? true : false">{{ __('Gunakan SV mesin') }}<x-text-button type="button"
-                    class="ml-2" x-data=""
-                    x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')"><i
+                    class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')"><i
                         class="far fa-question-circle"></i></x-text-button>
             </x-toggle>
         </div>   
@@ -239,7 +270,7 @@ new class extends Component {
                             </div>
                         </div>
                         <div
-                            class="flex items-center py-6 border-b border-neutral-100 dark:border-neutral-700">
+                            class="flex items-center py-6">
                             <div class="px-3 py-2 -rotate-90">{{ __('Bawah') }}</div>
                             <div class="grow grid grid-cols-1">
                                 <div>

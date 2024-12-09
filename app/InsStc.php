@@ -152,75 +152,187 @@ class InsStc
         return $svp_results;
     }
 
-    public static function getHistoryChartOptions($data) 
-    {
-        return [
-            'chart' => [
-                'type' => 'line',
-                'height' => '100%',
-                'animations' => [
-                    'enabled' => false, // Disable animations for better performance with multiple series
-                ],
-                'toolbar' => [
-                    'show' => true,
-                    'tools' => [
-                        'download' => true,
-                        'selection' => true,
-                        'zoom' => true,
-                        'zoomin' => true,
-                        'zoomout' => true,
-                        'pan' => true,
-                        'reset' => true,
-                    ],
-                ],
-            ],
-            'series' => $data,
-            'xaxis' => [
-                'type' => 'numeric',
-                'labels' => [
-                    'datetimeUTC' => false,
-                ],
-                'title' => [
-                    'text' => 'Time (HH:MM)'
-                ],
-                'tickAmount' => 10,
-            ],
-            'yaxis' => [
-                'title' => [
-                    'text' => 'Temperature (°C)',
-                ],
-                'decimalsInFloat' => 1,
-            ],
-            'tooltip' => [
-                'enabled' => true,
-                'shared' => false,
-            ],
-            'stroke' => [
-                'curve' => 'smooth',
-                'width' => 2,
-            ],
-            'theme' => [
-                'mode' => session('bg'),
-            ],
-            'legend' => [
-                'show' => true,
-                'position' => 'top',
-                'horizontalAlign' => 'center',
-            ],
-            'grid' => [
-                'borderColor' => '#e7e7e7',
-                'row' => [
-                    'colors' => ['#f3f3f3', 'transparent'],
-                    'opacity' => 0.5
-                ],
-            ],
-        ];
-    }
-
     public static function getRecentChartOptions($chartData, $width, $height)
     {
         $ymax = 85;
         $ymin = 35;
+
+        $logs = [
+            [
+                'taken_at' => 1*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 2*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 3*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 4*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 5*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 6*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 7*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 8*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 9*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 10*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 11*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 12*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 13*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 14*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 15*60, 'temp' => 75
+            ],
+            [
+                'taken_at' => 16*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 17*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 18*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 19*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 20*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 21*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 22*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 23*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 24*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 25*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 26*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 27*60, 'temp' => 65
+            ],
+            [
+                'taken_at' => 28*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 29*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 30*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 31*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 32*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 33*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 34*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 35*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 36*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 37*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 38*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 39*60, 'temp' => 55
+            ],
+            [
+                'taken_at' => 40*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 41*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 42*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 43*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 44*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 45*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 46*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 47*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 48*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 49*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 50*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 51*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 52*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 53*60, 'temp' => 45
+            ],
+            [
+                'taken_at' => 54*60, 'temp' => 45
+            ]
+        ];        
+
+        $zones = [
+            'zone_1' => ['section_1', 'section_2'],
+            'zone_2' => ['section_3', 'section_4'],
+            'zone_3' => ['section_5', 'section_6'],
+            'zone_4' => ['section_7', 'section_8'],
+        ];
+
+        $temps = array_map(fn($item) => $item['temp'], $logs);
+        $sections = Self::groupValuesBySection($temps);
+        $xzones = array_map('count', $sections);
+        $yzones = [ 40, 50, 60, 70, 80 ];
 
         $chartData = $chartData->map(function ($group) {
             // Sort the group by taken_at to ensure chronological order
@@ -270,8 +382,8 @@ class InsStc
             'xaxis' => [
                 'type' => 'datetime',
                 'labels' => [
-                    'show' => false,
-                    'datetimeUTC' => false
+                    'show' => true,
+                    'datetimeUTC' => true
                 ],
             ],
             'yaxis' => [
@@ -297,6 +409,11 @@ class InsStc
             'legend' => [
                 'show' => false,
             ],
+            'annotations' => [
+                'xaxis' => self::generateXAnnotations($zones, $xzones, $logs),
+                'yaxis' => self::generateYAnnotations($yzones),
+                'points' => self::generatePointAnnotations($zones, $yzones, $logs),
+            ],
             'tooltip' => [
                 'enabled' => false,
             ],
@@ -320,7 +437,6 @@ class InsStc
 
         $temps = array_map(fn($item) => $item['temp'], $logs);
         $sections = Self::groupValuesBySection($temps);
-
         $zones = [
             'zone_1' => ['section_1', 'section_2'],
             'zone_2' => ['section_3', 'section_4'],
