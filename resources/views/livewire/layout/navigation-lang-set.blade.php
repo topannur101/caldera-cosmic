@@ -37,7 +37,7 @@ new class extends Component {
     <x-select wire:model.live="lang" class="{{ $small ? 'text-xs py-1' : ''}}">
         <option value="id">Bahasa Indonesia</option>
         <option value="en">English (US)</option>
-        <option value="vi">Tiếng Việt (AI)</option>
-        <option value="ko">한국 (AI)</option>
+        <option value="vi">Tiếng Việt</option>
+        <option value="ko">한국</option>
     </x-select>
 </div>

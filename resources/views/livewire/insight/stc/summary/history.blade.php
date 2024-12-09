@@ -19,7 +19,7 @@ class extends Component {
 
     use HasDateRangeFilter;
 
-    private int $limit = 100;
+    private int $limit = 50;
 
     public array $lines = [];
 
@@ -160,7 +160,6 @@ class extends Component {
                             <option value="5">5</option>
                             <option value="10">10</option>
                             <option value="50">50</option>
-                            <option value="100">100</option>
                         </x-select>
                     </div>
                     @break
