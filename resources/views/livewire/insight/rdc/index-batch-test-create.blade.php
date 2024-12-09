@@ -92,11 +92,16 @@ class extends Component {
             'file' => 'file|mimes:txt,xls,xlsx|max:1024'
         ]);
 
-        $type = $this->file->getMimeType();
+        $mimeType = $this->file->getMimeType();
+
+        $type = match ($mimeType) {
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'excel',
+            'text/plain' => 'text'
+        };
 
         switch ($type) {
-            case 'application/vnd.ms-excel':
-            case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+            case 'excel':
                 $this->extractDataExcel();
                 $this->view = 'review';
                 break;
@@ -125,8 +130,126 @@ class extends Component {
 
     private function extractDataText()
     {
-        // tambah logic disini
-        $this->js('notyfError("' . __('Logic untuk ekstrat txt belum siap') . '")');
+
+        try {
+            // Fetch the machine data based on the selected machine_id
+            $machine = InsRdcMachine::find($this->machine_id);
+
+            if (!$machine) {
+                throw new \Exception("Mesin tidak ditemukan");
+            }
+
+            // Read the text file content
+            $content = file_get_contents($this->file->getRealPath());
+            
+            // Split content into lines
+            $lines = explode("\n", $content);
+            
+            // Initialize variables to store extracted values
+            $values = [
+                'model' => '',
+                'color' => '',
+                'mcs' => '',
+                'code_alt' => '',
+                's_max' => 0,
+                's_min' => 0,
+                'tc10' => 0,
+                'tc50' => 0,
+                'tc90' => 0,
+                'eval' => ''
+            ];
+
+            // Process each line to extract data
+            foreach ($lines as $line) {
+                $line = trim($line);
+                
+                // Debug line yang sedang diproses
+                $this->js('console.log("Processing line: '. addslashes($line) .'")');
+                
+                // Extract MCS dari baris yang mengandung "Compound"
+                if (strpos($line, 'Compound') !== false) {
+                    // Extract MCS
+                    if (preg_match('/OG\/RS\s+(\d{3})/i', $line, $matches)) {
+                        $values['mcs'] = $matches[1];
+                        $this->js('console.log("Found MCS in Compound line: '. $matches[1] .'")');
+                    }
+                    
+                    // Extract Description (Warna) dari baris yang sama
+                    if (preg_match('/Description:\s*([^$]+)/i', $line, $matches)) {
+                        $values['color'] = trim($matches[1]);
+                        $this->js('console.log("Found Color in Description: '. $matches[1] .'")');
+                    }
+                }
+                // Extract Orderno as code_alt
+                elseif (preg_match('/Orderno\.:?\s*(\d+)/i', $line, $matches)) {
+                    $values['code_alt'] = $this->safeString($matches[1]);
+                }
+                // Extract Description as color
+                elseif (preg_match('/Description:\s*(.+)$/i', $line, $matches)) {
+                    $values['color'] = $this->safeString($matches[1]);
+                }
+                // Extract ML as s_min
+                elseif (preg_match('/^ML\s+(\d+\.\d+)/i', $line, $matches)) {
+                    $values['s_min'] = $this->safeFloat($matches[1]);
+                }
+                // Extract MH as s_max
+                elseif (preg_match('/^MH\s+(\d+\.\d+)/i', $line, $matches)) {
+                    $values['s_max'] = $this->safeFloat($matches[1]);
+                }
+                // Extract t10 as tc10
+                elseif (preg_match('/^t10\s+(\d+\.\d+)/i', $line, $matches)) {
+                    $values['tc10'] = $this->safeFloat($matches[1]);
+                }
+                // Extract t50 as tc50
+                elseif (preg_match('/^t50\s+(\d+\.\d+)/i', $line, $matches)) {
+                    $values['tc50'] = $this->safeFloat($matches[1]);
+                }
+                // Extract t90 as tc90
+                elseif (preg_match('/^t90\s+(\d+\.\d+)/i', $line, $matches)) {
+                    $values['tc90'] = $this->safeFloat($matches[1]);
+                }
+                // Extract status for eval
+                elseif (preg_match('/Status:\s*Pass/i', $line)) {
+                    $values['eval'] = 'pass';
+                }
+                elseif (preg_match('/Status:\s*Fail/i', $line)) {
+                    $values['eval'] = 'fail';
+                }
+            }
+
+            // Debug final values
+            $this->js('console.log("Before assignment - Color value:", "' . ($values['color'] ?? 'not set') . '")');
+
+            // Assign extracted values to component properties
+            $this->e_model = $values['model'];
+            $this->e_color = $values['color'] ?? '';  // Menggunakan nilai dari Description
+            $this->e_mcs = $values['mcs'] ?? '';
+            $this->e_code_alt = $values['code_alt'];
+            $this->s_max = $values['s_max'];
+            $this->s_min = $values['s_min'];
+            $this->tc10 = $values['tc10'];
+            $this->tc50 = $values['tc50'];
+            $this->tc90 = $values['tc90'];
+            $this->eval = $values['eval'];
+
+            // Debug after assignment
+            $this->js('console.log("After assignment - Color value:", "' . $this->e_color . '")');
+
+            // Check if batch info should be updated
+            if((!$this->model && !$this->color && !$this->mcs && !$this->code_alt) && 
+               ($this->e_model || $this->e_color || $this->e_mcs || $this->e_code_alt)) 
+            {
+                $this->update_batch = true;
+                $this->updateBatchInfo();
+            }
+
+            $this->view = 'review';
+
+        } catch (\Exception $e) {
+            $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
+            $this->js('console.log("Error: '. $e->getMessage() .'")');
+        }
+
     }
 
     private function extractDataExcel()
@@ -187,7 +310,7 @@ class extends Component {
 
     private function safeString($value): string
     {
-        return is_string($value) ? strtoupper(trim($value)) : '';
+        return trim(preg_replace('/[^a-zA-Z0-9\s]/', '', $value));
     }
 
     private function safeFloat($value): ?float
