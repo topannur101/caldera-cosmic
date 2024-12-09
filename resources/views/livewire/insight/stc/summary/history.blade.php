@@ -59,19 +59,17 @@ class extends Component {
     public function update()
     {
         $query = InsStcDLog::query();
+        $dSumQuery = InsStcDSum::orderBy('created_at', 'desc');
 
-        // First, handle filtering of d_sum based on the selected mode
         if ($this->mode === 'recents') {
-            // Get the most recent d_sum records
-            $dSumQuery = InsStcDSum::orderBy('created_at', 'desc')
-                ->limit($this->count ?? $this->limit);
+            $dSumQuery->limit($this->count);
+
         } elseif ($this->mode === 'range') {
-            // Use Carbon for date range parsing
             $start = Carbon::parse($this->start_at);
             $end = Carbon::parse($this->end_at)->endOfDay();
-
-            // Filter d_sum records within the date range
-            $dSumQuery = InsStcDSum::whereBetween('created_at', [$start, $end]);
+            
+            $dSumQuery->limit($this->limit)
+            ->whereBetween('created_at', [$start, $end]);
         }
 
         // Apply additional filters for line and position
@@ -85,17 +83,15 @@ class extends Component {
             $dSumQuery->where('position', $this->position);
         }
 
-        $this->d_sum_total = $dSumQuery->count();
+        // Get the filtered d_sum IDs
+        $dSumIds = $dSumQuery->pluck('id');
         
+        $this->d_sum_total = $dSumQuery->count();
         $dSumLatest = $dSumQuery->latest()->first();
         $this->d_sum_latest_date = $dSumLatest ? $dSumLatest->created_at : '';
 
-        // Get the filtered d_sum IDs
-        $dSumIds = $dSumQuery->pluck('id');
-
         // Now filter d_log using these d_sum IDs
         $d_sums = InsStcDLog::whereIn('ins_stc_d_sum_id', $dSumIds)
-            ->limit($this->limit)
             ->get()
             ->groupBy('ins_stc_d_sum_id');
 
