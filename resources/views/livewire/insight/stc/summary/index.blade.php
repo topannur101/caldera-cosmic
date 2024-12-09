@@ -11,17 +11,17 @@ new #[Layout('layouts.app')]
 class extends Component {
     
     #[Url]
-    public $view = 'd-sums';
+    public $view = 'recents';
     public array $view_titles = [];
 
     public function mount()
     {
         $this->view_titles = [   
-            'd-logs'    => __('Ringkasan'), 
-            'adjs'      => __('Penyetelan '),  
-            'recents'   => __('Pembacaan terkini'),    
-            'd-sums'    => __('Pembacaan alat'),    
-            'm-sums'    => __('Pembacaan mesin'), 
+            'recents'       => __('Pembacaan terkini'),    
+            'device'        => __('Pembacaan alat'),    
+            'machine'       => __('Pembacaan mesin'), 
+            'history'       => __('Riwayat'), 
+            'adjustments'   => __('Penyetelan '),  
         ];
     }
 
@@ -63,21 +63,27 @@ class extends Component {
     </div>
     <div wire:key="stc-summary-index-container" wire:loading.class="hidden">
         @switch($view)
-            @case('d-logs')
-            <livewire:insight.stc.summary.d-logs />                       
+
+            @case('adjustments')
+            <livewire:insight.stc.summary.adjustments />
                 @break
-            @case('adjs')
-            <livewire:insight.stc.summary.adjs />
+                
+            @case('device')
+            <livewire:insight.stc.summary.device />                       
                 @break
+
+            @case('history')
+            <livewire:insight.stc.summary.history />                       
+                @break
+
+            @case('machine')
+                <livewire:insight.stc.summary.machine />                       
+                @break
+
             @case('recents')
             <livewire:insight.stc.summary.recents />
                 @break
-            @case('d-sums')
-            <livewire:insight.stc.summary.d-sums />                       
-                @break
-            @case('m-sums')
-                <livewire:insight.stc.summary.m-logs />                       
-                @break
+
             @default
                 <div wire:key="no-view" class="w-full py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">

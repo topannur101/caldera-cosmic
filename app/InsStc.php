@@ -92,7 +92,7 @@ class InsStc
 
     public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id): array
     {
-        $HBTargets = [ 75, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 45 ];
+        $HBTargets = [ 77.5, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 42.5 ];
 
         // Validate input arrays have same length
         if (count($hb_values) !== count($HBTargets) || count($sv_values) !== count($HBTargets)) {
@@ -152,11 +152,12 @@ class InsStc
         return $svp_results;
     }
 
-    public static function getDLogsChartOptions($data) 
+    public static function getHistoryChartOptions($data) 
     {
         return [
             'chart' => [
                 'type' => 'line',
+                'height' => '100%',
                 'animations' => [
                     'enabled' => false, // Disable animations for better performance with multiple series
                 ],

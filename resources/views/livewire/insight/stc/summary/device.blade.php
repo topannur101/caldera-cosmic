@@ -22,15 +22,20 @@ class extends Component {
     use HasDateRangeFilter;
 
     #[Url]
-    public $start_at;
+    public string $start_at = '';
+
     #[Url]
-    public $end_at;
+    public string $end_at = '';
+
     #[Url]
     public $line;
 
-    public $lines;
+    #[Url]
+    public string $position = '';
 
-    public $perPage = 20;
+    public array $lines = [];
+
+    public int $perPage = 20;
 
     private function getDSumsQuery()
     {
@@ -54,6 +59,11 @@ class extends Component {
             if ($this->line)
             {
                 $query->where('ins_stc_machines.line', $this->line);
+            }
+
+            if ($this->position)
+            {
+                $query->where('ins_stc_d_sums.position', $this->position);
             }
 
         return $query->orderBy('created_at', 'DESC');
@@ -88,7 +98,12 @@ class extends Component {
                 $query->where('ins_stc_machines.line', $this->line);
             }
 
-        return $query->orderBy('started_at', 'DESC');
+            if ($this->position)
+            {
+                $query->where('ins_stc_d_sums.position', $this->position);
+            }
+
+        return $query->orderBy('ins_stc_d_sums.created_at', 'DESC');
     }
 
     public function mount()
@@ -260,22 +275,31 @@ class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="flex gap-3">
-                <div class="w-full lg:w-32">
-                    <label for="d_sums-line"
+            <div class="grid grid-cols-2 lg:flex gap-3">
+                <div>
+                    <label for="device-line"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                    <x-text-input id="d_sums-line" wire:model.live="line" type="number" list="d_sums-lines" step="1" />
-                    <datalist id="d_sums-lines">
+                    <x-select class="w-full lg:w-auto" id="device-line" wire:model.live="line">
+                        <option value=""></option>
                         @foreach($lines as $line)
-                        <option value="{{ $line }}"></option>
+                        <option value="{{ $line }}">{{ $line }}</option>
                         @endforeach
-                    </datalist>
+                    </x-select>
+                </div>
+                <div>
+                    <label for="device-position"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
+                    <x-select class="w-full lg:w-auto" id="device-position" wire:model.live="position">
+                        <option value=""></option>
+                        <option value="lower">{{ __('Atas') }}</option>
+                        <option value="upper">{{ __('Bawah') }}</option>
+                    </x-select>
                 </div>
                 {{-- <div class="w-full lg:w-32">
-                    <label for="d_sums-team"
+                    <label for="device-team"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
-                    <x-text-input id="d_sums-team" wire:model.live="team" type="text" list="d_sums-teams" />
-                    <datalist id="d_sums-teams">
+                    <x-text-input id="device-team" wire:model.live="team" type="text" list="device-teams" />
+                    <datalist id="device-teams">
                         <option value="A"></option>
                         <option value="B"></option>
                         <option value="C"></option>

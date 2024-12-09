@@ -22,14 +22,20 @@ class extends Component {
 
     #[Url]
     public $start_at;
+
     #[Url]
+
     public $end_at;
     #[Url]
+
     public $line;
+
+    #[Url]
+    public string $position = '';
 
     public $lines;
 
-    public $perPage = 20;
+    public int $perPage = 20;
 
     private function getMlogsQuery()
     {
@@ -39,17 +45,22 @@ class extends Component {
         $query = InsStcMlog::join('ins_stc_machines', 'ins_stc_m_logs.ins_stc_machine_id', '=', 'ins_stc_machines.id')
             ->select(
                 'ins_stc_m_logs.*',
-                'ins_stc_m_logs.updated_at as m_log_updated_at',
+                'ins_stc_m_logs.created_at as m_log_created_at',
                 'ins_stc_machines.line as machine_line',
             )
-            ->whereBetween('ins_stc_m_logs.updated_at', [$start, $end]);
+            ->whereBetween('ins_stc_m_logs.created_at', [$start, $end]);
 
             if ($this->line)
             {
                 $query->where('ins_stc_machines.line', $this->line);
             }
 
-        return $query;
+            if ($this->position)
+            {
+                $query->where('ins_stc_m_logs.position', $this->position);
+            }
+
+            return $query->orderBy('ins_stc_m_logs.created_at', 'DESC');
     }
 
     public function mount()
@@ -109,7 +120,7 @@ class extends Component {
             $this->getMlogsQuery()->chunk(1000, function ($mlogs) use ($file) {
                 foreach ($mlogs as $mlog) {
                     fputcsv($file, [
-                        $mlog->m_log_updated_at,
+                        $mlog->m_log_created_at,
                         $mlog->machine_line,
                         InsStc::positionHuman($mlog->position),
                         $mlog->speed,
@@ -176,16 +187,25 @@ class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="flex gap-3">
-                <div class="w-full lg:w-32">
-                    <label for="m_logs-line"
+            <div class="grid grid-cols-2 lg:flex gap-3">
+                <div>
+                    <label for="machine-line"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                    <x-text-input id="m_logs-line" wire:model.live="line" type="number" list="m_logs-lines" step="1" />
-                    <datalist id="m_logs-lines">
+                    <x-select class="w-full lg:w-auto" id="machine-line" wire:model.live="line">
+                        <option value=""></option>
                         @foreach($lines as $line)
-                        <option value="{{ $line }}"></option>
+                        <option value="{{ $line }}">{{ $line }}</option>
                         @endforeach
-                    </datalist>
+                    </x-select>
+                </div>
+                <div>
+                    <label for="machine-position"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
+                    <x-select class="w-full lg:w-auto" id="machine-position" wire:model.live="position">
+                        <option value=""></option>
+                        <option value="lower">{{ __('Atas') }}</option>
+                        <option value="upper">{{ __('Bawah') }}</option>
+                    </x-select>
                 </div>
                 {{-- <div class="w-full lg:w-32">
                     <label for="m_logs-team"
@@ -275,7 +295,7 @@ class extends Component {
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                 <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
-                        <th>{{ __('Diperbarui pada') }}</th> 
+                        <th>{{ __('Dibuat pada') }}</th> 
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('Posisi') }}</th>
                         <th>PV R</th>
@@ -286,7 +306,7 @@ class extends Component {
                     @foreach ($m_logs as $m_log)
                         <tr wire:key="m_log-tr-{{ $m_log->id . $loop->index }}" tabindex="0"
                             x-on:click="$dispatch('open-modal', 'm_log-show'); $dispatch('m_log-show', { id: '{{ $m_log->id }}'})">
-                            <td>{{ $m_log->m_log_updated_at }}</td>
+                            <td>{{ $m_log->m_log_created_at }}</td>
                             <td>{{ $m_log->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($m_log->position) }}</td>
                             <td class="font-mono"> 
