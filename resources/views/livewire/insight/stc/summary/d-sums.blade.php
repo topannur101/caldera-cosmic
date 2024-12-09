@@ -42,21 +42,21 @@ class extends Component {
             ->leftjoin('users as user2', 'ins_stc_d_sums.user_2_id', '=', 'user2.id')
             ->select(
                 'ins_stc_d_sums.*',
-                'ins_stc_d_sums.updated_at as d_sum_updated_at',
+                'ins_stc_d_sums.created_at as d_sum_created_at',
                 'ins_stc_machines.line as machine_line',
                 'user1.emp_id as user1_emp_id',
                 'user1.name as user1_name',
                 'user2.emp_id as user2_emp_id',
                 'user2.name as user2_name'
             )
-            ->whereBetween('ins_stc_d_sums.updated_at', [$start, $end]);
+            ->whereBetween('ins_stc_d_sums.created_at', [$start, $end]);
 
             if ($this->line)
             {
-                $query->where('ins_stc_machines.line', 'LIKE', '%' . $this->line . '%');
+                $query->where('ins_stc_machines.line', $this->line);
             }
 
-        return $query->orderBy('start_time', 'DESC');
+        return $query->orderBy('created_at', 'DESC');
     }
 
     private function getDLogsQuery()
@@ -72,7 +72,7 @@ class extends Component {
                 'ins_stc_d_logs.*',
                 'ins_stc_d_sums.*',
                 'ins_stc_d_sums.id as d_sum_id',
-                'ins_stc_d_sums.updated_at as d_sum_updated_at',
+                'ins_stc_d_sums.created_at as d_sum_created_at',
                 'ins_stc_machines.line as machine_line',
                 'user1.emp_id as user1_emp_id',
                 'user1.name as user1_name',
@@ -81,14 +81,14 @@ class extends Component {
                 'ins_stc_d_logs.taken_at as d_log_taken_at',
                 'ins_stc_d_logs.temp as d_log_temp',
             )
-            ->whereBetween('ins_stc_d_sums.updated_at', [$start, $end]);
+            ->whereBetween('ins_stc_d_sums.created_at', [$start, $end]);
 
             if ($this->line)
             {
-                $query->where('ins_stc_machines.line', 'LIKE', '%' . $this->line . '%');
+                $query->where('ins_stc_machines.line', $this->line);
             }
 
-        return $query->orderBy('start_time', 'DESC');
+        return $query->orderBy('started_at', 'DESC');
     }
 
     public function mount()
@@ -132,7 +132,7 @@ class extends Component {
                 ];
 
                 $columns = [
-                    __('Diperbarui pada'), __('Line'), __('Posisi'), __('RPM'), 'Z1 Temp', 'Z2 Temp', 'Z3 Temp', 'Z4 Temp',
+                    __('Diperbarui pada'), __('Line'), __('Posisi'), __('RPM'), 'HB S1', 'HB S2', 'HB S3', 'HB S4', 'HB S5', 'HB S6', 'HB S7', 'HB S8',
                     __('Operator') . ' 1' , __('Operator') . ' 2', __('Awal'), __('Durasi'), __('Latensi unggah')
                 ];
 
@@ -143,17 +143,21 @@ class extends Component {
                     $this->getDSumsQuery()->chunk(1000, function ($dSums) use ($file) {
                         foreach ($dSums as $dSum) {
                             fputcsv($file, [
-                                $dSum->d_sum_updated_at,
+                                $dSum->d_sum_created_at,
                                 $dSum->machine_line,
                                 InsStc::positionHuman($dSum->position),
                                 $dSum->speed,
-                                $dSum->z_1_temp,
-                                $dSum->z_2_temp,
-                                $dSum->z_3_temp,
-                                $dSum->z_4_temp,
+                                $dSum->section_1,
+                                $dSum->section_2,
+                                $dSum->section_3,
+                                $dSum->section_4,
+                                $dSum->section_5,
+                                $dSum->section_6,
+                                $dSum->section_7,
+                                $dSum->section_8,
                                 $dSum->user1_name . ' - ' . $dSum->user1_emp_id,
                                 $dSum->user2_name . ' - ' . $dSum->user2_emp_id,
-                                $dSum->start_time,
+                                $dSum->started_at,
                                 $dSum->duration(),
                                 $dSum->uploadLatency(),
                             ]);
@@ -191,7 +195,7 @@ class extends Component {
                         foreach ($dLogs as $dLog) {
                             fputcsv($file, [
                                 $dLog->d_sum_id,
-                                $dLog->d_sum_updated_at,
+                                $dLog->d_sum_created_at,
                                 $dLog->machine_line,
                                 InsStc::positionHuman($dLog->position),
                                 $dLog->speed,
@@ -341,7 +345,7 @@ class extends Component {
                     <i class="fa fa-calendar relative"><i
                             class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                 </div>
-                <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tentukan rentang tanggal') }}
+                <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih rentang tanggal') }}
                 </div>
             </div>
         @else
@@ -358,12 +362,12 @@ class extends Component {
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                 <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
-                        <th>{{ __('Diperbarui pada') }}</th> 
+                        <th>{{ __('Dibuat pada') }}</th> 
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('Posisi') }}</th>  
                         <th>{{ __('RPM') }}</th>   
-                        <th>{{ __('Median suhu') }}</th>
-                        <th>{{ __('Pengukur') }}</th>
+                        <th>{{ __('HB') }}</th>
+                        <th>{{ __('Operator') }}</th>
                         <th>{{ __('Waktu mulai') }}</th>
                         <th>{{ __('Durasi') }}</th>
                         <th>{{ __('Latensi unggah') }}</th>
@@ -371,13 +375,24 @@ class extends Component {
                     @foreach ($d_sums as $d_sum)
                         <tr wire:key="d_sum-tr-{{ $d_sum->id . $loop->index }}" tabindex="0"
                             x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $d_sum->id }}'})">
-                            <td>{{ $d_sum->d_sum_updated_at }}</td>
+                            <td>{{ $d_sum->d_sum_created_at }}</td>
                             <td>{{ $d_sum->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($d_sum->position) }}</td>
                             <td>{{ $d_sum->speed }}</td>
-                            <td>{{ $d_sum->z_1_temp . ' | ' . $d_sum->z_2_temp . ' | ' . $d_sum->z_3_temp . ' | ' . $d_sum->z_4_temp  }}</td>
+                            <td class="font-mono">
+                                {{ 
+                                    sprintf('%02d', $d_sum->section_1) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_2) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_3) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_4) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_5) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_6) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_7) . ', ' . 
+                                    sprintf('%02d', $d_sum->section_8) 
+                                }}
+                            </td>
                             <td>{{ $d_sum->user1_name }}</td>
-                            <td>{{ $d_sum->start_time }}</td>
+                            <td>{{ $d_sum->started_at }}</td>
                             <td>{{ $d_sum->duration() }}</td>
                             <td>{{ $d_sum->uploadLatency() }}</td>
                         </tr>

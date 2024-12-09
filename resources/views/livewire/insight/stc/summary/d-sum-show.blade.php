@@ -22,25 +22,15 @@ class extends Component {
     public string $machine_line;
     public string $machine_name;
     public string $machine_code;
-    public string $start_time;
-    public string $end_time;
+    public string $started_at;
+    public string $ended_at;
     public string $duration;
     public string $upload_latency;
     public string $logs_count;
     public string $position;
     public string $speed;
-    public array $log_temps;
-    public array $set_temps;
-    public array $cor_temps;
-
-    public array $xzones = [];
-    public array $yzones = [];
-
-    public function mount()
-    {
-        $this->xzones = InsStc::zones('x');
-        $this->yzones = InsStc::zones('y');
-    }
+    public array $hb_temps;
+    public array $sv_temps;
 
     #[On('d_sum-show')]
     public function showDSum(int $id)
@@ -49,6 +39,10 @@ class extends Component {
         $dSum = InsStcDSum::find($id);
 
         if ($dSum) {
+            $logs = $dSum->ins_stc_d_logs->toArray();
+            $temps = array_map(fn($item) => $item['temp'], $logs);
+            $hb_temps = InsStc::getMediansBySection($temps);
+
             $this->id = $dSum->id;
             $this->sequence         = $dSum->sequence;
             $this->user_1_name      = $dSum->user_1->name;
@@ -61,27 +55,20 @@ class extends Component {
             $this->machine_line     = $dSum->ins_stc_machine->line;
             $this->machine_name     = $dSum->ins_stc_machine->name;
             $this->machine_code     = $dSum->ins_stc_machine->code;
-            $this->start_time       = $dSum->start_time;
-            $this->end_time         = $dSum->end_time;
-            $this->duration         = InsStc::duration($dSum->start_time, $dSum->end_time);
-            $this->upload_latency   = InsStc::duration($dSum->end_time, $dSum->updated_at);
+            $this->started_at       = $dSum->started_at;
+            $this->ended_at         = $dSum->ended_at;
+            $this->duration         = InsStc::duration($dSum->started_at, $dSum->ended_at);
+            $this->upload_latency   = InsStc::duration($dSum->ended_at, $dSum->updated_at);
             $this->logs_count       = $dSum->ins_stc_d_logs->count();
             $this->position         = InsStc::positionHuman($dSum->position);
             $this->speed            = $dSum->speed;
-            $this->log_temps        = $dSum->logTemps();
-            $this->set_temps        = json_decode($dSum->set_temps, true);
-            $this->cor_temps        = $dSum->corTemps();
-
-            $logs = $dSum->ins_stc_d_logs->toArray();
-            $xzones = $this->xzones;
-            $yzones = $this->yzones;
-            $ymax = $yzones ? max($yzones) + 5 : $ymax;
-            $ymin = $yzones ? min($yzones) - 10 : $ymin;
+            $this->hb_temps         = [ $hb_temps['section_1'], $hb_temps['section_2'], $hb_temps['section_3'], $hb_temps['section_4'], $hb_temps['section_5'], $hb_temps['section_6'], $hb_temps['section_7'], $hb_temps['section_8'], ];
+            $this->sv_temps         = json_decode($dSum->sv_temps, true);
 
             $this->js(
                 "
                 let modalOptions = " .
-                    json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 100, 100)) .
+                    json_encode(InsStc::getChartOptions($logs, 100, 100)) .
                     ";
 
                 // Render modal chart
@@ -91,7 +78,7 @@ class extends Component {
                 modalChart.render();
 
                 let printOptions = " .
-                    json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 90, 85)) .
+                    json_encode(InsStc::getChartOptions($logs, 90, 85)) .
                     ";
 
                 // // Render hidden printable chart
@@ -132,13 +119,13 @@ class extends Component {
             'machine_line'  => $this->machine_line,
             'machine_name'  => $this->machine_name,
             'machine_code'  => $this->machine_code,
-            'start_time'    => $this->start_time,
+            'started_at'    => $this->started_at,
             'duration'      => $this->duration,
             'upload_latency'=> $this->upload_latency,
             'logs_count'    => $this->logs_count,
             'position'      => $this->position,
             'speed'         => $this->speed,
-            'set_temps'     => $this->set_temps
+            'sv_temps'     => $this->sv_temps
         ];
         $this->dispatch('print-prepare', $data);
     }
@@ -220,7 +207,7 @@ class extends Component {
                                     {{ __('Awal') . ': ' }}
                                 </td>
                                 <td class="font-mono">
-                                    {{ $start_time }}
+                                    {{ $started_at }}
                                 </td>
                             </tr>
                             <tr>
@@ -228,7 +215,7 @@ class extends Component {
                                     {{ __('Akhir') . ': ' }}
                                 </td>
                                 <td class="font-mono">
-                                    {{ $end_time }}
+                                    {{ $ended_at }}
                                 </td>
                             </tr>
                         </table>                                           
@@ -252,7 +239,6 @@ class extends Component {
                 </div>
             </div>
             <div class="flex flex-col grow">
-                <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Suhu') }}</dt>
                 <dd>
                     <div class="grid grid-cols-9 text-center gap-x-3">
                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">S</div>
@@ -266,18 +252,13 @@ class extends Component {
                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">8</div>
 
                         <div>HB</div>
-                        @foreach($log_temps as $log_temp)
-                            <div>{{ $log_temp }}</div>
+                        @foreach($hb_temps as $hb_temp)
+                            <div>{{ $hb_temp }}</div>
                         @endforeach
 
                         <div>SV</div>
-                        @foreach($set_temps as $set_temp)
-                            <div>{{ $set_temp }}</div>
-                        @endforeach
-
-                        <div>SVC</div>
-                        @foreach($cor_temps as $cor_temp)
-                            <div>{{ $cor_temp }}</div>
+                        @foreach($sv_temps as $sv_temp)
+                            <div>{{ $sv_temp }}</div>
                         @endforeach
                     </div>
                 </dd>

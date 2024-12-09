@@ -21,13 +21,13 @@ class extends Component {
     public string $machine_line;
     public string $machine_name;
     public string $machine_code;
-    public string $start_time;
+    public string $started_at;
     public string $duration;
     public string $upload_latency;
     public string $logs_count;
     public string $position;
     public string $speed;
-    public array $set_temps;
+    public array $sv_temps;
 
     #[On('print-prepare')]
     public function load($data)
@@ -43,13 +43,13 @@ class extends Component {
         $this->machine_line  = $data['machine_line'];
         $this->machine_name  = $data['machine_name'];
         $this->machine_code  = $data['machine_code'];
-        $this->start_time    = $data['start_time'];
+        $this->started_at    = $data['started_at'];
         $this->duration      = $data['duration'];
         $this->upload_latency= $data['upload_latency'];
         $this->logs_count    = $data['logs_count'];
         $this->position      = $data['position'];
         $this->speed         = $data['speed'];
-        $this->set_temps     = $data['set_temps'];
+        $this->sv_temps     = $data['sv_temps'];
         $this->dispatch('print-execute');
     }
 };
@@ -76,7 +76,7 @@ class extends Component {
                                 </tr>
                                 <tr>
                                     <td class="text-neutral-500 text-xs">
-                                        {{ __('Pengukur 1') }}
+                                        {{ __('Operator') . ' 1' }}
                                     </td>
                                     <td class="px-1">:</td>
                                     <td class="truncate">
@@ -85,7 +85,7 @@ class extends Component {
                                 </tr>
                                 <tr>
                                     <td class="text-neutral-500 text-xs">
-                                        {{ __('Pengukur 2') }}
+                                        {{ __('Operator') . ' 2' }}
                                     </td>
                                     <td class="px-1">:</td>
                                     <td class="truncate">
@@ -148,14 +148,14 @@ class extends Component {
                         </dd>
                     </div>
                     <div class="flex flex-col">
-                        <dt class="mb-3 text-neutral-500 text-xs uppercase">{{ __('Suhu diatur') }}</dt>
+                        <dt class="mb-3 text-neutral-500 text-xs uppercase">{{ __('SV') }}</dt>
                         <dd>
                             <div class="grid grid-cols-8 text-center gap-x-3">
-                                @foreach($set_temps as $set_temp)
+                                @foreach($sv_temps as $sv_temp)
                                 <div>
                                     <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">
                                         {{ __('S') . $loop->iteration }}</div>
-                                    <div>{{ $set_temp }}</div>
+                                    <div>{{ $sv_temp }}</div>
                                 </div>
                                 @endforeach
                             </div>
@@ -166,7 +166,7 @@ class extends Component {
                                     </td>
                                     <td class="px-1">:</td>
                                     <td>
-                                        {{ $start_time }}
+                                        {{ $started_at }}
                                     </td>
                                 </tr>
                                 <tr>

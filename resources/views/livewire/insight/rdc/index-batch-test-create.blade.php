@@ -130,6 +130,7 @@ class extends Component {
 
     private function extractDataText()
     {
+
         try {
             // Fetch the machine data based on the selected machine_id
             $machine = InsRdcMachine::find($this->machine_id);
@@ -248,6 +249,7 @@ class extends Component {
             $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
             $this->js('console.log("Error: '. $e->getMessage() .'")');
         }
+
     }
 
     private function extractDataExcel()

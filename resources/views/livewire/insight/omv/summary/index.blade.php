@@ -11,12 +11,14 @@ new #[Layout('layouts.app')]
 class extends Component {
     
     #[Url]
-    public $view = 'running-time';
+    public $view = 'batch-count';
     public array $view_titles = [];
 
     public function mount()
     {
         $this->view_titles = [        
+            'batch-count'   => __('Jumlah batch'),
+            'worker-perf'   => __('Performa pekerja'),
             'running-time'  => __('Waktu Jalan'),
             'metrics'       => __('Data mentah'),    
         ];
@@ -56,6 +58,12 @@ class extends Component {
     </div>
     <div wire:key="omv-summary-index-container" wire:loading.class="hidden">
         @switch($view)
+            @case('batch-count')
+            <livewire:insight.omv.summary.batch-count />                       
+                @break
+            @case('worker-perf')
+            <livewire:insight.omv.summary.worker-perf />                       
+                @break
             @case('running-time')
             <livewire:insight.omv.summary.running-time />                       
                 @break

@@ -7,6 +7,151 @@ use InvalidArgumentException;
 
 class InsStc
 {
+    private static array $sectionRatios = [
+        'preheat' => 0.09,
+        'section_1' => 0.10,
+        'section_2' => 0.10,
+        'section_3' => 0.10,
+        'section_4' => 0.10,
+        'section_5' => 0.10,
+        'section_6' => 0.10,
+        'section_7' => 0.10,
+        'section_8' => 0.10,
+        'postheat' => 0.09,
+    ];
+
+    public static function groupValuesBySection($values): array
+    {
+        $totalValues = count($values);
+        $sections = [];
+        $startIndex = 0;
+
+        // Divide values into sections based on default ratios
+        foreach (self::$sectionRatios as $section => $sectionRatio) {
+            $sectionCount = (int) round($totalValues * $sectionRatio, 0);
+            $sections[$section] = array_slice($values, $startIndex, $sectionCount);
+            $startIndex += $sectionCount;
+        }
+
+        return $sections;
+    }
+
+    public static function getMediansBySection(array $values): array
+    {
+        // Validate input values
+        if (empty($values)) {
+            throw new InvalidArgumentException('Values array cannot be empty.');
+        }
+        
+        $sections = self::groupValuesBySection($values);
+
+        // Calculate medians for each section
+        $medians = [];
+        foreach ($sections as $section => $sectionValues) {
+            if (!empty($sectionValues)) {
+                sort($sectionValues); // Sort the section values to calculate median
+                $count = count($sectionValues);
+                $middle = (int) floor($count / 2);
+
+                if ($count % 2 === 0) {
+                    // Even count: Average the two middle values
+                    $median = ($sectionValues[$middle - 1] + $sectionValues[$middle]) / 2;
+                } else {
+                    // Odd count: Take the middle value
+                    $median = $sectionValues[$middle];
+                }
+
+                $medians[$section] = (int) round($median, 0);
+            } else {
+                $medians[$section] = null; // No data in this section
+            }
+        }
+        return $medians;
+    }
+
+    public static function flattenDLogs(array $dLogs): array
+    {
+        // Sort the dlogs array by the 'taken_at' field
+        usort($dLogs, function ($a, $b) {
+            return strtotime($a['taken_at']) <=> strtotime($b['taken_at']);
+        });
+
+        // Extract the 'temp' values from the sorted array
+        return array_map(function ($dLog) {
+            return $dLog['temp'];
+        }, $dLogs);
+
+    }
+
+    public static function getMediansfromDLogs(array $dLogs): array
+    {
+        $flattenedDLogs = self::flattenDLogs($dLogs);
+        $medians = self::getMediansBySection($flattenedDLogs);
+        return $medians;
+    }
+
+    public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id): array
+    {
+        $HBTargets = [ 75, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 45 ];
+
+        // Validate input arrays have same length
+        if (count($hb_values) !== count($HBTargets) || count($sv_values) !== count($HBTargets)) {
+            throw new \InvalidArgumentException('Input arrays must match HB Targets length');
+        }
+
+        $svp_results = [];
+
+        foreach ($hb_values as $index => $hb_value) {
+            $hb_target = $HBTargets[$index];
+            $sv_value = (int) $sv_values[$index];
+
+            // Handle special case for zero SV values
+            if ($sv_value == 0) {
+                $svp_results[] = [
+                    'absolute' => 0,
+                    'relative' => ''
+                ];
+                continue;
+            }
+
+            $adjusted_sv = $sv_value;
+            $relative = 0;
+
+            switch ($formula_id) {
+                case '411':
+                    $diff = $hb_value - $hb_target;
+                    $adjusted_sv = (int) max(0, round($sv_value - $diff, 0));
+                    break;
+                case '412':
+                    $diff = ($hb_value - $hb_target) / 2;
+                    $adjusted_sv = (int) max(0, round($sv_value - $diff, 0));
+                    break;
+                
+                case '421':
+                    if ($hb_value < $hb_target) {
+                        $ratio = $hb_value > 0 ? ($hb_value / ($hb_target > 0 ? $hb_target : $hb_value)) : 0;
+                        $adjusted_sv = (int) max(0, round($sv_value + ($sv_value * (1 - $ratio))));
+                    } else if ($hb_value > $hb_target) {
+                        $ratio = $hb_target > 0 ? ($hb_target / ($hb_value > 0 ? $hb_value : $hb_target)) : 0;
+                        $adjusted_sv = (int) max(0, round($sv_value - ($sv_value * (1 - $ratio))));
+                    }
+                    
+                    break;
+            }
+
+            // Calculate relative difference between adjusted and original SV
+            $relative = $adjusted_sv - $sv_value;
+            $relative = $relative > 0 ? '+' . abs($relative) : ( $relative < 0 ? '-' . abs($relative) : '' );
+
+            $svp_results[] = [
+                'absolute' => $adjusted_sv,
+                'relative' => $relative ?: null
+            ];
+        }
+
+        return $svp_results;
+    }
+
     public static function getDLogsChartOptions($data) 
     {
         return [
@@ -53,6 +198,9 @@ class InsStc
                 'curve' => 'smooth',
                 'width' => 2,
             ],
+            'theme' => [
+                'mode' => session('bg'),
+            ],
             'legend' => [
                 'show' => true,
                 'position' => 'top',
@@ -68,11 +216,121 @@ class InsStc
         ];
     }
 
-    public static function getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, $width, $height)
+    public static function getRecentChartOptions($chartData, $width, $height)
     {
+        $ymax = 85;
+        $ymin = 35;
+
+        $chartData = $chartData->map(function ($group) {
+            // Sort the group by taken_at to ensure chronological order
+            $sortedGroup = $group->sortBy('taken_at');
+            
+            // Get the first timestamp as the reference point
+            $firstTimestamp = strtotime($sortedGroup->first()['taken_at']);
+    
+            return [
+                'name' => 'Series ' . $sortedGroup->first()['ins_stc_d_sum_id'],
+                'data' => $sortedGroup->map(function ($item) use ($firstTimestamp) {
+                    return [
+                        'x' => (strtotime($item['taken_at']) - $firstTimestamp) * 1000, // Convert to milliseconds
+                        'y' => $item['temp']
+                    ];
+                })->toArray()
+            ];
+        })->values()->toArray();
+
+        return [
+            'chart' => [
+                'redrawOnParentResize' => true,
+                'width' => $width . '%',
+                'height' => $height .'%',
+                'type' => 'line',
+                'toolbar' => [
+                    'show' => true,
+                    'tools' => [
+                        'download' => '<img src="/icon-download.svg" width="18">',
+                        'zoom' => '<img src="/icon-zoom-in.svg" width="18">',
+                        'zoomin' => false,
+                        'zoomout' => false,
+                        'pan' => '<img src="/icon-hand.svg" width="20">',
+                        'reset' => '<img src="/icon-zoom-out.svg" width="18">',
+                    ],
+                ],
+                'animations' => [
+                    'enabled' => true,
+                    'easing' => 'easeout',
+                    'speed' => 400,
+                    'animateGradually' => [
+                        'enabled' => false,
+                    ],
+                ],
+            ],
+            'series' => $chartData,
+            'xaxis' => [
+                'type' => 'datetime',
+                'labels' => [
+                    'show' => false,
+                    'datetimeUTC' => false
+                ],
+            ],
+            'yaxis' => [
+                'title' => [
+                    'text' => '°C',
+                    'style' => [
+                        'color' => session('bg') == 'dark' ? '#FFF' : null,
+                    ],
+                ],
+                'max' => $ymax,
+                'min' => $ymin,
+                'labels' => [
+                    'datetimeUTC' => false,
+                    'style' => [
+                        'colors' => session('bg') == 'dark' ? '#FFF' : null,
+                    ],
+                ],
+            ],
+            'stroke' => [
+                'curve' => 'smooth',
+                'width' => 1,
+            ],
+            'legend' => [
+                'show' => false,
+            ],
+            'tooltip' => [
+                'enabled' => false,
+            ],
+            'grid' => [
+                'yaxis' => [
+                    'lines' => [
+                        'show' => false,
+                    ],
+                ],
+            ],
+        ];
+
+    }
+
+    public static function getChartOptions($logs, $width, $height)
+    {
+
         $chartData = array_map(function ($log) {
             return [Self::parseDate($log['taken_at']), $log['temp']];
         }, $logs);
+
+        $temps = array_map(fn($item) => $item['temp'], $logs);
+        $sections = Self::groupValuesBySection($temps);
+
+        $zones = [
+            'zone_1' => ['section_1', 'section_2'],
+            'zone_2' => ['section_3', 'section_4'],
+            'zone_3' => ['section_5', 'section_6'],
+            'zone_4' => ['section_7', 'section_8'],
+        ];
+
+        $xzones = array_map('count', $sections);
+        $yzones = [ 40, 50, 60, 70, 80 ];
+        $ymax = 85;
+        $ymin = 35;
         $chartDataJs = json_encode($chartData);
 
         return [
@@ -131,9 +389,9 @@ class InsStc
                 ],
             ],
             'annotations' => [
-                'xaxis' => self::generateXAnnotations($xzones, $logs),
+                'xaxis' => self::generateXAnnotations($zones, $xzones, $logs),
                 'yaxis' => self::generateYAnnotations($yzones),
-                'points' => self::generatePointAnnotations($xzones, $yzones, $logs),
+                'points' => self::generatePointAnnotations($zones, $yzones, $logs),
             ],
             'grid' => [
                 'yaxis' => [
@@ -145,33 +403,50 @@ class InsStc
         ];
     }  
 
-    private static function generateXAnnotations($xzones, $logs)
+    private static function generateXAnnotations($zones, $xzones, $logs)
     {
         $annotations = [];
-        $previousCount = 0;
+        $previousCount = $xzones['preheat']; // Start after preheat
 
-        foreach ($xzones as $zone => $count) {
-            if ($count > 0) {
-                $position = $previousCount + $count;
-
-                if (isset($logs[$position])) {
-                    $annotations[] = [
-                        'x' => self::parseDate($logs[$position]['taken_at']),
-                        'borderColor' => '#bcbcbc',
-                        'label' => [
-                            'style' => [
-                                'color' => 'transparent',
-                                'background' => 'transparent',
-                            ],
-                            'text' => '',
-                        ],
-                    ];
-                }
-
-                $previousCount += $count;
+        $annotations[] = [
+            'x' => self::parseDate($logs[$previousCount]['taken_at']),
+            'borderColor' => '#bcbcbc',
+            'label' => [
+                'style' => [
+                    'color' => 'transparent',
+                    'background' => 'transparent',
+                ],
+                'text' => '',
+            ],
+        ];
+    
+        foreach ($zones as $zoneName => $zoneSections) {
+    
+            // Calculate the position of the last section's end
+            $lastSectionPosition = $previousCount;
+            foreach ($zoneSections as $section) {
+                $lastSectionPosition += $xzones[$section];
             }
+    
+            // Last border: end of the last section in the zone
+            if (isset($logs[$lastSectionPosition])) {
+                $annotations[] = [
+                    'x' => self::parseDate($logs[$lastSectionPosition]['taken_at']),
+                    'borderColor' => '#bcbcbc',
+                    'label' => [
+                        'style' => [
+                            'color' => 'transparent',
+                            'background' => 'transparent',
+                        ],
+                        'text' => '',
+                    ],
+                ];
+            }
+    
+            // Update previous count for next iteration
+            $previousCount = $lastSectionPosition;
         }
-
+    
         return $annotations;
     }
 
@@ -195,81 +470,65 @@ class InsStc
         return $annotations;
     }
 
-    private static function generatePointAnnotations($xzones, $yzones, $logs)
+    private static function generatePointAnnotations($zones, $yzones, $logs)
     {
         $pointAnnotations = [];
-        $preheatCount = $xzones['preheat'];
-        $currentIndex = $preheatCount;
-        $zoneNames = ['zone_1', 'zone_2', 'zone_3', 'zone_4'];
-        $yzonesReversed = array_reverse($yzones);
+        $temps = array_map(fn($item) => $item['temp'], $logs);
+        $medians = Self::getMediansBySection($temps);
+    
+        $counts = array_map('count', Self::groupValuesBySection($temps));
+    
+        // Calculate cumulative counts to determine x-coordinates
+        $cumulativeCounts = [];
+        $total = $counts['preheat']; // Start with full preheat count
 
-        foreach ($zoneNames as $index => $zoneName) {
-            $zoneCount = $xzones[$zoneName];
-            $midpointIndex = $currentIndex + floor($zoneCount / 2);
-            $slicedZone = InsStc::sliceZoneData($logs, $xzones, $zoneName);
-
-            if (isset($logs[$midpointIndex])) {
-                $yValue = ($yzonesReversed[$index] + $yzonesReversed[$index + 1]) / 2;
-
-                $pointAnnotations[] = [
-                    'x' => self::parseDate($logs[$midpointIndex]['taken_at']),
-                    'y' => $yValue,
-                    'marker' => [
-                        'size' => 0,
-                        'strokeWidth' => 0,
-                    ],
-                    'label' => [
-                        'borderWidth' => 0,
-                        'text' => 'Z' . ($index + 1) . ': ' . InsStc::medianTemp($slicedZone),
-                        'style' => [
-                            'background' => '#D64550',
-                            'color' => '#ffffff',
-                        ],
-                    ],
-                ];
-            }
-
-            $currentIndex += $zoneCount;
+        foreach (['section_1', 'section_2', 'section_3', 'section_4', 'section_5', 'section_6', 'section_7', 'section_8'] as $section) {
+            $total += $counts[$section];
+            $cumulativeCounts[$section] = $total;
         }
-
+    
+        $i = 0;
+        foreach ($zones as $zoneName => $zoneSections) {
+            // Calculate index as the last log entry in the cumulative count
+            $firstSection = $zoneSections[0];
+            $index = $cumulativeCounts[$firstSection]; // subtract 1 to get correct zero-based index
+    
+            // Get the 'taken_at' timestamp for this index
+            $x = self::parseDate($logs[$index]['taken_at']);
+    
+            // Calculate y as the middle of the y-zones
+            $zoneIndex = array_search($zoneName, array_keys($zones));
+            $y = $yzones[count($yzones) - $zoneIndex - 2];
+    
+            // Calculate zone value (average of two sections' median temperatures)
+            $zoneValue = round(
+                ($medians[$zoneSections[0]] + $medians[$zoneSections[1]]) / 2, 
+                2
+            );
+    
+            $pointAnnotations[] = [
+                'x' => $x,
+                'y' => $y,
+                'marker' => [
+                    'size' => 0,
+                    'strokeWidth' => 0,
+                ],
+                'label' => [
+                    'borderWidth' => 0,
+                    'text' => sprintf('%s: %.2f', __('Z') . + ++$i, $zoneValue),
+                    'style' => [
+                        'background' => '#D64550',
+                        'color' => '#ffffff',
+                    ],
+                ],
+            ];
+        }
+    
         return $pointAnnotations;
     }
-
     public static function parseDate($dateString)
     {
         return Carbon::parse($dateString)->timestamp * 1000;
-    }
-
-    public static function sliceZoneData(array $logs, array $xzones, string $selectedZone): array
-    {
-        $zoneOrder = ['preheat', 'zone_1', 'zone_2', 'zone_3', 'zone_4', 'postheat'];
-        
-        if (!in_array($selectedZone, $zoneOrder)) {
-            throw new InvalidArgumentException("Invalid zone selected: $selectedZone");
-        }
-        
-        $startIndex = 0;
-        $endIndex = 0;
-        
-        foreach ($zoneOrder as $zone) {
-            if (!isset($xzones[$zone])) {
-                continue;
-            }
-            
-            $zoneSize = $xzones[$zone];
-            $endIndex = $startIndex + $zoneSize;
-            
-            if ($zone === $selectedZone) {
-                // Ensure we don't exceed the array bounds
-                $endIndex = min($endIndex, count($logs));
-                return array_slice($logs, $startIndex, $endIndex - $startIndex);
-            }
-            
-            $startIndex = $endIndex;
-        }
-        
-        // If we get here, the selected zone wasn't found or had no logs
-        return [];
     }
 
     public static function medianTemp(array $data): float
@@ -322,56 +581,5 @@ class InsStc
                 break;
         }
         return $positionHuman;
-    }
-
-    public static function sections(string $axis): array
-    {
-        switch ($axis) {
-            case 'x':
-                return [
-                    'preheat'   => 5,
-                    'section_1' => 6,
-                    'section_2' => 6,
-                    'section_3' => 6,
-                    'section_4' => 6,
-                    'section_5' => 6,
-                    'section_6' => 6,
-                    'section_7' => 6,
-                    'section_8' => 6,
-                    'postheat'  => 5
-                ];
-                break;
-            case 'y':
-                return [ 40, 50, 60, 70, 80 ];
-                break;
-            
-            default:
-                return [];
-                break;
-        }        
-    }
-
-    public static function zones(string $axis): array
-    {
-        switch ($axis) {
-            case 'x':
-                return [
-                    'preheat'   => 5,
-                    'zone_1'    => 12,
-                    'zone_2'    => 12,
-                    'zone_3'    => 12,
-                    'zone_4'    => 12,
-                    'postheat'  => 5
-                ];
-                break;
-            case 'y':
-                return [ 40, 50, 60, 70, 80 ];
-                break;
-            
-            default:
-                return [];
-                break;
-        }
-    }
-    
+    }    
 }

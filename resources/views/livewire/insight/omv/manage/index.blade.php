@@ -43,10 +43,10 @@ new #[Layout('layouts.app')] class extends Component {};
                     </div>
                     <div class="grow truncate py-4">
                         <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Kelola perangkat') }}
+                            {{ __('Kelola alat') }}
                         </div>
                         <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
-                            {{ __('Kelola perangkat yang tersedia di line produksi') }}
+                            {{ __('Kelola alat yang tersedia di line produksi') }}
                         </div>
                     </div>
                 </div>

@@ -230,7 +230,6 @@ class InsRtcFetch extends Command
                     echo 'Response from: ' . $device->ip_address . ' (Line ' . $device->line . ')';
                     $fc2_data = $fc2_response->getData();
                     $fc3_data = $fc3_response->getData();
-                    // print_r($fc3_data);
 
                     $metric = [
                         'device_id'         => $device->id,

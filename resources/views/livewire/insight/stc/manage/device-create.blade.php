@@ -34,7 +34,7 @@ new class extends Component {
         $device->save();
 
         $this->js('$dispatch("close")');
-        $this->js('notyfSuccess("' . __('Perangkat dibuat') . '")');
+        $this->js('notyfSuccess("' . __('Alat ukur dibuat') . '")');
         $this->dispatch('updated');
 
         $this->customReset();
@@ -51,7 +51,7 @@ new class extends Component {
     <form wire:submit="save" class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Perangkat baru') }}
+                {{ __('Alat ukur baru') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>

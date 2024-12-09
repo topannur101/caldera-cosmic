@@ -10,18 +10,12 @@ new class extends Component {
     public array $logs = [['taken_at' => '', 'temp' => '']];
 
     #[On('d-logs-review')]
-    public function dLogsLoad($logs, $xzones, $yzones)
+    public function dLogsLoad($logs)
     {
-        $logs   = json_decode($logs, true);
-        $xzones = json_decode($xzones, true);
-        $yzones = json_decode($yzones, true);
-        $ymax   = $yzones ? max($yzones) + 5 : $ymax;
-        $ymin   = $yzones ? min($yzones) - 10 : $ymin;
-
-        $this->logs = $logs;
+        $this->logs = json_decode($logs, true);
 
         $this->js("
-            let options = " . json_encode(InsStc::getChartOptions($logs, $xzones, $yzones, $ymax, $ymin, 100, 100)) . ";
+            let options = " . json_encode(InsStc::getChartOptions($this->logs, 100, 100)) . ";
 
             const parent = \$wire.\$el.querySelector('#chart-container');
             parent.innerHTML = '';

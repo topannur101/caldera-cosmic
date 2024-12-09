@@ -134,7 +134,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <i class="fa fa-calendar relative"><i
                                 class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
-                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tentukan rentang tanggal') }}
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih rentang tanggal') }}
                     </div>
                 </div>
             @else

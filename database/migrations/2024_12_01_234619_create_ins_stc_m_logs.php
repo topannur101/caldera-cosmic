@@ -36,14 +36,14 @@ return new class extends Migration
             $table->tinyInteger('pv_r_8');
 
             // php modbus akan kirim ke sini
-            $table->tinyInteger('sv_c_1');
-            $table->tinyInteger('sv_c_2');
-            $table->tinyInteger('sv_c_3');
-            $table->tinyInteger('sv_c_4');
-            $table->tinyInteger('sv_c_5');
-            $table->tinyInteger('sv_c_6');
-            $table->tinyInteger('sv_c_7');
-            $table->tinyInteger('sv_c_8');
+            $table->tinyInteger('sv_p_1');
+            $table->tinyInteger('sv_p_2');
+            $table->tinyInteger('sv_p_3');
+            $table->tinyInteger('sv_p_4');
+            $table->tinyInteger('sv_p_5');
+            $table->tinyInteger('sv_p_6');
+            $table->tinyInteger('sv_p_7');
+            $table->tinyInteger('sv_p_8');
 
             // value masuk ke sini jika sudah tekan koreksi
             $table->tinyInteger('sv_w_1');

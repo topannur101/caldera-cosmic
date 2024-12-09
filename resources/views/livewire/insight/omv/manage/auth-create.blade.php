@@ -78,7 +78,7 @@ new class extends Component {
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-3">
             <div wire:key="user-select" x-data="{ open: false, userq: @entangle('userq').live }"
-                x-on:user-selected="userq = $event.detail; open = false">
+                x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
                 <div x-on:click.away="open = false">
                     <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
                         x-ref="userq" x-on:focus="open = true" id="inv-user" class="mt-3" type="text"
@@ -98,7 +98,7 @@ new class extends Component {
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
             {{-- <x-checkbox id="new-device-manage" wire:model="actions"
-                value="device-manage">{{ __('Kelola perangkat') }}</x-checkbox> --}}
+                value="device-manage">{{ __('Kelola alat') }}</x-checkbox> --}}
             <x-checkbox id="new-recipe-manage" wire:model="actions"
                 value="recipe-manage">{{ __('Kelola resep') }}</x-checkbox>
             <x-checkbox id="new-csv-download" wire:model="actions"
