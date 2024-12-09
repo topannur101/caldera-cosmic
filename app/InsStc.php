@@ -17,7 +17,7 @@ class InsStc
         'section_6' => 0.10,
         'section_7' => 0.10,
         'section_8' => 0.10,
-        'postheat' => 0.09,
+        'postheat' => 0.11,
     ];
 
     public static function groupValuesBySection($values): array
