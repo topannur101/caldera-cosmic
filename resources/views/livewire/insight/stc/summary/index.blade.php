@@ -21,6 +21,7 @@ class extends Component {
             'device'        => __('Pembacaan alat'),    
             'machine'       => __('Pembacaan mesin'), 
             'history'       => __('Riwayat'), 
+            'comparison'    => __('Perbandingan'),
             'adjustments'   => __('Penyetelan '),  
         ];
     }
@@ -66,6 +67,10 @@ class extends Component {
 
             @case('adjustments')
             <livewire:insight.stc.summary.adjustments />
+                @break
+
+            @case('comparison')
+            <livewire:insight.stc.summary.comparison />
                 @break
                 
             @case('device')

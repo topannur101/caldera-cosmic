@@ -25,7 +25,7 @@ new class extends Component {
     public array $sv_values = [];
     public array $svp_values = [];
 
-    public int $formula_id = 0;
+    public int $formula_id = 412;
     public bool $use_m_log_sv = false;
 
     public string $remarks = '';
@@ -317,7 +317,7 @@ new class extends Component {
                             <x-text-button type="button" x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $d_sum['id'] ?? 0 }}'})">
                             <div class="flex gap-x-2 uppercase">
                                 <div>
-                                   {{ Carbon\Carbon::parse($d_sum['ended_at'])->diffForHumans() }} 
+                                   {{ Carbon\Carbon::parse($d_sum['created_at'])->diffForHumans() }} 
                                 </div>                                
                                 <i class="fa fa-arrow-up-right-from-square"></i>
                             </div>

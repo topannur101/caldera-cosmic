@@ -177,9 +177,14 @@ class InsStc
             
             // Get the first timestamp as the reference point
             $firstTimestamp = strtotime($sortedGroup->first()['taken_at']);
+
+            $firstLog       = $sortedGroup->first();
+            $line           = $firstLog->ins_stc_d_sum->ins_stc_machine->line;
+            $position       = $firstLog->ins_stc_d_sum->position;
+            $positionSymbol = $position == 'upper' ? '△' : ($position == 'lower' ? '▽' : '');
     
             return [
-                'name' => 'Series ' . $sortedGroup->first()['ins_stc_d_sum_id'],
+                'name' => $line . ' ' . $positionSymbol,
                 'data' => $sortedGroup->map(function ($item) use ($firstTimestamp) {
                     return [
                         'x' => (strtotime($item['taken_at']) - $firstTimestamp) * 1000, // Convert to milliseconds
@@ -192,6 +197,7 @@ class InsStc
         return [
             'chart' => [
                 'redrawOnParentResize' => true,
+                'background' => 'transparent',
                 'width' => $width . '%',
                 'height' => $height .'%',
                 'type' => 'line',
@@ -214,6 +220,9 @@ class InsStc
                         'enabled' => false,
                     ],
                 ],
+            ],
+            'theme' => [
+                'mode' => session('bg'),
             ],
             'series' => $chartData,
             'xaxis' => [
@@ -244,7 +253,8 @@ class InsStc
                 'width' => 1,
             ],
             'legend' => [
-                'show' => false,
+                'show' => true,
+                'position' => 'right',
             ],
             'annotations' => [
                 'xaxis' => self::generateXAnnotations($zones, $xzones, $logs),
@@ -290,6 +300,7 @@ class InsStc
         return [
             'chart' => [
                 'redrawOnParentResize' => true,
+                'background' => 'transparent',
                 'width' => $width . '%',
                 'height' => $height .'%',
                 'type' => 'line',
@@ -312,6 +323,9 @@ class InsStc
                         'enabled' => false,
                     ],
                 ],
+            ],
+            'theme' => [
+                'mode' => session('bg'),
             ],
             'series' => [
                 [

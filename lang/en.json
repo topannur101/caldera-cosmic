@@ -865,5 +865,11 @@
     "Terdapat dua modus pembagian zona pada bagan.": "There are two zone distribution modes on the chart.",
     "mesin ": "machine(s)",
     "Data HB": "HB data",
-    "line ": "line(s)"
+    "line ": "line(s)",
+    "Hasil ukur untuk line dan posisi tersebut sudah ada": "Measurement results for the line and position already exist",
+    "Perbandingan": "Comparison",
+    "Belum ada hasil ukur yang dipilih": "No measurement results have been selected",
+    "Edit akun": "Edit account",
+    "Sisipkan hasil ukur": "Insert measurement results"
+
 }
