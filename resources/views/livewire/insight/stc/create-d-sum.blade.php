@@ -206,7 +206,7 @@ new class extends Component {
         }
 
         $logs = [];
-        $logTempMinEnd = 40;
+        $logTempMinEnd = 35;
 
         foreach ($rows as $row) {
             if (isset($row[0]) && isset($row[$tempColumn]) && $row[0] !== '' && $row[$tempColumn] !== '') {
