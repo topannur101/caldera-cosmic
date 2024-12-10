@@ -43,7 +43,7 @@ new class extends Component {
         foreach ($machines as $key => $machine) {
             $upper_d_sum = InsStcDSum::where('position', 'upper')
                 ->where('ins_stc_machine_id', $machine['id'])
-                ->latest('ended_at')
+                ->latest('created_at')
                 ->first();
             $upper_m_log = InsStcMLog::where('position', 'upper')
                 ->where('ins_stc_machine_id', $machine['id'])
@@ -56,7 +56,7 @@ new class extends Component {
 
             $lower_d_sum = InsStcDSum::where('position', 'lower')
                 ->where('ins_stc_machine_id', $machine['id'])
-                ->latest('ended_at')
+                ->latest('created_at')
                 ->first();
             $lower_m_log = InsStcMLog::where('position', 'lower')
                 ->where('ins_stc_machine_id', $machine['id'])

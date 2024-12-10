@@ -12,7 +12,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\User;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.app')] 
+class extends Component {
+
     use HasDateRangeFilter;
 
     #[Url]
@@ -57,20 +59,21 @@ new #[Layout('layouts.app')] class extends Component {
             $user1Id = $metric['user_1_id'];
             $user2Id = $metric['user_2_id'];
 
-            // Skip if either user_id is null
-            if ($user1Id === null || $user2Id === null) {
-                continue;
-            }
+            // Process users, handling null and duplicate scenarios
+            $usersToProcess = [];
+            if ($user1Id !== null) $usersToProcess[] = $user1Id;
+            if ($user2Id !== null && $user2Id !== $user1Id) $usersToProcess[] = $user2Id;
 
-            // Initialize users if not already in the array
-            foreach ([$user1Id, $user2Id] as $userId) {
+            // Skip if no valid users to process
+            if (empty($usersToProcess)) continue;
+
+            foreach ($usersToProcess as $userId) {
+                // Initialize user if not already in the array
                 if (!isset($highOnTimeUsers[$userId])) {
                     $user = User::find($userId);
 
                     // Skip if user not found
-                    if (!$user) {
-                        continue;
-                    }
+                    if (!$user) continue;
 
                     $highOnTimeUsers[$userId] = [
                         'id' => $userId,
@@ -86,21 +89,22 @@ new #[Layout('layouts.app')] class extends Component {
                         'on_time_ratio' => 0,
                     ];
                 }
-            }
 
-            // Increment counts based on eval
-            if ($metric['eval'] === 'on_time') {
-                $highOnTimeUsers[$user1Id]['count_on_time']++;
-                $highOnTimeUsers[$user2Id]['count_on_time']++;
-            } elseif ($metric['eval'] === 'on_time_manual') {
-                $highOnTimeUsers[$user1Id]['count_on_time_manual']++;
-                $highOnTimeUsers[$user2Id]['count_on_time_manual']++;
-            } elseif ($metric['eval'] === 'too_soon') {
-                $highOnTimeUsers[$user1Id]['count_too_soon']++;
-                $highOnTimeUsers[$user2Id]['count_too_soon']++;
-            } elseif ($metric['eval'] === 'too_late') {
-                $highOnTimeUsers[$user1Id]['count_too_late']++;
-                $highOnTimeUsers[$user2Id]['count_too_late']++;
+                // Increment counts based on eval for this user
+                switch ($metric['eval']) {
+                    case 'on_time':
+                        $highOnTimeUsers[$userId]['count_on_time']++;
+                        break;
+                    case 'on_time_manual':
+                        $highOnTimeUsers[$userId]['count_on_time_manual']++;
+                        break;
+                    case 'too_soon':
+                        $highOnTimeUsers[$userId]['count_too_soon']++;
+                        break;
+                    case 'too_late':
+                        $highOnTimeUsers[$userId]['count_too_late']++;
+                        break;
+                }
             }
         }
 
@@ -109,7 +113,9 @@ new #[Layout('layouts.app')] class extends Component {
             $user['total_count_on_time'] = $user['count_on_time'] + $user['count_on_time_manual'];
             $user['total_count'] = $user['count_on_time'] + $user['count_on_time_manual'] + $user['count_too_soon'] + $user['count_too_late'];
 
-            $user['on_time_ratio'] = $user['total_count'] > 0 ? round(($user['total_count_on_time'] / $user['total_count']) * 100, 1) : 0;
+            $user['on_time_ratio'] = $user['total_count'] > 0 
+                ? round(($user['total_count_on_time'] / $user['total_count']) * 100, 1) 
+                : 0;
         }
 
         $highOnTimeUsers = array_map(fn($item) => $item, $highOnTimeUsers);
@@ -122,26 +128,22 @@ new #[Layout('layouts.app')] class extends Component {
             return $b['total_count'] <=> $a['total_count'];
         });
 
+        // High Batch Users calculation (similar approach)
         $highBatchUsers = [];
 
         foreach ($metrics as $metric) {
             $user1Id = $metric['user_1_id'];
             $user2Id = $metric['user_2_id'];
 
-            // Skip if either user_id is null
-            if ($user1Id === null || $user2Id === null) {
-                continue;
-            }
+            $usersToProcess = [];
+            if ($user1Id !== null) $usersToProcess[] = $user1Id;
+            if ($user2Id !== null && $user2Id !== $user1Id) $usersToProcess[] = $user2Id;
 
-            // Initialize users if not already in the array
-            foreach ([$user1Id, $user2Id] as $userId) {
+            foreach ($usersToProcess as $userId) {
                 if (!isset($highBatchUsers[$userId])) {
                     $user = User::find($userId);
 
-                    // Skip if user not found
-                    if (!$user) {
-                        continue;
-                    }
+                    if (!$user) continue;
 
                     $highBatchUsers[$userId] = [
                         'id' => $userId,
@@ -151,11 +153,11 @@ new #[Layout('layouts.app')] class extends Component {
                         'total_batch' => 0,
                     ];
                 }
-            }
 
-            $highBatchUsers[$user1Id]['total_batch']++;
-            $highBatchUsers[$user2Id]['total_batch']++;
+                $highBatchUsers[$userId]['total_batch']++;
+            }
         }
+
         usort($highBatchUsers, function ($a, $b) {
             return $b['total_batch'] <=> $a['total_batch'];
         });

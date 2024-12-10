@@ -206,7 +206,7 @@ new class extends Component {
         }
 
         $logs = [];
-        $logTempMinEnd = 35;
+        $logTempMinEnd = 40;
 
         foreach ($rows as $row) {
             if (isset($row[0]) && isset($row[$tempColumn]) && $row[0] !== '' && $row[$tempColumn] !== '') {
@@ -288,7 +288,7 @@ new class extends Component {
                     'section_6'     => 'required|numeric|min:1|max:99',
                     'section_7'     => 'required|numeric|min:1|max:99',
                     'section_8'     => 'required|numeric|min:1|max:99',
-                    'postheat'      => 'required|numeric|min:1|max:99',
+                    'postheat'      => 'nullable|numeric|min:1|max:99',
                 ],
             );
 
@@ -311,7 +311,7 @@ new class extends Component {
                 $this->section_6    = $validatedData['section_6'];
                 $this->section_7    = $validatedData['section_7'];
                 $this->section_8    = $validatedData['section_8'];
-                $this->postheat     = $validatedData['postheat'];
+                $this->postheat     = $validatedData['postheat'] ?? 0;
                 $this->duration     = InsStc::duration($validatedData['started_at'], $validatedData['ended_at']);
 
                 $this->view = 'review';

@@ -59,7 +59,7 @@ class extends Component {
     public function update()
     {
         $query = InsStcDLog::query();
-        $dSumQuery = InsStcDSum::orderBy('created_at', 'desc');
+        $dSumQuery = InsStcDSum::latest('created_at');
 
         if ($this->mode === 'recents') {
             $dSumQuery->limit($this->count);

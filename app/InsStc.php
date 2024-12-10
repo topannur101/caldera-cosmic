@@ -8,16 +8,16 @@ use InvalidArgumentException;
 class InsStc
 {
     private static array $sectionRatios = [
-        'preheat' => 0.09,
-        'section_1' => 0.10,
-        'section_2' => 0.10,
-        'section_3' => 0.10,
-        'section_4' => 0.10,
-        'section_5' => 0.10,
-        'section_6' => 0.10,
-        'section_7' => 0.10,
-        'section_8' => 0.10,
-        'postheat' => 0.11,
+        'preheat' => 0.08,
+        'section_1' => 0.11,
+        'section_2' => 0.11,
+        'section_3' => 0.11,
+        'section_4' => 0.11,
+        'section_5' => 0.11,
+        'section_6' => 0.11,
+        'section_7' => 0.11,
+        'section_8' => 0.11,
+        'postheat' => 0.06,
     ];
 
     public static function groupValuesBySection($values): array
