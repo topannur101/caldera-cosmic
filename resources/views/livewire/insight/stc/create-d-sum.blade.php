@@ -90,6 +90,7 @@ new class extends Component {
     {
 
         if ($this->view == 'review') {
+
             $d_sum = new InsStcDsum();
             Gate::authorize('manage', $d_sum);
 
@@ -136,38 +137,47 @@ new class extends Component {
                 'message' => ''
             ];
 
-            try {
-                // Send section data
-                $insStcPush->send('section_hb', $d_sum->ins_stc_machine->ip_address, $this->position, [
-                    $d_sum->section_1,
-                    $d_sum->section_2,
-                    $d_sum->section_3,
-                    $d_sum->section_4,
-                    $d_sum->section_5,
-                    $d_sum->section_6,
-                    $d_sum->section_7,
-                    $d_sum->section_8
-                ]);
+            if (strpos($d_sum->ins_stc_machine->ip_address, '127.') !== 0) {
 
-                // Calculate zones by averaging adjacent sections
-                $zones = [
-                    // Zone 1: Average of section 1 and 2
-                    ($d_sum->section_1 + $d_sum->section_2) / 2,
-                    // Zone 2: Average of section 3 and 4
-                    ($d_sum->section_3 + $d_sum->section_4) / 2,
-                    // Zone 3: Average of section 5 and 6
-                    ($d_sum->section_5 + $d_sum->section_6) / 2,
-                    // Zone 4: Average of section 7 and 8
-                    ($d_sum->section_7 + $d_sum->section_8) / 2
-                ];
+                try {
+                    // Send section data
+                    $insStcPush->send('section_hb', $d_sum->ins_stc_machine->ip_address, $this->position, [
+                        $d_sum->section_1,
+                        $d_sum->section_2,
+                        $d_sum->section_3,
+                        $d_sum->section_4,
+                        $d_sum->section_5,
+                        $d_sum->section_6,
+                        $d_sum->section_7,
+                        $d_sum->section_8
+                    ]);
 
-                // Send zone data
-                $insStcPush->send('zone_hb', $d_sum->ins_stc_machine->ip_address, $this->position, $zones);
-                $pushStatus['is_sent'] = true;
+                    // Calculate zones by averaging adjacent sections
+                    $zones = [
+                        // Zone 1: Average of section 1 and 2
+                        ($d_sum->section_1 + $d_sum->section_2) / 2,
+                        // Zone 2: Average of section 3 and 4
+                        ($d_sum->section_3 + $d_sum->section_4) / 2,
+                        // Zone 3: Average of section 5 and 6
+                        ($d_sum->section_5 + $d_sum->section_6) / 2,
+                        // Zone 4: Average of section 7 and 8
+                        ($d_sum->section_7 + $d_sum->section_8) / 2
+                    ];
 
-            } catch (\Exception $e) {
+                    // Send zone data
+                    $insStcPush->send('zone_hb', $d_sum->ins_stc_machine->ip_address, $this->position, $zones);
+                    $pushStatus['is_sent'] = true;
+
+                } catch (\Exception $e) {
+                    $pushStatus['is_sent'] = false;
+                    $pushStatus['message'] = htmlspecialchars($e->getMessage(), ENT_QUOTES);
+                }
+
+            } else {
+
                 $pushStatus['is_sent'] = false;
-                $pushStatus['message'] = htmlspecialchars($e->getMessage(), ENT_QUOTES);
+                $pushStatus['message'] = 'The IP is a loopback address. Ignored.';
+                
             }
             
             $this->dispatch('d_sum-created', $d_sum);

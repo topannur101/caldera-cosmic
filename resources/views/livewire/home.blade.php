@@ -76,7 +76,7 @@ class extends Component {
                 <animate attributeName="y" dur="24s" values="0%;25%;0%" repeatCount="indefinite"></animate>
                 <animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="18s" repeatCount="indefinite"></animateTransform>
             </rect>
-            </svg>
+        </svg>
     
     @if (Auth::user()->id ?? false)
         <div class="max-w-4xl mx-auto py-8 px-4 lg:px-8">

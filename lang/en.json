@@ -862,5 +862,8 @@
     "Batas": "Limit",
     "Tidak ada": "None",
     "Pembacaan alat terakhir": "Last instrument reading",
-    "Terdapat dua modus pembagian zona pada bagan.": "There are two zone distribution modes on the chart."
+    "Terdapat dua modus pembagian zona pada bagan.": "There are two zone distribution modes on the chart.",
+    "mesin ": "machine(s)",
+    "Data HB": "HB data",
+    "line ": "line(s)"
 }

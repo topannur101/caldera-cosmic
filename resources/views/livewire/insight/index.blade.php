@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\InsStcMLog;
 use App\Models\InsStcDSum;
 use App\Models\InsOmvMetric;
 use App\Models\InsRtcClump;
@@ -15,7 +16,8 @@ use Livewire\Attributes\On;
 
 new #[Layout('layouts.app')] 
 class extends Component {
-    public int $stc_lines_recent = 0;
+    public int $stc_m_logs_recent = 0;
+    public int $stc_d_sums_recent = 0;
     public int $omv_lines_recent = 0;
     public int $rtc_lines_recent = 0;
     public int $rdc_machines_recent = 0;
@@ -42,15 +44,26 @@ class extends Component {
         return false;
     }
 
-    private function getCachedStcLines(): int 
+    private function getCachedStcMLogs(): int 
     {
-        return Cache::remember('stc_lines_recent', now()->addMinutes(30), function () {
+        return Cache::remember('stc_m_logs_recent', now()->addMinutes(30), function () {
+            $timeWindow = Carbon::now()->subHours(5);
+            return InsStcMLog::where('updated_at', '>=', $timeWindow)
+                ->distinct('ins_stc_machine_id')
+                ->count('ins_stc_machine_id');
+        });
+    }
+
+    private function getCachedStcDSums(): int 
+    {
+        return Cache::remember('stc_d_sums_recent', now()->addMinutes(30), function () {
             $timeWindow = Carbon::now()->subHours(5);
             return InsStcDSum::where('updated_at', '>=', $timeWindow)
                 ->distinct('ins_stc_machine_id')
                 ->count('ins_stc_machine_id');
         });
     }
+
 
     private function getCachedOmvLines(): int 
     {
@@ -105,7 +118,8 @@ class extends Component {
 
     public function calculateMetrics()
     {
-        $this->stc_lines_recent = $this->getCachedStcLines();
+        $this->stc_m_logs_recent = $this->getCachedStcMLogs();
+        $this->stc_d_sums_recent = $this->getCachedStcDSums();
         $this->omv_lines_recent = $this->getCachedOmvLines();
         $this->rtc_lines_recent = $this->getCachedRtcLines();
         $this->rdc_machines_recent = $this->getCachedRdcMachines();
@@ -118,7 +132,8 @@ class extends Component {
     #[On('recalculate')]
     public function recalculate()
     {
-        Cache::forget('stc_lines_recent');
+        Cache::forget('stc_m_logs_recent');
+        Cache::forget('stc_d_sums_recent');
         Cache::forget('omv_lines_recent');
         Cache::forget('rtc_lines_recent');
         Cache::forget('rdc_machines_recent');
@@ -191,8 +206,10 @@ class extends Component {
                                     <div class="text-sm">{{ __('Kendali temperatur chamber IP') }}</div>
                                     <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
-                                        <div class="w-2 h-2 {{ $stc_lines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
-                                        <div class="">{{ $stc_lines_recent > 0 ? $stc_lines_recent . ' ' . __('line daring') : __('luring') }}</div>
+                                        <div class="w-2 h-2 {{ $stc_m_logs_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
+                                        <div>{{ $stc_m_logs_recent > 0 ? $stc_m_logs_recent . ' ' . __('line ') : __('luring') }}</div>
+                                        <div>•</div>
+                                        <div>{{ __('Data HB') . ': ' . $stc_d_sums_recent . ' ' . __('line ') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -308,7 +325,7 @@ class extends Component {
                                     <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $omv_lines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
-                                        <div class="">{{ $omv_lines_recent > 0 ? $omv_lines_recent . ' ' . __('line daring') : __('luring') }}</div>
+                                        <div class="">{{ $omv_lines_recent > 0 ? $omv_lines_recent . ' ' . __('line ') : __('luring') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -347,7 +364,7 @@ class extends Component {
                                     <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $rtc_lines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
-                                        <div class="">{{ $rtc_lines_recent > 0 ? $rtc_lines_recent . ' ' . __('line daring') : __('luring') }}</div>
+                                        <div class="">{{ $rtc_lines_recent > 0 ? $rtc_lines_recent . ' ' . __('line ') : __('luring') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -386,7 +403,7 @@ class extends Component {
                                     <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $rdc_machines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
-                                        <div class="">{{ $rdc_machines_recent > 0 ? $rdc_machines_recent . ' ' . __('mesin daring') : __('luring') }}</div>
+                                        <div class="">{{ $rdc_machines_recent > 0 ? $rdc_machines_recent . ' ' . __('mesin ') : __('luring') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -470,7 +487,7 @@ class extends Component {
                                     <hr class="border-neutral-200 dark:border-neutral-700" />
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $ldc_codes_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
-                                        <div class="">{{ $ldc_codes_recent > 0 ? $ldc_codes_recent . ' ' . __('mesin daring') : __('luring') }}</div>
+                                        <div class="">{{ $ldc_codes_recent > 0 ? $ldc_codes_recent . ' ' . __('mesin ') : __('luring') }}</div>
                                     </div>
                                 </div>
                             </div>
