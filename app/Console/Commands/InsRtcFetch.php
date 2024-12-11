@@ -135,7 +135,7 @@ class InsRtcFetch extends Command
             $st_cr = $metric['st_correct_right'];
 
             // Save 'thin' or 'thick' action if there's new correction system time
-            if ($st_cl !== $this->st_cl_prev[$metric['device_id']]) {
+            if (($st_cl !== $this->st_cl_prev[$metric['device_id']]) && $metric['is_correcting']) {
                 $action_left = $this->action($metric['push_thin_left'], $metric['push_thick_left']);
                 $thin_left  = (int) $metric['push_thin_left'];
                 $thick_left = (int) $metric['push_thick_left'];
@@ -145,7 +145,7 @@ class InsRtcFetch extends Command
                 $this->st_cl_prev[$metric['device_id']] = $st_cl;
             }
 
-            if ($st_cr !== $this->st_cr_prev[$metric['device_id']]) {
+            if ($st_cr !== $this->st_cr_prev[$metric['device_id']] && $metric['is_correcting']) {
                 $action_right = $this->action($metric['push_thin_right'], $metric['push_thick_right']);
                 $thin_right  = (int) $metric['push_thin_right'];
                 $thick_right = (int) $metric['push_thick_right'];
