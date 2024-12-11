@@ -46,6 +46,8 @@ new class extends Component {
     public float    $section_8 = 0;
     public float    $postheat = 0;
 
+    public bool $auto_adjust = true;
+
     public string $view = 'initial';
     public string $duration;
 
@@ -174,16 +176,19 @@ new class extends Component {
                 }
 
             } else {
-
                 $pushStatus['is_sent'] = false;
                 $pushStatus['message'] = 'The IP is a loopback address. Ignored.';
-                
             }
+
+            $d_sum = $d_sum->toArray();
+            $d_sum['auto_adjust'] = $pushStatus['is_sent'] && $this->auto_adjust;
             
             $this->dispatch('d_sum-created', $d_sum);
-            if ($pushStatus['is_sent']) {
+
+            if ($pushStatus['is_sent'] && !$this->auto_adjust) {
                 $this->js('notyfSuccess("' . __('Nilai HB disimpan dan dikirim ke HMI') . '")');
-            } else {
+
+            } else if(!$pushStatus['is_sent']) {
                 $this->js('notyfSuccess("' . __('Nilai HB disimpan namun tidak dikirim ke HMI. Periksa console.') . '")');
                 $this->js('console.log("' . $pushStatus['message'] . '")');
             }
@@ -385,9 +390,32 @@ new class extends Component {
 <div>
     <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">{{ __('Pembacaan alat') }}</h1>
     <div class="w-full my-8">
+        <div wire:key="modals">
         <x-modal name="d-logs-review" maxWidth="2xl">
             <livewire:insight.stc.create-d-sum-review />
         </x-modal>
+            <x-modal name="auto-adjustment-help">
+                <div class="p-6">
+                    <div class="flex justify-between items-start">
+                        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                            {{ __('Setel otomatis') }}
+                        </h2>
+                        <x-text-button type="button" x-on:click="$dispatch('close')"><i
+                                class="fa fa-times"></i></x-text-button>
+                    </div>
+                    <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
+                        <div>
+                            {{ __('SV Prediksi (SVP) akan dikirim langsung ke HMI setelah data pengukuran berhasil disimpan.') }}
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <x-primary-button type="button" x-on:click="$dispatch('close')">
+                            {{ __('Paham') }}
+                        </x-primary-button>
+                    </div>
+                </div>
+            </x-modal>
+        </div>
         <div x-data="{ dropping: false }" class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             @switch($view)
                 @case('initial')
@@ -540,15 +568,7 @@ new class extends Component {
                                         </tr>
                                         <tr>
                                             <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Operator') . ' 1' . ': ' }}
-                                            </td>
-                                            <td>
-                                                {{ Auth::user()->name . ' (' . Auth::user()->emp_id . ')' }}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Operator') . ' 2' . ': ' }}
+                                                {{ __('Mitra kerja') . ': ' }}
                                             </td>
                                             <td>
                                                 {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}
@@ -572,10 +592,10 @@ new class extends Component {
                                     <table class="table table-xs table-col-heading-fit">
                                         <tr>
                                             <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Line') . ': ' }}
+                                                {{ __('Line') . '/' . __('Posisi') . ': ' }}
                                             </td>
                                             <td>
-                                                {{ $machines->firstWhere('id', $this->machine_id)->line }}
+                                                {{ $machines->firstWhere('id', $this->machine_id)->line . ' ' . InsStc::positionHuman($position) }}
                                             </td>
                                         </tr>
                                         <tr>
@@ -584,14 +604,6 @@ new class extends Component {
                                             </td>
                                             <td>
                                                 {{ $machines->firstWhere('id', $this->machine_id)->code . ' (' . $machines->firstWhere('id', $this->machine_id)->name . ')' }}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Posisi') . ': ' }}
-                                            </td>
-                                            <td>
-                                                {{ InsStc::positionHuman($position) }}
                                             </td>
                                         </tr>
                                         <tr>
@@ -644,15 +656,7 @@ new class extends Component {
                                     </tr>
                                     <tr>
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Pengguna') . ' 1' . ': ' }}
-                                        </td>
-                                        <td>
-                                            {{ Auth::user()->name . ' (' . Auth::user()->emp_id . ')' }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Pengguna') . ' 2' . ': ' }}
+                                            {{ __('Mitra kerja') . ': ' }}
                                         </td>
                                         <td>
                                             {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}
@@ -676,10 +680,10 @@ new class extends Component {
                                 <table class="table table-xs table-col-heading-fit">
                                     <tr>
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Line') . ': ' }}
+                                            {{ __('Line') . '/' . __('Posisi') . ': ' }}
                                         </td>
                                         <td>
-                                            {{ $machines->firstWhere('id', $this->machine_id)->line }}
+                                            {{ $machines->firstWhere('id', $this->machine_id)->line . ' ' . InsStc::positionHuman($position) }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -688,14 +692,6 @@ new class extends Component {
                                         </td>
                                         <td>
                                             {{ $machines->firstWhere('id', $this->machine_id)->code . ' (' . $machines->firstWhere('id', $this->machine_id)->name . ')' }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Posisi') . ': ' }}
-                                        </td>
-                                        <td>
-                                            {{ InsStc::positionHuman($position) }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -710,7 +706,7 @@ new class extends Component {
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
                                             {{ __('SV') . ': ' }}
                                         </td>
-                                        <td class="flex gap-x-3">
+                                        <td class="flex gap-x-2">
                                             @foreach ($sv_temps as $sv_temp)
                                                 <div>
                                                     {{ $sv_temp }}
@@ -723,6 +719,9 @@ new class extends Component {
                                     </tr>
                                 </table>
                             </dd>
+                            @error('file')
+                                <x-input-error messages="{{ $message }}" class="px-1 mt-2" />
+                            @enderror
                         </div>
                         <div class="flex flex-col py-6">
                             <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">
@@ -731,18 +730,10 @@ new class extends Component {
                                 <table class="table table-xs table-col-heading-fit">
                                     <tr>
                                         <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Waktu awal') . ': ' }}
+                                            {{ __('Latensi unggah') . ': ' }}
                                         </td>
                                         <td>
-                                            {{ $started_at }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Waktu akhir') . ': ' }}
-                                        </td>
-                                        <td>
-                                            {{ $ended_at }}
+                                            {{ InsStc::duration($this->ended_at, Carbon::now() ) }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -794,6 +785,14 @@ new class extends Component {
                                 </table>
                             </dd>
                         </div>
+                        <div class="py-6">
+                            <x-toggle name="d-sum-auto_adjust" wire:model.live="auto_adjust"
+                            :checked="$auto_adjust ? true : false">{{ __('Setel otomatis') }}<x-text-button type="button"
+                                class="ml-2" x-data=""
+                                x-on:click="$dispatch('open-modal', 'auto-adjustment-help')"><i
+                                    class="far fa-question-circle"></i></x-text-button>
+                        </x-toggle>
+                        </div>
                     </dl>
                 @break
 
@@ -831,7 +830,7 @@ new class extends Component {
                         <x-secondary-button type="button"
                             wire:click="$set('view', 'upload'), $">{{ __('Mundur') }}</x-secondary-button>
                         <x-secondary-button type="button"
-                            x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}' })">{{ __('Tinjau data') }}</x-secondary-button>
+                            x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}' })">{{ __('Tinjau') }}</x-secondary-button>
                         <x-primary-button type="button" wire:click="save">{{ __('Simpan') }}</x-primary-button>
                     @endif
                 </div>

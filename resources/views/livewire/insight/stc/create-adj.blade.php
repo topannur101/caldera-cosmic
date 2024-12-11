@@ -27,6 +27,7 @@ new class extends Component {
 
     public int $formula_id = 412;
     public bool $use_m_log_sv = false;
+    public bool $auto_adjust = false;
 
     public string $remarks = '';
 
@@ -73,6 +74,7 @@ new class extends Component {
     {
         $this->machine_id   = $dSum['ins_stc_machine_id'];
         $this->position     = $dSum['position'];
+        $this->auto_adjust  = $dSum['auto_adjust'];
     }
 
     public function with(): array
@@ -128,6 +130,11 @@ new class extends Component {
                 $this->svp_values = [];
             }
 
+            if ($this->auto_adjust) {
+                $this->send();
+                $this->reset(['auto_adjust']);
+            }
+
         }
 
         return [
@@ -158,7 +165,13 @@ new class extends Component {
             ]);
 
             $this->saveAdj();
-            $this->js('notyfSuccess("' . __('SVP terkirim ke HMI') . '")');
+
+            if ($this->auto_adjust) {
+                $this->js('notyfSuccess("' . __('Data HB dan SV prediksi terkirim ke HMI') . '")');
+            } else {
+                $this->js('notyfSuccess("' . __('SV prediksi terkirim ke HMI') . '")');
+            }
+            
 
         } catch (\InvalidArgumentException $e) {
             // Handle validation errors

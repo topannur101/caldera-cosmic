@@ -3,44 +3,39 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 
+use App\Models\LatihanKelas;
+
 new  #[Layout('layouts.app')] 
 class extends Component {
 
-    public int $angka = 0;
-    public string $nama = 'Test';
+    public string $nama = '';
+    public int $lantai;
 
-    public function tambahin()
+    public function simpan()
     {
-        $this->angka = $this->angka + 1;
-    }
-
-    public function kurangin()
-    {
-        $this->angka = $this->angka - 1;
-
-    }
-
-    public function yakinGanti()
-    {
-
+        LatihanKelas::create([
+            'nama' => $this->nama,
+            'lantai' => $this->lantai
+        ]);              
     }
 
 }; ?>
 
 
-<div>
-
-    <div class="flex p-6 gap-3">
-        <x-secondary-button type="button" wire:click="kurangin">- Kurang</x-secondary-button>
-        <span>{{ $angka }}</span>
-        <x-secondary-button type="button" wire:click="tambahin">+ Tambah</x-secondary-button>
-    </div>
-
-    <div>
-        {{ $nama }}
-        <x-secondary-button type="button" wire:click="yakinGanti">Ganti nama</x-secondary-button>
-    </div>
-    <div class="mx-auto w-32">
-        <x-text-input wire:model="nama"></x-text-input>
-    </div>
+<div class="text-white">
+    <form wire:submit.prevent="simpan" class="mx-auto max-w-md  p-6">
+        <div class="mb-6">Buat kelas baru</div>
+        <div>Nama kelas: {{ $nama }}</div>
+        <input type="text" class="bg-neutral-500" wire:model.live="nama" />
+        <div>Lantai: {{ $lantai }}</div>
+        <select class="bg-neutral-500" wire:model.live="lantai">
+            <option value=""></option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <div class="mt-6">
+            <button type="submit" class="bg-neutral-500">Simpan</button>
+        </div>
+    </form>
 </div>
