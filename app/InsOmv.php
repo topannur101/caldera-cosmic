@@ -108,7 +108,7 @@ class InsOmv
         ];
     }
 
-    public static function getBatchCountChartOptions($data, string $groupBy)
+    public static function getBatchEvalChartOptions($data, string $groupBy)
     {
         $groupByName = '';
         switch ($groupBy) {
@@ -202,6 +202,98 @@ class InsOmv
                 'categories' => $groups,
                 'title' => [
                     'text' => $groupBy == 'line' ? __('Jumlah batch') : __('Persentase evaluasi'),
+                ],
+                'labels' => [
+                    'formatter' => null,
+                ],
+            ],
+            'fill' => [
+                'opacity' => 1,
+            ],
+            'legend' => [
+                'position' => 'top',
+                'horizontalAlign' => 'left',
+                'offsetX' => 40,
+                'markers' => [
+                    'strokeWidth' => 0,
+                ]
+            ],
+        ];
+    }
+
+    public static function getBatchIdentityChartOptions($data)
+    {
+        $groups = array_map(function($group) {
+            return __('Tim') . " " . $group;
+        }, array_keys($data->toArray()));
+        
+        return [
+            'series' => [
+                [
+                    'name' => __('Dengan Kode'),
+                    'data' => $data->pluck('with_code')->values(),
+                    'color' => '#80CC80',  // Pastel green
+                ],
+                [
+                    'name' => __('Tanpa Kode'),
+                    'data' => $data->pluck('without_code')->values(),
+                    'color' => '#FF8080',  // Pastel red
+                ],
+            ],
+            'chart' => [
+                'type' => 'bar',
+                'height' => '100%',
+                'background' => 'transparent',
+                'stacked' => true,
+                'stackType' => '100%',
+                'toolbar' => [
+                    'show' => true,
+                    'tools' => [
+                        'download' => '<img src="/icon-download.svg" width="18">',
+                        'zoom' => '<img src="/icon-zoom-in.svg" width="18">',
+                        'zoomin' => false,
+                        'zoomout' => false,
+                        'pan' => '<img src="/icon-hand.svg" width="20">',
+                        'reset' => '<img src="/icon-zoom-out.svg" width="18">',
+                    ],
+                ],
+            ],
+            'dataLabels' => [
+                'formatter' => null,
+                'background' => [
+                    'enabled' => false,
+                ]
+            ],
+            'plotOptions' => [
+                'bar' => [
+                    'horizontal' => true,
+                    'dataLabels' => [
+                        'total' => [
+                            'enabled' => true,
+                            'style' => [
+                                'fontSize' => '11px',
+                                'fontWeight' => 900,
+                                'color' => session('bg') == 'dark' ? '#FFF' : null
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'stroke' => [
+                'width' => 0
+            ],
+            'theme' => [
+                'mode' => session('bg'),
+            ],
+            'tooltip' => [
+                'y'=> [
+                    'formatter' => null
+                ],
+            ],
+            'xaxis' => [
+                'categories' => $groups,
+                'title' => [
+                    'text' => __('Persentase identitas'),
                 ],
                 'labels' => [
                     'formatter' => null,

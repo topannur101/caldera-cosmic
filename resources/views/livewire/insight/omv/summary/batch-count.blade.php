@@ -52,11 +52,6 @@ class extends Component {
             })
             ->whereBetween('start_at', [$start, $end]);
 
-        // $this->batch_total = $metrics->count();
-        // $this->duration_avg = round($metrics->get()->average(function ($metric) {
-        //     return Carbon::parse($metric->start_at)->diffInMinutes(Carbon::parse($metric->end_at));
-        // }), 1);
-
         $dataByTeam = $metrics->get()->groupBy('team')
             ->map(function ($teamMetrics) {
                 return [
@@ -73,7 +68,7 @@ class extends Component {
         $this->js(
             "
             let options = " .
-                json_encode(InsOmv::getBatchCountChartOptions($dataByTeam, 'team')) .
+                json_encode(InsOmv::getBatchEvalChartOptions($dataByTeam, 'team')) .
                 ";
                 
             // Fix the formatters
@@ -101,6 +96,48 @@ class extends Component {
             ",
         );
 
+        $dataByIdentity = $metrics->get()->groupBy('team')
+            ->map(function ($teamMetrics) {
+                return [
+                    'with_code'     => $teamMetrics->whereNotNull('ins_rubber_batch_id')->count(),
+                    'without_code'  => $teamMetrics->whereNull('ins_rubber_batch_id')->count(),
+                ];
+            })
+            ->sortBy(function ($value, $key) {
+                return $key;
+            });
+
+        $this->js(
+            "
+            let options = " .
+                json_encode(InsOmv::getBatchIdentityChartOptions($dataByIdentity, 'team')) .
+                ";
+                
+            // Fix the formatters
+            options.xaxis.labels.formatter = function(val) { 
+                return val; 
+            };
+
+            options.plotOptions.bar.dataLabels.total.formatter = function(val) {
+                return val.toFixed(0);
+            }
+
+            options.dataLabels.formatter = function(val) {
+                return val.toFixed(1) + '%';            
+            };
+
+            options.tooltip.y.formatter = function(val) {
+                return val + ' " . __('batch') . "';       
+            };
+
+            // Render chart
+            const chartContainer = \$wire.\$el.querySelector('#omv-summary-batch-count-by-identity-chart-container');
+            chartContainer.innerHTML = '<div class=\"chart\"></div>';
+            let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
+            chart.render();
+            ",
+        );
+
         $dataByLine = $metrics->get()->groupBy('line')
             ->map(function ($lineMetrics) {
                 return [
@@ -117,7 +154,7 @@ class extends Component {
         $this->js(
             "
             let options = " .
-                json_encode(InsOmv::getBatchCountChartOptions($dataByLine, 'line')) .
+                json_encode(InsOmv::getBatchEvalChartOptions($dataByLine, 'line')) .
                 ";
                 
             // Fix the formatters
@@ -239,20 +276,21 @@ class extends Component {
     <div wire:key="modals"> 
 
     </div>
-    <div wire:key="omv-summary-batch-count" class="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
-        <div>
-            <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
-                {{ __('Berdasarkan tim') }}</h1>
-            <div wire:key="omv-summary-batch-count-by-team-chart" class="h-[32rem] bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
-                id="omv-summary-batch-count-by-team-chart-container" wire:key="omv-summary-batch-count-by-team-chart-container" wire:ignore> 
-            </div>
+    <div class="hidden sm:grid grid-cols-2 mb-2">
+        <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
+            {{ __('Berdasarkan tim') }}</h1>
+        <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
+            {{ __('Berdasarkan line') }}</h1>
+    </div>
+    <div wire:key="omv-summary-batch-count" class="grid grid-cols-1 grid-rows-3 sm:grid-cols-2 sm:grid-rows-2 gap-3 h-[96rem] sm:h-[32rem]">
+        <div wire:key="omv-summary-batch-count-by-team-chart" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
+            id="omv-summary-batch-count-by-team-chart-container" wire:key="omv-summary-batch-count-by-team-chart-container" wire:ignore> 
         </div>
-        <div>
-            <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
-                {{ __('Berdasarkan line') }}</h1>
-            <div wire:key="omv-summary-batch-count-by-line-chart" class="h-[32rem] bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
-                id="omv-summary-batch-count-by-line-chart-container" wire:key="omv-summary-batch-count-by-line-chart-container" wire:ignore>
-            </div>  
+        <div wire:key="omv-summary-batch-count-by-line-chart" class="row-span-1 sm:row-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
+            id="omv-summary-batch-count-by-line-chart-container" wire:key="omv-summary-batch-count-by-line-chart-container" wire:ignore>
+        </div> 
+        <div wire:key="omv-summary-batch-count-by-identity-chart" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
+            id="omv-summary-batch-count-by-identity-chart-container" wire:key="omv-summary-batch-count-by-identity-chart-container" wire:ignore> 
         </div>
     </div>
 </div>
