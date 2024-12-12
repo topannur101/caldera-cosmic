@@ -189,8 +189,8 @@ new class extends Component {
                     </div>
                     <div class="grow">
                         <div
-                            class="flex items-center py-6 border-b border-neutral-100 dark:border-neutral-700">
-                            <div class="px-3 py-2 -rotate-90">{{ __('Atas') }}</div>
+                            class="flex items-center py-3 border-b border-neutral-100 dark:border-neutral-700">
+                            <div class="px-2">△</div>
                             <div class="grow grid grid-cols-1">
                                 <div>
                                     <div
@@ -270,8 +270,8 @@ new class extends Component {
                             </div>
                         </div>
                         <div
-                            class="flex items-center py-6">
-                            <div class="px-3 py-2 -rotate-90">{{ __('Bawah') }}</div>
+                            class="flex items-center py-3">
+                            <div class="px-2">▽</div>
                             <div class="grow grid grid-cols-1">
                                 <div>
                                     <div
