@@ -12,7 +12,12 @@ class extends Component {
 
     public string $code = '';
 
-    public bool $immediate_queue = true;
+    public bool $immediate_queue = false;
+
+    public function mount()
+    {
+        $this->immediate_queue = Gate::allows('manage', InsRdcTest::class);
+    }
 
     #[On('updated')]
     public function with(): array
@@ -45,8 +50,11 @@ class extends Component {
 
         } else {
 
+            $batch = InsRubberBatch::firstOrCreate(
+                    ['code' => $this->code]
+                );
+
             if ($this->immediate_queue) {
-                $batch = InsRubberBatch::where('code', $this->code)->first();
 
                 if ($batch->rdc_eval == 'queue') {
                     $this->js('notyfError("'. __('Sudah diantrikan') . '")'); 
@@ -60,9 +68,6 @@ class extends Component {
                 }
 
             } else {
-                $batch = InsRubberBatch::firstOrCreate(
-                    ['code' => $this->code]
-                );
 
                 $this->js('$dispatch("open-modal", "batch-info"); $dispatch("batch-load", { 
                     id: ' . $batch->id . ', 
@@ -97,11 +102,13 @@ class extends Component {
     <div class="flex flex-col items-center gap-y-8 sm:flex-row">
         <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">
             {{ __('Antrian pengujian') }}</h1>
-        <div>
-            <x-toggle name="auto_queue" wire:model.live="immediate_queue"
-                :checked="$immediate_queue ? true : false">{{ __('Langsung antrikan') }}
-            </x-toggle>
-        </div>
+        @can('manage', InsRdcTest::class)
+            <div>
+                <x-toggle name="auto_queue" wire:model="immediate_queue"
+                    :checked="$immediate_queue ? true : false">{{ __('Langsung antrikan') }}
+                </x-toggle>
+            </div>
+        @endcan
         <div class="px-8">
             <form wire:submit="batchQuery" class="btn-group">
                 <x-text-input class="w-20" wire:model="code" id="rdc-code" placeholder="{{ __('Kode') }}"></x-text-input->
