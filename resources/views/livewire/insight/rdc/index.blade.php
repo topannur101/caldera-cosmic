@@ -12,6 +12,8 @@ class extends Component {
 
     public string $code = '';
 
+    public bool $immediate_queue = true;
+
     #[On('updated')]
     public function with(): array
     {
@@ -43,24 +45,42 @@ class extends Component {
 
         } else {
 
-            $batch = InsRubberBatch::firstOrCreate(
-                ['code' => $this->code]
-            );
-            $this->js('$dispatch("open-modal", "batch-info"); $dispatch("batch-load", { 
-                id: ' . $batch->id . ', 
-                updated_at_human: "' . $batch->updated_at->diffForHumans() . '", 
-                code: "' . $batch->code . '", 
-                model: "' . $batch->model . '", 
-                color: "' . $batch->color . '", 
-                mcs: "' . $batch->mcs . '", 
-                code_alt: "' . $batch->code_alt . '", 
-                omv_eval: "' . $batch->omv_eval . '", 
-                omv_eval_human: "' . $batch->omvEvalHuman() . '",
-                rdc_eval: "' . $batch->rdc_eval . '", 
-                rdc_eval_human: "' . $batch->rdcEvalHuman() . '",
-                rdc_tests_count: "' . $batch->ins_rdc_tests->count() . '"
-            })');
+            if ($this->immediate_queue) {
+                $batch = InsRubberBatch::where('code', $this->code)->first();
+
+                if ($batch->rdc_eval == 'queue') {
+                    $this->js('notyfError("'. __('Sudah diantrikan') . '")'); 
+
+                } else {
+                    $batch->update([
+                        'rdc_eval' => 'queue'
+                    ]);
+                    $this->js('notyfSuccess("' . __('Ditambahkan ke antrian') . '")');
+                    $this->dispatch('updated');
+                }
+
+            } else {
+                $batch = InsRubberBatch::firstOrCreate(
+                    ['code' => $this->code]
+                );
+
+                $this->js('$dispatch("open-modal", "batch-info"); $dispatch("batch-load", { 
+                    id: ' . $batch->id . ', 
+                    updated_at_human: "' . $batch->updated_at->diffForHumans() . '", 
+                    code: "' . $batch->code . '", 
+                    model: "' . $batch->model . '", 
+                    color: "' . $batch->color . '", 
+                    mcs: "' . $batch->mcs . '", 
+                    code_alt: "' . $batch->code_alt . '", 
+                    omv_eval: "' . $batch->omv_eval . '", 
+                    omv_eval_human: "' . $batch->omvEvalHuman() . '",
+                    rdc_eval: "' . $batch->rdc_eval . '", 
+                    rdc_eval_human: "' . $batch->rdcEvalHuman() . '",
+                    rdc_tests_count: "' . $batch->ins_rdc_tests->count() . '"
+                })');
+            }
             $this->reset(['code']);
+
         }
     }
 };
@@ -74,9 +94,14 @@ class extends Component {
 </x-slot>
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
-    <div class="flex flex-col gap-y-8 sm:flex-row">
+    <div class="flex flex-col items-center gap-y-8 sm:flex-row">
         <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">
             {{ __('Antrian pengujian') }}</h1>
+        <div>
+            <x-toggle name="auto_queue" wire:model.live="immediate_queue"
+                :checked="$immediate_queue ? true : false">{{ __('Langsung antrikan') }}
+            </x-toggle>
+        </div>
         <div class="px-8">
             <form wire:submit="batchQuery" class="btn-group">
                 <x-text-input class="w-20" wire:model="code" id="rdc-code" placeholder="{{ __('Kode') }}"></x-text-input->
