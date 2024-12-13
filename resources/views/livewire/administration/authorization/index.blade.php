@@ -18,7 +18,7 @@ new #[Layout('layouts.app')] class extends Component {};
             <li>Masukkan pengguna...</li>
             <li>Inventaris</li>
             <li>IP Stabilization Control</li>
-            <li>Open Mill Validator</li>
+            <li>Open-mill Monitoring</li>
             <li>Pendataan Rheometer</li>
             <li>Rubber Thickness Control</li>
             <li>Pendataan Kulit</li>

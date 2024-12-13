@@ -47,7 +47,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Resep') . ' — ' . __('Open Mill Validator') }}</x-slot>
+<x-slot name="title">{{ __('Resep') . ' — ' . __('Open-mill Monitoring') }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-omv-sub />
 </x-slot>

@@ -22,7 +22,7 @@ class extends Component {
 
     public function batchQuery()
     {
-        $this->code = strtoupper(trim($this->code));
+        $this->code = strtoupper(trim(str_replace('#', '', $this->code)));
 
         $validator = Validator::make(
             ['code' => $this->code ],
@@ -135,3 +135,17 @@ class extends Component {
         </div>
     </div>
 </div>
+
+@script
+<script>
+    document.addEventListener('keypress', (event) => {
+        if (event.key === '#') {
+            const rdcCodeInput = document.getElementById('rdc-code');
+            if (rdcCodeInput) {
+                event.preventDefault();
+                rdcCodeInput.focus();
+            }
+        }
+    });
+</script>
+@endscript

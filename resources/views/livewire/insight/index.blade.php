@@ -269,7 +269,7 @@ class extends Component {
                     <div class="relative z-10">
                         <div class="flex items-center mb-2">
                         <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                        <h3 class="text-xl font-semibold text-white ml-2">Open Mill Validator</h3>
+                        <h3 class="text-xl font-semibold text-white ml-2">Open-mill Monitoring</h3>
                         </div>
                         <p class="text-neutral-400 text-sm mb-4">Sistem validasi proses open mill untuk mengevaluasi kepatuhan resep.</p>
                         <div class="flex justify-between items-center">
@@ -318,7 +318,7 @@ class extends Component {
                         <div class="flex grow py-4 px-2 sm:p-4">
                             <div class="grow">
                                 <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                                    {{ __('Open Mill Validator') }}
+                                    {{ __('Open-mill Monitoring') }}
                                 </div>
                                 <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                     <div class="text-sm">{{ __('Validasi proses open-roll mixing') }}</div>
