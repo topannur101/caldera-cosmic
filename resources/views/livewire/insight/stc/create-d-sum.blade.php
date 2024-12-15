@@ -398,7 +398,7 @@ new class extends Component {
                 <div class="p-6">
                     <div class="flex justify-between items-start">
                         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Setel otomatis') }}
+                            {{ __('Kirim langsung SV prediksi') }}
                         </h2>
                         <x-text-button type="button" x-on:click="$dispatch('close')"><i
                                 class="fa fa-times"></i></x-text-button>
@@ -556,33 +556,31 @@ new class extends Component {
                             <div class="flex flex-col pb-6">
                                 <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">
                                     {{ __('Informasi pengukuran') }}</dt>
-                                <dd>
-                                    <table class="table table-xs table-col-heading-fit">
-                                        <tr>
-                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Urutan') . ': ' }}
-                                            </td>
-                                            <td>
-                                                {{ $sequence }}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Mitra kerja') . ': ' }}
-                                            </td>
-                                            <td>
-                                                {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                                {{ __('Kode alat ukur') . ': ' }}
-                                            </td>
-                                            <td>
-                                                {{ $device_code }}
-                                            </td>
-                                        </tr>
-                                    </table>
+                                <dd class="grid grid-cols-2">
+                                    <div class="flex gap-x-3 items-center">
+                                        <div class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                            {{ __('Urutan') . ': ' }}
+                                        </div>
+                                        <div>
+                                            {{ $sequence }}
+                                        </div>                                        
+                                    </div>
+                                    <div class="flex gap-x-3 items-center">
+                                        <div class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                            {{ __('Mitra kerja') . ': ' }}
+                                        </div>
+                                        <div>
+                                            {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-x-3 items-center">
+                                        <div class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                            {{ __('Kode alat ukur') . ': ' }}
+                                        </div>
+                                        <div>
+                                            {{ $device_code }}
+                                        </div>
+                                    </div>
                                 </dd>
                             </div>
                             <div class="flex flex-col py-6">
@@ -644,33 +642,31 @@ new class extends Component {
                         <div class="flex flex-col pb-6">
                             <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">
                                 {{ __('Informasi pengukuran') }}</dt>
-                            <dd>
-                                <table class="table table-xs table-col-heading-fit">
-                                    <tr>
-                                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Urutan') . ': ' }}
-                                        </td>
-                                        <td>
-                                            {{ $sequence }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Mitra kerja') . ': ' }}
-                                        </td>
-                                        <td>
-                                            {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Kode alat ukur') . ': ' }}
-                                        </td>
-                                        <td>
-                                            {{ $device_code }}
-                                        </td>
-                                    </tr>
-                                </table>
+                            <dd class="grid grid-cols-2">
+                                <div class="flex gap-x-3 items-center">
+                                    <div class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Urutan') . ': ' }}
+                                    </div>
+                                    <div>
+                                        {{ $sequence }}
+                                    </div>                                        
+                                </div>
+                                <div class="flex gap-x-3 items-center">
+                                    <div class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Mitra kerja') . ': ' }}
+                                    </div>
+                                    <div>
+                                        {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}
+                                    </div>
+                                </div>
+                                <div class="flex gap-x-3 items-center">
+                                    <div class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Kode alat ukur') . ': ' }}
+                                    </div>
+                                    <div>
+                                        {{ $device_code }}
+                                    </div>
+                                </div>
                             </dd>
                         </div>
                         <div class="flex flex-col py-6">
@@ -787,7 +783,7 @@ new class extends Component {
                         </div>
                         <div class="py-6">
                             <x-toggle name="d-sum-auto_adjust" wire:model.live="auto_adjust"
-                            :checked="$auto_adjust ? true : false">{{ __('Setel otomatis') }}<x-text-button type="button"
+                            :checked="$auto_adjust ? true : false">{{ __('Kirim langsung SV prediksi') }}<x-text-button type="button"
                                 class="ml-2" x-data=""
                                 x-on:click="$dispatch('open-modal', 'auto-adjustment-help')"><i
                                     class="far fa-question-circle"></i></x-text-button>

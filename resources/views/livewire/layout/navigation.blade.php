@@ -31,7 +31,7 @@ new class extends Component {
                 <!-- Navigation Links -->
                 <div id="cal-nav-main-links-alt" class="hidden text-xs uppercase">
                     <span class="inline-flex items-center ms-10 h-full border-b-2 border-transparent font-medium leading-5 text-neutral-500 dark:text-neutral-400 dark:hover:border-neutral-700">
-                        {{ __('Open-mill Monitoring') }}
+                        {{ __('Pemantauan open mill') }}
                     </span>
                 </div>
                 <div id="cal-nav-main-links" class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex text-xs uppercase">

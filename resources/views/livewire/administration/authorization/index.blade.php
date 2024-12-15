@@ -17,11 +17,11 @@ new #[Layout('layouts.app')] class extends Component {};
         <ul>
             <li>Masukkan pengguna...</li>
             <li>Inventaris</li>
-            <li>IP Stabilization Control</li>
-            <li>Open-mill Monitoring</li>
-            <li>Pendataan Rheometer</li>
-            <li>Rubber Thickness Control</li>
-            <li>Pendataan Kulit</li>
+            <li>Kendali suhu chamber IP</li>
+            <li>Pemantauan open mill</li>
+            <li>Sistem data rheometer</li>
+            <li>Kendali tebal rubber</li>
+            <li>Sistem data kulit</li>
         </ul>
         {{-- <div class="grid grid-cols-1 gap-1 my-8 ">
             <x-card-link href="{{ route('administration.manage.shmods') }}" wire:navigate>

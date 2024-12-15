@@ -3,7 +3,7 @@
        <div>
            <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
                <x-link href="{{ route('insight.stc.manage.index') }}" class="inline-block py-6" wire:navigate><i
-                       class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('IP Stabilization Control') }}</span><span class="sm:hidden inline">{{ __('IP STC') }}</span></span>
+                       class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Kendali suhu chamber IP') }}</span><span class="sm:hidden inline">{{ __('IP STC') }}</span></span>
            </h2>
        </div>
    </div>

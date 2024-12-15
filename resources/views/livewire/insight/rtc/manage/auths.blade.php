@@ -41,7 +41,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Wewenang') . ' — ' . __('Rubber thickness control') }}</x-slot>
+<x-slot name="title">{{ __('Wewenang') . ' — ' . __('Kendali tebal rubber') }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-rtc-sub />
 </x-slot>

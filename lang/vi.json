@@ -459,7 +459,6 @@
 "Hasil": "Kết quả",
 "Tak ada mesin ditemukan": "Không tìm thấy máy",
 "Kelola mesin chamber IP Stabilization": "Quản lý máy buồng ổn định IP",
-"IP Stabilization Control": "Kiểm soát ổn định IP",
 "Sistem OKC": "Hệ thống OKC",
 "SF Terkecil": "SF Nhỏ nhất",
 "Sistem kendali temperatur dan kecepatan pada mesin chamber IP.": "Hệ thống kiểm soát nhiệt độ và tốc độ trên máy buồng IP.",
@@ -870,6 +869,23 @@
 "Perbandingan": "So sánh",
 "Belum ada hasil ukur yang dipilih": "Chưa có kết quả đo nào được chọn",
 "Edit akun": "Chỉnh sửa tài khoản",
-"Sisipkan hasil ukur": "Chèn kết quả đo"
+"Sisipkan hasil ukur": "Chèn kết quả đo",
+"Tinjau": "Xem xét",  
+"Sistem data kulit": "Hệ thống dữ liệu da",  
+"Langsung antrikan": "Xếp hàng trực tiếp",  
+"Sistem Rubber Terintegrasi": "Hệ thống cao su tích hợp",  
+"Kendali tebal rubber": "Kiểm soát độ dày cao su",  
+"SV prediksi terkirim ke HMI": "SV dự đoán được gửi đến HMI",  
+"SV Prediksi (SVP) akan dikirim langsung ke HMI setelah data pengukuran berhasil disimpan.": "SV dự đoán (SVP) sẽ được gửi trực tiếp đến HMI sau khi dữ liệu đo lường được lưu thành công.",  
+"Data HB dan SV prediksi terkirim ke HMI": "Dữ liệu HB và SV dự đoán được gửi đến HMI",  
+"Sistem Area OKC": "Hệ thống khu vực OKC",  
+"Lacak penuaan batch": "Theo dõi quá trình lão hóa lô",  
+"Sistem Area IP": "Hệ thống khu vực IP",  
+"Setel otomatis": "Cài đặt tự động",  
+"Kendali suhu chamber IP": "Kiểm soát nhiệt độ buồng IP",  
+"Sistem data rheometer": "Hệ thống dữ liệu máy đo lưu biến",  
+"Pemantauan open mill": "Giám sát máy cán mở",  
+"Kirim langsung SV prediksi": "Gửi trực tiếp SV dự đoán"  
+
 
 }

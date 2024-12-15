@@ -47,7 +47,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Alat ukur') . ' — ' . __('IP Stabilization Control') }}</x-slot>
+<x-slot name="title">{{ __('Alat ukur') . ' — ' . __('Kendali suhu chamber IP') }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-stc-sub />
 </x-slot>

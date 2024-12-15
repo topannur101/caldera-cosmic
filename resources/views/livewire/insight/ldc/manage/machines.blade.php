@@ -47,7 +47,7 @@ class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Mesin') . ' — ' . __('Pendataan Kulit') }}</x-slot>
+<x-slot name="title">{{ __('Mesin') . ' — ' . __('Sistem data kulit') }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-ldc-sub />
 </x-slot>

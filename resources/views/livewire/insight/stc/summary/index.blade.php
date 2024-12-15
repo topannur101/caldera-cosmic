@@ -34,7 +34,7 @@ class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('IP Stabilization Control') }}</x-slot>
+<x-slot name="title">{{ __('Kendali suhu chamber IP') }}</x-slot>
 
 <x-slot name="header">
     <x-nav-insights-stc></x-nav-insights-stc>

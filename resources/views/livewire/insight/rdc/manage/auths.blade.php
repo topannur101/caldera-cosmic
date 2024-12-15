@@ -41,7 +41,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Wewenang') . ' — ' . __('Pendataan Rheometer') }}</x-slot>
+<x-slot name="title">{{ __('Wewenang') . ' — ' . __('Sistem data rheometer') }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-rdc-sub />
 </x-slot>

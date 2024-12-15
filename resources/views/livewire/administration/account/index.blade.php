@@ -11,11 +11,75 @@ new #[Layout('layouts.app')]
 class extends Component {
 
     public string $userq;
+    public string $mode = '';
+    public int $user_id;
+
+    public int $password_option = 0;
+
+    public string $user_name;
+    public string $user_emp_id;
 
     #[Renderless]
     public function updatedUserq()
     {
         $this->dispatch('userq-updated', $this->userq);
+    }
+
+    public function resetPassword()
+    {
+        Gate::authorize('superuser');
+
+        $validator = Validator::make(
+            ['password_option' => $this->password_option ],
+            ['password_option' => 'required|integer|min:1|max:2'],
+            [
+                'min' => __('Kata sandi wajib dipilih')
+            ]
+        );
+
+        if ($validator->fails()) {
+
+            $errors = $validator->errors();
+            $error = $errors->first();
+            $this->js('notyfError("'.$error.'")'); 
+
+        } else {
+            $user = User::find($this->user_id);
+            $password = '';
+            switch ($this->password_option) {
+                // 11223344
+                case 1:
+                    $password = '$2y$12$nxdoZHJWSasGm3nr1wQAc.zuun0lZ3TGHC6gm8iUMHCpUhart4beS';
+                    break;
+                
+                // opop1212
+                case 2:
+                    $password = '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC';
+                    break;
+            }
+
+            if ($user && $password) {  
+                $user->update([
+                    'password' => $password
+                ]);               
+
+                $this->js('notyfSuccess("' . __('Kata sandi diperbarui') . '")');
+                $this->reset(['mode', 'password_option']);
+            }            
+        }
+    }
+
+    public function updateUser()
+    {
+        Gate::authorize('superuser');
+        dd($this->user_id);
+        $this->reset(['user_name', 'user_edit']);
+    }
+
+    public function deactivateUser()
+    {
+        Gate::authorize('superuser');
+        dd($this->user_id);
     }
 
 };
@@ -32,13 +96,13 @@ class extends Component {
         <div x-data="{ 
                 open: false, 
                 userq: @entangle('userq').live,
-                user_id: '',
+                user_id: @entangle('user_id'),
                 user_name: '',
                 user_emp_id: '',
                 user_photo: '',
                 user_is_active: '',
                 user_seen_at: '',
-                mode: '',
+                mode: @entangle('mode'),
                 userFill(event) {
                     this.open = false;
                     this.userq = '';
@@ -119,7 +183,7 @@ class extends Component {
                                 </div>
                             </div>
                         </x-card-button>
-                        <x-card-button x-on:click.prevent="mode = 'user-edit'">
+                        <x-card-button x-on:click.prevent="mode = 'user-update'">
                             <div class="flex px-8">
                                 <div>
                                     <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
@@ -128,7 +192,7 @@ class extends Component {
                                 </div>
                                 <div class="grow text-left py-4">
                                     <div class="text-neutral-900 dark:text-neutral-100">
-                                        {{ __('Edit informasi akun') }}
+                                        {{ __('Edit akun') }}
                                     </div>
                                 </div>
                             </div>
@@ -152,35 +216,36 @@ class extends Component {
                         <x-secondary-button type="button" x-on:click="userReset()">{{ __('Pilih pengguna lain') }}</x-secondary-button>
                     </div>    
                 </div>
-                <div x-show="mode == 'password-reset'" x-cloak class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
-                    <div class="p-6">
+                <div x-show="mode == 'password-reset'" x-cloak class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
+                    <form wire:submit="resetPassword" class="p-6">
                         <div class="flex justify-between items-start">
                             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                                {{ __('Perbarui kata sandi') }}
+                                {{ __('Atur ulang kata sandi') }}
                             </h2>
                             <x-text-button type="button" x-on:click="mode = ''"><i
                                     class="fa fa-times"></i></x-text-button>
                         </div>
                         <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
                             <div>
-                                {{ __('Ada dua rentetan nilai SV dan hanya satu rentetan SV yang diambil untuk perhitungan SVP (SV Prediksi).') }}
+                                {{ __('Atur kata sandi pengguna ini menjadi:') }}
                             </div>
                             <div>
-                                <span class="font-bold">{{ __('SV manual') . ': ' }}</span>{{ __('SV didapat dari pencatatan manual yang dilakukan oleh pekerja ketika mengunggah hasil catatan alat ukur (HOBO).') }}
+                                <x-radio wire:model="password_option" id="password_option-1" name="password_option" value="1">11223344</x-radio>
+                                <x-radio wire:model="password_option" id="password_option-2" name="password_option" value="2">opop1212</x-radio>
                             </div>
-                            <div>
-                                <span class="font-bold">{{ __('SV mesin') . ': ' }}</span>{{ __('SV didapat langsung dari mesin sehingga pilihan ini lebih akurat dan paling ideal.') }}
-                            </div>
+                            <div>{{ __('Peringatan: Ketika mengklik tombol dibawah berikut, Caldera tidak akan menanyakan konfirmasi dan kata sandi akan diatur sesuai dengan kata sandi yang dipilih.') }}</div>
                         </div>
                         <div class="mt-6 flex justify-end">
-                            <x-primary-button type="button" x-on:click="mode = ''">
-                                {{ __('Paham') }}
+                            <x-primary-button type="submit">
+                                {{ __('Atur kata sandi') }}
                             </x-primary-button>
                         </div>
-                    </div>
+                    </form>
+                    <x-spinner-bg wire:loading.class.remove="hidden" wire:target="resetPassword"></x-spinner-bg>
+                    <x-spinner wire:loading.class.remove="hidden" wire:target="resetPassword" class="hidden"></x-spinner>
                 </div>
-                <div x-show="mode == 'user-edit'" x-cloak class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
-                    <div class="p-6">
+                <div x-show="mode == 'user-update'" x-cloak class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
+                    <form wire:submit="updateUser" class="p-6">
                         <div class="flex justify-between items-start">
                             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ __('Edit akun') }}
@@ -190,24 +255,43 @@ class extends Component {
                         </div>
                         <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
                             <div>
-                                {{ __('Ada dua rentetan nilai SV dan hanya satu rentetan SV yang diambil untuk perhitungan SVP (SV Prediksi).') }}
+                                <label for="user-name"
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+                                <x-text-input id="user-name" wire:model="user_name" type="text" />
+                                @error('line')
+                                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                                @enderror
                             </div>
                             <div>
-                                <span class="font-bold">{{ __('SV manual') . ': ' }}</span>{{ __('SV didapat dari pencatatan manual yang dilakukan oleh pekerja ketika mengunggah hasil catatan alat ukur (HOBO).') }}
-                            </div>
-                            <div>
-                                <span class="font-bold">{{ __('SV mesin') . ': ' }}</span>{{ __('SV didapat langsung dari mesin sehingga pilihan ini lebih akurat dan paling ideal.') }}
+                                <label for="user-emp_id"
+                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nomor karyawan') }}</label>
+                                <x-text-input id="user-emp_id" wire:model="user_emp_id" type="text" />
+                                @error('ip_address')
+                                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                                @enderror
                             </div>
                         </div>
                         <div class="mt-6 flex justify-end">
-                            <x-primary-button type="button" x-on:click="$dispatch('close')">
-                                {{ __('Paham') }}
+                            <x-primary-button type="submit">
+                                {{ __('Perbarui') }}
                             </x-primary-button>
                         </div>
+                    </form>
+                    <div class="w-full h-full absolute top-0 left-0 z-10 rounded-lg bg-white/90 dark:bg-neutral-800/90">
+                        <div class="flex items-center justify-center z-20 h-full">
+                            <div class="grid gap-3">
+                                <div class="text-4xl text-center">
+                                    <i class="fa fa-radiation"></i>
+                                </div>
+                                <div>{{ __('Sedang dalam tahap pengembangan') }}</div>
+                            </div>
+                        </div>
                     </div>
+                    <x-spinner-bg wire:loading.class.remove="hidden" wire:target="updateUser"></x-spinner-bg>
+                    <x-spinner wire:loading.class.remove="hidden" wire:target="updateUser" class="hidden"></x-spinner>
                 </div>
-                <div x-show="mode == 'user-deactivate'" x-cloak class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
-                    <div class="p-6">
+                <div x-show="mode == 'user-deactivate'" x-cloak class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg">
+                    <form wire:submit="deactivateUser" class="p-6">
                         <div class="flex justify-between items-start">
                             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ __('Nonaktifkan akun') }}
@@ -217,21 +301,30 @@ class extends Component {
                         </div>
                         <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
                             <div>
-                                {{ __('Ada dua rentetan nilai SV dan hanya satu rentetan SV yang diambil untuk perhitungan SVP (SV Prediksi).') }}
+                                {{ __('Akun yang telah dibuat tidak dapat dihapus. Namun kamu dapat menonaktifkannya saja. Akun yang dinonaktifkan tidak akan muncul diberbagai pencarian namun akan masih muncul di data yang sudah ada.') }}
                             </div>
                             <div>
-                                <span class="font-bold">{{ __('SV manual') . ': ' }}</span>{{ __('SV didapat dari pencatatan manual yang dilakukan oleh pekerja ketika mengunggah hasil catatan alat ukur (HOBO).') }}
-                            </div>
-                            <div>
-                                <span class="font-bold">{{ __('SV mesin') . ': ' }}</span>{{ __('SV didapat langsung dari mesin sehingga pilihan ini lebih akurat dan paling ideal.') }}
+                                <div>{{ __('Peringatan: Ketika mengklik tombol dibawah berikut, Caldera tidak akan menanyakan konfirmasi dan akun akan langsung dinonaktifkan.') }}</div>
                             </div>
                         </div>
                         <div class="mt-6 flex justify-end">
-                            <x-primary-button type="button" x-on:click="$dispatch('close')">
-                                {{ __('Paham') }}
+                            <x-primary-button type="submit">
+                                {{ __('Nonaktifkan') }}
                             </x-primary-button>
                         </div>
+                    </form>
+                    <div class="w-full h-full absolute top-0 left-0 z-10 rounded-lg bg-white/90 dark:bg-neutral-800/90">
+                        <div class="flex items-center justify-center z-20 h-full">
+                            <div class="grid gap-3">
+                                <div class="text-4xl text-center">
+                                    <i class="fa fa-radiation"></i>
+                                </div>
+                                <div>{{ __('Sedang dalam tahap pengembangan') }}</div>
+                            </div>
+                        </div>
                     </div>
+                    <x-spinner-bg wire:loading.class.remove="hidden" wire:target="deactivateUser"></x-spinner-bg>
+                    <x-spinner wire:loading.class.remove="hidden" wire:target="deactivateUser" class="hidden"></x-spinner>
                 </div>
             </div>
         </div> 
