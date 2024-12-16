@@ -89,7 +89,7 @@ class extends Component {
         $this->js(
             "
             let recentsOptions = " . 
-            json_encode(InsStc::getRecentChartOptions($d_sums, 100, 100)) .
+            json_encode(InsStc::getStandardZoneChartOptions($d_sums, 100, 100)) .
             ";
 
             // Render recents chart

@@ -17,7 +17,7 @@ new #[Layout('layouts.app')] class extends Component {};
         <ul>
             <li>Masukkan pengguna...</li>
             <li>Inventaris</li>
-            <li>Kendali suhu chamber IP</li>
+            <li>Kendali chamber IP</li>
             <li>Pemantauan open mill</li>
             <li>Sistem data rheometer</li>
             <li>Kendali tebal rubber</li>

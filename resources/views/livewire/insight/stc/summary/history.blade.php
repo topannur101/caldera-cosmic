@@ -30,7 +30,8 @@ class extends Component {
     public string $position = '';
     
     #[Url]
-    public string $mode = 'recents';
+    public string $selection_mode = 'recents';
+    public string $present_mode = 'standard_zone';
 
     #[Url]
     public string $start_at = '';
@@ -61,10 +62,10 @@ class extends Component {
         $query = InsStcDLog::query();
         $dSumQuery = InsStcDSum::latest('created_at');
 
-        if ($this->mode === 'recents') {
+        if ($this->selection_mode === 'recents') {
             $dSumQuery->limit($this->count);
 
-        } elseif ($this->mode === 'range') {
+        } elseif ($this->selection_mode === 'range') {
             $start = Carbon::parse($this->start_at);
             $end = Carbon::parse($this->end_at)->endOfDay();
             
@@ -95,11 +96,22 @@ class extends Component {
             ->get()
             ->groupBy('ins_stc_d_sum_id');
 
+        switch ($this->present_mode) {
+            case 'standard_zone':
+                $chartOptions = InsStc::getStandardZoneChartOptions($d_sums, 100, 100);
+                break;
+
+            case 'boxplot':
+                $chartOptions = InsStc::getBoxplotChartOptions($d_sums, 100, 100);
+                break;
+        }
+
+
         // Rest of your existing code remains the same
         $this->js(
             "
             let recentsOptions = " . 
-            json_encode(InsStc::getRecentChartOptions($d_sums, 100, 100)) .
+            json_encode($chartOptions) .
             ";
 
             // Render recents chart
@@ -143,15 +155,23 @@ class extends Component {
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div>
-                <label for="history-mode"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Modus') }}</label>
-                <x-select id="history-mode" wire:model.live="mode">
-                    <option value="recents">{{ __('Pengukuran terakhir') }}</option>
+                <label for="history-selection-mode"
+                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Seleksi') }}</label>
+                <x-select id="history-selection-mode" wire:model.live="selection_mode">
+                    <option value="recents">{{ __('Data terakhir') }}</option>
                     <option value="range">{{ __('Rentang tanggal') }}</option>
                 </x-select>
             </div>
+            <div>
+                <label for="history-selection-mode"
+                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Presentasi') }}</label>
+                <x-select id="history-selection-mode" wire:model.live="present_mode">
+                    <option value="standard_zone">{{ __('Zona standar') }}</option>
+                    <option value="boxplot">{{ __('Boxplot') }}</option>
+                </x-select>
+            </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            @switch($mode)
+            @switch($selection_mode)
                 @case('recents')
                     <div>
                         <label for="history-count"

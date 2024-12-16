@@ -42,7 +42,7 @@ class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Wewenang') . ' — ' . __('Kendali suhu chamber IP') }}</x-slot>
+<x-slot name="title">{{ __('Wewenang') . ' — ' . __('Kendali chamber IP') }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-stc-sub />
 </x-slot>

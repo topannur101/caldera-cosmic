@@ -10,7 +10,7 @@ class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('Kendali suhu chamber IP') }}</x-slot>
+<x-slot name="title">{{ __('Kendali chamber IP') }}</x-slot>
 
 <x-slot name="header">
     <x-nav-insights-stc></x-nav-insights-stc>

@@ -152,7 +152,7 @@ class InsStc
         return $svp_results;
     }
 
-    public static function getRecentChartOptions($chartData, $width, $height)
+    public static function getStandardZoneChartOptions($chartData, $width, $height)
     {
         $ymax = 85;
         $ymin = 35;
@@ -260,6 +260,156 @@ class InsStc
                 'xaxis' => self::generateXAnnotations($zones, $xzones, $logs),
                 'yaxis' => self::generateYAnnotations($yzones),
                 'points' => self::generatePointAnnotations($zones, $yzones, $logs),
+            ],
+            'tooltip' => [
+                'enabled' => false,
+            ],
+            'grid' => [
+                'yaxis' => [
+                    'lines' => [
+                        'show' => false,
+                    ],
+                ],
+            ],
+        ];
+
+    }
+
+    public static function getBoxplotChartOptions($chartData, $width, $height)
+    {
+        $ymax = 85;
+        $ymin = 35;
+        $yzones = [ 40, 50, 60, 70, 80 ];
+
+        // Initialize sections to collect temperatures
+        $sectionTemperatures = [
+            'preheat' => [],
+            'section_1' => [],
+            'section_2' => [],
+            'section_3' => [],
+            'section_4' => [],
+            'section_5' => [],
+            'section_6' => [],
+            'section_7' => [],
+            'section_8' => [],
+            'postheat' => []
+        ];
+
+        // Iterate through each element in chartData
+        $chartData->each(function ($group) use (&$sectionTemperatures) {
+            // Group temperatures for this specific group
+            $groupSections = Self::groupValuesBySection($group->pluck('temp')->toArray());
+            
+            // Aggregate temperatures for each section
+            foreach ($sectionTemperatures as $section => $temps) {
+                if (isset($groupSections[$section])) {
+                    $sectionTemperatures[$section] = array_merge($sectionTemperatures[$section], $groupSections[$section]);
+                }
+            }
+        });
+
+        // Function to calculate boxplot statistics
+        $calculateBoxplotStats = function($values) {
+            if (empty($values)) {
+                return [0, 0, 0, 0, 0];
+            }
+
+            // Sort the values
+            sort($values);
+            $count = count($values);
+            
+            // Calculate quartiles
+            $min = $values[0];
+            $max = $values[$count - 1];
+            
+            // Median (Q2)
+            $medianIndex = floor(($count - 1) / 2);
+            $median = $count % 2 ? $values[$medianIndex] : 
+                ($values[$medianIndex] + $values[$medianIndex + 1]) / 2;
+            
+            // Q1 and Q3
+            $q1Index = floor(($count - 1) / 4);
+            $q3Index = floor(3 * ($count - 1) / 4);
+            $q1 = $count % 4 ? $values[$q1Index] : 
+                ($values[$q1Index] + $values[$q1Index + 1]) / 2;
+            $q3 = $count % 4 ? $values[$q3Index] : 
+                ($values[$q3Index] + $values[$q3Index + 1]) / 2;
+
+            return [$min, $q1, $median, $q3, $max];
+        };
+
+        // Prepare boxplot data
+        $boxplotData = collect($sectionTemperatures)
+            ->map(function($temps, $sectionName) use ($calculateBoxplotStats) {
+                return [
+                    'x' => $sectionName,
+                    'y' => $calculateBoxplotStats($temps)
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        return [
+            'chart' => [
+                'redrawOnParentResize' => true,
+                'background' => 'transparent',
+                'width' => $width . '%',
+                'height' => $height .'%',
+                'type' => 'boxPlot',
+                'toolbar' => [
+                    'show' => true,
+                    'tools' => [
+                        'download' => '<img src="/icon-download.svg" width="18">',
+                        'zoom' => '<img src="/icon-zoom-in.svg" width="18">',
+                        'zoomin' => false,
+                        'zoomout' => false,
+                        'pan' => '<img src="/icon-hand.svg" width="20">',
+                        'reset' => '<img src="/icon-zoom-out.svg" width="18">',
+                    ],
+                ],
+                'animations' => [
+                    'enabled' => true,
+                    'easing' => 'easeout',
+                    'speed' => 400,
+                    'animateGradually' => [
+                        'enabled' => false,
+                    ],
+                ],
+            ],
+            'theme' => [
+                'mode' => session('bg'),
+            ],
+            'series' => [
+                [
+                    'data' => $boxplotData
+                ]
+            ],
+            'yaxis' => [
+                'title' => [
+                    'text' => '°C',
+                    'style' => [
+                        'color' => session('bg') == 'dark' ? '#FFF' : null,
+                    ],
+                ],
+                'max' => $ymax,
+                'min' => $ymin,
+                'labels' => [
+                    'datetimeUTC' => false,
+                    'style' => [
+                        'colors' => session('bg') == 'dark' ? '#FFF' : null,
+                    ],
+                ],
+            ],
+            'stroke' => [
+                'curve' => 'smooth',
+                'width' => 1,
+            ],
+            'legend' => [
+                'show' => true,
+                'position' => 'right',
+            ],
+            'annotations' => [
+                'yaxis' => self::generateYAnnotations($yzones),
             ],
             'tooltip' => [
                 'enabled' => false,
