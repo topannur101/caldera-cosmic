@@ -259,7 +259,7 @@ class InsStc
             'annotations' => [
                 'xaxis' => self::generateXAnnotations($zones, $xzones, $logs),
                 'yaxis' => self::generateYAnnotations($yzones),
-                'points' => self::generatePointAnnotations($zones, $yzones, $logs),
+                'points' => self::generateZoneAnnotations($zones, $yzones, $logs),
             ],
             'tooltip' => [
                 'enabled' => false,
@@ -279,7 +279,8 @@ class InsStc
     {
         $ymax = 85;
         $ymin = 35;
-        $yzones = [ 40, 50, 60, 70, 80 ];
+        $logs = [ [ 'taken_at' => 1*60, 'temp' => 75 ], [ 'taken_at' => 2*60, 'temp' => 75 ], [ 'taken_at' => 3*60, 'temp' => 75 ], [ 'taken_at' => 4*60, 'temp' => 75 ], [ 'taken_at' => 5*60, 'temp' => 75 ], [ 'taken_at' => 6*60, 'temp' => 75 ], [ 'taken_at' => 7*60, 'temp' => 75 ], [ 'taken_at' => 8*60, 'temp' => 75 ], [ 'taken_at' => 9*60, 'temp' => 75 ], [ 'taken_at' => 10*60, 'temp' => 75 ], [ 'taken_at' => 11*60, 'temp' => 75 ], [ 'taken_at' => 12*60, 'temp' => 75 ], [ 'taken_at' => 13*60, 'temp' => 75 ], [ 'taken_at' => 14*60, 'temp' => 75 ], [ 'taken_at' => 15*60, 'temp' => 75 ], [ 'taken_at' => 16*60, 'temp' => 75 ], [ 'taken_at' => 17*60, 'temp' => 75 ], [ 'taken_at' => 18*60, 'temp' => 65 ], [ 'taken_at' => 19*60, 'temp' => 65 ], [ 'taken_at' => 20*60, 'temp' => 65 ], [ 'taken_at' => 21*60, 'temp' => 65 ], [ 'taken_at' => 22*60, 'temp' => 65 ], [ 'taken_at' => 23*60, 'temp' => 65 ], [ 'taken_at' => 24*60, 'temp' => 65 ], [ 'taken_at' => 25*60, 'temp' => 65 ], [ 'taken_at' => 26*60, 'temp' => 65 ], [ 'taken_at' => 27*60, 'temp' => 65 ], [ 'taken_at' => 28*60, 'temp' => 65 ], [ 'taken_at' => 29*60, 'temp' => 65 ], [ 'taken_at' => 30*60, 'temp' => 55 ], [ 'taken_at' => 31*60, 'temp' => 55 ], [ 'taken_at' => 32*60, 'temp' => 55 ], [ 'taken_at' => 33*60, 'temp' => 55 ], [ 'taken_at' => 34*60, 'temp' => 55 ], [ 'taken_at' => 35*60, 'temp' => 55 ], [ 'taken_at' => 36*60, 'temp' => 55 ], [ 'taken_at' => 37*60, 'temp' => 55 ], [ 'taken_at' => 38*60, 'temp' => 55 ], [ 'taken_at' => 39*60, 'temp' => 55 ], [ 'taken_at' => 40*60, 'temp' => 55 ], [ 'taken_at' => 41*60, 'temp' => 55 ], [ 'taken_at' => 42*60, 'temp' => 45 ], [ 'taken_at' => 43*60, 'temp' => 45 ], [ 'taken_at' => 44*60, 'temp' => 45 ], [ 'taken_at' => 45*60, 'temp' => 45 ], [ 'taken_at' => 46*60, 'temp' => 45 ], [ 'taken_at' => 47*60, 'temp' => 45 ], [ 'taken_at' => 48*60, 'temp' => 45 ], [ 'taken_at' => 49*60, 'temp' => 45 ], [ 'taken_at' => 50*60, 'temp' => 45 ], [ 'taken_at' => 51*60, 'temp' => 45 ], [ 'taken_at' => 52*60, 'temp' => 45 ], [ 'taken_at' => 53*60, 'temp' => 45 ], [ 'taken_at' => 54*60, 'temp' => 45 ], [ 'taken_at' => 55*60, 'temp' => 45 ], [ 'taken_at' => 56*60, 'temp' => 45 ], [ 'taken_at' => 57*60, 'temp' => 45 ], [ 'taken_at' => 58*60, 'temp' => 45 ] ];       
+        $yzones = [ 37.5, 42.5, 47.5, 52.5, 57.5, 62.5, 67.5, 72.5, 77.5 ];
 
         // Initialize sections to collect temperatures
         $sectionTemperatures = [
@@ -381,8 +382,13 @@ class InsStc
             ],
             'series' => [
                 [
+                    'name' => 'box',
+                    'type' => 'boxPlot',
                     'data' => $boxplotData
                 ]
+            ],
+            'xaxis' => [
+                'type' => 'category',
             ],
             'yaxis' => [
                 'title' => [
@@ -400,29 +406,27 @@ class InsStc
                     ],
                 ],
             ],
-            'stroke' => [
-                'curve' => 'smooth',
-                'width' => 1,
+            'annotations' => [
+                'points' => self::generateSectionAnnotations($yzones, $logs),
             ],
             'legend' => [
                 'show' => true,
+                'showForSingleSeries' => true,
                 'position' => 'right',
+                'customLegendItems' => [ __('Standar') ],
+                'markers' => [
+                    'fillColors' => ['#D64550']
+                ]
             ],
-            'annotations' => [
-                'yaxis' => self::generateYAnnotations($yzones),
-            ],
-            'tooltip' => [
-                'enabled' => false,
-            ],
-            'grid' => [
-                'yaxis' => [
-                    'lines' => [
-                        'show' => false,
-                    ],
-                ],
-            ],
+            'plotOptions' => [
+                'boxPlot' => [
+                    'colors' => [
+                        'upper' => '#A8D8EA',
+                        'lower' => '#A8EAC1'
+                    ]
+                ]
+            ]
         ];
-
     }
 
     public static function getChartOptions($logs, $width, $height)
@@ -509,7 +513,7 @@ class InsStc
             'annotations' => [
                 'xaxis' => self::generateXAnnotations($zones, $xzones, $logs),
                 'yaxis' => self::generateYAnnotations($yzones),
-                'points' => self::generatePointAnnotations($zones, $yzones, $logs),
+                'points' => self::generateZoneAnnotations($zones, $yzones, $logs),
             ],
             'grid' => [
                 'yaxis' => [
@@ -588,7 +592,7 @@ class InsStc
         return $annotations;
     }
 
-    private static function generatePointAnnotations($zones, $yzones, $logs)
+    private static function generateZoneAnnotations($zones, $yzones, $logs)
     {
         $pointAnnotations = [];
         $temps = array_map(fn($item) => $item['temp'], $logs);
@@ -644,6 +648,35 @@ class InsStc
     
         return $pointAnnotations;
     }
+
+    private static function generateSectionAnnotations($yzones)
+    {
+        $pointAnnotations = [];
+    
+        // Directly create annotations for sections
+        $sections = ['section_1', 'section_2', 'section_3', 'section_4', 'section_5', 'section_6', 'section_7', 'section_8'];
+        
+        foreach ($sections as $index => $section) {
+            // Use the section name as x-coordinate
+            $x = $section;
+    
+            // Calculate y as the middle of the y-zones, starting from the end
+            $y = $yzones[count($yzones) - $index - 1];
+    
+            $pointAnnotations[] = [
+                'x' => $x,
+                'y' => $y,
+                'marker' => [
+                    'size' => 4,
+                    'strokeWidth' => 0,
+                    'fillColor' => '#D64550'
+                ],
+            ];
+        }
+    
+        return $pointAnnotations;
+    }
+
     public static function parseDate($dateString)
     {
         return Carbon::parse($dateString)->timestamp * 1000;

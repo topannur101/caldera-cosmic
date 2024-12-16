@@ -12,6 +12,7 @@ use App\InsStc;
 new class extends Component {
 
     public array $d_sum_ids = [];
+    public string $present_mode = 'boxplot';
     public bool $use_m_log_sv = false;
 
     #[On('update')]
@@ -21,10 +22,20 @@ new class extends Component {
             ->get()
             ->groupBy('ins_stc_d_sum_id');
 
+        switch ($this->present_mode) {
+        case 'standard_zone':
+            $chartOptions = InsStc::getStandardZoneChartOptions($d_sums, 100, 100);
+            break;
+
+        case 'boxplot':
+            $chartOptions = InsStc::getBoxplotChartOptions($d_sums, 100, 100);
+            break;
+        }
+
         $this->js(
                 "
                 let recentsOptions = " .
-                    json_encode(InsStc::getStandardZoneChartOptions($d_sums, 100, 100)) .
+                    json_encode($chartOptions) .
                     ";
 
                 // Render recents chart
@@ -148,10 +159,10 @@ new class extends Component {
                         {{ __('Terdapat dua modus pembagian zona pada bagan.') }}
                     </div>
                     <div>
-                        <span class="font-bold">{{ __('Pembagian zona standar') . ': ' }}</span>{{ __('Halaman ini menggunakan metode pembagian zona standar yang artinya pengukuran seharusnya berdurasi 54 menit.') }}
+                        <span class="font-bold">{{ __('Pembagian zona standar') . ': ' }}</span>{{ __('Menggunakan semua titik data dan ditempatkan pada pembagian zona standar pada panjang data yang tetap sebesar 54 menit.') }}
                     </div>
                     <div>
-                        <span class="font-bold">{{ __('Pembagian zona adaptif') . ': ' }}</span>{{ __('Bila kecepatan konveyor diluar standar, maka durasi pengukuran akan kurang atau lebih dari 54 menit. Fitur zona adaptif akan mengabaikan titik data yang memiliki temperatur ruangan  (di bawah 40°C) agar SV prediksi akurat.') }}
+                        <span class="font-bold">{{ __('Pembagian zona adaptif') . ': ' }}</span>{{ __('Mengabaikan titik data yang dianggap temperatur ruangan (di bawah 40°C) agar SV prediksi akurat sehingga pembagian zona akan tergantung dengan panjang data.') }}
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end">
@@ -162,16 +173,34 @@ new class extends Component {
             </div>
         </x-modal>
     </div>
-    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg h-80 p-4"
-    id="recents-chart-container" wire:key="recents-chart-container" wire:ignore>
-    </div>
-    <div class="flex justify-between flex-col lg:flex-row">
-        <div class="px-2 py-8 text-sm">
-            {{ __('Pembagian zona pada bagan di atas mungkin akan berbeda dengan bagan individu') }}<x-text-button type="button"
+    <div class="flex justify-between gap-8 flex-col lg:flex-row">
+        <div class="px-8 py-4 text-sm">
+            @switch($present_mode)
+                @case('boxplot')
+                    {{ __('Pembagian zona adaptif diterapkan pada bagan berikut') }}
+                    @break
+                @case('standard_zone')
+                    {{ __('Pembagian zona standar diterapkan pada bagan berikut') }}
+                    @break                    
+            @endswitch
+            <x-text-button type="button"
             class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'different-zoning-help')"><i
                 class="far fa-question-circle"></i></x-text-button>
         </div>
-        <div class="px-2 py-8">
+        <div class="btn-group h-10">
+            <x-radio-button wire:model.live="present_mode" grow value="boxplot" name="present_mode" id="present_mode_boxplot">
+                {{ __('Boxplot') }}
+            </x-radio-button>
+            <x-radio-button wire:model.live="present_mode" grow value="standard_zone" name="present_mode" id="present_mode_standard_zone">
+                {{ __('Standard zone') }}
+            </x-radio-button>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg h-80 p-4"
+    id="recents-chart-container" wire:key="recents-chart-container" wire:ignore>
+    </div>
+    <div class="flex justify-end">
+        <div class="p-8">
             <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv"
                 :checked="$use_m_log_sv ? true : false">{{ __('Gunakan SV mesin') }}<x-text-button type="button"
                     class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')"><i
