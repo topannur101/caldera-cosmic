@@ -171,7 +171,7 @@ class extends Component {
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="flex gap-3">
-                <div class="w-full lg:w-32">
+                <div class="w-full lg:w-28">
                     <label for="metrics-line"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
                     <x-text-input id="metrics-line" wire:model.live="line" type="number" list="metrics-lines" step="1" />
@@ -187,7 +187,7 @@ class extends Component {
                         <option value="9"></option>
                     </datalist>
                 </div>
-                <div class="w-full lg:w-32">
+                <div class="w-full lg:w-28">
                     <label for="metrics-team"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
                     <x-text-input id="metrics-team" wire:model.live="team" type="text" list="metrics-teams" />

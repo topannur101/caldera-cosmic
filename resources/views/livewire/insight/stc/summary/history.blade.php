@@ -173,14 +173,16 @@ class extends Component {
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             @switch($selection_mode)
                 @case('recents')
-                    <div>
+                    <div class="w-full lg:w-28">
                         <label for="history-count"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Batas') }}</label>
-                        <x-select id="history-count" wire:model.live="count">
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="50">50</option>
-                        </x-select>
+                        <x-text-input id="history-count" wire:model.live="count" type="number" step="1" list="history-counts" />
+                        <datalist id="history-counts">
+                            <option value="1"></option>
+                            <option value="5"></option>
+                            <option value="10"></option>
+                            <option value="50"></option>
+                        </datalist>
                     </div>
                     @break
                 @case('range')

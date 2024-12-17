@@ -35,7 +35,7 @@ class InsRubberBatch extends Model
                 return __('Fail');
                 break;
             default:
-            return __('Baru');
+            return 'N/A';
         }
     }
 
@@ -51,7 +51,7 @@ class InsRubberBatch extends Model
             case 'on_time_manual':
                 return __('Tepat waktu');
             default:
-                return __('Baru');
+                return 'N/A';
         }
     }
 

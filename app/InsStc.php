@@ -336,7 +336,13 @@ class InsStc
             $q3 = $count % 4 ? $values[$q3Index] : 
                 ($values[$q3Index] + $values[$q3Index + 1]) / 2;
 
-            return [$min, $q1, $median, $q3, $max];
+            return [
+                round($min, 0),
+                round($q1, 0),
+                round($median, 0),
+                round($q3, 0),
+                round($max, 0),
+            ];
         };
 
         // Prepare boxplot data

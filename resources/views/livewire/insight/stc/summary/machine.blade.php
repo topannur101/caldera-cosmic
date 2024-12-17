@@ -207,7 +207,7 @@ class extends Component {
                         <option value="lower">{{ __('Bawah') }}</option>
                     </x-select>
                 </div>
-                {{-- <div class="w-full lg:w-32">
+                {{-- <div class="w-full lg:w-28">
                     <label for="m_logs-team"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
                     <x-text-input id="m_logs-team" wire:model.live="team" type="text" list="m_logs-teams" />

@@ -83,19 +83,19 @@ class extends Component {
                 <ol class="relative border-s border-neutral-200 dark:border-neutral-700 mt-2">                  
                     <li class="mb-6 ms-4">
                         <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('OMV')}}</div>
+                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Open mill')}}</div>
                         <x-pill class="uppercase"
                         color="{{ $omv_eval === 'on_time' ? 'green' : ($omv_eval === 'on_time_manual' ? 'yellow' : ($omv_eval === 'too_late' || $omv_eval === 'too_soon' ? 'red' : 'neutral')) }}">{{ $omv_eval_human }}</x-pill>    
                     </li>
                     <li class="mb-6 ms-4">
                         <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('RTC')}}</div>
+                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Calendar')}}</div>
                         <x-pill class="uppercase"
-                        color="neutral">{{ __('Segera') }}</x-pill>
+                        color="neutral">N/A</x-pill>
                     </li>
                     <li class="mb-6 ms-4">
                         <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Rheo')}}</div>
+                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Rheometer')}}</div>
                         <x-pill class="uppercase"
                         color="{{ $rdc_eval === 'queue' ? 'yellow' : ($rdc_eval === 'pass' ? 'green' : ($rdc_eval === 'fail' ? 'red' : 'neutral')) }}">{{ $rdc_eval_human }}</x-pill> 
 
@@ -104,7 +104,7 @@ class extends Component {
                         <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
                         <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Aging') }}</div>
                         <x-pill class="uppercase"
-                        color="neutral">{{ __('Segera') }}</x-pill>                                </li>
+                        color="neutral">N/A</x-pill>                                </li>
                 </ol>
             </div>
             <div class="grow">

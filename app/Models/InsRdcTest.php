@@ -38,7 +38,7 @@ class InsRdcTest extends Model
                 return __('Fail');
                 break;
         }
-        return __('Baru');
+        return 'N/A';
     }
 
     public function ins_rubber_batch(): BelongsTo

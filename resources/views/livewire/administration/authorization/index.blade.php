@@ -20,7 +20,7 @@ new #[Layout('layouts.app')] class extends Component {};
             <li>Kendali chamber IP</li>
             <li>Pemantauan open mill</li>
             <li>Sistem data rheometer</li>
-            <li>Kendali tebal rubber</li>
+            <li>Kendali tebal calendar</li>
             <li>Sistem data kulit</li>
         </ul>
         {{-- <div class="grid grid-cols-1 gap-1 my-8 ">

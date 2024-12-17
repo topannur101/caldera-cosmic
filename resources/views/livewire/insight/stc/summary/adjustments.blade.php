@@ -180,7 +180,7 @@ class extends Component {
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="flex gap-3">
-                <div class="w-full lg:w-32">
+                <div class="w-full lg:w-28">
                     <label for="adjs-line"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
                     <x-text-input id="adjs-line" wire:model.live="line" type="number" list="adjs-lines" step="1" />
@@ -190,7 +190,7 @@ class extends Component {
                         @endforeach
                     </datalist>
                 </div>
-                {{-- <div class="w-full lg:w-32">
+                {{-- <div class="w-full lg:w-28">
                     <label for="adjs-team"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
                     <x-text-input id="adjs-team" wire:model.live="team" type="text" list="adjs-teams" />

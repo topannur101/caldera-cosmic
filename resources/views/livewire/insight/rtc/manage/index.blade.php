@@ -6,7 +6,7 @@ use Livewire\Attributes\Layout;
 new #[Layout('layouts.app')] class extends Component {};
 
 ?>
-<x-slot name="title">{{ __('Kelola') . ' — ' . __('Kendali tebal rubber') }}</x-slot>
+<x-slot name="title">{{ __('Kelola') . ' — ' . __('Kendali tebal calendar') }}</x-slot>
 
 <x-slot name="header">
     <x-nav-insights-rtc></x-nav-insights-rtc>
