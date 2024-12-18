@@ -50,14 +50,6 @@ new #[Layout('layouts.app')] class extends Component {
                 class="flex gap-2 px-4 mb-4">
                 <div class="text-sm">{{ __('Statistik') . ': ' }}</div>
                 <x-pill color="yellow">
-                    <span>batchTeam: </span>
-                    <span class="font-mono" x-text="batchTeam"></span>
-                </x-pill>
-                <x-pill color="yellow">
-                    <span>userq: </span>
-                    <span class="font-mono" x-text="userq"></span>
-                </x-pill>
-                <x-pill color="yellow">
                     <span>evalTolerance: </span>
                     <span class="font-mono" x-text="evalTolerance"></span>
                 </x-pill>
@@ -81,6 +73,18 @@ new #[Layout('layouts.app')] class extends Component {
                     <span>batchAmp: </span>
                     <span class="font-mono" x-text="batchAmps[batchAmps.length - 1]?.value ?? 0"></span>
                 </x-pill>
+                <x-pill color="yellow" @click="$dispatch('open-modal', 'threshold-amp-adjust')">
+                    <span>thresholdAmp: </span>
+                    <span class="font-mono" x-text="thresholdAmp"></span>
+                </x-pill>
+                <x-modal name="threshold-amp-adjust">
+                    <div class="p-6">
+                        <label for="threshold-amp"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">Ampere threshold</label>
+                        <x-text-input id="threshold-amp" x-model="thresholdAmp" type="number" step="1" min="0" max="200"></x-text-input> 
+
+                    </div>
+                </x-modal>
             </div>
             <div class="flex flex-col sm:flex-row gap-x-4 p-2">
                 <div>
@@ -539,6 +543,7 @@ new #[Layout('layouts.app')] class extends Component {
                 overtimeMaxDuration: 600,
                 pollingAInterval: 4000,
                 pollingBInterval: 4000,
+                thresholdAmp: 100,
             };
 
             const batchDefaults = {

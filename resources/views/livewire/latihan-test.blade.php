@@ -35,7 +35,9 @@ class extends Component {
             <option value="3">3</option>
         </select>
         <div class="mt-6">
-            <button type="submit" class="bg-neutral-500">Simpan</button>
+            <button type="submit" class="bg-neutral-500"><i class="fa fa-floppy-disk mr-2"></i>Simpan</button>
         </div>
     </form>
 </div>
+
+

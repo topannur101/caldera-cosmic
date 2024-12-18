@@ -1,76 +1,11 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Attributes\On;
-use Livewire\Attributes\Renderless;
-use App\Models\InsRdcTest;
-use App\Models\InsRubberBatch;
 
 new class extends Component {
+
    public int $id;
 
-   public string $batch_code;
-   public string $batch_model;
-   public string $batch_color;
-   public string $batch_mcs;
-   public string $batch_code_alt;
-   public string $batch_omv_eval;
-   public string $batch_omv_eval_human;
-   public string $batch_rdc_eval;
-   public string $batch_rdc_eval_human;
-   public int $batch_rdc_tests_count;
-   public string $batch_updated_at_human;
-   public int $test_machine_number;
-   public string $test_machine_name;
-   public string $test_user_name;
-   public string $test_user_emp_id;
-   public string $test_eval;
-   public string $test_eval_human;
-   public float $test_s_min;
-   public float $test_s_max;
-   public float $test_tc10;
-   public float $test_tc50;
-   public float $test_tc90;
-   public string $test_queued_at;
-   public string $test_updated_at;
-
-   #[On('test-show')]
-   public function showTest(int $id)
-   {
-      $this->id = $id;
-      $test = InsRdcTest::find($id);
-      if ($test) {
-         $this->id                     = $test->id;
-         $this->batch_code             = $test->ins_rubber_batch->code ?? '-';
-         $this->batch_model            = $test->ins_rubber_batch->model ?? '-';
-         $this->batch_color            = $test->ins_rubber_batch->color ?? '-';
-         $this->batch_mcs              = $test->ins_rubber_batch->mcs ?? '-';
-         $this->batch_code_alt         = $test->ins_rubber_batch->code_alt ?? '-';
-         $this->batch_omv_eval         = $test->ins_rubber_batch->omv_eval ?? '-';
-         $this->batch_omv_eval_human   = $test->ins_rubber_batch->omvEvalHuman();
-         $this->batch_rdc_eval         = $test->ins_rubber_batch->rdc_eval ?? '-';
-         $this->batch_rdc_eval_human   = $test->ins_rubber_batch->rdcEvalHuman();
-         $this->batch_rdc_tests_count  = $test->ins_rubber_batch->ins_rdc_tests->count();
-         $this->batch_updated_at_human = $test->ins_rubber_batch->updated_at->diffForHumans();
-
-         $this->test_machine_number    = $test->ins_rdc_machine->number;
-         $this->test_machine_name      = $test->ins_rdc_machine->name;
-         $this->test_user_name         = $test->user->name;
-         $this->test_user_emp_id       = $test->user->emp_id;
-         $this->test_eval              = $test->eval;
-         $this->test_eval_human        = $test->evalHuman();
-         $this->test_s_min             = $test->s_min;
-         $this->test_s_max             = $test->s_max;
-         $this->test_tc10              = $test->tc10;
-         $this->test_tc50              = $test->tc50;
-         $this->test_tc90              = $test->tc90;
-
-         $this->test_queued_at         = $test->queued_at;
-         $this->test_updated_at        = $test->updated_at;
-      } else {
-         $this->handleNotFound();
-      }
-   }
 
    public function customReset()
    {
