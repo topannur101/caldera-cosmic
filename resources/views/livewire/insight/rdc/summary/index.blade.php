@@ -1,14 +1,14 @@
 <?php
 
-use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
 use Carbon\Carbon;
-use App\Models\InsRtcMetric;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
-use Illuminate\Support\Facades\Response;
+use Livewire\Volt\Component;
 
-new #[Layout('layouts.app')] 
-class extends Component {
+new #[Layout('layouts.app')]
+class extends Component
+{
     #[Url]
     public $view = 'tests';
 
@@ -25,17 +25,20 @@ class extends Component {
     public $ftype = 'any';
 
     public $dateViews = ['tests', 'by-mcs'];
+
     public $rangeViews = ['tests', 'by-mcs'];
+
     public $filterViews = ['tests'];
 
     public $is_date;
+
     public $is_range;
+
     public $is_filter;
 
     public function mount()
     {
-        if(!$this->start_at || !$this->end_at)
-        {
+        if (! $this->start_at || ! $this->end_at) {
             $this->setToday();
         }
     }
@@ -100,6 +103,8 @@ class extends Component {
 };
 
 ?>
+
+
 
 <x-slot name="title">{{ __('Sistem data rheometer') }}</x-slot>
 

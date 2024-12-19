@@ -2,22 +2,31 @@
 
 use Livewire\Volt\Component;
 
-new class extends Component {
+new class extends Component
+{
+    public int $id;
 
-   public int $id;
+    public array $rubberBatch = [];
 
+    public string $view = '';
 
-   public function customReset()
-   {
-      $this->reset(['id']);
-   }
+    public function mount() {}
 
-   public function handleNotFound()
-   {
-      $this->js('$dispatch("close")');
-      $this->js('notyfError("' . __('Tidak ditemukan') . '")');
-      $this->dispatch('updated');
-   }
+    private function loadBatch() {
+        
+    }
+
+    public function customReset()
+    {
+        $this->reset(['id']);
+    }
+
+    public function handleNotFound()
+    {
+        $this->js('$dispatch("close")');
+        $this->js('notyfError("'.__('Tidak ditemukan').'")');
+        $this->dispatch('updated');
+    }
 };
 
 ?>
@@ -25,7 +34,7 @@ new class extends Component {
     <div class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Rincian pengujian rheometer') }}
+                {{ __('Info batch') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
