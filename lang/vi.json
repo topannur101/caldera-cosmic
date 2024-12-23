@@ -885,7 +885,26 @@
 "Kendali chamber IP": "Điều khiển IP buồng",  
 "Sistem data rheometer": "Hệ thống dữ liệu máy đo lưu biến",  
 "Pemantauan open mill": "Giám sát máy cán mở",  
-"Kirim langsung SV prediksi": "Gửi trực tiếp SV dự đoán"  
-
-
-}
+"Kirim langsung SV prediksi": "Gửi trực tiếp SV dự đoán",
+"Menggunakan semua titik data dan ditempatkan pada pembagian zona standar pada panjang data yang tetap sebesar 54 menit.": "Sử dụng tất cả các điểm dữ liệu và đặt vào phân chia vùng tiêu chuẩn với độ dài dữ liệu cố định là 54 phút.",
+"Pembagian zona adaptif diterapkan pada bagan berikut": "Phân chia vùng thích ứng được áp dụng cho biểu đồ sau",
+"Zona standar": "Vùng tiêu chuẩn",
+"Kata sandi wajib dipilih": "Mật khẩu phải được chọn",
+"Calendar": "Lịch",
+"Sedang dalam tahap pengembangan": "Đang trong giai đoạn phát triển",
+"Boxplot": "Biểu đồ hộp",
+"Atur kata sandi pengguna ini menjadi:": "Đặt mật khẩu của người dùng này thành:",
+"Open mill": "Mở nhà máy",
+"Data terakhir": "Dữ liệu cuối cùng",
+"Administrasi adalah tempat bagi superuser untuk mengelola akun.": "Quản trị là nơi dành cho siêu người dùng quản lý tài khoản.",
+"Atur kata sandi": "Đặt mật khẩu",
+"Seleksi": "Lựa chọn",
+"Nonaktifkan": "Vô hiệu hóa",
+"Rheometer": "Máy đo độ nhớt",
+"Akun yang telah dibuat tidak dapat dihapus. Namun kamu dapat menonaktifkannya saja. Akun yang dinonaktifkan tidak akan muncul diberbagai pencarian namun akan masih muncul di data yang sudah ada.": "Tài khoản đã được tạo không thể bị xóa. Tuy nhiên, bạn có thể vô hiệu hóa nó. Tài khoản bị vô hiệu hóa sẽ không xuất hiện trong các tìm kiếm khác nhau nhưng vẫn sẽ xuất hiện trong dữ liệu hiện có.",
+"Mengabaikan titik data yang dianggap temperatur ruangan (di bawah 40°C) agar SV prediksi akurat sehingga pembagian zona akan tergantung dengan panjang data.": "Bỏ qua các điểm dữ liệu được coi là nhiệt độ phòng (dưới 40°C) để đảm bảo dự đoán SV chính xác để phân chia vùng sẽ phụ thuộc vào độ dài dữ liệu.",
+"Peringatan: Ketika mengklik tombol dibawah berikut, Caldera tidak akan menanyakan konfirmasi dan akun akan langsung dinonaktifkan.": "Cảnh báo: Khi nhấp vào nút dưới đây, Caldera sẽ không yêu cầu xác nhận và tài khoản sẽ bị vô hiệu hóa ngay lập tức.",
+"Presentasi": "Thuyết trình",
+"Pembagian zona standar diterapkan pada bagan berikut": "Phân chia vùng tiêu chuẩn được áp dụng cho biểu đồ sau",
+"Standard zone": "Vùng tiêu chuẩn",
+"Peringatan: Ketika mengklik tombol dibawah berikut, Caldera tidak akan menanyakan konfirmasi dan kata sandi akan diatur sesuai dengan kata sandi yang dipilih.": "Cảnh báo: Khi nhấp vào nút dưới đây, Caldera sẽ không yêu cầu xác nhận và mật khẩu sẽ được đặt theo mật khẩu đã chọn."}
