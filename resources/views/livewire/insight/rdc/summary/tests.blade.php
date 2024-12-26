@@ -188,6 +188,9 @@ class extends Component {
                     </div>
                 </div>
             </x-modal>  
+            <x-modal name="batch-show">
+                <livewire:insight.rubber-batch.show />
+            </x-modal>
             <x-modal name="test-show">
                 <livewire:insight.rdc.summary.test-show />
             </x-modal>
@@ -230,7 +233,7 @@ class extends Component {
                         </tr>
                         @foreach ($tests as $test)
                         <tr wire:key="test-tr-{{ $test->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'test-show'); $dispatch('test-show', { id: '{{ $test->id }}'})">
+                            x-on:click="$dispatch('open-modal', 'batch-show'); $dispatch('batch-show', { id: '{{ $test->ins_rubber_batch_id }}'})">
                             <td>{{ $test->test_updated_at }}</td>
                             <td>{{ $test->batch_code }}</td>
                             <td>{{ $test->batch_code_alt }}</td>
