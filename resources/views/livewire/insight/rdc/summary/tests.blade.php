@@ -188,7 +188,7 @@ class extends Component {
                     </div>
                 </div>
             </x-modal>  
-            <x-modal name="batch-show">
+            <x-modal name="batch-show" maxWidth="2xl">
                 <livewire:insight.rubber-batch.show />
             </x-modal>
             <x-modal name="test-show">

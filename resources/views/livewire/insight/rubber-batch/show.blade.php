@@ -24,30 +24,65 @@ new class extends Component
 
     public string $view = '';
 
-    public function mount() {}
+    public function mount() {
+        $this->batch['code'] = __('Kode batch');
+    }
 
-    #[On('batch-show')]
-    public function showBatch(int $id) {
+    private function loadBatch(int $id) {
 
-        $this->id = $id;
         $batch = InsRubberBatch::find($id);
         
         if ($batch) {
+            $this->id = $id;
             $this->batch['omv_eval']         = $batch->omv_eval;
             $this->batch['omv_eval_human']   = $batch->omvEvalHuman();
             $this->batch['rdc_eval']         = $batch->rdc_eval;
             $this->batch['rdc_eval_human']   = $batch->rdcEvalHuman();
             $this->batch['code']             = $batch->code;
-            $this->batch['code_alt']         = $batch->code_alt;
-            $this->batch['model']            = $batch->model;
-            $this->batch['color']            = $batch->color;
-            $this->batch['mcs']              = $batch->mcs;
+            $this->batch['code_alt']         = $batch->code_alt ?: '-';
+            $this->batch['model']            = $batch->model ?: '-';
+            $this->batch['color']            = $batch->color ?: '-';
+            $this->batch['mcs']              = $batch->mcs ?: '-';
             $this->batch['rdc_tests_count']  = $batch->ins_rdc_tests->count();
             $this->batch['updated_at_human'] = $batch->updated_at->diffForHumans();
         } else {
-           $this->handleNotFound();
+            $this->handleNotFound();
+         }
+    }
+
+    #[On('batch-show')]
+    public function showBatch(int $id) {
+        $this->loadBatch($id);
+    }
+
+    #[On('batch-show-omv')]
+    public function showBatchOmv(int $id) {
+
+        $this->loadBatch($id);
+        if ($this->id) {
+            $this->view = 'omv';
         }
-                
+    }
+
+        
+    #[On('batch-show-rdc')]
+    public function showBatchRdc(int $id) {
+
+        $this->loadBatch($id);
+        if ($this->id) {
+            $this->view = 'rdc';
+        }
+
+    }
+
+    #[On('batch-show-rtc')]
+    public function showBatchRtc(int $id) {
+
+        $this->loadBatch($id);
+        if ($this->id) {
+            $this->view = 'rtc';
+        }
+        
     }
 
     public function customReset()
@@ -68,7 +103,7 @@ new class extends Component
 <div>
     <div class="p-6">
         <div class="flex justify-between items-start">
-            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+            <h2 class="text-lg uppercase font-medium text-neutral-900 dark:text-neutral-100">
                 {{ $batch['code'] }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
@@ -77,7 +112,7 @@ new class extends Component
             <div class="flex flex-col py-6">
                 <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi batch') }}</dt>
                 <dd class="flex gap-x-6">
-                    <div>                        
+                    <div class="w-40">                        
                         <ol class="relative border-s border-neutral-200 dark:border-neutral-700 mt-2">                  
                             <li class="mb-6 ms-4 cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-caldy-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition ease-in-out duration-150" wire:click="switchView" tabindex="0">
                                 <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
