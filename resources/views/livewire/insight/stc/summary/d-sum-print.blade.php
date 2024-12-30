@@ -194,7 +194,7 @@ class extends Component {
             </div>
         </div>
         <div class="grow border border-neutral-500 rounded-lg overflow-hidden">
-            <div id="print-chart-container" class="h-full" wire:key="print-chart-container" wire:ignore></div>
+            <div id="print-chart-container" class="h-[85%]" wire:key="print-chart-container" wire:ignore></div>
         </div>
         <div class="grow-0">
             <div id="print-container-footer">
