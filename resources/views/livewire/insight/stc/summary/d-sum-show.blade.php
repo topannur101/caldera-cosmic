@@ -65,29 +65,46 @@ class extends Component {
             $this->hb_temps         = [ $hb_temps['section_1'], $hb_temps['section_2'], $hb_temps['section_3'], $hb_temps['section_4'], $hb_temps['section_5'], $hb_temps['section_6'], $hb_temps['section_7'], $hb_temps['section_8'], ];
             $this->sv_temps         = json_decode($dSum->sv_temps, true);
 
-            $this->js(
-                "
-                let modalOptions = " .
-                    json_encode(InsStc::getChartOptions($logs, 100, 100)) .
-                    ";
-
-                // Render modal chart
-                const modalChartContainer = \$wire.\$el.querySelector('#modal-chart-container');
-                modalChartContainer.innerHTML = '<div id=\"modal-chart\"></div>';
-                let modalChart = new ApexCharts(modalChartContainer.querySelector('#modal-chart'), modalOptions);
-                modalChart.render();
-
-                let printOptions = " .
-                    json_encode(InsStc::getChartOptions($logs, 90, 85)) .
-                    ";
-
-                // // Render hidden printable chart
-                const printChartContainer = document.querySelector('#print-chart-container');
-                printChartContainer.innerHTML = '<div id=\"print-chart\"></div>';
-                let printChart = new ApexCharts(printChartContainer.querySelector('#print-chart'), printOptions);
-                printChart.render();
-            ",
-            );
+            $this->js("
+            const options = " . json_encode(InsStc::getChartJsOptions($logs)) . ";
+        
+            // Add tooltip configuration
+            options.options.plugins.tooltip = {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + context.parsed.y + '°C';
+                    },
+                    title: function(context) {
+                        if (!context[0]) return '';
+                        const date = new Date(context[0].parsed.x);
+                        return date.toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    }
+                }
+            };
+        
+            // Render modal chart
+            const modalChartContainer = \$wire.\$el.querySelector('#modal-chart-container');
+            modalChartContainer.innerHTML = '';
+            const modalCanvas = document.createElement('canvas');
+            modalCanvas.id = 'modal-chart';
+            modalChartContainer.appendChild(modalCanvas);
+            new Chart(modalCanvas, options);
+        
+            // Render print chart
+            const printChartContainer = document.querySelector('#print-chart-container');
+            printChartContainer.innerHTML = '';
+            const printCanvas = document.createElement('canvas');
+            printCanvas.id = 'print-chart';
+            printChartContainer.appendChild(printCanvas);
+            new Chart(printCanvas, options);
+        ");
+        
         } else {
             $this->handleNotFound();
         }

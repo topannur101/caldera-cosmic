@@ -1,18 +1,19 @@
 <?php
 
-use Livewire\Volt\Component;
-use Livewire\Attributes\On;
-use Livewire\Attributes\Renderless;
-use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Validator;
-use App\Models\InsStcMachine;
-use App\Models\InsStcDevice;
+use App\InsStc;
+use Carbon\Carbon;
+use App\InsStcPush;
+use App\Models\User;
 use App\Models\InsStcDLog;
 use App\Models\InsStcDSum;
-use App\Models\User;
-use Carbon\Carbon;
-use App\InsStc;
-use App\InsStcPush;
+use App\Models\InsStcDevice;
+use Livewire\Volt\Component;
+use App\Models\InsStcMachine;
+use Livewire\WithFileUploads;
+use Livewire\Attributes\Renderless;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
 
 new class extends Component {
 
@@ -391,7 +392,7 @@ new class extends Component {
     <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">{{ __('Pembacaan alat') }}</h1>
     <div class="w-full my-8">
         <div wire:key="modals">
-        <x-modal name="d-logs-review" maxWidth="2xl">
+        <x-modal name="d-sum-review" maxWidth="2xl">
             <livewire:insight.stc.create-d-sum-review />
         </x-modal>
             <x-modal name="auto-adjustment-help">
@@ -782,7 +783,7 @@ new class extends Component {
                             </dd>
                         </div>
                         <div class="py-6">
-                            <x-toggle name="d-sum-auto_adjust" wire:model.live="auto_adjust"
+                            <x-toggle name="d-sum-auto_adjust" wire:model="auto_adjust"
                             :checked="$auto_adjust ? true : false">{{ __('Kirim langsung SV prediksi') }}<x-text-button type="button"
                                 class="ml-2" x-data=""
                                 x-on:click="$dispatch('open-modal', 'auto-adjustment-help')"><i
@@ -826,7 +827,7 @@ new class extends Component {
                         <x-secondary-button type="button"
                             wire:click="$set('view', 'upload'), $">{{ __('Mundur') }}</x-secondary-button>
                         <x-secondary-button type="button"
-                            x-on:click.prevent="$dispatch('open-modal', 'd-logs-review'); $dispatch('d-logs-review', { logs: '{{ json_encode($logs) }}' })">{{ __('Tinjau') }}</x-secondary-button>
+                            x-on:click.prevent="$dispatch('open-modal', 'd-sum-review'); $dispatch('d-sum-review', { logs: '{{ json_encode($logs) }}' })">{{ __('Tinjau') }}</x-secondary-button>
                         <x-primary-button type="button" wire:click="save">{{ __('Simpan') }}</x-primary-button>
                     @endif
                 </div>

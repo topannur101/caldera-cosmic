@@ -2,30 +2,48 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
-use Carbon\Carbon;
 use App\InsStc;
 
 new class extends Component {
     
     public array $logs = [['taken_at' => '', 'temp' => '']];
 
-    #[On('d-logs-review')]
+    #[On('d-sum-review')]
     public function dLogsLoad($logs)
     {
         $this->logs = json_decode($logs, true);
-
+    
         $this->js("
-            let options = " . json_encode(InsStc::getChartOptions($this->logs, 100, 100)) . ";
+            const options = " . json_encode(InsStc::getChartJsOptions($this->logs)) . ";
+            
+            // Add tooltip configuration
+            options.options.plugins.tooltip = {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + context.parsed.y + '°C';
+                    },
+                    title: function(context) {
+                        if (!context[0]) return '';
+                        const date = new Date(context[0].parsed.x);
+                        return date.toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    }
+                }
+            };
 
             const parent = \$wire.\$el.querySelector('#chart-container');
             parent.innerHTML = '';
 
-            const newChartMain = document.createElement('div');
-            newChartMain.id = 'chart-main';
-            parent.appendChild(newChartMain);
+            const canvas = document.createElement('canvas');
+            canvas.id = 'chart-main';
+            parent.appendChild(canvas);
 
-            let mainChart = new ApexCharts(parent.querySelector('#chart-main'), options);
-            mainChart.render();
+            new Chart(canvas, options);
         ");
     }
 };

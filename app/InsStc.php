@@ -435,6 +435,203 @@ class InsStc
         ];
     }
 
+    public static function getChartJsOptions($logs) 
+    {
+        $temps = array_map(fn($item) => $item['temp'], $logs);
+        $sections = self::groupValuesBySection($temps);
+        $zones = [
+            'zone_1' => ['section_1', 'section_2'],
+            'zone_2' => ['section_3', 'section_4'],
+            'zone_3' => ['section_5', 'section_6'],
+            'zone_4' => ['section_7', 'section_8'],
+        ];
+
+        $xzones = array_map('count', $sections);
+        $yzones = [80, 70, 60, 50, 40];
+        $ymax = 85;
+        $ymin = 35;
+
+        // Transform data for Chart.js
+        $chartData = array_map(function ($log) {
+            return [
+                'x' => Carbon::parse($log['taken_at']),
+                'y' => $log['temp']
+            ];
+        }, $logs);
+
+        return [
+            'type' => 'line',
+            'data' => [
+                'datasets' => [
+                    [
+                        'label' => __('Suhu'),
+                        'data' => $chartData,
+                        'borderColor' => '#D64550',
+                        'borderWidth' => 1,
+                    ]
+                ]
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'interaction' => [
+                    'intersect' => false,
+                    'mode' => 'index',
+                ],
+                'scales' => [
+                    'x' => [
+                        'type' => 'time',
+                        'time' => [
+                            'displayFormats' => [
+                                'hour' => 'HH:mm',
+                                'minute' => 'HH:mm'
+                            ]
+                        ],
+                        'grid' => [
+                            'display' => false
+                        ],                        
+                        'ticks' => [
+                            'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
+                        ]
+                    ],
+                    'y' => [
+                        'min' => $ymin,
+                        'max' => $ymax,
+                        'title' => [
+                            'display' => true,
+                            'text' => '°C',
+                            'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
+                        ],
+                        'grid' => [
+                            'display' => false
+                        ],
+                        'ticks' => [
+                            'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
+                        ]
+                    ]
+                ],
+                'plugins' => [
+                    'annotation' => [
+                        'annotations' => array_merge(
+                            self::generateChartJsXAnnotations($zones, $xzones, $logs),
+                            self::generateChartJsYAnnotations($yzones),
+                            self::generateChartJsZoneAnnotations($zones, $yzones, $logs)
+                        )
+                    ],
+                    'legend' => [
+                        'display' => false
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    private static function generateChartJsXAnnotations($zones, $xzones, $logs) 
+    {
+        $annotations = [];
+        $previousCount = $xzones['preheat'];
+
+        // Initial border after preheat
+        $annotations[] = [
+            'type' => 'line',
+            'xMin' => Carbon::parse($logs[$previousCount]['taken_at']),
+            'xMax' => Carbon::parse($logs[$previousCount]['taken_at']),
+            'borderColor' => session('bg') === 'dark' ? '#404040' : '#e5e5e5',
+            'borderWidth' => 1,
+        ];
+
+        foreach ($zones as $zoneSections) {
+            $lastSectionPosition = $previousCount;
+            foreach ($zoneSections as $section) {
+                $lastSectionPosition += $xzones[$section];
+            }
+
+            if (isset($logs[$lastSectionPosition])) {
+                $annotations[] = [
+                    'type' => 'line',
+                    'xMin' => Carbon::parse($logs[$lastSectionPosition]['taken_at']),
+                    'xMax' => Carbon::parse($logs[$lastSectionPosition]['taken_at']),
+                    'borderColor' => session('bg') === 'dark' ? '#404040' : '#e5e5e5',
+                    'borderWidth' => 1,
+                ];
+            }
+
+            $previousCount = $lastSectionPosition;
+        }
+
+        return $annotations;
+    }
+
+    private static function generateChartJsYAnnotations($yzones) 
+    {
+        return array_map(function($value) {
+            return [
+                'type' => 'line',
+                'yMin' => $value,
+                'yMax' => $value,
+                'borderColor' => session('bg') === 'dark' ? '#404040' : '#e5e5e5',
+                'borderWidth' => 1,
+                'label' => [
+                    'content' => $value . '°C',
+                    'color' => session('bg') === 'dark' ? '#404040' : '#e5e5e5',
+                    'backgroundColor' => 'transparent',
+                    'position' => 'start'
+                ]
+            ];
+        }, $yzones);
+    }
+
+    // $zones = [
+    //     'zone_1' => ['section_1', 'section_2'],
+    //     'zone_2' => ['section_3', 'section_4'],
+    //     'zone_3' => ['section_5', 'section_6'],
+    //     'zone_4' => ['section_7', 'section_8'],
+    // ];
+
+    // $yzones = [40, 50, 60, 70, 80];
+
+    private static function generateChartJsZoneAnnotations($zones, $yzones, $logs) 
+    {
+        $annotations = [];
+        $temps = array_map(fn($item) => $item['temp'], $logs);
+        $counts = array_map('count', self::groupValuesBySection($temps));
+    
+        // Calculate start positions for each section
+        $cumulativeCounts = [];
+        $total = $counts['preheat'];
+    
+        foreach (['section_1', 'section_2', 'section_3', 'section_4', 'section_5', 'section_6', 'section_7', 'section_8'] as $section) {
+            $total += $counts[$section];
+            $cumulativeCounts[$section] = $total;
+        }
+
+        foreach ($zones as $zoneName => $zoneSections) {
+            // Get start and end indexes for the zone
+            $startSection = $zoneSections[0];
+            $endSection = $zoneSections[1];
+            
+            $startIndex = $cumulativeCounts[$startSection] - $counts[$startSection];
+            $endIndex = min($cumulativeCounts[$endSection], count($logs) - 1);
+            
+            // Get temperature range for the zone from yzones
+            $zoneIndex = array_search($zoneName, array_keys($zones));
+            $yMin = $yzones[$zoneIndex];
+            $yMax = $yzones[$zoneIndex + 1];
+    
+            $annotations[] = [
+                'type' => 'box',
+                'xMin' => Carbon::parse($logs[$startIndex]['taken_at']),
+                'xMax' => Carbon::parse($logs[$endIndex]['taken_at']),
+                'yMin' => $yMin,
+                'yMax' => $yMax,
+                'backgroundColor' => 'rgba(214, 69, 80, 0.10)', // #D64550 with 25% opacity
+                'borderWidth' => 0
+            ];
+        }
+    
+        return $annotations;
+    }
+
     public static function getChartOptions($logs, $width, $height)
     {
 
