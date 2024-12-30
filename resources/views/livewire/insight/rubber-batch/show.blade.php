@@ -9,6 +9,7 @@ new class extends Component
     public int $id;
 
     public array $batch = [
+        'omv_metric_id'     => '',
         'omv_eval'          => '',
         'omv_eval_human'    => '',
         'rdc_eval'          => '',
@@ -34,6 +35,7 @@ new class extends Component
         
         if ($batch) {
             $this->id = $id;
+            $this->batch['omv_metric_id']    = $batch->omv_metric_id;
             $this->batch['omv_eval']         = $batch->omv_eval;
             $this->batch['omv_eval_human']   = $batch->omvEvalHuman();
             $this->batch['rdc_eval']         = $batch->rdc_eval;
@@ -55,12 +57,11 @@ new class extends Component
         $this->loadBatch($id);
     }
 
-    #[On('batch-show-omv')]
-    public function showBatchOmv(int $id) {
+    public function showBatchOmv() {
 
-        $this->loadBatch($id);
         if ($this->id) {
             $this->view = 'omv';
+
         }
     }
 
@@ -114,7 +115,7 @@ new class extends Component
                 <dd class="flex gap-x-6">
                     <div class="w-40">                        
                         <ol class="relative border-s border-neutral-200 dark:border-neutral-700 mt-2">                  
-                            <li class="mb-6 ms-4 cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-caldy-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition ease-in-out duration-150" wire:click="switchView" tabindex="0">
+                            <li class="mb-6 ms-4 cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-caldy-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition ease-in-out duration-150" wire:click="showBatchOmv" tabindex="0">
                                 <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
                                 <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Open mill')}}</div>
                                 <x-pill class="uppercase"
