@@ -71,6 +71,8 @@ class extends Component {
                 $this->sv_temps         = [0,0,0,0,0,0,0,0];
 
                 $m_log = InsStcMLog::query()
+                    ->where('ins_stc_machine_id',   $dSum->ins_stc_machine_id)
+                    ->where('position',             $dSum->position)
                     ->select('*')
                     ->selectRaw('ABS(TIMESTAMPDIFF(SECOND, created_at, ?)) as time_difference', [$dSum->created_at])
                     ->havingRaw('time_difference <= ?', [3600]) // 3600 seconds = 1 hour

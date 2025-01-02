@@ -8,6 +8,7 @@ use App\Models\InsStcDSum;
 use App\Models\InsStcMLog;
 use App\Models\InsStcDLog;
 use App\InsStc;
+use Carbon\Carbon;
 
 new class extends Component {
 
@@ -54,10 +55,12 @@ new class extends Component {
         foreach ($machines as $key => $machine) {
             $upper_d_sum = InsStcDSum::where('position', 'upper')
                 ->where('ins_stc_machine_id', $machine['id'])
+                ->where('created_at', '>=', Carbon::now()->subHours(5))
                 ->latest('created_at')
                 ->first();
             $upper_m_log = InsStcMLog::where('position', 'upper')
                 ->where('ins_stc_machine_id', $machine['id'])
+                ->where('created_at', '>=', Carbon::now()->subHour())
                 ->latest('created_at')
                 ->first();
             $upper_d_sum_sv_temps = $upper_d_sum ? ($upper_d_sum_sv_temps = json_decode($upper_d_sum->sv_temps, true)) : [];
@@ -67,10 +70,12 @@ new class extends Component {
 
             $lower_d_sum = InsStcDSum::where('position', 'lower')
                 ->where('ins_stc_machine_id', $machine['id'])
+                ->where('created_at', '>=', Carbon::now()->subHours(5))
                 ->latest('created_at')
                 ->first();
             $lower_m_log = InsStcMLog::where('position', 'lower')
                 ->where('ins_stc_machine_id', $machine['id'])
+                ->where('created_at', '>=', Carbon::now()->subHour())
                 ->latest('created_at')
                 ->first();
             $lower_d_sum_sv_temps = $lower_d_sum ? ($lower_d_sum_sv_temps = json_decode($lower_d_sum->sv_temps, true)) : [];
@@ -218,9 +223,9 @@ new class extends Component {
                     </div>
                     <div class="grow">
                         <div
-                            class="flex items-center py-3 border-b border-neutral-100 dark:border-neutral-700">
+                            class="flex items-center border-b border-neutral-100 dark:border-neutral-700">
                             <div class="px-2">△</div>
-                            <div class="grow grid grid-cols-1">
+                            <div class="grow grid grid-cols-1 py-3">
                                 <div>
                                     <div
                                         class="grid grid-cols-9 text-center gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
@@ -260,17 +265,6 @@ new class extends Component {
                                     </div>
                                 </div>
                                 <div>
-                                    <div class="grid grid-cols-9 text-center gap-x-3">
-                                        <div>PV</div>
-                                        <div>{{ $machine['upper']['m_log']['pv_r_1'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['pv_r_2'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['pv_r_3'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['pv_r_4'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['pv_r_5'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['pv_r_6'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['pv_r_7'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['pv_r_8'] ?? '-' }}</div>
-                                    </div>
 
                                     @if($use_m_log_sv)
                                     <div class="grid grid-cols-9 text-center gap-x-3">
@@ -299,9 +293,9 @@ new class extends Component {
                             </div>
                         </div>
                         <div
-                            class="flex items-center py-3">
+                            class="flex items-center">
                             <div class="px-2">▽</div>
-                            <div class="grow grid grid-cols-1">
+                            <div class="grow grid grid-cols-1 py-3">
                                 <div>
                                     <div
                                         class="grid grid-cols-9 text-center gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
@@ -341,17 +335,6 @@ new class extends Component {
                                     </div>
                                 </div>
                                 <div>
-                                    <div class="grid grid-cols-9 text-center gap-x-3">
-                                        <div>PV</div>
-                                        <div>{{ $machine['lower']['m_log']['pv_r_1'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['pv_r_2'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['pv_r_3'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['pv_r_4'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['pv_r_5'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['pv_r_6'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['pv_r_7'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['pv_r_8'] ?? '-' }}</div>
-                                    </div>
                                     @if($use_m_log_sv)
                                     <div class="grid grid-cols-9 text-center gap-x-3">
                                         <div>SV</div>
