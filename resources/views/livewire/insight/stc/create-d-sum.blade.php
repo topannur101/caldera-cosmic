@@ -827,7 +827,7 @@ new class extends Component {
                         <x-secondary-button type="button"
                             wire:click="$set('view', 'upload'), $">{{ __('Mundur') }}</x-secondary-button>
                         <x-secondary-button type="button"
-                            x-on:click.prevent="$dispatch('open-modal', 'd-sum-review'); $dispatch('d-sum-review', { logs: '{{ json_encode($logs) }}' })">{{ __('Tinjau') }}</x-secondary-button>
+                            x-on:click.prevent="$dispatch('open-modal', 'd-sum-review'); $dispatch('d-sum-review', { logs: '{{ json_encode($logs) }}', sv_temps: '{{ json_encode($sv_temps) }}' })">{{ __('Tinjau') }}</x-secondary-button>
                         <x-primary-button type="button" wire:click="save">{{ __('Simpan') }}</x-primary-button>
                     @endif
                 </div>

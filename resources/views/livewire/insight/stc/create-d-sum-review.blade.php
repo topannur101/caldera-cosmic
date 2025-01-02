@@ -7,14 +7,16 @@ use App\InsStc;
 new class extends Component {
     
     public array $logs = [['taken_at' => '', 'temp' => '']];
+    public array $sv_temp = [];
 
     #[On('d-sum-review')]
-    public function dLogsLoad($logs)
+    public function dLogsLoad($logs, $sv_temps = '')
     {
-        $this->logs = json_decode($logs, true);
+        $this->logs     = json_decode($logs, true);
+        $this->sv_temps = json_decode($sv_temps, true);
     
         $this->js("
-            const options = " . json_encode(InsStc::getChartJsOptions($this->logs)) . ";
+            const options = " . json_encode(InsStc::getChartJsOptions($this->logs, $this->sv_temps)) . ";
             
             // Add tooltip configuration
             options.options.plugins.tooltip = {

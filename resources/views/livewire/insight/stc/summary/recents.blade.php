@@ -13,7 +13,7 @@ use Carbon\Carbon;
 new class extends Component {
 
     public array $d_sum_ids = [];
-    public string $present_mode = 'boxplot';
+    public string $present_mode = 'standard';
     public bool $use_m_log_sv = false;
 
     #[On('update')]
@@ -24,11 +24,11 @@ new class extends Component {
             ->groupBy('ins_stc_d_sum_id');
 
         switch ($this->present_mode) {
-        case 'standard_zone':
+        case 'standard':
             $chartOptions = InsStc::getStandardZoneChartOptions($d_sums, 100, 100);
             break;
 
-        case 'boxplot':
+        case 'adaptive':
             $chartOptions = InsStc::getBoxplotChartOptions($d_sums, 100, 100);
             break;
         }
@@ -181,10 +181,10 @@ new class extends Component {
     <div class="flex justify-between gap-8 flex-col lg:flex-row">
         <div class="px-8 py-4 text-sm">
             @switch($present_mode)
-                @case('boxplot')
+                @case('adaptive')
                     {{ __('Pembagian zona adaptif diterapkan pada bagan berikut') }}
                     @break
-                @case('standard_zone')
+                @case('standard')
                     {{ __('Pembagian zona standar diterapkan pada bagan berikut') }}
                     @break                    
             @endswitch
@@ -193,11 +193,11 @@ new class extends Component {
                 class="far fa-question-circle"></i></x-text-button>
         </div>
         <div class="btn-group h-10">
-            <x-radio-button wire:model.live="present_mode" grow value="boxplot" name="present_mode" id="present_mode_boxplot">
-                {{ __('Boxplot') }}
+            <x-radio-button wire:model.live="present_mode" grow value="adaptive" name="present_mode" id="present_mode_adaptive">
+                {{ __('Adaptif') }}
             </x-radio-button>
-            <x-radio-button wire:model.live="present_mode" grow value="standard_zone" name="present_mode" id="present_mode_standard_zone">
-                {{ __('Standard zone') }}
+            <x-radio-button wire:model.live="present_mode" grow value="standard" name="present_mode" id="present_mode_standard">
+                {{ __('Standard') }}
             </x-radio-button>
         </div>
     </div>
