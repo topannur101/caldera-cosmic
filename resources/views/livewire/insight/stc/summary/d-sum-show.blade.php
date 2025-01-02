@@ -5,6 +5,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
 use App\Models\InsStcDSum;
+use App\Models\InsStcMLog;
 use App\InsStc;
 
 new #[Layout('layouts.app')] 
@@ -29,8 +30,10 @@ class extends Component {
     public string $logs_count;
     public string $position;
     public string $speed;
-    public array $hb_temps;
-    public array $sv_temps;
+    public array $hb_temps = [0, 0, 0, 0, 0, 0, 0, 0];
+    public array $sv_temps = [0, 0, 0, 0, 0, 0, 0, 0];
+
+    public bool $use_m_log_sv = false;
 
     #[On('d_sum-show')]
     public function showDSum(int $id)
@@ -63,10 +66,32 @@ class extends Component {
             $this->position         = InsStc::positionHuman($dSum->position);
             $this->speed            = $dSum->speed;
             $this->hb_temps         = [ $hb_temps['section_1'], $hb_temps['section_2'], $hb_temps['section_3'], $hb_temps['section_4'], $hb_temps['section_5'], $hb_temps['section_6'], $hb_temps['section_7'], $hb_temps['section_8'], ];
-            $this->sv_temps         = json_decode($dSum->sv_temps, true);
+            
+            if ($this->use_m_log_sv) {
+                $this->sv_temps         = [0,0,0,0,0,0,0,0];
+
+                $m_log = InsStcMLog::query()
+                    ->select('*')
+                    ->selectRaw('ABS(TIMESTAMPDIFF(SECOND, created_at, ?)) as time_difference', [$dSum->created_at])
+                    ->havingRaw('time_difference <= ?', [3600]) // 3600 seconds = 1 hour
+                    ->orderBy('time_difference')
+                    ->first();
+
+                if ($m_log) {
+                    for ($i = 1; $i <= 8; $i++) {
+                        $key = "sv_r_$i";
+                        if (isset($m_log[$key])) {
+                            $this->sv_temps[$i - 1] = $m_log[$key];
+                        }
+                    }
+                }
+
+            } else {
+                $this->sv_temps         = json_decode($dSum->sv_temps, true);
+            }
 
             $this->js("
-            const options = " . json_encode(InsStc::getChartJsOptions($logs)) . ";
+            const options = " . json_encode(InsStc::getChartJsOptions($logs, $this->sv_temps)) . ";
         
             // Add tooltip configuration
             options.options.plugins.tooltip = {
@@ -152,6 +177,15 @@ class extends Component {
     {
         $this->js("window.print()");
     }
+
+    public function updated($property)
+    {
+        if ($property == 'use_m_log_sv') {
+            if ($this->id) {
+                $this->showDSum($this->id);
+            }
+        }
+   }
 };
 
 ?>
@@ -281,9 +315,15 @@ class extends Component {
                 </dd>
             </div>
         </div>
-        <div class="flex justify-end">
-            <x-primary-button type="button" wire:click="printPrepare"><i
-                    class="fa fa-print me-2"></i>{{ __('Cetak') }}</x-primary-button>
+        <div class="flex justify-between items-end">
+            <div>
+                <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv"
+                    :checked="$use_m_log_sv ? true : false">{{ __('Gunakan SV mesin') }}<x-text-button type="button"
+                    class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')">
+                    <i class="far fa-question-circle"></i></x-text-button>
+                </x-toggle>
+            </div>
+            <x-primary-button type="button" wire:click="printPrepare"><i class="fa fa-print me-2"></i>{{ __('Cetak') }}</x-primary-button>
         </div>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>

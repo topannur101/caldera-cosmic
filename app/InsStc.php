@@ -435,10 +435,11 @@ class InsStc
         ];
     }
 
-    public static function getChartJsOptions($logs) 
+    public static function getChartJsOptions($logs, array $sv_temps = []) 
     {
         $temps = array_map(fn($item) => $item['temp'], $logs);
         $sections = self::groupValuesBySection($temps);
+        
         $zones = [
             'zone_1' => ['section_1', 'section_2'],
             'zone_2' => ['section_3', 'section_4'],
@@ -515,7 +516,8 @@ class InsStc
                         'annotations' => array_merge(
                             self::generateChartJsXAnnotations($zones, $xzones, $logs),
                             self::generateChartJsYAnnotations($yzones),
-                            self::generateChartJsZoneAnnotations($zones, $yzones, $logs)
+                            self::generateChartJsZoneAnnotations($zones, $yzones, $logs),
+                            self::generateChartJsSVAnnotations($sections, $sv_temps, $logs)
                         )
                     ],
                     'legend' => [
@@ -581,14 +583,103 @@ class InsStc
         }, $yzones);
     }
 
-    // $zones = [
-    //     'zone_1' => ['section_1', 'section_2'],
-    //     'zone_2' => ['section_3', 'section_4'],
-    //     'zone_3' => ['section_5', 'section_6'],
-    //     'zone_4' => ['section_7', 'section_8'],
-    // ];
+    private static function generateChartJsSVAnnotations(array $sections, array $sv_temps, array $logs): array
+    {
+        // Validate sv_temps
+        if (count($sv_temps) !== 8) {
+            return []; // Return empty array if sv_temps is invalid
+        }
+    
+        $annotations = [];
+        $cursorLogsIndex = 0;
+        $cursorSVTempIndex = 0;
+    
+        foreach ($sections as $sectionName => $values) {
+            if (in_array($sectionName, ['preheat'])) {
+                $cursorLogsIndex = $values ? count($values) : 0;
+                continue;
+            }
 
-    // $yzones = [40, 50, 60, 70, 80];
+            if (in_array($sectionName, ['postheat'])) {
+                continue;
+            }
+    
+            if (empty($values)) {
+                continue; // Skip if section is missing or empty
+            }
+
+            // Get the original indices before sorting
+            $originalIndices = array_keys($values);
+    
+            // Find the middle index of the sorted values
+            $middleIndex = (int) floor(count($values) / 2);
+
+            $log = $logs[$cursorLogsIndex + $middleIndex];
+
+            $annotations[] = [
+                'type' => 'point',
+                'xValue' => Carbon::parse($log['taken_at']),
+                'yValue' => $sv_temps[$cursorSVTempIndex],
+                'radius' => 4,
+                'borderWidth' => 0,
+                'backgroundColor' => 'red',
+            ];
+            
+            $cursorLogsIndex = $cursorLogsIndex + count($values);
+            $cursorSVTempIndex++;
+            
+    
+            // // Get the original index of the middle value
+            // $originalMiddleIndex = $originalIndices[$middleIndex];
+    
+            // // Use the original index to find the corresponding log entry
+            // $middleValue = $values[$middleIndex] ?? null;
+            
+            // if ($middleValue !== null && isset($sv_temps[$sectionIndex])) {
+
+            //     // Find the corresponding datetime from logs using the original index
+            //     $logIndex = array_search($middleValue, array_column($logs, 'value'), true);
+            //     dd($logIndex);
+            //     $datetime = $logIndex !== false ? $logs[$logIndex]['datetime'] : null;
+    
+            //     if ($datetime) {
+            //         $annotations[] = [
+            //             'type' => 'point',
+            //             'xValue' => Carbon::parse($datetime),
+            //             'yValue' => $sv_temps[$sectionIndex],
+            //             'label' => [
+            //                 'content' => sprintf('SV%d: (%d)', $sectionIndex + 1, $sv_temps[$sectionIndex]),
+            //                 'enabled' => true,
+            //                 'position' => 'top',
+            //             ],
+            //             'backgroundColor' => 'red',
+            //         ];
+            //     }
+            // }
+    
+            // $sectionIndex++;
+        }
+    
+        return $annotations;
+    }
+    
+
+    public static function getMedians(array $values): ?float
+    {
+        $count = count($values);
+        if ($count === 0) {
+            return null;
+        }
+
+        sort($values);
+        $middleIndex = (int) floor($count / 2);
+
+        if ($count % 2 === 0) {
+            return ($values[$middleIndex - 1] + $values[$middleIndex]) / 2;
+        }
+
+        return $values[$middleIndex];
+    }
 
     private static function generateChartJsZoneAnnotations($zones, $yzones, $logs) 
     {

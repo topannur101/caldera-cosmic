@@ -35,7 +35,7 @@ class extends Component {
 
     public array $lines = [];
 
-    public int $perPage = 20;
+    public int $perPage = 10;
 
     private function getDSumsQuery()
     {
