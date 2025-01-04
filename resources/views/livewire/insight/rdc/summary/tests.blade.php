@@ -191,9 +191,6 @@ class extends Component {
             <x-modal name="batch-show" maxWidth="2xl">
                 <livewire:insight.rubber-batch.show />
             </x-modal>
-            <x-modal name="test-show">
-                <livewire:insight.rdc.summary.test-show />
-            </x-modal>
         </div>
         @if (!$tests->count())
             @if (!$start_at || !$end_at)
@@ -233,7 +230,7 @@ class extends Component {
                         </tr>
                         @foreach ($tests as $test)
                         <tr wire:key="test-tr-{{ $test->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'batch-show'); $dispatch('batch-show', { id: '{{ $test->ins_rubber_batch_id }}'})">
+                            x-on:click="$dispatch('open-modal', 'batch-show'); $dispatch('batch-show', { rdc_test_id: '{{ $test->id }}', view: 'rdc'})">
                             <td>{{ $test->test_updated_at }}</td>
                             <td>{{ $test->batch_code }}</td>
                             <td>{{ $test->batch_code_alt }}</td>

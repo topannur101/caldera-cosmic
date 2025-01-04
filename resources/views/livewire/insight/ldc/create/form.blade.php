@@ -2,7 +2,6 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
-use Illuminate\Validation\Rule;
 
 use App\Models\InsLdcGroup;
 use App\Models\InsLdcHide;
@@ -209,7 +208,7 @@ new class extends Component {
                         <div class="text-neutral-500 text-xs pr-3">|</div>
                         <div class="text-neutral-500 text-xs"><span class="uppercase">{{ __('Defect') . ': ' }}</span><span x-text="defect.toFixed(1) + '%'"></span></div>
                     </div>
-                    <x-text-input-suffix suffix="SF" id="hide-area_qt" x-model="area_qt" type="number" step=".01" autocomplete="off" x-on:keydown="if ($event.key === '+' || $event.key === '-') { $dispatch('open-spotlight', 'calculate-qt'); console.log(area_qt); area_qt_string = area_qt + $event.key }"  />
+                    <x-text-input-suffix suffix="SF" id="hide-area_qt" x-model="area_qt" type="number" step=".01" autocomplete="off" x-on:keydown="if ($event.key === '+' || $event.key === '-') { $dispatch('open-spotlight', 'calculate-qt'); console.log(area_qt); area_qt_string = area_qt + $event.key }" />
                 </div>
             </div>
             <div class="grid grid-cols-3 gap-3">
@@ -311,8 +310,8 @@ new class extends Component {
             <div x-show="!area_vn || !area_qt"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
         </div>
         <div class="text-xs text-neutral-500 text-center">
-            <div>{{ Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMM YYYY'); }}</div>
-            <div>{{ Carbon::now()->locale(app()->getLocale())->isoFormat('HH:mm'); }}</div>
+            <div>{{ Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMM YYYY') }}</div>
+            <div>{{ Carbon::now()->locale(app()->getLocale())->isoFormat('HH:mm') }}</div>
         </div>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>

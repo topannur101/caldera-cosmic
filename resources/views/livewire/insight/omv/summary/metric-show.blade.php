@@ -1,13 +1,11 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use App\Models\InsOmvMetric;
 use App\InsOmv;
 
-new #[Layout('layouts.app')] 
-class extends Component {
+new class extends Component {
     public int $id;
     public bool $amps_exists;
 

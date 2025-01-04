@@ -289,8 +289,8 @@ class extends Component {
                 </div>
             </div>
         </x-modal> 
-        <x-modal name="metric-show" maxWidth="2xl">
-            <livewire:insight.omv.summary.metric-show />
+        <x-modal name="batch-show" maxWidth="2xl">
+                <livewire:insight.rubber-batch.show />
         </x-modal>
     </div>
     @if (!$metrics->count())
@@ -332,7 +332,7 @@ class extends Component {
                     </tr>
                     @foreach ($metrics as $metric)
                     <tr wire:key="metric-tr-{{ $metric->id . $loop->index }}" tabindex="0"
-                        x-on:click="$dispatch('open-modal', 'metric-show'); $dispatch('metric-show', { id: '{{ $metric->id }}'})">
+                        x-on:click="$dispatch('open-modal', 'batch-show'); $dispatch('batch-show', { omv_metric_id: '{{ $metric->id }}', view: 'omv'})">
                             <td>{{ $metric->id }}</td>
                             <td>{{ $metric->ins_rubber_batch->code ?? '' }}</td>
                             <td>{{ strtoupper($metric->ins_omv_recipe->type) }}</td>

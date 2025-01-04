@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class InsRubberBatch extends Model
 {
@@ -20,39 +21,14 @@ class InsRubberBatch extends Model
         'omv_eval',
     ];
 
-    public function rdcEvalHuman(): string
+    public function ins_omv_metric(): HasOne
     {
-        $this->rdc_eval;
-
-        switch ($this->rdc_eval) {
-            case 'queue':
-                return __('Antri');
-                break;
-            case 'pass':
-                return __('Pass');
-                break;
-            case 'fail':
-                return __('Fail');
-                break;
-            default:
-            return 'N/A';
-        }
+        return $this->hasOne(InsOmvMetric::class)->latest();
     }
 
-    public function omvEvalHuman(): string
+    public function ins_rdc_test(): HasOne
     {
-        switch ($this->omv_eval) {
-            case 'on_time':
-                return __('Tepat waktu');
-            case 'too_soon':
-                return __('Terlalu awal');
-            case 'too_late':
-                return __('Terlambat');
-            case 'on_time_manual':
-                return __('Tepat waktu');
-            default:
-                return 'N/A';
-        }
+        return $this->hasOne(InsRdcTest::class)->latest();
     }
 
     public function ins_rdc_tests(): HasMany

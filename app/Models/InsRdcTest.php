@@ -33,10 +33,10 @@ class InsRdcTest extends Model
         switch ($this->eval) {
             case 'pass':
                 return __('Pass');
-                break;
+                
             case 'fail':
                 return __('Fail');
-                break;
+                
         }
         return 'N/A';
     }
