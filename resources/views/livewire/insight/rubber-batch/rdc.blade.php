@@ -75,10 +75,10 @@ new class extends Component
             $this->updated_at = $test->updated_at;
 
             if ($test->ins_rubber_batch_id) {
-                $this->batch['code'] = $test->ins_rubber_batch->code ?? '-';
-                $this->batch['model'] = $test->ins_rubber_batch->model ?? __('Model');
-                $this->batch['color'] = $test->ins_rubber_batch->color ?? __('Warna');
-                $this->batch['mcs'] = $test->ins_rubber_batch->mcs ?? __('MCS');
+                $this->batch['code'] = $test->ins_rubber_batch->code ?? '';
+                $this->batch['model'] = $test->ins_rubber_batch->model ?? '';
+                $this->batch['color'] = $test->ins_rubber_batch->color ?? '';
+                $this->batch['mcs'] = $test->ins_rubber_batch->mcs ?? '';
                 $this->batch['code_alt'] = $test->ins_rubber_batch->code_alt ?? '-';
             }
 

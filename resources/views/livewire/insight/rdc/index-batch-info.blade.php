@@ -28,14 +28,14 @@ class extends Component {
     {
         $this->id               = $id;
         $this->code             = $code ?: '-';
-        $this->model            = $model ?: '-';
-        $this->color            = $color ?: '-';
-        $this->mcs              = $mcs ?: '-';
-        $this->code_alt         = $code_alt ?: '-';
+        $this->model            = $model ?: '?';
+        $this->color            = $color ?: '?';
+        $this->mcs              = $mcs ?: '?';
+        $this->code_alt         = $code_alt ?: '?';
         $this->omv_eval         = $omv_eval ?: '-';
-        $this->omv_eval_human   = $omv_eval_human ?: '-';
+        $this->omv_eval_human   = $omv_eval_human ?: 'N/A';
         $this->rdc_eval         = $rdc_eval ?: '-';
-        $this->rdc_eval_human   = $rdc_eval_human ?: '-';
+        $this->rdc_eval_human   = $rdc_eval_human ?: 'N/A';
         $this->rdc_tests_count  = $rdc_tests_count ?: 0;
         $this->updated_at_human = $updated_at_human ?: '-';
     }
@@ -58,7 +58,7 @@ class extends Component {
         $batch = InsRubberBatch::find($this->id);
         if ($batch) {
             $batch->update([
-                'rdc_eval' => 'queue'
+                'rdc_queue' => 1
             ]);
             $this->js('$dispatch("close")');
             $this->js('notyfSuccess("' . __('Ditambahkan ke antrian') . '")');

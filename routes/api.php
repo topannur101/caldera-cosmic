@@ -98,10 +98,6 @@ Route::post('/omv-metric', function (Request $request) {
     $batch = null;
     if ($code) {
         $batch = InsRubberBatch::firstOrCreate(['code' => $code]);
-        if ($batch) {
-            $batch->omv_eval = strtolower($validated['eval']);
-            $batch->save();
-        }
     }
 
     $amps = $validated['amps']; 
@@ -134,7 +130,7 @@ Route::post('/omv-metric', function (Request $request) {
     $omvMetric->start_at = $validated['start_at'];
     $omvMetric->end_at = $validated['end_at'];
     $omvMetric->data = json_encode(['amps' => $filteredAmps]);
-    $omvMetric->ins_rubber_batch_id = ($batch->id ?? false) ?: null;
+    $omvMetric->ins_rubber_batch_id = $batch ? $batch->id : null;
     $omvMetric->save();
     
     $captureMessages = [];

@@ -25,7 +25,8 @@ new class extends Component
         'rdc_eval'          => '',
         'rdc_eval_human'    => '',
         'rdc_tests_count'   => '',
-        'updated_at_human'  => '',
+        'created_at'        => '',
+        'updated_at'        => '',
     ];
 
     public string $view = '';
@@ -38,10 +39,11 @@ new class extends Component
             $this->batch_id = $id;
             $this->batch['code']             = $batch->code;
             $this->batch['code_alt']         = $batch->code_alt ?: '';
-            $this->batch['model']            = $batch->model ?: '';
-            $this->batch['color']            = $batch->color ?: '';
-            $this->batch['mcs']              = $batch->mcs ?: '';
-            $this->batch['updated_at_human'] = $batch->updated_at->diffForHumans();
+            $this->batch['model']            = $batch->model ?: '?';
+            $this->batch['color']            = $batch->color ?: '?';
+            $this->batch['mcs']              = $batch->mcs ?: '?';
+            $this->batch['created_at']       = $batch->created_at ?: '';
+            $this->batch['updated_at']       = $batch->updated_at ?: '';
 
             $omv_metric = $batch->ins_omv_metric;
             $rdc_test   = $batch->ins_rdc_test;
@@ -146,7 +148,7 @@ new class extends Component
                     <div class="grid grid-cols-3 gap-x-6">
                     <div>
                         <ol class="relative border-s border-neutral-200 dark:border-neutral-700">                  
-                            <li wire:click="showBatch({{ $batch_id }}, 'omv')" tabindex="0" class="ms-3 px-3 py-4 cursor-pointer rounded hover:bg-caldy-500 hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-caldy-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition ease-in-out duration-150">
+                            <li @if( $batch['omv_eval'] ) wire:click="showBatch({{ $batch_id }}, 'omv')" @endif tabindex="0" class="ms-3 px-3 py-4 cursor-pointer rounded hover:bg-caldy-500 hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-caldy-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition ease-in-out duration-150">
                                 <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
                                 <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Open mill')}}</div>
                                 <x-pill class="uppercase"
@@ -158,7 +160,7 @@ new class extends Component
                                 <x-pill class="uppercase"
                                 color="neutral">N/A</x-pill>
                             </li>
-                            <li wire:click="showBatch({{ $batch_id }}, 'rdc')" tabindex="0" class="ms-3 px-3 py-4 cursor-pointer rounded hover:bg-caldy-500 hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-caldy-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition ease-in-out duration-150">
+                            <li @if( $batch['rdc_eval'] ) wire:click="showBatch({{ $batch_id }}, 'rdc')" @endif tabindex="0" class="ms-3 px-3 py-4 cursor-pointer rounded hover:bg-caldy-500 hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-caldy-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition ease-in-out duration-150">
                                 <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
                                 <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400 dark:text-neutral-500">{{ __('Rheometer')}}</div>
                                 <x-pill class="uppercase"
@@ -210,10 +212,18 @@ new class extends Component
                             </tr>
                             <tr>
                                 <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                    {{ __('Dibuat') . ': ' }}
+                                </td>
+                                <td>
+                                    {{ $batch['created_at'] }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
                                     {{ __('Diperbarui') . ': ' }}
                                 </td>
                                 <td>
-                                    {{ $batch['updated_at_human'] }}
+                                    {{ $batch['updated_at'] }}
                                 </td>
                             </tr>
                         </table>

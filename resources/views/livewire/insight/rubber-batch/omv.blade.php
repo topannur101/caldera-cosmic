@@ -76,10 +76,10 @@ new class extends Component {
             $this->end_at           = $metric->end_at;
 
             if ($metric->ins_rubber_batch_id) {
-                $this->batch['code']            = $metric->ins_rubber_batch->code ?: '-';
-                $this->batch['model']           = $metric->ins_rubber_batch->model ?: __('Model'); 
-                $this->batch['color']           = $metric->ins_rubber_batch->color ?: __('Warna');
-                $this->batch['mcs']             = $metric->ins_rubber_batch->mcs ?: __('MCS');
+                $this->batch['code']            = $metric->ins_rubber_batch->code ?: '';
+                $this->batch['model']           = $metric->ins_rubber_batch->model ?: ''; 
+                $this->batch['color']           = $metric->ins_rubber_batch->color ?: '';
+                $this->batch['mcs']             = $metric->ins_rubber_batch->mcs ?: '';
             }
 
             $this->batch['omv_eval']        = $metric->eval ?: '-';
@@ -179,7 +179,7 @@ new class extends Component {
 <div>
     <div class="flex w-full justify-between p-3 border border-neutral-300 dark:border-neutral-700 rounded-full">
         <div class="flex items-center text-xs uppercase text-neutral-500 dark:text-neutral-400 divide-x divide-neutral-300 dark:divide-neutral-700">
-            <div class="px-2 text-neutral-900 dark:text-white">{{ __('Open-mill')}}</div>
+            <div class="px-2 text-neutral-900 dark:text-white">{{ __('Open mill')}}</div>
             <div class="px-2">{{ $batch['model'] }}</div>
             <div class="px-2">{{ $batch['color'] }}</div>
             <div class="px-2">{{ $batch['mcs'] }}</div>

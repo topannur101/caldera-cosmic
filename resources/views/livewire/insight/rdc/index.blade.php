@@ -23,7 +23,7 @@ class extends Component {
     public function with(): array
     {
         return [
-            'batches' => InsRubberBatch::where('rdc_eval', 'queue')->orderBy('updated_at')->get()
+            'batches' => InsRubberBatch::where('rdc_queue', 1)->orderBy('updated_at')->get()
         ];
     }
 
@@ -50,24 +50,27 @@ class extends Component {
 
         } else {
 
-            $batch = InsRubberBatch::firstOrCreate(
+            $batch = InsRubberBatch::with('ins_omv_metric', 'ins_rdc_test')->firstOrCreate(
                     ['code' => $this->code]
                 );
 
             if ($this->immediate_queue) {
 
-                if ($batch->rdc_eval == 'queue') {
+                if ($batch->rdc_queue == 1) {
                     $this->js('notyfError("'. __('Sudah diantrikan') . '")'); 
 
                 } else {
                     $batch->update([
-                        'rdc_eval' => 'queue'
+                        'rdc_queue' => 1
                     ]);
                     $this->js('notyfSuccess("' . __('Ditambahkan ke antrian') . '")');
                     $this->dispatch('updated');
                 }
 
             } else {
+
+                $omv_metric = $batch->ins_omv_metric;
+                $rdc_test = $batch->ins_rdc_test;
 
                 $this->js('$dispatch("open-modal", "batch-info"); $dispatch("batch-load", { 
                     id: ' . $batch->id . ', 
@@ -77,10 +80,10 @@ class extends Component {
                     color: "' . $batch->color . '", 
                     mcs: "' . $batch->mcs . '", 
                     code_alt: "' . $batch->code_alt . '", 
-                    omv_eval: "' . $batch->omv_eval . '", 
-                    omv_eval_human: "' . $batch->omvEvalHuman() . '",
-                    rdc_eval: "' . $batch->rdc_eval . '", 
-                    rdc_eval_human: "' . $batch->rdcEvalHuman() . '",
+                    omv_eval: "' . ( $omv_metric ? $omv_metric->eval : '' ) . '", 
+                    omv_eval_human: "' . ( $omv_metric ? $omv_metric->evalHuman() : '' ) . '",
+                    rdc_eval: "' . ( $rdc_test ? $rdc_test->eval : '' ) . '", 
+                    rdc_eval_human: "' . ( $rdc_test ? $rdc_test->evalHuman() : '' ) . '",
                     rdc_tests_count: "' . $batch->ins_rdc_tests->count() . '"
                 })');
             }

@@ -17,8 +17,7 @@ class InsRubberBatch extends Model
         'model',
         'color',
         'mcs',
-        'rdc_eval',
-        'omv_eval',
+        'rdc_queue',
     ];
 
     public function ins_omv_metric(): HasOne

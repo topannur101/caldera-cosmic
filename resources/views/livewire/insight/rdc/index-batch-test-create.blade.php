@@ -37,14 +37,14 @@ class extends Component {
     public string $o_code_alt = '';
     
     public string $tag = '';
-    public float $s_max;
-    public float $s_min;
-    public string $eval;
+    public float $s_max = 0;
+    public float $s_min = 0;
+    public string $eval = '';
     public float $tc10 = 0;
     public float $tc50 = 0;
     public float $tc90 = 0;
 
-    public int $machine_id;
+    public int $machine_id = 0;
     public bool $update_batch = false;
     public $sh_mods;
     public $ins_rdc_tags;
@@ -324,7 +324,7 @@ class extends Component {
 
         if ($batch) {
             $batch->update([
-                'rdc_eval' => null
+                'rdc_queue' => 0
             ]);
             $this->js('notyfSuccess("' . __('Dihapus dari antrian') . '")'); 
             $this->js('$dispatch("close")');
@@ -435,7 +435,7 @@ class extends Component {
                 $test->save();
 
                 $batch->update([
-                    'rdc_eval' => $this->eval
+                    'rdc_queue' => 0
                 ]);
 
                 $this->js('$dispatch("close")');
@@ -811,7 +811,7 @@ class extends Component {
             </x-dropdown>
             <div class="flex flex-row gap-x-3">
                 @if($view != 'form')
-                <x-secondary-button type="button" wire:click="$set('view', 'form'); $set('file', '')">{{ __('Isi manual') }}</x-secondary-button>
+                <x-secondary-button type="button" wire:click="$set('view', 'form'); $set('file', '')" x-show="machine_id">{{ __('Isi manual') }}</x-secondary-button>
                 @endif
                 @if($view == 'review' || $view == 'form')
                 <x-primary-button type="button" wire:click="insertTest">
