@@ -1,7 +1,6 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use App\Models\ShMod;
 use App\Models\InsRdcTest;
@@ -12,8 +11,7 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
-new #[Layout('layouts.app')] 
-class extends Component {
+new class extends Component {
 
     use WithFileUploads;
 

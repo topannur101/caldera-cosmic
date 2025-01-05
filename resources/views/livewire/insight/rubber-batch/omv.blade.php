@@ -271,114 +271,114 @@ new class extends Component {
             </div>
         </div>
     </div>
-
-    <div class="flex flex-col gap-6">
-        <div class="flex flex-col grow">
-            <div class="flex flex-col md:flex-row gap-6">
-                <div class="grow">
-                    <div>
-                        <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                            {{ __('Operator') . ': ' }}
-                        </span>
-                    </div>
-                    <table class="table-auto">
-                    <tr>
-                            <td class="flex items-center">
-                                <div class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                                    @if($user_1_photo ?? false)
-                                    <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/'.$user_1_photo }}" />
-                                    @else
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
-                                    @endif
-                                </div>
-                                <div class="text-neutral-500 dark:text-neutral-400 font-mono px-2">{{ ' ' . $user_1_emp_id }}</div>
-                            </td>
-                            <td>
-                            {{ $user_1_name }}
-                            </td>
-                        </tr>
-                        @if($user_2_emp_id)
-                        <tr>
-                            <td class="flex items-center">
-                                <div class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                                    @if($user_2_photo ?? false)
-                                    <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/'.$user_2_photo }}" />
-                                    @else
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
-                                    @endif
-                                </div>
-                                <div class="text-neutral-500 dark:text-neutral-400 font-mono px-2">{{ ' ' . $user_2_emp_id }}</div>
-                            </td>
-                            <td>
-                            {{ $user_2_name }}
-                            </td>
-                        </tr>
-                        @endif
-                    </table>  
-                    <div class="flex gap-x-3 mt-3"">
-                        <div class="">
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Tim') . ': ' }}
-                            </span>
-                            <span>
-                                {{ $team }}
-                            </span>
-                        </div>
-                        <div class="">
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Line') . ': ' }}
-                            </span>
-                            <span>
-                                {{ $line }}
-                            </span>
-                        </div>
-                        <div class="">
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Durasi') . ': ' }}
-                            </span>
-                            <span>
-                            {{ $duration }}
-                            </span>
-                        </div>   
-                    </div>
-                </div>
-                <div class="grow">
-                    <div>
-                        <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                            {{ __('Tipe') . ': ' }}
-                        </span>
-                        <span class="uppercase">
-                            {{ $recipe_type }}
-                        </span>
-                    </div>
-                    <div>
-                        <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                            {{ __('Resep') . ': ' }}
-                        </span>
-                        <span class="uppercase">
-                            {{ $recipe_name }}
-                        </span>
-                    </div>
-                    <table class="table-auto mt-3">
-                        <tr>
-                            <td class="text-neutral-500 dark:text-neutral-400 text-sm pr-4">
-                                {{ __('Awal') . ': ' }}
-                            </td>
-                            <td class="font-mono">
-                                {{ $start_at }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-neutral-500 dark:text-neutral-400 text-sm pr-4">
-                                {{ __('Akhir') . ': ' }}
-                            </td>
-                            <td class="font-mono">
-                                {{ $end_at }}
-                            </td>
-                        </tr>
-                    </table>    
-                </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grow">
+            <div>
+                <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                    {{ __('Operator') . ': ' }}
+                </span>
             </div>
+            <table class="table-auto [&>tr>td]:align-bottom">
+            <tr>
+                    <td>
+                        <div class="flex items-center">
+                        <div class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            @if($user_1_photo ?? false)
+                            <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/'.$user_1_photo }}" />
+                            @else
+                            <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                            @endif
+                        </div>
+                        <div class="text-sm text-neutral-500 dark:text-neutral-400 font-mono px-2">{{ ' ' . $user_1_emp_id }}</div>
+                        </div>
+                    </td>
+                    <td>
+                    {{ $user_1_name }}
+                    </td>
+                </tr>
+                @if($user_2_emp_id)
+                <tr>
+                    <td>
+                        <div class="flex items-center">
+                        <div class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            @if($user_2_photo ?? false)
+                            <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/'.$user_2_photo }}" />
+                            @else
+                            <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                            @endif
+                        </div>
+                        <div class="text-sm text-neutral-500 dark:text-neutral-400 font-mono px-2">{{ ' ' . $user_2_emp_id }}</div>
+
+                        </div>
+                    </td>
+                    <td>
+                    {{ $user_2_name }}
+                    </td>
+                </tr>
+                @endif
+            </table>  
+            <div class="flex gap-x-3 mt-3"">
+                <div class="">
+                    <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                        {{ __('Tim') . ': ' }}
+                    </span>
+                    <span>
+                        {{ $team }}
+                    </span>
+                </div>
+                <div class="">
+                    <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                        {{ __('Line') . ': ' }}
+                    </span>
+                    <span>
+                        {{ $line }}
+                    </span>
+                </div>
+                <div class="">
+                    <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                        {{ __('Durasi') . ': ' }}
+                    </span>
+                    <span>
+                    {{ $duration }}
+                    </span>
+                </div>   
+            </div>
+        </div>
+        <div class="grow">
+            <div>
+                <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                    {{ __('Tipe') . ': ' }}
+                </span>
+                <span class="uppercase">
+                    {{ $recipe_type }}
+                </span>
+            </div>
+            <div>
+                <span class="text-neutral-500 dark:text-neutral-400 text-sm">
+                    {{ __('Resep') . ': ' }}
+                </span>
+                <span class="uppercase">
+                    {{ $recipe_name }}
+                </span>
+            </div>
+            <table class="table-auto mt-3">
+                <tr>
+                    <td class="text-neutral-500 dark:text-neutral-400 text-sm pr-4">
+                        {{ __('Awal') . ': ' }}
+                    </td>
+                    <td class="font-mono">
+                        {{ $start_at }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-neutral-500 dark:text-neutral-400 text-sm pr-4">
+                        {{ __('Akhir') . ': ' }}
+                    </td>
+                    <td class="font-mono">
+                        {{ $end_at }}
+                    </td>
+                </tr>
+            </table>    
         </div>
     </div>
 </div>

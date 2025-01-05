@@ -119,18 +119,27 @@ class extends Component {
             </form>
         </div>
     </div>
-    <div wire:key="batch-info">
-        <x-modal name="batch-info">
-            <livewire:insight.rdc.index-batch-info />
-        </x-modal>
+    <div wire:key="modals">
+        <div wire:key="batch-info">
+            <x-modal name="batch-info">
+                <livewire:insight.rdc.index-batch-info />
+            </x-modal>
+        </div>
+        @can('manage', InsRdcTest::class)
+        <div wire:key="batch-test-create">
+            <x-modal name="batch-test-create">
+                <livewire:insight.rdc.index-batch-test-create />
+            </x-modal>
+        </div>
+        @endcan
+        @can('manage', InsRdcTest::class)
+        <div wire:key="test-create">
+            <x-modal name="test-create" maxWidth="2xl">
+                <livewire:insight.rdc.index-test-create />
+            </x-modal>
+        </div>
+        @endcan
     </div>
-    @can('manage', InsRdcTest::class)
-    <div wire:key="batch-test-create">
-        <x-modal name="batch-test-create">
-            <livewire:insight.rdc.index-batch-test-create />
-        </x-modal>
-    </div>
-    @endcan
     <div wire:poll.30s class="overflow-auto w-full my-8">
         <div class="p-0 sm:p-1">
             <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
@@ -143,7 +152,7 @@ class extends Component {
                     </tr>
                     @foreach ($batches as $batch)
                         <tr wire:key="batch-tr-{{ $batch->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'batch-test-create'); $dispatch('batch-test-create', { id: '{{ $batch->id }}'})">
+                            x-on:click="$dispatch('open-modal', 'batch-test-create'); $dispatch('test-create', { id: '{{ $batch->id }}'})">
                             <td>
                                 {{ $batch->code }}
                             </td>

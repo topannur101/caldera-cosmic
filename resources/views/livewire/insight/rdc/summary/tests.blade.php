@@ -1,41 +1,34 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 
 use Carbon\Carbon;
-use Livewire\Attributes\Reactive;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Builder;
 use App\Models\InsRdcTest;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Traits\HasDateRangeFilter;
 
+new class extends Component {
 
-new #[Layout('layouts.app')] 
-class extends Component {
     use WithPagination;
+    use HasDateRangeFilter;
 
-    #[Reactive]
+    #[Url]
     public $start_at;
 
-    #[Reactive]
+    #[Url]
     public $end_at;
 
-    #[Reactive]
-    public $fquery;
-
-    #[Reactive]
-    public $ftype;
-
     public $perPage = 20;
-
-    // public $sort = 'updated';
 
     private function getTestsQuery()
     {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
+
+        // $this->line = trim($this->line);
+        // $this->team = trim($this->team);
 
         $query = InsRdcTest::join('ins_rubber_batches', 'ins_rdc_tests.ins_rubber_batch_id', '=', 'ins_rubber_batches.id')
             ->join('ins_rdc_machines', 'ins_rdc_tests.ins_rdc_machine_id', '=', 'ins_rdc_machines.id')
@@ -54,44 +47,30 @@ class extends Component {
                 'users.name as user_name'
             )
             ->whereBetween('ins_rdc_tests.updated_at', [$start, $end]);
+            // if ($this->line)
+            // {
+            //     $query->where('ins_rdc_tests.line', $this->line);
+            // }
 
-        switch ($this->ftype) {
-            case 'code':
-                $query->where('ins_rubber_batches.code', 'LIKE', '%' . $this->fquery . '%');
-                break;
-            case 'model':
-                $query->where('ins_rubber_batches.model', 'LIKE', '%' . $this->fquery . '%');
-                break;
-            case 'color':
-                $query->where('ins_rubber_batches.color', 'LIKE', '%' . $this->fquery . '%');
-                break;
-            case 'mcs':
-                $query->where('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%');
-                break;
-            case 'eval':
-                $query->where('ins_rdc_tests.eval', 'LIKE', '%' . $this->fquery . '%');
-                break;
-            case 'emp_id':
-                $query->where('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
-                break;
-            default:
-                $query->where(function (Builder $query) {
-                    $query->orWhere('ins_rubber_batches.code', 'LIKE', '%' . $this->fquery . '%')
-                        ->orWhere('ins_rubber_batches.model', 'LIKE', '%' . $this->fquery . '%')
-                        ->orWhere('ins_rubber_batches.color', 'LIKE', '%' . $this->fquery . '%')
-                        ->orWhere('ins_rubber_batches.mcs', 'LIKE', '%' . $this->fquery . '%')
-                        ->orWhere('users.emp_id', 'LIKE', '%' . $this->fquery . '%');
-                });
-                break;
+            // if ($this->team)
+            // {
+            //     $query->where('ins_rdc_tests.team', $this->team);
+            // }
+
+        return $query->orderBy('updated_at', 'DESC');
+    }
+
+    public function mount()
+    {
+        if(!$this->start_at || !$this->end_at)
+        {
+            $this->setToday();
         }
-
-        return $query->orderBy('ins_rdc_tests.updated_at', 'DESC');
     }
 
     public function with(): array
     {
         $tests = $this->getTestsQuery()->paginate($this->perPage);
-
         return [
             'tests' => $tests,
         ];
@@ -149,88 +128,166 @@ class extends Component {
 
 ?>
 
-<div wire:poll.30s class="overflow-auto w-full">
-    <div>
-        <div class="flex justify-between items-center mb-6 px-5 py-1">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
-                {{ __('Hasil Uji') }}</h1>
-            <div class="flex gap-x-2 items-center">
+<div>
+    <div class="p-0 sm:p-1 mb-6">
+        <div class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <div>
+                <div class="flex mb-2 text-xs text-neutral-500">
+                    <div class="flex">
+                        <x-dropdown align="left" width="48">
+                            <x-slot name="trigger">
+                                <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="fa fa-fw fa-chevron-down ms-1"></i></x-text-button>
+                            </x-slot>
+                            <x-slot name="content">
+                                <x-dropdown-link href="#" wire:click.prevent="setToday">
+                                    {{ __('Hari ini') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setYesterday">
+                                    {{ __('Kemarin') }}
+                                </x-dropdown-link>
+                                <hr class="border-neutral-300 dark:border-neutral-600" />
+                                <x-dropdown-link href="#" wire:click.prevent="setThisWeek">
+                                    {{ __('Minggu ini') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setLastWeek">
+                                    {{ __('Minggu lalu') }}
+                                </x-dropdown-link>
+                                <hr class="border-neutral-300 dark:border-neutral-600" />
+                                <x-dropdown-link href="#" wire:click.prevent="setThisMonth">
+                                    {{ __('Bulan ini') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setLastMonth">
+                                    {{ __('Bulan lalu') }}
+                                </x-dropdown-link>
+                            </x-slot>
+                        </x-dropdown>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
+                    <x-text-input wire:model.live="end_at"  id="cal-date-end" type="date"></x-text-input>
+                </div>
+            </div>
+            <!-- <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="flex gap-3">
+                <div class="w-full lg:w-28">
+                    <label for="tests-line"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                    <x-text-input id="tests-line" wire:model.live="line" type="number" list="tests-lines" step="1" />
+                    <datalist id="tests-lines">
+                        <option value="1"></option>
+                        <option value="2"></option>
+                        <option value="3"></option>
+                        <option value="4"></option>
+                        <option value="5"></option>
+                        <option value="6"></option>
+                        <option value="7"></option>
+                        <option value="8"></option>
+                        <option value="9"></option>
+                    </datalist>
+                </div>
+                <div class="w-full lg:w-28">
+                    <label for="tests-team"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
+                    <x-text-input id="tests-team" wire:model.live="team" type="text" list="tests-teams" />
+                    <datalist id="tests-teams">
+                        <option value="A"></option>
+                        <option value="B"></option>
+                        <option value="C"></option>
+                    </datalist>
+                </div>
+            </div> -->
+            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="grow flex justify-between gap-x-2 items-center">
+                <div>
+                    <div class="px-3">
+                        <div wire:loading.class="hidden">{{ $tests->total() . ' ' . __('ditemukan') }}</div>
+                        <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
+                            <div class="relative w-3">
+                                <x-spinner class="sm white"></x-spinner>
+                            </div>
+                            <div>
+                                {{ __('Memuat...') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
                     </x-slot>
                     <x-slot name="content">
-                        {{-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                            {{ __('Statistik ')}}
-                        </x-dropdown-link> --}}
-                        {{-- <hr
-                            class="border-neutral-300 dark:border-neutral-600" /> --}}
+                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
+                            <i class="fa fa-fw me-2"></i>{{ __('Statistik ')}}
+                        </x-dropdown-link>
+                        <hr
+                            class="border-neutral-300 dark:border-neutral-600" />
                         <x-dropdown-link href="#" wire:click.prevent="download">
-                            <i class="fa fa-download me-2"></i>{{ __('Unduh') }}
+                            <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
                         </x-dropdown-link>
                     </x-slot>
                 </x-dropdown>
             </div>
         </div>
-        <div wire:key="modals"> 
-            <x-modal name="raw-stats-info">
-                <div class="p-6">
-                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        {{ __('Statistik hasil uji') }}
-                    </h2>
-                    <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                        {{ __('Belum ada informasi statistik yang tersedia.') }}
-                    </p>
-                    <div class="mt-6 flex justify-end">
-                        <x-primary-button type="button" x-on:click="$dispatch('close')">
-                            {{ __('Paham') }}
-                        </x-primary-button>
-                    </div>
+    </div>
+    <div wire:key="modals"> 
+        <x-modal name="raw-stats-info">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                    {{ __('Statistik data mentah') }}
+                </h2>
+                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                    {{ __('Belum ada informasi statistik yang tersedia.') }}
+                </p>
+                <div class="mt-6 flex justify-end">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                        {{ __('Paham') }}
+                    </x-primary-button>
                 </div>
-            </x-modal>  
-            <x-modal name="batch-show" maxWidth="2xl">
-                <livewire:insight.rubber-batch.show />
-            </x-modal>
-        </div>
-        @if (!$tests->count())
-            @if (!$start_at || !$end_at)
-                <div wire:key="no-range" class="py-20">
-                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-calendar relative"><i
-                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
-                    </div>
-                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih rentang tanggal') }}
-                    </div>
+            </div>
+        </x-modal> 
+        <x-modal name="batch-show" maxWidth="2xl">
+            <livewire:insight.rubber-batch.show />
+        </x-modal>
+    </div>
+    @if (!$tests->count())
+        @if (!$start_at || !$end_at)
+            <div wire:key="no-range" class="py-20">
+                <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                    <i class="fa fa-calendar relative"><i
+                            class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                 </div>
-            @else
-                <div wire:key="no-match" class="py-20">
-                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-ghost"></i>
-                    </div>
-                    <div class="text-center text-neutral-500 dark:text-neutral-600">{{ __('Tidak ada yang cocok') }}
-                    </div>
+                <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih rentang tanggal') }}
                 </div>
-            @endif
+            </div>
         @else
-            <div wire:key="raw-tests" class="p-0 sm:p-1 overflow-auto">
-                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table">
-                    <table class="table table-sm table-truncate text-sm text-neutral-600 dark:text-neutral-400">
-                        <tr class="uppercase text-xs">
-                            <th>{{ __('Diperbarui') }}</th>
-                            <th>{{ __('Kode') }}</th>
-                            <th>{{ __('Alt') }}</th>
-                            <th>{{ __('Model') }}</th>
-                            <th>{{ __('Warna') }}</th>
-                            <th>{{ __('MCS') }}</th>
-                            <th>{{ __('Hasil') }}</th>
-                            <th>{{ __('M') }}</th>
-                            <th>{{ __('Tag') }}</th>
-                            <th>{{ __('Nama') }}</th>
-                            <th>{{ __('Waktu antri') }}</th>
-                        </tr>
-                        @foreach ($tests as $test)
-                        <tr wire:key="test-tr-{{ $test->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'batch-show'); $dispatch('batch-show', { rdc_test_id: '{{ $test->id }}', view: 'rdc'})">
+            <div wire:key="no-match" class="py-20">
+                <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                    <i class="fa fa-ghost"></i>
+                </div>
+                <div class="text-center text-neutral-500 dark:text-neutral-600">{{ __('Tidak ada yang cocok') }}
+                </div>
+            </div>
+        @endif
+    @else
+        <div wire:key="raw-tests" class="overflow-auto p-0 sm:p-1">
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
+                <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                    <tr class="uppercase text-xs">
+                        <th>{{ __('Diperbarui') }}</th>
+                        <th>{{ __('Kode') }}</th>
+                        <th>{{ __('Alt') }}</th>
+                        <th>{{ __('Model') }}</th>
+                        <th>{{ __('Warna') }}</th>
+                        <th>{{ __('MCS') }}</th>
+                        <th>{{ __('Hasil') }}</th>
+                        <th>{{ __('M') }}</th>
+                        <th>{{ __('Tag') }}</th>
+                        <th>{{ __('Operator') }}</th>
+                    </tr>
+                    @foreach ($tests as $test)
+                    <tr wire:key="test-tr-{{ $test->id . $loop->index }}" tabindex="0"
+                        x-on:click="$dispatch('open-modal', 'batch-show'); $dispatch('batch-show', { rdc_test_id: '{{ $test->id }}', view: 'rdc'})">
                             <td>{{ $test->test_updated_at }}</td>
                             <td>{{ $test->batch_code }}</td>
                             <td>{{ $test->batch_code_alt }}</td>
@@ -244,34 +301,32 @@ class extends Component {
                                 }}">{{ $test->evalHuman() }}</x-pill></td>
                             <td>{{ $test->machine_number }}</td>
                             <td>{{ $test->tag }}</td>
-                            <td>{{ $test->user_name }}</td>
-                            <td>{{ $test->test_queued_at }}</td>
+                            <td>{{ ($test->user_emp_id ?? '') . ' - ' . ($test->user_name ?? '') }}</td>
                         </tr>
                     @endforeach
-                    </table>
-                </div>
+                </table>
             </div>
-            <div class="flex items-center relative h-16">
-                @if (!$tests->isEmpty())
-                    @if ($tests->hasMorePages())
-                        <div wire:key="more" x-data="{
-                            observe() {
-                                const observer = new IntersectionObserver((tests) => {
-                                    tests.forEach(test => {
-                                        if (test.isIntersecting) {
-                                            @this.loadMore()
-                                        }
-                                    })
+        </div>
+        <div class="flex items-center relative h-16">
+            @if (!$tests->isEmpty())
+                @if ($tests->hasMorePages())
+                    <div wire:key="more" x-data="{
+                        observe() {
+                            const observer = new IntersectionObserver((tests) => {
+                                tests.forEach(test => {
+                                    if (test.isIntersecting) {
+                                        @this.loadMore()
+                                    }
                                 })
-                                observer.observe(this.$el)
-                            }
-                        }" x-init="observe"></div>
-                        <x-spinner class="sm" />
-                    @else
-                        <div class="mx-auto">{{ __('Tidak ada lagi') }}</div>
-                    @endif
+                            })
+                            observer.observe(this.$el)
+                        }
+                    }" x-init="observe"></div>
+                    <x-spinner class="sm" />
+                @else
+                    <div class="mx-auto">{{ __('Tidak ada lagi') }}</div>
                 @endif
-            </div>
-        @endif
-    </div>
+            @endif
+        </div>
+    @endif
 </div>

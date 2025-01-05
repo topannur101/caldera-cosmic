@@ -126,14 +126,19 @@ new class extends Component
 <div>
     <div class="p-6 text-neutral-900 dark:text-white">
         <div class="flex justify-between items-start mb-4">
-            <div class="flex gap-x-3">
-                @if($view && $batch_id)
-                    <x-text-button type="button" wire:click="showBatch({{ $batch_id }})"><i class="fa fa-arrow-left"></i></x-text-button>
-                @endif
+            @if($view && $batch_id)
+            <x-text-button type="button" wire:click="showBatch({{ $batch_id }})">
+            <div class="flex gap-x-3 items-center">
+                    <i class="fa fa-arrow-left"></i>
                 <h2 class="text-lg uppercase font-medium">
                     {{ $batch['code'] ?: __('Tanpa kode') }}
                 </h2>
             </div>
+            </x-text-button>
+            @else
+            <h2 class="text-lg uppercase font-medium">{{ $batch['code'] ?: __('Tanpa kode') }}</h2>
+            @endif
+
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
         <div>
