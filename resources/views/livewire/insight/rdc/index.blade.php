@@ -152,7 +152,7 @@ class extends Component {
                     </tr>
                     @foreach ($batches as $batch)
                         <tr wire:key="batch-tr-{{ $batch->id . $loop->index }}" tabindex="0"
-                            x-on:click="$dispatch('open-modal', 'batch-test-create'); $dispatch('test-create', { id: '{{ $batch->id }}'})">
+                            x-on:click="$dispatch('open-modal', 'test-create'); $dispatch('test-create', { id: '{{ $batch->id }}'})">
                             <td>
                                 {{ $batch->code }}
                             </td>

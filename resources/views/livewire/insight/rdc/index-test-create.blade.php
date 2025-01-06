@@ -94,9 +94,7 @@ new class extends Component {
                            class="absolute inset-0 m-0 p-0 w-full h-full outline-none opacity-0" x-cloak x-ref="file"
                            x-show="dropping" x-on:dragleave.prevent="dropping = false" x-on:drop="dropping = false" />
                   <div class="mt-6">
-                  <label for="test-machine_id"
-                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin uji') }}</label>
-
+                  <label for="test-machine_id" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin') }}</label>
                   <x-select class="w-full" id="test-machine_id" x-model="machine_id" :disabled="$file">
                            <option value=""></option>
                            @foreach($machines as $machine)

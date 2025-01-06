@@ -32,8 +32,8 @@ new class extends Component {
 
 <div wire:poll.5s class="w-64 bg-white dark:bg-neutral-800  bg-opacity-80 dark:bg-opacity-80 shadow rounded-lg">
     <div wire:key="modals"> 
-        <x-modal name="metric-show" maxWidth="2xl">
-            <livewire:insight.omv.summary.metric-show />
+        <x-modal name="batch-show" maxWidth="2xl">
+            <livewire:insight.rubber-batch.show />
         </x-modal>
     </div>
     <div class="pt-6">
@@ -62,7 +62,7 @@ new class extends Component {
                 <ul class="py-3">
                     @foreach ($metrics as $metric)
                         <li class="w-full hover:bg-caldy-500 hover:bg-opacity-10">
-                            <x-link href="#" x-on:click.prevent="$dispatch('open-modal', 'metric-show'); $dispatch('metric-show', { id: '{{ $metric->id }}'})" 
+                            <x-link href="#" x-on:click="$dispatch('open-modal', 'batch-show'); $dispatch('batch-show', { omv_metric_id: '{{ $metric->id }}', view: 'omv'})" 
                                 class="grid gap-y-1 px-6 py-3">
                                 <div class="flex gap-x-1 text-sm text-neutral-500">                        
                                     <div class="w-4 h-4 my-auto bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
