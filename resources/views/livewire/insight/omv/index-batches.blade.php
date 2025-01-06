@@ -92,7 +92,7 @@ new class extends Component {
                                         color="{{ $metric->eval === 'on_time' ? 'green' : ($metric->eval === 'on_time_manual' ? 'yellow' : ($metric->eval === 'too_late' || $metric->eval === 'too_soon' ? 'red' : 'neutral')) }}">{{ $metric->evalHuman() }}</x-pill>
                                     @if($metric->ins_rubber_batch)
                                     <x-pill class="inline-block uppercase"
-                                    color="{{ $metric->ins_rubber_batch->ins_rdc_test->eval ?? null === 'queue' ? 'yellow' : ($metric->ins_rubber_batch->ins_rdc_test->eval ?? null === 'pass' ? 'green' : ($metric->ins_rubber_batch->ins_rdc_test->eval ?? null === 'fail' ? 'red' : 'neutral')) }}">{{ 'RHEO: ' . $metric->ins_rubber_batch->ins_rdc_test->evalHuman() ?? 'N/A' }}</x-pill>                             
+                                    color="{{ $metric->ins_rubber_batch->ins_rdc_test?->eval === 'queue' ? 'yellow' : ($metric->ins_rubber_batch->ins_rdc_test?->eval === 'pass' ? 'green' : ($metric->ins_rubber_batch->ins_rdc_test?->eval === 'fail' ? 'red' : 'neutral')) }}">{{ 'RHEO: ' . $metric->ins_rubber_batch->ins_rdc_test?->evalHuman() ?? 'N/A' }}</x-pill>                             
                                     @endif
                                 </div>
                             </x-link>
