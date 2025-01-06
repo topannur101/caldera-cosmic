@@ -2,295 +2,567 @@
 
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
+use Livewire\Attributes\On;
+
+use App\Models\InsRubberBatch;
+use App\Models\InsRdcMachine;
+
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 new class extends Component
 {
    use WithFileUploads;
 
-   public int $machine_id = 0;
+   public $file;
+
+   public array $machines = [];
 
    public array $batch = [
+      'id' => '',
+      'code' => '',
       'code_alt' => '',
       'model' => '',
       'color' => '',
       'mcs' => '',
    ];
+   
+   public bool $update_batch = true;  
 
    public array $test = [
-      'eval' => '',
+
+      'machine_id' => 0,
+
+      's_max_low' => '',
+      's_max_high' => '',
+      's_min_low' => '',
+      's_min_high' => '',
+
+      'tc10_low' => '',
+      'tc10_high' => '',
+      'tc50_low' => '',
+      'tc50_high' => '',
+      'tc90_low' => '',
+      'tc90_high' => '',
+
+      'type' => '',
       's_max' => '',
       's_min' => '',
-      'std_tc10' => '',
-      'std_tc_50' => '',
-      'std_tc_90' => '',
       'tc10' => '',
       'tc50' => '',
       'tc90' => '',
-      'tag' => '',
+      'eval' => '',
    ];
 
-   public $view;
+   public array $shoe_models = [];
 
-   public $sh_mods = [];
+   public array $ins_rdc_types = ['-', 'SLOW', 'FAST'];
 
-   public $ins_rdc_tags = [];
+   public function mount()
+   {
+      $this->batch['code'] = __('Kode batch');
+      $this->machines = InsRdcMachine::all()->toArray();
+   }
 
-   public $file;
+   #[On('test-create')]
+   public function loadBatch($id)
+   {
+      $this->customReset();
 
-   public $machines = [];
+      $batch = InsRubberBatch::find($id);
 
-   public $update_batch;      
+      if ($batch) {
+         $this->batch['id'] = $batch->id;
+         $this->batch['code'] = $batch->code;
+         $this->batch['code_alt'] = $batch->code_alt;
+         $this->batch['model'] = $batch->model;
+         $this->batch['color'] = $batch->color;
+         $this->batch['mcs'] = $batch->mcs;
+
+      } else {
+         $this->handleNotFound();
+      }
+
+   }
+
+   private function customReset()
+   {
+      $this->reset(['file', 'batch', 'test']);
+      $this->batch['code'] = __('Kode batch');
+   }
+
+   public function customResetBatch()
+   {
+      $id = $this->batch['id'];
+      $this->customReset();
+      $this->loadBatch($id);
+   }
+
+   public function handleNotFound()
+   {
+       $this->js('$dispatch("close")');
+       $this->js('notyfError("' . __('Tidak ditemukan') . '")');
+       $this->dispatch('updated');
+   }
 
    public function rules()
    {
       return [
-         'code_alt' => 'nullable|string|max:50',
-         'model' => 'nullable|string|max:30',
-         'color' => 'nullable|string|max:20',
-         'mcs' => 'nullable|string|max:10',
+         'batch.code_alt'     => 'nullable|string|max:50',
+         'batch.model'        => 'nullable|string|max:30',
+         'batch.color'        => 'nullable|string|max:20',
+         'batch.mcs'          => 'nullable|string|max:10',
 
-         'eval' => 'required|in:pass,fail',
-         's_max' => 'required|numeric|gt:0|lt:99',
-         's_min' => 'required|numeric|gt:0|lt:99',
+         'test.s_min_low'    => 'required|numeric|gt:0|lt:99',
+         'test.s_min_high'   => 'required|numeric|gt:0|lt:99',
+         'test.s_max_low'    => 'required|numeric|gt:0|lt:99',
+         'test.s_max_high'   => 'required|numeric|gt:0|lt:99',
 
-         'std_tc10' => 'required|numeric|gt:0|lt:999',
-         'std_tc_50' => 'nullable|numeric|gt:0|lt:999',
-         'std_tc_90' => 'required|numeric|gt:0|lt:999',
-
-         'tc10' => 'required|numeric|gt:0|lt:999',
-         'tc50' => 'nullable|numeric|gt:0|lt:999',
-         'tc90' => 'required|numeric|gt:0|lt:999',
-
-         'type' => 'required|exists:ins_rdc_types,name',
+         'test.tc10_low'     => 'required|numeric|gt:0|lt:999',
+         'test.tc10_high'    => 'required|numeric|gt:0|lt:999',
+         'test.tc50_low'     => 'nullable|numeric|gt:0|lt:999',
+         'test.tc50_high'    => 'nullable|numeric|gt:0|lt:999',
+         'test.tc90_low'     => 'required|numeric|gt:0|lt:999',
+         'test.tc90_high'    => 'required|numeric|gt:0|lt:999',
+         
+         'test.type'         => 'required|in:-,slow,fast',
+         'test.s_max'        => 'required|numeric|gt:0|lt:99',
+         'test.s_min'        => 'required|numeric|gt:0|lt:99',
+         'test.tc10'         => 'required|numeric|gt:0|lt:999',
+         'test.tc50'         => 'nullable|numeric|gt:0|lt:999',
+         'test.tc90'         => 'required|numeric|gt:0|lt:999',
+         'test.eval'         => 'required|in:pass,fail',
       ];
+   }
+
+   public function updatedFile()
+   {
+      $this->validate([
+      'file' => 'file|mimes:txt,xls,xlsx|max:1024'
+      ]);
+
+      $mimeType = $this->file->getMimeType();
+
+      $type = match ($mimeType) {
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'excel',
+      'text/plain' => 'text'
+      };
+
+      switch ($type) {
+      case 'excel':
+         $this->extractDataExcel();
+         $this->view = 'review';
+         break;
+
+      case 'text':
+         $this->extractDataText();
+         $this->view = 'review';
+         break;
+
+      default:
+         $this->js('notyfError("' . __('Mime tidak didukung') . '")');
+         break;
+      }
+      $this->reset(['file']);
+   }
+
+   private function find3Digit($string) {
+      preg_match_all('/\/?(\d{3})/', $string, $matches);
+      return !empty($matches[1]) ? end($matches[1]) : null;
+   }
+
+   private function extractDataText()
+   {
+      try {
+         // Fetch the machine data based on the selected machine_id
+         $machine = InsRdcMachine::find($this->test['machine_id']);
+
+         if (!$machine) {
+            throw new \Exception("Mesin tidak ditemukan");
+         }
+
+         // Read the text file content
+         $content = file_get_contents($this->file->getRealPath());
+         
+         // Split content into lines
+         $lines = explode("\n", $content);
+         
+         // Initialize variables to store extracted values
+         $values = [
+            'model' => '',
+            'color' => '',
+            'mcs' => '',
+            'code_alt' => '',
+            's_max' => 0,
+            's_min' => 0,
+            'tc10' => 0,
+            'tc50' => 0,
+            'tc90' => 0,
+            'eval' => ''
+         ];
+
+         // Process each line to extract data
+         foreach ($lines as $line) {
+            $line = trim($line);
+            
+            // Debug line yang sedang diproses
+            $this->js('console.log("Processing line: '. addslashes($line) .'")');
+            
+            // Extract MCS dari baris yang mengandung "Compound"
+            if (strpos($line, 'Compound') !== false) {
+               // Extract MCS
+               if (preg_match('/OG\/RS\s+(\d{3})/i', $line, $matches)) {
+                     $values['mcs'] = $matches[1];
+                     $this->js('console.log("Found MCS in Compound line: '. $matches[1] .'")');
+               }
+               
+               // Extract Description (Warna) dari baris yang sama
+               if (preg_match('/Description:\s*([^$]+)/i', $line, $matches)) {
+                     $values['color'] = trim($matches[1]);
+                     $this->js('console.log("Found Color in Description: '. $matches[1] .'")');
+               }
+            }
+            // Extract Orderno as code_alt
+            elseif (preg_match('/Orderno\.:?\s*(\d+)/i', $line, $matches)) {
+               $values['code_alt'] = $this->safeString($matches[1]);
+            }
+            // Extract Description as color
+            elseif (preg_match('/Description:\s*(.+)$/i', $line, $matches)) {
+               $values['color'] = $this->safeString($matches[1]);
+            }
+            // Extract ML as s_min
+            elseif (preg_match('/^ML\s+(\d+\.\d+)/i', $line, $matches)) {
+               $values['s_min'] = $this->safeFloat($matches[1]);
+            }
+            // Extract MH as s_max
+            elseif (preg_match('/^MH\s+(\d+\.\d+)/i', $line, $matches)) {
+               $values['s_max'] = $this->safeFloat($matches[1]);
+            }
+            // Extract t10 as tc10
+            elseif (preg_match('/^t10\s+(\d+\.\d+)/i', $line, $matches)) {
+               $values['tc10'] = $this->safeFloat($matches[1]);
+            }
+            // Extract t50 as tc50
+            elseif (preg_match('/^t50\s+(\d+\.\d+)/i', $line, $matches)) {
+               $values['tc50'] = $this->safeFloat($matches[1]);
+            }
+            // Extract t90 as tc90
+            elseif (preg_match('/^t90\s+(\d+\.\d+)/i', $line, $matches)) {
+               $values['tc90'] = $this->safeFloat($matches[1]);
+            }
+            // Extract status for eval
+            elseif (preg_match('/Status:\s*Pass/i', $line)) {
+               $values['eval'] = 'pass';
+            }
+            elseif (preg_match('/Status:\s*Fail/i', $line)) {
+               $values['eval'] = 'fail';
+            }
+         }
+
+         // Debug final values
+         $this->js('console.log("Before assignment - Color value:", "' . ($values['color'] ?? 'not set') . '")');
+
+         // Assign extracted values to component properties
+         $this->batch['code_alt']   = $values['code_alt'];
+         $this->batch['model']      = $values['model'];
+         $this->batch['color']      = $values['color'];
+         $this->batch['mcs']        = $values['mcs'];
+
+         $this->test['s_max']       = $values['s_max'];
+         $this->test['s_min']       = $values['s_min'];
+         $this->test['tc10']        = $values['tc10'];
+         $this->test['tc50']        = $values['tc50'];
+         $this->test['tc90']        = $values['tc90'];
+         $this->test['eval']        = $values['eval'];
+
+         // Debug after assignment
+         $this->js('console.log("After assignment - Color value:", "' . $this->e_color . '")');
+
+      } catch (\Exception $e) {
+            $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
+            $this->js('console.log("Error: '. $e->getMessage() .'")');
+      }
+   }
+
+   private function extractDataExcel()
+   {
+      try {
+         // Fetch the machine data based on the selected machine_id
+         $machine = InsRdcMachine::find($this->test['machine_id']);
+
+         if (!$machine) {
+            throw new \Exception("Mesin tidak ditemukan");
+         }
+
+         $cellsConfig = json_decode($machine->cells, true);
+
+         $path = $this->file->getRealPath();
+         $spreadsheet = IOFactory::load($path);
+         $worksheet = $spreadsheet->getActiveSheet();
+
+         foreach ($cellsConfig as $config) {
+            $field = $config['field'];
+            $address = $config['address'];
+            $value = $worksheet->getCell($address)->getValue();
+
+            switch ($field) {
+               case 'model':
+               case 'color':
+               case 'code_alt':
+                  $this->batch[$field] = $this->safeString($value);
+                  break;
+               case 'mcs':
+                  $this->batch['mcs'] = $this->find3Digit($this->safeString($value));
+                  break;
+               case 's_max':
+               case 's_min':
+               case 'tc10':
+               case 'tc50':
+               case 'tc90':
+                  $this->test[$field] = $this->safeFloat($value);
+                  break;
+               case 'eval':
+                  $eval = $this->safeString($value);
+                  $this->test['eval'] = ($eval == 'OK' ? 'pass' : ($eval == 'SL' ? 'fail' : ''));
+                  break;
+            }
+         }
+
+      } catch (\Exception $e) {
+            $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
+            $this->js('console.log("'. $e->getMessage() .'")');
+      }
+   }
+
+   private function safeString($value): string
+   {
+      return trim(preg_replace('/[^a-zA-Z0-9\s]/', '', $value));
+   }
+
+   private function safeFloat($value): ?float
+   {
+      return is_numeric($value) ? (float)$value : 0;
+   }
+
+   public function removeFromQueue()
+   {
+      $batch = InsRubberBatch::find($this->batch['id']);
+
+      if ($batch) {
+         $batch->update([ 'rdc_queue' => 0 ]);
+         $this->js('notyfSuccess("' . __('Dihapus dari antrian') . '")'); 
+         $this->js('$dispatch("close")');
+         $this->dispatch('updated');
+
+      } else {
+         $this->handleNotFound();
+      }
+      $this->customReset();
    }
 }
 
 ?>
 
-
-
 <div>
-   <div x-data="{ dropping: false, machine_id: @entangle('machine_id') }">
-      <div class="flex justify-between items-start p-6">
-            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-               {{ __('Sisipkan hasil uji') }}
-            </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
-      </div>
-      <div class="grid grid-cols-6 gap-6 px-6 mt-6">
-         <div class="col-span-4">
-            <label for="test-machine_id" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin') }}</label>
-            <x-select class="w-full" id="test-machine_id" x-model="machine_id" :disabled="$file">
-               <option value=""></option>
-               @foreach($machines as $machine)
-                  <option value="{{ $machine->id }}">{{ $machine->number . ' - ' . $machine->name }}</option>
+   <div class="flex justify-between items-start p-6">
+      <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+         {{ $batch['code'] }}
+      </h2>
+      <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+   </div>
+   <div class="grid grid-cols-6">
+      <div class="col-span-2 px-6 bg-caldy-500 bg-opacity-10 rounded-r-xl">
+         <div class="mt-6">
+            <x-pill class="uppercase">{{ __('Batch') }}</x-pill>     
+         </div>   
+         <div class="mt-6">
+            <label for="test-code_alt"
+               class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode alt.') }}</label>
+            <x-text-input id="test-code_alt" wire:model="batch.code_alt" type="text" />
+         </div>
+         <div class="mt-6">
+            <label for="test-model"
+               class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Model') }}</label>
+            <x-text-input id="test-model" list="test-models" wire:model="batch.model" type="text" />
+            <datalist id="test-models">
+               @foreach ($shoe_models as $shoe_model)
+                     <option value="{{ $shoe_model }}">
                @endforeach
-            </x-select>
+            </datalist>
          </div>
-         <div class="col-span-2">
-            <x-secondary-button type="button" id="test-file" class="w-full h-full justify-center" x-on:click="$refs.file.click()" ><i
-            class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
+         <div class="mt-6">
+            <label for="test-color"
+               class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Warna') }}</label>
+            <x-text-input id="test-color" wire:model="batch.color" type="text" />
          </div>
+         <div class="mt-6">
+            <label for="test-mcs"
+               class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
+            <x-text-input id="test-mcs" wire:model="batch.mcs" type="text" />
+         </div>
+         <!-- <div class="px-3 my-6">
+            <x-toggle name="update_batch" wire:model.live="update_batch" :checked="$update_batch ? true : false" >{{ __('Perbarui') }}</x-toggle>
+         </div> -->
       </div>
-      <div class="grid grid-cols-6 mt-6">
-         <div class="col-span-2 px-6 bg-caldy-500 bg-opacity-10 rounded-r-xl">
-            <div class="mt-6">
-               <x-pill class="uppercase">{{ __('Batch') }}</x-pill>     
-            </div>   
-            <div class="mt-6">
-               <label for="test-code_alt"
-                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode alt.') }}</label>
-               <x-text-input id="test-code_alt" wire:model="code_alt" type="text" />
-               @error('code_alt')
-                  <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-               @enderror
-            </div>
-            <div class="mt-6">
-               <label for="test-model"
-                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Model') }}</label>
-               <x-text-input id="test-model" list="test-models" wire:model="model" type="text" />
-               @error('model')
-                  <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-               @enderror
-               <datalist id="test-models">
-                  @foreach ($sh_mods as $sh_mod)
-                        <option value="{{ $sh_mod->name }}">
+      <div class="col-span-4 px-6">
+         <div class="flex gap-3" x-data="{ machine_id: @entangle('test.machine_id') }">
+            <div class="grow">
+               <x-select class="w-full" id="test-machine_id" x-model="machine_id">
+                  <option value=""></option>
+                  @foreach($machines as $machine)
+                     <option value="{{ $machine['id'] }}">{{ $machine['number'] . ' - ' . $machine['name'] }}</option>
                   @endforeach
-               </datalist>
+               </x-select>
             </div>
-            <div class="mt-6">
-               <label for="test-color"
-                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Warna') }}</label>
-               <x-text-input id="test-color" wire:model="color" type="text" />
-               @error('color')
-                  <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-               @enderror
-            </div>
-            <div class="mt-6">
-               <label for="test-mcs"
-                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
-               <x-text-input id="test-mcs" wire:model="mcs" type="text" />
-               @error('mcs')
-                  <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-               @enderror
-            </div>
-            <div class="px-3 my-6">
-               <x-toggle name="update_batch" wire:model.live="update_batch" :checked="$update_batch ? true : false" >{{ __('Perbarui') }}</x-toggle>
+            <div>
+               <input wire:model="file" type="file" class="hidden" x-cloak x-ref="file" />
+               <x-secondary-button x-show="!machine_id" disabled type="button" id="test-file" class="w-full h-full justify-center"><i
+               class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
+               <x-secondary-button x-show="machine_id" type="button" id="test-file" class="w-full h-full justify-center" x-on:click="$refs.file.click()" ><i
+               class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
             </div>
          </div>
-         <div class="col-span-4 px-6">
-            <div class="mt-6">
-               <x-pill class="uppercase">{{ __('Standar') }}</x-pill>     
-            </div>    
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 mt-6">
-               <div>
-                  <label for="test-std_s_max"
-                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S maks') }}</label>
-                  <x-text-input id="test-std_s_max" wire:model="std_s_max" type="number" step=".01" />
-                  @error('std_s_max')
-                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                  @enderror
-               </div>
-               <div>
-                  <label for="test-std_s_min"
-                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S Min') }}</label>
-                  <x-text-input id="test-std_s_min" wire:model="std_s_min" type="number" step=".01" />
-                  @error('std_s_min')
-                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                  @enderror
-               </div>
-               <div>
-                  <label for="test-tag"
-                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tag') }}</label>
-                  <x-text-input id="test-tag" list="test-tags" wire:model="tag" type="text" />
-                  @error('tag')
-                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                  @enderror
-                  <datalist id="test-tags">
-                     @foreach ($ins_rdc_tags as $ins_rdc_tag)
-                        <option value="{{ $ins_rdc_tag->name }}">
-                     @endforeach
-                  </datalist>
+         <div class="my-6">
+            <x-pill class="uppercase">{{ __('Standar') }}</x-pill>     
+         </div>    
+         <div class="grid grid-cols-1 sm:grid-cols-3 mt-6">     
+            <div>
+               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S maks') }}</label>
+               <div class="flex w-full items-center">
+                  <div class="grow">
+                     <x-text-input-t class="text-center" wire:model="test.s_max_low" />
+                  </div>
+                  <div>-</div>
+                  <div class="grow">
+                     <x-text-input-t class="text-center" wire:model="test.s_max_high" />
+                  </div>
                </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 mt-6">
-               <div>
-                     <label for="test-std_tc10"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC10') }}</label>
-                     <x-text-input id="test-std_tc10" wire:model="std_tc10" type="number" step=".01" />
-                     @error('std_tc10')
-                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                     @enderror
-               </div>
-               <div>
-                     <label for="test-std_tc50"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC50') }}</label>
-                     <x-text-input id="test-std_tc50" wire:model="std_tc50" type="number" step=".01" />
-                     @error('std_tc50')
-                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                     @enderror
-               </div>
-               <div>
-                     <label for="test-std_tc90"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC90') }}</label>
-                     <x-text-input id="test-std_tc90" wire:model="std_tc90" type="number" step=".01" />
-                     @error('std_tc90')
-                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                     @enderror
+            <div>
+               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S min') }}</label>
+               <div class="flex w-full items-center">
+                  <div class="grow">
+                     <x-text-input-t class="text-center" wire:model="test.s_min_low" />
+                  </div>
+                  <div>-</div>
+                  <div class="grow">
+                     <x-text-input-t class="text-center" wire:model="test.s_min_high" />
+                  </div>
                </div>
             </div>
-            <div class="mt-6">
-               <x-pill class="uppercase">{{ __('Hasil') }}</x-pill>     
-            </div>       
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 mt-6">
-               <div>
-                  <label for="test-s_max"
-                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S maks') }}</label>
-                  <x-text-input id="test-s_max" wire:model="s_max" type="number" step=".01" />
-                  @error('s_max')
-                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                  @enderror
-               </div>
-               <div>
-                  <label for="test-s_min"
-                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S Min') }}</label>
-                  <x-text-input id="test-s_min" wire:model="s_min" type="number" step=".01" />
-                  @error('s_min')
-                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                  @enderror
-               </div>
-               <div>
-                  <label for="test-eval"
-                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Evaluasi') }}</label>
-                  <x-select class="w-full" id="test-eval" wire:model="eval">
-                     <option value=""></option>
-                     <option value="pass">{{ __('PASS') }}</option>
-                     <option value="fail">{{ __('FAIL') }}</option>
-                  </x-select>
-                  @error('eval')
-                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                  @enderror
+            <div>
+               <label for="test-eval"
+                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tipe') }}</label>
+               <x-select class="w-full" id="test-eval" wire:model="test.type">
+                  <option value=""></option>
+                  @foreach ($ins_rdc_types as $type)
+                     <option value="{{ $type }}">{{ $type }}</option>
+                  @endforeach
+               </x-select>
+            </div>
+         </div>
+         <div class="grid grid-cols-1 sm:grid-cols-3 mt-6">
+            <div>
+               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC10') }}</label>
+               <div class="flex w-full items-center">
+                  <div class="grow">
+                     <x-text-input-t class="text-center" wire:model="test.tc10_low" />
+                  </div>
+                  <div>-</div>
+                  <div class="grow">
+                     <x-text-input-t class="text-center" wire:model="test.tc10_high" />
+                  </div>
                </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 mt-6">
-               <div>
-                     <label for="test-tc10"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC10') }}</label>
-                     <x-text-input id="test-tc10" wire:model="tc10" type="number" step=".01" />
-                     @error('tc10')
-                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                     @enderror
+            <div>
+               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC50') }}</label>
+               <div class="flex w-full items-center">
+                  <div class="grow">
+                     <x-text-input-t class="text-center" wire:model="test.tc50_low" />
+                  </div>
+                  <div>-</div>
+                  <div class="grow">
+                     <x-text-input-t class="text-center" wire:model="test.tc50_low" />
+                  </div>
                </div>
-               <div>
-                     <label for="test-tc50"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC50') }}</label>
-                     <x-text-input id="test-tc50" wire:model="tc50" type="number" step=".01" />
-                     @error('tc50')
-                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                     @enderror
+            </div>
+            <div>
+               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC90') }}</label>
+               <div class="flex w-full items-center">
+                  <div class="grow">
+                     <x-text-input-t class="text-center" wire:model="test.tc90_low" />
+                  </div>
+                  <div>-</div>
+                  <div class="grow">
+                     <x-text-input-t class="text-center" wire:model="test.tc90_low" />
+                  </div>
                </div>
-               <div>
-                     <label for="test-tc90"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC90') }}</label>
-                     <x-text-input id="test-tc90" wire:model="tc90" type="number" step=".01" />
-                     @error('tc90')
-                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                     @enderror
-               </div>
+            </div>
+         </div>
+         <div class="my-6">
+            <x-pill class="uppercase">{{ __('Hasil') }}</x-pill>     
+         </div>       
+         <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 mt-6">
+            <div>
+               <label for="test-s_max"
+                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S maks') }}</label>
+               <x-text-input id="test-s_max" wire:model="test.s_max" type="number" step=".01" />
+            </div>
+            <div>
+               <label for="test-s_min"
+                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S Min') }}</label>
+               <x-text-input id="test-s_min" wire:model="test.s_min" type="number" step=".01" />
+               
+            </div>
+            <div>
+               <label for="test-eval"
+                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Evaluasi') }}</label>
+               <x-select class="w-full" id="test-eval" wire:model="test.eval">
+                  <option value=""></option>
+                  <option value="pass">{{ __('PASS') }}</option>
+                  <option value="fail">{{ __('FAIL') }}</option>
+               </x-select>
+            </div>
+         </div>
+         <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 mt-6">
+            <div>
+               <label for="test-tc10"
+                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC10') }}</label>
+               <x-text-input id="test-tc10" wire:model="test.tc10" type="number" step=".01" />
+            </div>
+            <div>
+               <label for="test-tc50"
+                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC50') }}</label>
+               <x-text-input id="test-tc50" wire:model="test.tc50" type="number" step=".01" />
+            </div>
+            <div>
+               <label for="test-tc90"
+                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('TC90') }}</label>
+               <x-text-input id="test-tc90" wire:model="test.tc90" type="number" step=".01" />
             </div>
          </div>
       </div>
    </div>
-   <div class="p-6 flex justify-between items-center">
+   <div class="p-6 flex justify-between items-center gap-3">
       <x-dropdown align="left" width="48">
-            <x-slot name="trigger">
-               <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
-            </x-slot>
-            <x-slot name="content">
-               <x-dropdown-link href="#" wire:click.prevent="customReset">
-                  {{ __('Reset') }}
-               </x-dropdown-link>
-               <hr class="border-neutral-300 dark:border-neutral-600 {{ true ? '' : 'hidden' }}" />
-               <x-dropdown-link href="#" wire:click.prevent="removeFromQueue"
-                  class="{{ true ? '' : 'hidden' }}">
-                  {{ __('Hapus dari antrian') }}
-               </x-dropdown-link>
-            </x-slot>
+         <x-slot name="trigger">
+            <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+         </x-slot>
+         <x-slot name="content">
+            <x-dropdown-link href="#" wire:click.prevent="customResetBatch">
+               {{ __('Reset') }}
+            </x-dropdown-link>
+            <hr class="border-neutral-300 dark:border-neutral-600 {{ true ? '' : 'hidden' }}" />
+            <x-dropdown-link href="#" wire:click.prevent="removeFromQueue"
+               class="{{ true ? '' : 'hidden' }}">
+               {{ __('Hapus dari antrian') }}
+            </x-dropdown-link>
+         </x-slot>
       </x-dropdown>
-      <div class="flex flex-row gap-x-3">
-            @if($view != 'form')
-            <x-secondary-button type="button" wire:click="$set('view', 'form'); $set('file', '')" x-show="machine_id">{{ __('Isi manual') }}</x-secondary-button>
-            @endif
-            @if($view == 'review' || $view == 'form')
-            <x-primary-button type="button" wire:click="insertTest">
-               {{ __('Sisipkan') }}
-            </x-primary-button>
-            @endif
-            @if($view == 'upload')
-            <x-primary-button type="button" x-on:click="$refs.file.click()" x-show="machine_id" ><i
-               class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-primary-button>
-            @endif
-      </div>
+      <x-primary-button type="button" wire:click="insertTest">
+         {{ __('Simpan') }}
+      </x-primary-button>
    </div>
+   <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
+   <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
 </div>

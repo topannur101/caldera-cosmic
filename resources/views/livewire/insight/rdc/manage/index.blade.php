@@ -17,23 +17,6 @@ new #[Layout('layouts.app')] class extends Component {};
         <h1 class="text-2xl text-neutral-900 dark:text-neutral-100 px-8">
             {{ __('Kelola') }}</h1>
         <div class="grid grid-cols-1 gap-1 my-8 ">
-            <x-card-link href="{{ route('insight.rdc.manage.stds') }}" wire:navigate>
-                <div class="flex px-8">
-                    <div>
-                        <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-fw fa-bullseye"></i></div>
-                        </div>
-                    </div>
-                    <div class="grow truncate py-4">
-                        <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Kelola standar') }}
-                        </div>
-                        <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
-                            {{ __('Kelola standar untuk tampil di bagan tren') }}
-                        </div>
-                    </div>
-                </div>
-            </x-card-link>
             <x-card-link href="{{ route('insight.rdc.manage.auths') }}" wire:navigate>
                 <div class="flex px-8">
                     <div>
@@ -47,23 +30,6 @@ new #[Layout('layouts.app')] class extends Component {};
                         </div>
                         <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
                             {{ __('Kelola wewenang pengguna data rheometer') }}
-                        </div>
-                    </div>
-                </div>
-            </x-card-link>
-            <x-card-link href="{{ route('insight.rdc.manage.tags') }}" wire:navigate>
-                <div class="flex px-8">
-                    <div>
-                        <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-fw fa-tag"></i></div>
-                        </div>
-                    </div>
-                    <div class="grow truncate py-4">
-                        <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Kelola tag') }}
-                        </div>
-                        <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
-                            {{ __('Kelola tag untuk hasil uji rheometer') }}
                         </div>
                     </div>
                 </div>

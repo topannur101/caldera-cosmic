@@ -293,7 +293,7 @@ new class extends Component {
             <div x-text="area_qt_eval" class="text-center font-bold text-7xl">
                 0.00
             </div>
-            <x-text-input-transparent type="text" x-model="area_qt_string" x-on:keyup.enter="area_qt = area_qt_eval; window.dispatchEvent(escKey); $refs.hidecode.focus()"></x-text-input-transparent>
+            <x-text-input-line type="text" x-model="area_qt_string" x-on:keyup.enter="area_qt = area_qt_eval; window.dispatchEvent(escKey); $refs.hidecode.focus()"></x-text-input-line>
         </div>
     </x-spotlight>
     <div class="w-60 grid grid-cols-1 grid-rows-2 gap-6 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">

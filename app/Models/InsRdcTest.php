@@ -11,19 +11,28 @@ class InsRdcTest extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'ins_rubber_batch_id',
-        'ins_rdc_machine_id',
         'eval',
-        'machine',
         's_min',
         's_max',
         'tc10',
         'tc50',
         'tc90',
         'data',
-        'tag',
-        'user_id',
-        'queued_at'
+        'queued_at',
+        'ins_rdc_machine_id',
+        's_min_low',
+        's_min_high',
+        's_max_low',
+        's_max_high',
+        'tc10_low',
+        'tc10_high',
+        'tc50_low',
+        'tc50_high',
+        'tc90_low',
+        'tc90_high',
+        'type',
     ];
 
     public function evalHuman(): string
