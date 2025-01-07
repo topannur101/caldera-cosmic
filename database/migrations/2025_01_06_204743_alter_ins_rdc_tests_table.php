@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::table('ins_rdc_tests', function (Blueprint $table) {
 
             $table->dropColumn(['tag', 'tc10_min', 'tc10_max', 'tc90_min', 'tc90_max']);
-            $table->decimal('tc50', 5, 2)->nullable()->change();
 
             $table->decimal('s_min_low', 4, 2)->default(0);
             $table->decimal('s_min_high', 4, 2)->default(0);
@@ -22,12 +21,12 @@ return new class extends Migration
             $table->decimal('s_max_high', 4, 2)->default(0);
             $table->decimal('tc10_low', 5, 2)->default(0);
             $table->decimal('tc10_high', 5, 2)->default(0);
-            $table->decimal('tc50_low', 5, 2)->nullable();
-            $table->decimal('tc50_high', 5, 2)->nullable();
+            $table->decimal('tc50_low', 5, 2)->default(0);
+            $table->decimal('tc50_high', 5, 2)->default(0);
             $table->decimal('tc90_low', 5, 2)->default(0);
             $table->decimal('tc90_high', 5, 2)->default(0);
             
-            $table->enum('type', ['-', 'SLOW', 'FAST'])->default('-');
+            $table->enum('type', ['-', 'slow', 'fast'])->default('-');
 
             $table->index('type');
             
@@ -46,9 +45,6 @@ return new class extends Migration
             $table->decimal('tc10_max', 5, 2)->nullable();
             $table->decimal('tc90_min', 5, 2)->nullable();
             $table->decimal('tc90_max', 5, 2)->nullable();
-    
-            // Revert changes to 'tc50' column
-            $table->decimal('tc50', 5, 2)->nullable(false)->change();
     
             // Drop newly added columns
             $table->dropColumn([

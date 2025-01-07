@@ -16,8 +16,8 @@ new class extends Component {
         return [
             'number'                => ['required', 'integer', 'min:1', 'max:99', 'unique:ins_rdc_machines'],
             'name'                  => ['required', 'string', 'min:1', 'max:20'],
-            'cells'                 => ['required', 'array', 'min:1', 'max:10'],
-            'cells.*.field'         => ['required', 'string', 'max:20'],
+            'cells'                 => ['required', 'array', 'min:1', 'max:20'],
+            'cells.*.field'         => ['required', 'string', 'unique', 'max:20', 'in:mcs,color,s_max,s_min,tc10,tc50,tc90,eval,code_alt,s_max_low,s_max_high,s_min_low,s_min_high,tc10_low,tc10_high,tc50_low,tc50_high,tc90_low,tc90_high'],
             'cells.*.address'       => ['required', 'string', 'regex:/^[A-Z]+[1-9]\d*$/'],
         ];
     }
@@ -61,7 +61,7 @@ new class extends Component {
 
     public function addCell()
     {
-        if (count($this->cells) < 10) {
+        if (count($this->cells) < 20) {
             $this->cells[] = ['field' => '', 'address' => ''];
         }
     }

@@ -17,8 +17,8 @@ class extends Component {
     public function mount()
     {
         $this->view_titles = [        
-            'by-mcs'    => __('Berdasarkan MCS'),
-            'tests'   => __('Hasil pengujian'),    
+            'tc10-tc90-chart'   => __('Bagan TC10 dan TC90'),
+            'tests'             => __('Hasil uji'),    
         ];
     }
 
@@ -55,6 +55,9 @@ class extends Component {
     </div>
     <div wire:key="rdc-summary-index-container" wire:loading.class="hidden">
         @switch($view)
+            @case('chart')
+                <livewire:insight.rdc.summary.tc10-tc90-chart />
+                @break
             @case('tests')
                 <livewire:insight.rdc.summary.tests />
                 @break

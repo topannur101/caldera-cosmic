@@ -36,7 +36,7 @@ new class extends Component {
             ->select(
                 'ins_rdc_tests.*',
                 'ins_rdc_tests.queued_at as test_queued_at',
-                'ins_rdc_tests.updated_at as test_updated_at',
+                'ins_rdc_tests.created_at as test_created_at',
                 'ins_rubber_batches.code as batch_code',
                 'ins_rubber_batches.code_alt as batch_code_alt',
                 'ins_rubber_batches.model as batch_model',
@@ -46,7 +46,7 @@ new class extends Component {
                 'users.emp_id as user_emp_id',
                 'users.name as user_name'
             )
-            ->whereBetween('ins_rdc_tests.updated_at', [$start, $end]);
+            ->whereBetween('ins_rdc_tests.created_at', [$start, $end]);
             // if ($this->line)
             // {
             //     $query->where('ins_rdc_tests.line', $this->line);
@@ -274,33 +274,38 @@ new class extends Component {
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                 <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
-                        <th>{{ __('Diperbarui') }}</th>
+                        <th>{{ __('Selesai') }}</th>
                         <th>{{ __('Kode') }}</th>
-                        <th>{{ __('Alt') }}</th>
+                        <th>{{ __('Kode alt') }}</th>
                         <th>{{ __('Model') }}</th>
                         <th>{{ __('Warna') }}</th>
                         <th>{{ __('MCS') }}</th>
+                        <th>{{ __('Type') }}</th>
+                        <th>{{ __('TC10') }}</th>
+                        <th>{{ __('TC90') }}</th>
                         <th>{{ __('Hasil') }}</th>
-                        <th>{{ __('M') }}</th>
-                        <th>{{ __('Tag') }}</th>
+                        <th>{{ __('M') }}</th>                
                         <th>{{ __('Operator') }}</th>
                     </tr>
                     @foreach ($tests as $test)
                     <tr wire:key="test-tr-{{ $test->id . $loop->index }}" tabindex="0"
                         x-on:click="$dispatch('open-modal', 'batch-show'); $dispatch('batch-show', { rdc_test_id: '{{ $test->id }}', view: 'rdc'})">
-                            <td>{{ $test->test_updated_at }}</td>
+                            <td>{{ $test->test_created_at }}</td>
                             <td>{{ $test->batch_code }}</td>
-                            <td>{{ $test->batch_code_alt }}</td>
+                            <td>{{ $test->batch_code_alt }}</td>                            
                             <td>{{ $test->batch_model ? $test->batch_model : '-' }}</td>
                             <td>{{ $test->batch_color ? $test->batch_color : '-'  }}</td>
                             <td>{{ $test->batch_mcs ? $test->batch_mcs : '-' }}</td>
+                            <td class="uppercase">{{ $test->type }}</td>
+                            <td>{{ $test->tc10 }}</td>
+                            <td>{{ $test->tc90 }}</td>
                             <td><x-pill class="uppercase" color="{{ 
                                 $test->eval === 'queue' ? 'yellow' : 
                                 ($test->eval === 'pass' ? 'green' : 
                                 ($test->eval === 'fail' ? 'red' : ''))
                                 }}">{{ $test->evalHuman() }}</x-pill></td>
                             <td>{{ $test->machine_number }}</td>
-                            <td>{{ $test->tag }}</td>
+                            
                             <td>{{ ($test->user_emp_id ?? '') . ' - ' . ($test->user_name ?? '') }}</td>
                         </tr>
                     @endforeach

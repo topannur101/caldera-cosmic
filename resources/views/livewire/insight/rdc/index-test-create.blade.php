@@ -6,6 +6,7 @@ use Livewire\Attributes\On;
 
 use App\Models\InsRubberBatch;
 use App\Models\InsRdcMachine;
+use App\Models\InsRdcTest;
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -30,7 +31,7 @@ new class extends Component
 
    public array $test = [
 
-      'machine_id' => 0,
+      'ins_rdc_machine_id' => 0,
 
       's_max_low' => '',
       's_max_high' => '',
@@ -54,8 +55,6 @@ new class extends Component
    ];
 
    public array $shoe_models = [];
-
-   public array $ins_rdc_types = ['-', 'SLOW', 'FAST'];
 
    public function mount()
    {
@@ -86,6 +85,7 @@ new class extends Component
 
    private function customReset()
    {
+      $this->resetErrorBag();
       $this->reset(['file', 'batch', 'test']);
       $this->batch['code'] = __('Kode batch');
    }
@@ -112,24 +112,26 @@ new class extends Component
          'batch.color'        => 'nullable|string|max:20',
          'batch.mcs'          => 'nullable|string|max:10',
 
-         'test.s_min_low'    => 'required|numeric|gt:0|lt:99',
-         'test.s_min_high'   => 'required|numeric|gt:0|lt:99',
-         'test.s_max_low'    => 'required|numeric|gt:0|lt:99',
-         'test.s_max_high'   => 'required|numeric|gt:0|lt:99',
+         'test.ins_rdc_machine_id' => 'required|exists:ins_rdc_machines,id',
 
-         'test.tc10_low'     => 'required|numeric|gt:0|lt:999',
-         'test.tc10_high'    => 'required|numeric|gt:0|lt:999',
-         'test.tc50_low'     => 'nullable|numeric|gt:0|lt:999',
-         'test.tc50_high'    => 'nullable|numeric|gt:0|lt:999',
-         'test.tc90_low'     => 'required|numeric|gt:0|lt:999',
-         'test.tc90_high'    => 'required|numeric|gt:0|lt:999',
+         'test.s_min_low'    => 'required|numeric|gte:0|lte:99',
+         'test.s_min_high'   => 'required|numeric|gte:0|lte:99',
+         'test.s_max_low'    => 'required|numeric|gte:0|lte:99',
+         'test.s_max_high'   => 'required|numeric|gte:0|lte:99',
+
+         'test.tc10_low'     => 'required|numeric|gte:0|lte:999',
+         'test.tc10_high'    => 'required|numeric|gte:0|lte:999',
+         'test.tc50_low'     => 'required|numeric|gte:0|lte:999',
+         'test.tc50_high'    => 'required|numeric|gte:0|lte:999',
+         'test.tc90_low'     => 'required|numeric|gte:0|lte:999',
+         'test.tc90_high'    => 'required|numeric|gte:0|lte:999',
          
          'test.type'         => 'required|in:-,slow,fast',
-         'test.s_max'        => 'required|numeric|gt:0|lt:99',
-         'test.s_min'        => 'required|numeric|gt:0|lt:99',
-         'test.tc10'         => 'required|numeric|gt:0|lt:999',
-         'test.tc50'         => 'nullable|numeric|gt:0|lt:999',
-         'test.tc90'         => 'required|numeric|gt:0|lt:999',
+         'test.s_max'        => 'required|numeric|gte:0|lte:99',
+         'test.s_min'        => 'required|numeric|gte:0|lte:99',
+         'test.tc10'         => 'required|numeric|gte:0|lte:999',
+         'test.tc50'         => 'required|numeric|gte:0|lte:999',
+         'test.tc90'         => 'required|numeric|gte:0|lte:999',
          'test.eval'         => 'required|in:pass,fail',
       ];
    }
@@ -175,7 +177,7 @@ new class extends Component
    {
       try {
          // Fetch the machine data based on the selected machine_id
-         $machine = InsRdcMachine::find($this->test['machine_id']);
+         $machine = InsRdcMachine::find($this->test['ins_rdc_machine_id']);
 
          if (!$machine) {
             throw new \Exception("Mesin tidak ditemukan");
@@ -288,7 +290,7 @@ new class extends Component
    {
       try {
          // Fetch the machine data based on the selected machine_id
-         $machine = InsRdcMachine::find($this->test['machine_id']);
+         $machine = InsRdcMachine::find($this->test['ins_rdc_machine_id']);
 
          if (!$machine) {
             throw new \Exception("Mesin tidak ditemukan");
@@ -321,6 +323,20 @@ new class extends Component
                case 'tc90':
                   $this->test[$field] = $this->safeFloat($value);
                   break;
+               case 's_max_low':
+               case 's_min_low':
+               case 'tc10_low':
+               case 'tc50_low':
+               case 'tc90_low':
+                  $this->test[$field] = $this->getBoundFromString($value, 'low');
+                  break;
+               case 's_max_high':
+               case 's_min_high':
+               case 'tc10_high':
+               case 'tc50_high':
+               case 'tc90_high':
+                  $this->test[$field] = $this->getBoundFromString($value, 'high');
+                  break;
                case 'eval':
                   $eval = $this->safeString($value);
                   $this->test['eval'] = ($eval == 'OK' ? 'pass' : ($eval == 'SL' ? 'fail' : ''));
@@ -344,6 +360,28 @@ new class extends Component
       return is_numeric($value) ? (float)$value : 0;
    }
 
+   public function getBoundFromString(string $range, string $type = 'low'): ?float
+   {
+       // Validate the input
+       if (empty($range) || !str_contains($range, '-')) {
+           return 0; 
+       }
+
+       // Split the string into parts
+       [$part1, $part2] = explode('-', $range, 2);
+
+       // Convert to floats using safeFloat
+       $value1 = $this->safeFloat($part1);
+       $value2 = $this->safeFloat($part2);
+
+       // Determine which is lower and which is higher
+       $lower = min($value1, $value2);
+       $higher = max($value1, $value2);
+
+       // Return based on requested type
+       return $type === 'high' ? $higher : $lower;
+   }
+
    public function removeFromQueue()
    {
       $batch = InsRubberBatch::find($this->batch['id']);
@@ -357,6 +395,51 @@ new class extends Component
       } else {
          $this->handleNotFound();
       }
+      $this->customReset();
+   }
+
+   public function save()
+   {
+      $test = new InsRdcTest;
+      Gate::authorize('manage', $test);
+
+      $this->validate();
+
+      $batch = InsRubberBatch::find($this->batch['id']);
+
+      if (!$batch) {
+         $this->customReset();
+         $this->handleNotFound();
+         return;
+      }
+
+      foreach ($this->batch as $key => $value) {
+
+         if (in_array($key, ['id','code'])) {
+            continue;
+         }
+
+         if ($value) {
+            $value = trim($value);
+            $batch->$key = $value;
+         }
+      }
+      
+      $batch->rdc_queue = 0;
+      $test->queued_at = $batch->updated_at;
+      $batch->save();
+      
+      foreach ($this->test as $key => $value) {
+         $test->$key = $value;
+      }
+
+      $test->user_id = Auth::user()->id;
+      $test->ins_rubber_batch_id = $batch->id;
+      $test->save();
+
+      $this->js('$dispatch("close")');
+      $this->js('notyfSuccess("' . __('Hasil uji disimpan') . '")');
+      $this->dispatch('updated');
       $this->customReset();
    }
 }
@@ -405,7 +488,7 @@ new class extends Component
          </div> -->
       </div>
       <div class="col-span-4 px-6">
-         <div class="flex gap-3" x-data="{ machine_id: @entangle('test.machine_id') }">
+         <div class="flex gap-3" x-data="{ machine_id: @entangle('test.ins_rdc_machine_id') }">
             <div class="grow">
                <x-select class="w-full" id="test-machine_id" x-model="machine_id">
                   <option value=""></option>
@@ -451,13 +534,13 @@ new class extends Component
                </div>
             </div>
             <div>
-               <label for="test-eval"
+               <label for="test-type"
                   class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tipe') }}</label>
-               <x-select class="w-full" id="test-eval" wire:model="test.type">
+               <x-select class="w-full uppercase" id="test-type" wire:model="test.type">
                   <option value=""></option>
-                  @foreach ($ins_rdc_types as $type)
-                     <option value="{{ $type }}">{{ $type }}</option>
-                  @endforeach
+                  <option value="-">-</option>
+                  <option value="slow">SLOW</option>
+                  <option value="fast">FAST</option>
                </x-select>
             </div>
          </div>
@@ -543,6 +626,11 @@ new class extends Component
          </div>
       </div>
    </div>
+   @if ($errors->any())
+            <div class="px-6 mt-6">
+                <x-input-error :messages="$errors->first()" />
+            </div>
+        @endif
    <div class="p-6 flex justify-between items-center gap-3">
       <x-dropdown align="left" width="48">
          <x-slot name="trigger">
@@ -559,7 +647,7 @@ new class extends Component
             </x-dropdown-link>
          </x-slot>
       </x-dropdown>
-      <x-primary-button type="button" wire:click="insertTest">
+      <x-primary-button type="button" wire:click="save">
          {{ __('Simpan') }}
       </x-primary-button>
    </div>
