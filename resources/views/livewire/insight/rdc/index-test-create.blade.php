@@ -482,7 +482,7 @@ new class extends Component
                   </div>
                   <div>-</div>
                   <div class="grow">
-                     <x-text-input-t class="text-center" wire:model="test.tc50_low" />
+                     <x-text-input-t class="text-center" wire:model="test.tc50_high" />
                   </div>
                </div>
             </div>
@@ -494,7 +494,7 @@ new class extends Component
                   </div>
                   <div>-</div>
                   <div class="grow">
-                     <x-text-input-t class="text-center" wire:model="test.tc90_low" />
+                     <x-text-input-t class="text-center" wire:model="test.tc90_high" />
                   </div>
                </div>
             </div>
