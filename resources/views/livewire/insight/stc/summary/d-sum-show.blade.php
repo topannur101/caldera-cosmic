@@ -83,7 +83,7 @@ class extends Component {
 
                 $this->sv_temps         = [0,0,0,0,0,0,0,0];
 
-                $m_log = InsStcMLog::where('created_at', '>', $dSum->created_at)
+                $m_log = InsStcMLog::where('created_at', '<', $dSum->created_at)
                     ->where('ins_stc_machine_id', $dSum->ins_stc_machine_id)
                     ->where('position', $dSum->position)
                     ->where('created_at', '>=', $dSum->created_at->subHour())
