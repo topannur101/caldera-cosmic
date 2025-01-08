@@ -1,16 +1,16 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Renderless;
 use App\Models\InsStcDSum;
+use App\Models\InsStcAdj;
 use App\Models\InsStcMLog;
 use App\InsStc;
 
 new #[Layout('layouts.app')] 
 class extends Component {
     public int $id;
+    public int $formula_id = 412;
 
     public string $sequence;
     public string $user_1_name;
@@ -30,16 +30,25 @@ class extends Component {
     public string $logs_count;
     public string $position;
     public string $speed;
+
     public array $hb_temps = [0, 0, 0, 0, 0, 0, 0, 0];
     public array $sv_temps = [0, 0, 0, 0, 0, 0, 0, 0];
-
+    public array $svpb_temps = [0, 0, 0, 0, 0, 0, 0, 0];
+    public array $svp_temps = [0, 0, 0, 0, 0, 0, 0, 0];
+    
     public bool $use_m_log_sv = false;
+
+    public string $last_adj_at = '';
 
     #[On('d_sum-show')]
     public function showDSum(int $id)
     {
         $this->id = $id;
         $dSum = InsStcDSum::find($id);
+        $adj = InsStcAdj::where('created_at', '<', $dSum->created_at)
+        ->where('created_at', '>=', $dSum->created_at->subHours(6))
+        ->orderBy('created_at', 'desc') // To get the most recent record in the 6-hour window
+        ->first(); // Retrieve the first matching record
 
         if ($dSum) {
             $logs = $dSum->ins_stc_d_logs->toArray();
@@ -63,11 +72,12 @@ class extends Component {
             $this->duration         = InsStc::duration($dSum->started_at, $dSum->ended_at);
             $this->upload_latency   = InsStc::duration($dSum->ended_at, $dSum->updated_at);
             $this->logs_count       = $dSum->ins_stc_d_logs->count();
-            $this->position         = InsStc::positionHuman($dSum->position);
+            $this->position         = $dSum->position;
             $this->speed            = $dSum->speed;
             $this->hb_temps         = [ $hb_temps['section_1'], $hb_temps['section_2'], $hb_temps['section_3'], $hb_temps['section_4'], $hb_temps['section_5'], $hb_temps['section_6'], $hb_temps['section_7'], $hb_temps['section_8'], ];
-            
+
             if ($this->use_m_log_sv) {
+
                 $this->sv_temps         = [0,0,0,0,0,0,0,0];
 
                 $m_log = InsStcMLog::query()
@@ -89,8 +99,19 @@ class extends Component {
                 }
 
             } else {
-                $this->sv_temps         = json_decode($dSum->sv_temps, true);
+                $this->sv_temps = json_decode($dSum->sv_temps, true);
             }
+
+            $this->last_adj_at = $adj ? $adj->created_at : '';
+            
+            $this->svpb_temps[0] = $adj ? $adj->sv_p_1 : 0;
+            $this->svpb_temps[1] = $adj ? $adj->sv_p_2 : 0;
+            $this->svpb_temps[2] = $adj ? $adj->sv_p_3 : 0;
+            $this->svpb_temps[3] = $adj ? $adj->sv_p_4 : 0;
+            $this->svpb_temps[4] = $adj ? $adj->sv_p_5 : 0;
+            $this->svpb_temps[5] = $adj ? $adj->sv_p_6 : 0;
+            $this->svpb_temps[6] = $adj ? $adj->sv_p_7 : 0;
+            $this->svpb_temps[7] = $adj ? $adj->sv_p_8 : 0;
 
             $this->js("
             const options = " . json_encode(InsStc::getChartJsOptions($logs, $this->sv_temps)) . ";
@@ -188,145 +209,173 @@ class extends Component {
             }
         }
    }
+
+   public function with(): array
+   {
+        if ($this->formula_id && $this->hb_temps && $this->sv_temps) {
+            $svp_values = InsStc::calculateSVP($this->hb_temps, $this->sv_temps, $this->formula_id);
+            foreach ($svp_values as $key => $value) {
+                $this->svp_temps[$key] = $value['absolute'];
+            }
+
+        } else {
+            $this->svp_temps = [];
+        }
+
+        return [];
+   }
 };
 
 ?>
-<div>
-    <div class="p-6">
-        <div class="flex justify-between items-start">
-            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Rincian pengukuran') }}
-            </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+<div class="p-6">
+    <div class="flex justify-between items-start">
+        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+            {{ __('Rincian pengukuran') }}
+        </h2>
+        <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="col-span-2">
+            <div class="h-80 overflow-hidden mt-6"
+                id="modal-chart-container" wire:key="modal-chart-container" wire:ignore>
+            </div>
+            <table class="table table-xs text-sm text-center mt-6">
+                <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
+                    <td></td>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>4</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>7</td>
+                    <td>8</td>
+                </tr>
+                <tr>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('HB') }}</td>
+                    @foreach($hb_temps as $hb_temp)
+                        <td>{{ $hb_temp }}</td>
+                    @endforeach
+                </tr>
+                <tr>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SVPB') }}</td>
+                    @foreach($svpb_temps as $svpb_temp)
+                        <td>{{ $svpb_temp }}</td>
+                    @endforeach
+                </tr>
+                <tr>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SV') }}</td>
+                    @foreach($sv_temps as $sv_temp)
+                        <td>{{ $sv_temp }}</td>
+                    @endforeach
+                </tr>
+                <tr>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SVP') }}</td>
+                    @foreach($svp_temps as $svp_temp)
+                        <td>{{ $svp_temp }}</td>
+                    @endforeach
+                </tr>
+            </table>
+            <div class="flex justify-between items-center mt-6">
+                <x-select id="adj-formula_id" wire:model.live="formula_id">
+                    <option value="0"></option>
+                    <option value="411">{{ __('v4.1.1 - Diff aggresive') }}</option>
+                    <option value="412">{{ __('v4.1.2 - Diff delicate') }}</option>
+                    <option value="421">{{ __('v4.2.1 - Ratio') }}</option>
+                </x-select>
+                <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv"
+                    :checked="$use_m_log_sv ? true : false">{{ __('Gunakan SV mesin') }}<x-text-button type="button"
+                    class="ml-2 whitespace-nowrap" x-data="" x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')">
+                    <i class="far fa-question-circle"></i></x-text-button>
+                </x-toggle>
+            </div>
         </div>
-        <div class="h-80 overflow-hidden my-8"
-            id="modal-chart-container" wire:key="modal-chart-container" wire:ignore>
-        </div>
-        <div class="flex flex-col mb-6 gap-6">
-            <div class="flex flex-col grow">
-                <div class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi pengukuran') }}</div>
-                <div class="flex flex-col md:flex-row gap-6">
-                    <div class="grow">
+        <div>
+            <div class="grid grid-cols-1 gap-6">
+                <div class="flex gap-6">
+                    <div>
+                        <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Line') }}</div>
                         <div>
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Operator') . ': ' }}
+                            <span>
+                                {{ $machine_line . ' ' . ($position == 'upper' ? '△' : ($position == 'lower' ? '▽' : '')) }}
                             </span>
                         </div>
-                        <div class=>
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm font-mono">1.</span>
-                            <span class="font-mono">{{ ' ' . $user_1_emp_id }}</span>
-                            <span>{{ ' - ' . $user_1_name }}</span>
-                        </div>
+                    </div>
+                    <div>
+                        <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Urutan') }}</div>
                         <div>
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm font-mono">2.</span>
-                            <span class="font-mono">{{ ' ' . $user_2_emp_id }}</span>
-                            <span>{{ ' - ' . $user_2_name }}</span>
-                        </div>
-                        <div class="mt-3">
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Urutan') . ': ' }}
-                            </span>
                             <span class="uppercase">
                                 {{ $sequence }}
                             </span>
                         </div>
-                        <div>
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Kode alat ukur') . ': ' }}
-                            </span>
-                            <span class="uppercase">
-                                {{ $device_code }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="grow">
-                        <div>
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Line') . ': ' }}
-                            </span>
-                            <span>
-                                {{ $machine_line }}
-                            </span>                            
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Posisi') . ': ' }}
-                            </span>
-                            <span>
-                                {{ $position }}
-                            </span>
-                        </div>
-                        <table class="table-auto">
-                            <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm pr-4">
-                                    {{ __('Awal') . ': ' }}
-                                </td>
-                                <td class="font-mono">
-                                    {{ $started_at }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm pr-4">
-                                    {{ __('Akhir') . ': ' }}
-                                </td>
-                                <td class="font-mono">
-                                    {{ $ended_at }}
-                                </td>
-                            </tr>
-                        </table>                                           
-                        <div class="mt-3">
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Durasi') . ': ' }}
-                            </span>
-                            <span>
-                                {{ $duration }}
-                            </span>
-                        </div>
-                        <div>
-                            <span class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                {{ __('Latensi unggah') . ': ' }}
-                            </span>
-                            <span>
-                                {{ $upload_latency }}
-                            </span>
-                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="flex flex-col grow">
-                <dd>
-                    <div class="grid grid-cols-9 text-center gap-x-3">
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">S</div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">1</div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">2</div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">3</div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">4</div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">5</div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">6</div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">7</div>
-                        <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">8</div>
-
-                        <div>HB</div>
-                        @foreach($hb_temps as $hb_temp)
-                            <div>{{ $hb_temp }}</div>
-                        @endforeach
-
-                        <div>SV</div>
-                        @foreach($sv_temps as $sv_temp)
-                            <div>{{ $sv_temp }}</div>
-                        @endforeach
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Operator') }}</div>
+                    <div>
+                        <span class="text-neutral-500 dark:text-neutral-400 text-sm font-mono">1.</span>
+                        <span class="font-mono">{{ ' ' . $user_1_emp_id }}</span>
+                        <span>{{ ' - ' . $user_1_name }}</span>
                     </div>
-                </dd>
-            </div>
+                    <div>
+                        <span class="text-neutral-500 dark:text-neutral-400 text-sm font-mono">2.</span>
+                        <span class="font-mono">{{ ' ' . $user_2_emp_id }}</span>
+                        <span>{{ ' - ' . $user_2_name }}</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Alat ukur') }}</div>
+                    <div>
+                        <span class="uppercase">
+                            {{ $device_code }}
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Awal') }}</div>
+                    <div>
+                        <span class="font-mono">
+                            {{ $started_at }}
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Akhir') }}</div>
+                    <div>
+                        <span class="font-mono">
+                            {{ $ended_at }}
+                        </span>
+                    </div>
+                </div>                
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Durasi') }}</div>
+                    <div>
+                        <span>
+                            {{ $duration }}
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Latensi') }}</div>
+                    <div>
+                        <span class="">
+                            {{ $upload_latency }}
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Terakhir disetel') }}</div>
+                    <div>
+                        <span class="">
+                            {{ $last_adj_at ?: __('Tak pernah') }}
+                        </span>
+                    </div>
+                </div>
+            </div>         
         </div>
-        <div class="flex justify-between items-end">
-            <div>
-                <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv"
-                    :checked="$use_m_log_sv ? true : false">{{ __('Gunakan SV mesin') }}<x-text-button type="button"
-                    class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')">
-                    <i class="far fa-question-circle"></i></x-text-button>
-                </x-toggle>
-            </div>
-            <x-primary-button type="button" wire:click="printPrepare"><i class="fa fa-print me-2"></i>{{ __('Cetak') }}</x-primary-button>
-        </div>
+    </div>
+    <div class="flex justify-end items-end mt-6">
+        <x-primary-button type="button" wire:click="printPrepare"><i class="fa fa-print me-2"></i>{{ __('Cetak') }}</x-primary-button>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>

@@ -295,16 +295,6 @@ class extends Component {
                         <option value="lower">{{ __('Bawah') }}</option>
                     </x-select>
                 </div>
-                {{-- <div class="w-full lg:w-28">
-                    <label for="device-team"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
-                    <x-text-input id="device-team" wire:model.live="team" type="text" list="device-teams" />
-                    <datalist id="device-teams">
-                        <option value="A"></option>
-                        <option value="B"></option>
-                        <option value="C"></option>
-                    </datalist>
-                </div> --}}
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grow flex justify-between gap-x-2 items-center">
@@ -358,7 +348,7 @@ class extends Component {
                 </div>
             </div>
         </x-modal> 
-        <x-modal name="d_sum-show" maxWidth="xl">
+        <x-modal name="d_sum-show" maxWidth="3xl">
             <livewire:insight.stc.summary.d-sum-show />
         </x-modal>
     </div>

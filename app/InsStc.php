@@ -179,12 +179,13 @@ class InsStc
             $firstTimestamp = strtotime($sortedGroup->first()['taken_at']);
 
             $firstLog       = $sortedGroup->first();
-            $line           = $firstLog->ins_stc_d_sum->ins_stc_machine->line;
+            $line           = sprintf('%02d', $firstLog->ins_stc_d_sum->ins_stc_machine->line);
             $position       = $firstLog->ins_stc_d_sum->position;
+            $taken_at       = Carbon::parse($firstLog->taken_at)->format('mdH');
             $positionSymbol = $position == 'upper' ? '△' : ($position == 'lower' ? '▽' : '');
     
             return [
-                'name' => $line . ' ' . $positionSymbol,
+                'name' => $line . ' ' . $positionSymbol . ' ' . $taken_at,
                 'data' => $sortedGroup->map(function ($item) use ($firstTimestamp) {
                     return [
                         'x' => (strtotime($item['taken_at']) - $firstTimestamp) * 1000, // Convert to milliseconds

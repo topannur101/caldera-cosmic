@@ -120,7 +120,7 @@ new class extends Component {
 
 <div wire:poll.60s>
     <div wire:key="modals">
-        <x-modal name="d_sum-show" maxWidth="xl">
+        <x-modal name="d_sum-show" maxWidth="3xl">
             <livewire:insight.stc.summary.d-sum-show />
         </x-modal>
         <x-modal name="use_m_log_sv-help">
