@@ -27,7 +27,10 @@ class extends Component {
     public string $logs_count;
     public string $position;
     public string $speed;
+    public array $svpb_temps;
+    public array $hb_temps;
     public array $sv_temps;
+    public array $svp_temps;
 
     #[On('print-prepare')]
     public function load($data)
@@ -49,7 +52,10 @@ class extends Component {
         $this->logs_count    = $data['logs_count'];
         $this->position      = $data['position'];
         $this->speed         = $data['speed'];
-        $this->sv_temps     = $data['sv_temps'];
+        $this->svpb_temps     = $data['svpb_temps'];
+        $this->hb_temps      = $data['hb_temps'];
+        $this->sv_temps      = $data['sv_temps'];
+        $this->svp_temps     = $data['svp_temps'];
         $this->dispatch('print-execute');
     }
 };
@@ -62,7 +68,7 @@ class extends Component {
             <div id="print-container-header">
                 <div class="flex gap-x-6 justify-between">
                     <div class="flex flex-col">
-                        <dt class="mb-3 text-neutral-500 text-xs uppercase">{{ __('Informasi pengukuran') }}</dt>
+                        <dt class="mb-3 text-neutral-500 text-xs uppercase">{{ __('Informasi dasar') }}</dt>
                         <dd>
                             <table>
                                 <tr>
@@ -148,17 +154,8 @@ class extends Component {
                         </dd>
                     </div>
                     <div class="flex flex-col">
-                        <dt class="mb-3 text-neutral-500 text-xs uppercase">{{ __('SV') }}</dt>
+                    <dt class="mb-3 text-neutral-500 text-xs uppercase">{{ __('Informasi pengukuran') }}</dt>
                         <dd>
-                            <div class="grid grid-cols-8 text-center gap-x-3">
-                                @foreach($sv_temps as $sv_temp)
-                                <div>
-                                    <div class="mb-1 text-xs uppercase font-normal leading-none text-neutral-400">
-                                        {{ __('S') . $loop->iteration }}</div>
-                                    <div>{{ $sv_temp }}</div>
-                                </div>
-                                @endforeach
-                            </div>
                             <table class="mt-3 text-sm text-neutral-500">
                                 <tr>
                                     <td class="text-xs">
@@ -198,59 +195,92 @@ class extends Component {
         </div>
         <div class="grow-0">
             <div id="print-container-footer">
-                <div class="flex justify-between p-4">
-                    <div class="flex justify-between flex-col">
-                        <div>{{ __('Zona 1') . ': 70-80 °C' }}</div>
-                        <div>{{ __('Zona 2') . ': 60-70 °C' }}</div>
-                        <div>{{ __('Zona 3') . ': 50-60 °C' }}</div>
-                        <div>{{ __('Zona 4') . ': 40-50 °C' }}</div>
+                <div class="grid grid-cols-3 gap-8 p-4">
+                    <table class="w-full text-sm text-center">
+                        <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
+                            <td></td>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>6</td>
+                            <td>7</td>
+                            <td>8</td>
+                        </tr>
+                        <tr>
+                            <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('HB') }}</td>
+                            @foreach($hb_temps as $hb_temp)
+                                <td>{{ $hb_temp }}</td>
+                            @endforeach
+                        </tr>
+                        <tr>
+                            <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SVPB') }}</td>
+                            @foreach($svpb_temps as $svpb_temp)
+                                <td>{{ $svpb_temp }}</td>
+                            @endforeach
+                        </tr>
+                        <tr>
+                            <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SV') }}</td>
+                            @foreach($sv_temps as $sv_temp)
+                                <td>{{ $sv_temp }}</td>
+                            @endforeach
+                        </tr>
+                        <tr>
+                            <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SVP') }}</td>
+                            @foreach($svp_temps as $svp_temp)
+                                <td>{{ $svp_temp }}</td>
+                            @endforeach
+                        </tr>
+                    </table>
+                    <div>
+                        <table class="w-full text-sm">
+                            <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
+                                <td></td>
+                                <td>{{ __('Legenda') }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-center px-3">HB</td>
+                                <td>{{ __('Median hasil ukur hobo')}}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-center px-3">SVPB</td>
+                                <td>{{ __('SV Prediksi hasil penyetelan terakhir')}}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-center px-3">SV</td>
+                                <td>{{ __('SV ketika mesin diukur dengan hobo')}}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-center px-3">SVP</td>
+                                <td>{{ __('SV Prediksi setelah diukur dengan hobo')}}</td>
+                            </tr>
+                        </table>
                     </div>
-                    <div class="flex gap-x-3">
-                        <div>
-                            <div class="text-center font-bold">CE</div>
-                            <div class="flex justify-center">
-                                <div class="w-8 h-8 my-4 bg-neutral-200 rounded-full overflow-hidden">
-                                    @if ($user_1_photo)
-                                        <img class="w-full h-full object-cover"
-                                            src="{{ '/storage/users/' . $user_1_photo }}" />
-                                    @else
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            class="block fill-current text-neutral-800  opacity-25" viewBox="0 0 1000 1000"
-                                            xmlns:v="https://vecta.io/nano">
-                                            <path
-                                                d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
-                                        </svg>
-                                    @endif
+                    <div class="flex justify-end">                        
+                        <div class="flex gap-x-3">
+                            <div>
+                                <div class="text-center font-bold">CE</div>
+                                <div class="flex justify-center">
+                                    <div class="w-8 h-8 my-4 bg-neutral-200 rounded-full overflow-hidden">
+                                        @if ($user_1_photo)
+                                            <img class="w-full h-full object-cover"
+                                                src="{{ '/storage/users/' . $user_1_photo }}" />
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="block fill-current text-neutral-800  opacity-25" viewBox="0 0 1000 1000"
+                                                xmlns:v="https://vecta.io/nano">
+                                                <path
+                                                    d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
+                                            </svg>
+                                        @endif
+                                    </div>
+                                </div>
+                                <hr class="border-neutral-300 w-48">
+                                <div class="text-center">
+                                    <div class="text-xs">{{ $user_1_name }}</div>
                                 </div>
                             </div>
-                            <hr class="border-neutral-300 w-48">
-                            <div class="text-center">
-                                <div class="text-xs">{{ $user_1_name }}</div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="text-center font-bold">TL</div>
-                            <div class="grow">
-                                <div class="w-8 h-8 my-4"></div>
-                            </div>
-                            <hr class="border-neutral-300 w-48">
-                            <div class="text-center text-xs text-neutral-500">{{ __('Nama dan tanggal') }}</div>
-                        </div>
-                        <div>
-                            <div class="text-center font-bold">GL</div>
-                            <div>
-                                <div class="w-8 h-8 my-4"></div>
-                            </div>
-                            <hr class="border-neutral-300 w-48">
-                            <div class="text-center text-xs text-neutral-500">{{ __('Nama dan tanggal') }}</div>
-                        </div>
-                        <div>
-                            <div class="text-center font-bold">VSM</div>
-                            <div>
-                                <div class="w-8 h-8 my-4"></div>
-                            </div>
-                            <hr class="border-neutral-300 w-48">
-                            <div class="text-center text-xs text-neutral-500">{{ __('Nama dan tanggal') }}</div>
                         </div>
                     </div>
                 </div>

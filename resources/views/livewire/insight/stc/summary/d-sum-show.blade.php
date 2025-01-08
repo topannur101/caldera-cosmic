@@ -191,7 +191,10 @@ class extends Component {
             'logs_count'    => $this->logs_count,
             'position'      => $this->position,
             'speed'         => $this->speed,
-            'sv_temps'     => $this->sv_temps
+            'svpb_temps'    => $this->svpb_temps,
+            'hb_temps'      => $this->hb_temps,
+            'sv_temps'      => $this->sv_temps,
+            'svp_temps'     => $this->svp_temps,
         ];
         $this->dispatch('print-prepare', $data);
     }
