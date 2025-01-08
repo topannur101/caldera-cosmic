@@ -783,12 +783,12 @@ new class extends Component {
                             </dd>
                         </div>
                         <div class="py-6">
-                            <x-toggle name="d-sum-auto_adjust" wire:model="auto_adjust"
+                            <x-toggle name="d-sum-auto_adjust" wire:model="auto_adjust" disabled
                             :checked="$auto_adjust ? true : false">{{ __('Kirim langsung SV prediksi') }}<x-text-button type="button"
                                 class="ml-2" x-data=""
                                 x-on:click="$dispatch('open-modal', 'auto-adjustment-help')"><i
-                                    class="far fa-question-circle"></i></x-text-button>
-                        </x-toggle>
+                                class="far fa-question-circle"></i></x-text-button>
+                            </x-toggle>
                         </div>
                     </dl>
                 @break

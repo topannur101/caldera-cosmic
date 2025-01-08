@@ -143,7 +143,7 @@ class InsStc
 
             if ($adjusted_sv > $svp_high[$index]) {
                 $adjusted_sv = $svp_high[$index];
-                
+
             } elseif ($adjusted_sv < $svp_low[$index]) {
                 $adjusted_sv = $svp_low[$index];
             }
@@ -163,8 +163,8 @@ class InsStc
 
     public static function getStandardZoneChartOptions($chartData, $width, $height)
     {
-        $ymax = 85;
-        $ymin = 35;
+        $ymax = 90;
+        $ymin = 30;
 
         $logs = [ [ 'taken_at' => 1*60, 'temp' => 75 ], [ 'taken_at' => 2*60, 'temp' => 75 ], [ 'taken_at' => 3*60, 'temp' => 75 ], [ 'taken_at' => 4*60, 'temp' => 75 ], [ 'taken_at' => 5*60, 'temp' => 75 ], [ 'taken_at' => 6*60, 'temp' => 75 ], [ 'taken_at' => 7*60, 'temp' => 75 ], [ 'taken_at' => 8*60, 'temp' => 75 ], [ 'taken_at' => 9*60, 'temp' => 75 ], [ 'taken_at' => 10*60, 'temp' => 75 ], [ 'taken_at' => 11*60, 'temp' => 75 ], [ 'taken_at' => 12*60, 'temp' => 75 ], [ 'taken_at' => 13*60, 'temp' => 75 ], [ 'taken_at' => 14*60, 'temp' => 75 ], [ 'taken_at' => 15*60, 'temp' => 75 ], [ 'taken_at' => 16*60, 'temp' => 75 ], [ 'taken_at' => 17*60, 'temp' => 75 ], [ 'taken_at' => 18*60, 'temp' => 65 ], [ 'taken_at' => 19*60, 'temp' => 65 ], [ 'taken_at' => 20*60, 'temp' => 65 ], [ 'taken_at' => 21*60, 'temp' => 65 ], [ 'taken_at' => 22*60, 'temp' => 65 ], [ 'taken_at' => 23*60, 'temp' => 65 ], [ 'taken_at' => 24*60, 'temp' => 65 ], [ 'taken_at' => 25*60, 'temp' => 65 ], [ 'taken_at' => 26*60, 'temp' => 65 ], [ 'taken_at' => 27*60, 'temp' => 65 ], [ 'taken_at' => 28*60, 'temp' => 65 ], [ 'taken_at' => 29*60, 'temp' => 65 ], [ 'taken_at' => 30*60, 'temp' => 55 ], [ 'taken_at' => 31*60, 'temp' => 55 ], [ 'taken_at' => 32*60, 'temp' => 55 ], [ 'taken_at' => 33*60, 'temp' => 55 ], [ 'taken_at' => 34*60, 'temp' => 55 ], [ 'taken_at' => 35*60, 'temp' => 55 ], [ 'taken_at' => 36*60, 'temp' => 55 ], [ 'taken_at' => 37*60, 'temp' => 55 ], [ 'taken_at' => 38*60, 'temp' => 55 ], [ 'taken_at' => 39*60, 'temp' => 55 ], [ 'taken_at' => 40*60, 'temp' => 55 ], [ 'taken_at' => 41*60, 'temp' => 55 ], [ 'taken_at' => 42*60, 'temp' => 45 ], [ 'taken_at' => 43*60, 'temp' => 45 ], [ 'taken_at' => 44*60, 'temp' => 45 ], [ 'taken_at' => 45*60, 'temp' => 45 ], [ 'taken_at' => 46*60, 'temp' => 45 ], [ 'taken_at' => 47*60, 'temp' => 45 ], [ 'taken_at' => 48*60, 'temp' => 45 ], [ 'taken_at' => 49*60, 'temp' => 45 ], [ 'taken_at' => 50*60, 'temp' => 45 ], [ 'taken_at' => 51*60, 'temp' => 45 ], [ 'taken_at' => 52*60, 'temp' => 45 ], [ 'taken_at' => 53*60, 'temp' => 45 ], [ 'taken_at' => 54*60, 'temp' => 45 ], [ 'taken_at' => 55*60, 'temp' => 45 ], [ 'taken_at' => 56*60, 'temp' => 45 ], [ 'taken_at' => 57*60, 'temp' => 45 ], [ 'taken_at' => 58*60, 'temp' => 45 ] ];       
 
@@ -287,8 +287,8 @@ class InsStc
 
     public static function getBoxplotChartOptions($chartData, $width, $height)
     {
-        $ymax = 85;
-        $ymin = 35;
+        $ymax = 90;
+        $ymin = 30;
         $logs = [ [ 'taken_at' => 1*60, 'temp' => 75 ], [ 'taken_at' => 2*60, 'temp' => 75 ], [ 'taken_at' => 3*60, 'temp' => 75 ], [ 'taken_at' => 4*60, 'temp' => 75 ], [ 'taken_at' => 5*60, 'temp' => 75 ], [ 'taken_at' => 6*60, 'temp' => 75 ], [ 'taken_at' => 7*60, 'temp' => 75 ], [ 'taken_at' => 8*60, 'temp' => 75 ], [ 'taken_at' => 9*60, 'temp' => 75 ], [ 'taken_at' => 10*60, 'temp' => 75 ], [ 'taken_at' => 11*60, 'temp' => 75 ], [ 'taken_at' => 12*60, 'temp' => 75 ], [ 'taken_at' => 13*60, 'temp' => 75 ], [ 'taken_at' => 14*60, 'temp' => 75 ], [ 'taken_at' => 15*60, 'temp' => 75 ], [ 'taken_at' => 16*60, 'temp' => 75 ], [ 'taken_at' => 17*60, 'temp' => 75 ], [ 'taken_at' => 18*60, 'temp' => 65 ], [ 'taken_at' => 19*60, 'temp' => 65 ], [ 'taken_at' => 20*60, 'temp' => 65 ], [ 'taken_at' => 21*60, 'temp' => 65 ], [ 'taken_at' => 22*60, 'temp' => 65 ], [ 'taken_at' => 23*60, 'temp' => 65 ], [ 'taken_at' => 24*60, 'temp' => 65 ], [ 'taken_at' => 25*60, 'temp' => 65 ], [ 'taken_at' => 26*60, 'temp' => 65 ], [ 'taken_at' => 27*60, 'temp' => 65 ], [ 'taken_at' => 28*60, 'temp' => 65 ], [ 'taken_at' => 29*60, 'temp' => 65 ], [ 'taken_at' => 30*60, 'temp' => 55 ], [ 'taken_at' => 31*60, 'temp' => 55 ], [ 'taken_at' => 32*60, 'temp' => 55 ], [ 'taken_at' => 33*60, 'temp' => 55 ], [ 'taken_at' => 34*60, 'temp' => 55 ], [ 'taken_at' => 35*60, 'temp' => 55 ], [ 'taken_at' => 36*60, 'temp' => 55 ], [ 'taken_at' => 37*60, 'temp' => 55 ], [ 'taken_at' => 38*60, 'temp' => 55 ], [ 'taken_at' => 39*60, 'temp' => 55 ], [ 'taken_at' => 40*60, 'temp' => 55 ], [ 'taken_at' => 41*60, 'temp' => 55 ], [ 'taken_at' => 42*60, 'temp' => 45 ], [ 'taken_at' => 43*60, 'temp' => 45 ], [ 'taken_at' => 44*60, 'temp' => 45 ], [ 'taken_at' => 45*60, 'temp' => 45 ], [ 'taken_at' => 46*60, 'temp' => 45 ], [ 'taken_at' => 47*60, 'temp' => 45 ], [ 'taken_at' => 48*60, 'temp' => 45 ], [ 'taken_at' => 49*60, 'temp' => 45 ], [ 'taken_at' => 50*60, 'temp' => 45 ], [ 'taken_at' => 51*60, 'temp' => 45 ], [ 'taken_at' => 52*60, 'temp' => 45 ], [ 'taken_at' => 53*60, 'temp' => 45 ], [ 'taken_at' => 54*60, 'temp' => 45 ], [ 'taken_at' => 55*60, 'temp' => 45 ], [ 'taken_at' => 56*60, 'temp' => 45 ], [ 'taken_at' => 57*60, 'temp' => 45 ], [ 'taken_at' => 58*60, 'temp' => 45 ] ];       
         $yzones = [ 37.5, 42.5, 47.5, 52.5, 57.5, 62.5, 67.5, 72.5, 77.5 ];
 
@@ -459,8 +459,8 @@ class InsStc
 
         $xzones = array_map('count', $sections);
         $yzones = [80, 70, 60, 50, 40];
-        $ymax = 85;
-        $ymin = 35;
+        $ymax = 90;
+        $ymin = 30;
 
         // Transform data for Chart.js
         $chartData = array_map(function ($log) {
@@ -751,8 +751,8 @@ class InsStc
 
         $xzones = array_map('count', $sections);
         $yzones = [ 40, 50, 60, 70, 80 ];
-        $ymax = 85;
-        $ymin = 35;
+        $ymax = 90;
+        $ymin = 30;
         $chartDataJs = json_encode($chartData);
 
         return [
