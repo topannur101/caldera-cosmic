@@ -92,7 +92,9 @@ class InsStc
 
     public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id): array
     {
-        $HBTargets = [ 77.5, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 42.5 ];
+        $HBTargets  = [ 77.5, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 47.5 ];
+        $svp_high   = [ 90.0, 85.0, 80.0, 75.0, 70.0, 65.0, 60.0, 55.0 ];
+        $svp_low    = [ 70.0, 65.0, 60.0, 55.0, 50.0, 45.0, 40.0, 35.0 ];
 
         // Validate input arrays have same length
         if (count($hb_values) !== count($HBTargets) || count($sv_values) !== count($HBTargets)) {
@@ -137,6 +139,13 @@ class InsStc
                     }
                     
                     break;
+            }
+
+            if ($adjusted_sv > $svp_high[$index]) {
+                $adjusted_sv = $svp_high[$index];
+                
+            } elseif ($adjusted_sv < $svp_low[$index]) {
+                $adjusted_sv = $svp_low[$index];
             }
 
             // Calculate relative difference between adjusted and original SV
