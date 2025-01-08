@@ -39,6 +39,7 @@ class extends Component {
     public bool $use_m_log_sv = false;
 
     public string $last_adj_at = '';
+    public string $svp_status = '';
 
     #[On('d_sum-show')]
     public function showDSum(int $id)
@@ -46,6 +47,8 @@ class extends Component {
         $this->id = $id;
         $dSum = InsStcDSum::find($id);
         $adj = InsStcAdj::where('created_at', '<', $dSum->created_at)
+        ->where('ins_stc_machine_id', $dSum->ins_stc_machine_id)
+        ->where('position', $dSum->position)
         ->where('created_at', '>=', $dSum->created_at->subHours(6))
         ->orderBy('created_at', 'desc') // To get the most recent record in the 6-hour window
         ->first(); // Retrieve the first matching record
@@ -219,7 +222,17 @@ class extends Component {
             }
 
         } else {
-            $this->svp_temps = [];
+            $this->svp_temps = [0, 0, 0, 0, 0, 0, 0, 0];
+        }
+
+        if (array_sum($this->svpb_temps)) {
+            if ($this->sv_temps == $this->svpb_temps) {
+                $this->svp_status = 'match';
+            } else {
+                $this->svp_status = 'mismatch';
+            }
+        } else {
+            $this->svp_status = '';
         }
 
         return [];
@@ -285,8 +298,7 @@ class extends Component {
                 </x-select>
                 <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv"
                     :checked="$use_m_log_sv ? true : false">{{ __('Gunakan SV mesin') }}<x-text-button type="button"
-                    class="ml-2 whitespace-nowrap" x-data="" x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')">
-                    <i class="far fa-question-circle"></i></x-text-button>
+                    class="ml-2 whitespace-nowrap" x-data="" x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')"></x-text-button>
                 </x-toggle>
             </div>
         </div>
@@ -312,15 +324,15 @@ class extends Component {
                 </div>
                 <div>
                     <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Operator') }}</div>
-                    <div>
-                        <span class="text-neutral-500 dark:text-neutral-400 text-sm font-mono">1.</span>
-                        <span class="font-mono">{{ ' ' . $user_1_emp_id }}</span>
-                        <span>{{ ' - ' . $user_1_name }}</span>
-                    </div>
-                    <div>
-                        <span class="text-neutral-500 dark:text-neutral-400 text-sm font-mono">2.</span>
-                        <span class="font-mono">{{ ' ' . $user_2_emp_id }}</span>
-                        <span>{{ ' - ' . $user_2_name }}</span>
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            @if($user_1_photo ?? false)
+                            <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/'.$user_1_photo }}" />
+                            @else
+                            <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                            @endif
+                        </div>
+                        <div class="text-sm text-neutral-500 dark:text-neutral-400 font-mono px-2">{{ ' ' . $user_1_emp_id }}</div>
                     </div>
                 </div>
                 <div>
@@ -364,12 +376,29 @@ class extends Component {
                     </div>
                 </div>
                 <div>
-                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Terakhir disetel') }}</div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Penyetelan terakhir') }}</div>
                     <div>
                         <span class="">
-                            {{ $last_adj_at ?: __('Tak pernah') }}
+                            {{ $last_adj_at ?: __('Tak ada') }}
                         </span>
                     </div>
+                </div>
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Status SV') }}</div>
+                    @switch($svp_status)
+
+                        @case('match')
+                            <div><i class="fa fa-check-circle me-2 text-green-500"></i>{{ __('Cocok dengan SVPB')}}</div>
+                            @break
+                        
+                        @case('mismatch')
+                            <div><i class="fa fa-exclamation-circle me-2 text-red-500"></i>{{ __('Tak cocok dengan SVPB')}}</div>
+                        @break
+
+                        @default
+                            <div>{{ __('Tak ada penyetelan')}}</div>
+
+                    @endswitch
                 </div>
             </div>         
         </div>
