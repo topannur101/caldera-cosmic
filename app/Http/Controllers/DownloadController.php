@@ -104,7 +104,7 @@ class DownloadController extends Controller
         }
         
         $start  = Carbon::parse($request['start_at'])->addHours(6);
-        $end    = $start->copy()->addHours(24);
+        $end = Carbon::parse($request['end_at'])->addDay();
         $fline  = $request['fline'];
 
         $clumps = DB::table('ins_rtc_metrics')
@@ -128,6 +128,22 @@ class DownloadController extends Controller
             // Calculate standard deviation number (dn_left and dn_right)
             ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_left), 2) as sd_left')
             ->selectRaw('ROUND(STDDEV(ins_rtc_metrics.sensor_right), 2) as sd_right')
+
+            // Calculate MAE
+            ->selectRaw(
+                'ROUND(
+                CASE 
+                    WHEN SUM(ins_rtc_metrics.sensor_left) = 0 THEN 0
+                    ELSE AVG(ins_rtc_metrics.sensor_left) - AVG(ins_rtc_recipes.std_mid)
+                END, 2) as mae_left',
+            )
+            ->selectRaw(
+                'ROUND(
+                CASE
+                    WHEN SUM(ins_rtc_metrics.sensor_right) = 0 THEN 0
+                    ELSE AVG(ins_rtc_metrics.sensor_right) - AVG(ins_rtc_recipes.std_mid)
+                END, 2) as mae_right',
+            )
 
             // Untuk menghitung presentase trigger nyala brp kali dalam %
             ->selectRaw('ROUND(SUM(CASE WHEN ins_rtc_metrics.is_correcting = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as correcting_rate')
@@ -178,8 +194,8 @@ class DownloadController extends Controller
                 $row['avg_right']           = $clump->avg_right;
                 $row['sd_left']             = $clump->sd_left;
                 $row['sd_right']            = $clump->sd_right;
-                $row['mae_left']            = '';
-                $row['mae_right']           = '';
+                $row['mae_left']            = $clump->mae_left;
+                $row['mae_right']           = $clump->mae_right;
                 $row['duration_seconds']    = $clump->duration_seconds;
                 $row['start_time']          = $clump->start_time; 
 

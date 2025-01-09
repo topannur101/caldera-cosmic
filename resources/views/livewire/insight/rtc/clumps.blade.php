@@ -16,13 +16,17 @@ new #[Layout('layouts.app')] class extends Component {
     public $start_at;
 
     #[Reactive]
+    public $end_at;
+
+    #[Reactive]
     public $fline;
     public $perPage = 20;
 
     public function with(): array
     {
         $start = Carbon::parse($this->start_at)->addHours(6);
-        $end = $start->copy()->addHours(24);
+        $end = Carbon::parse($this->end_at)->addDay();
+        
         $clumps = DB::table('ins_rtc_metrics')
             ->join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
             ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
