@@ -275,7 +275,7 @@ class extends Component {
                 <div class="text-medium text-sm uppercase text-neutral-400 dark:text-neutral-600 mb-4">
                     {{ __('Harga dan Satuan') }}</div>
                 @if ($currs->count())
-                    <x-select wire:model.live="inv_curr_id" class="mb-3">
+                    <x-select wire:model.live="inv_curr_id" class="w-full mb-3">
                         <option value="">{{ __('Gunakan hanya') . ' ' . $curr_main->name }}</option>
                         @foreach ($currs as $curr)
                             <option wire:key="{{ 'curr' . $loop->index }}" value="{{ $curr->id }}">
