@@ -11,12 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('inv_uoms', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-
-            $table->string('name')->unique();
-        });
+        //
     }
 
     /**
@@ -24,6 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('inv_uoms');
+        //
     }
 };

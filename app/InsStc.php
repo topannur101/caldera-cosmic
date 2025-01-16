@@ -92,7 +92,7 @@ class InsStc
 
     public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id): array
     {
-        $HBTargets  = [ 77.5, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 47.5 ];
+        $HBTargets  = [ 77.5, 72.5, 67.5, 62.5, 57.5, 52.5, 47.5, 42.5 ];
         $svp_high   = [ 90.0, 85.0, 80.0, 75.0, 70.0, 65.0, 60.0, 55.0 ];
         $svp_low    = [ 70.0, 65.0, 60.0, 55.0, 50.0, 45.0, 40.0, 35.0 ];
 
