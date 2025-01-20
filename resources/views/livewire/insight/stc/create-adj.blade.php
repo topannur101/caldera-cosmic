@@ -8,8 +8,9 @@ use App\InsStcPush;
 use App\Models\InsStcMachine;
 use App\Models\InsStcDSum;
 use App\Models\InsStcDLog;
-use App\Models\InsStcMLog;
 use App\Models\InsStcAdj;
+
+use ModbusTcpClient\Packet\ModbusFunction\WriteMultipleRegistersResponse;
 
 new class extends Component {
 
@@ -66,7 +67,6 @@ new class extends Component {
             'sv_p_8'                => $this->svp_values[7]['absolute'],
             'remarks'               => $this->remarks,
         ]);
-        $this->customReset();
     }
 
     #[On('d_sum-created')]
@@ -88,13 +88,13 @@ new class extends Component {
 
         if ($this->machine_id && $this->position) {
 
-            $m_log = InsStcMLog::where('ins_stc_machine_id', $this->machine_id)
-                ->where('position', $this->position)
-                ->latest()
-                ->first();
+            $m_log = InsStcMachine::find($this->machine_id)?->ins_stc_m_log($this->position)->first();
 
             if ($m_log) {
                 $this->m_log = $m_log->toArray();
+                $this->use_m_log_sv = true;
+            } else {
+                $this->use_m_log_sv = false;
             }
 
             $d_sum = InsStcDSum::where('ins_stc_machine_id', $this->machine_id)
@@ -152,38 +152,101 @@ new class extends Component {
         $machine   = InsStcMachine::find($this->machine_id);
         $insStcPush = new InsStcPush();
 
+        $svpResponse = false;
+        $svwResponse = false;
+
+        $message = [
+            'notyf' => [
+                'type' => 'Error',
+                'content' => 'No messages available',
+            ],
+            'console' => [
+                'show' => true,
+                'content' => 'No messages available',
+            ]
+        ];
+
         try {
-            $response = $insStcPush->send('section_svp', $machine->ip_address, $this->position, [
-                $this->svp_values[0]['absolute'],
-                $this->svp_values[1]['absolute'],
-                $this->svp_values[2]['absolute'],
-                $this->svp_values[3]['absolute'],
-                $this->svp_values[4]['absolute'],
-                $this->svp_values[5]['absolute'],
-                $this->svp_values[6]['absolute'],
-                $this->svp_values[7]['absolute']
-            ]);
+            $svp_values_abs = [];
+            $m_log = $machine->ins_stc_m_log($this->position);
 
-            $this->saveAdj();
+            if ($m_log) {
+                
+                $allAboveZero = true;
+                for ($i = 1; $i <= 8; $i++) {
+                    $property = 'sv_r_' . $i;
+                    if ($m_log->$property <= 0) {
+                        $allAboveZero = false;
+                        break; // No need to check further if one value is less than or equal to 0
+                    }
+                }
+                if ($allAboveZero) {
+                    for ($i = 1; $i <= 8; $i++) {
+                        $property = 'sv_r_' . $i;
+                        $svp_values_abs[] = $m_log->$property;
+                    }
+                }
 
-            if ($this->auto_adjust) {
-                $this->js('notyfSuccess("' . __('Data HB dan SV prediksi terkirim ke HMI') . '")');
             } else {
-                $this->js('notyfSuccess("' . __('SV prediksi terkirim ke HMI') . '")');
+                $svp_values_abs = [
+                    $this->svp_values[0]['absolute'],
+                    $this->svp_values[1]['absolute'],
+                    $this->svp_values[2]['absolute'],
+                    $this->svp_values[3]['absolute'],
+                    $this->svp_values[4]['absolute'],
+                    $this->svp_values[5]['absolute'],
+                    $this->svp_values[6]['absolute'],
+                    $this->svp_values[7]['absolute']
+                ];
             }
+
+            $svpResponse = $insStcPush->send(
+                'section_svp', 
+                $machine->ip_address, 
+                $this->position, 
+                $svp_values_abs);
+
+            $svwResponse = $insStcPush->send(
+                'apply_svw', 
+                $machine->ip_address, 
+                $this->position, 
+                [true]);
             
 
-        } catch (\InvalidArgumentException $e) {
-            // Handle validation errors
-            $this->js('notyfError("Invalid data: ' . $e->getMessage() . '")');
         } catch (Exception $e) {
-            // Handle connection or other errors
-            $this->js('notyfError("' . $e->getMessage() . '")');
+            $message['console']['content'] = $e->getMessage();
+
+        } finally {
+
+            if ($svpResponse && $svwResponse) {
+                $message['notyf']['type'] = 'Success';
+                $message['notyf']['content'] = $this->auto_adjust
+                    ? __('HB dan SVP terkirim dan diterapkan ke HMI.')
+                    : __('SVP terkirim dan diterapkan ke HMI.');
+                $message['console']['show'] = false;
+                $this->saveAdj();
+
+            } elseif ($svpResponse && !$svwResponse) {
+                $message['notyf']['type'] = 'Success';
+                $message['notyf']['content'] = $this->auto_adjust
+                    ? __('HB dan SVP terkirim namun tak dapat diterapkan ke HMI, periksa console.')
+                    : __('SVP terkirim namun tak dapat diterapkan ke HMI, periksa console.');
+                $this->saveAdj();
+
+            } else {
+                $message['notyf']['type'] = $this->auto_adjust ? 'Success' : 'Error';
+                $message['notyf']['content'] = $this->auto_adjust
+                    ? __('HB tersimpan namun tak dapat mengirim SVP ke HMI, periksa console.')
+                    : __('Tak dapat mengirim SVP ke HMI, periksa console.');
+            }
+
+            $this->js('notyf' . $message['notyf']['type'] . '("' . $message['notyf']['content'] . '")');
+            if ($message['console']['show']) {
+                $this->js('console.log("' . $message['console']['content'] . '")');
+            }
         }
         
     }
-
-
     
     public function exception($e, $stopPropagation) {
 
@@ -254,40 +317,6 @@ new class extends Component {
                 </div>
             </div>
         </x-modal>
-        <x-modal name="adj-send">
-            <div class="p-6">
-                <div class="flex justify-between items-start">
-                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        {{ __('Kirim ke HMI') }}
-                    </h2>
-                    <x-text-button type="button" x-on:click="$dispatch('close')"><i
-                            class="fa fa-times"></i></x-text-button>
-                </div>
-                <div class="py-8">
-                    <div class="text-center">
-                        <i class="fa fa-tablet relative text-5xl text-neutral-300 dark:text-neutral-700"><i
-                                class="fa fa-arrow-right absolute bottom-0 -left-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
-                        <div class="px-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">{{ __('Angka SV prediksi (SVP) akan dikirimkan ke HMI.') }}
-                        </div>
-                    </div>
-                </div>
-                <div class="grid gap-y-6 text-sm text-neutral-600 dark:text-neutral-40">
-                    <div>
-                        <label for="adj-remarks"
-                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keterangan') }}</label>
-                        <x-text-input id="adj-remarks" wire:model="remarks" type="text" />
-                        @error('remarks')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end">
-                    <x-primary-button type="button" x-on:click="$dispatch('close')" wire:click="send">
-                        {{ __('Kirim SVP ke HMI') }}
-                    </x-primary-button>
-                </div>
-            </div>
-        </x-modal>
     </div>
     <div class="w-full my-8">
         <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
@@ -296,7 +325,7 @@ new class extends Component {
                     <div>
                         <label for="adj-machine_id"
                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                        <x-select class="w-full" id="adj-machine_id" wire:model.live="machine_id">
+                        <x-select class="w-full" id="adj-machine_id" wire:model.live="machine_id" disabled>
                             <option value="0"></option>
                             @foreach ($machines as $machine)
                                 <option value="{{ $machine->id }}">{{ $machine->line }}</option>
@@ -306,7 +335,7 @@ new class extends Component {
                     <div>
                         <label for="adj-position"
                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
-                        <x-select class="w-full" id="adj-position" wire:model.live="position">
+                        <x-select class="w-full" id="adj-position" wire:model.live="position" disabled>
                             <option value=""></option>
                             <option value="upper">{{ __('Atas') }}</option>
                             <option value="lower">{{ __('Bawah') }}</option>
@@ -417,7 +446,7 @@ new class extends Component {
                             <div>
                                 <label for="adj-formula_id"
                                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Formula') }}</label>
-                                <x-select class="w-full" id="adj-formula_id" wire:model.live="formula_id">
+                                <x-select class="w-full" id="adj-formula_id" wire:model.live="formula_id" disabled>
                                     <option value="0"></option>
                                     <option value="411">{{ __('v4.1.1 - Diff aggresive') }}</option>
                                     <option value="412">{{ __('v4.1.2 - Diff delicate') }}</option>
@@ -431,7 +460,7 @@ new class extends Component {
                                 <label for="adj-use_m_log_sv"
                                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Referensi SV') }}</label>
                                 <div class="p-2">
-                                    <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv"
+                                    <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv" disabled
                                         :checked="$use_m_log_sv ? true : false">{{ __('Gunakan SV mesin') }}<x-text-button type="button"
                                             class="ml-2" x-data=""
                                             x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')"><i
@@ -477,21 +506,16 @@ new class extends Component {
                             <div>{{ $this->svp_values[7]['relative'] ?? '' }}</div>
                         </div>
                     </div>
-                    <div class="flex gap-x-2">
-                        <div>
-                            @if ($errors->any())
-                                <x-text-button type="button" x-on:click="$dispatch('open-modal', 'adj-error')">
-                                    <div class="flex gap-x-2 items-center text-sm text-red-500">
-                                        <i class="fa fa-exclamation-circle"></i>
-                                        <div>{{ __('Data tidak sah') }}</div>
-                                    </div>
-                                </x-text-button>
-                            @endif
-                        </div>
-                        <div class="grow"></div>
-                        <x-primary-button type="button" :disabled="!$svp_values"
-                            x-on:click="$dispatch('open-modal', 'adj-send')">{{ __('Kirim') }}</x-primary-button>
+                    @if ($errors->any())
+                    <div>                        
+                        <x-text-button type="button" x-on:click="$dispatch('open-modal', 'adj-error')">
+                            <div class="flex gap-x-2 items-center text-sm text-red-500">
+                                <i class="fa fa-exclamation-circle"></i>
+                                <div>{{ __('Data tidak sah') }}</div>
+                            </div>
+                        </x-text-button>                        
                     </div>
+                    @endif
                 </div>
             @else
                 <div class="py-20">

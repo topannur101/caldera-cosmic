@@ -103,34 +103,39 @@ Schema::create('inv_item_tags', function (Blueprint $table) {
 // inventory item UoMs (with pricing)
 Schema::create('inv_item_uoms', function (Blueprint $table) {
     $table->id();
-    $table->foreignId('inv_item_id')->constrained('inv_items');
-    $table->foreignId('inv_uom_id')->constrained('inv_uoms');
-    $table->foreignId('inv_curr_id')->default(1)->constrained('inv_currs');
-    $table->decimal('price', 15, 2);
+    $table->enum('type', ['main', 'repaired', 'used'])->default('main');
+    $table->foreignId('inv_item_id')->constrained();
+    $table->foreignId('inv_uom_id')->constrained();
+    $table->foreignId('inv_curr_id')->default(1)->constrained();
+    $table->decimal('price', 15, 2)->default(0);
     $table->boolean('is_base')->default(false);
     $table->timestamps();
 
-    // Ensure unique combination of item and UoM
-    $table->unique(['inv_item_id', 'inv_uom_id']);
+    // Ensure unique combination of item and UoM. eg. Pen EA USD
+    $table->unique(['inv_item_id', 'inv_uom_id', 'inv_curr_id']);
 });
 
-// inventory UoM conversions
-Schema::create('inv_uom_conversions', function (Blueprint $table) {
+<!-- // inventory UoM conversions
+Schema::create('inv_item_uoms_conversions', function (Blueprint $table) {
     $table->id();
-    $table->foreignId('inv_item_id')->constrained('inv_items');
-    $table->foreignId('from_uom')->constrained('inv_uoms');
-    $table->foreignId('to_uom')->constrained('inv_uoms');
-    $table->decimal('factor', 15, 4);
+    $table->foreignId('inv_item_id')->constrained();
+    $table->foreignId('from_id')->constrained('inv_item_uoms');
+    $table->foreignId('to_id')->constrained('inv_item_uoms');
+    $table->decimal('qty_factor', 15, 4);
+    $table->decimal('price_factor', 15, 4);
     $table->timestamps();
 
     // Ensure unique combination of item and conversion pair
     $table->unique(['inv_item_id', 'from_uom', 'to_uom']);
-});
+}); -->
 
 // inventory circulation (transactions)
 Schema::create('inv_circs', function (Blueprint $table) {
     $table->id();
-    $table->enum('type', ['in', 'out']);
+    $table->enum('type', ['in', 'out', 'capture']);
+    $table->enum('evaluation_status');
+    $table->foreignId('evaluator_id');
+    $table->string('evaluation_remarks');
     $table->foreignId('inv_item_uom_id')->constrained('inv_item_uoms');
     $table->decimal('qty', 15, 2);
     $table->decimal('amount', 15, 2);
@@ -145,15 +150,6 @@ Schema::create('inv_auths', function (Blueprint $table) {
     $table->foreignId('user_id')->constrained('users');
     $table->foreignId('inv_area_id')->constrained('inv_areas');
     $table->json('actions');
-    $table->timestamps();
-});
-
-// inventory stock parameters
-Schema::create('inv_stock_params', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('inv_item_uom_id')->unique()->constrained('inv_item_uoms');
-    $table->decimal('qty_min', 15, 2)->default(0);
-    $table->decimal('qty_max', 15, 2)->default(0);
     $table->timestamps();
 });
 

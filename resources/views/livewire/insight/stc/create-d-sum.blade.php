@@ -7,8 +7,8 @@ use App\Models\User;
 use App\Models\InsStcDLog;
 use App\Models\InsStcDSum;
 use App\Models\InsStcDevice;
-use Livewire\Volt\Component;
 use App\Models\InsStcMachine;
+use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Renderless;
 use Illuminate\Support\Facades\Auth;
@@ -27,11 +27,12 @@ new class extends Component {
     public int      $user_2_id;
     public string   $user_2_name;
     public string   $user_2_emp_id;
-    public int      $machine_id;
-    public string   $position;
+    public int      $machine_id = 0;
+    public string   $position = '';
     public float    $speed;
-    public string   $sv_temps_raw;
+    public string   $sv_temps_raw = '';
     public array    $sv_temps = [];
+    public bool     $sv_temps_enabled = true;
     public string   $device_code = '';
 
     public string   $started_at;
@@ -140,46 +141,39 @@ new class extends Component {
                 'message' => ''
             ];
 
-            if (strpos($d_sum->ins_stc_machine->ip_address, '127.') !== 0) {
+            try {
+                // Send section data
+                $insStcPush->send('section_hb', $d_sum->ins_stc_machine->ip_address, $this->position, [
+                    $d_sum->section_1,
+                    $d_sum->section_2,
+                    $d_sum->section_3,
+                    $d_sum->section_4,
+                    $d_sum->section_5,
+                    $d_sum->section_6,
+                    $d_sum->section_7,
+                    $d_sum->section_8
+                ]);
 
-                try {
-                    // Send section data
-                    $insStcPush->send('section_hb', $d_sum->ins_stc_machine->ip_address, $this->position, [
-                        $d_sum->section_1,
-                        $d_sum->section_2,
-                        $d_sum->section_3,
-                        $d_sum->section_4,
-                        $d_sum->section_5,
-                        $d_sum->section_6,
-                        $d_sum->section_7,
-                        $d_sum->section_8
-                    ]);
+                // Calculate zones by averaging adjacent sections
+                $zones = [
+                    // Zone 1: Average of section 1 and 2
+                    ($d_sum->section_1 + $d_sum->section_2) / 2,
+                    // Zone 2: Average of section 3 and 4
+                    ($d_sum->section_3 + $d_sum->section_4) / 2,
+                    // Zone 3: Average of section 5 and 6
+                    ($d_sum->section_5 + $d_sum->section_6) / 2,
+                    // Zone 4: Average of section 7 and 8
+                    ($d_sum->section_7 + $d_sum->section_8) / 2
+                ];
 
-                    // Calculate zones by averaging adjacent sections
-                    $zones = [
-                        // Zone 1: Average of section 1 and 2
-                        ($d_sum->section_1 + $d_sum->section_2) / 2,
-                        // Zone 2: Average of section 3 and 4
-                        ($d_sum->section_3 + $d_sum->section_4) / 2,
-                        // Zone 3: Average of section 5 and 6
-                        ($d_sum->section_5 + $d_sum->section_6) / 2,
-                        // Zone 4: Average of section 7 and 8
-                        ($d_sum->section_7 + $d_sum->section_8) / 2
-                    ];
+                // Send zone data
+                $insStcPush->send('zone_hb', $d_sum->ins_stc_machine->ip_address, $this->position, $zones);
+                $pushStatus['is_sent'] = true;
 
-                    // Send zone data
-                    $insStcPush->send('zone_hb', $d_sum->ins_stc_machine->ip_address, $this->position, $zones);
-                    $pushStatus['is_sent'] = true;
-
-                } catch (\Exception $e) {
-                    $pushStatus['is_sent'] = false;
-                    $pushStatus['message'] = htmlspecialchars($e->getMessage(), ENT_QUOTES);
-                }
-
-            } else {
+            } catch (\Exception $e) {
                 $pushStatus['is_sent'] = false;
-                $pushStatus['message'] = 'The IP is a loopback address. Ignored.';
-            }
+                $pushStatus['message'] = htmlspecialchars($e->getMessage(), ENT_QUOTES);
+            }            
 
             $d_sum = $d_sum->toArray();
             $d_sum['auto_adjust'] = $pushStatus['is_sent'] && $this->auto_adjust;
@@ -203,6 +197,47 @@ new class extends Component {
             'file' => 'file|mimes:csv|max:1024',
         ]);
         $this->extractData();
+    }
+
+    public function updatedMachineId()
+    {
+        $this->set_m_log_sv();
+    }
+
+    public function updatedPosition()
+    {
+        $this->set_m_log_sv();
+    }
+
+    private function set_m_log_sv()
+    {
+        $this->reset(['sv_temps', 'sv_temps_raw', 'sv_temps_enabled']);
+
+        if($this->machine_id && $this->position) {
+            $m_log = InsStcMachine::find($this->machine_id)?->ins_stc_m_log($this->position)->first();
+
+            if ($m_log) {
+                
+                $allAboveZero = true;
+                for ($i = 1; $i <= 8; $i++) {
+                    $property = 'sv_r_' . $i;
+                    if ($m_log->$property <= 0) {
+                        $allAboveZero = false;
+                        break; // No need to check further if one value is less than or equal to 0
+                    }
+                }
+                if ($allAboveZero) {
+                    for ($i = 1; $i <= 8; $i++) {
+                        $property = 'sv_r_' . $i;
+                        $this->sv_temps[] = $m_log->$property;
+                        $this->sv_temps_raw .= $m_log->$property . ', ';
+                        $this->sv_temps_enabled = false;
+                    }
+                    $this->sv_temps_raw = rtrim($this->sv_temps_raw, ', ');
+                }
+
+            }
+        }
     }
 
     #[Renderless]
@@ -348,6 +383,7 @@ new class extends Component {
             'speed', 
             'sv_temps_raw', 
             'sv_temps', 
+            'sv_temps_enabled',
             'device_code', 
             'started_at', 
             'ended_at', 
@@ -463,8 +499,8 @@ new class extends Component {
                                 <div>
                                     <label for="d-log-machine_id"
                                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                                    <x-select class="w-full" id="d-log-machine_id" wire:model="machine_id">
-                                        <option value=""></option>
+                                    <x-select class="w-full" id="d-log-machine_id" wire:model.live="machine_id">
+                                        <option value="0"></option>
                                         @foreach ($machines as $machine)
                                             <option value="{{ $machine->id }}">{{ $machine->line }}</option>
                                         @endforeach
@@ -473,7 +509,7 @@ new class extends Component {
                                 <div>
                                     <label for="d-log-position"
                                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
-                                    <x-select class="w-full" id="d-log-position" wire:model="position">
+                                    <x-select class="w-full" id="d-log-position" wire:model.live="position">
                                         <option value=""></option>
                                         <option value="upper">{{ __('Atas') }}</option>
                                         <option value="lower">{{ __('Bawah') }}</option>
@@ -492,7 +528,19 @@ new class extends Component {
                                 <div x-data="{
                                     sv_temps: @entangle('sv_temps'),
                                     sv_temps_raw: @entangle('sv_temps_raw'),
+                                    sv_temps_enabled: @entangle('sv_temps_enabled'),
                                     sv_temps_count: 0,
+                                    sv_attributes: {
+                                        ':disabled': function() {
+                                            return this.sv_temps_enabled ? null : 'disabled';
+                                        },
+                                        '@input': function() {
+                                            this.updateSVTemps();
+                                        },
+                                        '@blur': function() {
+                                            this.updateSVTemps();
+                                        },
+                                    },
                                     updateSVTemps() {
                                         if (this.sv_temps_raw) {
                                             this.sv_temps = this.sv_temps_raw.split(',').map(temp => temp.trim()).filter(temp => temp !== '');
@@ -502,9 +550,10 @@ new class extends Component {
                                 }" x-init="updateSVTemps">
                                     <div class="flex justify-between px-3 mb-2 uppercase text-xs text-neutral-500">
                                         <label for="d-log-sv_temps">{{ __('SV') }}</label>
-                                        <div><span x-text="sv_temps_count"></span>{{ ' ' . __('terbaca') }}</div>
+                                        <div x-show="sv_temps_enabled"><span x-text="sv_temps_count"></span>{{ ' ' . __('terbaca') }}</div>
+                                        <div x-show="!sv_temps_enabled"><i class="fa fa-lock"></i></div>
                                     </div>
-                                    <x-text-input id="d-log-sv_temps" x-model="sv_temps_raw" @input="updateSVTemps"
+                                    <x-text-input id="d-log-sv_temps" x-model="sv_temps_raw" x-bind="sv_attributes" 
                                         type="text" placeholder="75, 65, 55,..." />
                                     @error('sv_temps')
                                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
@@ -557,7 +606,7 @@ new class extends Component {
                             <div class="flex flex-col pb-6">
                                 <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">
                                     {{ __('Informasi pengukuran') }}</dt>
-                                <dd class="grid grid-cols-2">
+                                <dd>
                                     <div class="flex gap-x-3 items-center">
                                         <div class="text-neutral-500 dark:text-neutral-400 text-sm">
                                             {{ __('Urutan') . ': ' }}
@@ -565,14 +614,6 @@ new class extends Component {
                                         <div>
                                             {{ $sequence }}
                                         </div>                                        
-                                    </div>
-                                    <div class="flex gap-x-3 items-center">
-                                        <div class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            {{ __('Mitra kerja') . ': ' }}
-                                        </div>
-                                        <div>
-                                            {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}
-                                        </div>
                                     </div>
                                     <div class="flex gap-x-3 items-center">
                                         <div class="text-neutral-500 dark:text-neutral-400 text-sm">
@@ -643,7 +684,7 @@ new class extends Component {
                         <div class="flex flex-col pb-6">
                             <dt class="mb-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">
                                 {{ __('Informasi pengukuran') }}</dt>
-                            <dd class="grid grid-cols-2">
+                            <dd>
                                 <div class="flex gap-x-3 items-center">
                                     <div class="text-neutral-500 dark:text-neutral-400 text-sm">
                                         {{ __('Urutan') . ': ' }}
@@ -651,14 +692,6 @@ new class extends Component {
                                     <div>
                                         {{ $sequence }}
                                     </div>                                        
-                                </div>
-                                <div class="flex gap-x-3 items-center">
-                                    <div class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                        {{ __('Mitra kerja') . ': ' }}
-                                    </div>
-                                    <div>
-                                        {{ $user_2_emp_id ? $user_2_name . ' (' . $user_2_emp_id . ')' : '-' }}
-                                    </div>
                                 </div>
                                 <div class="flex gap-x-3 items-center">
                                     <div class="text-neutral-500 dark:text-neutral-400 text-sm">
@@ -781,14 +814,6 @@ new class extends Component {
                                     </tr>
                                 </table>
                             </dd>
-                        </div>
-                        <div class="py-6">
-                            <x-toggle name="d-sum-auto_adjust" wire:model="auto_adjust" disabled
-                            :checked="$auto_adjust ? true : false">{{ __('Kirim langsung SV prediksi') }}<x-text-button type="button"
-                                class="ml-2" x-data=""
-                                x-on:click="$dispatch('open-modal', 'auto-adjustment-help')"><i
-                                class="far fa-question-circle"></i></x-text-button>
-                            </x-toggle>
                         </div>
                     </dl>
                 @break

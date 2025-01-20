@@ -4,94 +4,110 @@ namespace App;
 
 use ModbusTcpClient\Network\BinaryStreamConnection;
 use ModbusTcpClient\Packet\ModbusFunction\WriteMultipleRegistersRequest;
-use ModbusTcpClient\Packet\ModbusFunction\WriteMultipleRegistersResponse;
+use ModbusTcpClient\Packet\ModbusFunction\WriteSingleCoilRequest;
 use ModbusTcpClient\Packet\ResponseFactory;
 use ModbusTcpClient\Utils\Types;
 use Exception;
+use InvalidArgumentException;
 
 class InsStcPush
 {
     /**
      * Send section_svp, section_hb, or zone_hb to HMI through Modbus TCP
      */
-    public function send(string $type, string $ipAddress, string $position, array $values, int $port = 503, int $unitID = 1): WriteMultipleRegistersResponse
+    public function send(string $type, string $ipAddress, string $position, array $values, int $port = 503, int $unitID = 1)
     {
-        // Validate type
         $typeConfigs = [
+            'apply_svw' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 322,
+                    'lower' => 312
+                ],
+                'function' => 'singleCoil'
+            ],
             'section_svp' => [
                 'valueCount' => 8,
                 'startAddresses' => [
                     'upper' => 230,
                     'lower' => 130
-                ]
+                ],
+                'function' => 'multipleRegisters'
             ],
             'section_hb' => [
                 'valueCount' => 8,
                 'startAddresses' => [
                     'upper' => 270,
                     'lower' => 170
-                ]
+                ],
+                'function' => 'multipleRegisters'
             ],
             'zone_hb' => [
                 'valueCount' => 4,
                 'startAddresses' => [
-                    'upper' => 260,
-                    'lower' => 160
-                ]
+                    'upper' => 210,
+                    'lower' => 110
+                ],
+                'function' => 'multipleRegisters'
             ]
         ];
+
+        if (strpos($ipAddress, '127.') == 0) {
+            throw new InvalidArgumentException("The IP is a loopback address");
+        }
     
-        // Check if type is valid
         if (!isset($typeConfigs[$type])) {
-            throw new \InvalidArgumentException(__('Tipe yang diberikan tidak sah.'));
+            throw new InvalidArgumentException("Invalid type: $type");
         }
     
         $config = $typeConfigs[$type];
-    
-        // Validate position
+
         if (!in_array($position, ['upper', 'lower'])) {
-            throw new \InvalidArgumentException(__('Posisi harus berupa upper atau lower.'));
+            throw new InvalidArgumentException("Invalid position: $position");
         }
     
-        // Validate input array count
         if (count($values) !== $config['valueCount']) {
-            throw new \InvalidArgumentException(__('Jumlah nilai kurang dari persyaratan'));
+            throw new InvalidArgumentException("Invalid number of values for type: $type");
         }
-    
-        // Validate and prepare registers
-        $registers = array_map(function($value) {
-            $intValue = (int)$value;
-            if ($intValue < 20 || $intValue > 90) {
-                throw new \InvalidArgumentException(
-                    __('Nilai temperatur berada di luar jangkauan (20-90)')
-                );
-            }
-            return Types::toInt16($intValue);
-        }, $values);
-    
-        // Create connection
+
+        $startAddress = $config['startAddresses'][$position];
         $connection = BinaryStreamConnection::getBuilder()
             ->setPort($port)
             ->setHost($ipAddress)
             ->build();
-    
-        // Get start address based on type and position
-        $startAddress = $config['startAddresses'][$position];
-    
-        // Create Modbus request
-        $packet = new WriteMultipleRegistersRequest($startAddress, $registers, $unitID);
-    
+
         try {
-            // Send and receive
-            $binaryData = $connection->connect()->sendAndReceive($packet);
-            
-            // Parse response
-            /** @var WriteMultipleRegistersResponse $response */
-            $response = ResponseFactory::parseResponseOrThrow($binaryData);
-            
-            return $response;
+            $connection->connect();
+
+            if ($config['function'] === 'singleCoil') {
+                $coil = $values[0];
+                $packet = new WriteSingleCoilRequest($startAddress, $coil, $unitID);
+            } else {
+                $registers = array_map(function($value) {
+                    $intValue = (int)$value;
+                    if ($intValue < 30 || $intValue > 90) {
+                        throw new InvalidArgumentException(
+                            __('Nilai temperatur berada di luar jangkauan (30-90)')
+                        );
+                    }
+                    return Types::toInt16($intValue);
+                }, $values);
+                $packet = new WriteMultipleRegistersRequest($startAddress, $registers, $unitID);
+            }
+
+            $binaryData = $connection->sendAndReceive($packet);
+
+            if ($config['function'] === 'singleCoil') {
+                $response = ResponseFactory::parseResponseOrThrow($binaryData);
+                return $response->isCoil();
+            } else {
+                $response = ResponseFactory::parseResponseOrThrow($binaryData);
+                return $response;
+            }
         } catch (Exception $exception) {
-            throw $exception;
+            echo 'An exception occurred' . PHP_EOL;
+            echo $exception->getMessage() . PHP_EOL;
+            echo $exception->getTraceAsString() . PHP_EOL;
         } finally {
             $connection->close();
         }

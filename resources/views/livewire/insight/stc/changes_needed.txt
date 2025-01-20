@@ -1,0 +1,107 @@
+remarks on adj not needed
+user_2 on d_sum not needed
+
+create adj form input is no longer needed
+create d_sum use single form
+
+consolidate d_sum with adjustment
+    protected $fillable = [
+        'ins_stc_device_id',
+        'ins_stc_machine_id',
+
+        'speed',
+        'sequence',
+        'position',
+
+        'user_id',
+        'started_at',
+        'ended_at',
+
+        'formula_id', // 
+        'sv_type', // ['d_sum', 'm_log'] nullable
+        is_applied // boolean, false, true
+
+        'hb_pr',
+        'hb_s1',
+        'hb_s2',
+        'hb_s3',
+        'hb_s4',
+        'hb_s5',
+        'hb_s6',
+        'hb_s7',
+        'hb_s8',
+        'hb_ps',
+
+        'svp_s1',
+        'svp_s2',
+        'svp_s3',
+        'svp_s4',
+        'svp_s5',
+        'svp_s6',
+        'svp_s7',
+        'svp_s8',
+
+        Informasi penyetelan:
+        - [v, green]  Full-auto: Modus otomatis menggunakan SV terekam, is_applied true dan sv_type m_log
+        - [v, yellow] Semi-auto: Modus otomatis menggunakan SV manual, is_applied true dan sv_type d_sum
+        - [x, red]    Manual: Tidak ada penyetelan otomatis, is_applied false
+
+        Integritas: [?] Perbandingan dengan penyetelan sebelumnya
+        Ada penyetelan sebelumnya (ada d_sum sebelumya dalam n jam terakhir)
+        - [v, green]  Modus auto dan SV sebelumnya tidak berubah
+        - [v, yellow] Modus auto namun SV sebelumnya telah berubah
+
+        Tidak ada penyetelan (tidak ada d_sum sebelumnya dalam n jam terakhir atau d)
+        - [?, gray]   Tidak ada penyetelan sebelumnya.        
+
+    ];
+
+// dsum
+    protected $fillable = [
+        'ins_stc_device_id',
+        'ins_stc_machine_id',
+
+        'user_1_id',
+        'user_2_id',
+        'started_at',
+        'ended_at',
+
+        'preheat',
+        'section_1',
+        'section_2',
+        'section_3',
+        'section_4',
+        'section_5',
+        'section_6',
+        'section_7',
+        'section_8',
+        'postheat',
+
+        'speed',
+        'sequence',
+        'position',
+        'sv_temps',
+    ];
+
+// adjustments
+    protected $fillable = [
+
+        'ins_stc_machine_id',
+        'user_id',
+        'position',
+        'use_m_log_sv',
+        'ins_stc_d_sum_id',
+        'ins_stc_m_log_id',
+        'formula_id',
+        'sv_p_1',        
+        'sv_p_2',        
+        'sv_p_3',        
+        'sv_p_4',        
+        'sv_p_5',        
+        'sv_p_6',        
+        'sv_p_7',        
+        'sv_p_8',
+        'remarks',
+        'is_applied'
+
+    ];

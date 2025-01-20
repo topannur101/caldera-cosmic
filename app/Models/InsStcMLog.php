@@ -48,8 +48,7 @@ class InsStcMLog extends Model
         'sv_r_5',
         'sv_r_6',
         'sv_r_7',
-        'sv_r_8',
-        
+        'sv_r_8',        
     ];
     
     // protected $casts = [
