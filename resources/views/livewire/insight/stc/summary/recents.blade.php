@@ -63,9 +63,12 @@ new class extends Component {
                 ->where('created_at', '>=', Carbon::now()->subHour())
                 ->latest('created_at')
                 ->first();
-            $upper_d_sum_sv_temps = $upper_d_sum ? ($upper_d_sum_sv_temps = json_decode($upper_d_sum->sv_temps, true)) : [];
+
+            $upper_d_sum_hb_values = $upper_d_sum ? json_decode($upper_d_sum->hb_values, true) : [];
+            $upper_d_sum_sv_values = $upper_d_sum ? json_decode($upper_d_sum->sv_values, true) : [];
             $machines[$key]['upper']['d_sum'] = $upper_d_sum ? $upper_d_sum->toArray() : [];
-            $machines[$key]['upper']['d_sum']['sv_temps'] = $upper_d_sum_sv_temps;
+            $machines[$key]['upper']['d_sum']['hb_values'] = $upper_d_sum_hb_values;
+            $machines[$key]['upper']['d_sum']['sv_values'] = $upper_d_sum_sv_values;
             $machines[$key]['upper']['m_log'] = $upper_m_log ? $upper_m_log->toArray() : [];
 
             $lower_d_sum = InsStcDSum::where('position', 'lower')
@@ -78,9 +81,12 @@ new class extends Component {
                 ->where('created_at', '>=', Carbon::now()->subHour())
                 ->latest('created_at')
                 ->first();
-            $lower_d_sum_sv_temps = $lower_d_sum ? ($lower_d_sum_sv_temps = json_decode($lower_d_sum->sv_temps, true)) : [];
+
+            $lower_d_sum_hb_values = $lower_d_sum ? json_decode($lower_d_sum->hb_values, true) : [];
+            $lower_d_sum_sv_values = $lower_d_sum ? json_decode($lower_d_sum->sv_values, true) : [];
             $machines[$key]['lower']['d_sum'] = $lower_d_sum ? $lower_d_sum->toArray() : [];
-            $machines[$key]['lower']['d_sum']['sv_temps'] = $lower_d_sum_sv_temps;
+            $machines[$key]['lower']['d_sum']['hb_values'] = $lower_d_sum_hb_values;
+            $machines[$key]['lower']['d_sum']['sv_values'] = $lower_d_sum_sv_values;
             $machines[$key]['lower']['m_log'] = $lower_m_log ? $lower_m_log->toArray() : [];
         }
 
@@ -242,25 +248,25 @@ new class extends Component {
                                     <div class="grid grid-cols-9 text-center gap-x-3">
                                         
                                         <div>HB</div>
-                                        <div>{{ $machine['upper']['d_sum']['section_1'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['section_2'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['section_3'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['section_4'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['section_5'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['section_6'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['section_7'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['section_8'] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['hb_values'][0] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['hb_values'][1] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['hb_values'][2] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['hb_values'][3] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['hb_values'][4] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['hb_values'][5] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['hb_values'][6] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['hb_values'][7] ?? '-' }}</div>
                                         
                                         @if(!$use_m_log_sv)
                                         <div>SV</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_temps'][0] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_temps'][1] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_temps'][2] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_temps'][3] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_temps'][4] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_temps'][5] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_temps'][6] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_temps'][7] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['sv_values'][0] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['sv_values'][1] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['sv_values'][2] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['sv_values'][3] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['sv_values'][4] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['sv_values'][5] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['sv_values'][6] ?? '-' }}</div>
+                                        <div>{{ $machine['upper']['d_sum']['sv_values'][7] ?? '-' }}</div>
                                         @endif
                                     </div>
                                 </div>
@@ -311,25 +317,25 @@ new class extends Component {
                                     </div>
                                     <div class="grid grid-cols-9 text-center gap-x-3">
                                         <div>HB</div>
-                                        <div>{{ $machine['lower']['d_sum']['section_1'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['section_2'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['section_3'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['section_4'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['section_5'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['section_6'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['section_7'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['section_8'] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['hb_values'][0] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['hb_values'][1] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['hb_values'][2] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['hb_values'][3] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['hb_values'][4] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['hb_values'][5] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['hb_values'][6] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['hb_values'][7] ?? '-' }}</div>
 
                                         @if(!$use_m_log_sv)
                                         <div>SV</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_temps'][0] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_temps'][1] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_temps'][2] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_temps'][3] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_temps'][4] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_temps'][5] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_temps'][6] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_temps'][7] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['sv_values'][0] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['sv_values'][1] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['sv_values'][2] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['sv_values'][3] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['sv_values'][4] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['sv_values'][5] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['sv_values'][6] ?? '-' }}</div>
+                                        <div>{{ $machine['lower']['d_sum']['sv_values'][7] ?? '-' }}</div>
                                         @endif
 
                                     </div>

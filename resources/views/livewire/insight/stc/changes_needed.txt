@@ -41,6 +41,8 @@ consolidate d_sum with adjustment
         'svp_s7',
         'svp_s8',
 
+        'integrity' // nullable enum ['stable','modified', 'none']
+
         Informasi penyetelan:
         - [v, green]  Full-auto: Modus otomatis menggunakan SV terekam, is_applied true dan sv_type m_log
         - [v, yellow] Semi-auto: Modus otomatis menggunakan SV manual, is_applied true dan sv_type d_sum

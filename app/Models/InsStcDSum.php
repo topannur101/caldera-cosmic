@@ -16,43 +16,29 @@ class InsStcDSum extends Model
         'ins_stc_device_id',
         'ins_stc_machine_id',
 
-        'user_1_id',
-        'user_2_id',
+        'user_id',
+        'formula_id',
+        'sv_used',
+        'is_applied',
+
+        'target_values',
+        'hb_values',
+        'sv_values',
+        'svp_values',
+
+        'integrity',
+
         'started_at',
         'ended_at',
-
-        'preheat',
-        'section_1',
-        'section_2',
-        'section_3',
-        'section_4',
-        'section_5',
-        'section_6',
-        'section_7',
-        'section_8',
-        'postheat',
 
         'speed',
         'sequence',
         'position',
-        'sv_temps',
     ];
     
     protected $casts = [
         'started_at'    => 'datetime',
         'ended_at'      => 'datetime',
-
-        'preheat'       => 'float',
-        'section_1'     => 'float',
-        'section_2'     => 'float',
-        'section_3'     => 'float',
-        'section_4'     => 'float',
-        'section_5'     => 'float',
-        'section_6'     => 'float',
-        'section_7'     => 'float',
-        'section_8'     => 'float',
-        'postheat'      => 'float',
-
         'speed' => 'float',
     ];
 

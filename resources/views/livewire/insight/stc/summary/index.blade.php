@@ -18,8 +18,7 @@ class extends Component {
     {
         $this->view_titles = [   
             'recents'       => __('Pembacaan terkini'),    
-            'device'        => __('Pembacaan alat'),    
-            'machine'       => __('Pembacaan mesin'), 
+            'device'        => __('Pembacaan alat'),   
             'history'       => __('Riwayat'), 
             'comparison'    => __('Perbandingan'),
             'adjustments'   => __('Penyetelan '),  
@@ -79,10 +78,6 @@ class extends Component {
 
             @case('history')
             <livewire:insight.stc.summary.history />                       
-                @break
-
-            @case('machine')
-                <livewire:insight.stc.summary.machine />                       
                 @break
 
             @case('recents')
