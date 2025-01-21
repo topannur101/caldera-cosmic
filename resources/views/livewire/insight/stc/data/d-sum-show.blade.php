@@ -6,6 +6,7 @@ use App\Models\InsStcDSum;
 use App\InsStc;
 
 new class extends Component {
+    
     public int $id;
 
     public array $d_sum = [

@@ -1049,13 +1049,163 @@ class InsStc
         return $positionHuman;
     }    
 
-    public static function getAdjustmentChartJsOptions()
+    public static function getAdjustmentChartJsOptions(array $dSums): array
     {
+        // Group by line and count occurrences for each condition
+        $lineData = [];
+        foreach ($dSums as $dSum) {
+            $line = $dSum['ins_stc_machine']['line'];
+            
+            if (!isset($lineData[$line])) {
+                $lineData[$line] = [
+                    'auto' => 0,      // is_applied true & sv_used m_log
+                    'semi_auto' => 0, // is_applied true & sv_used d_sum
+                    'none' => 0       // is_applied false
+                ];
+            }
+            
+            if (!$dSum['is_applied']) {
+                $lineData[$line]['none']++;
+            } else {
+                if ($dSum['sv_used'] === 'm_log') {
+                    $lineData[$line]['auto']++;
+                } elseif ($dSum['sv_used'] === 'd_sum') {
+                    $lineData[$line]['semi_auto']++;
+                }
+            }
+        }
+        
+        // Sort lines numerically
+        ksort($lineData);
+    
+        return [
+            'type' => 'bar',
+            'data' => [
+                'labels' => array_map(fn($line) => "Line $line", array_keys($lineData)),
+                'datasets' => [
+                    [
+                        'label' => __('Auto'),
+                        'data' => array_column($lineData, 'auto'),
+                        'backgroundColor' => 'rgba(75, 192, 92, 0.5)',
+                    ],
+                    [
+                        'label' => __('Semi auto'),
+                        'data' => array_column($lineData, 'semi_auto'),
+                        'backgroundColor' => 'rgba(255, 205, 86, 0.5)',
+                    ],
+                    [
+                        'label' => __('Manual'),
+                        'data' => array_column($lineData, 'none'),
+                        'backgroundColor' => 'rgba(255, 99, 132, 0.5)',
+                    ]
+                ]
+            ],
+            'options' => [
+                'indexAxis' => 'y',
+                'maintainAspectRatio' => false,
+                'responsive' => true,
+                'scales' => [
+                    'x' => [
+                        'stacked' => true,
+                    ],
+                    'y' => [
+                        'stacked' => true,
+                    ],
+                ],
+                'plugins' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => __('Modus penyetelan berdasarkan Line')
+                    ],
+                ],
 
+            ],
+        ];
     }
 
-    public static function getIntegrityChartJsOptions()
+    public static function getIntegrityChartJsOptions(array $dSums): array 
     {
+        // Define integrity label mapping
+        $integrityLabels = [
+            'stable' => __('SV konsisten'),
+            'modified' => __('SV berubah'),
+            'none' => __('Tak ada pembanding'),
+        ];
         
+        // Group by line and count integrity types
+        $lineData = [];
+        foreach ($dSums as $dSum) {
+            $line = $dSum['ins_stc_machine']['line'];
+            
+            if (!isset($lineData[$line])) {
+                $lineData[$line] = [
+                    'stable' => 0,
+                    'modified' => 0,
+                    'none' => 0,
+                    'unknown' => 0
+                ];
+            }
+            
+            // Handle integrity value
+            $integrity = $dSum['integrity'] ?? 'unknown';
+            if (array_key_exists($integrity, $integrityLabels)) {
+                $lineData[$line][$integrity]++;
+            } else {
+                $lineData[$line]['unknown']++;
+            }
+        }
+        
+        // Sort lines numerically
+        ksort($lineData);
+        
+        // Prepare data in ChartJS format
+        return [
+            'type' => 'bar',
+            'data' => [
+                'labels' => array_map(fn($line) => "Line $line", array_keys($lineData)),
+                'datasets' => [
+                    [
+                        'label' => $integrityLabels['stable'],
+                        'data' => array_column($lineData, 'stable'),
+                        'backgroundColor' => 'rgba(75, 192, 92, 0.5)',
+                    ],
+                    [
+                        'label' => $integrityLabels['modified'],
+                        'data' => array_column($lineData, 'modified'),
+                        'backgroundColor' => 'rgba(54, 162, 160, 0.5)',
+                    ],
+                    [
+                        'label' => $integrityLabels['none'],
+                        'data' => array_column($lineData, 'none'),
+                        'backgroundColor' => 'rgba(255, 99, 132, 0.5)',
+                    ],
+                    [
+                        'label' => __('Tak diketahui'),
+                        'data' => array_column($lineData, 'unknown'),
+                        'backgroundColor' => 'rgba(201, 203, 207, 0.5)',
+                    ]
+                ]
+            ],
+            'options' => [
+                'indexAxis' => 'y',
+                'maintainAspectRatio' => false,
+                'responsive' => true,
+                'scales' => [
+                    'x' => [
+                        'stacked' => true,
+                    ],
+                    'y' => [
+                        'stacked' => true,
+                        'beginAtZero' => true
+                    ]
+                ],
+                'plugins' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => __('Integritas berdasarkan Line')
+                    ],
+                ]
+            ]
+        ];
     }
 }

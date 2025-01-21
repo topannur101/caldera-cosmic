@@ -44,7 +44,7 @@ new class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $dSums = InsStcDSum::query()
+        $dSums = InsStcDSum::with(['ins_stc_machine'])
             ->when($this->line, function (Builder $query) {
                 $query->whereHas('ins_stc_machine', function (Builder $query) {
                     $query->where('line', $this->line);
@@ -53,112 +53,30 @@ new class extends Component {
             ->whereBetween('created_at', [$start, $end])
             ->get()
             ->toArray();
-            
-        $adjustmentData = [];
 
-        foreach ($dSums as $dSum) {
-            //
-        }
-
-        $this->js(
-            "
-            let options = " .
-                json_encode(InsStc::getAdjustmentChartJsOptions($adjustmentData)) .
-                ";
-                
+        $this->js("
+            const options = " . json_encode(InsStc::getAdjustmentChartJsOptions($dSums)) . ";
+          
             // Render chart
-            const chartContainer = \$wire.\$el.querySelector('#stc-data-adjustment-chart-container');
-            chartContainer.innerHTML = '<div class=\"chart\"></div>';
-            let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
-            chart.render();
-            ",
-        );
+            const adjustmentChartContainer = \$wire.\$el.querySelector('#stc-data-adjustment-chart-container');
+            adjustmentChartContainer.innerHTML = '';
+            const adjustmentCanvas = document.createElement('canvas');
+            adjustmentCanvas.id = 'adjustment-chart';
+            adjustmentChartContainer.appendChild(adjustmentCanvas);
+            new Chart(adjustmentCanvas, options);
+        ");
 
-        $dataByIdentity = $dSum->get()->groupBy('team')
-            ->map(function ($teamdSum) {
-                return [
-                    'with_code'     => $teamdSum->whereNotNull('ins_rubber_batch_id')->count(),
-                    'without_code'  => $teamdSum->whereNull('ins_rubber_batch_id')->count(),
-                ];
-            })
-            ->sortBy(function ($value, $key) {
-                return $key;
-            });
-
-        $this->js(
-            "
-            let options = " .
-                json_encode(InsStc::getBatchIdentityChartOptions($dataByIdentity, 'team')) .
-                ";
-                
-            // Fix the formatters
-            options.xaxis.labels.formatter = function(val) { 
-                return val; 
-            };
-
-            options.plotOptions.bar.dataLabels.total.formatter = function(val) {
-                return val.toFixed(0);
-            }
-
-            options.dataLabels.formatter = function(val) {
-                return val.toFixed(1) + '%';            
-            };
-
-            options.tooltip.y.formatter = function(val) {
-                return val + ' " . __('batch') . "';       
-            };
-
+        $this->js("
+            const options = " . json_encode(InsStc::getIntegrityChartJsOptions($dSums)) . ";
+        
             // Render chart
-            const chartContainer = \$wire.\$el.querySelector('#stc-data-batch-count-by-identity-chart-container');
-            chartContainer.innerHTML = '<div class=\"chart\"></div>';
-            let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
-            chart.render();
-            ",
-        );
-
-        $dataByLine = $dSum->get()->groupBy('line')
-            ->map(function ($linedSum) {
-                return [
-                    'too_soon'          => $linedSum->where('eval', 'too_soon')->count(),
-                    'on_time'           => $linedSum->where('eval', 'on_time')->count(), 
-                    'on_time_manual'    => $linedSum->where('eval', 'on_time_manual')->count(),
-                    'too_late'          => $linedSum->where('eval', 'too_late')->count(),
-                ];
-            })
-            ->sortByDesc(function ($value, $key) {
-                return $key;
-            });
-
-        $this->js(
-            "
-            let options = " .
-                json_encode(InsStc::getBatchEvalChartOptions($dataByLine, 'line')) .
-                ";
-                
-            // Fix the formatters
-            options.xaxis.labels.formatter = function(val) { 
-                return val; 
-            };
-            
-            options.plotOptions.bar.dataLabels.total.formatter = function(val) {
-                return val;
-            };
-
-            options.dataLabels.formatter = function(val) {
-                return val;             
-            };
-
-            options.tooltip.y.formatter = function(val) {
-                return val + ' " . __('batch') . "';       
-            };
-
-            // Render chart
-            const chartContainer = \$wire.\$el.querySelector('#stc-data-batch-count-by-line-chart-container');
-            chartContainer.innerHTML = '<div class=\"chart\"></div>';
-            let chart = new ApexCharts(chartContainer.querySelector('.chart'), options);
-            chart.render();
-            ",
-        );
+            const integrityChartContainer = \$wire.\$el.querySelector('#stc-data-integrity-chart-container');
+            integrityChartContainer.innerHTML = '';
+            const integrityCanvas = document.createElement('canvas');
+            integrityCanvas.id = 'integrity-chart';
+            integrityChartContainer.appendChild(integrityCanvas);
+            new Chart(integrityCanvas, options);
+        ");
     }
 
     public function updated()
