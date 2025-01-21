@@ -9,7 +9,7 @@
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.stc.index') }}" :active="request()->routeIs('insight.stc.index')" wire:navigate>
                 <i class="fa fa-pen text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Buat') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.stc.summary.index') }}" :active="request()->routeIs('insight.stc.summary.index')" wire:navigate>
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.stc.data.index') }}" :active="request()->routeIs('insight.stc.data.index')" wire:navigate>
                 <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.stc.manage.index') }}" :active="request()->routeIs('insight.stc.manage.index')" wire:navigate>

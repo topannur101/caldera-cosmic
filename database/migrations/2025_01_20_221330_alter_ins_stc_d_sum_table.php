@@ -20,12 +20,12 @@ return new class extends Migration
             $table->renameColumn('sv_temps', 'sv_values');
 
             $table->integer('formula_id')->nullable();                          // 👍🏽
-            $table->enum('sv_used', ['d_sum', 'm_log'])->nullable();   // 👍🏽
+            $table->enum('sv_used', ['d_sum', 'm_log'])->nullable();   // 👍🏽 from submission
             $table->boolean('is_applied')->default(false); 
             $table->json('target_values')->nullable();                          // 👍🏽
             $table->json('hb_values')->nullable();                              // 👍🏽
             $table->json('svp_values')->nullable();                             // 👍🏽
-            $table->enum('integrity', ['stable', 'modified', 'none'])->nullable();        
+            $table->enum('integrity', ['stable', 'modified', 'none'])->nullable();  // from submission treat d_sum and m_log differently     
         });
 
         $dSums = InsStcDSum::all();
@@ -57,6 +57,10 @@ return new class extends Migration
                 (int) round($dSum->section_8, 0)
             ];
             $dSum->hb_values = json_encode($hb_values);
+
+            if ($dSum->ins_stc_machine_id == 5) {
+                $dSum->is_applied = true;
+            }
 
             $m_log = InsStcMLog::where('created_at', '<', $dSum->created_at)
                 ->where('ins_stc_machine_id', $dSum->ins_stc_machine_id)
@@ -121,6 +125,10 @@ return new class extends Migration
                     $adj->sv_p_7,
                     $adj->sv_p_8,
                 ];
+            }
+
+            if (!$svpb) {
+                $svpb = json_decode($dSum->sv_values, true);
             }
 
             if ($svp_values && $svpb) {

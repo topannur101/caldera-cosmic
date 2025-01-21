@@ -603,7 +603,7 @@ input[type="checkbox"]:checked + label.custom-checkbox {
   }
 
   .cal-includes {
-    @apply bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-600 dark:hover:bg-neutral-700 bg-green-500 bg-red-500 text-neutral-800 bg-red-200 dark:bg-red-900 bg-yellow-500 text-neutral-800 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800;
+    @apply text-yellow-500 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-600 dark:hover:bg-neutral-700 bg-green-500 bg-red-500 text-neutral-800 bg-red-200 dark:bg-red-900 bg-yellow-500 text-neutral-800 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800;
   }
 
   .cal-offscreen {

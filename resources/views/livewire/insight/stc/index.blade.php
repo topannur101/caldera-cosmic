@@ -17,7 +17,7 @@ class extends Component {
 </x-slot>
 
 <x-slot name="printable">
-    <livewire:insight.stc.summary.d-sum-print />
+    <livewire:insight.stc.data.d-sum-print />
 </x-slot>
 
 <div id="content" class="py-12 max-w-6xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">

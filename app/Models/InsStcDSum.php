@@ -37,32 +37,69 @@ class InsStcDSum extends Model
     ];
     
     protected $casts = [
-        'started_at'    => 'datetime',
-        'ended_at'      => 'datetime',
+        'started_at'    => 'datetime:Y-m-d H:i',
+        'ended_at'      => 'datetime:Y-m-d H:i',
         'speed' => 'float',
     ];
 
     public function duration(): string
     {
-        return InsStc::duration($this->started_at, $this->ended_at);
+        return InsStc::duration($this->started_at, $this->ended_at, 'short');
     }
 
-    public function uploadLatency(): string
+    public function latency(): string
     {
-        return InsStc::duration($this->ended_at, $this->updated_at);
+        return InsStc::duration($this->ended_at, $this->created_at, 'short');
     }
+
+
+    public function integrity_friendly(): string
+    {
+        switch ($this->integrity) {
+            case 'stable':
+                return '<i class="fa fa-check-circle me-2 text-green-500"></i>' . __('SV konsisten');
+            case 'modified':
+                return '<i class="fa fa-exclamation-circle me-2 text-yellow-500"></i>' . __('SV berubah');
+            case 'none':
+                return __('Tak ada pembanding');
+            default:
+                return __('Tak ada pembanding');
+        }
+
+    }
+
+    public function adjustment(): string
+    {
+        if ($this->is_applied) {
+            if ($this->sv_used == 'm_log') {
+            return 'full-auto';
+            } elseif ($this->sv_used == 'd_sum') {
+            return 'semi-auto';
+            }
+        }
+        return 'none';
+    }
+
+    public function adjustment_friendly(): string
+    {
+        switch ($this->adjustment()) {
+            case 'full-auto':
+                return '<i class="fa fa-check-circle me-2 text-green-500"></i>' . __('Auto (SV auto)');
+            case 'semi-auto':
+                return '<i class="fa fa-check-circle me-2 text-yellow-500"></i>' . __('Auto (SV manual)');
+            case 'manual':
+                return __('Manual');
+            default:
+                return __('Manual');
+        }
+    }    
 
     public function ins_stc_d_logs(): HasMany
     {
         return $this->hasMany(InsStcDlog::class);
     }
 
-    public function user_1(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function user_2(): BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

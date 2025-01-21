@@ -1,7 +1,6 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 
@@ -10,13 +9,10 @@ use App\InsStc;
 use App\Models\InsStcDSum;
 use App\Models\InsStcDLog;
 use App\Models\InsStcMachine;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Traits\HasDateRangeFilter;
 
-new #[Layout('layouts.app')] 
-class extends Component {
+new class extends Component {
 
     use WithPagination;
     use HasDateRangeFilter;
@@ -43,16 +39,14 @@ class extends Component {
         $end = Carbon::parse($this->end_at)->endOfDay();
 
         $query = InsStcDSum::join('ins_stc_machines', 'ins_stc_d_sums.ins_stc_machine_id', '=', 'ins_stc_machines.id')
-            ->join('users as user1', 'ins_stc_d_sums.user_1_id', '=', 'user1.id')
-            ->leftjoin('users as user2', 'ins_stc_d_sums.user_2_id', '=', 'user2.id')
+            ->join('users', 'ins_stc_d_sums.user_id', '=', 'users.id')
             ->select(
                 'ins_stc_d_sums.*',
                 'ins_stc_d_sums.created_at as d_sum_created_at',
                 'ins_stc_machines.line as machine_line',
-                'user1.emp_id as user1_emp_id',
-                'user1.name as user1_name',
-                'user2.emp_id as user2_emp_id',
-                'user2.name as user2_name'
+                'users.emp_id as user_emp_id',
+                'users.name as user_name',
+                'users.photo as user_photo'
             )
             ->whereBetween('ins_stc_d_sums.created_at', [$start, $end]);
 
@@ -77,17 +71,14 @@ class extends Component {
         $query = InsStcDLog::join('ins_stc_d_sums', 'ins_stc_d_logs.ins_stc_d_sum_id', '=', 'ins_stc_d_sums.id')
             ->join('ins_stc_machines', 'ins_stc_d_sums.ins_stc_machine_id', '=', 'ins_stc_machines.id')
             ->join('users as user1', 'ins_stc_d_sums.user_1_id', '=', 'user1.id')
-            ->leftjoin('users as user2', 'ins_stc_d_sums.user_2_id', '=', 'user2.id')
             ->select(
                 'ins_stc_d_logs.*',
                 'ins_stc_d_sums.*',
                 'ins_stc_d_sums.id as d_sum_id',
                 'ins_stc_d_sums.created_at as d_sum_created_at',
                 'ins_stc_machines.line as machine_line',
-                'user1.emp_id as user1_emp_id',
-                'user1.name as user1_name',
-                'user2.emp_id as user2_emp_id',
-                'user2.name as user2_name',
+                'users.emp_id as user_emp_id',
+                'users.name as user_name',
                 'ins_stc_d_logs.taken_at as d_log_taken_at',
                 'ins_stc_d_logs.temp as d_log_temp',
             )
@@ -174,7 +165,7 @@ class extends Component {
                                 $dSum->user2_name . ' - ' . $dSum->user2_emp_id,
                                 $dSum->started_at,
                                 $dSum->duration(),
-                                $dSum->uploadLatency(),
+                                $dSum->latency(),
                             ]);
                         }
                     });
@@ -349,7 +340,7 @@ class extends Component {
             </div>
         </x-modal> 
         <x-modal name="d_sum-show" maxWidth="3xl">
-            <livewire:insight.stc.summary.d-sum-show />
+            <livewire:insight.stc.data.d-sum-show />
         </x-modal>
     </div>
     @if (!$d_sums->count())
@@ -376,39 +367,41 @@ class extends Component {
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                 <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
-                        <th>{{ __('Dibuat pada') }}</th> 
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('Posisi') }}</th>  
-                        <th>{{ __('RPM') }}</th>   
-                        <th>{{ __('HB') }}</th>
-                        <th>{{ __('Operator') }}</th>
+                        <th>{{ __('RPM') }}</th>
+                        <th>{{ __('Penyetelan') }}</th>
+                        <th>{{ __('Integritas') }}</th>
+                        <th>{{ __('Dibuat pada') }}</th> 
                         <th>{{ __('Waktu mulai') }}</th>
                         <th>{{ __('Durasi') }}</th>
-                        <th>{{ __('Latensi unggah') }}</th>
+                        <th>{{ __('Latensi') }}</th>
+                        <th>{{ __('Operator') }}</th>
                     </tr>
                     @foreach ($d_sums as $d_sum)
                         <tr wire:key="d_sum-tr-{{ $d_sum->id . $loop->index }}" tabindex="0"
                             x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $d_sum->id }}'})">
-                            <td>{{ $d_sum->d_sum_created_at }}</td>
                             <td>{{ $d_sum->machine_line }}</td>
                             <td>{{ InsStc::positionHuman($d_sum->position) }}</td>
                             <td>{{ $d_sum->speed }}</td>
-                            <td class="font-mono">
-                                {{ 
-                                    sprintf('%02d', $d_sum->section_1) . ', ' . 
-                                    sprintf('%02d', $d_sum->section_2) . ', ' . 
-                                    sprintf('%02d', $d_sum->section_3) . ', ' . 
-                                    sprintf('%02d', $d_sum->section_4) . ', ' . 
-                                    sprintf('%02d', $d_sum->section_5) . ', ' . 
-                                    sprintf('%02d', $d_sum->section_6) . ', ' . 
-                                    sprintf('%02d', $d_sum->section_7) . ', ' . 
-                                    sprintf('%02d', $d_sum->section_8) 
-                                }}
-                            </td>
-                            <td>{{ $d_sum->user1_name }}</td>
+                            <td>{!! $d_sum->adjustment_friendly() !!}</td>
+                            <td>{!! $d_sum->integrity_friendly() !!}</td>
+                            <td>{{ $d_sum->d_sum_created_at }}</td>
                             <td>{{ $d_sum->started_at }}</td>
                             <td>{{ $d_sum->duration() }}</td>
-                            <td>{{ $d_sum->uploadLatency() }}</td>
+                            <td>{{ $d_sum->latency() }}</td>
+                            <td>
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                        @if($d_sum->user_photo ?? false)
+                                        <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/'.$d_sum->user_photo }}" />
+                                        @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano"><path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"/></svg>
+                                        @endif
+                                    </div>
+                                    <div class="text-sm px-2"><span>{{ $d_sum->user_name }}</span></div>
+                                </div>
+                            </td>
                         </tr>
                     @endforeach
                 </table>

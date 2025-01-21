@@ -14,8 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
-new #[Layout('layouts.app')] 
-class extends Component {
+new class extends Component {
 
     use HasDateRangeFilter;
 
@@ -115,9 +114,9 @@ class extends Component {
             ";
 
             // Render recents chart
-            const recentsChartContainer = \$wire.\$el.querySelector('#stc-summary-history-chart-container');
-            recentsChartContainer.innerHTML = '<div id=\"stc-summary-history-chart\"></div>';
-            let recentsChart = new ApexCharts(recentsChartContainer.querySelector('#stc-summary-history-chart'), recentsOptions);
+            const recentsChartContainer = \$wire.\$el.querySelector('#stc-data-history-chart-container');
+            recentsChartContainer.innerHTML = '<div id=\"stc-data-history-chart\"></div>';
+            let recentsChart = new ApexCharts(recentsChartContainer.querySelector('#stc-data-history-chart'), recentsOptions);
             recentsChart.render();
             ",
         );        
@@ -242,7 +241,7 @@ class extends Component {
     <div wire:key="modals"> 
 
     </div>
-    <div wire:key="stc-summary-history" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-x-3">
+    <div wire:key="stc-data-history" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-x-3">
         <div>
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                 {{ __('Ikhtisar') }}</h1>
@@ -273,8 +272,8 @@ class extends Component {
         <div class="sm:col-span-2 lg:col-span-3">
             <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                 {{ __('Grafik') }}</h1>
-            <div wire:key="stc-summary-history-chart" class="h-96 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
-                id="stc-summary-history-chart-container" wire:key="stc-summary-history-chart-container" wire:ignore>
+            <div wire:key="stc-data-history-chart" class="h-96 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
+                id="stc-data-history-chart-container" wire:key="stc-data-history-chart-container" wire:ignore>
             </div>  
         </div>
     </div>

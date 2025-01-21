@@ -1,20 +1,14 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Url;
 use Livewire\Attributes\On;
 
 use App\InsStc;
 use App\Models\InsStcDSum;
 use App\Models\InsStcDLog;
 use App\Models\InsStcMachine;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 
-new #[Layout('layouts.app')] 
-class extends Component {
+new class extends Component {
 
     public array $d_sums = [];
 
@@ -93,9 +87,9 @@ class extends Component {
             ";
 
             // Render recents chart
-            const recentsChartContainer = \$wire.\$el.querySelector('#stc-summary-comparison-chart-container');
-            recentsChartContainer.innerHTML = '<div id=\"stc-summary-comparison-chart\"></div>';
-            let recentsChart = new ApexCharts(recentsChartContainer.querySelector('#stc-summary-comparison-chart'), recentsOptions);
+            const recentsChartContainer = \$wire.\$el.querySelector('#stc-data-comparison-chart-container');
+            recentsChartContainer.innerHTML = '<div id=\"stc-data-comparison-chart\"></div>';
+            let recentsChart = new ApexCharts(recentsChartContainer.querySelector('#stc-data-comparison-chart'), recentsOptions);
             recentsChart.render();
             ",
         );        
@@ -105,7 +99,7 @@ class extends Component {
 ?>
 
 <div>
-    <div wire:key="summary-selected-d_sums-container" class="px-8 flex items-center gap-x-6 mb-8">
+    <div wire:key="data-selected-d_sums-container" class="px-8 flex items-center gap-x-6 mb-8">
 
         @if($d_sums)
         <div class="flex gap-3 text-xs uppercase">
@@ -169,9 +163,9 @@ class extends Component {
             <x-spinner wire:loading.class.remove="hidden" wire:target="insertDSum" class="hidden"></x-spinner>
         </x-modal>
     </div>
-    <div wire:key="stc-summary-comparison">
-        <div wire:key="stc-summary-comparison-chart" class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden">
-            <div id="stc-summary-comparison-chart-container" class="h-96" wire:key="stc-summary-comparison-chart-container" wire:ignore>
+    <div wire:key="stc-data-comparison">
+        <div wire:key="stc-data-comparison-chart" class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden">
+            <div id="stc-data-comparison-chart-container" class="h-96" wire:key="stc-data-comparison-chart-container" wire:ignore>
             </div>
             <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="insertDSum"></x-spinner-bg>
             <x-spinner wire:loading.class.remove="hidden" wire:target.except="insertDSum" class="hidden"></x-spinner>

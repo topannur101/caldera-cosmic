@@ -11,17 +11,17 @@ new #[Layout('layouts.app')]
 class extends Component {
     
     #[Url]
-    public $view = 'recents';
+    public $view = 'summary-readings';
     public array $view_titles = [];
 
     public function mount()
     {
         $this->view_titles = [   
-            'recents'       => __('Pembacaan terkini'),    
-            'device'        => __('Pembacaan alat'),   
-            'history'       => __('Riwayat'), 
-            'comparison'    => __('Perbandingan'),
-            'adjustments'   => __('Penyetelan '),  
+            'summary-readings'      => __('Ringkasan pembacaan'),
+            'summary-operational'   => __('Ringkasan operasional'),
+            'readings'              => __('Pembacaan'),   
+            'history'               => __('Riwayat'), 
+            'comparison'            => __('Perbandingan'),
         ];
     }
 
@@ -40,12 +40,12 @@ class extends Component {
 </x-slot>
 
 <x-slot name="printable">
-    <livewire:insight.stc.summary.d-sum-print />
+    <livewire:insight.stc.data.d-sum-print />
 </x-slot>
 
 <div id="content" class="relative py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     @vite(['resources/js/apexcharts.js'])
-    <div wire:key="stc-summary-index-nav" class="flex px-8 mb-6">
+    <div wire:key="stc-data-index-nav" class="flex px-8 mb-6">
         <x-dropdown align="left">
             <x-slot name="trigger">
                 <x-text-button type="button" class="flex gap-2 items-center ml-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="fa fa-fw fa-chevron-down"></i></x-text-button>
@@ -61,27 +61,27 @@ class extends Component {
     <div wire:loading.class.remove="hidden" class="hidden h-96">
         <x-spinner></x-spinner>
     </div>
-    <div wire:key="stc-summary-index-container" wire:loading.class="hidden">
+    <div wire:key="stc-data-index-container" wire:loading.class="hidden">
         @switch($view)
 
-            @case('adjustments')
-            <livewire:insight.stc.summary.adjustments />
+            @case('summary-readings')
+            <livewire:insight.stc.data.summary-readings />
                 @break
 
-            @case('comparison')
-            <livewire:insight.stc.summary.comparison />
+            @case('summary-operational')
+            <livewire:insight.stc.data.summary-operational />
                 @break
                 
-            @case('device')
-            <livewire:insight.stc.summary.device />                       
+            @case('readings')
+            <livewire:insight.stc.data.readings />                       
                 @break
 
             @case('history')
-            <livewire:insight.stc.summary.history />                       
+            <livewire:insight.stc.data.history />                       
                 @break
 
-            @case('recents')
-            <livewire:insight.stc.summary.recents />
+            @case('comparison')
+            <livewire:insight.stc.data.comparison />
                 @break
 
             @default

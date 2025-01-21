@@ -127,7 +127,7 @@ new class extends Component {
 <div wire:poll.60s>
     <div wire:key="modals">
         <x-modal name="d_sum-show" maxWidth="3xl">
-            <livewire:insight.stc.summary.d-sum-show />
+            <livewire:insight.stc.data.d-sum-show />
         </x-modal>
         <x-modal name="use_m_log_sv-help">
             <div class="p-6">
@@ -293,7 +293,7 @@ new class extends Component {
                                 <x-text-button type="button" x-data="" class="px-3 py-2" type="button"
                                 x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['upper']['d_sum']['id'] ?? 0 }}'})"><i class="fa-regular fa-eye"></i></x-text-button>
                                 @endif
-                                <x-link href="{{ route('insight.stc.summary.index', [ 'view' => 'history', 'mode' => 'recents', 'line' => $machine['line'], 'position' => 'upper' ])}}" class="px-3 py-2" wire:navigate>
+                                <x-link href="{{ route('insight.stc.data.index', [ 'view' => 'history', 'mode' => 'recents', 'line' => $machine['line'], 'position' => 'upper' ])}}" class="px-3 py-2" wire:navigate>
                                     <i class="fa-regular fa-clock"></i>
                                 </x-link>
                             </div>
@@ -361,7 +361,7 @@ new class extends Component {
                                 <x-text-button type="button" x-data="" class="px-3 py-2" type="button"
                                 x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['lower']['d_sum']['id'] ?? 0 }}'})"><i class="fa-regular fa-eye"></i></x-text-button>
                                 @endif
-                                <x-link href="{{ route('insight.stc.summary.index', [ 'view' => 'history', 'mode' => 'recents', 'line' => $machine['line'], 'position' => 'lower' ])}}" class="px-3 py-2" wire:navigate>
+                                <x-link href="{{ route('insight.stc.data.index', [ 'view' => 'history', 'mode' => 'recents', 'line' => $machine['line'], 'position' => 'lower' ])}}" class="px-3 py-2" wire:navigate>
                                     <i class="fa-regular fa-clock"></i>
                                 </x-link>
                             </div>

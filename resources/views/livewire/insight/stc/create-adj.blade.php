@@ -266,7 +266,7 @@ new class extends Component {
     <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">{{ __('Penyetelan') }}</h1>
     <div wire:key="modals">
         <x-modal name="d_sum-show" maxWidth="3xl">
-            <livewire:insight.stc.summary.d-sum-show />
+            <livewire:insight.stc.data.d-sum-show />
         </x-modal>
         <x-modal name="use_m_log_sv-help">
             <div class="p-6">

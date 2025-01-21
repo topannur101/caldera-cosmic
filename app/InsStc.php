@@ -1013,16 +1013,27 @@ class InsStc
         }
     }
 
-    public static function duration($start_time, $end_time): string
+    public static function duration($start_time, $end_time, $mode = 'long'): string
     {
         $x = Carbon::parse($start_time);
         $y = Carbon::parse($end_time);
+    
+        if ($mode === 'short') {
+            return $x->diff($y)->forHumans([
+                'parts' => 1,
+                'join' => true,
+                'short' => true,
+            ]);
+        }
+    
+        // Default 'hm' mode (hours and minutes)
         return $x->diff($y)->forHumans([
             'parts' => 2,
             'join' => true,
             'short' => false,
         ]);
     }
+    
 
     public static function positionHuman(string $position): string
     {
@@ -1037,4 +1048,14 @@ class InsStc
         }
         return $positionHuman;
     }    
+
+    public static function getAdjustmentChartJsOptions()
+    {
+
+    }
+
+    public static function getIntegrityChartJsOptions()
+    {
+        
+    }
 }

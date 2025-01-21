@@ -1,61 +1,54 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Renderless;
-use App\Models\InsStcDSum;
-use App\InsStc;
 
-new #[Layout('layouts.app')] 
-class extends Component {
+new class extends Component {
 
-    public string $sequence;
-    public string $user_1_name;
-    public string $user_1_emp_id;
-    public string $user_1_photo;
-    public string $user_2_name;
-    public string $user_2_emp_id;
-    public string $device_name;
-    public string $device_code;
-    public string $machine_line;
-    public string $machine_name;
-    public string $machine_code;
-    public string $started_at;
-    public string $duration;
-    public string $upload_latency;
-    public string $logs_count;
-    public string $position;
-    public string $speed;
-    public array $svpb_temps;
-    public array $hb_temps;
-    public array $sv_temps;
-    public array $svp_temps;
+    public array $d_sum = [
+
+        // defaults
+        'created_at'        => '',
+        'started_at'        => '',
+        'ended_at'          => '',
+        'speed'             => '',
+        'sequence'          => '',
+        'position'          => '',
+        'sv_values'         => [],
+        'formula_id'        => '',
+        'sv_used'           => '',
+        'is_applied'        => '',
+        'target_values'     => [],
+        'hb_values'         => [],
+        'svp_values'        => [],
+        
+        // relationship
+        'user' => [
+            'photo'         => '',
+            'name'          => '',
+            'emp_id'        => ''
+        ],
+        'ins_stc_machine'   => [
+            'line'          => '',
+            'name'          => '',
+        ],
+        'ins_stc_device'    => [
+            'code'          => '',
+            'name'          => '',
+        ],
+        'ins_stc_d_logs'    => [],
+        
+        // calculated
+        'duration'              => '',
+        'latency'               => '',
+        'adjustment_friendly'   => '',
+        'integrity_friendly'    => '',
+    ];
 
     #[On('print-prepare')]
-    public function load($data)
+    public function load($d_sum)
     {
-        $this->sequence      = $data['sequence'];
-        $this->user_1_name   = $data['user_1_name'];
-        $this->user_1_emp_id = $data['user_1_emp_id'];
-        $this->user_1_photo  = $data['user_1_photo'];
-        $this->user_2_name   = $data['user_2_name'];
-        $this->user_2_emp_id = $data['user_2_emp_id'];
-        $this->device_name   = $data['device_name'];
-        $this->device_code   = $data['device_code'];
-        $this->machine_line  = $data['machine_line'];
-        $this->machine_name  = $data['machine_name'];
-        $this->machine_code  = $data['machine_code'];
-        $this->started_at    = $data['started_at'];
-        $this->duration      = $data['duration'];
-        $this->upload_latency= $data['upload_latency'];
-        $this->logs_count    = $data['logs_count'];
-        $this->position      = $data['position'];
-        $this->speed         = $data['speed'];
-        $this->svpb_temps     = $data['svpb_temps'];
-        $this->hb_temps      = $data['hb_temps'];
-        $this->sv_temps      = $data['sv_temps'];
-        $this->svp_temps     = $data['svp_temps'];
+        $this->d_sum = $d_sum;
         $this->dispatch('print-execute');
     }
 };
@@ -77,25 +70,16 @@ class extends Component {
                                     </td>
                                     <td class="px-1">:</td>
                                     <td>
-                                        {{ $sequence }}
+                                        {{ $d_sum['sequence'] }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="text-neutral-500 text-xs">
-                                        {{ __('Operator') . ' 1' }}
+                                        {{ __('Operator') }}
                                     </td>
                                     <td class="px-1">:</td>
                                     <td class="truncate">
-                                        {{ $user_1_emp_id . ' | '. $user_1_name }}                                        
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-neutral-500 text-xs">
-                                        {{ __('Operator') . ' 2' }}
-                                    </td>
-                                    <td class="px-1">:</td>
-                                    <td class="truncate">
-                                        {{ $user_2_emp_id . ' | '. $user_2_name  }} 
+                                        {{ $d_sum['user']['emp_id'] . ' | '. $d_sum['user']['name'] }}                                        
                                     </td>
                                 </tr>
                                 <tr>
@@ -104,7 +88,7 @@ class extends Component {
                                     </td>
                                     <td class="px-1">:</td>
                                     <td>
-                                        {{ $device_code }}
+                                        {{ $d_sum['ins_stc_device']['code'] . ' | ' . $d_sum['ins_stc_device']['name'] }}
                                     </td>
                                 </tr>
                             </table>
@@ -120,7 +104,7 @@ class extends Component {
                                     </td>
                                     <td class="px-1">:</td>
                                     <td>
-                                        {{ $machine_line }}
+                                        {{ $d_sum['ins_stc_machine']['line'] . ' ' . ($d_sum['position'] == 'upper' ? '△' : ($d_sum['position'] == 'lower' ? '▽' : '')) }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -129,16 +113,7 @@ class extends Component {
                                     </td>
                                     <td class="px-1">:</td>
                                     <td class="truncate">
-                                        {{ $machine_code . ' | ' . $machine_name }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-neutral-500 text-xs">
-                                        {{ __('Posisi') }}
-                                    </td>
-                                    <td class="px-1">:</td>
-                                    <td>
-                                        {{ $position }}
+                                        {{ $d_sum['ins_stc_machine']['name'] }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -147,7 +122,7 @@ class extends Component {
                                     </td>
                                     <td class="px-1">:</td>
                                     <td>
-                                        {{ $speed . ' RPM' }}
+                                        {{ $d_sum['speed'] . ' RPM' }}
                                     </td>
                                 </tr>
                             </table>
@@ -163,7 +138,7 @@ class extends Component {
                                     </td>
                                     <td class="px-1">:</td>
                                     <td>
-                                        {{ $started_at }}
+                                        {{ $d_sum['started_at'] }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -172,16 +147,16 @@ class extends Component {
                                     </td>
                                     <td class="px-1">:</td>
                                     <td class="truncate">
-                                        {{ $duration . ' ' . __('dari') . ' ' . $logs_count . ' ' . __('baris data') }}                                      
+                                        {{ $d_sum['duration'] . ' ' . __('dari') . ' ' . count($d_sum['ins_stc_d_logs']) . ' ' . __('baris data') }}                                      
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="text-xs">
-                                        {{ __('Latensi unggah') }}
+                                        {{ __('Latensi') }}
                                     </td>
                                     <td class="px-1">:</td>
                                     <td class="truncate">
-                                        {{ $upload_latency }}                                      
+                                        {{ $d_sum['latency'] }}                                      
                                     </td>
                                 </tr>
                             </table>
@@ -210,26 +185,20 @@ class extends Component {
                         </tr>
                         <tr>
                             <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('HB') }}</td>
-                            @foreach($hb_temps as $hb_temp)
-                                <td>{{ $hb_temp }}</td>
-                            @endforeach
-                        </tr>
-                        <tr>
-                            <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SVPB') }}</td>
-                            @foreach($svpb_temps as $svpb_temp)
-                                <td>{{ $svpb_temp }}</td>
+                            @foreach($d_sum['hb_values'] as $hb_value)
+                                <td>{{ $hb_value }}</td>
                             @endforeach
                         </tr>
                         <tr>
                             <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SV') }}</td>
-                            @foreach($sv_temps as $sv_temp)
-                                <td>{{ $sv_temp }}</td>
+                            @foreach($d_sum['sv_values'] as $sv_value)
+                                <td>{{ $sv_value }}</td>
                             @endforeach
                         </tr>
                         <tr>
                             <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SVP') }}</td>
-                            @foreach($svp_temps as $svp_temp)
-                                <td>{{ $svp_temp }}</td>
+                            @foreach($d_sum['svp_values'] as $svp_value)
+                                <td>{{ $svp_value }}</td>
                             @endforeach
                         </tr>
                     </table>
@@ -244,16 +213,12 @@ class extends Component {
                                 <td>{{ __('Median hasil ukur hobo')}}</td>
                             </tr>
                             <tr>
-                                <td class="text-center px-3">SVPB</td>
-                                <td>{{ __('SV Prediksi hasil penyetelan terakhir')}}</td>
-                            </tr>
-                            <tr>
                                 <td class="text-center px-3">SV</td>
                                 <td>{{ __('SV ketika mesin diukur dengan hobo')}}</td>
                             </tr>
                             <tr>
                                 <td class="text-center px-3">SVP</td>
-                                <td>{{ __('SV Prediksi setelah diukur dengan hobo')}}</td>
+                                <td>{{ __('SV prediksi setelah diukur dengan hobo')}}</td>
                             </tr>
                         </table>
                     </div>
@@ -263,9 +228,9 @@ class extends Component {
                                 <div class="text-center font-bold">CE</div>
                                 <div class="flex justify-center">
                                     <div class="w-8 h-8 my-4 bg-neutral-200 rounded-full overflow-hidden">
-                                        @if ($user_1_photo)
+                                        @if ($d_sum['user']['photo'])
                                             <img class="w-full h-full object-cover"
-                                                src="{{ '/storage/users/' . $user_1_photo }}" />
+                                                src="{{ '/storage/users/' . $d_sum['user']['photo'] }}" />
                                         @else
                                             <svg xmlns="http://www.w3.org/2000/svg"
                                                 class="block fill-current text-neutral-800  opacity-25" viewBox="0 0 1000 1000"
@@ -278,7 +243,7 @@ class extends Component {
                                 </div>
                                 <hr class="border-neutral-300 w-48">
                                 <div class="text-center">
-                                    <div class="text-xs">{{ $user_1_name }}</div>
+                                    <div class="text-xs">{{ $d_sum['user']['name'] }}</div>
                                 </div>
                             </div>
                         </div>
