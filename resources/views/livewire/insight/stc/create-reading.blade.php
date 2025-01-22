@@ -388,10 +388,10 @@ new class extends Component
         $machine = InsStcMachine::find($this->d_sum['ins_stc_machine_id']);
         $push = new InsStcPush;
         $zones = [
-            round(($this->d_sum['hb_values'][0] + $this->d_sum['hb_values'][1]) / 2, 0),
-            round(($this->d_sum['hb_values'][2] + $this->d_sum['hb_values'][3]) / 2, 0),
-            round(($this->d_sum['hb_values'][4] + $this->d_sum['hb_values'][5]) / 2, 0),
-            round(($this->d_sum['hb_values'][6] + $this->d_sum['hb_values'][7]) / 2, 0),
+            (int) round(($this->d_sum['hb_values'][0] + $this->d_sum['hb_values'][1]) / 2, 0),
+            (int) round(($this->d_sum['hb_values'][2] + $this->d_sum['hb_values'][3]) / 2, 0),
+            (int) round(($this->d_sum['hb_values'][4] + $this->d_sum['hb_values'][5]) / 2, 0),
+            (int) round(($this->d_sum['hb_values'][6] + $this->d_sum['hb_values'][7]) / 2, 0),
         ];
 
         $is_applied = false;
@@ -406,22 +406,22 @@ new class extends Component
             );
 
             // push HB zone
-            $push->send(
-                'zone_hb',
-                $machine->ip_address,
-                $this->d_sum['position'],
-                $zones
-            );
+            // $push->send(
+            //     'zone_hb',
+            //     $machine->ip_address,
+            //     $this->d_sum['position'],
+            //     $zones
+            // );
 
             // push SVP
             $push->send(
                 'section_svp',
                 $machine->ip_address,
-                $this->position,
+                $this->d_sum['position'],
                 $this->d_sum['svp_values']
             );
-
-            // push SVW
+            
+            // // push SVW
             $push->send(
                 'apply_svw',
                 $machine->ip_address,

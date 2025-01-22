@@ -52,7 +52,7 @@ class InsStcPush
             ]
         ];
 
-        if (strpos($ipAddress, '127.') == 0) {
+        if (strpos($ipAddress, '127.') === 0) {
             throw new InvalidArgumentException("The IP is a loopback address");
         }
     
@@ -104,10 +104,10 @@ class InsStcPush
                 $response = ResponseFactory::parseResponseOrThrow($binaryData);
                 return $response;
             }
+
         } catch (Exception $exception) {
-            echo 'An exception occurred' . PHP_EOL;
-            echo $exception->getMessage() . PHP_EOL;
-            echo $exception->getTraceAsString() . PHP_EOL;
+            throw $exception;
+
         } finally {
             $connection->close();
         }
