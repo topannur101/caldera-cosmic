@@ -9,7 +9,7 @@ new class extends Component {
     public array $logs = [['taken_at' => '', 'temp' => '']];
     public array $sv_temp = [];
 
-    #[On('d-sum-review')]
+    #[On('reading-review')]
     public function dLogsLoad($logs, $sv_temps = '')
     {
         $this->logs     = json_decode($logs, true);

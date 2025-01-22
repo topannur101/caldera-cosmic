@@ -428,9 +428,9 @@ new class extends Component {
     <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">{{ __('Pembacaan alat') }}</h1>
     <div class="w-full my-8">
         <div wire:key="modals">
-        <x-modal name="d-sum-review" maxWidth="2xl">
-            <livewire:insight.stc.create-d-sum-review />
-        </x-modal>
+            <x-modal name="d-sum-review" maxWidth="2xl">
+                <livewire:insight.stc.create-d-sum-review />
+            </x-modal>
             <x-modal name="auto-adjustment-help">
                 <div class="p-6">
                     <div class="flex justify-between items-start">

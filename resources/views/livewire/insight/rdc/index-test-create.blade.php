@@ -626,7 +626,7 @@ new class extends Component
          </div>
       </div>
    </div>
-   @if ($errors->any())
+         @if ($errors->any())
             <div class="px-6 mt-6">
                 <x-input-error :messages="$errors->first()" />
             </div>

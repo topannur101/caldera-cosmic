@@ -8,7 +8,7 @@ use InvalidArgumentException;
 class InsStc
 {
     private static array $sectionRatios = [
-        'preheat' => 0.08,
+        'preheat' => 0.06,
         'section_1' => 0.11,
         'section_2' => 0.11,
         'section_3' => 0.11,
@@ -19,6 +19,8 @@ class InsStc
         'section_8' => 0.11,
         'postheat' => 0.06,
     ];
+
+    public static array $target_values = [ 78, 73, 68, 63, 58, 53, 48, 43 ];
 
     public static function groupValuesBySection($values): array
     {
@@ -92,7 +94,7 @@ class InsStc
 
     public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id): array
     {
-        $target_values  = [ 78, 73, 68, 63, 58, 53, 48, 43 ];
+        $target_values  = Self::$target_values;
         $svp_highs      = [ 90, 85, 80, 75, 70, 65, 60, 55 ];
         $svp_lows       = [ 70, 65, 60, 55, 50, 45, 40, 35 ];
 
