@@ -45,8 +45,8 @@ class InsStcPush
             'zone_hb' => [
                 'valueCount' => 4,
                 'startAddresses' => [
-                    'upper' => 210,
-                    'lower' => 110
+                    'upper' => 260,
+                    'lower' => 160
                 ],
                 'function' => 'multipleRegisters'
             ]

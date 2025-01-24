@@ -58,7 +58,7 @@ new class extends Component
         $check_m_log_props = ['d_sum.ins_stc_machine_id', 'd_sum.position'];
         if (in_array($property, $check_m_log_props)) {
             $this->check_m_log_sv();
-            $this->resetPrediction();
+            $this->calculatePrediction();
         }
 
         // check file upload
@@ -75,7 +75,7 @@ new class extends Component
                 $this->js('console.log("'.$e->getMessage().'")');
             }
 
-            $this->resetPrediction();
+            $this->calculatePrediction();
         }
     }
 
@@ -455,7 +455,7 @@ new class extends Component
       </x-modal>
    </div>
    <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-6">
-      <div class="grid grid-cols-1 sm:grid-cols-3 divide-x divide-neutral-200 dark:text-white dark:divide-neutral-700">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-x md:divide-y-0 divide-neutral-200 dark:text-white dark:divide-neutral-700">
          <div class="p-6">
             <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6">{{ __('Mesin') }}</h1>
             <div class="grid grid-cols-2 gap-x-3 mb-6">
