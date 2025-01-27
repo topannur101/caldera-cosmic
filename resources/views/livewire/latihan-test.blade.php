@@ -1,24 +1,23 @@
 <?php
 
-use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
-
 use App\Models\LatihanKelas;
+use Livewire\Attributes\Layout;
+use Livewire\Volt\Component;
 
-new  #[Layout('layouts.app')] 
-class extends Component {
-
+new #[Layout('layouts.app')]
+class extends Component
+{
     public string $nama = '';
+
     public int $lantai;
 
     public function simpan()
     {
         LatihanKelas::create([
             'nama' => $this->nama,
-            'lantai' => $this->lantai
-        ]);              
+            'lantai' => $this->lantai,
+        ]);
     }
-
 }; ?>
 
 

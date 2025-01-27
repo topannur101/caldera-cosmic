@@ -6,10 +6,10 @@
             </h2>
         </div>
         <div class="space-x-6 -my-px ml-10 flex">
-            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.rdc.index') }}" :active="request()->routeIs('insight.rdc.index')" wire:navigate>
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.rdc.queue.index') }}" :active="request()->routeIs('insight.rdc.queue.index')" wire:navigate>
                 <i class="fa fa-inbox text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Antrian') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.rdc.summary.index') }}" :active="request()->routeIs('insight.rdc.summary.index')" wire:navigate>
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.rdc.data.index') }}" :active="request()->routeIs('insight.rdc.data.index')" wire:navigate>
                 <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.rdc.manage.index') }}" :active="request()->routeIs('insight.rdc.manage.index')" wire:navigate>

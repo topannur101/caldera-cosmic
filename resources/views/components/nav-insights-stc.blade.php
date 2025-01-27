@@ -6,7 +6,7 @@
             </h2>
         </div>
         <div class="space-x-6 -my-px ml-10 flex">
-            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.stc.index') }}" :active="request()->routeIs('insight.stc.index')" wire:navigate>
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.stc.create.index') }}" :active="request()->routeIs('insight.stc.create.index')" wire:navigate>
                 <i class="fa fa-pen text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Buat') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insight.stc.data.index') }}" :active="request()->routeIs('insight.stc.data.index')" wire:navigate>

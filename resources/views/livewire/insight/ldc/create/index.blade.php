@@ -41,19 +41,17 @@ class extends Component {
             </div>
         </div>
     @else
-        <div class="w-full overflow-hidden p-1">
-            <div class="relative bg-white dark:bg-neutral-800 shadow rounded-lg overflow-hidden">
-                <div id="ldc-create-groups" class="border-b border-neutral-100 dark:border-neutral-700 overflow-x-auto">
-                    <livewire:insight.ldc.create.groups />
-                </div>
-                <div class="flex w-full items-stretch">
-                    <div class="border-r border-neutral-100 dark:border-neutral-700">
-                        <div class="w-40 overflow-y-auto">
-                            <livewire:insight.ldc.create.hides />
-                        </div>
+        <div class="relative bg-white dark:bg-neutral-800 shadow rounded-lg overflow-hidden">
+            <div id="ldc-create-groups" class="border-b border-neutral-100 dark:border-neutral-700 overflow-x-auto">
+                <livewire:insight.ldc.create.groups />
+            </div>
+            <div class="flex w-full items-stretch">
+                <div class="border-r border-neutral-100 dark:border-neutral-700">
+                    <div class="w-40 overflow-y-auto">
+                        <livewire:insight.ldc.create.hides />
                     </div>
-                    <livewire:insight.ldc.create.form />
                 </div>
+                <livewire:insight.ldc.create.form />
             </div>
         </div>
     @endif

@@ -36,9 +36,9 @@ new class extends Component
 
         if ($item)
         {
-            return redirect(route('inventory.items.show', [ 'id' => $item->id ]));
+            return redirect(route('invlegacy.items.show', [ 'id' => $item->id ]));
         } else {
-            return redirect(route('inventory.items.create', [ 'inv_area_id' => $this->inv_area_id, 'code' => $this->code ]));
+            return redirect(route('invlegacy.items.create', [ 'inv_area_id' => $this->inv_area_id, 'code' => $this->code ]));
         }        
 
     }

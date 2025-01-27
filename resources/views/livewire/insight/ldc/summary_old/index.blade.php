@@ -229,7 +229,7 @@ class extends Component {
         </div>
         @switch($view)
             @case('hides')
-                <livewire:insight.ldc.summary.hides :$start_at :$end_at :$is_workdate :$fquery :$ftype />
+                <livewire:insight.ldc.data.hides :$start_at :$end_at :$is_workdate :$fquery :$ftype />
             @break
 
             @default

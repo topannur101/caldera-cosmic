@@ -137,7 +137,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         <div wire:key="hide-edit">   
             <x-modal name="hide-edit">
-                <livewire:insight.ldc.summary.hide-edit />
+                <livewire:insight.ldc.data.hide-edit />
             </x-modal>
         </div>
         @if (!$hides->count())

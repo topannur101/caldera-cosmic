@@ -14,7 +14,6 @@ new class extends Component {
 
     public array $d_sum_ids = [];
     public string $present_mode = 'standard';
-    public bool $use_m_log_sv = false;
 
     #[On('update')]
     public function update()
@@ -58,36 +57,20 @@ new class extends Component {
                 ->where('created_at', '>=', Carbon::now()->subHours(5))
                 ->latest('created_at')
                 ->first();
-            $upper_m_log = InsStcMLog::where('position', 'upper')
-                ->where('ins_stc_machine_id', $machine['id'])
-                ->where('created_at', '>=', Carbon::now()->subHour())
-                ->latest('created_at')
-                ->first();
 
             $upper_d_sum_hb_values = $upper_d_sum ? json_decode($upper_d_sum->hb_values, true) : [];
-            $upper_d_sum_sv_values = $upper_d_sum ? json_decode($upper_d_sum->sv_values, true) : [];
             $machines[$key]['upper']['d_sum'] = $upper_d_sum ? $upper_d_sum->toArray() : [];
             $machines[$key]['upper']['d_sum']['hb_values'] = $upper_d_sum_hb_values;
-            $machines[$key]['upper']['d_sum']['sv_values'] = $upper_d_sum_sv_values;
-            $machines[$key]['upper']['m_log'] = $upper_m_log ? $upper_m_log->toArray() : [];
 
             $lower_d_sum = InsStcDSum::where('position', 'lower')
                 ->where('ins_stc_machine_id', $machine['id'])
                 ->where('created_at', '>=', Carbon::now()->subHours(5))
                 ->latest('created_at')
                 ->first();
-            $lower_m_log = InsStcMLog::where('position', 'lower')
-                ->where('ins_stc_machine_id', $machine['id'])
-                ->where('created_at', '>=', Carbon::now()->subHour())
-                ->latest('created_at')
-                ->first();
 
             $lower_d_sum_hb_values = $lower_d_sum ? json_decode($lower_d_sum->hb_values, true) : [];
-            $lower_d_sum_sv_values = $lower_d_sum ? json_decode($lower_d_sum->sv_values, true) : [];
             $machines[$key]['lower']['d_sum'] = $lower_d_sum ? $lower_d_sum->toArray() : [];
             $machines[$key]['lower']['d_sum']['hb_values'] = $lower_d_sum_hb_values;
-            $machines[$key]['lower']['d_sum']['sv_values'] = $lower_d_sum_sv_values;
-            $machines[$key]['lower']['m_log'] = $lower_m_log ? $lower_m_log->toArray() : [];
         }
 
         $this->d_sum_ids = $this->extractDSumIds($machines);
@@ -128,33 +111,6 @@ new class extends Component {
     <div wire:key="modals">
         <x-modal name="d_sum-show" maxWidth="3xl">
             <livewire:insight.stc.data.d-sum-show />
-        </x-modal>
-        <x-modal name="use_m_log_sv-help">
-            <div class="p-6">
-                <div class="flex justify-between items-start">
-                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        {{ __('Referensi SV') }}
-                    </h2>
-                    <x-text-button type="button" x-on:click="$dispatch('close')"><i
-                            class="fa fa-times"></i></x-text-button>
-                </div>
-                <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
-                    <div>
-                        {{ __('Ada dua rentetan nilai SV dan hanya satu rentetan SV yang diambil untuk perhitungan SVP (SV Prediksi).') }}
-                    </div>
-                    <div>
-                        <span class="font-bold">{{ __('SV manual') . ': ' }}</span>{{ __('SV didapat dari pencatatan manual yang dilakukan oleh pekerja ketika mengunggah hasil catatan alat ukur (HOBO).') }}
-                    </div>
-                    <div>
-                        <span class="font-bold">{{ __('SV mesin') . ': ' }}</span>{{ __('SV didapat langsung dari mesin sehingga pilihan ini lebih akurat dan paling ideal.') }}
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end">
-                    <x-primary-button type="button" x-on:click="$dispatch('close')">
-                        {{ __('Paham') }}
-                    </x-primary-button>
-                </div>
-            </div>
         </x-modal>
         <x-modal name="different-zoning-help">
             <div class="p-6">
@@ -207,17 +163,8 @@ new class extends Component {
             </x-radio-button>
         </div>
     </div>
-    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg h-80 p-4"
+    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg h-80 p-4 mb-8"
     id="recents-chart-container" wire:key="recents-chart-container" wire:ignore>
-    </div>
-    <div class="flex justify-end">
-        <div class="p-8">
-            <x-toggle name="use_m_log_sv" wire:model.live="use_m_log_sv"
-                :checked="$use_m_log_sv ? true : false">{{ __('Gunakan SV mesin') }}<x-text-button type="button"
-                    class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'use_m_log_sv-help')"><i
-                        class="far fa-question-circle"></i></x-text-button>
-            </x-toggle>
-        </div>   
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         @foreach ($machines as $machine)
@@ -245,8 +192,7 @@ new class extends Component {
                                         <div>7</div>
                                         <div>8</div>
                                     </div>
-                                    <div class="grid grid-cols-9 text-center gap-x-3">
-                                        
+                                    <div class="grid grid-cols-9 text-center gap-x-3">                                        
                                         <div>HB</div>
                                         <div>{{ $machine['upper']['d_sum']['hb_values'][0] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['d_sum']['hb_values'][1] ?? '-' }}</div>
@@ -255,37 +201,8 @@ new class extends Component {
                                         <div>{{ $machine['upper']['d_sum']['hb_values'][4] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['d_sum']['hb_values'][5] ?? '-' }}</div>
                                         <div>{{ $machine['upper']['d_sum']['hb_values'][6] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['hb_values'][7] ?? '-' }}</div>
-                                        
-                                        @if(!$use_m_log_sv)
-                                        <div>SV</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_values'][0] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_values'][1] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_values'][2] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_values'][3] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_values'][4] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_values'][5] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_values'][6] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['sv_values'][7] ?? '-' }}</div>
-                                        @endif
+                                        <div>{{ $machine['upper']['d_sum']['hb_values'][7] ?? '-' }}</div>                                    
                                     </div>
-                                </div>
-                                <div>
-
-                                    @if($use_m_log_sv)
-                                    <div class="grid grid-cols-9 text-center gap-x-3">
-                                        <div>SV</div>
-                                        <div>{{ $machine['upper']['m_log']['sv_r_1'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['sv_r_2'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['sv_r_3'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['sv_r_4'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['sv_r_5'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['sv_r_6'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['sv_r_7'] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['m_log']['sv_r_8'] ?? '-' }}</div>
-                                    </div>
-                                    @endif
-                                    
                                 </div>
                             </div>
                             <div class="flex px-2 flex-col">
@@ -325,35 +242,7 @@ new class extends Component {
                                         <div>{{ $machine['lower']['d_sum']['hb_values'][5] ?? '-' }}</div>
                                         <div>{{ $machine['lower']['d_sum']['hb_values'][6] ?? '-' }}</div>
                                         <div>{{ $machine['lower']['d_sum']['hb_values'][7] ?? '-' }}</div>
-
-                                        @if(!$use_m_log_sv)
-                                        <div>SV</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_values'][0] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_values'][1] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_values'][2] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_values'][3] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_values'][4] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_values'][5] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_values'][6] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['sv_values'][7] ?? '-' }}</div>
-                                        @endif
-
                                     </div>
-                                </div>
-                                <div>
-                                    @if($use_m_log_sv)
-                                    <div class="grid grid-cols-9 text-center gap-x-3">
-                                        <div>SV</div>
-                                        <div>{{ $machine['lower']['m_log']['sv_r_1'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['sv_r_2'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['sv_r_3'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['sv_r_4'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['sv_r_5'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['sv_r_6'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['sv_r_7'] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['m_log']['sv_r_8'] ?? '-' }}</div>
-                                    </div>
-                                    @endif
                                 </div>
                             </div>
                             <div class="flex px-2 flex-col">

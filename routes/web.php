@@ -10,6 +10,10 @@ use App\Http\Resources\InsRtcRecipeResource;
 
 Volt::route('/', 'home')->name('home');
 Volt::route('/latihan', 'latihan-test');
+Volt::route('/inventory', 'inventory.index')->name('inventory');
+// Route::view('kpi', 'kpi')->name('kpi');
+// Route::view('profile', 'profile')->name('profile');
+// Route::view('help', 'help')->name('help');
 
 // Insight routes
 Route::prefix('insight')->group(function () {
@@ -47,9 +51,14 @@ Route::prefix('insight')->group(function () {
         Volt::route('/ldc/manage/authorizations',   'insight.ldc.manage.auths') ->name('manage.auths');
         Volt::route('/ldc/manage/machines',         'insight.ldc.manage.machines') ->name('manage.machines');
         Volt::route('/ldc/manage',                  'insight.ldc.manage.index') ->name('manage.index');
-        Volt::route('/ldc/summary',                 'insight.ldc.summary.index')->name('summary.index');
-        Volt::route('/ldc',                         'insight.ldc.create.index')->name('create.index');
-
+        Volt::route('/ldc/data',                    'insight.ldc.data.index')->name('data.index');
+        Volt::route('/ldc/create',                  'insight.ldc.create.index')->name('create.index');
+        Route::get('/ldc', function () {
+            if (auth()->check()) {
+                return redirect()->route('insight.ldc.create.index');
+            }
+            return redirect()->route('insight.ldc.data.index');
+        })->name('index');
     });
 
     Route::name('insight.omv.')->group(function () {
@@ -57,9 +66,14 @@ Route::prefix('insight')->group(function () {
         Volt::route('/omv/manage/authorizations',   'insight.omv.manage.auths')     ->name('manage.auths');
         Volt::route('/omv/manage/recipes',          'insight.omv.manage.recipes')   ->name('manage.recipes');
         Volt::route('/omv/manage',                  'insight.omv.manage.index')     ->name('manage.index');
-        Volt::route('/omv/summary',                 'insight.omv.summary.index')    ->name('summary.index');
-        Volt::route('/omv',                         'insight.omv.index')            ->name('index');
-
+        Volt::route('/omv/data',                    'insight.omv.data.index')       ->name('data.index');
+        Volt::route('/omv/create',                  'insight.omv.create.index')     ->name('create.index');
+        Route::get('/omv', function () {
+            if (auth()->check()) {
+                return redirect()->route('insight.omv.create.index');
+            }
+            return redirect()->route('insight.omv.data.index');
+        })->name('index');
     });
 
     Route::name('insight.rdc.')->group(function () {
@@ -67,8 +81,14 @@ Route::prefix('insight')->group(function () {
         Volt::route('/rdc/manage/authorizations',   'insight.rdc.manage.auths')     ->name('manage.auths');
         Volt::route('/rdc/manage/machines',         'insight.rdc.manage.machines')  ->name('manage.machines');
         Volt::route('/rdc/manage',                  'insight.rdc.manage.index')     ->name('manage.index');
-        Volt::route('/rdc/summary',                 'insight.rdc.summary.index')    ->name('summary.index');
-        Volt::route('/rdc',                         'insight.rdc.index')            ->name('index');
+        Volt::route('/rdc/data',                    'insight.rdc.data.index')       ->name('data.index');
+        Volt::route('/rdc/queue',                   'insight.rdc.queue.index')      ->name('queue.index');
+        Route::get('/rdc', function () {
+            if (auth()->check()) {
+                return redirect()->route('insight.rdc.queue.index');
+            }
+            return redirect()->route('insight.rdc.data.index');
+        })->name('index');
 
     });
 
@@ -79,7 +99,13 @@ Route::prefix('insight')->group(function () {
         Volt::route('/stc/manage/devices',          'insight.stc.manage.devices')   ->name('manage.devices');
         Volt::route('/stc/manage',                  'insight.stc.manage.index')     ->name('manage.index');
         Volt::route('/stc/data',                    'insight.stc.data.index')       ->name('data.index');
-        Volt::route('/stc',                         'insight.stc.index')            ->name('index');
+        Volt::route('/stc/create',                  'insight.stc.create.index')     ->name('create.index');
+        Route::get('/stc', function () {
+            if (auth()->check()) {
+                return redirect()->route('insight.stc.create.index');
+            }
+            return redirect()->route('insight.stc.data.index');
+        })->name('index');
 
     });
 
@@ -96,12 +122,7 @@ Route::prefix('insight')->group(function () {
     Volt::route('/', 'insight.index')->name('insight');
 });
 
-Route::view('/inventory', 'livewire.inventory.index')->name('inventory');
-// Route::view('kpi', 'kpi')->name('kpi');
-// Route::view('profile', 'profile')->name('profile');
-// Route::view('help', 'help')->name('help');
-
-// DOWNLOAD download
+// Download route
 Route::name('download.')->group(function () {
 
     Route::get('/download/ins-rtc-metrics', [DownloadController::class, 'insRtcMetrics'])->name('ins-rtc-metrics');
@@ -130,7 +151,7 @@ Route::middleware('auth')->group(function () {
 
     });
 
-    // Inventory routes
+    // inventory routes
     Route::prefix('inventory')->group(function () {
 
         Route::name('inventory.items.')->group(function () {
@@ -167,18 +188,21 @@ Route::middleware('auth')->group(function () {
     });
 
     // SH routes
-    Route::prefix('administration')->group(function () {
+    Route::prefix('admin')->group(function () {
 
-        Route::name('administration.')->group(function () {
+        Route::name('admin.')->group(function () {
 
-            Volt::route('/account',         'administration.account.index')         ->name('account.index');
-            Volt::route('/authorization',   'administration.authorization.index')   ->name('authorization.index');
-            Volt::route('/manage/shmods',   'administration.manage.shmods')         ->name('manage.shmods');
-            Volt::route('/manage',          'administration.manage.index')          ->name('manage.index');
+            Volt::route('/account',         'admin.account.index')         ->name('account.index');
+            Volt::route('/inventory',       'admin.inventory.index')       ->name('inventory.index');
+            Volt::route('/inventory/auths', 'admin.inventory.auths')       ->name('inventory.auths');
+            Volt::route('/inventory/areas', 'admin.inventory.areas')       ->name('inventory.areas');
+            Volt::route('/authorization',   'admin.authorization.index')   ->name('authorization.index');
+            Volt::route('/manage/shmods',   'admin.manage.shmods')         ->name('manage.shmods');
+            Volt::route('/manage',          'admin.manage.index')          ->name('manage.index');
         
         });
 
-        Route::view('/', 'livewire.administration.index')->name('administration');
+        Route::view('/', 'livewire.admin.index')->name('admin');
     });
 
 });
