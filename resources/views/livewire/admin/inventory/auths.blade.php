@@ -64,12 +64,12 @@ class extends Component {
         </div>
         <div wire:key="auth-create">
             <x-modal name="auth-create">
-                <livewire:invlegacy.manage.auth-create  />
+                <livewire:admin.inventory.auth-create  />
             </x-modal>
         </div>
         <div wire:key="auth-edit">
             <x-modal name="auth-edit">
-                <livewire:invlegacy.manage.auth-edit  />
+                <livewire:admin.inventory.auth-edit  />
             </x-modal>
         </div>
         <div class="overflow-auto w-full my-8">

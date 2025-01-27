@@ -21,7 +21,7 @@ new #[Layout('layouts.app')] class extends Component {
 <x-slot name="title">{{ __('Area') . ' — ' . __('Inventaris') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-invlegacy-sub view="administration" />
+    <x-nav-inventory-sub view="administration" />
 </x-slot>
 
 <div id="content" class="py-12 max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
@@ -37,12 +37,12 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         <div wire:key="area-create">
             <x-modal name="area-create">
-                <livewire:invlegacy.manage.area-create />
+                <livewire:admin.inventory.area-create />
             </x-modal>
         </div>
         <div wire:key="area-edit">
             <x-modal name="area-edit">
-                <livewire:invlegacy.manage.area-edit  />                    
+                <livewire:admin.inventory.area-edit  />                    
             </x-modal> 
         </div>
         <div class="overflow-auto w-full my-8">

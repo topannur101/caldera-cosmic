@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         $tables = [
-            'inv_uoms',
-            'inv_auths',
-            'inv_tags',
             'inv_circs',            
             'inv_item_tags',
             'inv_items',
+            'inv_uoms',
+            'inv_auths',
+            'inv_tags',
             'inv_locs',
             'inv_areas',
             'inv_bins',
