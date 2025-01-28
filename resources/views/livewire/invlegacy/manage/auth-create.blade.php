@@ -172,16 +172,6 @@ new #[Layout('layouts.app')] class extends Component {
                 {{ __('Buat') }}
             </x-primary-button>
         </div>
-        {{-- @can('superuser')
-        <div class="mt-6 flex justify-between items-end">
-            <x-secondary-button type="submit">
-                <i class="fa fa-save me-2"></i>
-                {{ __('Simpan') }}
-            </x-secondary-button>
-            <div>
-            </div>
-        </div>
-        @endcan --}}
     </form>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>

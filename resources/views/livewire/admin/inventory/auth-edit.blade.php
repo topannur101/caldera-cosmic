@@ -1,16 +1,13 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
-use Illuminate\Validation\Rule;
 
-use App\Models\User;
-use App\Models\InsOmvAuth;
-use Livewire\Attributes\Renderless;
+use App\Models\InvAuth;
 use Illuminate\Support\Facades\Gate;
 
 new #[Layout('layouts.app')] class extends Component {
+    
     public int $id;
     public string $user_name;
     public string $user_emp_id;
@@ -28,7 +25,7 @@ new #[Layout('layouts.app')] class extends Component {
     #[On('auth-edit')]
     public function loadAuth(int $id)
     {
-        $auth = InsOmvAuth::find($id);
+        $auth = InvAuth::find($id);
         if ($auth) {
             $this->id           = $auth->id;
             $this->user_name    = $auth->user->name;
@@ -53,7 +50,7 @@ new #[Layout('layouts.app')] class extends Component {
         Gate::authorize('superuser');
         $this->validate();
 
-        $auth = InsOmvAuth::find($this->id);
+        $auth = InvAuth::find($this->id);
         if ($auth) {
             $auth->actions = json_encode($this->actions, true);
             $auth->update();
@@ -71,7 +68,7 @@ new #[Layout('layouts.app')] class extends Component {
     {
         Gate::authorize('superuser');
 
-        $auth = InsOmvAuth::find($this->id);
+        $auth = InvAuth::find($this->id);
         if ($auth) {
             $auth->delete();
 
@@ -134,12 +131,17 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
-            {{-- <x-checkbox id="device-manage" :disabled="!$is_superuser" wire:model="actions"
-                value="device-manage">{{ __('Kelola perangkat ') }}</x-checkbox> --}}
-            <x-checkbox id="recipe-manage" :disabled="!$is_superuser" wire:model="actions"
-                value="recipe-manage">{{ __('Kelola resep ') }}</x-checkbox>
-            <x-checkbox id="csv-download" :disabled="!$is_superuser" wire:model="actions"
-                value="csv-download">{{ __('Unduh CSV') }}</x-checkbox>
+            <div>{{ __('Barang') }}</div>
+            <x-checkbox id="item-manage" :disabled="!$is_superuser" wire:model="actions" value="item-manage">{{ __('Buat dan perbarui barang ') }}</x-checkbox>
+        </div>
+        <div class="grid grid-cols-1 gap-y-3 mt-6">
+            <div>{{ __('Sirkulasi') }}</div>
+            <x-checkbox id="circ-create" :disabled="!$is_superuser" wire:model="actions" value="circ-create">{{ __('Buat sirkulasi') }}</x-checkbox>
+            <x-checkbox id="circ-eval" :disabled="!$is_superuser" wire:model="actions" value="circ-eval">{{ __('Evaluasi sirkulasi (setujui/tolak)') }}</x-checkbox>
+        </div>
+        <div class="grid grid-cols-1 gap-y-3 mt-6">
+            <div>{{ __('Bin') }}</div>
+            <x-checkbox id="bin-manage" :disabled="!$is_superuser" wire:model="actions" value="bin-manage">{{ __('Buat dan perbarui bin') }}</x-checkbox>
         </div>
         @can('superuser')
             <div class="mt-6 flex justify-between items-end">

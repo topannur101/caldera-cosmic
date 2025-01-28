@@ -104,11 +104,13 @@ class extends Component {
                                         </div>
                                         <div>
                                             <div>{{ $auth->user_name }}</div>
-                                            <div>{{ $auth->inv_area->name }}</div>
                                             <div class="text-xs text-neutral-400 dark:text-neutral-600">
                                                 {{ $auth->user_emp_id }}</div>
                                         </div>
                                     </div>
+                                </td>
+                                <td>
+                                    <div>{{ $auth->inv_area->name }}</div>
                                 </td>
                                 <td>
                                     {{ $auth->countActions() . ' ' . __('tindakan') }}
