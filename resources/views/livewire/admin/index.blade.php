@@ -2,18 +2,57 @@
 
    <x-slot name="title">{{ __('Admin') }}</x-slot>
 
-   <x-slot name="header">
-     <x-nav-admin></x-nav-admin>
-   </x-slot>
-
-   <div class="max-w-sm mx-auto text-center px-4 py-16">
-    <div class="py-16">
-        <div class="mb-8">
-            <i class="fa fa-exclamation-triangle text-neutral-300 dark:text-neutral-800 text-7xl"></i>
-        </div>
-        <div class="text-neutral-500">
-            {{ __('Kamu sedang mengakses halaman yang terbatas untuk umum.')}}
-        </div>
+    <div class="py-12 text-neutral-800 dark:text-neutral-200">
+        <div class="max-w-xl flex flex-col gap-y-6 mx-auto sm:px-6 lg:px-8">
+            <div>
+                <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">{{ __('Akun') }}</h1>
+                <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
+                    <a href="{{ route('admin.account-manage') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                        <div class="flex items-center px-6 py-5">
+                            <div class="grow">
+                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola akun') }}</div>
+                                <div class="text-sm text-neutral-500">
+                                    {{ __('Edit, nonaktifkan, atur ulang kata sandi') }}
+                                </div>
+                            </div>
+                            <div class="text-lg">
+                                <i class="fa fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">{{ __('Inventaris') }}</h1>
+                <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
+                    <a href="{{ route('admin.inventory-areas') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                        <div class="flex items-center px-6 py-5">
+                            <div class="grow">
+                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola area') }}</div>
+                                <div class="text-sm text-neutral-500">
+                                    {{ __('Edit, nonaktifkan, atur ulang kata sandi') }}
+                                </div>
+                            </div>
+                            <div class="text-lg">
+                                <i class="fa fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="{{ route('admin.inventory-auths') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                        <div class="flex items-center px-6 py-5">
+                            <div class="grow">
+                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola wewenang') }}</div>
+                                <div class="text-sm text-neutral-500">
+                                    {{ __('Edit, nonaktifkan, atur ulang kata sandi') }}
+                                </div>
+                            </div>
+                            <div class="text-lg">
+                                <i class="fa fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>     
     </div>
-   </div>
 </x-app-layout>

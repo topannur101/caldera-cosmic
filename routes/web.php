@@ -194,13 +194,9 @@ Route::middleware('auth')->group(function () {
 
         Route::name('admin.')->group(function () {
 
-            Volt::route('/account',         'admin.account.index')         ->name('account.index');
-            Volt::route('/inventory',       'admin.inventory.index')       ->name('inventory.index');
-            Volt::route('/inventory/auths', 'admin.inventory.auths')       ->name('inventory.auths');
-            Volt::route('/inventory/areas', 'admin.inventory.areas')       ->name('inventory.areas');
-            Volt::route('/authorization',   'admin.authorization.index')   ->name('authorization.index');
-            Volt::route('/manage/shmods',   'admin.manage.shmods')         ->name('manage.shmods');
-            Volt::route('/manage',          'admin.manage.index')          ->name('manage.index');
+            Volt::route('/account-manage',  'admin.account.manage')     ->name('account-manage');
+            Volt::route('/inventory-auths', 'admin.inventory.auths')    ->name('inventory-auths');
+            Volt::route('/inventory-areas', 'admin.inventory.areas')    ->name('inventory-areas');
         
         });
 
