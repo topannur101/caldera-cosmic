@@ -3,19 +3,19 @@
        <div>
            <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
                <div class="inline-block py-6">
-                    {{ __('Inventaris') }}
+                    {{ __('Mesin ') }}
                </div>
            </h2>
        </div>
        <div class="space-x-6 -my-px ml-10 flex">
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.items.index') }}" :active="request()->is('inventory/items*')" wire:navigate>
-                <i class="fa fa-cube text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Barang ') }}</span>
+                <i class="fa fa-book-open text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Direktori') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.circs.index') }}" :active="request()->is('inventory/circs*')" wire:navigate>
-                <i class="fa fa-arrow-right-arrow-left text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Sirkulasi ') }}</span>
+                <i class="fa fa-screwdriver-wrench text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Perawatan ') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.manage.index') }}" :active="request()->is('inventory/manage*')" wire:navigate>
-                <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
+                <i class="fa fa-bars-progress text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Waktu henti') }}</span>
             </x-nav-link>
         </div>
        {{-- <div class="space-x-8 -my-px ml-10 flex">

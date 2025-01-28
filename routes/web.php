@@ -9,8 +9,10 @@ use App\Http\Resources\InsRtcMetricResource;
 use App\Http\Resources\InsRtcRecipeResource;
 
 Volt::route('/', 'home')->name('home');
-Volt::route('/latihan', 'latihan-test');
-Volt::route('/inventory', 'inventory.index')->name('inventory');
+Volt::route('/latihan',     'latihan-test');
+Volt::route('/inventory',   'inventory.index')->name('inventory');
+Volt::route('/machines',        'machines.index')->name('machines');
+Volt::route('/projects',     'projects.index')->name('projects');
 // Route::view('kpi', 'kpi')->name('kpi');
 // Route::view('profile', 'profile')->name('profile');
 // Route::view('help', 'help')->name('help');
@@ -187,7 +189,7 @@ Route::middleware('auth')->group(function () {
 
     });
 
-    // SH routes
+    // Administration routes
     Route::prefix('admin')->group(function () {
 
         Route::name('admin.')->group(function () {
