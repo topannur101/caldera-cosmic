@@ -185,104 +185,145 @@ new class extends Component
 
          // Read the text file content
          $content = file_get_contents($this->file->getRealPath());
-         
+              
          // Split content into lines
          $lines = explode("\n", $content);
          
-         // Initialize variables to store extracted values
+         // Initialize variables
          $values = [
-            'model' => '',
+            'code_alt' => '',
             'color' => '',
             'mcs' => '',
-            'code_alt' => '',
             's_max' => 0,
             's_min' => 0,
             'tc10' => 0,
             'tc50' => 0,
             'tc90' => 0,
-            'eval' => ''
+            's_max_low' => 0,
+            's_max_high' => 0,
+            's_min_low' => 0,
+            's_min_high' => 0,
+            'tc10_low' => 0,
+            'tc10_high' => 0,
+            'tc50_low' => 0,
+            'tc50_high' => 0,
+            'tc90_low' => 0,
+            'tc90_high' => 0,
          ];
 
-         // Process each line to extract data
          foreach ($lines as $line) {
             $line = trim($line);
             
-            // Debug line yang sedang diproses
-            $this->js('console.log("Processing line: '. addslashes($line) .'")');
+            // Extract Orderno (code_alt)
+            if (preg_match('/Orderno\.\s*:\s*(\d+)/i', $line, $matches)) {
+               $values['code_alt'] = $matches[1];
+            }
             
-            // Extract MCS dari baris yang mengandung "Compound"
-            if (strpos($line, 'Compound') !== false) {
-               // Extract MCS
+            // Extract Description (color) and MCS from Compound line
+            elseif (strpos($line, 'Compound') !== false) {
+               // Extract MCS (001)
                if (preg_match('/OG\/RS\s+(\d{3})/i', $line, $matches)) {
-                     $values['mcs'] = $matches[1];
-                     $this->js('console.log("Found MCS in Compound line: '. $matches[1] .'")');
+                  $values['mcs'] = $matches[1];
                }
-               
-               // Extract Description (Warna) dari baris yang sama
+               // Extract Description
                if (preg_match('/Description:\s*([^$]+)/i', $line, $matches)) {
-                     $values['color'] = trim($matches[1]);
-                     $this->js('console.log("Found Color in Description: '. $matches[1] .'")');
+                  $values['color'] = trim($matches[1]);
                }
             }
-            // Extract Orderno as code_alt
-            elseif (preg_match('/Orderno\.:?\s*(\d+)/i', $line, $matches)) {
-               $values['code_alt'] = $this->safeString($matches[1]);
+            
+            // Extract ML (s_min) and its bounds
+            elseif (strpos($line, 'ML') === 0) {
+               if (preg_match('/ML\s+(\d+\.\d+).*?(\d+\.\d+)\s+(\d+\.\d+)/i', $line, $matches)) {
+                  $values['s_min'] = floatval($matches[1]);
+                  $values['s_min_low'] = floatval($matches[2]);
+                  $values['s_min_high'] = floatval($matches[3]);
+               }
             }
-            // Extract Description as color
-            elseif (preg_match('/Description:\s*(.+)$/i', $line, $matches)) {
-               $values['color'] = $this->safeString($matches[1]);
+            
+            // Extract MH (s_max) and its bounds
+            elseif (strpos($line, 'MH') === 0) {
+               if (preg_match('/MH\s+(\d+\.\d+).*?(\d+\.\d+)\s+(\d+\.\d+)/i', $line, $matches)) {
+                  $values['s_max'] = floatval($matches[1]);
+                  $values['s_max_low'] = floatval($matches[2]);
+                  $values['s_max_high'] = floatval($matches[3]);
+               }
             }
-            // Extract ML as s_min
-            elseif (preg_match('/^ML\s+(\d+\.\d+)/i', $line, $matches)) {
-               $values['s_min'] = $this->safeFloat($matches[1]);
+            
+            // Extract t10 (tc10) and its bounds
+            elseif (strpos($line, 't10') === 0) {
+               if (preg_match('/t10\s+(\d+\.\d+).*?(\d+\.\d+)\s+(\d+\.\d+)/i', $line, $matches)) {
+                  $values['tc10'] = floatval($matches[1]);
+                  $values['tc10_low'] = floatval($matches[2]);
+                  $values['tc10_high'] = floatval($matches[3]);
+               }
             }
-            // Extract MH as s_max
-            elseif (preg_match('/^MH\s+(\d+\.\d+)/i', $line, $matches)) {
-               $values['s_max'] = $this->safeFloat($matches[1]);
+            
+            // Extract t50 (tc50) and its bounds
+            elseif (strpos($line, 't50') === 0) {
+               if (preg_match('/t50\s+(\d+\.\d+).*?(\d+\.\d+)\s+(\d+\.\d+)/i', $line, $matches)) {
+                  // If value and bounds exist in file, use them
+                  $values['tc50'] = floatval($matches[1]);
+                  $values['tc50_low'] = floatval($matches[2]);
+                  $values['tc50_high'] = floatval($matches[3]);
+               } elseif (preg_match('/t50\s+(\d+\.\d+)/i', $line, $matches)) {
+                  // If only value exists, use it and set bounds to 0
+                  $values['tc50'] = floatval($matches[1]);
+                  $values['tc50_low'] = 0;
+                  $values['tc50_high'] = 0;
+               }
             }
-            // Extract t10 as tc10
-            elseif (preg_match('/^t10\s+(\d+\.\d+)/i', $line, $matches)) {
-               $values['tc10'] = $this->safeFloat($matches[1]);
+            
+            // Extract t90 (tc90) and its bounds
+            elseif (strpos($line, 't90') === 0) {
+               if (preg_match('/t90\s+(\d+\.\d+).*?(\d+\.\d+)\s+(\d+\.\d+)/i', $line, $matches)) {
+                  $values['tc90'] = floatval($matches[1]);
+                  $values['tc90_low'] = floatval($matches[2]);
+                  $values['tc90_high'] = floatval($matches[3]);
+               }
             }
-            // Extract t50 as tc50
-            elseif (preg_match('/^t50\s+(\d+\.\d+)/i', $line, $matches)) {
-               $values['tc50'] = $this->safeFloat($matches[1]);
-            }
-            // Extract t90 as tc90
-            elseif (preg_match('/^t90\s+(\d+\.\d+)/i', $line, $matches)) {
-               $values['tc90'] = $this->safeFloat($matches[1]);
-            }
-            // Extract status for eval
-            elseif (preg_match('/Status:\s*Pass/i', $line)) {
-               $values['eval'] = 'pass';
-            }
-            elseif (preg_match('/Status:\s*Fail/i', $line)) {
-               $values['eval'] = 'fail';
+
+            // Extract Status for evaluation
+            elseif (preg_match('/Status:\s*(\w+)/i', $line, $matches)) {
+               $status = strtolower($matches[1]); // Convert to lowercase
+               $values['eval'] = ($status === 'pass') ? 'pass' : 'fail'; // Anything not 'pass' will be 'fail'
             }
          }
 
-         // Debug final values
-         $this->js('console.log("Before assignment - Color value:", "' . ($values['color'] ?? 'not set') . '")');
+         // Assign extracted values
+         $this->batch['code_alt'] = $values['code_alt'];
+         $this->batch['color'] = $values['color'];
+         $this->batch['mcs'] = $values['mcs'];
 
-         // Assign extracted values to component properties
-         $this->batch['code_alt']   = $values['code_alt'];
-         $this->batch['model']      = $values['model'];
-         $this->batch['color']      = $values['color'];
-         $this->batch['mcs']        = $values['mcs'];
+         // Assign test values
+         $this->test['s_max'] = $values['s_max'];
+         $this->test['s_min'] = $values['s_min'];
+         $this->test['tc10'] = $values['tc10'];
+         $this->test['tc50'] = $values['tc50'];
+         $this->test['tc90'] = $values['tc90'];
 
-         $this->test['s_max']       = $values['s_max'];
-         $this->test['s_min']       = $values['s_min'];
-         $this->test['tc10']        = $values['tc10'];
-         $this->test['tc50']        = $values['tc50'];
-         $this->test['tc90']        = $values['tc90'];
-         $this->test['eval']        = $values['eval'];
+         // Assign bounds
+         $this->test['s_max_low'] = $values['s_max_low'];
+         $this->test['s_max_high'] = $values['s_max_high'];
+         $this->test['s_min_low'] = $values['s_min_low'];
+         $this->test['s_min_high'] = $values['s_min_high'];
+         $this->test['tc10_low'] = $values['tc10_low'];
+         $this->test['tc10_high'] = $values['tc10_high'];
+         $this->test['tc50_low'] = $values['tc50_low'];
+         $this->test['tc50_high'] = $values['tc50_high'];
+         $this->test['tc90_low'] = $values['tc90_low'];
+         $this->test['tc90_high'] = $values['tc90_high'];
 
-         // Debug after assignment
-         $this->js('console.log("After assignment - Color value:", "' . $this->e_color . '")');
+         // Set evaluation from status
+         $this->test['eval'] = $values['eval'] ?? 'fail'; // Default to fail if status not found
+
+         // Debug output
+         $this->js('console.log("TC50 Value:", ' . $values['tc50'] . ')');
+         $this->js('console.log("TC50 Bounds:", ' . $values['tc50_low'] . ' - ' . $values['tc50_high'] . ')');
+         $this->js('console.log("Status found:", "' . $this->test['eval'] . '")');
 
       } catch (\Exception $e) {
-            $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
-            $this->js('console.log("Error: '. $e->getMessage() .'")');
+         $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
+         $this->js('console.log("Error: '. $e->getMessage() .'")');
       }
    }
 
