@@ -389,7 +389,7 @@ new class extends Component {
                             <td>{{ $d_sum->d_sum_created_at }}</td>
                             <td>{{ $d_sum->started_at }}</td>
                             <td>{{ $d_sum->duration() }}</td>
-                            <td>{{ $d_sum->latency() }}</td>
+                            <td>{{ }}</td>
                             <td>
                                 <div class="flex items-center">
                                     <div class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">

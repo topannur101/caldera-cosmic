@@ -7,7 +7,7 @@
             <div class="relative text-neutral h-32 sm:rounded-lg overflow-hidden mb-8 border border-dashed border-neutral-300 dark:border-neutral-500">
                 <div class="absolute top-0 left-0 flex h-full items-center px-4 lg:px-8 text-neutral-500">
                     <div>
-                        <div class="uppercase font-bold"><i class="fa fa-exclamation-triangle me-2"></i>{{ __('Peringatan') }}</div>
+                        <div class="uppercase font-bold mb-2"><i class="fa fa-exclamation-triangle me-2"></i>{{ __('Peringatan') }}</div>
                         <div>{{ __('Kamu sedang mengakses halaman yang hanya diperuntukkan bagi superuser.') }}</div>
                     </div>
                 </div>

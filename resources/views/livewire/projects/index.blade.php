@@ -11,6 +11,12 @@ class extends Component {
 
 <x-slot name="title">{{ __('Inventaris') }}</x-slot>
 
+@if (Auth::user()->id ?? false)
+   <x-slot name="header">
+      <x-nav-projects></x-nav-projects>
+   </x-slot>
+@endif
+
 <div class="relative">
    
       <section class="px-2 pt-16 md:px-0">
