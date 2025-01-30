@@ -58,9 +58,17 @@ new class extends Component {
                 ->latest('created_at')
                 ->first();
 
+            $tvs =InsStc::$target_values; // [ 78, 73, 68, 63, 58, 53, 48, 43 ]
+
             $upper_d_sum_hb_values = $upper_d_sum ? json_decode($upper_d_sum->hb_values, true) : [];
             $machines[$key]['upper']['d_sum'] = $upper_d_sum ? $upper_d_sum->toArray() : [];
             $machines[$key]['upper']['d_sum']['hb_values'] = $upper_d_sum_hb_values;
+            $machines[$key]['upper']['d_sum']['hb_diff'] = array_map(function ($hb, $tv) {
+                return $hb ? $hb - $tv : 0;
+            }, $upper_d_sum_hb_values, $tvs);
+            $machines[$key]['upper']['d_sum']['hb_eval'] = array_map(function ($diff) {
+                return $diff > 5 || $diff < -5;
+            }, $machines[$key]['upper']['d_sum']['hb_diff']);
 
             $lower_d_sum = InsStcDSum::where('position', 'lower')
                 ->where('ins_stc_machine_id', $machine['id'])
@@ -71,6 +79,12 @@ new class extends Component {
             $lower_d_sum_hb_values = $lower_d_sum ? json_decode($lower_d_sum->hb_values, true) : [];
             $machines[$key]['lower']['d_sum'] = $lower_d_sum ? $lower_d_sum->toArray() : [];
             $machines[$key]['lower']['d_sum']['hb_values'] = $lower_d_sum_hb_values;
+            $machines[$key]['lower']['d_sum']['hb_diff'] = array_map(function ($hb, $tv) {
+                return $hb ? $hb - $tv : 0;
+            }, $lower_d_sum_hb_values, $tvs);
+            $machines[$key]['lower']['d_sum']['hb_eval'] = array_map(function ($diff) {
+                return $diff > 5 || $diff < -5;
+            }, $machines[$key]['lower']['d_sum']['hb_diff']);
         }
 
         $this->d_sum_ids = $this->extractDSumIds($machines);
@@ -194,14 +208,14 @@ new class extends Component {
                                     </div>
                                     <div class="grid grid-cols-9 text-center gap-x-3">                                        
                                         <div>HB</div>
-                                        <div>{{ $machine['upper']['d_sum']['hb_values'][0] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['hb_values'][1] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['hb_values'][2] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['hb_values'][3] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['hb_values'][4] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['hb_values'][5] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['hb_values'][6] ?? '-' }}</div>
-                                        <div>{{ $machine['upper']['d_sum']['hb_values'][7] ?? '-' }}</div>                                    
+                                        <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][0] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][0] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][1] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][1] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][2] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][2] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][3] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][3] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][4] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][4] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][5] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][5] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][6] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][6] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][7] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][7] ?? '-' }}</div>                                    
                                     </div>
                                 </div>
                             </div>
@@ -234,14 +248,14 @@ new class extends Component {
                                     </div>
                                     <div class="grid grid-cols-9 text-center gap-x-3">
                                         <div>HB</div>
-                                        <div>{{ $machine['lower']['d_sum']['hb_values'][0] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['hb_values'][1] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['hb_values'][2] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['hb_values'][3] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['hb_values'][4] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['hb_values'][5] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['hb_values'][6] ?? '-' }}</div>
-                                        <div>{{ $machine['lower']['d_sum']['hb_values'][7] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][0] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][0] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][1] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][1] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][2] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][2] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][3] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][3] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][4] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][4] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][5] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][5] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][6] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][6] ?? '-' }}</div>
+                                        <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][7] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][7] ?? '-' }}</div>                                    
                                     </div>
                                 </div>
                             </div>
