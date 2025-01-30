@@ -195,8 +195,7 @@ new class extends Component {
                             <div class="grow grid grid-cols-1 py-3">
                                 <div>
                                     <div
-                                        class="grid grid-cols-9 text-center gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
-                                        <div>S</div>
+                                        class="grid grid-cols-8 text-center px-3 gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
                                         <div>1</div>
                                         <div>2</div>
                                         <div>3</div>
@@ -206,8 +205,7 @@ new class extends Component {
                                         <div>7</div>
                                         <div>8</div>
                                     </div>
-                                    <div class="grid grid-cols-9 text-center gap-x-3">                                        
-                                        <div>HB</div>
+                                    <div class="grid grid-cols-8 text-center px-3 gap-x-3">
                                         <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][0] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][0] ?? '-' }}</div>
                                         <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][1] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][1] ?? '-' }}</div>
                                         <div class="rounded {{ $machine['upper']['d_sum']['hb_eval'][2] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['upper']['d_sum']['hb_values'][2] ?? '-' }}</div>
@@ -235,8 +233,7 @@ new class extends Component {
                             <div class="grow grid grid-cols-1 py-3">
                                 <div>
                                     <div
-                                        class="grid grid-cols-9 text-center gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
-                                        <div>S</div>
+                                        class="grid grid-cols-8 text-center px-3 gap-x-3 mb-1 text-xs uppercase font-normal leading-none text-neutral-500">
                                         <div>1</div>
                                         <div>2</div>
                                         <div>3</div>
@@ -246,8 +243,7 @@ new class extends Component {
                                         <div>7</div>
                                         <div>8</div>
                                     </div>
-                                    <div class="grid grid-cols-9 text-center gap-x-3">
-                                        <div>HB</div>
+                                    <div class="grid grid-cols-8 text-center px-3 gap-x-3">
                                         <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][0] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][0] ?? '-' }}</div>
                                         <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][1] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][1] ?? '-' }}</div>
                                         <div class="rounded {{ $machine['lower']['d_sum']['hb_eval'][2] ? 'bg-red-200 dark:bg-red-800' : '' }}">{{ $machine['lower']['d_sum']['hb_values'][2] ?? '-' }}</div>
