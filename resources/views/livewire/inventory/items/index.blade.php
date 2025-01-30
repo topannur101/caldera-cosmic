@@ -40,7 +40,145 @@ class extends Component {
 </x-slot>
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+    <div class="flex flex-col items-center lg:flex-row gap-4 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 mb-6">
+        <div class="w-full sm:w-44 md:w-56">
+            <x-text-input-icon wire:model.live="q" icon="fa fa-fw fa-search" id="inv-q" name="inv-q"
+                type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
+            <datalist id="qwords">
+                @if (count($qwords))
+                    @foreach ($qwords as $qword)
+                        <option value="{{ $qword }}">
+                    @endforeach
+                @endif
+            </datalist>
+        </div>
+        <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-neutral-700"><i class="fa fa-plus me-2"></i>{{ __('Filter') }}</x-secondary-button>
+        <div class="grow"></div>
+        <div class="flex items-center gap-x-4">
+            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-neutral-700">TT MM, TT CE, +2</x-secondary-button>
+            <div>
+                <x-dropdown align="right" width="48">
+                    <x-slot name="trigger">
+                        <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                    </x-slot>
+                    <x-slot name="content">
+                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
+                            <i class="fa fa-fw fa-plus me-2"></i>{{ __('Tambah barang')}}
+                        </x-dropdown-link>
+                        <hr class="border-neutral-300 dark:border-neutral-600" />
+                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
+                            <i class="fa fa-fw me-2"></i>{{ __('Kelola bin')}}
+                        </x-dropdown-link>
+                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
+                            <i class="fa fa-fw me-2"></i>{{ __('Kelola tag')}}
+                        </x-dropdown-link>
+                        <hr class="border-neutral-300 dark:border-neutral-600" />
+                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
+                            <i class="fa fa-fw me-2"></i>{{ __('Hapus semua filter')}}
+                        </x-dropdown-link>
+                        <hr class="border-neutral-300 dark:border-neutral-600" />
+                        <x-dropdown-link href="#" wire:click.prevent="download">
+                            <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
+                        </x-dropdown-link>
+                    </x-slot>
+                </x-dropdown>
+            </div>
+        </div>
+    </div>
+    <div class="w-full">
+        <div class="flex justify-between w-full px-3 sm:px-0">
+            <div class="my-auto px-6"><span>{{ $inv_items->total() }}</span><span
+                    class="hidden md:inline">{{ ' ' . __('barang') }}</span></div>
+            <div class="flex">
+                <x-select wire:model.live="sort" class="mr-3">
+                    <option value="updated">{{ __('Diperbarui') }}</option>
+                    <option value="created">{{ __('Dibuat') }}</option>
+                    <option value="price_low">{{ __('Termurah') }}</option>
+                    <option value="price_high">{{ __('Termahal') }}</option>
+                    <option value="qty_low">{{ __('Paling sedikit') }}</option>
+                    <option value="qty_high">{{ __('Paling banyak') }}</option>
+                    <option value="alpha">{{ __('Abjad') }}</option>
+                </x-select>
+                <div class="btn-group">
+                    <x-radio-button wire:model.live="view" value="list" name="view" id="view-list"><i
+                            class="fa fa-fw fa-grip-lines text-center m-auto"></i></x-radio-button>
+                    <x-radio-button wire:model.live="view" value="content" name="view" id="view-content"><i
+                            class="fa fa-fw fa-list text-center m-auto"></i></x-radio-button>
+                    <x-radio-button wire:model.live="view" value="grid" name="view" id="view-grid"><i
+                            class="fa fa-fw fa-border-all text-center m-auto"></i></x-radio-button>
+                </div>
+            </div>
+        </div>
+        @if (!$inv_items->count())
+            @if (count($area_ids))
+                <div wire:key="no-match" class="py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-ghost"></i>
+                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">
+                        {{ __('Tidak ada yang cocok') }}
+                    </div>
+                </div>
+            @else
+                <div wire:key="no-area" class="py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-building relative"><i
+                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}
+                    </div>
+                </div>
+            @endif
+        @else
+            @switch($view)
+                @case('grid')
+                    <div wire:key="grid"
+                        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 mt-4 px-3 sm:px-0">
+                        @foreach ($inv_items as $inv_item)
+                            <x-inv-card-grid :href="route('inventory.items.show', ['id' => $inv_item->id])" :name="$inv_item->name" :desc="$inv_item->desc" :uom="$inv_item->inv_uom->name"
+                                :loc="$inv_item->inv_loc->name ?? null" :qty="$qty" :qty_main="$inv_item->qty_main" :qty_used="$inv_item->qty_used" :qty_rep="$inv_item->qty_rep"
+                                :url="$inv_item->photo ? '/storage/inv-items/' . $inv_item->photo : null">
+                            </x-inv-card-grid>
+                        @endforeach
+                    </div>
+                @break
 
+                @case('list')
+                    <div wire:key="list" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto mt-4">
+                        <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                            <tr class="uppercase text-xs">
+                                <th>{{ __('Qty') }}</th>
+                                <th>{{ __('Nama') }}</th>
+                                <th>{{ __('Kode') }}</th>
+                                <th>{{ __('Harga') }}</th>
+                                <th>{{ __('Lokasi') }} </th>
+                                <th>{{ __('Tag') }} </th>
+                                <th></th>
+                            </tr>
+                            @foreach ($inv_items as $inv_item)
+                                <x-inv-tr :href="route('inventory.items.show', ['id' => $inv_item->id])" :name="$inv_item->name" :desc="$inv_item->desc" :code="$inv_item->code"
+                                    :curr="$inv_curr->name" :price="$inv_item->price" :uom="$inv_item->inv_uom->name" :loc="$inv_item->inv_loc->name ?? null"
+                                    :tags="$inv_item->tags() ?? null" :qty="$qty" :qty_main="$inv_item->qty_main" :qty_used="$inv_item->qty_used"
+                                    :qty_rep="$inv_item->qty_rep">
+                                </x-inv-tr>
+                            @endforeach
+                        </table>
+                    </div>
+                @break
+
+                @default
+                    <div wire:key="content" class="grid grid-cols-1 lg:grid-cols-2 gap-1 mt-4">
+                        @foreach ($inv_items as $inv_item)
+                            <x-inv-card-content :href="route('inventory.items.show', ['id' => $inv_item->id])" :name="$inv_item->name" :desc="$inv_item->desc" :code="$inv_item->code"
+                                :curr="$inv_curr->name" :price="$inv_item->price" :uom="$inv_item->inv_uom->name" :loc="$inv_item->inv_loc->name ?? null"
+                                :tags="$inv_item->tags() ?? null" :qty="$qty" :qty_main="$inv_item->qty_main" :qty_used="$inv_item->qty_used"
+                                :qty_rep="$inv_item->qty_rep" :url="$inv_item->photo ? '/storage/inv-items/' . $inv_item->photo : null">
+                            </x-inv-card-content>
+                        @endforeach
+                    </div>
+            @endswitch
+        @endif
+    </div>
     <div class="flex flex-col gap-x-4 md:gap-x-8 sm:flex-row">
         <div>
             <div class="w-full sm:w-44 md:w-56 px-3 sm:px-0">

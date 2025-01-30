@@ -14,7 +14,7 @@
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.circs.index') }}" :active="request()->is('inventory/circs*')" wire:navigate>
                 <i class="fa fa-clipboard-list text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Tugas ') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.manage.index') }}" :active="request()->is('inventory/manage*')" wire:navigate>
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.data.index') }}" :active="request()->is('inventory/manage*')" wire:navigate>
                 <i class="fa fa-pie-chart text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Ringkasan') }}</span>
             </x-nav-link>
         </div>
@@ -25,7 +25,7 @@
            <x-nav-link href="{{ route('inventory.circs.index') }}" :active="request()->is('inventory/circs*')" wire:navigate>
                <i class="fa mx-2 fa-fw fa-arrow-right-arrow-left text-sm"></i>
            </x-nav-link>
-           <x-nav-link href="{{ route('inventory.manage.index') }}" :active="request()->is('inventory/admin*')" wire:navigate>
+           <x-nav-link href="{{ route('inventory.data.index') }}" :active="request()->is('inventory/admin*')" wire:navigate>
                <i class="fa mx-2 fa-fw fa-ellipsis-h text-sm"></i>
            </x-nav-link>
        </div> --}}

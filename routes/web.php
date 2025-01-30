@@ -173,17 +173,8 @@ Route::middleware('auth')->group(function () {
 
         });
 
-        Route::name('inventory.manage.')->group(function () {
-
-            Volt::route('/manage/areas',             'inventory.manage.areas')        ->name('areas');
-            Volt::route('/manage/authorizations',    'inventory.manage.auths')        ->name('auths');
-            Volt::route('/manage/currencies',        'inventory.manage.currs')        ->name('currs');
-            Volt::route('/manage/locations',         'inventory.manage.locs')         ->name('locs');
-            Volt::route('/manage/tags',              'inventory.manage.tags')         ->name('tags');
-            Volt::route('/manage/uoms',              'inventory.manage.uoms')         ->name('uoms');
-            Volt::route('/manage/circs-create',      'inventory.manage.circs-create') ->name('circs-create');
-            Volt::route('/manage/items-update',      'inventory.manage.items-update') ->name('items-update');
-            Volt::route('/manage',                   'inventory.manage.index')        ->name('index');
+        Route::name('inventory.data.')->group(function () {
+            Volt::route('/data',              'inventory.data.index')   ->name('index');
             
         });
 
