@@ -53,7 +53,6 @@ new class extends Component
 
     public function updated($property)
     {
-
         // check m_log
         $check_m_log_props = ['d_sum.ins_stc_machine_id', 'd_sum.position'];
         if (in_array($property, $check_m_log_props)) {
@@ -70,6 +69,8 @@ new class extends Component
 
             try {
                 $this->extractData();
+                $chart_values = array_column($this->logs, "temp");
+                $chart_values = array_pad($chart_values, 60, 0);
 
             } catch (Exception $e) {
                 $this->js('console.log("'.$e->getMessage().'")');
@@ -406,12 +407,12 @@ new class extends Component
             );
 
             // push HB zone
-            // $push->send(
-            //     'zone_hb',
-            //     $machine->ip_address,
-            //     $this->d_sum['position'],
-            //     $zones
-            // );
+            $push->send(
+                'zone_hb',
+                $machine->ip_address,
+                $this->d_sum['position'],
+                $zones
+            );
 
             // push SVP
             $push->send(
@@ -427,6 +428,14 @@ new class extends Component
                 $machine->ip_address,
                 $this->d_sum['position'],
                 [true]
+            );
+
+            // push HB chart
+            $push->send(
+                'chart_hb',
+                $machine->ip_address,
+                $this->d_sum['position'],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] // gimana kalau lebih dari 60? kalau kurang? sisanya harus 0 
             );
 
             $is_applied = true;

@@ -18,16 +18,5 @@
                 <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
             </x-nav-link>
         </div>
-       {{-- <div class="space-x-8 -my-px ml-10 flex">
-           <x-nav-link href="{{ route('inventory.items.index') }}" :active="request()->is('inventory/items*')" wire:navigate>
-               <i class="fa mx-2 fa-fw fa-search text-sm"></i>
-           </x-nav-link>
-           <x-nav-link href="{{ route('inventory.circs.index') }}" :active="request()->is('inventory/circs*')" wire:navigate>
-               <i class="fa mx-2 fa-fw fa-arrow-right-arrow-left text-sm"></i>
-           </x-nav-link>
-           <x-nav-link href="{{ route('inventory.data.index') }}" :active="request()->is('inventory/admin*')" wire:navigate>
-               <i class="fa mx-2 fa-fw fa-ellipsis-h text-sm"></i>
-           </x-nav-link>
-       </div> --}}
    </div>
 </header>

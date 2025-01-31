@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('nama');
             $table->integer('umur');
             $table->enum('jk', ['male', 'female']);
-            $table->foreignId('kelas_id');
+            $table->foreignId('kelas_id');;
         });
     }
 

@@ -16,11 +16,6 @@ class extends Component {
    public string $status = '';
    public array $area_ids = [];
 
-   public function mount()
-   {
-      
-   }
-
    public function with(): array
    {
       $inv_items = InvItem::paginate(10);
@@ -62,7 +57,7 @@ class extends Component {
                         <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
                     </x-slot>
                     <x-slot name="content">
-                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
+                        <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
                             <i class="fa fa-fw fa-plus me-2"></i>{{ __('Tambah barang')}}
                         </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />

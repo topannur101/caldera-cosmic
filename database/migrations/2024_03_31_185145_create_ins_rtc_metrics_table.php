@@ -18,8 +18,8 @@ return new class extends Migration
             $table->boolean('is_correcting');
             $table->enum('action_left', ['thick','thin'])->nullable();   
             $table->enum('action_right', ['thick','thin'])->nullable();   
-            $table->decimal('sensor_left', 4, 2);
-            $table->decimal('sensor_right', 4, 2);
+            $table->decimal('sensor_left', 4, 2); // 12.34
+            $table->decimal('sensor_right', 4, 2); //  6 > 6.0... 6.5808... 6.58
 
             $table->datetime('dt_client');
 
