@@ -35,37 +35,41 @@ class extends Component {
 </x-slot>
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
-    <div class="flex flex-col items-center lg:flex-row gap-4 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 mb-6">
-        <div class="w-full sm:w-44 md:w-56">
-            <x-text-input-icon wire:model.live="q" icon="fa fa-fw fa-search" id="inv-q" name="inv-q"
-                type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
-            <datalist id="qwords">
-                @if (count($qwords))
-                    @foreach ($qwords as $qword)
-                        <option value="{{ $qword }}">
-                    @endforeach
-                @endif
-            </datalist>
+    <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2 mb-6">
+        <div class="flex gap-x-2 items-center px-8 py-2 lg:py-0">
+            <i class="fa fa-search text-neutral-400 dark:text-neutral-700"></i>
+            <div class="w-full md:w-56">
+                <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q"
+                    type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
+                <datalist id="qwords">
+                    @if (count($qwords))
+                        @foreach ($qwords as $qword)
+                            <option value="{{ $qword }}">
+                        @endforeach
+                    @endif
+                </datalist>
+            </div>
         </div>
-        <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-neutral-700"><i class="fa fa-plus me-2"></i>{{ __('Filter') }}</x-secondary-button>
-        <div class="grow"></div>
-        <div class="flex items-center gap-x-4">
-            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-neutral-700">TT MM, TT CE, +2</x-secondary-button>
+        <div class="px-4 py-4 lg:py-0 grow flex items-center">
+            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-neutral-700"><i class="fa fa-fw fa-filter me-2"></i>{{ __('Filter') }}</x-secondary-button>
+        </div>
+        <div class="px-4 py-4 lg:py-0 flex items-center justify-between gap-x-4">
+            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-neutral-700"><i class="fa fa-fw fa-tent me-2"></i>TT MM +2</x-secondary-button>
             <div>
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                        <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
                     </x-slot>
                     <x-slot name="content">
                         <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
-                            <i class="fa fa-fw fa-plus me-2"></i>{{ __('Tambah barang')}}
+                            <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
                         </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />
                         <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                            <i class="fa fa-fw me-2"></i>{{ __('Kelola bin')}}
+                            <i class="fa fa-fw fa-inbox me-2"></i>{{ __('Kelola bin ')}}
                         </x-dropdown-link>
                         <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                            <i class="fa fa-fw me-2"></i>{{ __('Kelola tag')}}
+                            <i class="fa fa-fw fa-tag me-2"></i>{{ __('Kelola tag ')}}
                         </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />
                         <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
@@ -82,7 +86,7 @@ class extends Component {
     </div>
     <div class="w-full">
         <div class="flex justify-between w-full px-3 sm:px-0">
-            <div class="my-auto px-6"><span>{{ $inv_items->total() }}</span><span
+            <div class="my-auto px-8"><span>{{ $inv_items->total() }}</span><span
                     class="hidden md:inline">{{ ' ' . __('barang') }}</span></div>
             <div class="flex">
                 <x-select wire:model.live="sort" class="mr-3">
@@ -117,7 +121,7 @@ class extends Component {
             @else
                 <div wire:key="no-area" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-building relative"><i
+                        <i class="fa fa-tent relative"><i
                                 class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}

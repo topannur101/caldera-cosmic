@@ -162,7 +162,13 @@ new class extends Component {
                 {{ __('Wawasan') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('inventory')" :active="request()->routeIs('inventory*')" wire:navigate>
-                {{ __('Inventory') }}
+                {{ __('Inventaris') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('machines')" :active="request()->routeIs('machines*')" wire:navigate>
+                {{ __('Mesin') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('projects')" :active="request()->routeIs('projects*')" wire:navigate>
+                {{ __('Proyek') }}
             </x-responsive-nav-link>
 
             {{-- <x-responsive-nav-link :href="route('help')" :active="request()->routeIs('help*')" wire:navigate>
