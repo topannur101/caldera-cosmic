@@ -37,9 +37,9 @@ class extends Component {
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2 mb-6">
         <div class="flex gap-x-2 items-center px-8 py-2 lg:py-0">
-            <i class="fa fa-search text-neutral-400 dark:text-neutral-700"></i>
+            <i class="fa fa-search"></i>
             <div class="w-full md:w-56">
-                <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q"
+                <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="py-1"
                     type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
                 <datalist id="qwords">
                     @if (count($qwords))
@@ -51,10 +51,10 @@ class extends Component {
             </div>
         </div>
         <div class="px-4 py-4 lg:py-0 grow flex items-center">
-            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-neutral-700"><i class="fa fa-fw fa-filter me-2"></i>{{ __('Filter') }}</x-secondary-button>
+            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-200 dark:hover:bg-neutral-700"><i class="fa fa-fw fa-filter mr-3"></i>{{ __('Filter') }}</x-secondary-button>
         </div>
         <div class="px-4 py-4 lg:py-0 flex items-center justify-between gap-x-4">
-            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-50 dark:hover:bg-neutral-700"><i class="fa fa-fw fa-tent me-2"></i>TT MM +2</x-secondary-button>
+            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-200 dark:hover:bg-neutral-700"><i class="fa fa-fw fa-tent mr-3"></i>TT MM +1</x-secondary-button>
             <div>
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -85,10 +85,9 @@ class extends Component {
         </div>
     </div>
     <div class="w-full">
-        <div class="flex justify-between w-full px-3 sm:px-0">
-            <div class="my-auto px-8"><span>{{ $inv_items->total() }}</span><span
-                    class="hidden md:inline">{{ ' ' . __('barang') }}</span></div>
-            <div class="flex">
+        <div class="flex flex-col gap-y-6 sm:flex-row gap-y-justify-between w-full px-8">
+            <div class="text-center sm:text-left">{{ $inv_items->total() . ' ' . __('barang') }}</div>
+            <div class="grow flex justify-center sm:justify-end">
                 <x-select wire:model.live="sort" class="mr-3">
                     <option value="updated">{{ __('Diperbarui') }}</option>
                     <option value="created">{{ __('Dibuat') }}</option>
