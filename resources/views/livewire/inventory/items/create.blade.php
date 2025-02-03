@@ -79,7 +79,7 @@ class extends Component
                             </li>
                         </ul>
                     </div> 
-                    <div class="mt-4">
+                    <div class="mt-6">
                         <div class="flex flex-col md:flex-row gap-y-4 justify-between">
                             <div class="flex gap-x-2 items-baseline">
                                 <div class="text-4xl">90</div>

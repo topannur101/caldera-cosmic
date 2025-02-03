@@ -64,6 +64,9 @@ class extends Component {
                         <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
                             <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
                         </x-dropdown-link>
+                        <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
+                            <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
+                        </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />
                         <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
                             <i class="fa fa-fw fa-inbox me-2"></i>{{ __('Kelola bin ')}}
@@ -85,8 +88,8 @@ class extends Component {
         </div>
     </div>
     <div class="w-full">
-        <div class="flex flex-col gap-y-6 sm:flex-row gap-y-justify-between w-full px-8">
-            <div class="text-center sm:text-left">{{ $inv_items->total() . ' ' . __('barang') }}</div>
+        <div class="flex flex-col gap-y-6 sm:flex-row justify-between w-full px-8">
+            <div class="text-center sm:text-left">{{ 0 . ' ' . __('barang') }}</div>
             <div class="grow flex justify-center sm:justify-end">
                 <x-select wire:model.live="sort" class="mr-3">
                     <option value="updated">{{ __('Diperbarui') }}</option>
