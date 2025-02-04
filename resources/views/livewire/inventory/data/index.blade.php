@@ -17,8 +17,9 @@ class extends Component {
     public function mount()
     {
         $this->view_titles = [        
-            'daily-flow'        => __('Arus harian'),
-            'monthly-summary'   => __('Ringkasan bulanan'),   
+            'daily-flow'    => __('Arus harian'),
+            'monthly-flow'  => __('Arus bulanan'),  
+            'monthly-summary' => __('Ringkasan bulanan'), 
         ];
     }
 

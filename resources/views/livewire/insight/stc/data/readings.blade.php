@@ -308,7 +308,7 @@ new class extends Component {
                     </x-slot>
                     <x-slot name="content">
                         <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                            <i class="fa fa-fw me-2"></i>{{ __('Statistik ')}}
+                            <i class="fa fa-fw me-2"></i>{{ __('Statistik ') }}
                         </x-dropdown-link>
                         <hr
                             class="border-neutral-300 dark:border-neutral-600" />
@@ -389,7 +389,7 @@ new class extends Component {
                             <td>{{ $d_sum->d_sum_created_at }}</td>
                             <td>{{ $d_sum->started_at }}</td>
                             <td>{{ $d_sum->duration() }}</td>
-                            <td>{{ }}</td>
+                            <td>{{ $d_sum->latency() }}</td>
                             <td>
                                 <div class="flex items-center">
                                     <div class="w-4 h-4 inline-block bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">

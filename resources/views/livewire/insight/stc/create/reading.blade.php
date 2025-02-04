@@ -178,7 +178,7 @@ new class extends Component
         if (empty($logs)) {
             $this->js('notyfError("'.__('Tidak ada data yang sah ditemukan').'")');
         } else {
-
+            
             $temps = array_map(fn ($item) => $item['temp'], $logs);
             $medians = InsStc::getMediansBySection($temps);
 
@@ -233,6 +233,21 @@ new class extends Component
                 $this->d_sum['hb_values'][7] = $validatedData['section_8'];
                 $this->duration = Carbon::parse($validatedData['started_at'])->diff(Carbon::parse($validatedData['ended_at']))->format('%H:%I:%S');
                 $this->latency = InsStc::duration($validatedData['ended_at'], Carbon::now(), 'short');
+
+                // prepare for HMI charts
+                $chart_logs = array_map(function($item) {
+                    return (int)round($item['temp']);
+                }, $logs);
+
+                $desiredLength = 60;
+                if (count($chart_logs) < $desiredLength) {
+                    $chart_logs = array_pad($chart_logs, $desiredLength, 0);
+                } elseif (count($chart_logs) > $desiredLength) {
+                    $chart_logs = array_slice($chart_logs, 0, $desiredLength);
+                }
+
+                $this->chart_logs = $chart_logs;
+                dd($this->chart_logs);
             }
         }
     }
@@ -308,6 +323,7 @@ new class extends Component
         $this->reset([
             'machines',
             'logs',
+            'chart_logs',
             'device_code',
             'file',
             'd_sum',
@@ -435,7 +451,7 @@ new class extends Component
                 'chart_hb',
                 $machine->ip_address,
                 $this->d_sum['position'],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] // gimana kalau lebih dari 60? kalau kurang? sisanya harus 0 
+                $this->chart_logs
             );
 
             $is_applied = true;

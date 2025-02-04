@@ -34,8 +34,13 @@ class extends Component {
     {
         try {
 
-            $response = Http::withoutVerifying()->timeout(2)->get('https://taekwang-id.comelz.cloud');
-            if ($response->successful()) {
+            // $response = Http::withoutVerifying()->timeout(2)->get('https://taekwang-id.comelz.cloud');
+            // if ($response->successful()) {
+            //     return true;
+            // }
+
+            $pingResult = exec("ping -n 1 172.70.77.230", $output, $status);
+            if ($status === 0) {
                 return true;
             }
         } catch (\Exception $e) {
