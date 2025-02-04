@@ -12,6 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         $tables = [
+            'inv_stocks',
+            'inv_bins',
+            'inv_areas',
             'inv_circs',            
             'inv_item_tags',
             'inv_items',
@@ -43,7 +46,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('inv_bins', function (Blueprint $table) {
+        Schema::create('inv_locs', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
             $table->string('group');
@@ -58,12 +61,12 @@ return new class extends Migration
             $table->string('name');
             $table->string('desc');
             $table->string('code')->nullable();
-            $table->foreignId('inv_bin_id')->nullable()->constrained();
+            $table->foreignId('inv_loc_id')->nullable()->constrained();
             $table->foreignId('inv_area_id')->constrained();
             $table->string('photo');
             $table->boolean('is_active');
             $table->index('code');
-            $table->index('inv_bin_id');
+            $table->index('inv_loc_id');
             $table->index('inv_area_id');
         });
 
@@ -83,9 +86,6 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->string('name');
-            $table->foreignId('inv_area_id')->constrained();
-            $table->unique(['name','inv_area_id']);
-            $table->index('inv_area_id');
         });
 
         Schema::create('inv_item_tags', function (Blueprint $table) {
@@ -100,7 +100,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->foreignId('user_id')->constrained();
-            $table->enum('type', ['in', 'out', 'capture']);
+            $table->enum('type', ['deposit', 'withdrawal', 'capture']);
             $table->enum('evaluation_status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->foreignId('evaluator_id')->constrained('users')->nullable();
             $table->string('evaluation_note')->nullable();
@@ -125,7 +125,7 @@ return new class extends Migration
             'inv_circs',
             'inv_stocks',
             'inv_items',
-            'inv_bins',
+            'inv_locs',
             'inv_auths',
             'inv_areas',
         ];
