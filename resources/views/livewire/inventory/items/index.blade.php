@@ -15,7 +15,7 @@ class extends Component {
    public string $q = '';
    public string $status = '';
    public array $area_ids = [];
-   public string $view = [];
+   public string $view = '';
 
    public function with(): array
    {

@@ -18,7 +18,7 @@ class extends Component {
     public array $qtags = [];
     public string $q = '';
     public string $status = '';
-    public string $view = [];
+    public string $view = '';
  
     public function with(): array
     {
