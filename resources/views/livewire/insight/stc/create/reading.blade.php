@@ -247,7 +247,6 @@ new class extends Component
                 }
 
                 $this->chart_logs = $chart_logs;
-                dd($this->chart_logs);
             }
         }
     }
