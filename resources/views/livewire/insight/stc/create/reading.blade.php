@@ -18,6 +18,8 @@ new class extends Component
 
     public array $logs = [];
 
+    public array $chart_logs = [];
+
     public string $device_code = '';
 
     public $file;
@@ -239,11 +241,11 @@ new class extends Component
                     return (int)round($item['temp']);
                 }, $logs);
 
-                $desiredLength = 60;
-                if (count($chart_logs) < $desiredLength) {
-                    $chart_logs = array_pad($chart_logs, $desiredLength, 0);
-                } elseif (count($chart_logs) > $desiredLength) {
-                    $chart_logs = array_slice($chart_logs, 0, $desiredLength);
+                $chart_length = 60;
+                if (count($chart_logs) < $chart_length) {
+                    $chart_logs = array_pad($chart_logs, $chart_length, 0);
+                } elseif (count($chart_logs) > $chart_length) {
+                    $chart_logs = array_slice($chart_logs, 0, $chart_length);
                 }
 
                 $this->chart_logs = $chart_logs;
