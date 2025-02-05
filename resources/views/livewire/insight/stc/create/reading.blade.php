@@ -241,16 +241,21 @@ new class extends Component
                     return (int)round($item['temp']);
                 }, $logs);
 
+                $min = 31;
+                $max = 89;
                 $chart_length = 60;
+
                 if (count($chart_logs) < $chart_length) {
-                    $chart_logs = array_pad($chart_logs, $chart_length, 31);
+                    $chart_logs = array_pad($chart_logs, $chart_length, $min);
                 } elseif (count($chart_logs) > $chart_length) {
                     $chart_logs = array_slice($chart_logs, 0, $chart_length);
                 }
 
                 foreach ($chart_logs as &$value) {
-                    if ($value < 31) {
-                        $value = 31;
+                    if ($value < $min) {
+                        $value = $min;
+                    } elseif ($value > $max) {
+                        $value = $max;
                     }
                 }
                 unset($value);

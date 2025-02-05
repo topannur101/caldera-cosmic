@@ -53,8 +53,8 @@ class InsStcPush
             'chart_hb' => [
                 'valueCount' => 60,
                 'startAddresses' => [
-                    'upper' => 1001,
-                    'lower' => 2001
+                    'upper' => 2001,
+                    'lower' => 1001
                 ],
                 'function' => 'multipleRegisters'
             ]
