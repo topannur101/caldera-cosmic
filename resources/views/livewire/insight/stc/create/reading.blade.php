@@ -243,10 +243,17 @@ new class extends Component
 
                 $chart_length = 60;
                 if (count($chart_logs) < $chart_length) {
-                    $chart_logs = array_pad($chart_logs, $chart_length, 0);
+                    $chart_logs = array_pad($chart_logs, $chart_length, 31);
                 } elseif (count($chart_logs) > $chart_length) {
                     $chart_logs = array_slice($chart_logs, 0, $chart_length);
                 }
+
+                foreach ($chart_logs as &$value) {
+                    if ($value < 31) {
+                        $value = 31;
+                    }
+                }
+                unset($value);
 
                 $this->chart_logs = $chart_logs;
             }
