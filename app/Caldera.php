@@ -39,4 +39,24 @@ class Caldera
         return $collection->sortByDesc('updated_at')->values();
     }
 
+    public static function encodeLittleEndian16($input, $charLimit) {
+        // Trim input to the specified character limit
+        $input = substr($input, 0, $charLimit);
+        
+        $result = [];
+        $length = strlen($input);
+        
+        for ($i = 0; $i < $length; $i += 2) {
+            // Get first byte
+            $low = ord($input[$i]);
+            
+            // Get second byte if available, otherwise use 0 for padding
+            $high = ($i + 1 < $length) ? ord($input[$i + 1]) : 0;
+            
+            // Combine into 16-bit integer (little-endian)
+            $result[] = ($high << 8) | $low;
+        }
+        
+        return $result;
+    }
 }
