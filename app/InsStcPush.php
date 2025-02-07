@@ -149,14 +149,14 @@ class InsStcPush
                 $coil = (bool)$values[0];
                 $packet = new WriteSingleCoilRequest($startAddress, $coil, $unitID);
 
-            } if($config['function'] === 'singleRegister') {
+            } elseif ($config['function'] === 'singleRegister') {
                 $register = (int)$values[0];
                 $packet = new WriteSingleRegisterRequest($startAddress, $register, $unitID);
 
             } else {
                 $registers = array_map(function($value) use($type) {
                     $intValue = (int)$value;
-                    if ($intValue < 30 || $intValue > 90 && $type === 'section_svp') {
+                    if (($intValue < 30 || $intValue > 90) && $type === 'section_svp') {
                         throw new InvalidArgumentException(
                             __('Nilai SVP berada di luar jangkauan (30-90)')
                         );

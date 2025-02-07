@@ -223,9 +223,11 @@ new class extends Component
                 $this->reset(['file']);
 
             } else {
-                $this->logs = $logs;
-                $validatedData = $validator->validated();
-                $duration = Carbon::parse($validatedData['started_at'])->diff(Carbon::parse($validatedData['ended_at']));
+                $this->logs     = $logs;
+                $validatedData  = $validator->validated();
+                $started_at     = Carbon::parse($validatedData['started_at']);
+                $ended_at       = Carbon::parse($validatedData['ended_at']);
+                $duration       = Carbon::parse($validatedData['started_at'])->diff(Carbon::parse($validatedData['ended_at']));
                 $this->d_sum['started_at'] = $validatedData['started_at'];
                 $this->d_sum['ended_at'] = $validatedData['ended_at'];
                 $this->d_sum['hb_values'][0] = $validatedData['section_1'];
@@ -236,8 +238,8 @@ new class extends Component
                 $this->d_sum['hb_values'][5] = $validatedData['section_6'];
                 $this->d_sum['hb_values'][6] = $validatedData['section_7'];
                 $this->d_sum['hb_values'][7] = $validatedData['section_8'];
-                $this->duration = $duration->format('%H:%I:%S');
-                $this->duration_min = $duration->totalMinutes();
+                $this->duration = $started_at->diff($ended_at)->format('%H:%I:%S');
+                $this->duration_min = (int) $started_at->diff($ended_at)->format('i');
                 $this->latency = InsStc::duration($validatedData['ended_at'], Carbon::now(), 'short');
 
                 // prepare for HMI charts
@@ -327,7 +329,6 @@ new class extends Component
          }
 
         $this->reset([
-            'machines',
             'logs',
             'chart_logs',
             'device_code',
@@ -464,7 +465,7 @@ new class extends Component
                 [$this->duration_min]
             );
 
-            $speed = (int) ($this->speed * 10);
+            $speed = (int) ($this->d_sum['speed'] * 10);
             $push->send(
                 'info_speed',
                 $machine->ip_address,
