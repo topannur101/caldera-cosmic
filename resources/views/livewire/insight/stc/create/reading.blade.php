@@ -227,7 +227,6 @@ new class extends Component
                 $validatedData  = $validator->validated();
                 $started_at     = Carbon::parse($validatedData['started_at']);
                 $ended_at       = Carbon::parse($validatedData['ended_at']);
-                $duration       = Carbon::parse($validatedData['started_at'])->diff(Carbon::parse($validatedData['ended_at']));
                 $this->d_sum['started_at'] = $validatedData['started_at'];
                 $this->d_sum['ended_at'] = $validatedData['ended_at'];
                 $this->d_sum['hb_values'][0] = $validatedData['section_1'];
@@ -239,7 +238,7 @@ new class extends Component
                 $this->d_sum['hb_values'][6] = $validatedData['section_7'];
                 $this->d_sum['hb_values'][7] = $validatedData['section_8'];
                 $this->duration = $started_at->diff($ended_at)->format('%H:%I:%S');
-                $this->duration_min = (int) $started_at->diff($ended_at)->format('i');
+                $this->duration_min = (int) round($started_at->diffInMinutes($ended_at));
                 $this->latency = InsStc::duration($validatedData['ended_at'], Carbon::now(), 'short');
 
                 // prepare for HMI charts
