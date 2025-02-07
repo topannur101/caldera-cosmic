@@ -51,7 +51,7 @@ new class extends Component {
                 ];
 
             } else {
-                $this->js('notyfError("' . __('Hasil ukur untuk line dan posisi tersebut sudah ada') . '")');
+                $this->js('toast("' . __('Hasil ukur untuk line dan posisi tersebut sudah ada') . '", { type: "danger" })');
             }
         }
 

@@ -42,7 +42,7 @@ new class extends Component {
         $recipe->save();
 
         $this->js('$dispatch("close")');
-        $this->js('notyfSuccess("' . __('Resep dibuat') . '")');
+        $this->js('toast("' . __('Resep dibuat') . '", { type: "success" })');
         $this->dispatch('updated');
 
         $this->customReset();

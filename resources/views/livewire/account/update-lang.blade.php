@@ -39,7 +39,7 @@ new class extends Component
             $this->redirectIntended(default: route('account', absolute: false), navigate: false);
 
         } catch (\Throwable $th) {
-            $this->js('notyfError("' . __('Terjadi kesalahan pada server') . '")');
+            $this->js('toast("' . __('Terjadi kesalahan pada server') . '", { type: "danger" })');
             $this->reset('lang');
         }
     }

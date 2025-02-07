@@ -62,7 +62,7 @@ new class extends Component {
             Gate::authorize('manage', $recipe);
             $recipe->update($validated);
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Resep diperbarui') . '")');
+            $this->js('toast("' . __('Resep diperbarui') . '", { type: "success" })');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();
@@ -79,7 +79,7 @@ new class extends Component {
     //         $recipe->delete();
 
     //         $this->js('$dispatch("close")');
-    //         $this->js('notyfSuccess("' . __('Resep dihapus') . '")');
+    //         $this->js('toast("' . __('Resep dihapus') . '", { type: "success" })');
     //         $this->dispatch('updated');
     //     } else {
     //         $this->handleNotFound();
@@ -95,7 +95,7 @@ new class extends Component {
     public function handleNotFound()
     {
         $this->js('$dispatch("close")');
-        $this->js('notyfError("' . __('Tidak ditemukan') . '")');
+        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
 };

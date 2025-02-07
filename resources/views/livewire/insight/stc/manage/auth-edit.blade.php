@@ -58,7 +58,7 @@ new class extends Component {
             $auth->update();
 
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Wewenang diperbarui') . '")');
+            $this->js('toast("' . __('Wewenang diperbarui') . '", { type: "success" })');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();
@@ -75,7 +75,7 @@ new class extends Component {
             $auth->delete();
 
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Wewenang dicabut') . '")');
+            $this->js('toast("' . __('Wewenang dicabut') . '", { type: "success" })');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();
@@ -91,7 +91,7 @@ new class extends Component {
     public function handleNotFound()
     {
         $this->js('$dispatch("close")');
-        $this->js('notyfError("' . __('Tidak ditemukan') . '")');
+        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
 };

@@ -73,7 +73,7 @@ new class extends Component {
     public function save()
     {
         if( !Auth::user() ) {
-            $this->js('notyfError("' . __('Kamu belum masuk') . '")');
+            $this->js('toast("' . __('Kamu belum masuk') . '", { type: "danger" })');
         } else {
 
             $this->code     = $this->clean($this->code);
@@ -119,7 +119,7 @@ new class extends Component {
                 ]);
 
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Kulit disimpan') . '")');
+            $this->js('toast("' . __('Kulit disimpan') . '", { type: "success" })');
             $this->dispatch('hide-saved');
             $this->customReset();
         }
@@ -133,14 +133,14 @@ new class extends Component {
     public function delete()
     {
         if( !Auth::user() ) {
-            $this->js('notyfError("' . __('Kamu belum masuk') . '")');
+            $this->js('toast("' . __('Kamu belum masuk') . '", { type: "danger" })');
         } else {
 
             if($this->code) {
                 $hide = InsLdcHide::where('code', $this->code);
                 if ($hide) {
                     $hide->delete();
-                    $this->js('notyfSuccess("' . __('Kulit dihapus') . '")');
+                    $this->js('toast("' . __('Kulit dihapus') . '", { type: "success" })');
                     $this->dispatch('hide-saved');
                     $this->customReset();
                 }

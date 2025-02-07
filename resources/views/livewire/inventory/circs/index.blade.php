@@ -30,6 +30,11 @@ class extends Component {
         ];
 
     }
+
+    public function loadMore()
+    {
+        $this->perPage += 10;
+    }
 }
 
 ?>

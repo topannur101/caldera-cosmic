@@ -41,7 +41,7 @@ class extends Component {
 
             $errors = $validator->errors();
             $error = $errors->first();
-            $this->js('notyfError("'.$error.'")'); 
+            $this->js('toast("'.$error.'", { type: "danger" })'); 
 
         } else {
             $user = User::find($this->user_id);
@@ -63,7 +63,7 @@ class extends Component {
                     'password' => $password
                 ]);               
 
-                $this->js('notyfSuccess("' . __('Kata sandi diperbarui') . '")');
+                $this->js('toast("' . __('Kata sandi diperbarui') . '", { type: "success" })');
                 $this->reset(['mode', 'password_option']);
             }            
         }

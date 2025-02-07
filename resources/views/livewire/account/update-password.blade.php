@@ -35,7 +35,7 @@ new class extends Component
         $this->reset('current_password', 'password', 'password_confirmation');
 
         $this->js('$dispatch("close")');
-        $this->js('notyfSuccess("' . __('Kata sandi diperbarui') . '")');
+        $this->js('toast("' . __('Kata sandi diperbarui') . '", { type: "success" })');
         // $this->dispatch('password-updated');
     }
 }; ?>

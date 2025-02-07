@@ -31,7 +31,7 @@ new class extends Component {
         $device->save();
 
         $this->js('$dispatch("close")');
-        $this->js('notyfSuccess("' . __('Wewenang dibuat') . '")');
+        $this->js('toast("' . __('Wewenang dibuat') . '", { type: "success" })');
         $this->dispatch('updated');
 
         $this->customReset();

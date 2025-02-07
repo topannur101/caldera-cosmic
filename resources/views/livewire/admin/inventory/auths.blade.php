@@ -40,6 +40,11 @@ class extends Component {
             'auths' => $auths->paginate($this->perPage),
         ];
     }
+
+    public function loadMore()
+    {
+        $this->perPage += 10;
+    }
 };
 ?>
 <x-slot name="title">{{ __('Inventaris') . ' — ' . __('Admin') }}</x-slot>

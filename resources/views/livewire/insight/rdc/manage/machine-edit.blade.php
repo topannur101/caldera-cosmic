@@ -67,7 +67,7 @@ new class extends Component {
             ]);
 
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Mesin diperbarui') . '")');
+            $this->js('toast("' . __('Mesin diperbarui') . '", { type: "success" })');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();
@@ -84,7 +84,7 @@ new class extends Component {
     public function handleNotFound()
     {
         $this->js('$dispatch("close")');
-        $this->js('notyfError("' . __('Tidak ditemukan') . '")');
+        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
 

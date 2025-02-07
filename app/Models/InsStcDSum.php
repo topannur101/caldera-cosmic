@@ -57,7 +57,7 @@ class InsStcDSum extends Model
     {
         switch ($this->integrity) {
             case 'stable':
-                return '<i class="fa fa-check-circle me-2 text-green-500"></i>' . __('SV konsisten');
+                return '<i class="fa fa-check-circle me-2 text-green-500"></i>' . __('SV cocok');
             case 'modified':
                 return '<i class="fa fa-exclamation-circle me-2 text-yellow-500"></i>' . __('SV berubah');
             case 'none':

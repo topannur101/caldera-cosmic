@@ -110,7 +110,7 @@ new class extends Component {
                 break;
 
             default:
-                $this->js('notyfError("' . __('Mime tidak didukung') . '")');
+                $this->js('toast("' . __('Mime tidak didukung') . '", { type: "danger" })');
                 break;
         }
 
@@ -244,8 +244,7 @@ new class extends Component {
             $this->view = 'review';
 
         } catch (\Exception $e) {
-            $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
-            $this->js('console.log("Error: '. $e->getMessage() .'")');
+            $this->js('toast("' . __('Tidak dapat membaca file') . '", { description: "'. $e->getMessage() .'", type: "danger" })'); 
         }
 
     }
@@ -301,8 +300,7 @@ new class extends Component {
             }
 
         } catch (\Exception $e) {
-            $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
-            $this->js('console.log("'. $e->getMessage() .'")');
+            $this->js('toast("' . __('Tidak dapat membaca file') . '", { description: "'. $e->getMessage() .'", type: "danger" })'); 
         }
     }
 
@@ -324,7 +322,7 @@ new class extends Component {
             $batch->update([
                 'rdc_queue' => 0
             ]);
-            $this->js('notyfSuccess("' . __('Dihapus dari antrian') . '")'); 
+            $this->js('toast("' . __('Dihapus dari antrian') . '", { type: "success" })'); 
             $this->js('$dispatch("close")');
             $this->dispatch('updated');
         } else {
@@ -398,11 +396,11 @@ new class extends Component {
 
             if ($batchValidator->fails() && $this->update_batch) {
                 $batchError = $batchValidator->errors()->first();
-                $this->js('notyfError("'.$batchError.'")'); 
+                $this->js('toast("'.$batchError.'", { type: "danger" })'); 
 
             } elseif ($testValidator->fails()) {
                 $testError = $testValidator->errors()->first();
-                $this->js('notyfError("'.$testError.'")'); 
+                $this->js('toast("'.$testError.'", { type: "danger" })'); 
             } else {
 
                 $queued_at = $batch->updated_at;
@@ -437,7 +435,7 @@ new class extends Component {
                 ]);
 
                 $this->js('$dispatch("close")');
-                $this->js('notyfSuccess("' . __('Hasil uji disisipkan') . '")');
+                $this->js('toast("' . __('Hasil uji disisipkan') . '", { type: "success" })');
                 $this->dispatch('updated');
 
                 $this->customReset();
@@ -466,7 +464,7 @@ new class extends Component {
     public function handleNotFound()
     {
         $this->js('$dispatch("close")');
-        $this->js('notyfError("' . __('Tidak ditemukan') . '")');
+        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
 };

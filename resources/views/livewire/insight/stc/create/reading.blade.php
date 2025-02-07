@@ -155,7 +155,7 @@ new class extends Component
 
         // If fewer than 4 logs, return empty
         if (count($logs) < 4) {
-            $this->js('notyfError("'.__('Tidak cukup data yang sah ditemukan').'")');
+            $this->js('toast("'.__('Tidak cukup data yang sah ditemukan').'", { type: "danger" })');
 
             return;
         }
@@ -178,7 +178,7 @@ new class extends Component
         $logs = array_values($logs);
 
         if (empty($logs)) {
-            $this->js('notyfError("'.__('Tidak ada data yang sah ditemukan').'")');
+            $this->js('toast("'.__('Tidak ada data yang sah ditemukan').'", { type: "danger" })');
         } else {
             
             $temps = array_map(fn ($item) => $item['temp'], $logs);
@@ -217,7 +217,7 @@ new class extends Component
 
             if ($validator->fails()) {
                 $error = $validator->errors()->first();
-                $this->js('notyfError("'.$error.'")');
+                $this->js('toast("'.$error.'", { type: "danger" })');
                 $this->reset(['file']);
 
             } else {
@@ -320,10 +320,10 @@ new class extends Component
         $this->save($is_applied);
 
         if ($is_applied) {
-            $this->js('notyfSuccess("' . __('Nilai HB beserta SVP disimpan dan dikirim ke HMI') . '")');
+            $this->js('toast("' . __('Berhasil') . '", { description: "' . __('Data tersimpan dan mesin telah disetel dengan SV prediksi') . '", type: "success" })');
 
          } else {
-            $this->js('notyfSuccess("' . __('Nilai HB beserta SVP disimpan namun tidak dikirim ke HMI. Periksa console.') . '")');
+            $this->js('toast("' . __('Berhasil (tanpa penyetelan)') . '", { description: "' . __('Data tersimpan namun tidak dilakukan penyetelan pada mesin. Periksa console.') . '", type: "success" })');
          }
 
         $this->reset([

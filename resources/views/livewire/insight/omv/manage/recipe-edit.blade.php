@@ -86,7 +86,7 @@ new class extends Component {
             ]);
 
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Resep diperbarui') . '")');
+            $this->js('toast("' . __('Resep diperbarui') . '", { type: "success" })');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();
@@ -126,7 +126,7 @@ new class extends Component {
         // $recipe->save();
 
         // $this->js('$dispatch("close")');
-        // $this->js('notyfSuccess("' . __('Resep dibuat') . '")');
+        // $this->js('toast("' . __('Resep dibuat') . '", { type: "success" })');
         // $this->dispatch('updated');
 
         // $this->customReset();
@@ -141,7 +141,7 @@ new class extends Component {
     public function handleNotFound()
     {
         $this->js('$dispatch("close")');
-        $this->js('notyfError("' . __('Tidak ditemukan') . '")');
+        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
 

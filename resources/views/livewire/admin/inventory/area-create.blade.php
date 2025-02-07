@@ -30,7 +30,7 @@ new class extends Component {
         $area->save();
 
         $this->js('$dispatch("close")');
-        $this->js('notyfSuccess("' . __('Area dibuat') . '")');
+        $this->js('toast("' . __('Area dibuat') . '", { type: "success" })');
         $this->dispatch('updated');
 
         $this->customReset();

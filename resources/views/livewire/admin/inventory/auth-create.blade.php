@@ -47,7 +47,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->validate();
         
         if ($this->user_id == 1) {
-            $this->js('notyfError("' . __('Superuser sudah memiliki wewenang penuh') . '")');
+            $this->js('toast("' . __('Superuser sudah memiliki wewenang penuh') . '", { type: "danger" })');
         } else {
             InvAuth::create([
                 'user_id' => $this->user_id,
@@ -56,7 +56,7 @@ new #[Layout('layouts.app')] class extends Component {
             ]);
 
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Wewenang dibuat') . '")');
+            $this->js('toast("' . __('Wewenang dibuat') . '", { type: "success" })');
             $this->dispatch('updated');
         }
         $this->customReset();

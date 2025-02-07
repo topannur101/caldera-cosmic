@@ -100,7 +100,7 @@ new class extends Component
    public function handleNotFound()
    {
        $this->js('$dispatch("close")');
-       $this->js('notyfError("' . __('Tidak ditemukan') . '")');
+       $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
        $this->dispatch('updated');
    }
 
@@ -162,7 +162,7 @@ new class extends Component
          break;
 
       default:
-         $this->js('notyfError("' . __('Mime tidak didukung') . '")');
+         $this->js('toast("' . __('Mime tidak didukung') . '", { type: "danger" })');
          break;
       }
       $this->reset(['file']);
@@ -322,8 +322,8 @@ new class extends Component
          $this->js('console.log("Status found:", "' . $this->test['eval'] . '")');
 
       } catch (\Exception $e) {
-         $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
-         $this->js('console.log("Error: '. $e->getMessage() .'")');
+         $this->js('toast("' . __('Tidak dapat membaca file') . '", { description: "'. $e->getMessage() .'", type: "danger" })'); 
+
       }
    }
 
@@ -386,8 +386,8 @@ new class extends Component
          }
 
       } catch (\Exception $e) {
-            $this->js('notyfError("' . __('Terjadi galat ketika memproses berkas. Periksa console') . '")'); 
-            $this->js('console.log("'. $e->getMessage() .'")');
+         $this->js('toast("' . __('Tidak dapat membaca file') . '", { description: "'. $e->getMessage() .'", type: "danger" })'); 
+
       }
    }
 
@@ -429,7 +429,7 @@ new class extends Component
 
       if ($batch) {
          $batch->update([ 'rdc_queue' => 0 ]);
-         $this->js('notyfSuccess("' . __('Dihapus dari antrian') . '")'); 
+         $this->js('toast("' . __('Dihapus dari antrian') . '", { type: "success" })'); 
          $this->js('$dispatch("close")');
          $this->dispatch('updated');
 
@@ -479,7 +479,7 @@ new class extends Component
       $test->save();
 
       $this->js('$dispatch("close")');
-      $this->js('notyfSuccess("' . __('Hasil uji disimpan') . '")');
+      $this->js('toast("' . __('Hasil uji disimpan') . '", { type: "success" })');
       $this->dispatch('updated');
       $this->customReset();
    }

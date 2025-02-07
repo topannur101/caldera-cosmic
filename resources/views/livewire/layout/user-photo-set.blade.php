@@ -25,7 +25,7 @@ new class extends Component
 
             $errors = $validator->errors();
             $error = $errors->first('temp');
-            $this->js('notyfError("'.$error.'")'); 
+            $this->js('toast("'.$error.'", { type: "danger" })'); 
 
         } else {
 
@@ -39,9 +39,9 @@ new class extends Component
     public function exception($e, $stopPropagation) {
 
         if($e instanceof League\Flysystem\UnableToRetrieveMetadata) {
-            $this->js('notyfError("' . __('Berkas tidak sah') . '")');
+            $this->js('toast("' . __('Berkas tidak sah') . '", { type: "danger" })');
         } else {
-            $this->js('notyfError("' . __('Terjadi kesalahan') . '")');
+            $this->js('toast("' . __('Terjadi kesalahan') . '", { type: "danger" })');
         }
         $stopPropagation();
     }

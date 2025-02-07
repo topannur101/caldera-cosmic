@@ -87,7 +87,7 @@ new class extends Component {
             $this->code     = preg_replace('/[^a-zA-Z0-9]/', '', $this->code);
 
             if (!$this->line || !$this->workdate || !$this->style) {
-                $this->js('notyfError("' . __('Info grup tidak sah') . '")');
+                $this->js('toast("' . __('Info grup tidak sah') . '", { type: "danger" })');
             }
 
             $validated = $this->validate();
@@ -138,7 +138,7 @@ new class extends Component {
                 ]);
 
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Kulit diperbarui') . '")');
+            $this->js('toast("' . __('Kulit diperbarui') . '", { type: "success" })');
             $this->dispatch('updated');
             $this->customReset();
         } else {
@@ -156,7 +156,7 @@ new class extends Component {
     public function handleNotFound()
     {
         $this->js('$dispatch("close")');
-        $this->js('notyfError("' . __('Tidak ditemukan') . '")');
+        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
 

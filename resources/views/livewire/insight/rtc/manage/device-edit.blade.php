@@ -44,7 +44,7 @@ new class extends Component {
             Gate::authorize('manage', $device);
             $device->update($validated);
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Perangkat diperbarui') . '")');
+            $this->js('toast("' . __('Perangkat diperbarui') . '", { type: "success" })');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();
@@ -61,7 +61,7 @@ new class extends Component {
             $device->delete();
 
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Perangkat dihapus') . '")');
+            $this->js('toast("' . __('Perangkat dihapus') . '", { type: "success" })');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();
@@ -77,7 +77,7 @@ new class extends Component {
     public function handleNotFound()
     {
         $this->js('$dispatch("close")');
-        $this->js('notyfError("' . __('Tidak ditemukan') . '")');
+        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
 

@@ -104,7 +104,7 @@ class extends Component {
                     'ftype'         => $this->ftype,
                 ]);
                 $this->js('$dispatch("close")');
-                $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
+                $this->js('toast("' . __('Pengunduhan dimulai...') . '", { type: "success" })');
                 break;
         }
     }

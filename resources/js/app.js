@@ -1,6 +1,4 @@
 import './bootstrap';
-import { Notyf } from 'notyf';
-import 'notyf/notyf.min.css';
 import axios from 'axios';
 
 function calderaSetTheme()
@@ -12,30 +10,6 @@ function calderaSetTheme()
     }
 }
 
-function notyfSuccess($msg)
-{
-   const notyf = new Notyf({
-      duration: 5000,
-      position: {
-         x:'center',
-         y:'top',
-      }
-   });
-   notyf.success($msg);
-}
-
-function notyfError($msg)
-{
-   const notyf = new Notyf({
-      duration: 5000,
-      position: {
-         x:'center',
-         y:'top',
-      }
-   });
-   notyf.error($msg);
-}
-
 const escKey = new KeyboardEvent('keydown', {
    key: 'Escape',
    keyCode: 27,
@@ -45,7 +19,16 @@ const escKey = new KeyboardEvent('keydown', {
 
 calderaSetTheme()
 window.calderaSetTheme  = calderaSetTheme;
-window.notyfSuccess     = notyfSuccess;
-window.notyfError       = notyfError;
 window.axios            = axios;
-window.escKey = escKey;
+window.escKey           = escKey;
+
+window.toast = function(message, options = {}) {
+   let description = options.description || '';
+   let type = options.type || 'default';
+   let position = options.position || 'top-center';
+   let html = options.html || '';
+
+   window.dispatchEvent(new CustomEvent('toast-show', { 
+       detail: { type, message, description, position, html }
+   }));
+};

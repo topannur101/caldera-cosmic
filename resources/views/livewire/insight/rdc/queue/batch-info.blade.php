@@ -48,7 +48,7 @@ class extends Component {
     public function handleNotFound()
     {
         $this->js('$dispatch("close")');
-        $this->js('notyfError("' . __('Tidak ditemukan') . '")');
+        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
 
@@ -61,7 +61,7 @@ class extends Component {
                 'rdc_queue' => 1
             ]);
             $this->js('$dispatch("close")');
-            $this->js('notyfSuccess("' . __('Ditambahkan ke antrian') . '")');
+            $this->js('toast("' . __('Ditambahkan ke antrian') . '", { type: "success" })');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();

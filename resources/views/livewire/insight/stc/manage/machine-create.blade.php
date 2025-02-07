@@ -40,7 +40,7 @@ new class extends Component {
         $machine->save();
 
         $this->js('$dispatch("close")');
-        $this->js('notyfSuccess("' . __('Mesin dibuat') . '")');
+        $this->js('toast("' . __('Mesin dibuat') . '", { type: "success" })');
         $this->dispatch('updated');
 
         $this->customReset();

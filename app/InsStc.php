@@ -1129,7 +1129,7 @@ class InsStc
     {
         // Define integrity label mapping
         $integrityLabels = [
-            'stable' => __('SV konsisten'),
+            'stable' => __('SV cocok'),
             'modified' => __('SV berubah'),
             'none' => __('Tak ada pembanding'),
         ];

@@ -39,6 +39,11 @@ new #[Layout('layouts.app')] class extends Component {
             'auths' => $auths->paginate($this->perPage),
         ];
     }
+
+    public function loadMore()
+    {
+        $this->perPage += 10;
+    }
 };
 ?>
 <x-slot name="title">{{ __('Wewenang') . ' — ' . __('Pemantauan open mill') }}</x-slot>

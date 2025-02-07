@@ -46,7 +46,7 @@ class extends Component {
 
             $errors = $validator->errors();
             $error = $errors->first('code');
-            $this->js('notyfError("'.$error.'")'); 
+            $this->js('toast("'.$error.'", { type: "danger" })'); 
 
         } else {
 
@@ -57,13 +57,13 @@ class extends Component {
             if ($this->immediate_queue) {
 
                 if ($batch->rdc_queue == 1) {
-                    $this->js('notyfError("'. __('Sudah diantrikan') . '")'); 
+                    $this->js('toast("'. __('Sudah diantrikan') . '", { type: "danger" })'); 
 
                 } else {
                     $batch->update([
                         'rdc_queue' => 1
                     ]);
-                    $this->js('notyfSuccess("' . __('Ditambahkan ke antrian') . '")');
+                    $this->js('toast("' . __('Ditambahkan ke antrian') . '", { type: "success" })');
                     $this->dispatch('updated');
                 }
 

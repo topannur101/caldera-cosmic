@@ -78,7 +78,7 @@ class extends Component {
     {
       $this->redirectRoute('download.inv-items', []);
       $this->js('$dispatch("close")');
-      $this->js('notyfSuccess("' . __('Pengunduhan dimulai...') . '")');
+      $this->js('toast("' . __('Pengunduhan dimulai...') . '", { type: "success" })');
     }
 
     public function updatedLoc()
