@@ -146,11 +146,11 @@ class InsStcPush
             $connection->connect();
 
             if ($config['function'] === 'singleCoil') {
-                $coil = $values[0];
+                $coil = (bool)$values[0];
                 $packet = new WriteSingleCoilRequest($startAddress, $coil, $unitID);
 
             } if($config['function'] === 'singleRegister') {
-                $register = $values[0];
+                $register = (int)$values[0];
                 $packet = new WriteSingleRegisterRequest($startAddress, $register, $unitID);
 
             } else {
