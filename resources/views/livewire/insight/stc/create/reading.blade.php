@@ -73,8 +73,6 @@ new class extends Component
 
             try {
                 $this->extractData();
-                $chart_values = array_column($this->logs, "temp");
-                $chart_values = array_pad($chart_values, 60, 0);
 
             } catch (Exception $e) {
                 $this->js('console.log("'.$e->getMessage().'")');
@@ -250,6 +248,7 @@ new class extends Component
 
                 if (count($chart_logs) < $chart_length) {
                     $chart_logs = array_pad($chart_logs, $chart_length, 0);
+                    
                 } elseif (count($chart_logs) > $chart_length) {
                     $chart_logs = array_slice($chart_logs, 0, $chart_length);
                 }

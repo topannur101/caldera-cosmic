@@ -41,7 +41,7 @@ class Caldera
 
     public static function encodeLittleEndian16($input, $charLimit) {
         // Trim input to the specified character limit
-        $input = substr($input, 0, $charLimit);
+        $input = str_pad(substr($input, 0, $charLimit), $charLimit, "\0");
         
         $result = [];
         $length = strlen($input);
