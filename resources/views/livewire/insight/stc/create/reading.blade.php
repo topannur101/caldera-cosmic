@@ -134,7 +134,7 @@ new class extends Component
             if (isset($row[0]) && isset($row[$tempColumn]) && $row[0] !== '' && $row[$tempColumn] !== '') {
                 $excel_ts = (float) (($row[1] - 25569) * 86400);
                 $taken_at = Carbon::createFromTimestamp($excel_ts)->format('Y-m-d H:i');
-                $temp = (float) $row[$tempColumn];
+                $temp = max(0, min(99, (float) $row[$tempColumn]));
                 $timestamp = (float) $row[1];
 
                 $logs[] = [
@@ -241,24 +241,13 @@ new class extends Component
                     return (int)round($item['temp']);
                 }, $logs);
 
-                $min = 31;
-                $max = 89;
                 $chart_length = 60;
 
                 if (count($chart_logs) < $chart_length) {
-                    $chart_logs = array_pad($chart_logs, $chart_length, $min);
+                    $chart_logs = array_pad($chart_logs, $chart_length, 0);
                 } elseif (count($chart_logs) > $chart_length) {
                     $chart_logs = array_slice($chart_logs, 0, $chart_length);
                 }
-
-                foreach ($chart_logs as &$value) {
-                    if ($value < $min) {
-                        $value = $min;
-                    } elseif ($value > $max) {
-                        $value = $max;
-                    }
-                }
-                unset($value);
 
                 $this->chart_logs = $chart_logs;
             }

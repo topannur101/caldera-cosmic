@@ -4,6 +4,7 @@ namespace App;
 
 use ModbusTcpClient\Network\BinaryStreamConnection;
 use ModbusTcpClient\Packet\ModbusFunction\WriteMultipleRegistersRequest;
+use ModbusTcpClient\Packet\ModbusFunction\WriteSingleRegisterRequest;
 use ModbusTcpClient\Packet\ModbusFunction\WriteSingleCoilRequest;
 use ModbusTcpClient\Packet\ResponseFactory;
 use ModbusTcpClient\Utils\Types;
@@ -57,7 +58,64 @@ class InsStcPush
                     'lower' => 1001
                 ],
                 'function' => 'multipleRegisters'
-            ]
+            ],
+            'info_duration' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 2110,
+                    'lower' => 1110
+                ],
+                'function' => 'singleRegister'
+            ],
+            'info_speed' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 2120,
+                    'lower' => 1120
+                ],
+                'function' => 'singleRegister'
+            ],
+            'info_device_code' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 2130,
+                    'lower' => 1130
+                ],
+                'function' => 'singleRegister'
+            ],
+            'info_operator' => [
+                'valueCount' => 3,
+                'startAddresses' => [
+                    'upper' => 2140,
+                    'lower' => 1140
+                ],
+                'function' => 'multipleRegisters'
+            ],
+            'info_year' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 2150,
+                    'lower' => 1150
+                ],
+                'function' => 'singleRegister'
+            ],
+            'info_month_date' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 2160,
+                    'lower' => 1160
+                ],
+                'function' => 'singleRegister'
+            ],
+            'info_time' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 2170,
+                    'lower' => 1170
+                ],
+                'function' => 'singleRegister'
+            ],
+
         ];
 
         if (strpos($ipAddress, '127.') === 0) {
@@ -90,12 +148,17 @@ class InsStcPush
             if ($config['function'] === 'singleCoil') {
                 $coil = $values[0];
                 $packet = new WriteSingleCoilRequest($startAddress, $coil, $unitID);
+
+            } if($config['function'] === 'singleRegister') {
+                $register = $values[0];
+                $packet = new WriteSingleRegisterRequest($startAddress, $register, $unitID);
+
             } else {
-                $registers = array_map(function($value) {
+                $registers = array_map(function($value) use($type) {
                     $intValue = (int)$value;
-                    if ($intValue < 30 || $intValue > 90) {
+                    if ($intValue < 30 || $intValue > 90 && $type === 'section_svp') {
                         throw new InvalidArgumentException(
-                            __('Nilai temperatur berada di luar jangkauan (30-90)')
+                            __('Nilai SVP berada di luar jangkauan (30-90)')
                         );
                     }
                     return Types::toInt16($intValue);
