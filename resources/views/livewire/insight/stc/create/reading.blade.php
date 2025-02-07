@@ -1,5 +1,6 @@
 <?php
 
+use App\Caldera;
 use App\InsStc;
 use App\InsStcPush;
 use App\Models\InsStcDevice;
@@ -46,6 +47,7 @@ new class extends Component
     public string $latency = '';
 
     public string $duration = '';
+    public int $duration_min = 0;
 
     public function mount()
     {
@@ -223,6 +225,7 @@ new class extends Component
             } else {
                 $this->logs = $logs;
                 $validatedData = $validator->validated();
+                $duration = Carbon::parse($validatedData['started_at'])->diff(Carbon::parse($validatedData['ended_at']));
                 $this->d_sum['started_at'] = $validatedData['started_at'];
                 $this->d_sum['ended_at'] = $validatedData['ended_at'];
                 $this->d_sum['hb_values'][0] = $validatedData['section_1'];
@@ -233,7 +236,8 @@ new class extends Component
                 $this->d_sum['hb_values'][5] = $validatedData['section_6'];
                 $this->d_sum['hb_values'][6] = $validatedData['section_7'];
                 $this->d_sum['hb_values'][7] = $validatedData['section_8'];
-                $this->duration = Carbon::parse($validatedData['started_at'])->diff(Carbon::parse($validatedData['ended_at']))->format('%H:%I:%S');
+                $this->duration = $duration->format('%H:%I:%S');
+                $this->duration_min = $duration->totalMinutes();
                 $this->latency = InsStc::duration($validatedData['ended_at'], Carbon::now(), 'short');
 
                 // prepare for HMI charts
@@ -331,6 +335,7 @@ new class extends Component
             'd_sum',
             'latency',
             'duration',
+            'duration_min'
         ]);
     }
 
@@ -416,23 +421,21 @@ new class extends Component
         $is_applied = false;
 
         try {
-            // push HB section
+            
             $push->send(
                 'section_hb',
                 $machine->ip_address,
                 $this->d_sum['position'],
                 $this->d_sum['hb_values']
             );
-
-            // push HB zone
+            
             $push->send(
                 'zone_hb',
                 $machine->ip_address,
                 $this->d_sum['position'],
                 $zones
             );
-
-            // push SVP
+            
             $push->send(
                 'section_svp',
                 $machine->ip_address,
@@ -440,7 +443,6 @@ new class extends Component
                 $this->d_sum['svp_values']
             );
             
-            // // push SVW
             $push->send(
                 'apply_svw',
                 $machine->ip_address,
@@ -448,12 +450,68 @@ new class extends Component
                 [true]
             );
 
-            // push HB chart
             $push->send(
                 'chart_hb',
                 $machine->ip_address,
                 $this->d_sum['position'],
                 $this->chart_logs
+            );
+
+            $push->send(
+                'info_duration',
+                $machine->ip_address,
+                $this->d_sum['position'],
+                [$this->duration_min]
+            );
+
+            $speed = (int) ($this->speed * 10);
+            $push->send(
+                'info_speed',
+                $machine->ip_address,
+                $this->d_sum['position'],
+                [$speed]
+            );
+
+            $code = (int) preg_replace('/[^0-9]/', '', $this->device_code);
+            $push->send(
+                'info_device_code',
+                $machine->ip_address,
+                $this->d_sum['position'],
+                [$code]
+            );
+
+            $nameArray = Caldera::encodeLittleEndian16(Auth::user()->name, 6);
+            $push->send(
+                'info_operator',
+                $machine->ip_address,
+                $this->d_sum['position'],
+                $nameArray,
+            );
+
+            $now = Carbon::now();
+
+            $year = (int) $now->format('Y'); 
+            $push->send(
+                'info_year',
+                $machine->ip_address,
+                $this->d_sum['position'],
+                [$year],
+            );
+
+            $month_date = (int) $now->format('md'); 
+            $push->send(
+                'info_month_date',
+                $machine->ip_address,
+                $this->d_sum['position'],
+                [$month_date],
+            );
+
+            $time = (int) $now->format('Hi'); 
+            $push->send(
+                'info_time',
+                $machine->ip_address,
+                $this->d_sum['position'],
+                [$time],
             );
 
             $is_applied = true;
