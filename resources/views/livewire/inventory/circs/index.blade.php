@@ -50,24 +50,24 @@ class extends Component {
         <div class="flex gap-x-4 px-8 py-3 lg:py-0">
             <div class="btn-group h-10">
                 <x-checkbox-button wire:model.live="status" grow value="pending" name="status" id="status-pending">
-                    <div class="text-center my-auto"><i class="fa fa-hourglass-half"></i></div>
+                    <div class="text-center my-auto"><i class="fa fa-fw fa-hourglass-half"></i></div>
                 </x-checkbox-button>
                 <x-checkbox-button wire:model.live="status" grow value="approved" name="status" id="status-approved">
-                    <div class="text-center my-auto"><i class="fa fa-thumbs-up"></i></div>
+                    <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-up"></i></div>
                 </x-checkbox-button>
                 <x-checkbox-button wire:model.live="status" grow value="rejected" name="status" id="status-rejected">
-                    <div class="text-center my-auto"><i class="fa fa-thumbs-down"></i></div>
+                    <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-down"></i></div>
                 </x-checkbox-button>
             </div>
             <div class="btn-group h-10">
                 <x-checkbox-button wire:model.live="type" grow value="deposit" name="type" id="type-deposit">
-                    <div class="text-center my-auto"><i class="fa fa-plus text-green-500"></i></div>
-                </x-checkbox-button>
-                <x-checkbox-button wire:model.live="type" grow value="withdrawal" name="type" id="type-withdrawal">
-                    <div class="text-center my-auto"><i class="fa fa-minus text-red-500"></i></div>
+                    <div class="text-center my-auto"><i class="fa fa-fw fa-plus text-green-500"></i></div>
                 </x-checkbox-button>
                 <x-checkbox-button wire:model.live="type" grow value="capture" name="type" id="type-capture">
-                    <div class="text-center my-auto"><i class="fa fa-code-commit text-yellow-500"></i></div>
+                    <div class="text-center my-auto"><i class="fa fa-fw fa-code-commit text-yellow-600"></i></div>
+                </x-checkbox-button>
+                <x-checkbox-button wire:model.live="type" grow value="withdrawal" name="type" id="type-withdrawal">
+                    <div class="text-center my-auto"><i class="fa fa-fw fa-minus text-red-500"></i></div>
                 </x-checkbox-button>
             </div>
         </div>

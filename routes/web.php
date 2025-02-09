@@ -17,22 +17,22 @@ Volt::route('/projects',     'projects.index')->name('projects');
 // Route::view('profile', 'profile')->name('profile');
 // Route::view('help', 'help')->name('help');
 
-// Insight routes
-Route::prefix('insight')->group(function () {
+// Insights routes
+Route::prefix('insights')->group(function () {
 
-    Route::name('insight.')->group(function () {
+    Route::name('insights.')->group(function () {
 
-        Volt::route('/ss/{id}', 'insight.ss.index')->name('ss'); // slideshow
+        Volt::route('/ss/{id}', 'insights.ss.index')->name('ss'); // slideshow
     });
 
-    Route::name('insight.rtc.')->group(function () {
+    Route::name('insights.rtc.')->group(function () {
 
-        Volt::route('/rtc/manage/authorizations',   'insight.rtc.manage.auths')     ->name('manage.auths');
-        Volt::route('/rtc/manage/devices',          'insight.rtc.manage.devices')   ->name('manage.devices');
-        Volt::route('/rtc/manage/recipes',          'insight.rtc.manage.recipes')   ->name('manage.recipes');
-        Volt::route('/rtc/manage',                  'insight.rtc.manage.index')     ->name('manage.index');
-        Volt::route('/rtc/slideshows',              'insight.rtc.slideshows')       ->name('slideshows');
-        Volt::route('/rtc',                         'insight.rtc.index')            ->name('index');
+        Volt::route('/rtc/manage/authorizations',   'insights.rtc.manage.auths')     ->name('manage.auths');
+        Volt::route('/rtc/manage/devices',          'insights.rtc.manage.devices')   ->name('manage.devices');
+        Volt::route('/rtc/manage/recipes',          'insights.rtc.manage.recipes')   ->name('manage.recipes');
+        Volt::route('/rtc/manage',                  'insights.rtc.manage.index')     ->name('manage.index');
+        Volt::route('/rtc/slideshows',              'insights.rtc.slideshows')       ->name('slideshows');
+        Volt::route('/rtc',                         'insights.rtc.index')            ->name('index');
 
         Route::get('/rtc/metric/{device_id}', function (string $device_id) {
             $metric = InsRtcMetric::join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
@@ -48,80 +48,80 @@ Route::prefix('insight')->group(function () {
 
     });
 
-    Route::name('insight.ldc.')->group(function () {
+    Route::name('insights.ldc.')->group(function () {
 
-        Volt::route('/ldc/manage/authorizations',   'insight.ldc.manage.auths') ->name('manage.auths');
-        Volt::route('/ldc/manage/machines',         'insight.ldc.manage.machines') ->name('manage.machines');
-        Volt::route('/ldc/manage',                  'insight.ldc.manage.index') ->name('manage.index');
-        Volt::route('/ldc/data',                    'insight.ldc.data.index')->name('data.index');
-        Volt::route('/ldc/create',                  'insight.ldc.create.index')->name('create.index');
+        Volt::route('/ldc/manage/authorizations',   'insights.ldc.manage.auths') ->name('manage.auths');
+        Volt::route('/ldc/manage/machines',         'insights.ldc.manage.machines') ->name('manage.machines');
+        Volt::route('/ldc/manage',                  'insights.ldc.manage.index') ->name('manage.index');
+        Volt::route('/ldc/data',                    'insights.ldc.data.index')->name('data.index');
+        Volt::route('/ldc/create',                  'insights.ldc.create.index')->name('create.index');
         Route::get('/ldc', function () {
             if (auth()->check()) {
-                return redirect()->route('insight.ldc.create.index');
+                return redirect()->route('insights.ldc.create.index');
             }
-            return redirect()->route('insight.ldc.data.index');
+            return redirect()->route('insights.ldc.data.index');
         })->name('index');
     });
 
-    Route::name('insight.omv.')->group(function () {
+    Route::name('insights.omv.')->group(function () {
 
-        Volt::route('/omv/manage/authorizations',   'insight.omv.manage.auths')     ->name('manage.auths');
-        Volt::route('/omv/manage/recipes',          'insight.omv.manage.recipes')   ->name('manage.recipes');
-        Volt::route('/omv/manage',                  'insight.omv.manage.index')     ->name('manage.index');
-        Volt::route('/omv/data',                    'insight.omv.data.index')       ->name('data.index');
-        Volt::route('/omv/create',                  'insight.omv.create.index')     ->name('create.index');
+        Volt::route('/omv/manage/authorizations',   'insights.omv.manage.auths')     ->name('manage.auths');
+        Volt::route('/omv/manage/recipes',          'insights.omv.manage.recipes')   ->name('manage.recipes');
+        Volt::route('/omv/manage',                  'insights.omv.manage.index')     ->name('manage.index');
+        Volt::route('/omv/data',                    'insights.omv.data.index')       ->name('data.index');
+        Volt::route('/omv/create',                  'insights.omv.create.index')     ->name('create.index');
         Route::get('/omv', function () {
             if (auth()->check()) {
-                return redirect()->route('insight.omv.create.index');
+                return redirect()->route('insights.omv.create.index');
             }
-            return redirect()->route('insight.omv.data.index');
+            return redirect()->route('insights.omv.data.index');
         })->name('index');
     });
 
-    Route::name('insight.rdc.')->group(function () {
+    Route::name('insights.rdc.')->group(function () {
 
-        Volt::route('/rdc/manage/authorizations',   'insight.rdc.manage.auths')     ->name('manage.auths');
-        Volt::route('/rdc/manage/machines',         'insight.rdc.manage.machines')  ->name('manage.machines');
-        Volt::route('/rdc/manage',                  'insight.rdc.manage.index')     ->name('manage.index');
-        Volt::route('/rdc/data',                    'insight.rdc.data.index')       ->name('data.index');
-        Volt::route('/rdc/queue',                   'insight.rdc.queue.index')      ->name('queue.index');
+        Volt::route('/rdc/manage/authorizations',   'insights.rdc.manage.auths')     ->name('manage.auths');
+        Volt::route('/rdc/manage/machines',         'insights.rdc.manage.machines')  ->name('manage.machines');
+        Volt::route('/rdc/manage',                  'insights.rdc.manage.index')     ->name('manage.index');
+        Volt::route('/rdc/data',                    'insights.rdc.data.index')       ->name('data.index');
+        Volt::route('/rdc/queue',                   'insights.rdc.queue.index')      ->name('queue.index');
         Route::get('/rdc', function () {
             if (auth()->check()) {
-                return redirect()->route('insight.rdc.queue.index');
+                return redirect()->route('insights.rdc.queue.index');
             }
-            return redirect()->route('insight.rdc.data.index');
+            return redirect()->route('insights.rdc.data.index');
         })->name('index');
 
     });
 
-    Route::name('insight.stc.')->group(function () {
+    Route::name('insights.stc.')->group(function () {
 
-        Volt::route('/stc/manage/authorizations',   'insight.stc.manage.auths')     ->name('manage.auths');
-        Volt::route('/stc/manage/machines',         'insight.stc.manage.machines')  ->name('manage.machines');
-        Volt::route('/stc/manage/devices',          'insight.stc.manage.devices')   ->name('manage.devices');
-        Volt::route('/stc/manage',                  'insight.stc.manage.index')     ->name('manage.index');
-        Volt::route('/stc/data',                    'insight.stc.data.index')       ->name('data.index');
-        Volt::route('/stc/create',                  'insight.stc.create.index')     ->name('create.index');
+        Volt::route('/stc/manage/authorizations',   'insights.stc.manage.auths')     ->name('manage.auths');
+        Volt::route('/stc/manage/machines',         'insights.stc.manage.machines')  ->name('manage.machines');
+        Volt::route('/stc/manage/devices',          'insights.stc.manage.devices')   ->name('manage.devices');
+        Volt::route('/stc/manage',                  'insights.stc.manage.index')     ->name('manage.index');
+        Volt::route('/stc/data',                    'insights.stc.data.index')       ->name('data.index');
+        Volt::route('/stc/create',                  'insights.stc.create.index')     ->name('create.index');
         Route::get('/stc', function () {
             if (auth()->check()) {
-                return redirect()->route('insight.stc.create.index');
+                return redirect()->route('insights.stc.create.index');
             }
-            return redirect()->route('insight.stc.data.index');
+            return redirect()->route('insights.stc.data.index');
         })->name('index');
 
     });
 
-    Route::name('insight.erd.')->group(function () {
+    Route::name('insights.erd.')->group(function () {
 
-        Volt::route('/erd/manage/authorizations',   'insight.erd.manage.auths')     ->name('manage.auths');
-        Volt::route('/erd/manage/machines',         'insight.erd.manage.machines')  ->name('manage.machines');
-        Volt::route('/erd/manage/devices',          'insight.erd.manage.devices')   ->name('manage.devices');
-        Volt::route('/erd/manage',                  'insight.erd.manage.index')     ->name('manage.index');
-        Volt::route('/erd/summary',                 'insight.erd.summary.index')    ->name('summary.index');
-        Volt::route('/erd',                         'insight.erd.index')            ->name('index');
+        Volt::route('/erd/manage/authorizations',   'insights.erd.manage.auths')     ->name('manage.auths');
+        Volt::route('/erd/manage/machines',         'insights.erd.manage.machines')  ->name('manage.machines');
+        Volt::route('/erd/manage/devices',          'insights.erd.manage.devices')   ->name('manage.devices');
+        Volt::route('/erd/manage',                  'insights.erd.manage.index')     ->name('manage.index');
+        Volt::route('/erd/summary',                 'insights.erd.summary.index')    ->name('summary.index');
+        Volt::route('/erd',                         'insights.erd.index')            ->name('index');
 
     });
-    Volt::route('/', 'insight.index')->name('insight');
+    Volt::route('/', 'insights.index')->name('insights');
 });
 
 // Download route

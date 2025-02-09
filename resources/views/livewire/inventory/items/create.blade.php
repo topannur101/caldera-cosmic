@@ -26,13 +26,18 @@ class extends Component
 </x-slot>
 
 <div class="py-12 max-w-5xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
-    <div class="flex items-center gap-x-6 text-neutral-500 p-4 sm:rounded-lg overflow-hidden mb-8 border border-dashed border-neutral-300 dark:border-neutral-500">
-        <div class="grow">
-            <span class="uppercase font-bold mb-2"><i class="fa fa-fw fa-pen mr-2"></i>{{ __('Mode edit') . ': ' }}</span>
-            <span>{{ __('Klik bidang yang hendak di edit, bila sudah selesai klik tombol simpan.') }}</span>
-        </div>
-        <div>
-            <x-primary-button type="button" wire:click="save">{{ __('Simpan') }}</x-primary-button>
+    <div class="px-4 sm:px-0">
+        <div class="flex items-center justify-between gap-x-4 p-4 mb-8 text-sm text-neutral-800 border border-neutral-300 rounded-lg bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-600" role="alert">
+            <div class="flex items-center">
+                <i class="fa fa-pen me-3"></i>
+                <span class="sr-only">Info</span>
+                <div>
+                    <span class="font-medium">{{ __('Mode edit') . ': ' }}</span> {{ __('Klik bidang yang hendak di edit, bila sudah selesai klik tombol simpan.') }}
+                </div>
+            </div>
+            <div>
+                <x-primary-button type="button"><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
+            </div>
         </div>
     </div>
     <div class="block sm:flex gap-x-6">
@@ -49,7 +54,7 @@ class extends Component
             </div>
         </div>
         <div class="grow">
-            <div class="bg-white dark:bg-neutral-800 shadow rounded-lg px-6 divide-y divide-neutral-200 dark:divide-neutral-700">
+            <div class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg px-6 divide-y divide-neutral-200 dark:divide-neutral-700">
                 <div class="py-6">
                     <h1 class="text-2xl font-medium text-neutral-900 dark:text-neutral-100 mb-3">{{ __('Nama barang') }}</h1>
                     <p>{{ __('Deskripsi barang akan muncul disini') }}</p>
@@ -64,7 +69,7 @@ class extends Component
                     </div>
                 </div>
             </div>
-            <div class="mt-6 bg-white dark:bg-neutral-800 shadow rounded-lg px-6 divide-y divide-neutral-200 dark:divide-neutral-700">
+            <div class="mt-6 bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg px-6 divide-y divide-neutral-200 dark:divide-neutral-700">
                 <div class="py-6">
                     <div class="text-sm text-center text-neutral-500 border-b border-neutral-200 dark:border-neutral-700">
                         <ul class="flex flex-wrap gap-x-4 uppercase">
@@ -80,34 +85,76 @@ class extends Component
                         </ul>
                     </div> 
                     <div class="mt-6">
-                        <div class="flex flex-col md:flex-row gap-y-4 justify-between">
+                        <div class="flex flex-col md:flex-row gap-y-4 justify-between items-center">
                             <div class="flex gap-x-2 items-baseline">
                                 <div class="text-4xl">90</div>
                                 <div class="text-sm font-bold">PCK</div>
                             </div>
-                            <div class="spinner-group my-auto">
-                                <x-secondary-button type="button"><i class="fa fa-fw fa-minus"></i></x-secondary-button>
-                                <x-text-input-spinner id="inv-circ-qty" class="w-full md:w-24 p-2 text-center" name="qty"
-                                    type="number" value="" placeholder="Qty"></x-text-input-spinner>
-                                <x-secondary-button type="button"><i class="fa fa-fw fa-plus"></i></x-secondary-button>
-                            </div>
-                        </div>
-                        <div class="mt-6 grid grid-cols-1 gap-y-6">
-                            <div>
-                                <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keterangan') }}</label>
-                                <x-text-input placeholder="{{ __('Ketik disini...') }}"></x-text-input-t>
-                            </div>
-                            <div >
-                                <label for="omv-user"
-                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengguna') }}</label>
-                                <x-text-input-icon icon="fa fa-fw fa-user" id="omv-user" type="text" autocomplete="off"
-                                    placeholder="{{ __('Pengguna') }}" />
-                            </div>
-                            <div class="flex flex-col md:flex-row items-end md:items-center gap-y-4 justify-end">
-                                <div class="text-neutral-500 uppercase text-xs font-bold px-3">Amount: 1240 USD</div>
-                                <div>
-                                    <x-secondary-button type="button"><span class="text-red-500"><i class="fa fa-fw fa-minus mr-2"></i>{{ __('Ambil') . ' ' }}34 PCK</span></x-secondary-button>
-                                </div>
+                            <div class="flex gap-x-3">
+                                <!-- Tambah -->
+                                <x-popover icon="fa-plus text-green-500">
+                                    <div class="grid grid-cols-1 gap-y-6">
+                                        <div>
+                                            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-qty"><span>{{ __('Jumlah') . ': ' }}</span><span>123.24 USD</span></label>
+                                            <x-text-input id="circ-deposit-qty" class="text-center" name="circ-deposit-qty"
+                                            type="number" value="" placeholder="Qty"></x-text-input>
+                                        </div>
+                                        <div>
+                                            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-deposit-remarks">{{ __('Keterangan') }}</label>
+                                            <x-text-input id="circ-deposit-remarks" placeholder="{{ __('Ketik disini...') }}"></x-text-input-t>
+                                        </div>
+                                        <div >
+                                            <label for="circ-deposit-user"
+                                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengguna') }}</label>
+                                            <x-text-input-icon id="circ-deposit-user" icon="fa fa-fw fa-user" type="text" autocomplete="off"
+                                                placeholder="{{ __('Pengguna') }}" />
+                                        </div>
+                                        <div class="text-right">
+                                            <x-secondary-button type="button"><span class="text-green-500"><i class="fa fa-fw fa-plus mr-2"></i>{{ __('Tambah') . ' ' }}</span></x-secondary-button>
+                                        </div>
+                                    </div>
+                                </x-popover>     
+                                <!-- Catat -->                           
+                                <x-popover icon="fa-code-commit text-yellow-600">
+                                    <div class="grid grid-cols-1 gap-y-6">
+                                        <div>
+                                            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-capture-remarks">{{ __('Keterangan') }}</label>
+                                            <x-text-input id="circ-capture-remarks" placeholder="{{ __('Ketik disini...') }}"></x-text-input-t>
+                                        </div>
+                                        <div >
+                                            <label for="circ-capture-user"
+                                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengguna') }}</label>
+                                            <x-text-input-icon id="circ-capture-user" icon="fa fa-fw fa-user" type="text" autocomplete="off"
+                                                placeholder="{{ __('Pengguna') }}" />
+                                        </div>
+                                        <div class="text-right">
+                                            <x-secondary-button type="button"><span class="text-yellow-600"><i class="fa fa-fw fa-code-commit mr-2"></i>{{ __('Catat') . ' ' }}</span></x-secondary-button>
+                                        </div>
+                                    </div>
+                                </x-popover>
+                                <!-- Ambil -->
+                                <x-popover icon="fa-minus text-red-500">
+                                    <div class="grid grid-cols-1 gap-y-6">
+                                        <div>
+                                            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-qty"><span>{{ __('Jumlah') . ': ' }}</span><span>123.24 USD</span></label>
+                                            <x-text-input id="circ-withdrawal-qty" class="text-center" name="circ-withdrawal-qty"
+                                            type="number" value="" placeholder="Qty"></x-text-input>
+                                        </div>
+                                        <div>
+                                            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-remarks">{{ __('Keterangan') }}</label>
+                                            <x-text-input id="circ-withdrawal-remarks" placeholder="{{ __('Ketik disini...') }}"></x-text-input-t>
+                                        </div>
+                                        <div >
+                                            <label for="circ-withdrawal-user"
+                                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengguna') }}</label>
+                                            <x-text-input-icon id="circ-withdrawal-user" icon="fa fa-fw fa-user" type="text" autocomplete="off"
+                                                placeholder="{{ __('Pengguna') }}" />
+                                        </div>
+                                        <div class="text-right">
+                                            <x-secondary-button type="button"><span class="text-red-500"><i class="fa fa-fw fa-minus mr-2"></i>{{ __('Ambil') . ' ' }}</span></x-secondary-button>
+                                        </div>
+                                    </div>
+                                </x-popover>
                             </div>
                         </div>
                     </div>
@@ -165,6 +212,10 @@ class extends Component
                 </div>
             </div>
         </div>
+    </div>
+    <hr class="border-neutral-200 dark:border-neutral-700 my-8" />
+    <div class="max-w-xl mx-auto px-6 md:px-0">
+        <livewire:comments.index />
     </div>
     <div x-data x-init="document.addEventListener('keydown', function(event) {
             if (event.key === '#') {

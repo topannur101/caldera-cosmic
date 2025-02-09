@@ -43,7 +43,7 @@ new class extends Component {
                             {{ __('KPI') }}
                         </x-nav-link>
                     @endcan --}}
-                    <x-nav-link :href="route('insight')" :active="request()->is('insight*')" wire:navigate>
+                    <x-nav-link :href="route('insights')" :active="request()->is('insights*')" wire:navigate>
                         {{ __('Wawasan') }}
                     </x-nav-link>
                     <x-nav-link :href="route('inventory')" :active="request()->routeIs('inventory*')" wire:navigate>
@@ -158,7 +158,7 @@ new class extends Component {
                     {{ __('KPI') }}
                 </x-responsive-nav-link>
             @endcan --}}
-            <x-responsive-nav-link :href="route('insight')" :active="request()->routeIs('insight*')" wire:navigate>
+            <x-responsive-nav-link :href="route('insights')" :active="request()->routeIs('insights*')" wire:navigate>
                 {{ __('Wawasan') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('inventory')" :active="request()->routeIs('inventory*')" wire:navigate>
