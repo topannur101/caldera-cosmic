@@ -26,6 +26,7 @@ new class extends Component {
                         <x-application-logo
                             class="block h-6 w-auto fill-current text-neutral-800 dark:text-neutral-200" />
                     </a>
+                    <span class="inline ml-6 uppercase text-xs tracking-widest sm:hidden">Caldera</span>
                 </div>
 
                 <!-- Navigation Links -->

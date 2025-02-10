@@ -75,10 +75,15 @@ new class extends Component {
                 </div>
                 <div class="w-full">
                     <div class="flex text-xs text-neutral-400 dark:text-neutral-600 mb-1 justify-between">
-                        <div>{{ $comment->user->name . ' • ' . $comment->updated_at->diffForHumans() }}</div>
+                        <div>{{ $comment->user->name . ' • ' . $comment->created_at->diffForHumans() }}</div>
                         {{-- <div><i class="fa fa-ellipsis"></i></div> --}}
                     </div>
-                    <div>{!! nl2br($comment->parseContent()) !!}</div>
+                    @if($comment->content || $comment->files->count())
+                        <div>{!! nl2br($comment->parseContent()) !!}</div>
+
+                    @else
+                        <div class="text-neutral-500 italic">{{ __('Komentar dihapus') }}</div>
+                    @endif
                     <div wire:key="files-{{ $comment->id }}">
                         @if ($comment->files->count())
                             <div
@@ -105,7 +110,7 @@ new class extends Component {
                                 x-on:mouseup="setFocus()">{{ __('Balas') }}</x-text-button>
                         </div>
                         <div x-show="open" x-cloak>
-                            <livewire:com-item-write wire:key="write-first-{{ $comment->id }}" :$mod
+                            <livewire:comments.write wire:key="write-first-{{ $comment->id }}" :$mod
                                 :parent_id="$comment->id" />
                         </div>
                     </div>
@@ -146,7 +151,13 @@ new class extends Component {
                                         </div>
                                         {{-- <div><i class="fa fa-ellipsis"></i></div> --}}
                                     </div>
-                                    <div>{!! nl2br($child->parseContent()) !!}</div>
+                                    @if($child->content || $child->files->count())
+                                        <div>{!! nl2br($child->parseContent()) !!}</div>
+
+                                    @else
+                                        <div class="text-neutral-500 italic">{{ __('Komentar dihapus') }}</div>
+                                    @endif
+                                    
                                     @if ($child->files->count())
                                         <div
                                             class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-sm text-neutral-600 dark:text-neutral-400">
@@ -175,7 +186,7 @@ new class extends Component {
                             </div>
                         @endforeach
                         <div x-show="open" wire:key="wrap-second-{{ $comment->id }}" x-cloak>
-                            <livewire:com-item-write wire:key="write-second-{{ $comment->id }}" :$mod
+                            <livewire:comments.write wire:key="write-second-{{ $comment->id }}" :$mod
                                 :parent_id="$comment->id" />
                         </div>
                     </div>

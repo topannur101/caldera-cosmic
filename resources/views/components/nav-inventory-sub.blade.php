@@ -3,7 +3,7 @@
        <div>
            <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
                <x-link href="{{ route('inventory.items.index') }}" class="inline-block py-6"
-                   wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span>{{ $slot }}</span></span>
+                   wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="hidden sm:inline ml-4"><span>{{ $slot }}</span></span>
            </h2>
        </div>
        <div class="space-x-6 -my-px ml-10 flex">

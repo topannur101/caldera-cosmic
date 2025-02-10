@@ -54,7 +54,7 @@ new class extends Component {
             'content.required_without' => __('Isi komentar atau unggah lampiran')
         ]);
         
-        $name = class_basename($this->mod);
+        $name = $this->mod ? class_basename($this->mod) : 'test';
         $com_item = ComItem::create([
             'user_id' => $this->user_id,
             'content'   => $this->content,
