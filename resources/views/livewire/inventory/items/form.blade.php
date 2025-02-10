@@ -39,6 +39,7 @@ new class extends Component
          
       } else {
          $this->areas = InvArea::all()->toArray();
+         $this->is_edit = false;
 
       }
    }
@@ -67,7 +68,7 @@ new class extends Component
     <div class="block sm:flex gap-x-6">
         <div wire:key="photo">
             <div class="sticky top-5 left-0">
-                <livewire:inventory.items.photo />
+                <livewire:inventory.items.photo :$is_edit />
                 <div class="grid grid-cols-1 divide-y divide-neutral-200 dark:divide-neutral-800 px-4 my-6 text-sm">
                   @if($is_edit)
                      <div class="flex items-center gap-x-3 py-3">
@@ -96,18 +97,28 @@ new class extends Component
         </div>
         <div class="grow">
             <div class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg px-6 divide-y divide-neutral-200 dark:divide-neutral-700">
-                <div class="py-6">
+                <div class="grid gap-y-3 py-6">
                   @if($is_edit)
-                     <x-text-input type="text" class="text-2xl mb-3" wire:model="item.name" placeholder="{{ __('Nama barang') }}" />
-                     <x-text-input type="text" wire:model="item.desc" placeholder="{{ __('Deskripsi barang') }}" />
+                     <div>
+                        <label for="item-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+                        <x-text-input id="item-name" wire:model="item.desc" type="text" />
+                     </div>
+                     <div>
+                        <label for="item-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
+                        <x-text-input id="item-desc" wire:model="item.desc" type="text" />
+                     </div>
                   @else
-                     <h1 class="text-2xl font-medium text-neutral-900 dark:text-neutral-100 mb-3">{{ $item['name'] }}</h1>
+                     <h1 class="text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $item['name'] }}</h1>
                      <p>{{ $item['desc'] }}</p>
                   @endif
                 </div>
                 @if($is_edit)
                   <div class="py-6 grid grid-cols-1 gap-y-3">
-                     <x-text-input type="text" wire:model="item.code" placeholder="{{ __('Kode barang') }}" />
+                     <div>
+                        <label for="item-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
+                        <x-text-input id="item-code" wire:model="item.code" type="text" />
+                     </div>
+                     <x-popover-loc></x-popover-loc>
                      <x-text-input-icon  icon="fa fa-fw fa-map-marker-alt" id="item_loc" type="text" placeholder="{{ __('Lokasi') }}" />     
                      <x-text-input-icon  icon="fa fa-fw fa-tag" id="item_loc" type="text" placeholder="{{ __('Tag') }}" />              
                   </div>

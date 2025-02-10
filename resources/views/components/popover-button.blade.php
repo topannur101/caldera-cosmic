@@ -1,4 +1,4 @@
-@props(['icon'])
+@props(['focus', 'icon'])
 
 <div x-data="{
          popoverOpen: false,
@@ -32,7 +32,7 @@
             popoverPositionCalculate();
          });
          $watch('popoverOpen', function(value){
-            if(value){ popoverPositionCalculate(); document.getElementById('width').focus();  }
+            if(value){ popoverPositionCalculate(); setTimeout(() => document.getElementById('{{ $focus }}').focus(), 100);  }
          });
       "
       class="static sm:relative z-10">

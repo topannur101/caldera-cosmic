@@ -33,7 +33,7 @@ new class extends Component
                </div>
                <div class="relative sm:static flex gap-x-3">
                   <!-- Tambah -->
-                  <x-popover icon="fa-plus text-green-500">
+                  <x-popover-button focus="circ-deposit-qty" icon="fa-plus text-green-500">
                      <div class="grid grid-cols-1 gap-y-4">
                            <div>
                               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-qty"><span>{{ __('Jumlah') . ': ' }}</span><span>123.24 USD</span></label>
@@ -54,9 +54,9 @@ new class extends Component
                               <x-secondary-button type="button"><span class="text-green-500"><i class="fa fa-fw fa-plus mr-2"></i>{{ __('Tambah') . ' ' }}</span></x-secondary-button>
                            </div>
                      </div>
-                  </x-popover>     
+                  </x-popover-button>     
                   <!-- Catat -->                           
-                  <x-popover icon="fa-code-commit text-yellow-600">
+                  <x-popover-button focus="circ-capture-remarks" icon="fa-code-commit text-yellow-600">
                      <div class="grid grid-cols-1 gap-y-4">
                            <div>
                               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-capture-remarks">{{ __('Keterangan') }}</label>
@@ -72,9 +72,9 @@ new class extends Component
                               <x-secondary-button type="button"><span class="text-yellow-600"><i class="fa fa-fw fa-code-commit mr-2"></i>{{ __('Catat') . ' ' }}</span></x-secondary-button>
                            </div>
                      </div>
-                  </x-popover>
+                  </x-popover-button>
                   <!-- Ambil -->
-                  <x-popover icon="fa-minus text-red-500">
+                  <x-popover-button focus="circ-withdrawal-qty" icon="fa-minus text-red-500">
                      <div class="grid grid-cols-1 gap-y-4">
                            <div>
                               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-qty"><span>{{ __('Jumlah') . ': ' }}</span><span>123.24 USD</span></label>
@@ -95,7 +95,7 @@ new class extends Component
                               <x-secondary-button type="button"><span class="text-red-500"><i class="fa fa-fw fa-minus mr-2"></i>{{ __('Ambil') . ' ' }}</span></x-secondary-button>
                            </div>
                      </div>
-                  </x-popover>
+                  </x-popover-button>
                </div>
          </div>
       </div>
