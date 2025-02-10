@@ -19,22 +19,6 @@ new class extends Component {
     public $user_id;
     public $content;
     public $files = [];
-    
-    public function rules()
-    {
-        return [
-            'user_id'   => ['required', 'integer', 'exists:App\Models\User,id'],
-            'content'   => ['required_without:files', 'max:999'],
-            'files.*'   => ['max:51200'],
-        ];
-    }
-
-    public function messages()
-    {
-        return [
-            'content.required_without' => __('Isi komentar atau unggah lampiran')
-        ];
-    }
 
     public function placeholder()
     {
@@ -62,8 +46,13 @@ new class extends Component {
 
     public function save()
     {
-        $this->validate();
-        // dd($this);
+        $this->validate([
+            'user_id'   => ['required', 'integer', 'exists:App\Models\User,id'],
+            'content'   => ['required_without:files', 'max:999'],
+            'files.*'   => ['max:51200'],
+        ], [
+            'content.required_without' => __('Isi komentar atau unggah lampiran')
+        ]);
         
         $name = class_basename($this->mod);
         $com_item = ComItem::create([
@@ -85,7 +74,7 @@ new class extends Component {
         }
 
         $this->reset(['content', 'files']);
-        $this->js('notyf.success("'.__('Komentar ditambahkan').'")'); 
+        $this->js('toast("'.__('Komentar ditambahkan').'", { type: "success" })'); 
         $this->dispatch('comment-added');
     }
 

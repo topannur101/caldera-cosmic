@@ -90,18 +90,18 @@ class extends Component
                                 <div class="text-4xl">90</div>
                                 <div class="text-sm font-bold">PCK</div>
                             </div>
-                            <div class="flex gap-x-3">
+                            <div class="relative sm:static flex gap-x-3">
                                 <!-- Tambah -->
                                 <x-popover icon="fa-plus text-green-500">
-                                    <div class="grid grid-cols-1 gap-y-6">
+                                    <div class="grid grid-cols-1 gap-y-4">
                                         <div>
                                             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-qty"><span>{{ __('Jumlah') . ': ' }}</span><span>123.24 USD</span></label>
-                                            <x-text-input id="circ-deposit-qty" class="text-center" name="circ-deposit-qty"
+                                            <x-text-input-suffix suffix="PCK" id="circ-deposit-qty" class="text-center" name="circ-deposit-qty"
                                             type="number" value="" placeholder="Qty"></x-text-input>
                                         </div>
                                         <div>
                                             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-deposit-remarks">{{ __('Keterangan') }}</label>
-                                            <x-text-input id="circ-deposit-remarks" placeholder="{{ __('Ketik disini...') }}"></x-text-input-t>
+                                            <x-text-input id="circ-deposit-remarks"></x-text-input-t>
                                         </div>
                                         <div >
                                             <label for="circ-deposit-user"
@@ -116,10 +116,10 @@ class extends Component
                                 </x-popover>     
                                 <!-- Catat -->                           
                                 <x-popover icon="fa-code-commit text-yellow-600">
-                                    <div class="grid grid-cols-1 gap-y-6">
+                                    <div class="grid grid-cols-1 gap-y-4">
                                         <div>
                                             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-capture-remarks">{{ __('Keterangan') }}</label>
-                                            <x-text-input id="circ-capture-remarks" placeholder="{{ __('Ketik disini...') }}"></x-text-input-t>
+                                            <x-text-input id="circ-capture-remarks"></x-text-input-t>
                                         </div>
                                         <div >
                                             <label for="circ-capture-user"
@@ -134,15 +134,15 @@ class extends Component
                                 </x-popover>
                                 <!-- Ambil -->
                                 <x-popover icon="fa-minus text-red-500">
-                                    <div class="grid grid-cols-1 gap-y-6">
+                                    <div class="grid grid-cols-1 gap-y-4">
                                         <div>
                                             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-qty"><span>{{ __('Jumlah') . ': ' }}</span><span>123.24 USD</span></label>
-                                            <x-text-input id="circ-withdrawal-qty" class="text-center" name="circ-withdrawal-qty"
+                                            <x-text-input-suffix suffix="PCK" id="circ-withdrawal-qty" class="text-center" name="circ-withdrawal-qty"
                                             type="number" value="" placeholder="Qty"></x-text-input>
                                         </div>
                                         <div>
                                             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-remarks">{{ __('Keterangan') }}</label>
-                                            <x-text-input id="circ-withdrawal-remarks" placeholder="{{ __('Ketik disini...') }}"></x-text-input-t>
+                                            <x-text-input id="circ-withdrawal-remarks"></x-text-input-t>
                                         </div>
                                         <div >
                                             <label for="circ-withdrawal-user"
@@ -172,7 +172,7 @@ class extends Component
                         </div>
                     </div>
                     <div class="truncate">
-                        <div wire:key="circ-button-xx" class="py-3 text-sm truncate rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        <div wire:key="circ-button-xx" class="py-3 text-sm truncate hover:bg-caldy-500 hover:bg-opacity-10"
                             x-on:click.prevent="$dispatch('open-modal', 'circ-edit-xx')">
                             <div class="flex items-center">
                                 <div>
@@ -213,7 +213,7 @@ class extends Component
             </div>
         </div>
     </div>
-    <hr class="border-neutral-200 dark:border-neutral-700 my-8" />
+    <hr class="border-neutral-200 dark:border-neutral-800 my-8" />
     <div class="max-w-xl mx-auto px-6 md:px-0">
         <livewire:comments.index />
     </div>
