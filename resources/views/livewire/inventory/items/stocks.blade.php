@@ -20,9 +20,6 @@ new class extends Component
                <li class="me-2">
                   <a href="#" class="inline-block pb-3 border-b-2 border-transparent hover:text-neutral-600 hover:border-neutral-300 dark:hover:text-neutral-300">0.5 USD / EA</a>
                </li>
-               <li class="me-2">
-                  <a href="#" class="inline-block pb-3 border-b-2 border-transparent hover:text-neutral-600 hover:border-neutral-300 dark:hover:text-neutral-300"><i class="fa fa-plus"></i></a>
-               </li>
          </ul>
       </div> 
       <div class="mt-6">
@@ -38,7 +35,7 @@ new class extends Component
                            <div>
                               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-qty"><span>{{ __('Jumlah') . ': ' }}</span><span>123.24 USD</span></label>
                               <x-text-input-suffix suffix="PCK" id="circ-deposit-qty" class="text-center" name="circ-deposit-qty"
-                              type="number" value="" placeholder="Qty"></x-text-input>
+                              type="number" value="" min="1" placeholder="Qty"></x-text-input>
                            </div>
                            <div>
                               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-deposit-remarks">{{ __('Keterangan') }}</label>
@@ -79,7 +76,7 @@ new class extends Component
                            <div>
                               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-qty"><span>{{ __('Jumlah') . ': ' }}</span><span>123.24 USD</span></label>
                               <x-text-input-suffix suffix="PCK" id="circ-withdrawal-qty" class="text-center" name="circ-withdrawal-qty"
-                              type="number" value="" placeholder="Qty"></x-text-input>
+                              type="number" value="" min="1" placeholder="Qty"></x-text-input>
                            </div>
                            <div>
                               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-withdrawal-remarks">{{ __('Keterangan') }}</label>

@@ -49,8 +49,8 @@ return new class extends Migration
         Schema::create('inv_locs', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('group');
-            $table->string('name');
+            $table->string('parent');
+            $table->string('bin');
             $table->foreignId('inv_area_id')->constrained();
             $table->index('inv_area_id');
         });

@@ -7,7 +7,7 @@ class extends Component {
 
     public $photo;
     public $url;
-    public $isForm;
+    public bool $is_editing = false;
   
 };
 
@@ -50,7 +50,7 @@ class extends Component {
         </div>
     </div>
     <div wire:key="tools">
-        @if($isForm)
+        @if($is_editing)
         <div class="p-4 text-sm text-neutral-600 dark:text-neutral-400">
             <div wire:key="discard">
                 @if($url)
@@ -59,12 +59,12 @@ class extends Component {
                 </div>
                 @endif
             </div>
-            <div class="mb-4">
+            <div>
                 <x-text-button type="button" x-on:click="$refs.invItemPhoto.click()"><i class="fa fa-fw fa-upload mr-3"></i>{{ __('Unggah foto') }}</x-text-button>
             </div>
-            <div>
+            <!-- <div>
                 <x-text-button type="button"><i class="fa fa-fw fa-file-import mr-3"></i>{{ __('Tarik dari ttconsumable') }}</x-text-button>
-            </div>
+            </div> -->
         </div>
         @endif
     </div>
