@@ -63,6 +63,7 @@ return new class extends Migration
             $table->string('code')->nullable();
             $table->foreignId('inv_loc_id')->nullable()->constrained();
             $table->foreignId('inv_area_id')->constrained();
+            $table->foreignId('inv_stock_id')->constrained();
             $table->string('photo');
             $table->boolean('is_active');
             $table->index('code');
@@ -78,6 +79,7 @@ return new class extends Migration
             $table->string('uom'); // ea, pcs
             $table->enum('currency', ['USD', 'IDR', 'KRW'])->default('USD');
             $table->decimal('unit_price', 15, 2)->default(0);
+            $table->boolean('is_active')->default(true);
             $table->index('inv_item_id');
             $table->index('currency');
         });

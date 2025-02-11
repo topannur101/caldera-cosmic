@@ -31,6 +31,7 @@ new class extends Component
    public array $tags         = [];
    public array $loc_parents  = [];
    public array $loc_bins     = [];
+   public array $stocks       = [];
 
    public function mount()
    {
@@ -121,117 +122,8 @@ new class extends Component
                         <label for="item-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
                         <x-text-input id="item-code" wire:model="item.code" type="text" />
                      </div>
-                     <div x-data="{ 
-                           loc_parent: @entangle('item.loc_parent'), 
-                           loc_bin: @entangle('item.loc_name'),
-                           get loc_name() {
-                              if (!this.loc_parent.trim() && !this.loc_bin.trim()) {
-                                    return '';
-                              }
-                              return `${this.loc_parent} ${this.loc_bin}`.trim();
-                           } 
-                        }" class="px-3 mt-3">
-                        <x-text-button type="button" x-on:click.prevent="$dispatch('open-modal', 'loc-selector')"><i class="fa fa-fw fa-map-marker-alt me-2"></i><span x-text="loc_name ? loc_name : '{{ __('Tak ada lokasi') }}'"></span></x-text-button>
-                        <x-modal name="loc-selector" maxWidth="sm" focusable>
-                           <div>
-                              <form wire:submit.prevent="save" class="p-6">
-                                 <div class="flex justify-between items-start">
-                                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                                       <i class="fa fa-fw fa-map-marker-alt me-3"></i>{{ __('Pilih lokasi') }}
-                                    </h2>
-                                    <x-text-button type="button" x-on:click="$dispatch('close')">
-                                       <i class="fa fa-times"></i>
-                                    </x-text-button>
-                                 </div>
-                                 <div class="grid grid-cols-1 gap-y-6 mt-6">        
-                                    <div>
-                                       <label for="loc-parent" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Induk') }}</label>
-                                       <x-text-input id="loc-parent" type="text" x-model="loc_parent" />
-                                       <datalist id="loc_parents">
-                                          @foreach($loc_parents as $loc_parent)
-                                             <option value="{{ $loc_parent }}"></option>
-                                          @endforeach
-                                       </datalist>
-                                    </div>                           
-                                    <div>
-                                       <label for="loc-bin" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Bin') }}</label>
-                                       <x-text-input id="loc-bin" type="text" x-model="loc_bin" />
-                                       <datalist id="loc_bins">
-                                          @foreach($loc_bins as $loc_bin)
-                                             <option value="{{ $loc_bin }}"></option>
-                                          @endforeach
-                                       </datalist>
-                                    </div>
-                                 </div>  
-                              </form>
-                           </div>
-                        </x-modal>   
-                     </div>
-                     <div x-data="{
-                           tags: @entangle('item.tags'),
-                           tag_input: '',
-                           get tag_list() {
-                              return this.tags.join(', ');
-                           },
-                           addTag() {
-                              let tag = this.tag_input.trim().toLowerCase();
-                              if (!tag) return;
-                              
-                              if (this.tags.length >= 5) {
-                                    toast('{{ __('Hanya maksimal 5 tag diperbolehkan') }}', { type: 'danger' });
-                                    return;
-                              }
-                              
-                              if (this.tags.includes(tag)) {
-                                    toast('{{ __('Tag sudah ada') }}', { type: 'danger' });
-                              } else {
-                                    this.tags.push(tag);
-                              }
-                              
-                              this.tag_input = '';
-                           },
-                           removeTag(tag) {
-                              this.tags = this.tags.filter(t => t !== tag);
-                           }
-                        }" class="px-3 mt-3">
-                        <x-text-button type="button" x-on:click.prevent="$dispatch('open-modal', 'tag-selector')">
-                           <i class="fa fa-fw fa-tag me-2"></i><span x-text="tag_list ? tag_list : '{{ __('Tak ada tag') }}'"></span>
-                        </x-text-button>
-                        
-                        <x-modal name="tag-selector" maxWidth="sm" focusable>
-                           <div>
-                              <form wire:submit.prevent="save" class="p-6">
-                                 <div class="flex justify-between items-start">
-                                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                                       <i class="fa fa-fw fa-tag me-3"></i>{{ __('Pilih tag') }}
-                                    </h2>
-                                    <x-text-button type="button" x-on:click="$dispatch('close')">
-                                       <i class="fa fa-times"></i>
-                                    </x-text-button>
-                                 </div>
-                                 <div class="grid grid-cols-1 gap-y-6 mt-6">
-                                    <div class="flex flex-wrap gap-2 text-sm">
-                                       <div x-show="tags.length === 0" class="text-neutral-500 italic">{{ __('Tak ada tag') }}</div>
-                                       <template x-for="tag in tags" :key="tag">
-                                          <div class="bg-neutral-200 dark:bg-neutral-900 rounded-full px-3 py-1">
-                                             <span x-text="tag"></span>
-                                             <x-text-button type="button" x-on:click="removeTag(tag)" class="ml-2">
-                                                <i class="fa fa-times"></i>
-                                             </x-text-button>
-                                          </div>
-                                       </template>
-                                    </div>
-                                    <x-text-input-icon id="tag-search" icon="fa fa-fw fa-search" type="text" x-model="tag_input" maxlength="20" placeholder="{{ __('Cari tag') }}" x-on:keydown.enter.prevent="addTag" />
-                                    <datalist id="tags">
-                                       @foreach($tags as $tag)
-                                          <option value="{{ $tag }}"></option>
-                                       @endforeach
-                                    </datalist>
-                                 </div>  
-                              </form>
-                           </div>
-                        </x-modal>                           
-                     </div>
+                     <x-inv-loc-selector :$loc_parents :$loc_bins />
+                     <x-inv-tag-selector :$tags />
                   </div>
                 @else
                   <div class="py-6 flex flex-col lg:flex-row gap-x-6 gap-y-3 text-neutral-500 text-sm">                    
@@ -243,9 +135,124 @@ new class extends Component
 
             </div>
             @if($is_editing)
-            <div class="mt-6 p-4 mb-8 italic tracking-wider text-sm text-center text-neutral-500 border border-dashed rounded-lg border-neutral-300 dark:border-neutral-600" role="alert">
-               {{ __('Stok dan Sirkulasi') }}
-            </div>
+            <div x-data="{
+               stocks: @entangle('stocks'),
+               currency_input: '',
+               unit_price_input: 0,
+               uom_input: '',
+               editingIndex: null, // Track which stock is being edited
+               addStock() {
+                  // Trim inputs
+                  const currency = this.currency_input.trim();
+                  const uom = this.uom_input.trim().toUpperCase().substring(0, 5); // Uppercase and limit to 5 chars
+
+                  // Validation
+                  if (!currency || !['USD', 'IDR', 'KRW'].includes(currency)) {
+                     toast('{{ __('Mata uang harus USD, IDR, atau KRW') }}', { type: 'danger' });
+                     return;
+                  }
+                  if (this.unit_price_input < 0) {
+                     toast('{{ __('Harga satuan harus angka positif') }}', { type: 'danger' });
+                     return;
+                  }
+                  if (!uom) {
+                     toast('{{ __('UoM wajib diisi') }}', { type: 'danger' });
+                     return;
+                  }
+                  if (this.stocks.some((stock, index) => stock.currency === currency && stock.uom === uom && index !== this.editingIndex)) {
+                     toast('{{ __('Kombinasi mata uang dan UoM tersebut sudah ada') }}', { type: 'danger' });
+                     return;
+                  }
+
+                  // Add or update stock
+                  if (this.editingIndex !== null) {
+                     // Update existing stock
+                     this.stocks[this.editingIndex] = {
+                     currency: currency,
+                     unit_price: this.unit_price_input,
+                     uom: uom
+                     };
+                  } else {
+                     // Add new stock
+                     this.stocks.push({
+                     currency: currency,
+                     unit_price: this.unit_price_input,
+                     uom: uom
+                     });
+                  }
+
+                  // Reset form and close modal
+                  this.resetForm();
+                  this.$dispatch('close');
+               },
+               editStock(index) {
+                  // Load stock data into the form
+                  this.currency_input = this.stocks[index].currency;
+                  this.unit_price_input = this.stocks[index].unit_price;
+                  this.uom_input = this.stocks[index].uom;
+                  this.editingIndex = index;
+                  // Open the modal
+                  this.$dispatch('open-modal', 'stock-creator');
+               },
+               resetForm() {
+                  // Clear form and reset editing state
+                  this.currency_input = '';
+                  this.unit_price_input = 0;
+                  this.uom_input = '';
+                  this.editingIndex = null;
+               },
+               removeStock(index) {
+                  this.stocks.splice(index, 1);
+               },
+               formatPrice(price) {
+                  return price.toLocaleString(); // Add thousands separators
+               }
+               }" class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg p-6 mt-6">
+               <!-- Modal Form -->
+               <x-modal name="stock-creator">
+                  <div class="p-6">
+                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100" x-text="editingIndex !== null ? '{{ __('Edit unit') }}' : '{{ __('Unit baru') }}'"></h2>
+                     <div class="grid gap-y-6 mt-6">
+                        <div>
+                           <label for="stock-currency" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Currency') }}</label>
+                           <x-select id="stock-currency" x-model="currency_input">
+                              <option value=""></option>
+                              <option value="USD">USD</option>
+                              <option value="IDR">IDR</option>
+                              <option value="KRW">KRW</option>
+                           </x-select>
+                        </div>
+                        <div>
+                           <label for="stock-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Unit Price') }}</label>
+                           <x-text-input id="stock-unit-price" type="number" x-model="unit_price_input" placeholder="Unit Price" min="0"></x-text-input>
+                        </div>
+                        <div>
+                           <label for="stock-uom" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('UOM') }}</label>
+                           <x-text-input id="stock-uom" type="text" x-model="uom_input" maxlength="5"></x-text-input>
+                        </div>
+                        <div class="flex justify-end">
+                           <x-primary-button type="button" x-on:click="addStock">
+                              <span x-text="editingIndex !== null ? '{{ __('Terapkan') }}' : '{{ __('Buat') }}'"></span>
+                           </x-primary-button>
+                        </div>
+                     </div>
+                  </div>
+               </x-modal>
+
+               <!-- Stock List -->
+               <div class="flex flex-wrap gap-2 text-sm">
+                  <template x-for="(stock, index) in stocks" :key="index">
+                     <div class="hover:opacity-80 bg-neutral-200 dark:bg-neutral-900 rounded-full border border-neutral-300 dark:border-neutral-700 px-3 py-1 cursor-pointer" x-on:click="editStock(index)">
+                        <span x-text="`${stock.currency} ${formatPrice(stock.unit_price)} / ${stock.uom}`"></span>
+                        <x-text-button type="button" x-on:click.stop="removeStock(index)" class="ml-2">
+                           <i class="fa fa-times"></i>
+                        </x-text-button>
+                     </div>
+                  </template>
+                  <x-text-button type="button" x-on:click="$dispatch('open-modal', 'stock-creator')" class="rounded-full border border-neutral-300 dark:border-neutral-700 px-3 py-1"><i class="fa fa-plus me-2"></i>{{ __('Tambah unit') }}</x-text-button>
+
+               </div>
+               </div>
 
             @else
                <livewire:inventory.items.stocks />
