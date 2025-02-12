@@ -38,7 +38,7 @@
                             <div class="grow">
                                 <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola area') }}</div>
                                 <div class="text-sm text-neutral-500">
-                                    {{ __('Edit, nonaktifkan, atur ulang kata sandi') }}
+                                    {{ __('Tambah atau edit area inventaris') }}
                                 </div>
                             </div>
                             <div class="text-lg">
@@ -51,7 +51,20 @@
                             <div class="grow">
                                 <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola wewenang') }}</div>
                                 <div class="text-sm text-neutral-500">
-                                    {{ __('Edit, nonaktifkan, atur ulang kata sandi') }}
+                                    {{ __('Tambah, edit, atau hapus wewenang inventaris') }}
+                                </div>
+                            </div>
+                            <div class="text-lg">
+                                <i class="fa fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="{{ route('admin.inventory-currs') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                        <div class="flex items-center px-6 py-5">
+                            <div class="grow">
+                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola mata uang') }}</div>
+                                <div class="text-sm text-neutral-500">
+                                    {{ __('Tambah atau edit mata uang inventaris') }}
                                 </div>
                             </div>
                             <div class="text-lg">

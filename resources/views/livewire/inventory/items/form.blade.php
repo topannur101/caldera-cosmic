@@ -21,8 +21,10 @@ new class extends Component
       'code'            => '',
       'loc_id'          => 0,
       'loc_parent'      => '',
-      'loc_bin'        => '',
-      'tags'            => [],  
+      'loc_bin'         => '',
+      'loc_name'        => '',
+      'tags'            => [],
+      'tags_list'       => '',
       'updated_at'      => '',
       'last_withdrawal' => '',
    ];
@@ -32,6 +34,16 @@ new class extends Component
    public array $loc_parents  = [];
    public array $loc_bins     = [];
    public array $stocks       = [];
+   public array $currencies   = [
+      [
+         'name' => 'USD',
+         'rate' => 1
+      ],[
+         'name' => 'IDR',
+         'rate' => 16300
+      ],
+
+   ];
 
    public function mount()
    {
@@ -101,7 +113,7 @@ new class extends Component
         </div>
         <div class="grow">
             <div class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg px-6 divide-y divide-neutral-200 dark:divide-neutral-700">
-                <div class="grid gap-y-3 py-6">
+                <div class="grid gap-y-6 py-6">
                   @if($is_editing)
                      <div>
                         <label for="item-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
@@ -109,14 +121,14 @@ new class extends Component
                      </div>
                      <div>
                         <label for="item-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
-                        <x-text-input id="item-desc" wire:model="item.desc" type="text" />
+                        <x-text-input id="item-desc" wire:model="item.desc" type="text" />                        
                      </div>
                   @else
                      <h1 class="text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $item['name'] }}</h1>
                      <p>{{ $item['desc'] }}</p>
                   @endif
                 </div>
-                @if($is_editing)
+                @if($is_editing)                
                   <div class="py-6 grid grid-cols-1 gap-y-3">
                      <div>
                         <label for="item-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
@@ -137,104 +149,155 @@ new class extends Component
             @if($is_editing)
             <div x-data="{
                stocks: @entangle('stocks'),
-               currency_input: '',
-               unit_price_input: 0,
+               currencies: @entangle('currencies'),
+               
+               // Currency-related state
+               main_currency: '',
+               main_unit_price: 0,
+               secondary_currency: '',
+               secondary_unit_price: 0,
+               is_secondary_currency: false,
+               
+               // Other state
                uom_input: '',
-               editingIndex: null, // Track which stock is being edited
+               editingIndex: null,
+
+               // Initialize the component
+               init() {
+                  // Set main currency from first element
+                  if (this.currencies.length > 0) {
+                     this.main_currency = this.currencies[0].name;
+                  }
+
+                  // Watch for changes in secondary_unit_price
+                  this.$watch('secondary_unit_price', (value) => {
+                     if (value && this.is_secondary_currency) {
+                        this.calculateMainPrice();
+                     }
+                  });
+               },
+
+               // Calculate main price based on secondary price and exchange rates
+               calculateMainPrice() {
+                  const mainRate = this.currencies.find(c => c.name === this.main_currency)?.rate || 1;
+                  const secondaryRate = this.currencies.find(c => c.name === this.secondary_currency)?.rate || 1;
+                  this.main_unit_price = ((this.secondary_unit_price * mainRate) / secondaryRate).toFixed(2);
+               },
+
+               // Get available secondary currencies (excluding main currency)
+               getSecondaryCurrencies() {
+                  return this.currencies.filter(c => c.name !== this.main_currency);
+               },
+               
                addStock() {
                   // Trim inputs
-                  const currency = this.currency_input.trim();
-                  const uom = this.uom_input.trim().toUpperCase().substring(0, 5); // Uppercase and limit to 5 chars
+                  const uom = this.uom_input.trim().toUpperCase().substring(0, 5);
+                  const currency = this.is_secondary_currency ? this.secondary_currency : this.main_currency;
+                  const unit_price = this.is_secondary_currency ? this.secondary_unit_price : this.main_unit_price;
 
-                  // Validation
-                  if (!currency || !['USD', 'IDR', 'KRW'].includes(currency)) {
-                     toast('{{ __('Mata uang harus USD, IDR, atau KRW') }}', { type: 'danger' });
-                     return;
-                  }
-                  if (this.unit_price_input < 0) {
-                     toast('{{ __('Harga satuan harus angka positif') }}', { type: 'danger' });
-                     return;
-                  }
                   if (!uom) {
-                     toast('{{ __('UoM wajib diisi') }}', { type: 'danger' });
+                     toast('{{ __('Uom wajib diisi') }}', { type: 'danger' });
                      return;
                   }
                   if (this.stocks.some((stock, index) => stock.currency === currency && stock.uom === uom && index !== this.editingIndex)) {
-                     toast('{{ __('Kombinasi mata uang dan UoM tersebut sudah ada') }}', { type: 'danger' });
+                     toast('{{ __('Mata uang dan uom tersebut sudah ada') }}', { type: 'danger' });
                      return;
                   }
 
-                  // Add or update stock
+                  const stockData = {
+                     currency: currency,
+                     unit_price: unit_price,
+                     uom: uom
+                  };
+
                   if (this.editingIndex !== null) {
-                     // Update existing stock
-                     this.stocks[this.editingIndex] = {
-                     currency: currency,
-                     unit_price: this.unit_price_input,
-                     uom: uom
-                     };
+                     this.stocks[this.editingIndex] = stockData;
                   } else {
-                     // Add new stock
-                     this.stocks.push({
-                     currency: currency,
-                     unit_price: this.unit_price_input,
-                     uom: uom
-                     });
+                     this.stocks.push(stockData);
                   }
 
-                  // Reset form and close modal
                   this.resetForm();
                   this.$dispatch('close');
                },
+
                editStock(index) {
-                  // Load stock data into the form
-                  this.currency_input = this.stocks[index].currency;
-                  this.unit_price_input = this.stocks[index].unit_price;
-                  this.uom_input = this.stocks[index].uom;
+                  const stock = this.stocks[index];
+                  this.uom_input = stock.uom;
+                  
+                  if (stock.currency === this.main_currency) {
+                     this.main_unit_price = stock.unit_price;
+                     this.is_secondary_currency = false;
+                  } else {
+                     this.secondary_currency = stock.currency;
+                     this.secondary_unit_price = stock.unit_price;
+                     this.is_secondary_currency = true;
+                     this.calculateMainPrice();
+                  }
+                  
                   this.editingIndex = index;
-                  // Open the modal
                   this.$dispatch('open-modal', 'stock-creator');
                },
+
                resetForm() {
-                  // Clear form and reset editing state
-                  this.currency_input = '';
-                  this.unit_price_input = 0;
+                  this.main_unit_price = 0;
+                  this.secondary_unit_price = 0;
                   this.uom_input = '';
+                  this.is_secondary_currency = false;
                   this.editingIndex = null;
                },
+
                removeStock(index) {
                   this.stocks.splice(index, 1);
                },
+
                formatPrice(price) {
-                  return price.toLocaleString(); // Add thousands separators
+                  return price.toLocaleString();
                }
-               }" class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg p-6 mt-6">
+            }" class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg p-6 mt-6">
                <!-- Modal Form -->
                <x-modal name="stock-creator">
                   <div class="p-6">
-                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100" x-text="editingIndex !== null ? '{{ __('Edit unit') }}' : '{{ __('Unit baru') }}'"></h2>
-                     <div class="grid gap-y-6 mt-6">
-                        <div>
-                           <label for="stock-currency" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Currency') }}</label>
-                           <x-select id="stock-currency" x-model="currency_input">
-                              <option value=""></option>
-                              <option value="USD">USD</option>
-                              <option value="IDR">IDR</option>
-                              <option value="KRW">KRW</option>
-                           </x-select>
-                        </div>
-                        <div>
-                           <label for="stock-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Unit Price') }}</label>
-                           <x-text-input id="stock-unit-price" type="number" x-model="unit_price_input" placeholder="Unit Price" min="0"></x-text-input>
-                        </div>
+                     <div class="flex justify-between items-start">
+                        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100" 
+                           x-text="editingIndex !== null ? '{{ __('Edit unit') }}' : '{{ __('Unit baru') }}'"></h2>
+                        <x-text-button type="button" x-on:click="$dispatch('close')">
+                           <i class="fa fa-times"></i>
+                        </x-text-button>
+                     </div>                    
+                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 gap-y-6 mt-6">
                         <div>
                            <label for="stock-uom" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('UOM') }}</label>
                            <x-text-input id="stock-uom" type="text" x-model="uom_input" maxlength="5"></x-text-input>
+                        </div>    
+                        <div class="col-span-1 sm:col-span-2">
+                           <label for="stock-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
+                           <x-text-input-curr curr="main_currency" ::disabled="is_secondary_currency" 
+                                          id="stock-unit-price" type="number" x-model="main_unit_price" min="0"></x-text-input>
                         </div>
-                        <div class="flex justify-end">
-                           <x-primary-button type="button" x-on:click="addStock">
-                              <span x-text="editingIndex !== null ? '{{ __('Terapkan') }}' : '{{ __('Buat') }}'"></span>
-                           </x-primary-button>
+
+                        <div x-show="is_secondary_currency">
+                           <label for="stock-secondary-currency" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mata uang') }}</label>
+                           <x-select id="stock-secondary-currency" class="w-full" x-model="secondary_currency">
+                              <option value=""></option>   
+                              <template x-for="currency in getSecondaryCurrencies()" :key="currency.name">                                 
+                                 <option :value="currency.name" x-text="currency.name"></option>
+                              </template>
+                           </x-select>
                         </div>
+                        <div x-show="is_secondary_currency" class="col-span-1 sm:col-span-2">
+                           <label for="stock-secondary-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
+                           <x-text-input-curr curr="secondary_currency" id="stock-secondary-unit-price" 
+                                          type="number" x-model="secondary_unit_price" min="0"></x-text-input>
+                        </div>                       
+                        
+                        <div class="px-3 col-span-1 sm:col-span-2">
+                           <x-toggle x-model="is_secondary_currency">{{ __('Gunakan mata uang sekunder') }}</x-toggle>
+                        </div>
+                     </div>
+                     <div class="flex justify-end mt-6">
+                        <x-primary-button type="button" x-on:click="addStock">
+                           <span x-text="editingIndex !== null ? '{{ __('Terapkan') }}' : '{{ __('Buat') }}'"></span>
+                        </x-primary-button>
                      </div>
                   </div>
                </x-modal>
@@ -242,17 +305,20 @@ new class extends Component
                <!-- Stock List -->
                <div class="flex flex-wrap gap-2 text-sm">
                   <template x-for="(stock, index) in stocks" :key="index">
-                     <div class="hover:opacity-80 bg-neutral-200 dark:bg-neutral-900 rounded-full border border-neutral-300 dark:border-neutral-700 px-3 py-1 cursor-pointer" x-on:click="editStock(index)">
+                     <div class="hover:opacity-80 bg-neutral-200 dark:bg-neutral-900 rounded-full border border-neutral-300 dark:border-neutral-700 px-3 py-1 cursor-pointer" 
+                        x-on:click="editStock(index)">
                         <span x-text="`${stock.currency} ${formatPrice(stock.unit_price)} / ${stock.uom}`"></span>
                         <x-text-button type="button" x-on:click.stop="removeStock(index)" class="ml-2">
                            <i class="fa fa-times"></i>
                         </x-text-button>
                      </div>
                   </template>
-                  <x-text-button type="button" x-on:click="$dispatch('open-modal', 'stock-creator')" class="rounded-full border border-neutral-300 dark:border-neutral-700 px-3 py-1"><i class="fa fa-plus me-2"></i>{{ __('Tambah unit') }}</x-text-button>
-
+                  <x-text-button type="button" x-on:click="$dispatch('open-modal', 'stock-creator')" 
+                                 class="rounded-full border border-neutral-300 dark:border-neutral-700 px-3 py-1">
+                     <i class="fa fa-plus me-2"></i>{{ __('Tambah unit') }}
+                  </x-text-button>
                </div>
-               </div>
+            </div>
 
             @else
                <livewire:inventory.items.stocks />

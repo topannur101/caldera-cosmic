@@ -188,7 +188,8 @@ Route::middleware('auth')->group(function () {
             Volt::route('/account-manage',  'admin.account.manage')     ->name('account-manage');
             Volt::route('/inventory-auths', 'admin.inventory.auths')    ->name('inventory-auths');
             Volt::route('/inventory-areas', 'admin.inventory.areas')    ->name('inventory-areas');
-        
+            Volt::route('/inventory-currs', 'admin.inventory.currs')    ->name('inventory-currs');
+
         });
 
         Route::view('/', 'livewire.admin.index')->name('admin');

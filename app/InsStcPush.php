@@ -115,6 +115,78 @@ class InsStcPush
                 ],
                 'function' => 'singleRegister'
             ],
+            'history_1_section_svp' => [
+                'valueCount' => 8,
+                'startAddresses' => [
+                    'upper' => 10230,
+                    'lower' => 10130
+                ],
+                'function' => 'multipleRegisters'
+            ],
+            'history_1_chart_hb' => [
+                'valueCount' => 60,
+                'startAddresses' => [
+                    'upper' => 12001,
+                    'lower' => 11001
+                ],
+                'function' => 'multipleRegisters'
+            ],
+            'history_1_info_duration' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 12110,
+                    'lower' => 11110
+                ],
+                'function' => 'singleRegister'
+            ],
+            'history_1_info_speed' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 12120,
+                    'lower' => 11120
+                ],
+                'function' => 'singleRegister'
+            ],
+            'history_1_info_device_code' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 12130,
+                    'lower' => 11130
+                ],
+                'function' => 'singleRegister'
+            ],
+            'history_1_info_operator' => [
+                'valueCount' => 3,
+                'startAddresses' => [
+                    'upper' => 12140,
+                    'lower' => 11140
+                ],
+                'function' => 'multipleRegisters'
+            ],
+            'history_1_info_year' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 12150,
+                    'lower' => 11150
+                ],
+                'function' => 'singleRegister'
+            ],
+            'history_1_info_month_date' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 12160,
+                    'lower' => 11160
+                ],
+                'function' => 'singleRegister'
+            ],
+            'history_1_info_time' => [
+                'valueCount' => 1,
+                'startAddresses' => [
+                    'upper' => 12170,
+                    'lower' => 11170
+                ],
+                'function' => 'singleRegister'
+            ],
 
         ];
 

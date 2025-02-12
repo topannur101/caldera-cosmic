@@ -31,12 +31,32 @@ return new class extends Migration
         foreach ($tables as $table) {
             Schema::dropIfExists($table);
         }
+
+        Schema::create('inv_currs', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+            $table->char('name', 3)->unique();
+            $table->decimal('rate', 8, 2);
+            $table->boolean('is_active')->default(true);
+        });
+
+        DB::table('inv_currs')->insert([
+            [
+                'name' => 'USD',
+                'rate' => 1.00,
+            ],
+            [
+                'name' => 'IDR',
+                'rate' => 16290.00,
+            ]
+        ]);
         
         Schema::create('inv_areas', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
             $table->string('name')->unique();
         });
+        
 
         Schema::create('inv_auths', function (Blueprint $table) {
             $table->id();
@@ -63,7 +83,6 @@ return new class extends Migration
             $table->string('code')->nullable();
             $table->foreignId('inv_loc_id')->nullable()->constrained();
             $table->foreignId('inv_area_id')->constrained();
-            $table->foreignId('inv_stock_id')->constrained();
             $table->string('photo');
             $table->boolean('is_active');
             $table->index('code');
