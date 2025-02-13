@@ -20,15 +20,13 @@ new class extends Component
       'desc'            => '',
       'code'            => '',
       'loc_id'          => 0,
-      'loc_parent'      => '',
-      'loc_bin'         => '',
-      'loc_name'        => '',
-      'tags'            => [],
       'tags_list'       => '',
       'updated_at'      => '',
       'last_withdrawal' => '',
    ];
 
+   public string $loc_parent  = '';
+   public string $loc_bin     = '';
    public array $areas        = [];
    public array $tags         = [];
    public array $loc_parents  = [];
@@ -134,8 +132,12 @@ new class extends Component
                         <label for="item-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
                         <x-text-input id="item-code" wire:model="item.code" type="text" />
                      </div>
-                     <x-inv-loc-selector :$loc_parents :$loc_bins />
-                     <x-inv-tag-selector :$tags />
+                     <div class="px-3 mt-3">
+                        <x-inv-loc-selector />
+                     </div>
+                     <div class="px-3 mt-3">
+                        <x-inv-tag-selector />
+                     </div>
                   </div>
                 @else
                   <div class="py-6 flex flex-col lg:flex-row gap-x-6 gap-y-3 text-neutral-500 text-sm">                    

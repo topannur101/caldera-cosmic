@@ -17,6 +17,10 @@ class extends Component {
    public array $area_ids = [];
    public string $view = '';
 
+    public string $loc_parent = '';
+    public string $loc_bin = '';
+    public array $tags = [];
+
    public function with(): array
    {
       $inv_items = InvItem::paginate(10);
@@ -39,7 +43,7 @@ class extends Component {
     <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2 mb-6">
         <div class="flex gap-x-2 items-center px-8 py-2 lg:py-0">
             <i class="fa fa-search"></i>
-            <div class="w-full md:w-56">
+            <div class="w-full md:w-40">
                 <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="py-1"
                     type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
                 <datalist id="qwords">
@@ -51,11 +55,20 @@ class extends Component {
                 </datalist>
             </div>
         </div>
-        <div class="px-4 py-4 lg:py-0 grow flex items-center">
-            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-200 dark:hover:bg-neutral-700"><i class="fa fa-fw fa-filter mr-3"></i>{{ __('Filter') }}</x-secondary-button>
+
+        <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
+            <x-inv-loc-selector isQuery="true" class="text-xs font-semibold uppercase tracking-widest" />
         </div>
-        <div class="px-4 py-4 lg:py-0 flex items-center justify-between gap-x-4">
-            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest hover:bg-neutral-200 dark:hover:bg-neutral-700"><i class="fa fa-fw fa-tent mr-3"></i>TT MM +1</x-secondary-button>
+
+        <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
+            <x-inv-tag-selector isQuery="true" class="text-xs font-semibold uppercase tracking-widest" />
+        </div>
+
+        <div class="p-4 lg:py-0 grow flex items-center">
+            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest"><i class="fa fa-fw fa-filter mr-3"></i>{{ __('Filter') }}</x-secondary-button>
+        </div>
+        <div class="p-4 lg:py-0 flex items-center justify-between gap-x-4">
+            <x-text-button type="button" class="px-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-widest"><i class="fa fa-fw fa-tent mr-3"></i>TT MM +1</x-secondary-button>
             <div>
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -70,7 +83,7 @@ class extends Component {
                         </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />
                         <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                            <i class="fa fa-fw fa-inbox me-2"></i>{{ __('Kelola bin ')}}
+                            <i class="fa fa-fw fa-map-marker-alt me-2"></i>{{ __('Kelola lokasi ')}}
                         </x-dropdown-link>
                         <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
                             <i class="fa fa-fw fa-tag me-2"></i>{{ __('Kelola tag ')}}

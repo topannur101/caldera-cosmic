@@ -1,5 +1,7 @@
+@props(['isQuery' => false ])
+
 <div x-data="{
-      tags: @entangle('item.tags'),
+      tags: @entangle('tags'),
       tag_input: '',
       get tag_list() {
          return this.tags.join(', ');
@@ -24,9 +26,9 @@
       removeTag(tag) {
          this.tags = this.tags.filter(t => t !== tag);
       }
-   }" class="px-3 mt-3">
-   <x-text-button type="button" x-on:click.prevent="$dispatch('open-modal', 'tag-selector')">
-      <i class="fa fa-fw fa-tag me-2"></i><span x-text="tag_list ? tag_list : '{{ __('Tak ada tag') }}'"></span>
+   }" class="flex items-center {{ $isQuery ? 'px-4' : '' }}">
+   <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'tag-selector')">
+      <i class="fa fa-fw fa-tag me-3"></i><span x-text="tag_list ? tag_list : '{{ $isQuery ? __('Tag') : __('Tak ada tag') }}'"></span>
    </x-text-button>
    
    <x-modal name="tag-selector" maxWidth="sm" focusable>
