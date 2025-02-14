@@ -173,17 +173,16 @@ new class extends Component {
             const data = JSON.parse(event.data);
             console.log('WebSocket received:', data);
             
-            // Extract and set the values from the data array
             if (data.data) {
                 // Set the code (index 2)
                 this.code = data.data[2];
                 
-                // Set area_ab (index 33)
-                this.area_ab = data.data[33];
+                // Convert mm² to ft² and round to 1 decimal
+                const areaInMm2 = data.data[33];
+                const areaInFt2 = (areaInMm2 * 0.00001076391).toFixed(1);
+                this.area_ab = areaInFt2;
                 
-                // Optional: Focus on the next logical input
                 this.$nextTick(() => {
-                    // Assuming you want to focus on area_vn after populating
                     document.getElementById('hide-area_vn')?.focus();
                 });
             }
