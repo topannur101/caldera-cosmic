@@ -163,33 +163,20 @@ new class extends Component {
     quota_id: $wire.entangle('quota_id'),
     websocket: null,
     initWebSocket() {
-        this.websocket = new WebSocket('ws://127.0.0.1:32999/ws');
-        this.websocket.onopen = () => {
-            console.log('WebSocket connected');
-        };
+        this.websocket = window.AppWebSockets.getOrCreate(
+            'leather-stats',  // Identifier for this specific websocket
+            'ws://127.0.0.1:32999/ws'
+        );
         
         this.websocket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            console.log('WebSocket received:', data);
+            console.log('Leather stats received:', data);
             
-            if (data.data) {
-                // Set the code (index 2)
-                this.code = data.data[2];
-                
-                // Convert mm² to ft² and round to 1 decimal
-                const areaInMm2 = data.data[33];
-                const areaInFt2 = (areaInMm2 * 0.00001076391).toFixed(2);
+            if (data.code && data.area_mm2) {
+                this.code = data.code;
+                const areaInFt2 = (data.area_mm2 * 0.00001076391).toFixed(1);
                 this.area_ab = areaInFt2;
-                
-                this.$nextTick(() => {
-                    document.getElementById('hide-area_vn')?.focus();
-                });
             }
-        };
-        
-        this.websocket.onclose = () => {
-            console.log('WebSocket disconnected. Attempting to reconnect...');
-            setTimeout(() => this.initWebSocket(), 3000);
         };
     },
     get diff() {
@@ -214,7 +201,8 @@ new class extends Component {
         this.$refs.hidecode.focus(); 
         this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); 
     },
-}" x-init="initWebSocket()" x-on:set-form-group.window="group_id = $event.detail.group_id; material = $event.detail.material" class="px-6 py-8 flex gap-x-6">
+}" x-init="initWebSocket()" @wire:navigate.window="if (websocket) { websocket.close(); websocket = null; }"
+    x-on:disconnect.window="if (websocket) { websocket.close(); websocket = null; }" x-on:set-form-group.window="group_id = $event.detail.group_id; material = $event.detail.material" class="px-6 py-8 flex gap-x-6">
     <form id="ldc-index-form-element" wire:submit="save">
         <div class="grid grid-cols-1 gap-6">
             <div class="grid grid-cols-3 gap-3">

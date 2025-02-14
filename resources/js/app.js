@@ -32,3 +32,36 @@ window.toast = function(message, options = {}) {
        detail: { type, message, description, position, html }
    }));
 };
+
+// Add this namespace management at the top of your application (e.g., in app.js)
+window.AppWebSockets = {
+   // Store websocket instances with their identifiers
+   connections: {},
+   
+   // Helper to get or create a websocket connection
+   getOrCreate(id, url) {
+       if (this.connections[id]?.readyState === WebSocket.OPEN) {
+           console.log(`Reusing existing WebSocket: ${id}`);
+           return this.connections[id];
+       }
+       
+       // Close existing connection if in bad state
+       if (this.connections[id]) {
+           console.log(`Closing old WebSocket: ${id}`);
+           this.connections[id].close();
+       }
+       
+       console.log(`Creating new WebSocket: ${id}`);
+       const ws = new WebSocket(url);
+       this.connections[id] = ws;
+       
+       ws.onclose = () => {
+           console.log(`WebSocket closed: ${id}`);
+           if (this.connections[id] === ws) {
+               delete this.connections[id];
+           }
+       };
+       
+       return ws;
+   }
+};
