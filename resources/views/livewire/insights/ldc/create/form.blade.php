@@ -179,7 +179,7 @@ new class extends Component {
                 
                 // Convert mm² to ft² and round to 1 decimal
                 const areaInMm2 = data.data[33];
-                const areaInFt2 = (areaInMm2 * 0.00001076391).toFixed(1);
+                const areaInFt2 = (areaInMm2 * 0.00001076391).toFixed(2);
                 this.area_ab = areaInFt2;
                 
                 this.$nextTick(() => {
