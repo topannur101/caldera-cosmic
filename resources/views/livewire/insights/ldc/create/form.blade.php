@@ -161,6 +161,40 @@ new class extends Component {
     area_qt_string: '',
     code: $wire.entangle('code'),
     quota_id: $wire.entangle('quota_id'),
+    websocket: null,
+    initWebSocket() {
+        this.websocket = new WebSocket('ws://127.0.0.1:32999/ws');
+        this.websocket.onopen = () => {
+            console.log('WebSocket connected');
+            toast('{{ __('Terhubung dengan ldc-worker') }}', { type: 'success' });
+        };
+        
+        this.websocket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('WebSocket received:', data);
+            
+            // Extract and set the values from the data array
+            if (data.data) {
+                // Set the code (index 2)
+                this.code = data.data[2];
+                
+                // Set area_ab (index 33)
+                this.area_ab = data.data[33];
+                
+                // Optional: Focus on the next logical input
+                this.$nextTick(() => {
+                    // Assuming you want to focus on area_vn after populating
+                    document.getElementById('hide-area_vn')?.focus();
+                });
+            }
+        };
+        
+        this.websocket.onclose = () => {
+            console.log('WebSocket disconnected. Attempting to reconnect...');
+            toast('{{ __('Terputus dengan ldc-worker, mencoba ulang koneksi...') }}', { type: 'success' });
+            setTimeout(() => this.initWebSocket(), 3000);
+        };
+    },
     get diff() {
         let area_vn = parseFloat(this.area_vn)
         let area_ab = parseFloat(this.area_ab)
@@ -182,8 +216,8 @@ new class extends Component {
     setCursorToEnd() { 
         this.$refs.hidecode.focus(); 
         this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); 
-    }
-}" x-on:set-form-group.window="group_id = $event.detail.group_id; material = $event.detail.material" class="px-6 py-8 flex gap-x-6">
+    },
+}" x-init="initWebSocket()" x-on:set-form-group.window="group_id = $event.detail.group_id; material = $event.detail.material" class="px-6 py-8 flex gap-x-6">
     <form id="ldc-index-form-element" wire:submit="save">
         <div class="grid grid-cols-1 gap-6">
             <div class="grid grid-cols-3 gap-3">
