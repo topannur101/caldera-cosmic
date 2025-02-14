@@ -166,7 +166,6 @@ new class extends Component {
         this.websocket = new WebSocket('ws://127.0.0.1:32999/ws');
         this.websocket.onopen = () => {
             console.log('WebSocket connected');
-            toast('{{ __('Terhubung dengan ldc-worker') }}', { type: 'success' });
         };
         
         this.websocket.onmessage = (event) => {
@@ -190,7 +189,6 @@ new class extends Component {
         
         this.websocket.onclose = () => {
             console.log('WebSocket disconnected. Attempting to reconnect...');
-            toast('{{ __('Terputus dengan ldc-worker, mencoba ulang koneksi...') }}', { type: 'success' });
             setTimeout(() => this.initWebSocket(), 3000);
         };
     },
