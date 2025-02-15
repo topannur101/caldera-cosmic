@@ -3,60 +3,71 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
 
-use App\Models\InvAuth;
+use App\Models\InvCurr;
 use Illuminate\Support\Facades\Gate;
 
 new #[Layout('layouts.app')] class extends Component {
     
-    public int $id;
-    public string $user_name;
-    public string $user_emp_id;
-    public string $user_photo;
-    public array $actions;
+    public int $id = 0;
+
+    public array $curr = [
+        'id'        => 0,
+        'name'      => '',
+        'rate'      => 1,
+        'is_active' => false
+    ];
+
+    public string $curr_main = '';
+
+    public function mount()
+    {
+        $this->curr_main = InvCurr::find(1)?->name ?? '';
+    }
 
     public function rules()
     {
         return [
-            'actions' => ['array'],
-            'actions.*' => ['string'],
+            'curr.rate' => ['required', 'gt:0', 'lt:1000000'],
+            'curr.is_active' => ['required', 'boolean']
         ];
     }
 
-    #[On('auth-edit')]
-    public function loadAuth(int $id)
+    #[On('curr-edit')]
+    public function loadCurr(int $id)
     {
-        $auth = InvAuth::find($id);
-        if ($auth) {
-            $this->id           = $auth->id;
-            $this->user_name    = $auth->user->name;
-            $this->user_emp_id  = $auth->user->emp_id;
-            $this->user_photo   = $auth->user->photo ?? '';
-            $this->actions      = json_decode($auth->actions ?? '[]', true);
+        $curr = InvCurr::find($id);
+        if ($curr) {
+            $this->curr['id']           = $curr->id;
+            $this->curr['name']         = $curr->name;
+            $this->curr['rate']         = $curr->rate;
+            $this->curr['is_active']    = (bool) $curr->is_active;
             $this->resetValidation();
+
         } else {
             $this->handleNotFound();
         }
     }
 
-    public function with(): array
-    {
-        return [
-            'is_superuser' => Gate::allows('superuser'),
-        ];
-    }
 
     public function save()
     {
         Gate::authorize('superuser');
+        $this->curr['name'] = strtoupper(trim($this->curr['name']));
         $this->validate();
 
-        $auth = InvAuth::find($this->id);
-        if ($auth) {
-            $auth->actions = json_encode($this->actions, true);
-            $auth->update();
+        $curr = InvCurr::find($this->curr['id']);
+        if ($curr->id == 1) {
+            $this->js('$dispatch("close")');
+            $this->js('toast("' . __('Mata uang utama tidak dapat diedit') . '", { type: "danger" })');
+            $this->dispatch('updated');
+
+        } elseif ($curr) {
+            $curr->rate         = $this->curr['rate'];
+            $curr->is_active    = $this->curr['is_active'];
+            $curr->update();
 
             $this->js('$dispatch("close")');
-            $this->js('toast("' . __('Wewenang diperbarui') . '", { type: "success" })');
+            $this->js('toast("' . __('Mata uang diperbarui') . '", { type: "success" })');
             $this->dispatch('updated');
         } else {
             $this->handleNotFound();
@@ -64,26 +75,10 @@ new #[Layout('layouts.app')] class extends Component {
         }
     }
 
-    public function delete()
-    {
-        Gate::authorize('superuser');
-
-        $auth = InvAuth::find($this->id);
-        if ($auth) {
-            $auth->delete();
-
-            $this->js('$dispatch("close")');
-            $this->js('toast("' . __('Wewenang dicabut') . '", { type: "success" })');
-            $this->dispatch('updated');
-        } else {
-            $this->handleNotFound();
-        }
-        $this->customReset();
-    }
 
     public function customReset()
     {
-        $this->reset(['id', 'user_name', 'user_emp_id', 'user_photo', 'user_photo', 'actions']);
+        $this->reset(['id', 'curr']);
     }
 
     public function handleNotFound()
@@ -99,65 +94,58 @@ new #[Layout('layouts.app')] class extends Component {
     <form wire:submit="save" class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Wewenang') }}
+                {{ __('Mata uang') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
-        <div class="grid grid-cols-1 gap-y-3 mt-3">
-            <div wire:key="user-info" class="grid gap-3 grid-cols-1">
-                <div class="flex p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
-                    <div>
-                        <div
-                            class="w-8 h-8 my-auto mr-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                            @if ($user_photo)
-                                <img class="w-full h-full object-cover dark:brightness-75"
-                                    src="{{ '/storage/users/' . $user_photo }}" />
-                            @else
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                    class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
-                                    viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
-                                    <path
-                                        d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
-                                </svg>
-                            @endif
+        <div class="grid grid-cols-1 gap-y-6 mt-6">
+            <div>
+                <label for="curr-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+                <x-text-input-t class="px-3" id="curr-name" wire:model="curr.name" type="text" disabled />
+                @error('curr.name')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
+            <div>
+                <div class="flex items-baseline">
+                    <label for="curr-rate" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nilai tukar') }}</label>
+                    @if($curr_main)
+                        <div 
+                            x-data="{
+                                tooltipVisible: false,
+                                tooltipText: 'Terhadap {{ $curr_main }}',
+                                tooltipArrow: true,
+                                tooltipPosition: 'top',
+                            }"
+                            x-init="$refs.content.addEventListener('mouseenter', () => { tooltipVisible = true; }); $refs.content.addEventListener('mouseleave', () => { tooltipVisible = false; });"
+                            class="relative">                        
+                            <div x-ref="tooltip" x-show="tooltipVisible" :class="{ 'top-0 left-1/2 -translate-x-1/2 -mt-0.5 -translate-y-full' : tooltipPosition == 'top', 'top-1/2 -translate-y-1/2 -ml-0.5 left-0 -translate-x-full' : tooltipPosition == 'left', 'bottom-0 left-1/2 -translate-x-1/2 -mb-0.5 translate-y-full' : tooltipPosition == 'bottom', 'top-1/2 -translate-y-1/2 -mr-0.5 right-0 translate-x-full' : tooltipPosition == 'right' }" class="absolute w-auto text-sm" x-cloak>
+                                <div x-show="tooltipVisible" x-transition class="relative px-2 py-1 text-white bg-black rounded bg-opacity-90">
+                                    <p x-text="tooltipText" class="flex-shrink-0 block text-xs whitespace-nowrap"></p>
+                                    <div x-ref="tooltipArrow" x-show="tooltipArrow" :class="{ 'bottom-0 -translate-x-1/2 left-1/2 w-2.5 translate-y-full mb-px' : tooltipPosition == 'top', 'right-0 -translate-y-1/2 top-1/2 h-2.5 -mt-px translate-x-full' : tooltipPosition == 'left', 'top-0 -translate-x-1/2 left-1/2 w-2.5 -translate-y-full' : tooltipPosition == 'bottom', 'left-0 -translate-y-1/2 top-1/2 h-2.5 -mt-px -translate-x-full' : tooltipPosition == 'right' }" class="absolute inline-flex items-center justify-center overflow-hidden">
+                                        <div :class="{ 'origin-top-left -rotate-45' : tooltipPosition == 'top', 'origin-top-left rotate-45' : tooltipPosition == 'left', 'origin-bottom-left rotate-45' : tooltipPosition == 'bottom', 'origin-top-right -rotate-45' : tooltipPosition == 'right' }" class="w-1.5 h-1.5 transform bg-black bg-opacity-90"></div>
+                                    </div>
+                                </div>
+                            </div>                   
+                            <div x-ref="content" class="text-sm cursor-pointer text-neutral-500"><i class="fa far fa-question-circle"></i>     </div>
                         </div>
-                    </div>
-                    <div class="truncate">
-                        <div class="truncate">{{ $user_name ?? __('Pengguna') }}</div>
-                        <div class="truncate text-xs text-neutral-400 dark:text-neutral-600">
-                            {{ $user_emp_id ?? __('Nomor karyawan') }}</div>
-                    </div>
+                    @endif
                 </div>
+                <x-text-input id="curr-rate" wire:model="curr.rate" type="number" step="0.01" />
+                @error('curr.rate')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
             </div>
-        </div>
-        <div class="grid grid-cols-1 gap-y-3 mt-6">
-            <div>{{ __('Barang') }}</div>
-            <x-checkbox id="item-manage" :disabled="!$is_superuser" wire:model="actions" value="item-manage">{{ __('Buat dan perbarui barang ') }}</x-checkbox>
-        </div>
-        <div class="grid grid-cols-1 gap-y-3 mt-6">
-            <div>{{ __('Sirkulasi') }}</div>
-            <x-checkbox id="circ-create" :disabled="!$is_superuser" wire:model="actions" value="circ-create">{{ __('Buat sirkulasi') }}</x-checkbox>
-            <x-checkbox id="circ-eval" :disabled="!$is_superuser" wire:model="actions" value="circ-eval">{{ __('Evaluasi sirkulasi (setujui/tolak)') }}</x-checkbox>
-        </div>
-        <div class="grid grid-cols-1 gap-y-3 mt-6">
-            <div>{{ __('Bin') }}</div>
-            <x-checkbox id="bin-manage" :disabled="!$is_superuser" wire:model="actions" value="bin-manage">{{ __('Buat dan perbarui bin') }}</x-checkbox>
-        </div>
-        @can('superuser')
-            <div class="mt-6 flex justify-between items-end">
-                <div>
-                    <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete"
-                        wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
-                        {{ __('Cabut') }}
-                    </x-text-button>
-                </div>
-                <x-primary-button type="submit">
-                    {{ __('Perbarui') }}
-                </x-primary-button>
+            <div>
+                <x-toggle id="curr-is_active" wire:model="curr.is_active">{{ __('Aktif') }}</x-toggle>
             </div>
-        @endcan
+        </div>  
+        <div class="mt-6 flex justify-end">
+            <x-primary-button type="submit">
+                {{ __('Simpan') }}
+            </x-primary-button>
+        </div>
     </form>
-    <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
-    <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
-
+    <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
+    <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
 </div>

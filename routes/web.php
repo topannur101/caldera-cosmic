@@ -181,7 +181,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Administration routes
-    Route::prefix('admin')->group(function () {
+    Route::prefix('admin')->middleware('can:superuser')->group(function () {
 
         Route::name('admin.')->group(function () {
 

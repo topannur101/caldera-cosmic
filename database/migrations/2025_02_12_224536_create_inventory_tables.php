@@ -11,26 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $tables = [
-            'inv_stocks',
-            'inv_bins',
-            'inv_areas',
-            'inv_circs',            
-            'inv_item_tags',
-            'inv_items',
-            'inv_uoms',
-            'inv_auths',
-            'inv_tags',
-            'inv_locs',
-            'inv_areas',
-            'inv_bins',
-            'inv_items',
-            'inv_stocks',
-        ];
-
-        foreach ($tables as $table) {
-            Schema::dropIfExists($table);
-        }
 
         Schema::create('inv_currs', function (Blueprint $table) {
             $table->id();
@@ -56,6 +36,12 @@ return new class extends Migration
             $table->timestamps();
             $table->string('name')->unique();
         });
+
+        DB::table('inv_areas')->insert([
+            [
+                'name' => 'TT MM (DEMO)'
+            ]
+        ]);
         
 
         Schema::create('inv_auths', function (Blueprint $table) {
@@ -94,13 +80,13 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->foreignId('inv_item_id')->constrained();
+            $table->foreignId('inv_curr_id')->constrained();
             $table->unsignedInteger('qty')->default(0);
             $table->string('uom'); // ea, pcs
-            $table->enum('currency', ['USD', 'IDR', 'KRW'])->default('USD');
             $table->decimal('unit_price', 15, 2)->default(0);
             $table->boolean('is_active')->default(true);
             $table->index('inv_item_id');
-            $table->index('currency');
+            $table->index('inv_curr_id');
         });
 
         Schema::create('inv_tags', function (Blueprint $table) {
@@ -129,7 +115,7 @@ return new class extends Migration
             $table->integer('qty_relative');
             $table->decimal('amount', 15, 2)->default(0);
             $table->decimal('unit_price', 15, 2);  // Added for historical price tracking
-            $table->string('note')->nullable();
+            $table->string('remarks')->nullable();
             $table->index('evaluator_id');
             $table->index('inv_stock_id');
         });
@@ -141,14 +127,15 @@ return new class extends Migration
     public function down(): void
     {
         $tables = [
-            'inv_tags',
-            'inv_item_tags',
             'inv_circs',
+            'inv_item_tags',
+            'inv_tags',
             'inv_stocks',
             'inv_items',
             'inv_locs',
             'inv_auths',
             'inv_areas',
+            'inv_currs',
         ];
 
         foreach ($tables as $table) {

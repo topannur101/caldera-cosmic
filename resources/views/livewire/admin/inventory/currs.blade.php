@@ -74,6 +74,14 @@ new #[Layout('layouts.app')] class extends Component {
                 <livewire:admin.inventory.curr-edit />
             </x-modal>
         </div>
+        <div class="mt-6 relative text-neutral h-32 sm:rounded-lg overflow-hidden mb-8 border border-dashed border-neutral-300 dark:border-neutral-500">
+                <div class="absolute top-0 left-0 flex h-full items-center px-4 lg:px-8 text-neutral-500">
+                    <div>
+                        <div class="uppercase font-bold mb-2"><i class="fa fa-exclamation-triangle me-2"></i>{{ __('Peringatan') }}</div>
+                        <div>{{ __('Nama mata uang yang telah dibuat tidak dapat diganti.') }}</div>
+                    </div>
+                </div>
+            </div>
         <div class="overflow-auto w-full my-8">
             <div class="p-0 sm:p-1">
                 <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
@@ -82,7 +90,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('ID') }}</th>
                             <th>{{ __('Nama') }}</th>
                             <th>{{ __('Nilai tukar') }}</th>
-                            <th>{{ __('Aktif?') }}</th>
+                            <th>{{ __('Status') }}</th>
                         </tr>
                         @foreach ($currs as $curr)
                             <tr wire:key="curr-tr-{{ $curr->id . $loop->index }}" tabindex="0"
@@ -97,7 +105,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     {{ $curr->rate }}
                                 </td>
                                 <td>
-                                    {{ $curr->is_active ? __('Aktif') : __('Nonaktif') }}
+                                    {{ ($curr->id == 1 ? __('Utama') . ', ' : '' ) . ($curr->is_active ? __('Aktif') : __('Nonaktif')) }}
                                 </td>
                             </tr>
                         @endforeach

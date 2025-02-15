@@ -2,76 +2,54 @@
 
 use Livewire\Volt\Component;
 
-use App\Models\User;
-use App\Models\InvAuth;
-use App\Models\InvArea;
-use Livewire\Attributes\Renderless;
+use App\Models\InvCurr;
 use Illuminate\Support\Facades\Gate;
 
 new #[Layout('layouts.app')] class extends Component {
-    public string       $userq = '';
-    public int          $user_id = 0;
-    public int          $area_id = 0;
-    public array        $actions = [];
-    public array        $areas = [];
+
+    public array $curr = [
+        'name'  => '',
+        'rate'  => 1
+    ];
+
+    public string $curr_main = '';
+
+    public function mount()
+    {
+        $this->curr_main = InvCurr::find(1)?->name ?? '';
+    }
 
     public function rules()
     {
         return [
-            'user_id'   => ['required', 'gt:0', 'integer', 'unique:ins_omv_auths'],
-            'area_id'   => ['required','exists:inv_areas,id'],
-            'actions'   => ['array'],
-            'actions.*' => ['string']
-        ];
-    }
-
-    public function mount()
-    {
-        $this->areas = InvArea::all()->toArray();
-    }
-
-    public function with(): array
-    {
-        return [
-            'is_superuser' => Gate::allows('superuser'),
+            'curr.name' => ['required', 'string', 'size:3', 'unique:inv_currs,name'],
+            'curr.rate' => ['required', 'gt:0', 'lt:1000000']
         ];
     }
 
     public function save()
     {
         Gate::authorize('superuser');
+        $this->curr['name'] = strtoupper(trim($this->curr['name']));
 
-        $this->userq    = trim($this->userq);
-        $user           = $this->userq ? User::where('emp_id', $this->userq)->first(): null;
-        $this->user_id  = $user->id ?? 0;
         $this->validate();
         
-        if ($this->user_id == 1) {
-            $this->js('toast("' . __('Superuser sudah memiliki wewenang penuh') . '", { type: "danger" })');
-        } else {
-            InvAuth::create([
-                'user_id' => $this->user_id,
-                'inv_area_id' => $this->area_id,
-                'actions' => json_encode($this->actions)
-            ]);
+        InvCurr::create([
+            'name'  => $this->curr['name'],
+            'rate'  => $this->curr['rate']
+        ]);
 
-            $this->js('$dispatch("close")');
-            $this->js('toast("' . __('Wewenang dibuat') . '", { type: "success" })');
-            $this->dispatch('updated');
-        }
+        $this->js('$dispatch("close")');
+        $this->js('toast("' . __('Mata uang dibuat') . '", { type: "success" })');
+        $this->dispatch('updated');
+
         $this->customReset();
 
     }
 
-    #[Renderless]
-    public function updatedUserq()
-    {
-        $this->dispatch('userq-updated', $this->userq);
-    }
-
     public function customReset()
     {
-        $this->reset(['userq', 'user_id', 'actions']);
+        $this->reset(['curr']);
     }
 };
 
@@ -80,62 +58,55 @@ new #[Layout('layouts.app')] class extends Component {
     <form wire:submit="save" class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Wewenang baru') }}
+                {{ __('Mata uang baru') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
         </div>
-         <div class="grid grid-cols-1 gap-y-3 mt-3">
-            <div x-data="{ open: false, userq: @entangle('userq').live }" x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
-                <div x-on:click.away="open = false">
-                    <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
-                        x-ref="userq" x-on:focus="open = true" id="inv-user" class="mt-3" type="text" autocomplete="off"
-                        placeholder="{{ __('Pengguna') }}" />
-                    <div class="relative" x-show="open" x-cloak>
-                        <div class="absolute top-1 left-0 w-full">
-                            <livewire:layout.user-select wire:key="user-select" />
-                        </div>
-                    </div>
-                </div>
-                <div wire:key="error-user_id">
-                    @error('user_id')
-                        <x-input-error messages="{{ $message }}" class="mt-2" />
-                    @enderror
-                </div>
+        <div class="grid grid-cols-1 gap-y-6 mt-6">
+            <div>
+                <label for="curr-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+                <x-text-input id="curr-name" wire:model="curr.name" type="text" />
+                @error('curr.name')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
             </div>
             <div>
-                <x-select wire:model="area_id" class="w-full">
-                    <option value=""></option>
-                    @foreach ($areas as $area)
-                        <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
-                    @endforeach
-                </x-select>
-                <div wire:key="error-area_id">
-                    @error('area_id')
-                        <x-input-error messages="{{ $message }}" class="mt-2" />
-                    @enderror
+                <div class="flex items-baseline">
+                    <label for="curr-rate" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nilai tukar') }}</label>
+                    @if($curr_main)
+                        <div 
+                            x-data="{
+                                tooltipVisible: false,
+                                tooltipText: 'Terhadap {{ $curr_main }}',
+                                tooltipArrow: true,
+                                tooltipPosition: 'top',
+                            }"
+                            x-init="$refs.content.addEventListener('mouseenter', () => { tooltipVisible = true; }); $refs.content.addEventListener('mouseleave', () => { tooltipVisible = false; });"
+                            class="relative">                        
+                            <div x-ref="tooltip" x-show="tooltipVisible" :class="{ 'top-0 left-1/2 -translate-x-1/2 -mt-0.5 -translate-y-full' : tooltipPosition == 'top', 'top-1/2 -translate-y-1/2 -ml-0.5 left-0 -translate-x-full' : tooltipPosition == 'left', 'bottom-0 left-1/2 -translate-x-1/2 -mb-0.5 translate-y-full' : tooltipPosition == 'bottom', 'top-1/2 -translate-y-1/2 -mr-0.5 right-0 translate-x-full' : tooltipPosition == 'right' }" class="absolute w-auto text-sm" x-cloak>
+                                <div x-show="tooltipVisible" x-transition class="relative px-2 py-1 text-white bg-black rounded bg-opacity-90">
+                                    <p x-text="tooltipText" class="flex-shrink-0 block text-xs whitespace-nowrap"></p>
+                                    <div x-ref="tooltipArrow" x-show="tooltipArrow" :class="{ 'bottom-0 -translate-x-1/2 left-1/2 w-2.5 translate-y-full mb-px' : tooltipPosition == 'top', 'right-0 -translate-y-1/2 top-1/2 h-2.5 -mt-px translate-x-full' : tooltipPosition == 'left', 'top-0 -translate-x-1/2 left-1/2 w-2.5 -translate-y-full' : tooltipPosition == 'bottom', 'left-0 -translate-y-1/2 top-1/2 h-2.5 -mt-px -translate-x-full' : tooltipPosition == 'right' }" class="absolute inline-flex items-center justify-center overflow-hidden">
+                                        <div :class="{ 'origin-top-left -rotate-45' : tooltipPosition == 'top', 'origin-top-left rotate-45' : tooltipPosition == 'left', 'origin-bottom-left rotate-45' : tooltipPosition == 'bottom', 'origin-top-right -rotate-45' : tooltipPosition == 'right' }" class="w-1.5 h-1.5 transform bg-black bg-opacity-90"></div>
+                                    </div>
+                                </div>
+                            </div>                   
+                            <div x-ref="content" class="text-sm cursor-pointer text-neutral-500"><i class="fa far fa-question-circle"></i>     </div>
+                        </div>
+                    @endif
                 </div>
+                <x-text-input id="curr-rate" wire:model="curr.rate" type="number" step="0.01" />
+                @error('curr.rate')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
             </div>
-        </div>
-        <div class="grid grid-cols-1 gap-y-3 mt-6">
-            <div>{{ __('Barang') }}</div>
-            <x-checkbox id="{{ $auth->id ?? 'new'}}-item-manage" :disabled="!$is_superuser" wire:model="actions" value="item-manage">{{ __('Buat dan perbarui barang ') }}</x-checkbox>
-        </div>
-        <div class="grid grid-cols-1 gap-y-3 mt-6">
-            <div>{{ __('Sirkulasi') }}</div>
-            <x-checkbox id="{{ $auth->id ?? 'new'}}-circ-create" :disabled="!$is_superuser" wire:model="actions" value="circ-create">{{ __('Buat sirkulasi') }}</x-checkbox>
-            <x-checkbox id="{{ $auth->id ?? 'new'}}-circ-eval" :disabled="!$is_superuser" wire:model="actions" value="circ-eval">{{ __('Evaluasi sirkulasi (setujui/tolak)') }}</x-checkbox>
-        </div>
-        <div class="grid grid-cols-1 gap-y-3 mt-6">
-            <div>{{ __('Lokasi') }}</div>
-            <x-checkbox id="{{ $auth->id ?? 'new'}}-bin-manage" :disabled="!$is_superuser" wire:model="actions" value="bin-manage">{{ __('Buat dan perbarui bin') }}</x-checkbox>
-        </div>
-        <div class="mt-6 flex justify-end items-end">
+        </div>  
+        <div class="mt-6 flex justify-end">
             <x-primary-button type="submit">
-                {{ __('Buat') }}
+                {{ __('Simpan') }}
             </x-primary-button>
         </div>
     </form>
-    <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
-    <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
-
+    <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
+    <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
 </div>
