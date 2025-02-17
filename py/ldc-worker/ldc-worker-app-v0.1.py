@@ -86,7 +86,7 @@ def parse_chunked_http_payload(payload):
     except json.JSONDecodeError as e:
         raise ValueError(f"Invalid JSON format: {str(e)}")
 
-def process_packet(packet):
+def process_packet(packet, loop):
     """Process captured packets and extract relevant data"""
     if packet.haslayer(TCP) and packet.haslayer(Raw):
         try:
@@ -105,7 +105,11 @@ def process_packet(packet):
                             'timestamp': datetime.now().isoformat()
                         }
                         logger.debug(f"Event Type 14 detected: {relevant_data}")
-                        broadcast_to_clients(relevant_data)
+                        # Schedule the coroutine in the main event loop
+                        asyncio.run_coroutine_threadsafe(
+                            broadcast_to_clients(relevant_data),
+                            loop
+                        )
         except UnicodeDecodeError as e:
             pass
 
@@ -148,7 +152,7 @@ async def start_packet_sniffing():
         None,
         lambda: sniff(
             filter="tcp",
-            prn=process_packet,
+            prn=lambda pkt: process_packet(pkt, loop),  # Pass loop to process_packet
             iface=loopback_iface
         )
     )

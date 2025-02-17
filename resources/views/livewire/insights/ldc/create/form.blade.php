@@ -165,24 +165,21 @@ new class extends Component {
     initWebSocket() {
         this.websocket = window.AppWebSockets.getOrCreate(
             'leather-stats',  // Identifier for this specific websocket
-            'ws://127.0.0.1:8000/ws'
+            'ws://127.0.0.1:32998/ws'
         );
         
         this.websocket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log('Leather stats received:', data);
-            
-            if (data.code && data.area_mm2) {
-                this.code = data.code;
-                this.area_ab = data.area_ab;
-                this.area_qt = data.area_qt;
-            }
+            this.code = data.code;
+            this.area_ab = data.area_ab;
+            this.area_qt = data.area_qt;
         };
     },
     get diff() {
         let area_vn = parseFloat(this.area_vn)
         let area_ab = parseFloat(this.area_ab)
-        return ((area_vn > 0 && area_ab > 0) ? ((area_vn - area_ab) / area_vn * 100) : 0)
+        return ((area_vn > 0 && area_ab > 0) ? ((area_vvn - area_ab) / area_vn * 100) : 0)
     },
     get defect() {
         let area_vn = parseFloat(this.area_vn)
