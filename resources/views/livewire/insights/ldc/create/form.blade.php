@@ -165,7 +165,7 @@ new class extends Component {
     initWebSocket() {
         this.websocket = window.AppWebSockets.getOrCreate(
             'leather-stats',  // Identifier for this specific websocket
-            'ws://127.0.0.1:32999/ws'
+            'ws://127.0.0.1:8000/ws'
         );
         
         this.websocket.onmessage = (event) => {

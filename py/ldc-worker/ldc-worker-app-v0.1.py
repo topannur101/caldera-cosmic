@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Constants
 MM2_TO_FT2 = 0.00001076391  # Conversion factor from mm² to ft²
-WEBSOCKET_PORT = 8000
+WEBSOCKET_PORT = 32998
 
 app = FastAPI()
 
@@ -105,9 +105,7 @@ def process_packet(packet):
                             'timestamp': datetime.now().isoformat()
                         }
                         logger.debug(f"Event Type 14 detected: {relevant_data}")
-                        
-                        # Schedule broadcasting to WebSocket clients
-                        asyncio.create_task(broadcast_to_clients(relevant_data))
+                        broadcast_to_clients(relevant_data)
         except UnicodeDecodeError as e:
             pass
 
