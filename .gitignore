@@ -22,6 +22,8 @@ yarn-error.log
 /py/ldc-worker/database.db
 /py/ldc-worker/debug.log
 /py/ldc-worker/__pycache__
+/py/ldc-worker/build/*
+/py/ldc-worker/dist/*
 /py/omv-worker/env/*
 /py/omv-worker/config.json
 /py/omv-worker/database.db

@@ -174,8 +174,8 @@ new class extends Component {
             
             if (data.code && data.area_mm2) {
                 this.code = data.code;
-                const areaInFt2 = (data.area_mm2 * 0.00001076391).toFixed(1);
-                this.area_ab = areaInFt2;
+                this.area_ab = data.area_ab;
+                this.area_qt = data.area_qt;
             }
         };
     },
