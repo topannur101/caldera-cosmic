@@ -186,9 +186,10 @@ new class extends Component {
                 const data = JSON.parse(event.data);
                 toast('{{ __('Data dari ldc-worker diterima') }}');
                     
-                this.code = data.code;
-                this.area_ab = data.area_ab;
-                this.area_qt = data.area_qt;
+                    this.code = data.code;
+                    this.area_ab = data.area_ab;
+                    this.area_qt = data.area_qt;
+                };
 
                 this.websocket.onopen = () => {
                     this.connectionStatus = 'Connected';
