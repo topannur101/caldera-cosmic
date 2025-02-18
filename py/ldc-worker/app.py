@@ -110,6 +110,7 @@ def parse_chunked_http_payload(payload):
 def process_packet(packet, loop):
     """Process captured packets and extract relevant data"""
     if packet.haslayer(TCP) and packet.haslayer(Raw):
+        payload = None
         try:
             payload = packet[Raw].load.decode('utf-8')
             if "POST /add_statinfo HTTP/1.1" in payload:
