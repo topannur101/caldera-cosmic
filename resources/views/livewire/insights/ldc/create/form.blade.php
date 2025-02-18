@@ -152,56 +152,113 @@ new class extends Component {
 
 ?>
 
-<div x-data="{ 
-    group_id: $wire.entangle('group_id'),
-    material: $wire.entangle('material'),
-    area_vn: $wire.entangle('area_vn'), 
-    area_ab: $wire.entangle('area_ab'),
-    area_qt: $wire.entangle('area_qt'),
-    area_qt_string: '',
-    code: $wire.entangle('code'),
-    quota_id: $wire.entangle('quota_id'),
-    websocket: null,
-    initWebSocket() {
-        this.websocket = window.AppWebSockets.getOrCreate(
-            'leather-stats',  // Identifier for this specific websocket
-            'ws://127.0.0.1:32998/ws'
-        );
-        
-        this.websocket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log('Leather stats received:', data);
-            this.code = data.code;
-            this.area_ab = data.area_ab;
-            this.area_qt = data.area_qt;
-        };
-    },
-    get diff() {
-        let area_vn = parseFloat(this.area_vn)
-        let area_ab = parseFloat(this.area_ab)
-        return ((area_vn > 0 && area_ab > 0) ? ((area_vvn - area_ab) / area_vn * 100) : 0)
-    },
-    get defect() {
-        let area_vn = parseFloat(this.area_vn)
-        let area_qt = parseFloat(this.area_qt)
-        return((area_vn > 0 && area_qt > 0) ? ((area_vn - area_qt) / area_vn * 100) : 0)
-    },
-    get area_qt_eval() {
-        try {
-            let result = eval(this.area_qt_string.replace(/[^\d\.\+\-\*\/\(\)]/g, ''));
-            return !isNaN(result) ? result.toFixed(2) : '0.00';
-        } catch {
-            return '0.00';
-        }
-    },
-    setCursorToEnd() { 
-        this.$refs.hidecode.focus(); 
-        this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); 
-    },
-}" x-init="initWebSocket()" @wire:navigate.window="if (websocket) { websocket.close(); websocket = null; }"
-    x-on:disconnect.window="if (websocket) { websocket.close(); websocket = null; }" x-on:set-form-group.window="group_id = $event.detail.group_id; material = $event.detail.material" class="px-6 py-8 flex gap-x-6">
+<div class="px-6 py-8 flex gap-x-6" 
+    x-data="{ 
+        group_id: $wire.entangle('group_id'),
+        material: $wire.entangle('material'),
+        area_vn: $wire.entangle('area_vn'), 
+        area_ab: $wire.entangle('area_ab'),
+        area_qt: $wire.entangle('area_qt'),
+        area_qt_string: '',
+        code: $wire.entangle('code'),
+        quota_id: $wire.entangle('quota_id'),
+        websocket: null,    
+        connectionStatus: 'Disconnected',
+        get connectionStatusClass() {
+            return {
+                'Connected': 'text-green-600',
+                'Connecting': 'text-yellow-600',
+                'Disconnected': 'text-red-600',
+            }[this.connectionStatus];
+        },        
+        get connectionMessage() {
+            return {
+                'Connected': '{{ __("ldc-worker tersambung") }}',
+                'Connecting': '{{ __("Menyambungkan...") }}',
+                'Disconnected': '{{ __("ldc-worker terputus") }}',
+            }[this.connectionStatus];
+        },
+        reconnectInterval: null,
+        initWebSocket() {
+            this.connectionStatus = 'Connecting';
+            this.connectWebSocket();        
+            this.websocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                toast('{{ __('Data dari ldc-worker diterima') }}');
+                    
+                if (data.code && data.area_mm2) {
+                        this.code = data.code;
+                        this.area_ab = data.area_ab;
+                        this.area_qt = data.area_qt;
+                    }
+                };
+
+                this.websocket.onopen = () => {
+                    this.connectionStatus = 'Connected';
+                    console.log('Terhubung dengan ldc-worker, websocket.readyState: ' + this.websocket.readyState);
+                };
+
+                this.websocket.onclose = () => {
+                    this.connectionStatus = 'Disconnected';
+                    console.log('Terputus dengan ldc-worker, websocket.readyState: ' + this.websocket.readyState);
+                    this.scheduleReconnect();
+                };
+
+                this.websocket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    this.websocket.close();
+                };
+            },
+            connectWebSocket() {
+                this.websocket = window.AppWebSockets.getOrCreate(
+                    'leather-stats',  // Identifier for this specific websocket
+                    'ws://127.0.0.1:32998/ws'
+                );
+            },
+            scheduleReconnect() {
+                if (!this.reconnectInterval) {
+                    this.reconnectInterval = setInterval(() => {
+                        if (!this.websocket || this.websocket.readyState === WebSocket.CLOSED) {
+                            this.initWebSocket();
+                        }
+                    }, 10000); // Attempt to reconnect every 5 seconds
+                }
+            },
+            get diff() {
+                let area_vn = parseFloat(this.area_vn)
+                let area_ab = parseFloat(this.area_ab)
+                return ((area_vn > 0 && area_ab > 0) ? ((area_vn - area_ab) / area_vn * 100) : 0)
+            },
+            get defect() {
+                let area_vn = parseFloat(this.area_vn)
+                let area_qt = parseFloat(this.area_qt)
+                return((area_vn > 0 && area_qt > 0) ? ((area_vn - area_qt) / area_vn * 100) : 0)
+            },
+            get area_qt_eval() {
+                try {
+                    let result = eval(this.area_qt_string.replace(/[^\d\.\+\-\*\/\(\)]/g, ''));
+                    return !isNaN(result) ? result.toFixed(2) : '0.00';
+                } catch {
+                    return '0.00';
+                }
+            },
+            setCursorToEnd() { 
+                this.$refs.hidecode.focus(); 
+                this.$refs.hidecode.setSelectionRange(this.code.length, this.code.length); 
+            }
+        }" 
+        x-init="initWebSocket()" 
+        @wire:navigate.window="if (websocket) { websocket.close(); websocket = null; }"
+        x-on:disconnect.window="if (websocket) { websocket.close(); websocket = null; }" 
+        x-on:set-form-group.window="group_id = $event.detail.group_id; material = $event.detail.material">
     <form id="ldc-index-form-element" wire:submit="save">
         <div class="grid grid-cols-1 gap-6">
+            <div class="flex justify-between text-xs uppercase">
+                <div class="text-neutral-500 px-3">{{ Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMMM YYYY, HH:mm') }}</div>
+                <div class="bg-neutral-200 dark:bg-neutral-900 rounded-full px-3 py-1 font-bold" :class="connectionStatusClass">
+                    <i class="fa fa-circle mr-2"></i><span x-text="connectionMessage">{{ __('ldc-worker terputus') }}</span>
+                </div>
+            </div>
             <div class="grid grid-cols-3 gap-3">
                 <div>
                     <label for="hide-area_vn"
@@ -312,7 +369,7 @@ new class extends Component {
             <x-text-input-line type="text" x-model="area_qt_string" x-on:keyup.enter="area_qt = area_qt_eval; window.dispatchEvent(escKey); $refs.hidecode.focus()"></x-text-input-line>
         </div>
     </x-spotlight>
-    <div class="w-60 grid grid-cols-1 grid-rows-2 gap-6 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
+    <div class="w-60 flex flex-col justify-around grid-rows-2 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
         <div>
             <div class="text-sm uppercase">{{ __('Selisih') }}</div>
             <div x-cloak x-show="diff < 6 && area_vn > 0 && area_ab > 0" class="text-green-500"><i class="fa fa-check-circle me-2"></i><span class="text-xl">{{ __('Di bawah 6%') }}</span></div>
@@ -324,10 +381,6 @@ new class extends Component {
             <div x-cloak x-show="defect >= 0 && area_vn > 0 && area_qt > 0"><span class="text-xl">{{ __('OK') }}</span></div>
             <div x-cloak x-show="defect < 0 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Abnormal') }}</span></div>
             <div x-show="!area_vn || !area_qt"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
-        </div>
-        <div class="text-xs text-neutral-500 text-center">
-            <div>{{ Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMM YYYY') }}</div>
-            <div>{{ Carbon::now()->locale(app()->getLocale())->isoFormat('HH:mm') }}</div>
         </div>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
