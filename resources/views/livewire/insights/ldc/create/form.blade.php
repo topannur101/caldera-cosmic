@@ -24,6 +24,7 @@ new class extends Component {
     public $grade;
     public $quota_id;
     public $code;
+    public $code_last_received;
     public $shift;
 
     public $ins_ldc_machines;
@@ -76,10 +77,12 @@ new class extends Component {
             $this->js('toast("' . __('Kamu belum masuk') . '", { type: "danger" })');
         } else {
 
-            $this->code     = $this->clean($this->code);
-            $this->code     = preg_replace('/[^a-zA-Z0-9]/', '', $this->code);
+            $this->code = $this->clean($this->code);
+            $this->code = preg_replace('/[^a-zA-Z0-9]/', '', $this->code);
 
-            $validated = $this->validate();
+            $this->validate();
+
+            $this->code_last_received = $this->code;
 
             $group = InsLdcGroup::find($this->group_id);
 
@@ -153,44 +156,48 @@ new class extends Component {
 ?>
 
 <div class="px-6 py-8 flex gap-x-6" 
-    x-data="{ 
-        group_id: $wire.entangle('group_id'),
-        material: $wire.entangle('material'),
-        area_vn: $wire.entangle('area_vn'), 
-        area_ab: $wire.entangle('area_ab'),
-        area_qt: $wire.entangle('area_qt'),
-        area_qt_string: '',
-        code: $wire.entangle('code'),
-        quota_id: $wire.entangle('quota_id'),
-        websocket: null,    
-        connectionStatus: 'Disconnected',
-        get connectionStatusClass() {
-            return {
-                'Connected': 'text-green-600',
-                'Connecting': 'text-yellow-600',
-                'Disconnected': 'text-red-600',
-            }[this.connectionStatus];
-        },        
-        get connectionMessage() {
-            return {
-                'Connected': '{{ __("ldc-worker tersambung") }}',
-                'Connecting': '{{ __("Menyambungkan...") }}',
-                'Disconnected': '{{ __("ldc-worker terputus") }}',
-            }[this.connectionStatus];
-        },
-        reconnectInterval: null,
-        initWebSocket() {
-            this.connectionStatus = 'Connecting';
-            this.connectWebSocket();        
-            this.websocket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                toast('{{ __('Data dari ldc-worker diterima') }}');
-                    
-                    this.code = data.code;
-                    this.area_ab = data.area_ab;
-                    this.area_qt = data.area_qt;
+        x-data="{ 
+            group_id: $wire.entangle('group_id'),
+            material: $wire.entangle('material'),
+            area_vn: $wire.entangle('area_vn'), 
+            area_ab: $wire.entangle('area_ab'),
+            area_qt: $wire.entangle('area_qt'),
+            area_qt_string: '',
+            code: $wire.entangle('code'),
+            code_last_received: $wire.entangle('code_last_received'),
+            quota_id: $wire.entangle('quota_id'),
+            websocket: null,    
+            connectionStatus: 'Disconnected',
+            get connectionStatusClass() {
+                return {
+                    'Connected': 'text-green-600',
+                    'Connecting': 'text-yellow-600',
+                    'Disconnected': 'text-red-600',
+                }[this.connectionStatus];
+            },        
+            get connectionMessage() {
+                return {
+                    'Connected': '{{ __("ldc-worker tersambung") }}',
+                    'Connecting': '{{ __("Menyambungkan...") }}',
+                    'Disconnected': '{{ __("ldc-worker terputus") }}',
+                }[this.connectionStatus];
+            },
+            reconnectInterval: null,
+            initWebSocket() {
+                this.connectionStatus = 'Connecting';
+                this.connectWebSocket();        
+                this.websocket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (this.code_last_received === data.code) {
+                        toast('{{ __('Data dari ldc-worker diabaikan (duplikat)') }}');
+                    } else {
+                        toast('{{ __('Data dari ldc-worker diterima') }}');
+                        this.code = data.code;
+                        this.area_ab = data.area_ab;
+                        this.area_qt = data.area_qt;
+                        this.code_last_received = data.code;
+                    }
                 };
-
                 this.websocket.onopen = () => {
                     this.connectionStatus = 'Connected';
                     console.log('Terhubung dengan ldc-worker, websocket.readyState: ' + this.websocket.readyState);
