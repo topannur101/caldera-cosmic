@@ -4,7 +4,7 @@
 block_cipher = None
 
 a = Analysis(
-    ['ldc-worker-app-v0.1.py'],
+    ['app.py'],
     pathex=[],
     binaries=[],
     datas=[],

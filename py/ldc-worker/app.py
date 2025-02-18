@@ -1,14 +1,17 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import logging
-from typing import List
 import sys
 import ctypes
 from scapy.all import sniff, TCP, Raw, conf
 import json
 import asyncio
 from datetime import datetime
+from weakref import WeakSet
+from asyncio import Semaphore
+import gc
 
 # Set up logging
 logging.basicConfig(
@@ -20,8 +23,24 @@ logger = logging.getLogger(__name__)
 # Constants
 MM2_TO_FT2 = 0.00001076391  # Conversion factor from mm² to ft²
 WEBSOCKET_PORT = 32998
+MAX_CONCURRENT_TASKS = 100
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Check for admin privileges
+    if not is_admin():
+        logger.error("This program requires administrator privileges to capture packets.")
+        sys.exit(1)
+    
+    sniffing_task = asyncio.create_task(start_packet_sniffing())
+    gc_task = asyncio.create_task(periodic_gc())
+
+    yield # the app is now running
+    sniffing_task.cancel()
+    gc_task.cancel()
+    logger.info("Application shutdown complete.")
+
+app = FastAPI(lifespan=lifespan)
 
 # Enable CORS
 app.add_middleware(
@@ -33,7 +52,7 @@ app.add_middleware(
 )
 
 # Store active WebSocket connections
-active_connections: List[WebSocket] = []
+active_connections = WeakSet()
 
 def is_admin():
     try:
@@ -52,15 +71,17 @@ def convert_to_ft2(mm2_value):
     """Convert from mm² to ft² and round to 2 decimal places"""
     return round(float(mm2_value) * MM2_TO_FT2, 2)
 
+semaphore = Semaphore(MAX_CONCURRENT_TASKS)
 async def broadcast_to_clients(data):
-    """Broadcast data to all connected WebSocket clients"""
-    for connection in active_connections:
-        try:
-            await connection.send_json(data)
-            logger.debug(f"Successfully sent to client {id(connection)}")
-        except Exception as e:
-            logger.error(f"Failed to send to client {id(connection)}: {str(e)}")
-            active_connections.remove(connection)
+    async with semaphore:
+        """Broadcast data to all connected WebSocket clients"""
+        for connection in active_connections:
+            try:
+                await connection.send_json(data)
+                logger.debug(f"Successfully sent to client {id(connection)}")
+            except Exception as e:
+                logger.error(f"Failed to send to client {id(connection)}: {str(e)}")
+                active_connections.remove(connection)
 
 def parse_chunked_http_payload(payload):
     """Parse an HTTP payload with chunked transfer encoding to extract JSON data."""
@@ -116,6 +137,10 @@ def process_packet(packet, loop):
         except Exception as e:
             logger.error(f"Error processing packet: {e}")
 
+        finally:
+            del packet
+            del payload
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -123,7 +148,7 @@ async def websocket_endpoint(websocket: WebSocket):
     logger.info(f"New WebSocket connection established. Client ID: {client_id}")
     logger.info(f"Total active connections: {len(active_connections) + 1}")
     
-    active_connections.append(websocket)
+    active_connections.add(websocket)
     try:
         while True:
             # Keep the connection alive
@@ -131,7 +156,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         logger.error(f"WebSocket error with client {client_id}: {str(e)}")
     finally:
-        active_connections.remove(websocket)
+        active_connections.discard(websocket)
         logger.info(f"Client {client_id} disconnected")
         logger.info(f"Remaining active connections: {len(active_connections)}")
 
@@ -153,19 +178,14 @@ async def start_packet_sniffing():
         lambda: sniff(
             filter="tcp",
             prn=lambda pkt: process_packet(pkt, loop),  # Pass loop to process_packet
-            iface=loopback_iface
+            iface=loopback_iface,
+            store=False
         )
     )
-
-@app.on_event("startup")
-async def startup_event():
-    # Check for admin privileges
-    if not is_admin():
-        logger.error("This program requires administrator privileges to capture packets.")
-        sys.exit(1)
-    
-    # Start packet sniffing
-    asyncio.create_task(start_packet_sniffing())
+async def periodic_gc(interval=300):
+    while True:
+        await asyncio.sleep(interval)
+        gc.collect()
 
 if __name__ == "__main__":
     print("\n=== WebSocket and Packet Sniffer Server ===")
