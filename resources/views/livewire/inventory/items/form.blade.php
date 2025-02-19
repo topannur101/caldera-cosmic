@@ -3,6 +3,9 @@
 use Livewire\Volt\Component;
 use App\Models\InvItem;
 use App\Models\InvArea;
+use App\Models\InvCurr;
+use Livewire\Attributes\Renderless;
+use Livewire\Attributes\On;
 
 new class extends Component
 {
@@ -12,15 +15,16 @@ new class extends Component
 
    public array $item = [
       'id'              => '',
-      'photo'           => '',
-      'area_id'         => 0,
-      'area_name'       => '',
-      'is_active'       => true,
       'name'            => '',
       'desc'            => '',
       'code'            => '',
       'loc_id'          => 0,
+      'loc_name'        => '',
       'tags_list'       => '',
+      'photo'           => '',
+      'area_id'         => 0,
+      'area_name'       => '',
+      'is_active'       => true,
       'updated_at'      => '',
       'last_withdrawal' => '',
    ];
@@ -32,21 +36,13 @@ new class extends Component
    public array $loc_parents  = [];
    public array $loc_bins     = [];
    public array $stocks       = [];
-   public array $currencies   = [
-      [
-         'name' => 'USD',
-         'rate' => 1
-      ],[
-         'name' => 'IDR',
-         'rate' => 16300
-      ],
-
-   ];
+   public array $currencies   = [];
 
    public function mount()
    {
+      $currencies = InvCurr::all();
+      $this->currencies = $currencies ? $currencies->toArray() : [];
       
-
       $item = InvItem::find($this->id);
       if($item) {
          $this->item['id'] = $item->id;
@@ -58,25 +54,59 @@ new class extends Component
       }
    }
 
+   public function save()
+   {
+      $this->validate([
+         'item.name'    => ['required', 'max:128'],
+         'item.desc'    => ['required', 'max:256'],
+         'item.code'    => ['nullable', 'alpha_dash', 'size:11'],
+
+         'loc_parent'   => ['required_with:loc_bin', 'alpha_dash','max:3'],
+         'loc_bin'      => ['required_with:loc_parent', 'alpha_dash','max:7'],
+         'tags'         => ['array', 'max:5'],
+         'tags.*'       => ['required', 'alpha_dash', 'max:20'],
+
+         'stocks'                => ['array', 'max:3'],
+         'stocks.*.currency'     => ['required', 'alpha', 'size:3'],
+         'stocks.*.unit_price'   => ['required', 'numeric', 'min:0', 'max:999999999'],
+         'stocks.*.uom'          => ['required', 'alpha', 'max:5'],
+
+         'item.photo'      => ['nullable'],
+         'item.area_id'    => ['required', 'exists:inv_areas,id'],
+         'item.is_active'  => ['required', 'boolean'],
+      ]);
+
+      dd($this);
+
+   }
+
+   #[Renderless] 
+   #[On('photo-updated')] 
+   public function updatePhoto($photo)
+   {
+       $this->item['photo'] = $photo;
+   }
+
 };
 
 ?>
 
 <div>
    @if($is_editing)
-      <div class="px-4 sm:px-0">
-         <div class="flex items-center justify-between gap-x-4 p-4 mb-8 text-sm text-neutral-800 border border-neutral-300 rounded-lg bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-600" role="alert">
-               <div class="flex items-center">
-                  <i class="fa fa-pen me-3"></i>
-                  <span class="sr-only">Info</span>
-                  <div>
-                     <span class="font-medium">{{ __('Mode edit') . ': ' }}</span> {{ __('Klik bidang yang hendak di edit, klik simpan bila sudah selesai.') }}
-                  </div>
-               </div>
-               <div>
-                  <x-primary-button type="button"><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
-               </div>
+      <div class="px-4 sm:px-0 mb-8 grid grid-cols-1 gap-y-4">
+         <div class="flex items-center justify-between gap-x-4 p-4 text-sm text-neutral-800 border border-neutral-300 rounded-lg bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-600" role="alert">
+            <div>
+               {{ __('Klik simpan jika sudah selesai melengkapi informasi barang') }}
+            </div>
+            <div>
+               <x-primary-button wire:click="save" type="button"><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
+            </div>
          </div>
+         @if ($errors->any())
+            <div class="text-center">
+                <x-input-error :messages="$errors->first()" />
+            </div>
+        @endif
       </div>
    @endif
     <div class="block sm:flex gap-x-6">
@@ -88,7 +118,7 @@ new class extends Component
                      <div class="flex items-center gap-x-3 py-3">
                         <i class="text-neutral-500 fa fa-fw fa-tent me-2"></i>
                         <x-select wire:model="item.area_id" class="w-full">
-                           <option value="">{{ __('Pilih area') }}</option>
+                           <option value=""></option>
                            @foreach($areas as $area)
                               <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
                            @endforeach
@@ -115,7 +145,7 @@ new class extends Component
                   @if($is_editing)
                      <div>
                         <label for="item-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
-                        <x-text-input id="item-name" wire:model="item.desc" type="text" />
+                        <x-text-input id="item-name" wire:model="item.name" type="text" />
                      </div>
                      <div>
                         <label for="item-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
@@ -177,6 +207,10 @@ new class extends Component
                         this.calculateMainPrice();
                      }
                   });
+
+                  this.$watch('secondary_currency', (value) => {
+                     this.calculateMainPrice();
+                  });
                },
 
                // Calculate main price based on secondary price and exchange rates
@@ -195,7 +229,7 @@ new class extends Component
                   // Trim inputs
                   const uom = this.uom_input.trim().toUpperCase().substring(0, 5);
                   const currency = this.is_secondary_currency ? this.secondary_currency : this.main_currency;
-                  const unit_price = this.is_secondary_currency ? this.secondary_unit_price : this.main_unit_price;
+                  const unit_price = this.is_secondary_currency ? (this.secondary_unit_price ? this.secondary_unit_price : 0) : this.main_unit_price;
 
                   if (!uom) {
                      toast('{{ __('Uom wajib diisi') }}', { type: 'danger' });
@@ -203,6 +237,11 @@ new class extends Component
                   }
                   if (this.stocks.some((stock, index) => stock.currency === currency && stock.uom === uom && index !== this.editingIndex)) {
                      toast('{{ __('Mata uang dan uom tersebut sudah ada') }}', { type: 'danger' });
+                     return;
+                  }
+
+                  if (this.is_secondary_currency && !this.secondary_currency) {
+                     toast('{{ __('Mata uang sekunder wajib diisi') }}', { type: 'danger' });
                      return;
                   }
 
@@ -272,7 +311,7 @@ new class extends Component
                            <x-text-input id="stock-uom" type="text" x-model="uom_input" maxlength="5"></x-text-input>
                         </div>    
                         <div class="col-span-1 sm:col-span-2">
-                           <label for="stock-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
+                           <label for="stock-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}<i class="fa fa-lock ml-3" x-show="is_secondary_currency" x-cloak></i></label>
                            <x-text-input-curr curr="main_currency" ::disabled="is_secondary_currency" 
                                           id="stock-unit-price" type="number" x-model="main_unit_price" min="0"></x-text-input>
                         </div>
@@ -315,11 +354,16 @@ new class extends Component
                         </x-text-button>
                      </div>
                   </template>
-                  <x-text-button type="button" x-on:click="$dispatch('open-modal', 'stock-creator')" 
+                  <x-text-button type="button" x-on:click="$dispatch('open-modal', 'stock-creator')" :disabled="!$currencies"
                                  class="rounded-full border border-neutral-300 dark:border-neutral-700 px-3 py-1">
                      <i class="fa fa-plus me-2"></i>{{ __('Tambah unit') }}
                   </x-text-button>
                </div>
+               @if(!$currencies)
+               <div class="mt-6 text-sm">
+                  <i class="fa fa-circle-exclamation mr-2"></i>{{ __('Mata uang perlu diregistrasi sebelum menambahkan unit') }}
+               </div> 
+               @endif
             </div>
 
             @else

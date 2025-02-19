@@ -1,13 +1,63 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
+use App\Models\InvItem;
 
 new #[Layout('layouts.app')] 
 class extends Component {
 
-    public $photo;
+    use WithFileUploads;
+    
+    public $mode;
+
+    public $is_editing = false;
+
+    public $id;
     public $url;
-    public bool $is_editing = false;
+    public $photo;
+
+    public function updatedPhoto()
+    {
+        
+        $validator = Validator::make(
+            ['photo' => $this->photo ],
+            ['photo' => 'nullable|mimetypes:image/jpeg,image/png,image/gif|max:1024'],
+            ['mimetypes' => __('Berkas harus jpg, png, atau gif'), 'max' => __('Berkas maksimal 1 MB')]
+        );
+
+        if ($validator->fails()) {
+
+            $errors = $validator->errors();
+            $error = $errors->first('photo'); 
+            $this->js('toast("' . $error . '", { type: "danger" })');
+
+        } else {
+
+            $this->url = $this->photo ? $this->photo->temporaryUrl() : '';
+            $photo = $this->photo ? $this->photo->getFilename() : '';
+
+            if ($this->is_editing) {
+                $this->dispatch('photo-updated', photo: $photo);
+            } else {
+                $item = InvItem::find($this->id);
+                if ($item) {
+                    Gate::authorize('updateOrCreate', $item);
+                    $item->updatePhoto($photo);
+                    $this->js('toast("' . __('Foto diperbarui') . '", { type: "success" })');
+
+                }
+            }
+
+        }
+    }
+
+    public function removePhoto()
+    {
+        $this->photo = '';
+        $this->url = '';
+        $this->dispatch('photo-updated', photo: '');
+    }
   
 };
 

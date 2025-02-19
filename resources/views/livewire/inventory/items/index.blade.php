@@ -41,10 +41,13 @@ class extends Component {
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2 mb-6">
-        <div class="flex gap-x-2 items-center px-8 py-2 lg:py-0">
-            <i class="fa fa-search"></i>
+        <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
+            <i wire:loading.remove class="fa fa-fw fa-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
+            <i wire:loading class="fa fa-fw relative">
+                <x-spinner class="sm mono"></x-spinner>
+            </i>
             <div class="w-full md:w-40">
-                <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="py-1"
+                <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
                     type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
                 <datalist id="qwords">
                     @if (count($qwords))

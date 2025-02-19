@@ -83,7 +83,7 @@ return new class extends Migration
             $table->foreignId('inv_curr_id')->constrained();
             $table->unsignedInteger('qty')->default(0);
             $table->string('uom'); // ea, pcs
-            $table->decimal('unit_price', 15, 2)->default(0);
+            $table->decimal('unit_price', 11, 2)->default(0);
             $table->boolean('is_active')->default(true);
             $table->index('inv_item_id');
             $table->index('inv_curr_id');

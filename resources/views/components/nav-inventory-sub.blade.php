@@ -13,8 +13,8 @@
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.circs.index') }}" :active="request()->is('inventory/circs*')" wire:navigate>
                 <i class="fa fa-arrow-right-arrow-left text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Sirkulasi ') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.data.index') }}" :active="request()->is('inventory/data*')" wire:navigate>
-                <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
+            <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.reqs.index') }}" :active="request()->is('inventory/reqs*')" wire:navigate>
+                <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Pengajuan') }}</span>
             </x-nav-link>
         </div>
    </div>

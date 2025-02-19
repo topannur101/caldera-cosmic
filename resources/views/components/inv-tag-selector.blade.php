@@ -27,7 +27,7 @@
          this.tags = this.tags.filter(t => t !== tag);
       }
    }" class="flex items-center {{ $isQuery ? 'px-4' : '' }}">
-   <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'tag-selector')">
+   <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'tag-selector')" ::class="tag_list ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'">
       <i class="fa fa-fw fa-tag me-3"></i><span x-text="tag_list ? tag_list : '{{ $isQuery ? __('Tag') : __('Tak ada tag') }}'"></span>
    </x-text-button>
    

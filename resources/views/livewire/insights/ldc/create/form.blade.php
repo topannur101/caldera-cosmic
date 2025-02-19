@@ -215,10 +215,16 @@ new class extends Component {
                 };
             },
             connectWebSocket() {
+                const previousState = this.websocket?.readyState;
                 this.websocket = window.AppWebSockets.getOrCreate(
                     'leather-stats',  // Identifier for this specific websocket
                     'ws://127.0.0.1:32998/ws'
                 );
+
+                if (previousState !== WebSocket.OPEN && this.websocket.readyState === WebSocket.OPEN) {
+                    // Connection was restored/reestablished
+                    this.connectionStatus = 'Connected';
+                }
             },
             scheduleReconnect() {
                 if (!this.reconnectInterval) {

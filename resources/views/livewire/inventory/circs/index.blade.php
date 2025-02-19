@@ -83,7 +83,10 @@ class extends Component {
                     </x-slot>
                     <x-slot name="content">
                         <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
-                            <i class="fa fa-fw me-2"></i>{{ __('Sirkulasi massal')}}
+                            <i class="fa fa-fw fa-arrows-turn-right me-2"></i>{{ __('Sirkulasi massal')}}
+                        </x-dropdown-link>
+                        <x-dropdown-link href="{{ route('inventory.circs.summary.index') }}" wire:navigate>
+                            <i class="fa fa-fw fa-line-chart me-2"></i>{{ __('Ringkasan')}}
                         </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />
                         <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
