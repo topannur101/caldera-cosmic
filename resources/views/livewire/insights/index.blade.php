@@ -224,24 +224,6 @@ class extends Component {
                             </div>
                         </div>
                     </a>
-                    <a href="#" class="block hover:bg-caldy-500 hover:bg-opacity-10" x-data x-on:click.prevent="alert('Sedang dalam tahap pengembangan')">
-                        <div class="flex items-center">
-                            <div class="px-6 py-3">
-                                <img src="/ink-rad.svg" class="w-16 h-16 dark:invert">
-                            </div>
-                            <div class="grow">
-                                <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Lacak penuaan batch') }}</div>
-                                <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
-                                    <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
-                                        <div>{{ __('Dalam tahap pengembangan') }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="px-6 py-3 text-lg">
-                                <i class="fa fa-chevron-right"></i>
-                            </div>
-                        </div>
-                    </a>
                 </div>
             </div>
             <div class="flex flex-col gap-6">
