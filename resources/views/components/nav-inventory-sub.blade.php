@@ -14,7 +14,7 @@
                 <i class="fa fa-arrow-right-arrow-left text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Sirkulasi ') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.reqs.index') }}" :active="request()->is('inventory/reqs*')" wire:navigate>
-                <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Pengajuan') }}</span>
+                <i class="fa fa-cart-shopping text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Pengajuan') }}</span>
             </x-nav-link>
         </div>
    </div>

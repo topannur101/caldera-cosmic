@@ -11,22 +11,26 @@ new class extends Component
 {
    public int $id = 0;
 
+   public int $id_new = 0;
+
    public bool $is_editing = false;
 
-   public array $item = [
-      'id'              => '',
-      'name'            => '',
-      'desc'            => '',
-      'code'            => '',
-      'loc_id'          => 0,
-      'loc_name'        => '',
-      'tags_list'       => '',
-      'photo'           => '',
-      'area_id'         => 0,
-      'area_name'       => '',
-      'is_active'       => true,
-      'updated_at'      => '',
-      'last_withdrawal' => '',
+   public array $items = [
+      0 => [
+         'id'              => '',
+         'name'            => '',
+         'desc'            => '',
+         'code'            => '',
+         'loc_id'          => 0,
+         'loc_name'        => '',
+         'tags_list'       => '',
+         'photo'           => '',
+         'area_id'         => 0,
+         'area_name'       => '',
+         'is_active'       => true,
+         'updated_at'      => '',
+         'last_withdrawal' => '',
+      ]
    ];
 
    public string $loc_parent  = '';
@@ -57,9 +61,9 @@ new class extends Component
    public function save()
    {
       $this->validate([
-         'item.name'    => ['required', 'max:128'],
-         'item.desc'    => ['required', 'max:256'],
-         'item.code'    => ['nullable', 'alpha_dash', 'size:11'],
+         'items.*.name'    => ['required', 'max:128'],
+         'items.*.desc'    => ['required', 'max:256'],
+         'items.*.code'    => ['nullable', 'alpha_dash', 'size:11'],
 
          'loc_parent'   => ['required_with:loc_bin', 'alpha_dash','max:3'],
          'loc_bin'      => ['required_with:loc_parent', 'alpha_dash','max:7'],
@@ -71,12 +75,13 @@ new class extends Component
          'stocks.*.unit_price'   => ['required', 'numeric', 'min:0', 'max:999999999'],
          'stocks.*.uom'          => ['required', 'alpha', 'max:5'],
 
-         'item.photo'      => ['nullable'],
-         'item.area_id'    => ['required', 'exists:inv_areas,id'],
-         'item.is_active'  => ['required', 'boolean'],
-      ]);
-
-      dd($this);
+         'items.*.photo'      => ['nullable'],
+         'items.*.area_id'    => ['required', 'exists:inv_areas,id'],
+         'items.*.is_active'  => ['required', 'boolean'],
+      ], []);
+      
+      $this->js('$dispatch("open-modal", "item-created")');
+      $this->reset(['id', 'items', 'loc_parent', 'loc_bin', 'tags', 'loc_parents', 'loc_bins', 'stocks']);
 
    }
 
@@ -84,7 +89,7 @@ new class extends Component
    #[On('photo-updated')] 
    public function updatePhoto($photo)
    {
-       $this->item['photo'] = $photo;
+       $this->items[0]['photo'] = $photo;
    }
 
 };
@@ -108,6 +113,21 @@ new class extends Component
             </div>
         @endif
       </div>
+      <div wire:key="modals">
+         <x-modal name="item-created" maxWidth="sm">
+            <div class="p-6">
+               <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100"><i class="fa fa-check-circle text-green-500 mr-3"></i>{{ __('Barang dibuat') }}</h2>
+               <div class="my-6 text-sm">
+                  <p>{{ __('Apa yang akan kamu lakukan selanjutnya?') }}</p>
+               </div>
+               <div class="grid grid-cols-1 gap-y-3">
+                  <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Kembali ke pencarian') }}</x-primary-button>
+                  <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Lihat barang') }}</x-primary-button>
+                  <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Buat lagi') }}</x-primary-button>
+               </div>
+            </div>
+         </x-modal>
+      </div>
    @endif
     <div class="block sm:flex gap-x-6">
         <div wire:key="photo">
@@ -117,14 +137,14 @@ new class extends Component
                   @if($is_editing)
                      <div class="flex items-center gap-x-3 py-3">
                         <i class="text-neutral-500 fa fa-fw fa-tent me-2"></i>
-                        <x-select wire:model="item.area_id" class="w-full">
+                        <x-select wire:model="items.0.area_id" class="w-full">
                            <option value=""></option>
                            @foreach($areas as $area)
                               <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
                            @endforeach
                         </x-select>
                      </div>
-                     <div x-data="{ is_active: @entangle('item.is_active') }" class="flex items-center gap-x-3 py-3">
+                     <div x-data="{ is_active: @entangle('items.0.is_active') }" class="flex items-center gap-x-3 py-3">
                         <i x-show="is_active" class="text-neutral-500 fa fa-fw fa-check-circle me-2"></i>
                         <i x-show="!is_active" class="text-neutral-500 fa fa-fw fa-ban me-2"></i>
                         <x-toggle id="item_is_active" x-model="is_active"><span x-show="is_active">{{ __('Aktif') }}</span><span x-show="!is_active">{{ __('Nonaktif') }}</span></x-toggle>
@@ -145,11 +165,11 @@ new class extends Component
                   @if($is_editing)
                      <div>
                         <label for="item-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
-                        <x-text-input id="item-name" wire:model="item.name" type="text" />
+                        <x-text-input id="item-name" wire:model="items.0.name" type="text" />
                      </div>
                      <div>
                         <label for="item-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
-                        <x-text-input id="item-desc" wire:model="item.desc" type="text" />                        
+                        <x-text-input id="item-desc" wire:model="items.0.desc" type="text" />                        
                      </div>
                   @else
                      <h1 class="text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $item['name'] }}</h1>
@@ -160,7 +180,7 @@ new class extends Component
                   <div class="py-6 grid grid-cols-1 gap-y-3">
                      <div>
                         <label for="item-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
-                        <x-text-input id="item-code" wire:model="item.code" type="text" />
+                        <x-text-input id="item-code" wire:model="items.0.code" type="text" />
                      </div>
                      <div class="px-3 mt-3">
                         <x-inv-loc-selector />
