@@ -96,7 +96,7 @@ new class extends Component
 
 ?>
 
-<div>
+<form wire:submit.prevent="save">
    @if($is_editing)
       <div class="px-4 sm:px-0 mb-8 grid grid-cols-1 gap-y-4">
          <div class="flex items-center justify-between gap-x-4 p-4 text-sm text-neutral-800 border border-neutral-300 rounded-lg bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-600" role="alert">
@@ -104,7 +104,7 @@ new class extends Component
                {{ __('Klik simpan jika sudah selesai melengkapi informasi barang') }}
             </div>
             <div>
-               <x-primary-button wire:click="save" type="button"><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
+               <x-primary-button type="submit"><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
             </div>
          </div>
          @if ($errors->any())
@@ -122,7 +122,7 @@ new class extends Component
                </div>
                <div class="grid grid-cols-1 gap-y-3">
                   <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Kembali ke pencarian') }}</x-primary-button>
-                  <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Lihat barang') }}</x-primary-button>
+                  <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Lihat barang yang dibuat') }}</x-primary-button>
                   <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Buat lagi') }}</x-primary-button>
                </div>
             </div>
@@ -392,4 +392,4 @@ new class extends Component
             @endif
         </div>
     </div>
-</div>
+</form>
