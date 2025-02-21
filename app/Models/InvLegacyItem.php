@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use App\Models\InvLoc;
 use App\Models\InvUom;
 use App\Models\InvCurr;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
+use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Imagick\Driver;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

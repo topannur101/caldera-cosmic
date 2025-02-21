@@ -4,8 +4,17 @@ use Livewire\Volt\Component;
 use App\Models\InvItem;
 use App\Models\InvArea;
 use App\Models\InvCurr;
+use App\Models\InvLoc;
+use App\Models\InvTag;
+use App\Models\InvStock;
+use App\Models\InvItemTag;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\On;
+
+use Carbon\Carbon;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Imagick\Driver;
+use Illuminate\Support\Facades\Storage;
 
 new class extends Component
 {
@@ -60,6 +69,22 @@ new class extends Component
 
    public function save()
    {
+      // clean up before validate
+      $this->items[0]['name']    = trim($this->items[0]['name']);
+      $this->items[0]['desc']    = trim($this->items[0]['desc']);
+      $this->items[0]['code']    = trim($this->items[0]['code']);
+      $this->loc_parent          = strtoupper(trim($this->loc_parent));
+      $this->loc_bin             = strtoupper(trim($this->loc_bin));
+      
+      foreach($this->tags as $tag) {
+         $tag = strtolower(trim($tag));
+      }
+      
+      foreach($this->stocks as $stock) {
+         $stock['currency'] = strtoupper(trim($stock['currency']));
+         $stock['uom']      = strtoupper(trim($stock['uom']));
+      }
+
       $this->validate([
          'items.*.name'    => ['required', 'max:128'],
          'items.*.desc'    => ['required', 'max:256'],
@@ -71,7 +96,7 @@ new class extends Component
          'tags.*'       => ['required', 'alpha_dash', 'max:20'],
 
          'stocks'                => ['array', 'max:3'],
-         'stocks.*.currency'     => ['required', 'alpha', 'size:3'],
+         'stocks.*.currency'     => ['required', 'exists:inv_currs,name'],
          'stocks.*.unit_price'   => ['required', 'numeric', 'min:0', 'max:999999999'],
          'stocks.*.uom'          => ['required', 'alpha', 'max:5'],
 
@@ -79,6 +104,108 @@ new class extends Component
          'items.*.area_id'    => ['required', 'exists:inv_areas,id'],
          'items.*.is_active'  => ['required', 'boolean'],
       ], []);
+
+      // process photo
+      $photo = null;
+      try {
+         $path = storage_path('app/livewire-tmp/' . $this->items[0]['photo']);
+        
+         // Check if file exists
+         if (!file_exists($path)) {
+             return;
+         }
+ 
+         $manager = new ImageManager(new Driver());
+         $image = $manager->read($path);
+         
+         // Process image
+         $image->scale(600, 600);
+         $image->toJpeg(70);
+         
+         // Generate unique filename
+         $time = Carbon::now()->format('YmdHis');
+         $rand = Str::random(5);
+         $photo = $time . '_' . $rand . '.jpg';
+         
+         // Attempt to store the image
+         $stored = Storage::put('/public/inv-items/' . $photo, $image);
+         
+         // If storage fails, reset photo to null
+         if (!$stored) {
+             $photo = null;
+         }
+
+      } catch (\Exception $e) {
+         $photo = null;
+      }
+
+      // prepare item model
+      if($this->items[0]['id']) {
+         $item = InvItem::find($this->items[0]['id']);
+      } else {
+         $item = new InvItem;
+      }
+
+      // prepare location id or null
+      $loc_id = null;
+      if ($this->loc_parent && $this->loc_bin) {
+         $loc_id = InvLoc::firstOrCreate([
+            'parent' => $this->loc_parent,
+            'bin'    => $this->loc_bin,
+         ])->id;
+      }
+
+      $item->name          = $this->items[0]['name'];
+      $item->desc          = $this->items[0]['desc'];
+      $item->code          = $this->items[0]['code'] ?? null;
+      $item->photo         = $photo;
+      $item->area_id       = $this->items[0]['area_id'];
+      $item->is_active     = $this->items[0]['is_active'];
+      $item->inv_loc_id    = $loc_id;
+      $item->save();
+
+      // detach tags
+      $item_tag_ids = InvItemTag::where('inv_item_id', $item->id);
+      $item_tag_ids->delete();
+
+      // create tags
+      $tag_ids = [];
+      foreach ($this->tags as $tag) {
+         $tag_ids[] = InvTag::firstOrCreate(['name' => $tag])->id;
+      }
+
+      // attach tags
+      foreach($tag_ids as $tag_id) {
+         InvItemTag::firstOrCreate([
+            'inv_item_id' => $item->id,
+            'inv_tag_id'  => $tag_id,
+         ]);
+      }
+
+      // detach stocks
+      $stocks = InvStock::where('inv_item_id', $item->id)->get();
+      foreach ($stocks as $stock) {
+         $stock->update([
+            'is_active' => false
+         ]);
+      }
+      
+      // create stocks
+      foreach ($this->stocks as $stock) {
+         $curr_id = InvCurr::where('name', $stock['currency'])->first()->id;
+         $stocks = InvStock::firstOrCreate([
+            'inv_item_id'  => $item->id,
+            'inv_curr_id'  => $curr_id,
+            'uom'          => $stock['uom'],
+         ]);
+      }
+
+      // attach stocks
+      foreach($stocks as $stock) {
+         $stock->update([
+            'is_active' => true
+         ]);
+      }
       
       $this->js('$dispatch("open-modal", "item-created")');
       $this->reset(['id', 'items', 'loc_parent', 'loc_bin', 'tags', 'loc_parents', 'loc_bins', 'stocks']);
