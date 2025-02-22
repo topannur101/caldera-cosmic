@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\InvItem;
+use App\Models\InvCurr;
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -28,7 +29,7 @@ class extends Component {
           'inv_items' => $inv_items,
       ];
    }
-  
+
 };
 
 ?>
@@ -78,9 +79,15 @@ class extends Component {
                         <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
                     </x-slot>
                     <x-slot name="content">
-                        <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
+                        @can('create', InvItem::class)
+                            <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
+                                <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
+                            </x-dropdown-link>
+                        @else
+                        <x-dropdown-link href="#" disabled="true">
                             <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
                         </x-dropdown-link>
+                        @endcan
                         <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
                             <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
                         </x-dropdown-link>
@@ -173,26 +180,13 @@ class extends Component {
                                 <th>{{ __('Tag') }} </th>
                                 <th></th>
                             </tr>
-                            @foreach ($inv_items as $inv_item)
-                                <x-inv-tr :href="route('inventory.items.show', ['id' => $inv_item->id])" :name="$inv_item->name" :desc="$inv_item->desc" :code="$inv_item->code"
-                                    :curr="$inv_curr->name" :price="$inv_item->price" :uom="$inv_item->inv_uom->name" :loc="$inv_item->inv_loc->name ?? null"
-                                    :tags="$inv_item->tags() ?? null" :qty="$qty" :qty_main="$inv_item->qty_main" :qty_used="$inv_item->qty_used"
-                                    :qty_rep="$inv_item->qty_rep">
-                                </x-inv-tr>
-                            @endforeach
                         </table>
                     </div>
                 @break
 
                 @default
                     <div wire:key="content" class="grid grid-cols-1 lg:grid-cols-2 gap-1 mt-4">
-                        @foreach ($inv_items as $inv_item)
-                            <x-inv-card-content :href="route('inventory.items.show', ['id' => $inv_item->id])" :name="$inv_item->name" :desc="$inv_item->desc" :code="$inv_item->code"
-                                :curr="$inv_curr->name" :price="$inv_item->price" :uom="$inv_item->inv_uom->name" :loc="$inv_item->inv_loc->name ?? null"
-                                :tags="$inv_item->tags() ?? null" :qty="$qty" :qty_main="$inv_item->qty_main" :qty_used="$inv_item->qty_used"
-                                :qty_rep="$inv_item->qty_rep" :url="$inv_item->photo ? '/storage/inv-items/' . $inv_item->photo : null">
-                            </x-inv-card-content>
-                        @endforeach
+
                     </div>
             @endswitch
         @endif
@@ -385,11 +379,7 @@ class extends Component {
                                     <th></th>
                                 </tr>
                                 @foreach ($inv_items as $inv_item)
-                                    <x-inv-tr :href="route('inventory.items.show', ['id' => $inv_item->id])" :name="$inv_item->name" :desc="$inv_item->desc" :code="$inv_item->code"
-                                        :curr="$inv_curr->name" :price="$inv_item->price" :uom="$inv_item->inv_uom->name" :loc="$inv_item->inv_loc->name ?? null"
-                                        :tags="$inv_item->tags() ?? null" :qty="$qty" :qty_main="$inv_item->qty_main" :qty_used="$inv_item->qty_used"
-                                        :qty_rep="$inv_item->qty_rep">
-                                    </x-inv-tr>
+
                                 @endforeach
                             </table>
                         </div>
@@ -398,11 +388,7 @@ class extends Component {
                     @default
                         <div wire:key="content" class="grid grid-cols-1 lg:grid-cols-2 gap-1 mt-4">
                             @foreach ($inv_items as $inv_item)
-                                <x-inv-card-content :href="route('inventory.items.show', ['id' => $inv_item->id])" :name="$inv_item->name" :desc="$inv_item->desc" :code="$inv_item->code"
-                                    :curr="$inv_curr->name" :price="$inv_item->price" :uom="$inv_item->inv_uom->name" :loc="$inv_item->inv_loc->name ?? null"
-                                    :tags="$inv_item->tags() ?? null" :qty="$qty" :qty_main="$inv_item->qty_main" :qty_used="$inv_item->qty_used"
-                                    :qty_rep="$inv_item->qty_rep" :url="$inv_item->photo ? '/storage/inv-items/' . $inv_item->photo : null">
-                                </x-inv-card-content>
+                            
                             @endforeach
                         </div>
                 @endswitch

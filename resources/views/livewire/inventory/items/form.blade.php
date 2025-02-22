@@ -13,7 +13,7 @@ use Livewire\Attributes\On;
 
 use Carbon\Carbon;
 use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Imagick\Driver;
+use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\Storage;
 
 new class extends Component
@@ -36,7 +36,7 @@ new class extends Component
          'photo'           => '',
          'area_id'         => 0,
          'area_name'       => '',
-         'is_active'       => true,
+         'is_active'       => false,
          'updated_at'      => '',
          'last_withdrawal' => '',
       ]
@@ -61,6 +61,7 @@ new class extends Component
          $this->item['id'] = $item->id;
          
       } else {
+         // caldera: please load areas where user has the right to create items
          $this->areas = InvArea::all()->toArray();
          $this->is_editing = true;
 
@@ -69,10 +70,11 @@ new class extends Component
 
    public function save()
    {
+
       // clean up before validate
       $this->items[0]['name']    = trim($this->items[0]['name']);
       $this->items[0]['desc']    = trim($this->items[0]['desc']);
-      $this->items[0]['code']    = trim($this->items[0]['code']);
+      $this->items[0]['code']    = strtoupper(trim($this->items[0]['code']));
       $this->loc_parent          = strtoupper(trim($this->loc_parent));
       $this->loc_bin             = strtoupper(trim($this->loc_bin));
       
@@ -116,11 +118,9 @@ new class extends Component
          }
  
          $manager = new ImageManager(new Driver());
-         $image = $manager->read($path);
-         
-         // Process image
-         $image->scale(600, 600);
-         $image->toJpeg(70);
+         $image = $manager->read($path)
+         ->scale(600, 600)
+         ->toJpeg(70);
          
          // Generate unique filename
          $time = Carbon::now()->format('YmdHis');
@@ -140,10 +140,13 @@ new class extends Component
       }
 
       // prepare item model
+      $item = null;
       if($this->items[0]['id']) {
          $item = InvItem::find($this->items[0]['id']);
-      } else {
-         $item = new InvItem;
+      }
+
+      if (!$item) {
+         $item = new InvItem();
       }
 
       // prepare location id or null
@@ -157,11 +160,19 @@ new class extends Component
 
       $item->name          = $this->items[0]['name'];
       $item->desc          = $this->items[0]['desc'];
-      $item->code          = $this->items[0]['code'] ?? null;
+      $item->code          = $this->items[0]['code'] ?: null;
       $item->photo         = $photo;
-      $item->area_id       = $this->items[0]['area_id'];
+      $item->inv_area_id   = $this->items[0]['area_id'];
       $item->is_active     = $this->items[0]['is_active'];
       $item->inv_loc_id    = $loc_id;
+
+      $response = Gate::inspect('store', $item);
+ 
+      if ($response->denied()) {
+         $this->js('toast("' . $response->message() . '", { type: "danger" })');
+         return;
+      }
+
       $item->save();
 
       // detach tags
@@ -203,18 +214,20 @@ new class extends Component
       // attach stocks
       foreach($stocks as $stock) {
          $stock->update([
+            'unit_price' => $stock['unit_price'],
             'is_active' => true
          ]);
       }
       
       $this->js('$dispatch("open-modal", "item-created")');
       $this->reset(['id', 'items', 'loc_parent', 'loc_bin', 'tags', 'loc_parents', 'loc_bins', 'stocks']);
+      $this->dispatch('remove-photo');
 
    }
 
    #[Renderless] 
    #[On('photo-updated')] 
-   public function updatePhoto($photo)
+   public function insertPhoto($photo)
    {
        $this->items[0]['photo'] = $photo;
    }

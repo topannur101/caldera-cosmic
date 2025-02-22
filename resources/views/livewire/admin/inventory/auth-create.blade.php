@@ -127,7 +127,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
             <div>{{ __('Lokasi') }}</div>
-            <x-checkbox id="{{ $auth->id ?? 'new'}}-bin-manage" :disabled="!$is_superuser" wire:model="actions" value="bin-manage">{{ __('Buat dan perbarui bin') }}</x-checkbox>
+            <x-checkbox id="{{ $auth->id ?? 'new'}}-bin-manage" :disabled="!$is_superuser" wire:model="actions" value="bin-manage">{{ __('Buat dan perbarui lokasi') }}</x-checkbox>
         </div>
         <div class="mt-6 flex justify-end items-end">
             <x-primary-button type="submit">

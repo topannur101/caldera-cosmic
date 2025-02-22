@@ -52,13 +52,28 @@ class InvItemPolicy
 
     }
 
-    public function updateOrCreate(User $user, InvItem $invItem): Response
+    public function create(User $user): Response
+    {
+        $auths = $user->inv_auths;
+        $actions = [];
+
+        foreach ($auths as $auth) {
+            $authActions = json_decode($auth->actions, true);
+            $actions = array_merge($actions, $authActions);
+        }
+        return in_array('item-manage', $actions)
+            ? Response::allow()
+            : Response::deny(__('Kamu tak memiliki wewenang untuk membuat barang'));
+    }
+
+    public function store(User $user, InvItem $invItem): Response
     {
         $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();
+
         $actions = json_decode($auth->actions ?? '{}', true);
-        return in_array('item-create', $actions)
+        return in_array('item-manage', $actions)
         ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk membuat atau memperbarui barang di') . ' ' . $invItem->inv_area->name) ;
+        : Response::deny( __('Kamu tak memiliki wewenang untuk mengelola barang di area ini'));
     }
 
     public function eval(User $user, InvItem $invItem): bool

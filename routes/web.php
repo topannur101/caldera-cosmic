@@ -158,7 +158,9 @@ Route::middleware('auth')->group(function () {
 
         Route::name('inventory.items.')->group(function () {
 
-            Volt::route('/items/create',    'inventory.items.create')   ->name('create');
+            Route::middleware('can:create,' . \App\Models\InvItem::class)->group(function () {
+                Volt::route('/items/create',    'inventory.items.create')   ->name('create');
+            });
             Volt::route('/items/{id}',      'inventory.items.show')     ->name('show');
             Volt::route('/items/{id}/edit', 'inventory.items.edit')     ->name('edit');
             Volt::route('/items/',          'inventory.items.index')    ->name('index');

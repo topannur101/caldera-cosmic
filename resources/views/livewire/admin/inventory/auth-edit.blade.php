@@ -140,8 +140,8 @@ new #[Layout('layouts.app')] class extends Component {
             <x-checkbox id="circ-eval" :disabled="!$is_superuser" wire:model="actions" value="circ-eval">{{ __('Evaluasi sirkulasi (setujui/tolak)') }}</x-checkbox>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
-            <div>{{ __('Bin') }}</div>
-            <x-checkbox id="bin-manage" :disabled="!$is_superuser" wire:model="actions" value="bin-manage">{{ __('Buat dan perbarui bin') }}</x-checkbox>
+            <div>{{ __('Lokasi') }}</div>
+            <x-checkbox id="bin-manage" :disabled="!$is_superuser" wire:model="actions" value="bin-manage">{{ __('Buat dan perbarui lokasi') }}</x-checkbox>
         </div>
         @can('superuser')
             <div class="mt-6 flex justify-between items-end">

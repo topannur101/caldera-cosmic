@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
+use Livewire\Attributes\On;
 use App\Models\InvItem;
 
 new #[Layout('layouts.app')] 
@@ -52,6 +53,7 @@ class extends Component {
         }
     }
 
+    #[On('remove-photo')]
     public function removePhoto()
     {
         $this->photo = '';
