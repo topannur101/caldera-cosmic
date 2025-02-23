@@ -15,7 +15,7 @@ class extends Component {
     public $is_editing = false;
 
     public $id;
-    public $url;
+    public $photo_url;
     public $photo;
 
     public function updatedPhoto()
@@ -35,7 +35,7 @@ class extends Component {
 
         } else {
 
-            $this->url = $this->photo ? $this->photo->temporaryUrl() : '';
+            $this->photo_url = $this->photo ? $this->photo->temporaryUrl() : '';
             $photo = $this->photo ? $this->photo->getFilename() : '';
 
             if ($this->is_editing) {
@@ -57,7 +57,7 @@ class extends Component {
     public function removePhoto()
     {
         $this->photo = '';
-        $this->url = '';
+        $this->photo_url = '';
         $this->dispatch('photo-updated', photo: '');
     }
   
@@ -76,8 +76,8 @@ class extends Component {
                     d="M19.396.011a1.058 1.058 0 0 0-.297.087L6.506 5.885a1.058 1.058 0 0 0 .885 1.924l12.14-5.581 15.25 7.328-15.242 6.895L1.49 8.42A1.058 1.058 0 0 0 0 9.386v20.717a1.058 1.058 0 0 0 .609.957l18.381 8.633a1.058 1.058 0 0 0 .897 0l18.279-8.529a1.058 1.058 0 0 0 .611-.959V9.793a1.058 1.058 0 0 0-.599-.953L20 .105a1.058 1.058 0 0 0-.604-.095zM2.117 11.016l16.994 7.562a1.058 1.058 0 0 0 .867-.002l16.682-7.547v18.502L20.6 37.026V22.893a1.059 1.059 0 1 0-2.117 0v14.224L2.117 29.432z" />
             </svg>
         </div>
-        @if($url)
-        <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ $url }}" />
+        @if($photo_url)
+        <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ $photo_url }}" />
         @endif
         <div wire:loading.class="hidden" class="absolute w-full h-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/80 dark:bg-neutral-800/80  p-3"
             x-cloak x-show="dropping">
@@ -105,7 +105,7 @@ class extends Component {
         @if($is_editing)
         <div class="p-4 text-sm text-neutral-600 dark:text-neutral-400">
             <div wire:key="discard">
-                @if($url)
+                @if($photo_url)
                 <div class="mb-4">
                     <x-text-button type="button" wire:click="removePhoto"><i class="fa fa-fw fa-times mr-3"></i>{{ __('Buang foto') }}</x-text-button>
                 </div>

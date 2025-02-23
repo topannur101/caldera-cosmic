@@ -58,7 +58,18 @@ new class extends Component
       
       $item = InvItem::find($this->id);
       if($item) {
-         $this->item['id'] = $item->id;
+         $this->items[0]['id'] = $item->id;
+         $this->items[0]['name'] = $item->name;
+         $this->items[0]['desc'] = $item->desc;
+         $this->items[0]['code'] = $item->code;
+         $this->items[0]['loc_name'] = $item->inv_loc_id ? $item->inv_loc->parent . ' ' . $item->inv_loc->bin : '';
+         $this->items[0]['tags_list'] = $item->inv_tags->pluck('name')->implode(', ');
+         $this->items[0]['photo'] = $item->photo ? '/storage/inv-items/'.$item->photo : '';
+         $this->items[0]['area_name'] = $item->inv_area->name;
+         $this->items[0]['is_active'] = $item->is_active;
+         $this->items[0]['updated_at'] = $item->updated_at->diffForHumans();
+         
+
          
       } else {
          // caldera: please load areas where user has the right to create items
@@ -201,21 +212,16 @@ new class extends Component
          ]);
       }
       
-      // create stocks
+      // create and attach stocks
       foreach ($this->stocks as $stock) {
          $curr_id = InvCurr::where('name', $stock['currency'])->first()->id;
          $stocks = InvStock::firstOrCreate([
             'inv_item_id'  => $item->id,
             'inv_curr_id'  => $curr_id,
             'uom'          => $stock['uom'],
-         ]);
-      }
-
-      // attach stocks
-      foreach($stocks as $stock) {
-         $stock->update([
-            'unit_price' => $stock['unit_price'],
-            'is_active' => true
+         ],[
+            'unit_price'   => $stock['unit_price'],
+            'is_active'    => true
          ]);
       }
       
@@ -272,7 +278,7 @@ new class extends Component
     <div class="block sm:flex gap-x-6">
         <div wire:key="photo">
             <div class="sticky top-5 left-0">
-                <livewire:inventory.items.photo :$is_editing />
+                <livewire:inventory.items.photo :$is_editing :photo_url="$items[0]['photo']" />
                 <div class="grid grid-cols-1 divide-y divide-neutral-200 dark:divide-neutral-800 px-4 my-6 text-sm">
                   @if($is_editing)
                      <div class="flex items-center gap-x-3 py-3">
@@ -290,18 +296,18 @@ new class extends Component
                         <x-toggle id="item_is_active" x-model="is_active"><span x-show="is_active">{{ __('Aktif') }}</span><span x-show="!is_active">{{ __('Nonaktif') }}</span></x-toggle>
                      </div>
                   @else
-                     <div class="py-3"><i class="text-neutral-500 fa fa-fw fa-tent me-2"></i>{{ $item['area_name']}}</div>
-                     <div class="py-3"><i class="text-neutral-500 fa fa-fw fa-check-circle me-2"></i>{{ $item['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
+                     <div class="py-3"><i class="text-neutral-500 fa fa-fw fa-tent me-2"></i>{{ $items[0]['area_name']}}</div>
+                     <div class="py-3"><i class="text-neutral-500 fa fa-fw fa-check-circle me-2"></i>{{ $items[0]['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
                      <div class="py-3"><i class="text-neutral-500 fa fa-fw fa-pen me-2"></i>{{ __('Edit barang') }}</div>
-                     <div class="py-3">{{ __('Terakhir diperbarui') . ': ' . $item['updated_at'] }}</div>
-                     <div class="py-3">{{ __('Pengambilan terakhir') . ': ' . $item['last_withdrawal'] }}</div>
+                     <div class="py-3">{{ __('Terakhir diperbarui') . ': ' . $items[0]['updated_at'] }}</div>
+                     <div class="py-3">{{ __('Pengambilan terakhir') . ': ' . $items[0]['last_withdrawal'] }}</div>
                   @endif
                 </div>
             </div>
         </div>
         <div class="grow">
             <div class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg px-6 divide-y divide-neutral-200 dark:divide-neutral-700">
-                <div class="grid gap-y-6 py-6">
+                <div class="grid gap-y-2 py-6">
                   @if($is_editing)
                      <div>
                         <label for="item-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
@@ -312,8 +318,8 @@ new class extends Component
                         <x-text-input id="item-desc" wire:model="items.0.desc" type="text" />                        
                      </div>
                   @else
-                     <h1 class="text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $item['name'] }}</h1>
-                     <p>{{ $item['desc'] }}</p>
+                     <h1 class="text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $items[0]['name'] }}</h1>
+                     <p>{{ $items[0]['desc'] }}</p>
                   @endif
                 </div>
                 @if($is_editing)                
@@ -330,10 +336,10 @@ new class extends Component
                      </div>
                   </div>
                 @else
-                  <div class="py-6 flex flex-col lg:flex-row gap-x-6 gap-y-3 text-neutral-500 text-sm">                    
-                     <div>{{ $item['code'] ?: __('TAK ADA KODE') }}</div>
-                     <div><i class="fa fa-fw fa-map-marker-alt me-2"></i>{{ $item['loc_name'] ?: __('Tak ada lokasi') }}</div>
-                     <div><i class="fa fa-fw fa-tag me-2"></i>{{ $item['tags_list'] ?: __('Tak ada tag') }}</div>
+                  <div class="py-4 flex flex-col lg:flex-row gap-x-6 gap-y-3 text-neutral-500 text-sm">                    
+                     <div>{{ $items[0]['code'] ?: __('TAK ADA KODE') }}</div>
+                     <div><i class="fa fa-fw fa-map-marker-alt me-2"></i>{{ $items[0]['loc_name'] ?: __('Tak ada lokasi') }}</div>
+                     <div><i class="fa fa-fw fa-tag me-2"></i>{{ $items[0]['tags_list'] ?: __('Tak ada tag') }}</div>
                   </div>
                 @endif
 
@@ -456,7 +462,7 @@ new class extends Component
                }
             }" class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg p-6 mt-6">
                <!-- Modal Form -->
-               <x-modal name="stock-creator">
+               <x-modal name="stock-creator" focusable>
                   <div class="p-6">
                      <div class="flex justify-between items-start">
                         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100" 
@@ -468,17 +474,17 @@ new class extends Component
                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 gap-y-6 mt-6">
                         <div>
                            <label for="stock-uom" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('UOM') }}</label>
-                           <x-text-input id="stock-uom" type="text" x-model="uom_input" maxlength="5"></x-text-input>
+                           <x-text-input id="stock-uom" type="text" x-model="uom_input" maxlength="5" x-on:keydown.enter.prevent="$nextTick(() => { $refs.mainUnitPrice.focus() })"></x-text-input>
                         </div>    
                         <div class="col-span-1 sm:col-span-2">
-                           <label for="stock-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}<i class="fa fa-lock ml-3" x-show="is_secondary_currency" x-cloak></i></label>
-                           <x-text-input-curr curr="main_currency" ::disabled="is_secondary_currency" 
+                           <label for="main-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500" >{{ __('Harga satuan') }}<i class="fa fa-lock ml-3" x-show="is_secondary_currency" x-cloak></i></label>
+                           <x-text-input-curr curr="main_currency" ::disabled="is_secondary_currency" x-ref="mainUnitPrice" x-on:keydown.enter.prevent=""
                                           id="stock-unit-price" type="number" x-model="main_unit_price" min="0"></x-text-input>
                         </div>
 
                         <div x-show="is_secondary_currency">
                            <label for="stock-secondary-currency" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mata uang') }}</label>
-                           <x-select id="stock-secondary-currency" class="w-full" x-model="secondary_currency">
+                           <x-select id="stock-secondary-currency" class="w-full" x-model="secondary_currency" x-on:change="secondary_currency ? $nextTick(() => { $refs.secondaryUnitPrice.focus() }) : (is_secondary_currency = false, secondary_unit_price = '')">
                               <option value=""></option>   
                               <template x-for="currency in getSecondaryCurrencies()" :key="currency.name">                                 
                                  <option :value="currency.name" x-text="currency.name"></option>
@@ -486,8 +492,8 @@ new class extends Component
                            </x-select>
                         </div>
                         <div x-show="is_secondary_currency" class="col-span-1 sm:col-span-2">
-                           <label for="stock-secondary-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
-                           <x-text-input-curr curr="secondary_currency" id="stock-secondary-unit-price" 
+                           <label for="secondary-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
+                           <x-text-input-curr curr="secondary_currency" id="secondary-unit-price" x-ref="secondaryUnitPrice" x-on:keydown.enter.prevent=""
                                           type="number" x-model="secondary_unit_price" min="0"></x-text-input>
                         </div>                       
                         

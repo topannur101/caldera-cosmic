@@ -57,8 +57,6 @@ return new class extends Migration
             $table->timestamps();
             $table->string('parent');
             $table->string('bin');
-            $table->foreignId('inv_area_id')->constrained();
-            $table->index('inv_area_id');
         });
 
         Schema::create('inv_items', function (Blueprint $table) {
@@ -96,6 +94,7 @@ return new class extends Migration
         });
 
         Schema::create('inv_item_tags', function (Blueprint $table) {
+            $table->timestamps();
             $table->foreignId('inv_item_id')->constrained();
             $table->foreignId('inv_tag_id')->constrained();
             $table->primary(['inv_item_id', 'inv_tag_id']);            
@@ -108,15 +107,15 @@ return new class extends Migration
             $table->timestamps();
             $table->foreignId('user_id')->constrained();
             $table->enum('type', ['deposit', 'withdrawal', 'capture']);
-            $table->enum('evaluation_status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->foreignId('evaluator_id')->constrained('users')->nullable();
-            $table->string('evaluation_note')->nullable();
+            $table->enum('eval_status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->foreignId('eval_user_id')->constrained('users')->nullable();
+            $table->string('eval_remarks')->nullable();
             $table->foreignId('inv_stock_id')->constrained();
             $table->integer('qty_relative');
             $table->decimal('amount', 15, 2)->default(0);
             $table->decimal('unit_price', 15, 2);  // Added for historical price tracking
             $table->string('remarks')->nullable();
-            $table->index('evaluator_id');
+            $table->index('eval_user_id');
             $table->index('inv_stock_id');
         });
     }

@@ -1,7 +1,7 @@
 @props(['isQuery' => false ])
 
 <div x-data="{
-      tags: @entangle('tags'),
+      tags: @entangle('tags').live,
       tag_input: '',
       get tag_list() {
          return this.tags.join(', ');
@@ -54,7 +54,7 @@
                      </div>
                   </template>
                </div>
-               <x-text-input-icon id="tag-search" icon="fa fa-fw fa-search" type="text" x-model="tag_input" maxlength="20" placeholder="{{ __('Cari tag') }}" x-on:keydown.enter.prevent="addTag" />
+               <x-text-input-icon id="tag-search" icon="fa fa-fw fa-search" type="text" x-model="tag_input" maxlength="20" placeholder="{{ __('Cari tag') }}" x-on:keydown.enter.prevent="tag_input ? addTag : $dispatch('close')" />
                <datalist id="tags">
                   @foreach($tags as $tag)
                      <option value="{{ $tag }}"></option>
