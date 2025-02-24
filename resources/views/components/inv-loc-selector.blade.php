@@ -7,7 +7,7 @@
             if (!this.loc_parent.trim() && !this.loc_bin.trim()) {
                 return '';
             }
-            return `${this.loc_parent} ${this.loc_bin}`.trim();
+            return `${this.loc_parent}-${this.loc_bin}`.trim();
         }
     }" class="flex items-center {{ $isQuery ? 'px-4' : '' }}">
     <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'loc-selector')" ::class="loc_name ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="fa fa-fw fa-map-marker-alt me-3"></i><span x-text="loc_name ? loc_name : '{{ $isQuery ? __('Lokasi') : __('Tak ada lokasi') }}'"></span></x-text-button>

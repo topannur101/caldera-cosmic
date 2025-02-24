@@ -15,15 +15,15 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->string('mod')->nullable();
-            $table->unsignedBigInteger('mod_id')->nullable();
+            $table->string('model_name');
+            $table->unsignedBigInteger('model_id');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->foreign('parent_id')->references('id')->on('com_items')->onDelete('cascade');
             $table->text('content')->nullable();
 
-            $table->index('mod');
-            $table->index('mod_id');
+            $table->index('model_name');
+            $table->index('model_id');
             $table->index('user_id');
             $table->index('parent_id');
         });

@@ -12,7 +12,8 @@ new class extends Component {
 
     use WithFileUploads;
 
-    public $mod;
+    public $model_name;
+    public $model_id;
     public $parent_id;
     public $users = [];
     public $userq;
@@ -54,12 +55,11 @@ new class extends Component {
             'content.required_without' => __('Isi komentar atau unggah lampiran')
         ]);
         
-        $name = $this->mod ? class_basename($this->mod) : 'test';
         $com_item = ComItem::create([
             'user_id' => $this->user_id,
             'content'   => $this->content,
-            'mod'       => $name,
-            'mod_id'    => $this->mod?->id ?? 1,
+            'mod'       => $this->model_name,
+            'model_id'    => $this->model_id,
         ]);
 
         if ($this->parent_id) {

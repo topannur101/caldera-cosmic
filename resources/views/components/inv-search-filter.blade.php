@@ -1,5 +1,5 @@
 <div x-data="{ 
-        filter: @entangle('filter'),
+        filter: @entangle('filter').live,
         get filter_name() {
          switch (this.filter) {
             case 'no-code':

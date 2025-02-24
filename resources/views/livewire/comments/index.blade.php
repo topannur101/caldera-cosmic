@@ -8,24 +8,14 @@ use Illuminate\Support\Facades\Storage;
 
 new class extends Component {
     
-    public $mod;
-
-    public $name;
-    public $id;
-
-    public function mount()
-    {
-        $this->name = $this->mod ? class_basename($this->mod) : 'test';
-        $this->id = $this->mod?->id ?? 1;
-
-    }
-    
+    public $model_name;
+    public $model_id;  
     
     #[On('comment-added')]
     public function with(): array
     {
-        $comments = ComItem::orderByDesc('updated_at')->where('mod', $this->name)->where('mod_id', $this->id)->whereNull('parent_id')->get();
-        $count = ComItem::orderByDesc('updated_at')->where('mod', $this->name)->where('mod_id', $this->id)->count();
+        $comments = ComItem::orderByDesc('updated_at')->where('model_name', $this->model_name)->where('model_id', $this->model_id)->whereNull('parent_id')->get();
+        $count = ComItem::orderByDesc('updated_at')->where('model_name', $this->model_name)->where('model_id', $this->model_id)->count();
         
         return [
             'comments' => $comments,
@@ -53,7 +43,7 @@ new class extends Component {
         <h1>{{ __('Komentar') . ' ' . '(' . $count . ')' }}</h1>
     </div>
     {{-- <hr class="border-neutral-300 dark:border-neutral-600" /> --}}
-    <livewire:comments.write wire:key="write-parent" :$mod />
+    <livewire:comments.write wire:key="write-parent" :$model_name :$model_id />
     @if ($comments->count())
         @foreach ($comments as $comment)
             <hr class=" border-neutral-200 dark:border-neutral-800" />
@@ -110,7 +100,7 @@ new class extends Component {
                                 x-on:mouseup="setFocus()">{{ __('Balas') }}</x-text-button>
                         </div>
                         <div x-show="open" x-cloak>
-                            <livewire:comments.write wire:key="write-first-{{ $comment->id }}" :$mod
+                            <livewire:comments.write wire:key="write-first-{{ $comment->id }}" :$model_name :$model_id
                                 :parent_id="$comment->id" />
                         </div>
                     </div>
@@ -186,7 +176,7 @@ new class extends Component {
                             </div>
                         @endforeach
                         <div x-show="open" wire:key="wrap-second-{{ $comment->id }}" x-cloak>
-                            <livewire:comments.write wire:key="write-second-{{ $comment->id }}" :$mod
+                            <livewire:comments.write wire:key="write-second-{{ $comment->id }}" :$model_name :$model_id
                                 :parent_id="$comment->id" />
                         </div>
                     </div>

@@ -10,8 +10,6 @@ class extends Component {
 
     use WithFileUploads;
     
-    public $mode;
-
     public $is_editing = false;
 
     public $id;

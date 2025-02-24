@@ -12,7 +12,6 @@ class InvItem extends Model
         'name',
         'desc',
         'code',
-        'in_loc_id',
         'inv_area_id',
         'photo',
         'is_active',
@@ -58,7 +57,7 @@ class InvItem extends Model
 
     public function inv_stocks()
     {
-        return $this->hasMany(InvStock::class);
+        return $this->hasMany(InvStock::class)->where('is_active', true);
     }
 
 }

@@ -27,7 +27,7 @@
         <div class="flex grow truncate py-4 pr-4">
             <div class="grow truncate">
                 <div class="px-2 sm:px-4 truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                    <x-link :href="$url">{{ $name }}</x-link>
+                    <x-link :href="$url" wire:navigate>{{ $name }}</x-link>
                 </div>                        
                 <div class="px-2 sm:px-4 truncate text-sm text-neutral-600 dark:text-neutral-400">
                     {{ $desc }}

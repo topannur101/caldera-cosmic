@@ -1,8 +1,8 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\InvItem;
 use App\Models\InvArea;
+use App\Models\InvItem;
 use App\Models\InvCurr;
 use App\Models\InvLoc;
 use App\Models\InvTag;
@@ -10,6 +10,7 @@ use App\Models\InvStock;
 use App\Models\InvItemTag;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 
 use Carbon\Carbon;
 use Intervention\Image\ImageManager;
@@ -18,8 +19,6 @@ use Illuminate\Support\Facades\Storage;
 
 new class extends Component
 {
-   public int $id = 0;
-
    public int $id_new = 0;
 
    public bool $is_editing = false;
@@ -50,32 +49,15 @@ new class extends Component
    public array $loc_bins     = [];
    public array $stocks       = [];
    public array $currencies   = [];
+   public bool $is_photo_dirty = false;
+   public bool $can_store = false;
 
    public function mount()
    {
-      $currencies = InvCurr::all();
-      $this->currencies = $currencies ? $currencies->toArray() : [];
-      
-      $item = InvItem::find($this->id);
-      if($item) {
-         $this->items[0]['id'] = $item->id;
-         $this->items[0]['name'] = $item->name;
-         $this->items[0]['desc'] = $item->desc;
-         $this->items[0]['code'] = $item->code;
-         $this->items[0]['loc_name'] = $item->inv_loc_id ? $item->inv_loc->parent . ' ' . $item->inv_loc->bin : '';
-         $this->items[0]['tags_list'] = $item->inv_tags->pluck('name')->implode(', ');
-         $this->items[0]['photo'] = $item->photo ? '/storage/inv-items/'.$item->photo : '';
-         $this->items[0]['area_name'] = $item->inv_area->name;
-         $this->items[0]['is_active'] = $item->is_active;
-         $this->items[0]['updated_at'] = $item->updated_at->diffForHumans();
-         
-
-         
-      } else {
-         // caldera: please load areas where user has the right to create items
-         $this->areas = InvArea::all()->toArray();
-         $this->is_editing = true;
-
+      if($this->is_editing) {
+         $currencies = InvCurr::all();
+         $this->currencies = $currencies ? $currencies->toArray() : [];
+         $this->areas = Auth::user()->id === 1 ? InvArea::all()->toArray() : Auth::user()->inv_areas->toArray();
       }
    }
 
@@ -116,39 +98,10 @@ new class extends Component
          'items.*.photo'      => ['nullable'],
          'items.*.area_id'    => ['required', 'exists:inv_areas,id'],
          'items.*.is_active'  => ['required', 'boolean'],
-      ], []);
+      ]);
 
       // process photo
-      $photo = null;
-      try {
-         $path = storage_path('app/livewire-tmp/' . $this->items[0]['photo']);
-        
-         // Check if file exists
-         if (!file_exists($path)) {
-             return;
-         }
- 
-         $manager = new ImageManager(new Driver());
-         $image = $manager->read($path)
-         ->scale(600, 600)
-         ->toJpeg(70);
-         
-         // Generate unique filename
-         $time = Carbon::now()->format('YmdHis');
-         $rand = Str::random(5);
-         $photo = $time . '_' . $rand . '.jpg';
-         
-         // Attempt to store the image
-         $stored = Storage::put('/public/inv-items/' . $photo, $image);
-         
-         // If storage fails, reset photo to null
-         if (!$stored) {
-             $photo = null;
-         }
-
-      } catch (\Exception $e) {
-         $photo = null;
-      }
+      $photo = $this->processPhoto();
 
       // prepare item model
       $item = null;
@@ -215,7 +168,7 @@ new class extends Component
       // create and attach stocks
       foreach ($this->stocks as $stock) {
          $curr_id = InvCurr::where('name', $stock['currency'])->first()->id;
-         $stocks = InvStock::firstOrCreate([
+         $stocks = InvStock::updateOrCreate([
             'inv_item_id'  => $item->id,
             'inv_curr_id'  => $curr_id,
             'uom'          => $stock['uom'],
@@ -225,17 +178,65 @@ new class extends Component
          ]);
       }
       
-      $this->js('$dispatch("open-modal", "item-created")');
-      $this->reset(['id', 'items', 'loc_parent', 'loc_bin', 'tags', 'loc_parents', 'loc_bins', 'stocks']);
-      $this->dispatch('remove-photo');
+      if ($this->is_editing)
+      {  
+         $this->redirect(route('inventory.items.show', ['id' => $item->id, 'is_updated' => true]), navigate: true);
+      
+      } else {      
+         $this->id_new = $item->id;
+         $this->reset(['items', 'loc_parent', 'loc_bin', 'tags', 'loc_parents', 'loc_bins', 'stocks']);
+         $this->dispatch('remove-photo');   
+         $this->js('$dispatch("open-modal", "item-created")');
 
+      }
+
+   }
+
+   private function processPhoto()
+   {
+      $photo = $this->items[0]['photo'] ?: null;
+
+      if ($this->is_photo_dirty && $photo) {
+         try {
+            $path = storage_path('app/livewire-tmp/' . $photo);
+           
+            // Check if file exists
+            if (!file_exists($path)) {
+                return;
+            }
+    
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($path)
+            ->scale(600, 600)
+            ->toJpeg(70);
+            
+            // Generate unique filename
+            $time = Carbon::now()->format('YmdHis');
+            $rand = Str::random(5);
+            $photo = $time . '_' . $rand . '.jpg';
+            
+            // Attempt to store the image
+            $stored = Storage::put('/public/inv-items/' . $photo, $image);
+            
+            // If storage fails, reset photo to null
+            if (!$stored) {
+                $photo = null;
+            }
+   
+         } catch (\Exception $e) {
+            $photo = null;
+         }         
+      }
+
+      return $photo;
    }
 
    #[Renderless] 
    #[On('photo-updated')] 
    public function insertPhoto($photo)
    {
-       $this->items[0]['photo'] = $photo;
+      $this->is_photo_dirty = true;
+      $this->items[0]['photo'] = $photo;
    }
 
 };
@@ -267,8 +268,8 @@ new class extends Component
                   <p>{{ __('Apa yang akan kamu lakukan selanjutnya?') }}</p>
                </div>
                <div class="grid grid-cols-1 gap-y-3">
-                  <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Kembali ke pencarian') }}</x-primary-button>
-                  <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Lihat barang yang dibuat') }}</x-primary-button>
+                  <x-link-secondary-button x-on:click="$dispatch('close')" href="{{ route('inventory.items.index') }}" wire:navigate>{{ __('Kembali ke pencarian') }}</x-link-secondary-button>
+                  <x-link-secondary-button x-on:click="$dispatch('close')" href="{{ route('inventory.items.show', ['id' => $id_new]) }}" wire:navigate>{{ __('Lihat barang yang dibuat') }}</x-link-secondary-button>
                   <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Buat lagi') }}</x-primary-button>
                </div>
             </div>
@@ -278,7 +279,7 @@ new class extends Component
     <div class="block sm:flex gap-x-6">
         <div wire:key="photo">
             <div class="sticky top-5 left-0">
-                <livewire:inventory.items.photo :$is_editing :photo_url="$items[0]['photo']" />
+                <livewire:inventory.items.photo :$is_editing :photo_url="$items[0]['photo'] ? ('/storage/inv-items/' . $items[0]['photo']) : null" />
                 <div class="grid grid-cols-1 divide-y divide-neutral-200 dark:divide-neutral-800 px-4 my-6 text-sm">
                   @if($is_editing)
                      <div class="flex items-center gap-x-3 py-3">
@@ -293,12 +294,14 @@ new class extends Component
                      <div x-data="{ is_active: @entangle('items.0.is_active') }" class="flex items-center gap-x-3 py-3">
                         <i x-show="is_active" class="text-neutral-500 fa fa-fw fa-check-circle me-2"></i>
                         <i x-show="!is_active" class="text-neutral-500 fa fa-fw fa-ban me-2"></i>
-                        <x-toggle id="item_is_active" x-model="is_active"><span x-show="is_active">{{ __('Aktif') }}</span><span x-show="!is_active">{{ __('Nonaktif') }}</span></x-toggle>
+                        <x-toggle id="item_is_active" x-model="is_active" ::checked="is_active"><span x-show="is_active">{{ __('Aktif') }}</span><span x-show="!is_active">{{ __('Nonaktif') }}</span></x-toggle>
                      </div>
                   @else
                      <div class="py-3"><i class="text-neutral-500 fa fa-fw fa-tent me-2"></i>{{ $items[0]['area_name']}}</div>
-                     <div class="py-3"><i class="text-neutral-500 fa fa-fw fa-check-circle me-2"></i>{{ $items[0]['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
-                     <div class="py-3"><i class="text-neutral-500 fa fa-fw fa-pen me-2"></i>{{ __('Edit barang') }}</div>
+                     <div class="py-3"><i class="text-neutral-500 fa fa-fw {{ $items[0]['is_active'] ? 'fa-check-circle' :'fa-ban' }} me-2"></i>{{ $items[0]['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
+                     @if($can_store)
+                        <div class="py-3"><x-link href="{{ route('inventory.items.edit', ['id' => $items[0]['id']] ) }}" wire:navigate><i class="text-neutral-500 fa fa-fw fa-pen me-2"></i>{{ __('Edit barang') }}</x-text-link></div>
+                     @endif
                      <div class="py-3">{{ __('Terakhir diperbarui') . ': ' . $items[0]['updated_at'] }}</div>
                      <div class="py-3">{{ __('Pengambilan terakhir') . ': ' . $items[0]['last_withdrawal'] }}</div>
                   @endif
