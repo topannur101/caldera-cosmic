@@ -4,58 +4,104 @@ use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\On;
 use App\Models\InvItem;
+use Carbon\Carbon;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Support\Facades\Storage;
 
 new #[Layout('layouts.app')] 
 class extends Component {
 
     use WithFileUploads;
     
-    public $is_editing = false;
+    public bool $is_editing = false;
 
-    public $id;
-    public $photo_url;
-    public $photo;
+    public int $id = 0;
+
+    public string $photo_url = '';
+
+    public $photo = '';
 
     public function updatedPhoto()
     {
-        
+
         $validator = Validator::make(
             ['photo' => $this->photo ],
             ['photo' => 'nullable|mimetypes:image/jpeg,image/png,image/gif|max:1024'],
             ['mimetypes' => __('Berkas harus jpg, png, atau gif'), 'max' => __('Berkas maksimal 1 MB')]
         );
-
+        
         if ($validator->fails()) {
-
             $errors = $validator->errors();
             $error = $errors->first('photo'); 
             $this->js('toast("' . $error . '", { type: "danger" })');
+            return;
+        } 
+
+        $photo_temp = $this->photo ? $this->photo->getFilename() : '';
+
+        if ($this->is_editing) {
+
+            $photo = $this->storePhoto($photo_temp);
+
+            if ($photo) {              
+                $this->dispatch('photo-updated', photo: $photo);
+            }
 
         } else {
 
-            $this->photo_url = $this->photo ? $this->photo->temporaryUrl() : '';
-            $photo = $this->photo ? $this->photo->getFilename() : '';
+            $item = InvItem::find($this->id);
 
-            if ($this->is_editing) {
-                $this->dispatch('photo-updated', photo: $photo);
-            } else {
-                $item = InvItem::find($this->id);
-                if ($item) {
-                    Gate::authorize('updateOrCreate', $item);
-                    $item->updatePhoto($photo);
+            if ($item) {
+                $store = Gate::inspect('store', $item);
+
+                if ($store->allowed()) {
+
+                    $item->photo = $this->storePhoto($photo_temp);
+                    $item->save();
+                    
                     $this->js('toast("' . __('Foto diperbarui') . '", { type: "success" })');
 
+                } else {
+                    $this->js('toast("' . $store->message() . '", { type: "danger" })');
                 }
             }
+        }        
+    }
 
-        }
+    private function storePhoto(string $photo_temp)
+    {
+        $photo = null;
+        try {
+            $path = storage_path('app/livewire-tmp/' . $photo_temp);
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($path)
+            ->scale(600, 600)
+            ->toJpeg(70);
+            
+            $time = Carbon::now()->format('YmdHis');
+            $rand = Str::random(5);
+            $photo = $time . '_' . $rand . '.jpg';
+            
+            $is_stored = Storage::put('/public/inv-items/' . $photo, $image);
+            
+            if (!$is_stored) {
+                $photo = null;
+            }
+
+            $this->photo_url = '/storage/inv-items/' . $photo;  
+
+         } catch (\Exception $e) {
+            $this->js('toast("' . $e->getMessage() . '", { type: "danger" })');
+         }
+
+         return $photo;
     }
 
     #[On('remove-photo')]
     public function removePhoto()
     {
-        $this->photo = '';
-        $this->photo_url = '';
+        $this->reset(['photo_url', 'photo']);
         $this->dispatch('photo-updated', photo: '');
     }
   

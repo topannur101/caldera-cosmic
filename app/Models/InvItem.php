@@ -60,4 +60,9 @@ class InvItem extends Model
         return $this->hasMany(InvStock::class)->where('is_active', true);
     }
 
+    public function updatePhoto()
+    {
+        
+    }
+
 }

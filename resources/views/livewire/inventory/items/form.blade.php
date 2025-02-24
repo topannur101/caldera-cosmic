@@ -13,9 +13,6 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 
 use Carbon\Carbon;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
-use Illuminate\Support\Facades\Storage;
 
 new class extends Component
 {
@@ -49,7 +46,6 @@ new class extends Component
    public array $loc_bins     = [];
    public array $stocks       = [];
    public array $currencies   = [];
-   public bool $is_photo_dirty = false;
    public bool $can_store = false;
 
    public function mount()
@@ -90,7 +86,7 @@ new class extends Component
          'tags'         => ['array', 'max:5'],
          'tags.*'       => ['required', 'alpha_dash', 'max:20'],
 
-         'stocks'                => ['array', 'max:3'],
+         'stocks'                => ['array','min:1', 'max:3'],
          'stocks.*.currency'     => ['required', 'exists:inv_currs,name'],
          'stocks.*.unit_price'   => ['required', 'numeric', 'min:0', 'max:999999999'],
          'stocks.*.uom'          => ['required', 'alpha', 'max:5'],
@@ -99,9 +95,6 @@ new class extends Component
          'items.*.area_id'    => ['required', 'exists:inv_areas,id'],
          'items.*.is_active'  => ['required', 'boolean'],
       ]);
-
-      // process photo
-      $photo = $this->processPhoto();
 
       // prepare item model
       $item = null;
@@ -125,7 +118,7 @@ new class extends Component
       $item->name          = $this->items[0]['name'];
       $item->desc          = $this->items[0]['desc'];
       $item->code          = $this->items[0]['code'] ?: null;
-      $item->photo         = $photo;
+      $item->photo         = $this->items[0]['photo'];
       $item->inv_area_id   = $this->items[0]['area_id'];
       $item->is_active     = $this->items[0]['is_active'];
       $item->inv_loc_id    = $loc_id;
@@ -192,50 +185,10 @@ new class extends Component
 
    }
 
-   private function processPhoto()
-   {
-      $photo = $this->items[0]['photo'] ?: null;
-
-      if ($this->is_photo_dirty && $photo) {
-         try {
-            $path = storage_path('app/livewire-tmp/' . $photo);
-           
-            // Check if file exists
-            if (!file_exists($path)) {
-                return;
-            }
-    
-            $manager = new ImageManager(new Driver());
-            $image = $manager->read($path)
-            ->scale(600, 600)
-            ->toJpeg(70);
-            
-            // Generate unique filename
-            $time = Carbon::now()->format('YmdHis');
-            $rand = Str::random(5);
-            $photo = $time . '_' . $rand . '.jpg';
-            
-            // Attempt to store the image
-            $stored = Storage::put('/public/inv-items/' . $photo, $image);
-            
-            // If storage fails, reset photo to null
-            if (!$stored) {
-                $photo = null;
-            }
-   
-         } catch (\Exception $e) {
-            $photo = null;
-         }         
-      }
-
-      return $photo;
-   }
-
    #[Renderless] 
    #[On('photo-updated')] 
    public function insertPhoto($photo)
    {
-      $this->is_photo_dirty = true;
       $this->items[0]['photo'] = $photo;
    }
 
@@ -243,7 +196,7 @@ new class extends Component
 
 ?>
 
-<form wire:submit.prevent="save">
+<div>
    @if($is_editing)
       <div class="px-4 sm:px-0 mb-8 grid grid-cols-1 gap-y-4">
          <div class="flex items-center justify-between gap-x-4 p-4 text-sm text-neutral-800 border border-neutral-300 rounded-lg bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-600" role="alert">
@@ -251,7 +204,8 @@ new class extends Component
                {{ __('Klik simpan jika sudah selesai melengkapi informasi barang') }}
             </div>
             <div>
-               <x-primary-button type="submit"><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
+               <x-primary-button type="button" wire:loading disabled><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
+               <x-primary-button type="button" wire:click="save" wire:loading.remove><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
             </div>
          </div>
          @if ($errors->any())
@@ -279,7 +233,7 @@ new class extends Component
     <div class="block sm:flex gap-x-6">
         <div wire:key="photo">
             <div class="sticky top-5 left-0">
-                <livewire:inventory.items.photo :$is_editing :photo_url="$items[0]['photo'] ? ('/storage/inv-items/' . $items[0]['photo']) : null" />
+                <livewire:inventory.items.photo :id="$items[0]['id']" :$is_editing :photo_url="$items[0]['photo'] ? ('/storage/inv-items/' . $items[0]['photo']) : ''" />
                 <div class="grid grid-cols-1 divide-y divide-neutral-200 dark:divide-neutral-800 px-4 my-6 text-sm">
                   @if($is_editing)
                      <div class="flex items-center gap-x-3 py-3">
@@ -309,24 +263,24 @@ new class extends Component
             </div>
         </div>
         <div class="grow">
-            <div class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg px-6 divide-y divide-neutral-200 dark:divide-neutral-700">
+            <div class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg divide-y divide-neutral-200 dark:divide-neutral-700">
                 <div class="grid gap-y-2 py-6">
                   @if($is_editing)
-                     <div>
+                     <div class="px-6">
                         <label for="item-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
                         <x-text-input id="item-name" wire:model="items.0.name" type="text" />
                      </div>
-                     <div>
+                     <div class="px-6">
                         <label for="item-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
                         <x-text-input id="item-desc" wire:model="items.0.desc" type="text" />                        
                      </div>
                   @else
-                     <h1 class="text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $items[0]['name'] }}</h1>
-                     <p>{{ $items[0]['desc'] }}</p>
+                     <h1 class="px-6 text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $items[0]['name'] }}</h1>
+                     <p class="px-6">{{ $items[0]['desc'] }}</p>
                   @endif
                 </div>
                 @if($is_editing)                
-                  <div class="py-6 grid grid-cols-1 gap-y-3">
+                  <div class="p-6 grid grid-cols-1 gap-y-3">
                      <div>
                         <label for="item-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
                         <x-text-input id="item-code" wire:model="items.0.code" type="text" />
@@ -339,7 +293,7 @@ new class extends Component
                      </div>
                   </div>
                 @else
-                  <div class="py-4 flex flex-col lg:flex-row gap-x-6 gap-y-3 text-neutral-500 text-sm">                    
+                  <div class="px-6 py-4 flex flex-col lg:flex-row gap-x-6 gap-y-3 text-neutral-500 text-sm">                    
                      <div>{{ $items[0]['code'] ?: __('TAK ADA KODE') }}</div>
                      <div><i class="fa fa-fw fa-map-marker-alt me-2"></i>{{ $items[0]['loc_name'] ?: __('Tak ada lokasi') }}</div>
                      <div><i class="fa fa-fw fa-tag me-2"></i>{{ $items[0]['tags_list'] ?: __('Tak ada tag') }}</div>
@@ -513,6 +467,7 @@ new class extends Component
                </x-modal>
 
                <!-- Stock List -->
+               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Unit stok') }}</label>
                <div class="flex flex-wrap gap-2 text-sm">
                   <template x-for="(stock, index) in stocks" :key="index">
                      <div class="hover:opacity-80 bg-neutral-200 dark:bg-neutral-900 rounded-full border border-neutral-300 dark:border-neutral-700 px-3 py-1 cursor-pointer" 
@@ -536,9 +491,9 @@ new class extends Component
             </div>
 
             @else
-               <livewire:inventory.items.stocks />
+               <livewire:inventory.items.stocks.index :item_id="$items[0]['id']" />
 
             @endif
         </div>
     </div>
-</form>
+</div>

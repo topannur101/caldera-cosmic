@@ -248,7 +248,7 @@ class extends Component
                             <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset pencarian')}}
                         </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />
-                        <x-dropdown-link href="#" wire:click.prevent="download">
+                        <x-dropdown-link href="#">
                             <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
                         </x-dropdown-link>
                     </x-slot>
@@ -307,7 +307,7 @@ class extends Component
                             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mt-6 px-3 sm:px-0">
                             @foreach ($inv_stocks as $inv_stock)
                                 <x-inv-card-grid
-                                :url="route('inventory.items.show', ['id' => $inv_stock->inv_item_id])"
+                                :url="route('inventory.items.show', ['id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id ])"
                                 :name="$inv_stock->inv_item->name" 
                                 :desc="$inv_stock->inv_item->desc" 
                                 :uom="$inv_stock->uom"
@@ -334,7 +334,7 @@ class extends Component
                                 @foreach($inv_stocks as $inv_stock)
                                     <tr>
                                         <td>{{ $inv_stock->qty . ' ' . $inv_stock->uom }}</td>
-                                        <td class="font-bold"><x-link href="{{ route('inventory.items.show', [ 'id' => $inv_stock->inv_item_id ]) }}" wire:navigate>{{ $inv_stock->inv_item->name }}</x-link></td>
+                                        <td class="font-bold"><x-link href="{{ route('inventory.items.show', [ 'id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id ]) }}" wire:navigate>{{ $inv_stock->inv_item->name }}</x-link></td>
                                         <td>{{ $inv_stock->inv_item->desc }}</td>
                                         <td>{{ $inv_stock->inv_item->code ?? __('Tanpa kode') }}</td>
                                         <td>{{ $inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' .$inv_stock->inv_item->inv_loc->bin) : __('Tanpa lokasi') }}</td>
@@ -350,7 +350,7 @@ class extends Component
                         <div wire:key="content" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2 mt-6">
                             @foreach ($inv_stocks as $inv_stock)
                                 <x-inv-card-content 
-                                :url="route('inventory.items.show', ['id' => $inv_stock->inv_item_id])"
+                                :url="route('inventory.items.show', ['id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id])"
                                 :name="$inv_stock->inv_item->name" 
                                 :desc="$inv_stock->inv_item->desc" 
                                 :code="$inv_stock->inv_item->code"
