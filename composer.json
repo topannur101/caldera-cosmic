@@ -9,7 +9,7 @@
         "aldas/modbus-tcp-client": "^3.5",
         "intervention/image": "^3.10",
         "laravel/breeze": "^2.0",
-        "laravel/framework": "^11.0",
+        "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "league/csv": "^9.15",

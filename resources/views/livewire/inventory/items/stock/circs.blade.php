@@ -15,9 +15,14 @@ new class extends Component
    #[Reactive]
    public $stock_id = 0;
 
+   public $stock_id_old = 0;
+
    #[On('circ-created')]
    public function with(): array
    {
+      $this->stock_id_old == $this->stock_id ?: $this->resetPage();
+      $this->stock_id_old = $this->stock_id;
+      
       $circs = InvCirc::latest('created_at')
       ->where('inv_stock_id', $this->stock_id)
       ->paginate($this->perPage);
