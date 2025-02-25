@@ -17,7 +17,7 @@ class extends Component
 
     public array $items = [
         0 => [
-           'id'              => '',
+           'id'              => 0,
            'name'            => '',
            'desc'            => '',
            'code'            => '',

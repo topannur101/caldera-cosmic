@@ -86,7 +86,6 @@ new class extends Component {
          'stock_id'     => ['required', 'exists:inv_stocks,id'],
          'qty_relative' => ['required', 'min:0', 'max:100000'],
          'remarks'      => ['required', 'string', 'max:256'],
-         'user_id'      => ['required', 'exists:users,id'],
 
          // 'amount'       => ['required', 'min:0', 'max:1000000000'],
          // 'unit_price'   => ['required', 'min:0', 'max:1000000000'],
@@ -120,15 +119,14 @@ new class extends Component {
          return;
       } else {
          $is_delegated = true;
-      }
-   
+      } 
 
       $circ = InvCirc::create([
          'amount'       => $amount,
          'unit_price'   => $this->unit_price, 
 
          'type'         => $this->type,
-         'stock_id'     => $this->stock_id,
+         'inv_stock_id' => $this->stock_id,
          'qty_relative' => $this->qty_relative,
          'remarks'      => $this->remarks,
 
@@ -137,6 +135,10 @@ new class extends Component {
       ]);
       
       $this->dispatch('close-popover');
+      $this->dispatch('circ-created');
+      $this->js('toast("' . __('Sirkulasi dibuat') . '", { type: "success" } )');
+      $this->reset(['qty_relative', 'amount', 'remarks', 'userq', 'user_id']);
+
    }
 }
 

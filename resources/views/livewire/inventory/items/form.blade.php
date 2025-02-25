@@ -22,7 +22,7 @@ new class extends Component
 
    public array $items = [
       0 => [
-         'id'              => '',
+         'id'              => 0,
          'name'            => '',
          'desc'            => '',
          'code'            => '',
@@ -204,8 +204,12 @@ new class extends Component
                {{ __('Klik simpan jika sudah selesai melengkapi informasi barang') }}
             </div>
             <div>
-               <x-primary-button type="button" wire:loading disabled><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
-               <x-primary-button type="button" wire:click="save" wire:loading.remove><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
+               <div wire:loading>
+                  <x-primary-button type="button" disabled><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
+               </div>
+               <div wire:loading.remove>
+                  <x-primary-button type="button" wire:click="save"><i class="fa fa-save me-2"></i>{{ __('Simpan') }}</x-primary-button>
+               </div>
             </div>
          </div>
          @if ($errors->any())
@@ -293,7 +297,7 @@ new class extends Component
                      </div>
                   </div>
                 @else
-                  <div class="px-6 py-4 flex flex-col lg:flex-row gap-x-6 gap-y-3 text-neutral-500 text-sm">                    
+                  <div class="px-6 py-4 flex flex-col md:flex-row gap-x-6 gap-y-3 text-neutral-500 text-sm">                    
                      <div>{{ $items[0]['code'] ?: __('TAK ADA KODE') }}</div>
                      <div><i class="fa fa-fw fa-map-marker-alt me-2"></i>{{ $items[0]['loc_name'] ?: __('Tak ada lokasi') }}</div>
                      <div><i class="fa fa-fw fa-tag me-2"></i>{{ $items[0]['tags_list'] ?: __('Tak ada tag') }}</div>

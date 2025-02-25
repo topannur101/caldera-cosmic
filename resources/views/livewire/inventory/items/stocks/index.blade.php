@@ -33,6 +33,9 @@ new class extends Component
       $stock_id   = 0;
       $stock_qty  = 0;
       $stock_uom  = '';
+      $curr_id = 1;
+      $curr_rate = 1;
+      $unit_price = 0;  
       
       if ($this->stock_id) {
          $stock = collect($this->stocks)->firstWhere('id', $this->stock_id);
@@ -40,6 +43,9 @@ new class extends Component
             $stock_id   = $stock['id'];
             $stock_qty  = $stock['qty'];
             $stock_uom  = $stock['uom'];
+            $curr_id    = $stock['inv_curr_id'];
+            $curr_rate  = $stock['inv_curr']['rate'];
+            $unit_price = $stock['unit_price'];
          }
       } else {
          $stock = collect($this->stocks)->first();
@@ -48,6 +54,9 @@ new class extends Component
             $stock_id         = $stock['id'];
             $stock_qty        = $stock['qty'];
             $stock_uom        = $stock['uom'];
+            $curr_id          = $stock['inv_curr_id'];
+            $curr_rate        = $stock['inv_curr']['rate'];
+            $unit_price       = $stock['unit_price'];
          }
       }
 
@@ -55,6 +64,9 @@ new class extends Component
          'stock_id'  => $stock_id,
          'stock_qty' => $stock_qty,
          'stock_uom' => $stock_uom,
+         'curr_id'   => $curr_id,
+         'curr_rate' => $curr_rate,
+         'unit_price' => $unit_price
       ];
    }
 
@@ -79,7 +91,7 @@ new class extends Component
          </ul>
       </div> 
       <div class="px-6">
-         <livewire:inventory.items.stock.index :$stock_id :$stock_qty :$stock_uom :$can_eval  />
+         <livewire:inventory.items.stock.index :$stock_id :$stock_qty :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval  />
       </div>
       <div class="truncate">
          <livewire:inventory.items.stock.circs :$stock_id />

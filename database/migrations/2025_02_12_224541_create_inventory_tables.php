@@ -39,7 +39,7 @@ return new class extends Migration
 
         DB::table('inv_areas')->insert([
             [
-                'name' => 'TT MM (DEMO)'
+                'name' => 'DEMO AREA'
             ]
         ]);
         
@@ -108,7 +108,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->enum('type', ['deposit', 'withdrawal', 'capture']);
             $table->enum('eval_status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->foreignId('eval_user_id')->constrained('users')->nullable();
+            $table->foreignId('eval_user_id')->nullable()->constrained('users');
             $table->string('eval_remarks')->nullable();
             $table->foreignId('inv_stock_id')->constrained();
             $table->unsignedInteger('qty_relative')->default(0);

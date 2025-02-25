@@ -36,7 +36,7 @@ class extends Component
 
     public function mount()
     {
-        $item = InvItem::find($this->id);
+        $item = InvItem::findOrFail($this->id);
         if ($item) {
             $this->items[0]['id'] = $item->id;
             $this->items[0]['name'] = $item->name;

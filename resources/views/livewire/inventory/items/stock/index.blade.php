@@ -15,6 +15,15 @@ new class extends Component {
    public string $stock_uom = '';
 
    #[Reactive]
+   public int $curr_id = 1;
+
+   #[Reactive]
+   public float $curr_rate = 1;
+
+   #[Reactive]
+   public float $unit_price = 0;   
+
+   #[Reactive]
    public bool $can_eval = false;
 
 }
@@ -27,8 +36,8 @@ new class extends Component {
       <div class="text-sm font-bold">{{ $stock_uom }}</div>
    </div>
    <div class="relative sm:static flex gap-x-3">
-      <livewire:inventory.items.stock.circ-form type="deposit"    :$stock_id :$stock_uom :$can_eval />
-      <livewire:inventory.items.stock.circ-form type="capture"    :$stock_id :$stock_uom :$can_eval />
-      <livewire:inventory.items.stock.circ-form type="withdrawal" :$stock_id :$stock_uom :$can_eval />
+      <livewire:inventory.items.stock.circ-form type="deposit"    :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
+      <livewire:inventory.items.stock.circ-form type="capture"    :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
+      <livewire:inventory.items.stock.circ-form type="withdrawal" :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
    </div>
 </div>

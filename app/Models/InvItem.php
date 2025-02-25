@@ -35,12 +35,12 @@ class InvItem extends Model
         return $this->hasManyThrough(InvTag::class, InvItemTag::class, 'inv_item_id', 'id', 'id', 'inv_tag_id');
     }
 
-    public function tags_facade()
+    public function tags_facade(): string
     {
         $tags = $this->inv_tags;
     
         if ($tags->isEmpty()) {
-            return null; // or return '';
+            return ''; // or return '';
         }
     
         $tagNames = $tags->pluck('name');
@@ -58,11 +58,6 @@ class InvItem extends Model
     public function inv_stocks()
     {
         return $this->hasMany(InvStock::class)->where('is_active', true);
-    }
-
-    public function updatePhoto()
-    {
-        
     }
 
 }
