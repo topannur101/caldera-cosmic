@@ -27,7 +27,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function rules()
     {
         return [
-            'curr.rate' => ['required', 'gt:0', 'lt:1000000'],
+            'curr.rate'     => ['required', 'gt:0', 'lt:1000000'],
             'curr.is_active' => ['required', 'boolean']
         ];
     }

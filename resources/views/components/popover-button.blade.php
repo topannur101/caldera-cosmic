@@ -35,6 +35,7 @@
             if(value) { popoverPositionCalculate(); setTimeout(() => document.getElementById('{{ $focus }}').focus(), 300);  }
          });
       "
+      x-on:close-popover.window="popoverOpen = false"
       class="static sm:relative z-10">
 
    <button 
@@ -47,8 +48,8 @@
    </button>
 
    <div 
-      x-ref="popover"
       x-cloak
+      x-ref="popover"
       x-show="popoverOpen"
       x-init="setTimeout(function(){ popoverHeightCalculate(); }, 100);"
       x-trap.inert="popoverOpen"
@@ -59,7 +60,7 @@
       <div x-ref="popoverInner" x-show="popoverOpen" class="w-full p-4 bg-white dark:bg-neutral-800 shadow-lg rounded-lg border border-neutral-200/70 dark:border-neutral-700/70">
          <div x-show="popoverArrow && popoverPosition == 'bottom'" class="absolute top-0 hidden sm:inline-block w-5 mt-px overflow-hidden -translate-x-2 -translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-bottom-left transform rotate-45 bg-white dark:bg-neutral-800 border-t border-l border-neutral-300 dark:border-neutral-700 rounded-sm"></div></div>
          <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 hidden sm:inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white dark:bg-neutral-800 border-b border-l border-neutral-300 dark:border-neutral-700 rounded-sm"></div></div>
-         <div>{{ $slot }}</div>
+         <div class="relative">{{ $slot }}</div>
       </div>
    </div>
 </div>

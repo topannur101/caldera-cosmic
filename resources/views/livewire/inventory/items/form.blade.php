@@ -88,7 +88,7 @@ new class extends Component
 
          'stocks'                => ['array','min:1', 'max:3'],
          'stocks.*.currency'     => ['required', 'exists:inv_currs,name'],
-         'stocks.*.unit_price'   => ['required', 'numeric', 'min:0', 'max:999999999'],
+         'stocks.*.unit_price'   => ['required', 'numeric', 'min:0', 'max:1000000000'],
          'stocks.*.uom'          => ['required', 'alpha', 'max:5'],
 
          'items.*.photo'      => ['nullable'],

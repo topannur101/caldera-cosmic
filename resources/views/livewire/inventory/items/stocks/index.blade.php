@@ -10,39 +10,54 @@ new class extends Component
 
    #[Url]
    public int $stock_id = 0;
+
    public array $stocks = [];
+
+   public bool $can_eval = false;
 
    public function mount()
    {
-      $stocks = InvStock::with(['inv_curr'])->where('inv_item_id', $this->item_id)->where('is_active', true)->get();
-      $this->stocks = $stocks ? $stocks->toArray() : [];      
+      $stocks = InvStock::with(['inv_curr', 'inv_item'])
+      ->where('inv_item_id', $this->item_id)
+      ->where('is_active', true)->get();
+      
+      $inv_item = $stocks->first()?->inv_item;
+      $this->can_eval = $inv_item ? Gate::inspect('eval', $inv_item)->allowed() : false;
+
+      $this->stocks  = $stocks ? $stocks->toArray() : [];  
+      $this->area_id = $stocks ? $stocks[0]['inv_item']['inv_area_id'] : 0;
    }
 
    public function with()
    {
-      $qty = 0;
-      $uom = '';
+      $stock_id   = 0;
+      $stock_qty  = 0;
+      $stock_uom  = '';
       
       if ($this->stock_id) {
          $stock = collect($this->stocks)->firstWhere('id', $this->stock_id);
          if ($stock) {
-            $qty = $stock['qty'];
-            $uom = $stock['uom'];
+            $stock_id   = $stock['id'];
+            $stock_qty  = $stock['qty'];
+            $stock_uom  = $stock['uom'];
          }
       } else {
          $stock = collect($this->stocks)->first();
          if ($stock) {
-            $this->stock_id = $stock['id'];
-            $qty = $stock['qty'];
-            $uom = $stock['uom'];
+            $this->stock_id   = $stock['id'];
+            $stock_id         = $stock['id'];
+            $stock_qty        = $stock['qty'];
+            $stock_uom        = $stock['uom'];
          }
       }
 
       return [
-         'qty' => $qty,
-         'uom' => $uom
+         'stock_id'  => $stock_id,
+         'stock_qty' => $stock_qty,
+         'stock_uom' => $stock_uom,
       ];
    }
+
 };
 
 ?>
@@ -64,10 +79,10 @@ new class extends Component
          </ul>
       </div> 
       <div class="px-6">
-         <livewire:inventory.items.stocks.stock.index :$stock_id :$qty :$uom  />
+         <livewire:inventory.items.stock.index :$stock_id :$stock_qty :$stock_uom :$can_eval  />
       </div>
       <div class="truncate">
-         <livewire:inventory.items.stocks.stock.circs.index :$stock_id />
+         <livewire:inventory.items.stock.circs :$stock_id />
       </div>
          <!-- <div class="flex justify-between items-center mb-4">
          <div class="uppercase text-neutral-500 text-sm">

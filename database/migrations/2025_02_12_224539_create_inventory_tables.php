@@ -81,7 +81,7 @@ return new class extends Migration
             $table->foreignId('inv_curr_id')->constrained();
             $table->unsignedInteger('qty')->default(0);
             $table->string('uom'); // ea, pcs
-            $table->decimal('unit_price', 11, 2)->default(0);
+            $table->decimal('unit_price', 14, 2)->default(0);
             $table->boolean('is_active')->default(true);
             $table->index('inv_item_id');
             $table->index('inv_curr_id');
@@ -111,10 +111,11 @@ return new class extends Migration
             $table->foreignId('eval_user_id')->constrained('users')->nullable();
             $table->string('eval_remarks')->nullable();
             $table->foreignId('inv_stock_id')->constrained();
-            $table->integer('qty_relative');
-            $table->decimal('amount', 15, 2)->default(0);
-            $table->decimal('unit_price', 15, 2);  // Added for historical price tracking
+            $table->unsignedInteger('qty_relative')->default(0);
+            $table->decimal('amount', 14, 2)->default(0);
+            $table->decimal('unit_price', 14, 2);  // Added for historical price tracking
             $table->string('remarks')->nullable();
+            $table->boolean('is_delegated')->default(false);
             $table->index('eval_user_id');
             $table->index('inv_stock_id');
         });
