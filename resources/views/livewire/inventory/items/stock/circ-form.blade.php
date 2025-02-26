@@ -111,13 +111,14 @@ new class extends Component {
       }
       
       $user = $this->userq ? User::where('emp_id', $this->userq)->first() : null;
-      $user_id = $user ? $user->id : Auth::user()->id;
+      $user_id = (int) ($user ? $user->id : Auth::user()->id);
+      $auth_id = (int) Auth::user()->id;
       
       $is_delegated = false;
-      if($user_id !== Auth::user()->id && !$this->can_eval) {
+      if($user_id !== $auth_id && !$this->can_eval) {
          $this->js('toast("' . __('Kamu tidak dapat mendelegasikan sirkulasi di area ini') . '", { type: "danger" } )');
          return;
-      } else {
+      } else if ($user_id !== $auth_id) {
          $is_delegated = true;
       } 
 
@@ -138,7 +139,6 @@ new class extends Component {
       $this->dispatch('circ-created');
       $this->js('toast("' . __('Sirkulasi dibuat') . '", { type: "success" } )');
       $this->reset(['qty_relative', 'amount', 'remarks', 'userq', 'user_id']);
-
    }
 }
 

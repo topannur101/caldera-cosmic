@@ -89,7 +89,7 @@ new class extends Component
          'stocks'                => ['array','min:1', 'max:3'],
          'stocks.*.currency'     => ['required', 'exists:inv_currs,name'],
          'stocks.*.unit_price'   => ['required', 'numeric', 'min:0', 'max:1000000000'],
-         'stocks.*.uom'          => ['required', 'alpha', 'max:5'],
+         'stocks.*.uom'          => ['required', 'alpha_dash', 'max:5'],
 
          'items.*.photo'      => ['nullable'],
          'items.*.area_id'    => ['required', 'exists:inv_areas,id'],
@@ -256,7 +256,7 @@ new class extends Component
                      </div>
                   @else
                      <div class="py-3"><i class="text-neutral-500 fa fa-fw fa-tent me-2"></i>{{ $items[0]['area_name']}}</div>
-                     <div class="py-3"><i class="text-neutral-500 fa fa-fw {{ $items[0]['is_active'] ? 'fa-check-circle' :'fa-ban' }} me-2"></i>{{ $items[0]['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
+                     <div class="py-3 {{ $items[0]['is_active'] ? '' :'text-red-500' }}"><i class="fa fa-fw {{ $items[0]['is_active'] ? 'fa-check-circle text-neutral-500' :'fa-ban' }} me-2"></i>{{ $items[0]['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
                      @if($can_store)
                         <div class="py-3"><x-link href="{{ route('inventory.items.edit', ['id' => $items[0]['id']] ) }}" wire:navigate><i class="text-neutral-500 fa fa-fw fa-pen me-2"></i>{{ __('Edit barang') }}</x-text-link></div>
                      @endif
@@ -268,8 +268,8 @@ new class extends Component
         </div>
         <div class="grow">
             <div class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg divide-y divide-neutral-200 dark:divide-neutral-700">
-                <div class="grid gap-y-2 py-6">
-                  @if($is_editing)
+               @if($is_editing)
+                  <div class="grid gap-y-4 py-6">
                      <div class="px-6">
                         <label for="item-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
                         <x-text-input id="item-name" wire:model="items.0.name" type="text" />
@@ -278,11 +278,14 @@ new class extends Component
                         <label for="item-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
                         <x-text-input id="item-desc" wire:model="items.0.desc" type="text" />                        
                      </div>
+                  </div>
                   @else
+                  <div class="grid gap-y-2 py-6">
                      <h1 class="px-6 text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $items[0]['name'] }}</h1>
                      <p class="px-6">{{ $items[0]['desc'] }}</p>
+                  </div>
                   @endif
-                </div>
+                
                 @if($is_editing)                
                   <div class="p-6 grid grid-cols-1 gap-y-3">
                      <div>
