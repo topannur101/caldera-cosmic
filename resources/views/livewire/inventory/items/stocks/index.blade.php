@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\On;
 use App\Models\InvStock;
 
 new class extends Component
@@ -11,11 +12,14 @@ new class extends Component
    #[Url]
    public int $stock_id = 0;
 
+   public int $stock_qty = 0;
+
    public array $stocks = [];
 
    public bool $can_eval = false;
 
-   public function mount()
+   #[On('circ-evaluated')]
+   public function init()
    {
       $stocks = InvStock::with(['inv_curr', 'inv_item'])
       ->where('inv_item_id', $this->item_id)
@@ -28,10 +32,14 @@ new class extends Component
       $this->area_id = $stocks ? $stocks[0]['inv_item']['inv_area_id'] : 0;
    }
 
+   public function mount()
+   {
+      $this->init();
+   }
+ 
    public function with()
    {
       $stock_id   = 0;
-      $stock_qty  = 0;
       $stock_uom  = '';
       $curr_id = 1;
       $curr_rate = 1;
@@ -40,19 +48,19 @@ new class extends Component
       if ($this->stock_id) {
          $stock = collect($this->stocks)->firstWhere('id', $this->stock_id);
          if ($stock) {
-            $stock_id   = $stock['id'];
-            $stock_qty  = $stock['qty'];
-            $stock_uom  = $stock['uom'];
-            $curr_id    = $stock['inv_curr_id'];
-            $curr_rate  = $stock['inv_curr']['rate'];
-            $unit_price = $stock['unit_price'];
+            $stock_id         = $stock['id'];
+            $this->stock_qty  = $stock['qty'];
+            $stock_uom        = $stock['uom'];
+            $curr_id          = $stock['inv_curr_id'];
+            $curr_rate        = $stock['inv_curr']['rate'];
+            $unit_price       = $stock['unit_price'];
          }
       } else {
          $stock = collect($this->stocks)->first();
          if ($stock) {
             $this->stock_id   = $stock['id'];
             $stock_id         = $stock['id'];
-            $stock_qty        = $stock['qty'];
+            $this->stock_qty  = $stock['qty'];
             $stock_uom        = $stock['uom'];
             $curr_id          = $stock['inv_curr_id'];
             $curr_rate        = $stock['inv_curr']['rate'];
@@ -62,14 +70,12 @@ new class extends Component
 
       return [
          'stock_id'  => $stock_id,
-         'stock_qty' => $stock_qty,
          'stock_uom' => $stock_uom,
          'curr_id'   => $curr_id,
          'curr_rate' => $curr_rate,
          'unit_price' => $unit_price
       ];
    }
-
 };
 
 ?>

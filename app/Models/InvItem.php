@@ -9,6 +9,7 @@ class InvItem extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'last_withdrawal',
         'name',
         'desc',
         'code',
@@ -17,7 +18,7 @@ class InvItem extends Model
         'is_active',
         'code',
         'inv_loc_id',
-        'inv_area_id'
+        'inv_area_id',
     ];
 
     public function inv_loc()

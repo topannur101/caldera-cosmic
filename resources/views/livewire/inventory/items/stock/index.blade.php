@@ -36,8 +36,8 @@ new class extends Component {
       <div class="text-sm font-bold">{{ $stock_uom }}</div>
    </div>
    <div class="relative sm:static flex gap-x-3">
-      <livewire:inventory.items.stock.circ-form type="deposit"    :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
-      <livewire:inventory.items.stock.circ-form type="capture"    :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
-      <livewire:inventory.items.stock.circ-form type="withdrawal" :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
+      <livewire:inventory.items.stock.circ-create type="deposit"    :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
+      <livewire:inventory.items.stock.circ-create type="capture"    :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
+      <livewire:inventory.items.stock.circ-create type="withdrawal" :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
    </div>
 </div>

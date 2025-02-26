@@ -23,6 +23,11 @@ class InvCirc extends Model
         'is_delegated'
     ];
 
+    protected $casts = [
+        'created_at' => 'datetime:Y-m-d H:i',
+        'updated_at' => 'datetime:Y-m-d H:i',
+    ];
+
     public function type_color(): string
     {
         $color = '';
@@ -77,15 +82,44 @@ class InvCirc extends Model
         $icon = '';
         switch ($this->eval_status) {
             case 'pending':
-                $icon = 'fa-hourglass';
+                $icon = 'fa-hourglass text-neutral-500 opacity-50';
                 break;
             case 'approved':
-                $icon = 'fa-thumbs-up';
+                $icon = 'fa-thumbs-up text-green-500 opacity-50';
                 break;
             case 'rejected':
-                $icon = 'fa-thumbs-down';
+                $icon = 'fa-thumbs-down text-red-500 opacity-50';
                 break;
         }
         return $icon;
+    }
+
+    public function eval_friendly(): string
+    {
+        $eval = '';
+        switch ($this->eval_status) {
+            case 'pending':
+                $eval = __('Tertunda');
+                break;
+            case 'approved':
+                $eval = __('Disetujui');
+                break;
+            case 'rejected':
+                $eval = __('Ditolak');
+                break;
+        }
+        return $eval;
+    }
+    
+    public function inv_curr()
+    {
+        return $this->hasOneThrough(
+            InvCurr::class, 
+            InvStock::class, 
+            'id',   
+            'id', 
+            'inv_stock_id', 
+            'inv_curr_id'
+        );
     }
 }

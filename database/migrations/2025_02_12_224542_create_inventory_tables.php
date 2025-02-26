@@ -62,6 +62,7 @@ return new class extends Migration
         Schema::create('inv_items', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+            $table->timestamp('last_withdrawal')->nullable();
             $table->string('name');
             $table->string('desc');
             $table->string('code')->nullable();

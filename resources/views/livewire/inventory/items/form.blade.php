@@ -261,7 +261,7 @@ new class extends Component
                         <div class="py-3"><x-link href="{{ route('inventory.items.edit', ['id' => $items[0]['id']] ) }}" wire:navigate><i class="text-neutral-500 fa fa-fw fa-pen me-2"></i>{{ __('Edit barang') }}</x-text-link></div>
                      @endif
                      <div class="py-3">{{ __('Terakhir diperbarui') . ': ' . $items[0]['updated_at'] }}</div>
-                     <div class="py-3">{{ __('Pengambilan terakhir') . ': ' . $items[0]['last_withdrawal'] }}</div>
+                     <div class="py-3">{{ __('Terakhir diambil') . ': ' . $items[0]['last_withdrawal'] ?: __('Tak pernah') }}</div>
                   @endif
                 </div>
             </div>
