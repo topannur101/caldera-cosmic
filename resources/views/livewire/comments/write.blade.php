@@ -56,10 +56,10 @@ new class extends Component {
         ]);
         
         $com_item = ComItem::create([
-            'user_id' => $this->user_id,
-            'content'   => $this->content,
-            'mod'       => $this->model_name,
-            'model_id'    => $this->model_id,
+            'user_id'       => $this->user_id,
+            'content'       => $this->content,
+            'model_name'    => $this->model_name,
+            'model_id'      => $this->model_id,
         ]);
 
         if ($this->parent_id) {

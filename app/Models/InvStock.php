@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class InvStock extends Model
 {
@@ -41,64 +42,82 @@ class InvStock extends Model
         
         try {
 
-            // caldera: validation auth pls
             $circ = InvCirc::find($circ['id']);
+
+            $circEval = Gate::inspect('eval', $circ);
+            if ($circEval->denied())
+            {
+                throw new \Exception(__('Kamu tidak memiliki wewenang untuk mengevaluasi sirkulasi ini'));
+            };
 
             switch ($eval) {
                 case 'approve':
+    
                     if ($circ->eval_status !== 'pending')
                     {
                         throw new \Exception(__('Sirkulasi sudah dievaluasi'));
                     }
 
                     $item = InvItem::find($circ['inv_stock']['inv_item_id']);
-
-                    $qty_a = $this->qty;
-                    $qty_b = $circ['qty_relative'];
-                    $qty_c = null;
+                    
+                    $qty_initial = $this->qty;
+                    $qty_relative = $circ['qty_relative'];
+                    $qty_end = null;
 
                     switch ($circ['type']) {
                         case 'deposit':
-                            $qty_c = $qty_a + $qty_b;
+                            $qty_end = $qty_initial + $qty_relative;
+                            $item->last_deposit = now();
                             break;
                         
                         case 'withdrawal':
-                            $qty_c = $qty_a - $qty_b;
+                            $qty_end = $qty_initial - $qty_relative;
                             $item->last_withdrawal = now();
                             break;
                     }
 
-                    if($qty_c === null)
+                    if($qty_end === null && ($circ['type'] === 'deposit' || $circ['type'] === 'withdrawal'))
                     {
-                        throw new \Exception(__('Terjadi masalah ketika menghitung qty akhir barang'));
+                        throw new \Exception(__('Terjadi galat ketika menghitung qty akhir barang'));
                     }
 
-                    if($qty_c < 0)
+                    if($qty_end < 0)
                     {
-                        throw new \Exception(__('Qty akhir barang tidak boleh negatif'));
+                        throw new \Exception(__('Pengambilan melebihi qty stok'));
                     }
 
-                    $this->update([
-                        'qty' => $qty_c,
-                        'is_active' => true
-                    ]);
-
-                    $item->is_active = true;
-                    $item->save();
-
-                    
                     $circ->update([
                         'eval_user_id'  => Auth::user()->id,
                         'eval_status'   => 'approved', 
                         'eval_remarks'  => $remarks
                     ]);
 
-                    $status = [
-                        'success' => true,
-                        'message' => __('Sirkulasi disetujui dan stok barang diperbarui'),
-                        'stock_qty' => $qty_c
-                    ];
+                    switch ($circ['type']) {
+                        case 'deposit':
+                        case 'withdrawal':
+                            $this->update([
+                                'qty' => $qty_end,
+                                'is_active' => true
+                            ]);
+        
+                            $item->is_active = true;
+                            $item->save();
+    
+                            $status = [
+                                'success' => true,
+                                'message' => __('Sirkulasi disetujui dan stok barang diperbarui'),
+                                'stock_qty' => $qty_end
+                            ];
+                            break;
 
+                        case 'capture':
+                            $status = [
+                                'success' => true,
+                                'message' => __('Sirkulasi disetujui'),
+                                'stock_qty' => $qty_end
+                            ];
+                    }
+                    
                     break;
                 
                 case 'reject':
@@ -121,8 +140,6 @@ class InvStock extends Model
 
                     break;
             }
-
-
 
         } catch (\Exception $th) {
             $status = [

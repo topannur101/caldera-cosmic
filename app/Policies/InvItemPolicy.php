@@ -16,40 +16,26 @@ class InvItemPolicy
         //
     }
 
-        /**
+    /**
      * Determine whether the user can view any models.
      */
-    public function viewAny(User $user): Response
-    {
-        return count($user->invAreaIds())
-        ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk melihat inventaris') );
-    }
+    // public function viewAny(User $user): Response
+    // {
+    //     return count($user->invAreaIds())
+    //     ? Response::allow()
+    //     : Response::deny( __('Kamu tak memiliki wewenang untuk melihat inventaris') );
+    // }
 
     /**
      * Determine whether the user can view the model.
      */
     public function view(User $user, InvItem $invItem): Response
     {
-        return $user->authInvArea($invItem->inv_area_id)
+        $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->count();
+
+        return $auth
         ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk melihat barang ini') );
-    }
-
-    public function updateLoc(User $user, InvItem $invItem) : bool
-    {
-        $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();
-        $actions = json_decode($auth->actions ?? '{}', true);
-        return in_array('item-loc', $actions);
-
-    }
-
-    public function updateTag(User $user, InvItem $invItem) : bool
-    {
-        $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();
-        $actions = json_decode($auth->actions ?? '{}', true);
-        return in_array('item-tag', $actions);
-
+        : Response::deny( __('Kamu tak memiliki wewenang untuk melihat barang ini'));
     }
 
     public function create(User $user): Response
@@ -76,11 +62,18 @@ class InvItemPolicy
         : Response::deny( __('Kamu tak memiliki wewenang untuk mengelola barang di area ini'));
     }
 
-    public function eval(User $user, InvItem $invItem): bool
+    public function circEval(User $user, InvItem $invItem): bool
     {
         $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();
         $actions = json_decode($auth->actions ?? '{}', true);
         return in_array('circ-eval', $actions);
+    }
+
+    public function circCreate(User $user, InvItem $invItem): bool
+    {
+        $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();
+        $actions = json_decode($auth->actions ?? '{}', true);
+        return in_array('circ-create', $actions);
     }
 
 

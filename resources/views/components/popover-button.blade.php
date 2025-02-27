@@ -43,7 +43,7 @@
       x-ref="popoverButton" 
       @click="popoverOpen=!popoverOpen" 
       :class="popoverOpen ? 'outline-none ring-2 ring-caldy-500 ring-offset-2 dark:ring-offset-neutral-800' : ''" 
-      class="flex items-center justify-center w-10 h-10 cursor-pointer bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-500 rounded-full font-semibold text-neutral-700 dark:text-neutral-300 shadow-sm hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-25 transition ease-in-out duration-150">
+      class="flex items-center justify-center w-10 h-10 cursor-pointer bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-full font-semibold text-neutral-700 dark:text-neutral-300 shadow-sm hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-25 transition ease-in-out duration-150">
       <i class="fa fa-fw {{ $icon }}"></i>
    </button>
 

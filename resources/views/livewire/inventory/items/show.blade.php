@@ -25,6 +25,7 @@ class extends Component
            'area_name'       => '',
            'is_active'       => false,
            'updated_at'      => '',
+           'last_deposit'    => '',
            'last_withdrawal' => '',
         ]
      ];
@@ -49,14 +50,13 @@ class extends Component
             $this->items[0]['area_name'] = $item->inv_area->name;
             $this->items[0]['is_active'] = $item->is_active;
             $this->items[0]['updated_at'] = $item->updated_at->diffForHumans();
+            $this->items[0]['last_withdrawal'] = $item->last_withdrawal;
+            $this->items[0]['last_deposit'] = $item->last_deposit;
 
             $store = Gate::inspect('store', $item);
             $this->can_store = $store->allowed();
 
-            $view = Gate::inspect('view', $item);
-            if ($view->denied()) {
-                abort(403, $view->message());
-            }
+            Gate::authorize('view', $item);
         }
     }
 

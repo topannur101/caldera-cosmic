@@ -122,4 +122,16 @@ class InvCirc extends Model
             'inv_curr_id'
         );
     }
+
+    public function inv_item()
+    {
+        return $this->hasOneThrough(
+            InvItem::class, 
+            InvStock::class, 
+            'id',   
+            'id', 
+            'inv_stock_id', 
+            'inv_item_id'
+        );
+    }
 }

@@ -263,11 +263,13 @@ class extends Component
                 <x-select wire:model.live="sort" class="mr-3">
                     <option value="updated">{{ __('Diperbarui') }}</option>
                     <option value="created">{{ __('Dibuat') }}</option>
+                    <option value="price_low">{{ __('Terakhir ditambah') }}</option>
+                    <option value="price_high">{{ __('Terakhir diambil') }}</option>
                     <option value="price_low">{{ __('Termurah') }}</option>
                     <option value="price_high">{{ __('Termahal') }}</option>
                     <option value="qty_low">{{ __('Paling sedikit') }}</option>
                     <option value="qty_high">{{ __('Paling banyak') }}</option>
-                    <option value="alpha">{{ __('Abjad') }}</option>
+                    <option value="alpha">{{ __('Alfabet') }}</option>
                 </x-select>
                 <div class="btn-group">
                     <x-radio-button wire:model.live="view" value="list" name="view" id="view-list"><i
@@ -355,7 +357,7 @@ class extends Component
                                 :desc="$inv_stock->inv_item->desc" 
                                 :code="$inv_stock->inv_item->code"
                                 :curr="$inv_stock->inv_curr->name" 
-                                :price="$inv_stock->inv_item->price" 
+                                :price="$inv_stock->unit_price" 
                                 :uom="$inv_stock->uom"
                                 :loc="$inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' . $inv_stock->inv_item->inv_loc->bin ) : null" 
                                 :tags="$inv_stock->inv_item->tags_facade() ?? null" 

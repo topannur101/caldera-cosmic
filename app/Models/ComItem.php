@@ -15,8 +15,8 @@ class ComItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'mod',
-        'mod_id',
+        'model_name',
+        'model_id',
         'user_id',
         'parent_id',
         'content',
@@ -37,20 +37,39 @@ class ComItem extends Model
         return $this->hasMany(ComItem::class, 'parent_id');
     }
 
+    public function getMentionedUsers()
+    {
+        $pattern = '/@(\w+)/';
+        
+        preg_match_all($pattern, $this->content, $matches);
+        
+        if (!empty($matches[1])) {
+            // Get unique emp_ids
+            $empIds = array_unique($matches[1]);
+            
+            // Return collection of User models
+            return User::whereIn('emp_id', $empIds)->get();
+        }
+        
+        return collect(); // Return empty collection if no mentions
+    }
+    
     public function parseContent()
     {
         $pattern = '/@(\w+)/';
-
-        return preg_replace_callback($pattern, function($matches) {
+        $content = e($this->content);
+        $mentionedUsers = $this->getMentionedUsers();
+        
+        return preg_replace_callback($pattern, function($matches) use ($mentionedUsers) {
             $username = $matches[1];
-            $user = User::where('emp_id', $username)->first();
-    
+            $user = $mentionedUsers->firstWhere('emp_id', $username);
+            
             if ($user) {
                 return '<span title="'.$user->emp_id.'" class="text-neutral-400 dark:text-neutral-600">@' . $user->name . '</span>';
             }
-    
-            return '@' . $username; // If the user doesn't exist, return the original text
-        }, e($this->content));
+            
+            return '@' . $username;
+        }, $content);
     }
 
     public function saveFile($file)

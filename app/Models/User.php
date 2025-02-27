@@ -107,60 +107,60 @@ class User extends Authenticatable
         return $this->hasMany(InvAuth::class);
     }
 
-    public function authInvArea($id): bool
-    {
-        return $this->inv_auths->where('inv_area_id', $id)->count() ? true : false;
-    }
+    // public function authInvArea($id): bool
+    // {
+    //     return $this->inv_auths->where('inv_area_id', $id)->count() ? true : false;
+    // }
 
     public function inv_areas() : BelongsToMany
     {
         return $this->belongsToMany(InvArea::class, 'inv_auths', 'user_id', 'inv_area_id');
     }
 
-    public function invAreaIdsItemCreate(): array
-    {
-        $ids = [];
+    // public function invAreaIdsItemCreate(): array
+    // {
+    //     $ids = [];
 
-        if($this->id === 1) {
-            $ids = $this->invAreaIds();          
-        } else {
-            foreach ($this->inv_auths as $auth) {
-                // Decode the "actions" string into an array
-                $actions = json_decode($auth['actions'], true);
+    //     if($this->id === 1) {
+    //         $ids = $this->invAreaIds();          
+    //     } else {
+    //         foreach ($this->inv_auths as $auth) {
+    //             // Decode the "actions" string into an array
+    //             $actions = json_decode($auth['actions'], true);
     
-                // Check if "item-create" is present in the actions array
-                if (in_array('item-create', $actions)) {
-                    $ids[] = $auth['inv_area_id'];
-                }
-            }
-        }
-        return $ids;
-    }
+    //             // Check if "item-create" is present in the actions array
+    //             if (in_array('item-create', $actions)) {
+    //                 $ids[] = $auth['inv_area_id'];
+    //             }
+    //         }
+    //     }
+    //     return $ids;
+    // }
     
-    public function invAreaIdsCircCreate(): array
-    {
-        $ids = [];
+    // public function invAreaIdsCircCreate(): array
+    // {
+    //     $ids = [];
 
-        if($this->id === 1) {
-            $ids = $this->invAreaIds();          
-        } else {
-            foreach ($this->inv_auths as $auth) {
-                // Decode the "actions" string into an array
-                $actions = json_decode($auth['actions'], true);
+    //     if($this->id === 1) {
+    //         $ids = $this->invAreaIds();          
+    //     } else {
+    //         foreach ($this->inv_auths as $auth) {
+    //             // Decode the "actions" string into an array
+    //             $actions = json_decode($auth['actions'], true);
     
-                // Check if "item-create" is present in the actions array
-                if (in_array('circ-create', $actions)) {
-                    $ids[] = $auth['inv_area_id'];
-                }
-            }
-        }
-        return $ids;
-    }
+    //             // Check if "item-create" is present in the actions array
+    //             if (in_array('circ-create', $actions)) {
+    //                 $ids[] = $auth['inv_area_id'];
+    //             }
+    //         }
+    //     }
+    //     return $ids;
+    // }
     
-    public function invAreaIds(): array
-    {
-        return $this->id === 1 ? InvArea::all()->pluck('id')->toArray() : $this->inv_areas->pluck('id')->toArray();
-    }
+    // public function invAreaIds(): array
+    // {
+    //     return $this->id === 1 ? InvArea::all()->pluck('id')->toArray() : $this->inv_areas->pluck('id')->toArray();
+    // }
 
     // public function kpi_areas() : BelongsToMany
     // {

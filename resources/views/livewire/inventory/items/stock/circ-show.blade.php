@@ -3,7 +3,6 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
 use App\Models\InvCirc;
-use App\Models\InvItem;
 use App\Models\InvStock;
 
 new class extends Component
@@ -39,14 +38,22 @@ new class extends Component
       'eval_friendly' => ''
    ];
 
+   public bool $can_eval = false;
    public bool $is_evaluating = false;
+
+   public bool $can_edit = false;
+   public bool $is_editing = false;
+
    public string $remarks = '';
 
    #[On('circ-show')]
    public function loadCirc(int $id)
    {
-       $circ = InvCirc::with(['user', 'inv_stock', 'inv_curr', 'eval_user'])->find($id);
+       $circ = InvCirc::with(['user', 'inv_stock', 'inv_item', 'inv_curr', 'eval_user'])->find($id);
        if ($circ) {
+            $this->can_eval = Gate::inspect('eval', $circ)->allowed();
+            $this->can_edit = Gate::inspect('edit', $circ)->allowed();
+
             $this->circ['color'] = $circ->type_color();
             $this->circ['icon']  = $circ->type_icon();
             $this->circ['eval_icon'] = $circ->eval_icon();
@@ -59,7 +66,7 @@ new class extends Component
        } else {
            $this->handleNotFound();
        }
-       $this->reset(['is_evaluating', 'remarks']);
+       $this->reset(['is_evaluating', 'is_editing', 'remarks']);
    }
 
    public function with(): array
@@ -73,6 +80,7 @@ new class extends Component
    {
       // caldera: validate first
       $stock = InvStock::find($this->circ['inv_stock_id']);
+      
       $result = $stock->updateByCirc($eval, $this->circ, $this->remarks);
 
       if($result['success']) {
@@ -102,12 +110,12 @@ new class extends Component
 
 ?>
 
-<div x-data="{ is_evaluating: @entangle('is_evaluating') }" class="p-6 flex flex-col gap-y-4">
+<div x-data="{ is_evaluating: @entangle('is_evaluating'), is_editing: @entangle('is_editing') }" class="p-6 flex flex-col gap-y-4">
 
    <!-- Quantity and UOM Section -->
-   <div class="flex items-center justify-between">
-      <div class="flex items-center">
-         <span class="{{ $circ['color'] }} text-base">
+   <div class="flex justify-between">
+      <div class="flex items-center text-xl">
+         <span class="{{ $circ['color'] }}">
             <i class="fa fa-fw {{ $circ['icon'] }} mr-1"></i>{{ $circ['qty_relative'] . ' ' . $circ['inv_stock']['uom'] }}
          </span>
       </div>
@@ -144,8 +152,8 @@ new class extends Component
       </div>
    </div>
 
-   <hr class="border-neutral-300 dark:border-neutral-700" />
-   <div class="flex flex-col gap-y-2 text-sm">
+   <hr x-show="!is_editing" class="border-neutral-300 dark:border-neutral-700" />
+   <div x-show="!is_editing" class="flex flex-col gap-y-2 text-sm">
       <div class="flex items-center gap-x-4 w-full">
          <div>
             <span class="text-neutral-500 hidden sm:inline">{{ __('Dibuat') . ': ' }}</span>
@@ -164,8 +172,8 @@ new class extends Component
    </div>
    
    <!-- amount $circ['amount'] and unit_price info $circ['unit_price'] and currency $circ['inv_curr']['name'] info -->
-   <hr class="border-neutral-300 dark:border-neutral-700" />
-   <div class="grid grid-cols-2 gap-4">
+   <hr x-show="!is_editing" class="border-neutral-300 dark:border-neutral-700" />
+   <div x-show="!is_editing" class="grid grid-cols-2 gap-4">
       <div class="flex flex-col">
          <span class="text-sm text-neutral-500">{{ __('Harga satuan') }}</span>
          <span class="text-base">{{ $circ['unit_price'] }} {{ $circ['inv_curr']['name'] }}</span>
@@ -209,12 +217,20 @@ new class extends Component
 
    @if($circ['eval_status'] === 'pending')
    <!-- Buttons -->
-   <div x-show="!is_evaluating" class="flex justify-between mt-4">
+   <div x-show="!is_editing && !is_evaluating" class="flex justify-between mt-4">
       <div>
-         <x-secondary-button type="button">{{ __('Edit') }}</x-secondary-button>
+         @if($can_edit)
+            <x-secondary-button type="button" x-on:click="is_editing = !is_editing;">{{ __('Edit') }}</x-secondary-button>
+         @else
+            <x-secondary-button type="button" disabled>{{ __('Edit') }}</x-secondary-button>
+         @endif
       </div>
       <div>
-         <x-primary-button type="button" x-on:click="is_evaluating = !is_evaluating; setTimeout(function(){ $refs.evalRemarks.focus()}, 100)">{{ __('Evaluasi') }}</x-secondary-button>
+         @if($can_eval)
+            <x-primary-button type="button" x-on:click="is_evaluating = !is_evaluating; setTimeout(function(){ $refs.evalRemarks.focus()}, 100)">{{ __('Evaluasi') }}</x-secondary-button>
+         @else
+            <x-primary-button type="button" disabled>{{ __('Evaluasi') }}</x-secondary-button>
+         @endif
       </div>
    </div>
    @endif

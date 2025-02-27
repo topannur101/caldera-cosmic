@@ -122,18 +122,27 @@ new class extends Component {
          $is_delegated = true;
       } 
 
-      $circ = InvCirc::create([
-         'amount'       => $amount,
-         'unit_price'   => $this->unit_price, 
+      $circ = new InvCirc();
+      $circ->amount       = $amount;
+      $circ->unit_price   = $this->unit_price; 
 
-         'type'         => $this->type,
-         'inv_stock_id' => $this->stock_id,
-         'qty_relative' => $this->qty_relative,
-         'remarks'      => $this->remarks,
+      $circ->type         = $this->type;
+      $circ->inv_stock_id = $this->stock_id;
+      $circ->qty_relative = $this->qty_relative;
+      $circ->remarks      = $this->remarks;
 
-         'user_id'      => $user_id,
-         'is_delegated' => $is_delegated,
-      ]);
+      $circ->user_id      = $user_id;
+      $circ->is_delegated = $is_delegated;
+      
+
+      $response = Gate::inspect('create', $circ);
+ 
+      if ($response->denied()) {
+         $this->js('toast("' . $response->message() . '", { type: "danger" })');
+         return;
+      }
+
+      $circ->save();
       
       $this->dispatch('close-popover');
       $this->dispatch('circ-created');

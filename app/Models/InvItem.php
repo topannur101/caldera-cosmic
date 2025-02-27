@@ -10,6 +10,7 @@ class InvItem extends Model
     use HasFactory;
     protected $fillable = [
         'last_withdrawal',
+        'last_deposit',
         'name',
         'desc',
         'code',

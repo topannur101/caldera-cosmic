@@ -34,6 +34,7 @@ new class extends Component
          'area_name'       => '',
          'is_active'       => false,
          'updated_at'      => '',
+         'last_deposit'    => '',
          'last_withdrawal' => '',
       ]
    ];
@@ -74,6 +75,14 @@ new class extends Component
       foreach($this->stocks as $stock) {
          $stock['currency'] = strtoupper(trim($stock['currency']));
          $stock['uom']      = strtoupper(trim($stock['uom']));
+      }
+
+      if (!$this->is_editing)
+      {
+         $item = InvItem::where('code', $this->items[0]['code'])->where('inv_area_id', $this->items[0]['area_id'])->count();
+         if ($item) {
+            $this->js('toast("' . __('Barang dengan item kode dan area tersebut sudah ada') . '", { type: "danger" } )');
+         }
       }
 
       $this->validate([
@@ -260,8 +269,9 @@ new class extends Component
                      @if($can_store)
                         <div class="py-3"><x-link href="{{ route('inventory.items.edit', ['id' => $items[0]['id']] ) }}" wire:navigate><i class="text-neutral-500 fa fa-fw fa-pen me-2"></i>{{ __('Edit barang') }}</x-text-link></div>
                      @endif
-                     <div class="py-3">{{ __('Terakhir diperbarui') . ': ' . $items[0]['updated_at'] }}</div>
-                     <div class="py-3">{{ __('Terakhir diambil') . ': ' . $items[0]['last_withdrawal'] ?: __('Tak pernah') }}</div>
+                     <div class="py-3"><span class="text-neutral-500">{{ __('Terakhir diperbarui') . ': ' }}</span>{{  $items[0]['updated_at'] }}</div>
+                     <div class="py-3"><span class="text-neutral-500">{{ __('Terakhir ditambah') . ': ' }}</span>{{ ($items[0]['last_deposit'] ?: __('Tak pernah')) }}</div>
+                     <div class="py-3"><span class="text-neutral-500">{{ __('Terakhir diambil') . ': ' }}</span>{{ ($items[0]['last_withdrawal'] ?: __('Tak pernah')) }}</div>
                   @endif
                 </div>
             </div>

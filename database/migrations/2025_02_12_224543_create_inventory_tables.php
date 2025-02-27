@@ -63,6 +63,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->timestamp('last_withdrawal')->nullable();
+            $table->timestamp('last_deposit')->nullable();
             $table->string('name');
             $table->string('desc');
             $table->string('code')->nullable();

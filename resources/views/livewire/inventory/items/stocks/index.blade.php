@@ -18,6 +18,8 @@ new class extends Component
 
    public bool $can_eval = false;
 
+   public bool $can_create = false;
+
    #[On('circ-evaluated')]
    public function init()
    {
@@ -26,7 +28,8 @@ new class extends Component
       ->where('is_active', true)->get();
       
       $inv_item = $stocks->first()?->inv_item;
-      $this->can_eval = $inv_item ? Gate::inspect('eval', $inv_item)->allowed() : false;
+      $this->can_eval   = $inv_item ? Gate::inspect('circEval', $inv_item)->allowed() : false;
+      $this->can_create = $inv_item ? Gate::inspect('circCreate', $inv_item)->allowed() : false;
 
       $this->stocks  = $stocks ? $stocks->toArray() : [];  
       $this->area_id = $stocks ? $stocks[0]['inv_item']['inv_area_id'] : 0;
@@ -97,7 +100,7 @@ new class extends Component
          </ul>
       </div> 
       <div class="px-6">
-         <livewire:inventory.items.stock.index :$stock_id :$stock_qty :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval  />
+         <livewire:inventory.items.stock.index :$stock_id :$stock_qty :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval :$can_create  />
       </div>
       <div class="truncate">
          <livewire:inventory.items.stock.circs :$stock_id />
