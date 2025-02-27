@@ -11,7 +11,7 @@ new class extends Component
       'id' => 0,
       'color' => '',
       'icon' => '',
-      'qty_relative' => '',
+      'qty_relative' => 0,
       'inv_stock' => [
          'uom' => '',
          'inv_item_id' => 0
@@ -22,7 +22,8 @@ new class extends Component
       'eval_icon' => '',
       'user' => [
          'name' => '',
-      'photo' => '',
+         'emp_id' => '',
+         'photo' => '',
       ],
       'is_delegated' => '',
       'created_at' => '',
@@ -35,7 +36,9 @@ new class extends Component
       ],
       'eval_status'  => '',
       'eval_remarks' => '',
-      'eval_friendly' => ''
+      'eval_friendly' => '',
+      'type' => '',
+      'type_friendly' => '',
    ];
 
    public bool $can_eval = false;
@@ -44,7 +47,9 @@ new class extends Component
    public bool $can_edit = false;
    public bool $is_editing = false;
 
+   public int $qty_relative = 0;
    public string $remarks = '';
+   public string $eval_remarks = '';
 
    #[On('circ-show')]
    public function loadCirc(int $id)
@@ -58,6 +63,10 @@ new class extends Component
             $this->circ['icon']  = $circ->type_icon();
             $this->circ['eval_icon'] = $circ->eval_icon();
             $this->circ['eval_friendly'] = $circ->eval_friendly();
+            $this->circ['type_friendly'] = $circ->type_friendly();
+
+            $this->qty_relative  = $circ->qty_relative;
+            $this->remarks       = $circ->remarks;
 
             $circ = $circ->toArray();
             $this->circ = array_merge($this->circ, $circ);
@@ -66,7 +75,7 @@ new class extends Component
        } else {
            $this->handleNotFound();
        }
-       $this->reset(['is_evaluating', 'is_editing', 'remarks']);
+       $this->reset(['is_evaluating', 'is_editing', 'eval_remarks']);
    }
 
    public function with(): array
@@ -95,6 +104,58 @@ new class extends Component
 
    }
 
+   public function update()
+   {
+      $this->remarks = trim($this->remarks);
+
+      $this->validate([
+         'qty_relative' => ['required', 'min:0', 'max:100000'],
+         'remarks'      => ['required', 'string', 'max:256'],
+      ]);
+
+      $circ = InvCirc::find($this->circ['id']);
+
+      if (!$circ) {
+         $this->handleNotFound();
+      }
+
+      // withdrawal and capture qty_relative cannot be 0
+      if ($circ->type == 'deposit' || $circ->type == 'withdrawal') {
+         if (!$this->qty_relative > 0) {
+            $this->js('toast("' . __('Qty tidak boleh 0') . '", { type: "danger" } )');
+            return;
+         }
+      }
+
+      if ($circ->eval_status == 'approved' || $circ->eval_status == 'rejected') {
+         $this->js('toast("' . __('Sirkulasi yang telah dievaluasi tidak dapat diedit') . '", { type: "danger" } )');
+         return;
+      }
+
+      $amount = 0;
+      $amount = $circ->unit_price * $this->qty_relative;
+
+      $circ->amount       = $amount; 
+
+      $circ->qty_relative = $this->qty_relative;
+      $circ->remarks      = $this->remarks;
+      
+
+      $response = Gate::inspect('edit', $circ);
+ 
+      if ($response->denied()) {
+         $this->js('toast("' . $response->message() . '", { type: "danger" })');
+         return;
+      }
+
+      $circ->save();
+      
+      $this->dispatch('circ-show', $circ->id);
+      $this->dispatch('circ-updated', $circ->id);
+      $this->js('toast("' . __('Sirkulasi diperbarui') . '", { type: "success" } )');
+      $this->reset(['is_editing']);
+   }
+
    public function customReset()
    {
        $this->reset(['circ', 'is_evaluating', 'remarks']);
@@ -110,50 +171,76 @@ new class extends Component
 
 ?>
 
-<div x-data="{ is_evaluating: @entangle('is_evaluating'), is_editing: @entangle('is_editing') }" class="p-6 flex flex-col gap-y-4">
+<div x-data="{ is_evaluating: @entangle('is_evaluating'), is_editing: @entangle('is_editing') }">
 
-   <!-- Quantity and UOM Section -->
-   <div class="flex justify-between">
-      <div class="flex items-center text-xl">
-         <span class="{{ $circ['color'] }}">
-            <i class="fa fa-fw {{ $circ['icon'] }} mr-1"></i>{{ $circ['qty_relative'] . ' ' . $circ['inv_stock']['uom'] }}
-         </span>
+   <div class="p-6 flex flex-col gap-y-6">
+      <!-- Quantity and UOM Section -->
+      <div class="flex justify-between">
+         <x-text-button type="button" x-show="is_editing" x-on:click="is_editing = !is_editing">
+            <div class="flex gap-x-3 items-center">
+               <i class="fa fa-arrow-left"></i>
+               <h2 class="text-lg font-medium">
+                  {{ __('Edit') }}
+               </h2>
+            </div>
+         </x-text-button>
+         <div x-show="!is_editing" class="flex items-center text-xl">
+            <span class="{{ $circ['color'] }}">
+               <i class="fa fa-fw {{ $circ['icon'] }} mr-1"></i>{{ $circ['qty_relative'] . ' ' . $circ['inv_stock']['uom'] }}
+            </span>
+         </div>
+         <div>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-button>
+         </div>
       </div>
-      <div>
-         <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-button>
+
+      <!-- User Details Section -->
+      <div class="flex gap-x-3">
+         <div>
+            <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            @if ($circ['user']['photo'])
+               <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/' . $circ['user']['photo'] }}" />
+            @else
+               <svg xmlns="http://www.w3.org/2000/svg"
+                     class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
+                     viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
+                  <path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
+               </svg>
+            @endif
+            </div>
+         </div>
+         <div class="grow">
+            <div class="text-xs text-neutral-500" :class="is_editing ? 'px-3 mb-2' : ''">
+               <span>{{ $circ['user']['name'] . ' - ' . $circ['user']['emp_id'] }}</span>
+               @if($circ['is_delegated'])
+                  <span title="Didelegasikan"><i class="fa fa-handshake-angle"></i></span>
+               @endif
+            </div>
+            <div x-show="!is_editing" class="text-base text-wrap">
+               {{ $circ['remarks'] }}
+            </div>
+            <div x-show="is_editing" class="flex flex-col gap-y-4">
+               <x-text-input wire:model="remarks" id="circ-remarks" />
+               @if($circ['type'] == 'deposit' || $circ['type'] == 'withdrawal')
+                  <div>
+                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-qty"><span>{{ __('Jumlah') }}</span></label>
+                     <x-text-input-suffix wire:model="qty_relative" suffix="{{ $circ['inv_stock']['uom'] }}" id="circ-qty" name="circ-qty"
+                     type="number" value="" min="1" placeholder="Qty" />
+                  </div>
+               @endif
+            </div>
+         </div>
       </div>
    </div>
-
-   <!-- User Details Section -->
-   <div class="flex gap-x-3">
-      <div>
-         <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-         @if ($circ['user']['photo'])
-            <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/' . $circ['user']['photo'] }}" />
-         @else
-            <svg xmlns="http://www.w3.org/2000/svg"
-                  class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
-                  viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
-               <path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
-            </svg>
-         @endif
-         </div>
+   <div x-show="is_editing" class="p-6 flex items-center justify-between">
+      <div class="{{ $circ['color'] }} text-sm font-bold uppercase">
+         <i class="fa fa {{ $circ['icon'] }} me-2"></i>{{ $circ['type_friendly'] }}
       </div>
-      <div>
-         <div class="text-xs text-neutral-500">
-            <span>{{ $circ['user']['name'] }}</span>
-            @if($circ['is_delegated'])
-               <span title="Didelegasikan"><i class="fa fa-handshake-angle"></i></span>
-            @endif
-         </div>
-         <div class="text-base text-wrap">
-            {{ $circ['remarks'] }}
-         </div>
-      </div>
+      <x-primary-button type="button" wire:click="update">{{ __('Perbarui') }}</x-secondary-button>
    </div>
 
    <hr x-show="!is_editing" class="border-neutral-300 dark:border-neutral-700" />
-   <div x-show="!is_editing" class="flex flex-col gap-y-2 text-sm">
+   <div x-show="!is_editing" class="p-6 flex flex-col gap-y-2 text-sm">
       <div class="flex items-center gap-x-4 w-full">
          <div>
             <span class="text-neutral-500 hidden sm:inline">{{ __('Dibuat') . ': ' }}</span>
@@ -173,7 +260,7 @@ new class extends Component
    
    <!-- amount $circ['amount'] and unit_price info $circ['unit_price'] and currency $circ['inv_curr']['name'] info -->
    <hr x-show="!is_editing" class="border-neutral-300 dark:border-neutral-700" />
-   <div x-show="!is_editing" class="grid grid-cols-2 gap-4">
+   <div x-show="!is_editing" class="p-6 grid grid-cols-2 gap-4">
       <div class="flex flex-col">
          <span class="text-sm text-neutral-500">{{ __('Harga satuan') }}</span>
          <span class="text-base">{{ $circ['unit_price'] }} {{ $circ['inv_curr']['name'] }}</span>
@@ -187,37 +274,46 @@ new class extends Component
    <!-- evaluation info evaluator and their remarks $circ['eval_user']['name'] and $circ['eval_remarks'] -->
    @if($circ['eval_status'] !== 'pending')
    <hr class="border-neutral-300 dark:border-neutral-700" />
-   <div class="flex flex-col gap-y-2 text-sm">
+   <div class="p-6 flex flex-col gap-y-2 text-sm">
       <div>
          <span class="text-neutral-500">{{ __('Evaluator') . ': ' }}</span>
          <span class="font-medium" title="{{ $circ['eval_user']['emp_id'] ?? '' }}">{{ $circ['eval_user']['name'] ?? 'Edwin' }}</span>
       </div>
       <div>
-         <span>{{  $circ['eval_remarks'] ?? 'Salah isi barang eh malah' }}</span>
+         <span>{{  $circ['eval_remarks'] ?? '' }}</span>
       </div>
    </div>
    @endif
 
-   <hr x-show="is_evaluating" class="border-neutral-300 dark:border-neutral-700" />
-   <div x-show="is_evaluating">
-      <div class="mt-4">
-         <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="evalRemarks">{{ __('Keterangan evaluasi') }}</label>
-         <x-text-input wire:model="remarks" id="eval-remarks" x-ref="evalRemarks" />
-      </div>
-   </div>
-   <div x-show="is_evaluating" class="flex justify-between mt-4">
+   <div class="p-6 bg-neutral-100 dark:bg-neutral-900 flex flex-col gap-y-4" x-show="is_evaluating">
       <div>
-         <x-secondary-button type="button" x-on:click="is_evaluating = !is_evaluating;">{{ __('Batal') }}</x-secondary-button>
+         <x-text-button type="button" x-on:click="is_evaluating = !is_evaluating">
+            <div class="flex gap-x-3 items-center">
+               <i class="fa fa-arrow-left"></i>
+               <h2 class="text-lg font-medium">
+                  {{ __('Evaluasi') }}
+               </h2>
+            </div>
+         </x-text-button>
       </div>
       <div>
-         <x-primary-button type="button" wire:click="evaluate('approve')"><i class="fa fa-thumbs-up mr-2"></i>{{ __('Setujui') }}</x-secondary-button>
-         <x-primary-button type="button" wire:click="evaluate('reject')" class="h-full"><i class="fa fa-thumbs-down"></i></x-secondary-button>
+         <div>
+            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="evalRemarks">{{ __('Keterangan evaluasi') }}</label>
+            <x-text-input wire:model="eval_remarks" id="eval-remarks" x-ref="evalRemarks" />
+         </div>
+         <div class="px-3 text-neutral-500 text-sm mt-2 text-wrap"><i class="fa fa-exclamation-triangle mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diralat.') }}</div>
+      </div>
+      <div class="flex justify-end mt-4">
+         <div class="btn-group">
+            <x-primary-button type="button" wire:click="evaluate('approve')"><i class="fa fa-thumbs-up mr-2"></i>{{ __('Setujui') }}</x-secondary-button>
+            <x-primary-button type="button" wire:click="evaluate('reject')" class="h-full"><i class="fa fa-thumbs-down"></i></x-secondary-button>
+         </div>
       </div>
    </div>
 
    @if($circ['eval_status'] === 'pending')
    <!-- Buttons -->
-   <div x-show="!is_editing && !is_evaluating" class="flex justify-between mt-4">
+   <div x-show="!is_editing && !is_evaluating" class="p-6 flex justify-between">
       <div>
          @if($can_edit)
             <x-secondary-button type="button" x-on:click="is_editing = !is_editing;">{{ __('Edit') }}</x-secondary-button>

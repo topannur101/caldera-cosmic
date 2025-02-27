@@ -33,6 +33,7 @@ new class extends Component
 
    #[On('circ-evaluated')]
    #[On('circ-created')]
+   #[On('circ-updated')]
    public function circsResetPage()
    {
       $this->resetPage();

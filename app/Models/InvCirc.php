@@ -45,6 +45,23 @@ class InvCirc extends Model
         return $color;
     }
 
+    public function type_friendly(): string
+    {
+        $color = '';
+        switch ($this->type) {
+            case 'deposit':
+                $color = __('Tambah');
+                break;
+            case 'capture':
+                $color = __('Catat');
+                break;
+            case 'withdrawal':
+                $color = __('Ambil');
+                break;
+        }
+        return $color;
+    }
+
     public function type_icon(): string
     {
         $icon = '';

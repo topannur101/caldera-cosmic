@@ -86,12 +86,6 @@ new class extends Component {
          'stock_id'     => ['required', 'exists:inv_stocks,id'],
          'qty_relative' => ['required', 'min:0', 'max:100000'],
          'remarks'      => ['required', 'string', 'max:256'],
-
-         // 'amount'       => ['required', 'min:0', 'max:1000000000'],
-         // 'unit_price'   => ['required', 'min:0', 'max:1000000000'],
-         // 'eval_status'  => ['required', 'in:pending,approved,rejected'],
-         // 'eval_user_id' => ['nullable', 'exists:users,id'],
-         // 'eval_remarks' => ['nullable', 'string', 'max:256'],
       ]);
 
       // withdrawal and capture qty_relative cannot be 0
