@@ -323,7 +323,7 @@ class extends Component
                                 :uom="$inv_stock->uom"
                                 :loc="$inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' . $inv_stock->inv_item->inv_loc->bin ) : null" 
                                 :qty="$inv_stock->qty" 
-                                :photo="$inv_stock->inv_item->photo ? '/storage/inv-items/' . $inv_stock->inv_item->photo : null">
+                                :photo="$inv_stock->inv_item->photo">
                                 </x-inv-card-grid>
                             @endforeach
                         </div>
@@ -370,7 +370,7 @@ class extends Component
                                 :loc="$inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' . $inv_stock->inv_item->inv_loc->bin ) : null" 
                                 :tags="$inv_stock->inv_item->tags_facade() ?? null" 
                                 :qty="$inv_stock->qty" 
-                                :photo="$inv_stock->inv_item->photo ? '/storage/inv-items/' . $inv_stock->inv_item->photo : null">
+                                :photo="$inv_stock->inv_item->photo">
                                 </x-inv-card-content>
                             @endforeach
                         </div>

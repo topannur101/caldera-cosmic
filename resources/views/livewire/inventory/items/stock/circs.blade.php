@@ -53,7 +53,7 @@ new class extends Component
       @if ($circs->count())
          <table wire:key="circs" class="w-full [&_td]:py-2 [&_tr_td:first-child]:w-[1%] [&_tr_td:last-child]:w-[1%]">
             @foreach ($circs as $circ)
-               <x-inv-circ-stock wire:key="circ-{{ $circ->id }}"
+               <x-inv-circ-stock-tr wire:key="circ-{{ $circ->id }}"
                   id="{{ $circ->id }}"
                   color="{{ $circ->type_color() }}" 
                   icon="{{ $circ->type_icon() }}" 
@@ -69,7 +69,7 @@ new class extends Component
                   updated_at_friendly="{{ $circ->updated_at->diffForHumans() }}" 
                   remarks="{{ $circ->remarks }}" 
                   eval_icon="{{ $circ->eval_icon() }}">
-               </x-inv-circ-stock>      
+               </x-inv-circ-stock-tr>      
             @endforeach
          </table>
          <div class="px-3 py-1">

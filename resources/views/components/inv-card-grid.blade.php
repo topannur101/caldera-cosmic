@@ -17,7 +17,7 @@
                 </div>
             </div>
             @if($photo)
-            <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ $photo }}" />
+            <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ '/storage/inv-items/' . $photo }}" />
             @endif
             <div class="absolute bottom-0 right-0 font-medium text-sm px-3 py-1 rounded-tl-md bg-white/70 dark:bg-black/70">
                 {{ $qty . ' ' . $uom }}
