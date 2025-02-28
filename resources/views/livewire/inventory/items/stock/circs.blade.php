@@ -53,22 +53,23 @@ new class extends Component
       @if ($circs->count())
          <table wire:key="circs" class="w-full [&_td]:py-2 [&_tr_td:first-child]:w-[1%] [&_tr_td:last-child]:w-[1%]">
             @foreach ($circs as $circ)
-               <x-inv-circ-item wire:key="circ-{{ $circ->id }}"
-               id="{{ $circ->id }}"
-               color="{{ $circ->type_color() }}" 
-               icon="{{ $circ->type_icon() }}" 
-               qty_relative="{{ $circ->qty_relative }}" 
-               uom="{{ $circ->inv_stock->uom }}" 
-               user_name="{{ $circ->user->name }}" 
-               user_emp_id="{{ $circ->user->emp_id }}"
-               user_photo="{{ $circ->user->photo }}"
-               is_delegated="{{ $circ->is_delegated }}" 
-               eval_status="{{ $circ->eval_status }}"
-               eval_user_name="{{ $circ->eval_user?->name }}" 
-               eval_user_emp_id="{{ $circ->eval_user?->emp_id }}" 
-               updated_at_friendly="{{ $circ->updated_at->diffForHumans() }}" 
-               remarks="{{ $circ->remarks }}" 
-               eval_icon="{{ $circ->eval_icon() }}"></x-inv-circ-item>      
+               <x-inv-circ-stock wire:key="circ-{{ $circ->id }}"
+                  id="{{ $circ->id }}"
+                  color="{{ $circ->type_color() }}" 
+                  icon="{{ $circ->type_icon() }}" 
+                  qty_relative="{{ $circ->qty_relative }}" 
+                  uom="{{ $circ->inv_stock->uom }}" 
+                  user_name="{{ $circ->user->name }}" 
+                  user_emp_id="{{ $circ->user->emp_id }}"
+                  user_photo="{{ $circ->user->photo }}"
+                  is_delegated="{{ $circ->is_delegated }}" 
+                  eval_status="{{ $circ->eval_status }}"
+                  eval_user_name="{{ $circ->eval_user?->name }}" 
+                  eval_user_emp_id="{{ $circ->eval_user?->emp_id }}" 
+                  updated_at_friendly="{{ $circ->updated_at->diffForHumans() }}" 
+                  remarks="{{ $circ->remarks }}" 
+                  eval_icon="{{ $circ->eval_icon() }}">
+               </x-inv-circ-stock>      
             @endforeach
          </table>
          <div class="px-3 py-1">

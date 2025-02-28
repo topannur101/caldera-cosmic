@@ -37,7 +37,7 @@ class extends Component
     #[Url]
     public string $q = '';
     
-    public array $qwords = [];
+    public array $qwords = []; // caldera: do you need it?
 
     public string $filter = '';
 
@@ -162,7 +162,7 @@ class extends Component
         ];
     }
 
-    public function resetSearch()
+    public function resetQuery()
     {
         session()->forget('inv_search_params');
         $this->redirect(route('inventory.items.index'), navigate: true);
@@ -192,7 +192,7 @@ class extends Component
                 <x-spinner class="sm mono"></x-spinner>
             </i>
             <div class="w-full md:w-40">
-                <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
+                <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class=" h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
                     type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
                 <datalist id="qwords">
                     @if (count($qwords))
@@ -233,9 +233,12 @@ class extends Component
                             <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
                         </x-dropdown-link>
                         @endcan
-                        <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
+                        <x-dropdown-link href="#" disabled="true">
                             <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
                         </x-dropdown-link>
+                        <!-- <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
+                            <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
+                        </x-dropdown-link> -->
                         <hr class="border-neutral-300 dark:border-neutral-600" />
                         <!-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
                             <i class="fa fa-fw fa-map-marker-alt me-2"></i>{{ __('Kelola lokasi ')}}
@@ -244,13 +247,16 @@ class extends Component
                             <i class="fa fa-fw fa-tag me-2"></i>{{ __('Kelola tag ')}}
                         </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" /> -->
-                        <x-dropdown-link href="#" wire:click.prevent="resetSearch">
-                            <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset pencarian')}}
+                        <x-dropdown-link href="#" wire:click.prevent="resetQuery">
+                            <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset')}}
                         </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />
-                        <x-dropdown-link href="#">
-                            <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
+                        <x-dropdown-link href="#" disabled="true">
+                            <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV')}}
                         </x-dropdown-link>
+                        <!-- <x-dropdown-link href="#">
+                            <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
+                        </x-dropdown-link> -->
                     </x-slot>
                 </x-dropdown>
             </div>
@@ -281,6 +287,8 @@ class extends Component
                 </div>
             </div>
         </div>
+    </div>
+    <div class="w-full">
         <div wire:loading.class="cal-shimmer">
             @if (!$inv_stocks->count())
                 @if (count($area_ids))

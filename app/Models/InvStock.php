@@ -32,7 +32,7 @@ class InvStock extends Model
         return $this->belongsTo(InvCurr::class);
     }
 
-    public function updateByCirc(string $eval, array $circ, string $remarks): array
+    public function updateByCirc(string $eval, array $circ, string $eval_remarks): array
     {
         $status = [
             'success' => false,
@@ -89,7 +89,7 @@ class InvStock extends Model
                     $circ->update([
                         'eval_user_id'  => Auth::user()->id,
                         'eval_status'   => 'approved', 
-                        'eval_remarks'  => $remarks
+                        'eval_remarks'  => $eval_remarks
                     ]);
 
                     switch ($circ['type']) {
@@ -129,7 +129,7 @@ class InvStock extends Model
                     $circ->update([
                         'eval_user_id'  => Auth::user()->id,
                         'eval_status'   => 'rejected', 
-                        'eval_remarks'  => $remarks
+                        'eval_remarks'  => $eval_remarks
                     ]);
 
                     $status = [

@@ -90,7 +90,7 @@ new class extends Component
       // caldera: validate first
       $stock = InvStock::find($this->circ['inv_stock_id']);
       
-      $result = $stock->updateByCirc($eval, $this->circ, $this->remarks);
+      $result = $stock->updateByCirc($eval, $this->circ, $this->eval_remarks);
 
       if($result['success']) {
          $this->dispatch('circ-evaluated');
