@@ -160,7 +160,7 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="grid grid-cols-1 gap-y-3 mt-6">
             <div>{{ __('Sirkulasi') }}</div>
             <x-checkbox id="{{ $auth->id ?? 'new'}}-circ-create" :disabled="!$is_superuser" wire:model="actions" value="circ-create">{{ __('Buat sirkulasi') }}</x-checkbox>
-            <x-checkbox id="{{ $auth->id ?? 'new'}}-circ-eval" :disabled="!$is_superuser" wire:model="actions" value="circ-eval">{{ __('Evaluasi sirkulasi (setujui/tolak)') }}</x-checkbox>
+            <x-checkbox id="{{ $auth->id ?? 'new'}}-circ-eval" :disabled="!$is_superuser" wire:model="actions" value="circ-eval">{{ __('Edit dan evaluasi sirkulasi (setujui/tolak)') }}</x-checkbox>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
             <div>{{ __('Lain-lain') }}</div>

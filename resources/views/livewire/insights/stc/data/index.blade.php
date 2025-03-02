@@ -36,6 +36,7 @@ class extends Component {
 <x-slot name="title">{{ __('Kendali chamber IP') }}</x-slot>
 
 <x-slot name="header">
+    <link href="/print-landscape.css" type="text/css" rel="stylesheet" media="print">
     <x-nav-insights-stc></x-nav-insights-stc>
 </x-slot>
 

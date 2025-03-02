@@ -1,4 +1,5 @@
 @props([
+      'is_print' => false,
       'id',
       'color',
       'icon',
@@ -18,15 +19,26 @@
       'item_desc',
       'item_code',
       'item_loc',
+      'checked' => false,
+      'disabled' => false
     ])
 
-<tr class="text-nowrap text-sm hover:bg-caldy-500 hover:bg-opacity-10 {{ $eval_status == 'rejected' ? 'opacity-50 grayscale' : '' }}">
+<tr class="text-nowrap hover:bg-caldy-500 hover:bg-opacity-10 {{ $eval_status == 'rejected' ? 'opacity-50 grayscale' : '' }}">
+   @if(!$is_print)
    <td class="w-[1%]">
-      <x-checkbox :$id class="p-2"></x-checkbox>
+      <label for="{{ 'circ-' . $id }}" class="flex p-2 gap-x-2">
+         <input 
+            {{ $checked ? 'checked' : '' }} 
+            {{ $attributes->merge(
+            ['class' => 'w-4 h-4 text-caldy-600 bg-neutral-100 border-neutral-300 rounded focus:ring-2 focus:ring-caldy-500 dark:focus:ring-caldy-600 dark:ring-offset-neutral-800 dark:bg-neutral-700 dark:border-neutral-600' ]) }}
+            id="{{ 'circ-' . $id }}"
+            type="checkbox"
+            value="{{ $id }}"
+            x-model="ids">
+         <i class="fa fa-fw {{ $eval_icon }}"></i>
+      </label>
    </td>
-   <td class="w-[1%]">
-      <i class="fa fa-fw {{ $eval_icon }}"></i>
-   </td>
+   @endif
    <td class="w-[1%]">
       <x-text-button class="truncate text-base" type="button" x-on:click="$dispatch('open-modal', 'circ-show'); $dispatch('circ-show', { id: '{{ $id }}'})">
          <span class="{{ $color }}"><i class="fa fa-fw {{ $icon }} mr-1"></i>{{ $qty_relative . ' ' . $uom }}</span>
@@ -63,9 +75,9 @@
       @endif
    </td>
    <td class="max-w-60">
-      <div class="flex items-center">
+      <div class="flex items-center gap-x-1">
          <div>
-            <div class="w-4 h-4 mr-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            <div class="w-4 h-4 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                @if ($user_photo)
                   <img class="w-full h-full object-cover dark:brightness-75"
                      src="{{ '/storage/users/' . $user_photo }}" />

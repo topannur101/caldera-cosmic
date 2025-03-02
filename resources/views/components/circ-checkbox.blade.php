@@ -43,7 +43,7 @@
             <div>
                 @switch($status)
                     @case(0)
-                        <i class="fa fa-hourglass-half"></i>
+                        <i class="fa fa-hourglass"></i>
                         @break
                     @case(1)
                         <i class="fa fa-thumbs-up"></i>

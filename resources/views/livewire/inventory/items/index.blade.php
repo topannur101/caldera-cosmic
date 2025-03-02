@@ -167,6 +167,11 @@ class extends Component
         session()->forget('inv_search_params');
         $this->redirect(route('inventory.items.index'), navigate: true);
     }
+
+    public function loadMore()
+    {
+        $this->perPage += 24;
+    }
 };
 
 ?>
@@ -269,12 +274,12 @@ class extends Component
                 <x-select wire:model.live="sort" class="mr-3">
                     <option value="updated">{{ __('Diperbarui') }}</option>
                     <option value="created">{{ __('Dibuat') }}</option>
-                    <option value="price_low">{{ __('Terakhir ditambah') }}</option>
-                    <option value="price_high">{{ __('Terakhir diambil') }}</option>
-                    <option value="price_low">{{ __('Termurah') }}</option>
-                    <option value="price_high">{{ __('Termahal') }}</option>
-                    <option value="qty_low">{{ __('Paling sedikit') }}</option>
-                    <option value="qty_high">{{ __('Paling banyak') }}</option>
+                    <option value="last_deposit">{{ __('Terakhir ditambah') }}</option>
+                    <option value="last_withdrawal">{{ __('Terakhir diambil') }}</option>
+                    <option value="unit_price_low">{{ __('Harga terendah') }}</option>
+                    <option value="unit_price_high">{{ __('Harga tertinggi') }}</option>
+                    <option value="qty_low">{{ __('Qty terendah') }}</option>
+                    <option value="qty_high">{{ __('Qty tertinggi') }}</option>
                     <option value="alpha">{{ __('Alfabet') }}</option>
                 </x-select>
                 <div class="btn-group">
@@ -375,6 +380,27 @@ class extends Component
                             @endforeach
                         </div>
                 @endswitch
+                <div wire:key="observer" class="flex items-center relative h-16">
+                    @if (!$inv_stocks->isEmpty())
+                        @if ($inv_stocks->hasMorePages())
+                            <div wire:key="more" x-data="{
+                                observe() {
+                                    const observer = new IntersectionObserver((inv_stocks) => {
+                                        inv_stocks.forEach(inv_stock => {
+                                            if (inv_stock.isIntersecting) {
+                                                @this.loadMore()
+                                            }
+                                        })
+                                    })
+                                    observer.observe(this.$el)
+                                }
+                            }" x-init="observe"></div>
+                            <x-spinner class="sm" />
+                        @else
+                            <div class="mx-auto">{{ __('Tidak ada lagi') }}</div>
+                        @endif
+                    @endif
+                </div>
             @endif
         </div>
     </div>

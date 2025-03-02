@@ -31,9 +31,9 @@ new class extends Component
       ];
    }
 
-   #[On('circ-evaluated')]
    #[On('circ-created')]
    #[On('circ-updated')]
+   #[On('circ-evaluated')]
    public function circsResetPage()
    {
       $this->resetPage();
@@ -44,9 +44,9 @@ new class extends Component
 ?>
 
 <div>
-   <div wire:key="circs-modals">
+   <div wire:key="stock-modals">
       <x-modal name="circ-show">
-         <livewire:inventory.items.stock.circ-show />
+         <livewire:inventory.circs.circ-show />
       </x-modal>
    </div>
    <div wire:loading.class="cal-shimmer">

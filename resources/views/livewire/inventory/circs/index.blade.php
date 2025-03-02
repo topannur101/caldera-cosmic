@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use App\Models\InvCirc;
 use App\Models\InvItem;
@@ -17,7 +18,7 @@ class extends Component {
 
     public string $view = 'list';
 
-    public string $sort = '';
+    public string $sort = 'updated';
 
     public array $areas = [];
 
@@ -25,7 +26,7 @@ class extends Component {
 
     public array $circ_eval_status = ['pending', 'approved'];
 
-    public array $circ_types = ['deposit', 'capture', 'withdrawal'];
+    public array $circ_types = ['deposit', 'withdrawal'];
 
     public string $date_from = '';
 
@@ -34,6 +35,10 @@ class extends Component {
     public int $user_id = 0;
 
     public array $remarks = ['', ''];
+
+    public array $circ_ids = [];
+
+    public string $eval_remarks = '';
 
     public function mount()
     {
@@ -65,6 +70,8 @@ class extends Component {
         }
     }
 
+    #[On('circ-updated')]
+    #[On('circ-evaluated')]
     public function with(): array
     {
         $circ_remarks = trim ($this->remarks[0]);
@@ -98,6 +105,25 @@ class extends Component {
         // ->where('remarks', $this->remarks[0])
         // ->where('eval_remarks', $this->remarks[1]);
 
+        switch ($this->sort) {
+            case 'updated':
+                $inv_circs_query->orderByDesc('updated_at');
+                break;
+            case 'qty_low':
+                $inv_circs_query->orderBy('qty_relative');
+                break;
+            case 'qty_high':
+                $inv_circs_query->orderByDesc('qty_relative');
+                break;
+            case 'amount_low':
+                $inv_circs_query->orderBy('amount');
+                break;
+            case 'amount_high':
+                $inv_circs_query->orderByDesc('amount');
+                break;
+
+        }
+
         $inv_circs = $inv_circs_query->paginate($this->perPage);
 
         return [
@@ -110,6 +136,37 @@ class extends Component {
         session()->forget('inv_circs_params');
         $this->redirect(route('inventory.circs.index'), navigate: true);
     }
+
+    public function loadMore()
+    {
+        $this->perPage += 24;
+    }
+
+    public function evalCircIds()
+    {
+        $this->dispatch('eval-circ-ids', $this->circ_ids);
+        $this->js('$dispatch("open-modal", "circs-evaluate")');
+    }
+
+    public function printCircIds()
+    {
+        $this->dispatch('print-circ-ids', $this->circ_ids);
+        $this->js('$dispatch("open-spotlight", "printing")');
+    }
+    
+    #[On('print-ready')]
+    public function printExecute()
+    {
+        $this->js("window.print()");
+        $this->js('window.dispatchEvent(escKey)');
+        $this->resetCircIds();
+    }
+
+    #[On('circ-evaluated')]
+    public function resetCircIds()
+    {
+        $this->reset(['circ_ids']);
+    }
 }
 
 ?>
@@ -117,19 +174,47 @@ class extends Component {
 <x-slot name="title">{{ __('Sirkulasi') . ' — ' . __('Inventaris') }}</x-slot>
 
 <x-slot name="header">
-  <x-nav-inventory></x-nav-inventory>
+    <link href="/print-potrait.css" type="text/css" rel="stylesheet" media="print">
+    <x-nav-inventory></x-nav-inventory>
 </x-slot>
 
-<div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+<x-slot name="printable">    
+    <livewire:inventory.circs.print />
+</x-slot>
+
+<div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200"
+    x-data="{ 
+        ids: @entangle('circ_ids'),
+        status: @entangle('circ_eval_status').live, 
+        types: @entangle('circ_types').live
+    }">
+    <div wire:key="circs-modals">
+      <x-modal name="circ-show">
+         <livewire:inventory.circs.circ-show />
+      </x-modal>
+      <x-modal name="circs-evaluate" focusable>
+        <livewire:inventory.circs.evaluate />
+      </x-modal>
+    </div>
+    <div wire:key="circs-spotlights">
+        <x-spotlight name="printing" maxWidth="sm">
+            <div class="w-full flex flex-col gap-y-6 pb-10 text-center ">
+                <div class="relative">
+                    <i class="text-4xl fa-solid fa-spinner fa-spin-pulse"></i>
+                </div>
+                <header>
+                    <h2 class="text-xl font-medium">
+                        {{ __('Memanggil dialog cetak...') }}
+                    </h2>
+                </header>
+            </div>
+        </x-spotlight>
+    </div>
     <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2 mb-6">
-        <div x-data="{ 
-                status: @entangle('circ_eval_status').live, 
-                types: @entangle('circ_types').live
-            }"
-            class="flex justify-between px-8 lg:px-3 py-3 lg:py-0 divide-x divide-neutral-200 dark:divide-neutral-700">
+        <div class="flex justify-between px-8 lg:px-3 py-3 lg:py-0 divide-x divide-neutral-200 dark:divide-neutral-700">
             <div class="btn-group h-9 pr-3">
                 <x-checkbox-button-t x-model="status" grow value="pending" name="circ_eval_status" id="circ_eval_status-pending">
-                    <div class="text-center my-auto"><i class="fa fa-fw fa-hourglass-half"></i></div>
+                    <div class="text-center my-auto"><i class="fa fa-fw fa-hourglass"></i></div>
                 </x-checkbox-button-t>
                 <x-checkbox-button-t x-model="status" grow value="approved" name="circ_eval_status" id="circ_eval_status-approved">
                     <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-up"></i></div>
@@ -189,20 +274,16 @@ class extends Component {
             </div>
         </div>
     </div>
-    <div class="w-full">
+    <div x-show="!ids.length">
         <div class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full px-8">
             <div class="text-center sm:text-left">{{ $inv_circs->total() . ' ' . __('sirkulasi') }}</div>
             <div class="grow flex justify-center sm:justify-end">
                 <x-select wire:model.live="sort" class="mr-3">
                     <option value="updated">{{ __('Diperbarui') }}</option>
-                    <option value="created">{{ __('Dibuat') }}</option>
-                    <option value="price_low">{{ __('Terakhir ditambah') }}</option>
-                    <option value="price_high">{{ __('Terakhir diambil') }}</option>
-                    <option value="price_low">{{ __('Termurah') }}</option>
-                    <option value="price_high">{{ __('Termahal') }}</option>
-                    <option value="qty_low">{{ __('Paling sedikit') }}</option>
-                    <option value="qty_high">{{ __('Paling banyak') }}</option>
-                    <option value="alpha">{{ __('Alfabet') }}</option>
+                    <option value="amount_low">{{ __('Amount terendah') }}</option>
+                    <option value="amount_high">{{ __('Amount tertinggi') }}</option>
+                    <option value="qty_low">{{ __('Qty terendah') }}</option>
+                    <option value="qty_high">{{ __('Qty tertinggi') }}</option>
                 </x-select>
                 <div class="btn-group">
                     <x-radio-button wire:model.live="view" value="list" name="view" id="view-list"><i
@@ -215,47 +296,111 @@ class extends Component {
             </div>
         </div>
     </div>
-    <div class="p-0 sm:p-1 overflow-auto mt-6 ">
-        <table class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table [&_th]:p-2 [&_td]:px-2 [&_td]:py-1">
-            <tr class="uppercase text-xs">
-                <th></th>
-                <th></th>
-                <th>{{ __('Qty') }}</th>
-                <th></th>
-                <th>{{ __('Nama') }}</th>
-                <th>{{ __('Deskripsi') }}</th>
-                <th>{{ __('Kode') }}</th>
-                <th>{{ __('Lokasi') }}</th>
-                <th>{{ __('Pengguna') }}</th>
-                <th>{{ __('Keterangan') }}</th>
-                <th>{{ __('Diperbarui') }}</th>
-            </tr>
-            @foreach ($inv_circs as $circ)
-                <x-inv-circ-circs-tr wire:key="circ-{{ $circ->id }}"
-                    id="{{ $circ->id }}"
-                    color="{{ $circ->type_color() }}" 
-                    icon="{{ $circ->type_icon() }}" 
-                    qty_relative="{{ $circ->qty_relative }}" 
-                    uom="{{ $circ->inv_stock->uom }}" 
-                    user_name="{{ $circ->user->name }}" 
-                    user_emp_id="{{ $circ->user->emp_id }}"
-                    user_photo="{{ $circ->user->photo }}"
-                    is_delegated="{{ $circ->is_delegated }}" 
-                    eval_status="{{ $circ->eval_status }}"
-                    eval_user_name="{{ $circ->eval_user?->name }}" 
-                    eval_user_emp_id="{{ $circ->eval_user?->emp_id }}" 
-                    updated_at="{{ $circ->updated_at }}" 
-                    remarks="{{ $circ->remarks }}" 
-                    eval_icon="{{ $circ->eval_icon() }}"
-                    item_photo="{{ $circ->inv_stock->inv_item->photo }}"
-                    item_name="{{ $circ->inv_stock->inv_item->name }}"
-                    item_desc="{{ $circ->inv_stock->inv_item->desc }}"
-                    item_code="{{ $circ->inv_stock->inv_item->code }}"
-                    item_loc="{{ $circ->inv_stock->inv_item->inv_loc_id ? ($circ->inv_stock->inv_item->inv_loc->parent . '-' . $circ->inv_stock->inv_item->inv_loc->bin) : null }}">
-                </x-inv-circ-circs-tr>     
-            @endforeach
-        </table>
+    <div x-show="ids.length" x-cloak class="flex items-center justify-between h-[42px] px-8">
+        <div class="font-bold"><span x-text="ids.length"></span><span>{{ ' ' . __('dipilih') }}</span></div>
+        <div class="flex gap-x-2">
+            <x-secondary-button type="button" wire:click="printCircIds">
+                <div class="relative">
+                    <span wire:loading.class="opacity-0" wire:target="printCircIds"><i class="fa fa-print mr-2"></i>{{ __('Cetak') }}</span>
+                    <x-spinner wire:loading.class.remove="hidden" wire:target="printCircIds" class="hidden sm mono"></x-spinner>                
+                </div>                
+            </x-secondary-button>
+            <x-secondary-button type="button" wire:click="evalCircIds">
+                <div class="relative">
+                    <span wire:loading.class="opacity-0" wire:target="evalCircIds">{{ __('Evaluasi') }}</span>
+                    <x-spinner wire:loading.class.remove="hidden" wire:target="evalCircIds" class="hidden sm mono"></x-spinner>
+                </div>
+            </x-secondary-button>
+        </div>
     </div>
-
-
+    <div wire:loading.class="cal-shimmer">
+        @if (!$inv_circs->count())
+            @if (count($area_ids))
+                <div wire:key="no-match" class="py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-ghost"></i>
+                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">
+                        {{ __('Tidak ada yang cocok') }}
+                    </div>
+                </div>
+            @else
+                <div wire:key="no-area" class="py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-tent relative"><i
+                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}
+                    </div>
+                </div>
+            @endif
+        @else
+            @switch($view)
+                @case('list')
+                    <div class="p-0 sm:p-1 overflow-auto mt-6">
+                        <table class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table text-sm [&_th]:p-2 [&_td]:px-2 [&_td]:py-1">
+                            <tr class="uppercase text-xs">
+                                <th></th>
+                                <th>{{ __('Qty') }}</th>
+                                <th></th>
+                                <th>{{ __('Nama') }}</th>
+                                <th>{{ __('Deskripsi') }}</th>
+                                <th>{{ __('Kode') }}</th>
+                                <th>{{ __('Lokasi') }}</th>
+                                <th>{{ __('Pengguna') }}</th>
+                                <th>{{ __('Keterangan') }}</th>
+                                <th>{{ __('Diperbarui') }}</th>
+                            </tr>
+                            @foreach ($inv_circs as $circ)
+                                <x-inv-circ-circs-tr
+                                    id="{{ $circ->id }}"
+                                    color="{{ $circ->type_color() }}" 
+                                    icon="{{ $circ->type_icon() }}" 
+                                    qty_relative="{{ $circ->qty_relative }}" 
+                                    uom="{{ $circ->inv_stock->uom }}" 
+                                    user_name="{{ $circ->user->name }}" 
+                                    user_emp_id="{{ $circ->user->emp_id }}"
+                                    user_photo="{{ $circ->user->photo }}"
+                                    is_delegated="{{ $circ->is_delegated }}" 
+                                    eval_status="{{ $circ->eval_status }}"
+                                    eval_user_name="{{ $circ->eval_user?->name }}" 
+                                    eval_user_emp_id="{{ $circ->eval_user?->emp_id }}" 
+                                    updated_at="{{ $circ->updated_at }}" 
+                                    remarks="{{ $circ->remarks }}" 
+                                    eval_icon="{{ $circ->eval_icon() }}"
+                                    item_photo="{{ $circ->inv_stock->inv_item->photo }}"
+                                    item_name="{{ $circ->inv_stock->inv_item->name }}"
+                                    item_desc="{{ $circ->inv_stock->inv_item->desc }}"
+                                    item_code="{{ $circ->inv_stock->inv_item->code }}"
+                                    item_loc="{{ $circ->inv_stock->inv_item->inv_loc_id ? ($circ->inv_stock->inv_item->inv_loc->parent . '-' . $circ->inv_stock->inv_item->inv_loc->bin) : null }}">
+                                </x-inv-circ-circs-tr>     
+                            @endforeach
+                        </table>
+                    </div>
+                    @break
+                
+            @endswitch
+            <div wire:key="observer" class="flex items-center relative h-16">
+                @if (!$inv_circs->isEmpty())
+                    @if ($inv_circs->hasMorePages())
+                        <div wire:key="more" x-data="{
+                            observe() {
+                                const observer = new IntersectionObserver((inv_circs) => {
+                                    inv_circs.forEach(inv_circ => {
+                                        if (inv_circ.isIntersecting) {
+                                            @this.loadMore()
+                                        }
+                                    })
+                                })
+                                observer.observe(this.$el)
+                            }
+                        }" x-init="observe"></div>
+                        <x-spinner class="sm" />
+                    @else
+                        <div class="mx-auto">{{ __('Tidak ada lagi') }}</div>
+                    @endif
+                @endif
+            </div>
+        @endif
+    </div>
 </div>

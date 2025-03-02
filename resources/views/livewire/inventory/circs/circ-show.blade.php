@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\On;
 use App\Models\InvCirc;
 use App\Models\InvStock;
+use App\Models\InvCurr;
 
 new class extends Component
 {
@@ -16,8 +17,11 @@ new class extends Component
          'uom' => '',
          'inv_item_id' => 0
       ],
-      'inv_curr' => [
-         'name' => ''
+      'inv_item' => [
+         'name' => '',
+         'desc' => '',
+         'code' => '',
+         'photo' => '',
       ],
       'eval_icon' => '',
       'user' => [
@@ -41,6 +45,8 @@ new class extends Component
       'type_friendly' => '',
    ];
 
+   public string $curr_name = '';
+
    public bool $can_eval = false;
    public bool $is_evaluating = false;
 
@@ -51,10 +57,15 @@ new class extends Component
    public string $remarks = '';
    public string $eval_remarks = '';
 
+   public function mount()
+   {
+      $this->curr_name = InvCurr::find(1)->name;
+   }
+
    #[On('circ-show')]
    public function loadCirc(int $id)
    {
-       $circ = InvCirc::with(['user', 'inv_stock', 'inv_item', 'inv_curr', 'eval_user'])->find($id);
+       $circ = InvCirc::with(['user', 'inv_stock', 'inv_item', 'eval_user'])->find($id);
        if ($circ) {
             $this->can_eval = Gate::inspect('eval', $circ)->allowed();
             $this->can_edit = Gate::inspect('edit', $circ)->allowed();
@@ -173,66 +184,84 @@ new class extends Component
 
 <div x-data="{ is_evaluating: @entangle('is_evaluating'), is_editing: @entangle('is_editing') }">
 
-   <div class="p-6 flex flex-col gap-y-6">
-      <!-- Quantity and UOM Section -->
-      <div class="flex justify-between">
-         <x-text-button type="button" x-show="is_editing" x-on:click="is_editing = !is_editing">
-            <div class="flex gap-x-3 items-center">
-               <i class="fa fa-arrow-left"></i>
-               <h2 class="text-lg font-medium">
-                  {{ __('Edit') }}
-               </h2>
-            </div>
-         </x-text-button>
-         <div x-show="!is_editing" class="flex items-center text-xl">
-            <span class="{{ $circ['color'] }}">
-               <i class="fa fa-fw {{ $circ['icon'] }} mr-1"></i>{{ $circ['qty_relative'] . ' ' . $circ['inv_stock']['uom'] }}
-            </span>
+   <div class="p-6 flex justify-between">
+      <x-text-button type="button" x-show="is_editing" x-on:click="is_editing = !is_editing">
+         <div class="flex gap-x-3 items-center">
+            <i class="fa fa-arrow-left"></i>
+            <h2 class="text-lg font-medium">
+               {{ __('Edit') }}
+            </h2>
          </div>
-         <div>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-button>
+      </x-text-button>
+      <div x-show="!is_editing" class="flex items-center text-xl">
+         <span class="{{ $circ['color'] }}">
+            <i class="fa fa-fw {{ $circ['icon'] }} mr-1"></i>{{ $circ['qty_relative'] . ' ' . $circ['inv_stock']['uom'] }}
+         </span>
+      </div>
+      <div>
+         <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-button>
+      </div>
+   </div>
+
+   <div class="px-6 pb-6 flex gap-x-3 text-sm">
+      <div>
+         <div class="rounded-sm overflow-hidden relative flex w-10 h-10 bg-neutral-200 dark:bg-neutral-700">
+            <div class="m-auto">
+               <svg xmlns="http://www.w3.org/2000/svg"  class="block w-10 h-10 fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 38.777 39.793"><path d="M19.396.011a1.058 1.058 0 0 0-.297.087L6.506 5.885a1.058 1.058 0 0 0 .885 1.924l12.14-5.581 15.25 7.328-15.242 6.895L1.49 8.42A1.058 1.058 0 0 0 0 9.386v20.717a1.058 1.058 0 0 0 .609.957l18.381 8.633a1.058 1.058 0 0 0 .897 0l18.279-8.529a1.058 1.058 0 0 0 .611-.959V9.793a1.058 1.058 0 0 0-.599-.953L20 .105a1.058 1.058 0 0 0-.604-.095zM2.117 11.016l16.994 7.562a1.058 1.058 0 0 0 .867-.002l16.682-7.547v18.502L20.6 37.026V22.893a1.059 1.059 0 1 0-2.117 0v14.224L2.117 29.432z" /></svg>
+            </div>
+            @if($circ['inv_item']['photo'])
+               <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ '/storage/inv-items/' . $circ['inv_item']['photo'] }}" />
+            @endif
+         </div> 
+      </div>
+      <div class="grow truncate">
+         <div class="truncate">{{ $circ['inv_item']['name'] }}</div>
+         <div class="flex gap-x-3 text-neutral-500">
+            <div class="grow truncate">{{ $circ['inv_item']['desc'] }}</div>
+            <div>{{ $circ['inv_item']['code'] }}</div>
          </div>
       </div>
+   </div>   
 
-      <!-- User Details Section -->
-      <div class="flex gap-x-3">
-         <div>
-            <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-            @if ($circ['user']['photo'])
-               <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/' . $circ['user']['photo'] }}" />
-            @else
-               <svg xmlns="http://www.w3.org/2000/svg"
-                     class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
-                     viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
-                  <path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
-               </svg>
-            @endif
-            </div>
+   <hr class="border-neutral-300 dark:border-neutral-700" />
+   <div class="p-6 flex gap-x-3">
+      <div>
+         <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+         @if ($circ['user']['photo'])
+            <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/' . $circ['user']['photo'] }}" />
+         @else
+            <svg xmlns="http://www.w3.org/2000/svg"
+                  class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
+                  viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
+               <path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
+            </svg>
+         @endif
          </div>
-         <div class="grow">
-            <div class="text-xs text-neutral-500" :class="is_editing ? 'px-3 mb-2' : ''">
-               <span>{{ $circ['user']['name'] . ' - ' . $circ['user']['emp_id'] }}</span>
-               @if($circ['is_delegated'])
-                  <span title="Didelegasikan"><i class="fa fa-handshake-angle"></i></span>
-               @endif
-            </div>
-            <div x-show="!is_editing" class="text-base text-wrap">
-               {{ $circ['remarks'] }}
-            </div>
-            <div x-show="is_editing" class="flex flex-col gap-y-4">
-               <x-text-input wire:model="remarks" id="circ-remarks" />
-               @if($circ['type'] == 'deposit' || $circ['type'] == 'withdrawal')
-                  <div>
-                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-qty"><span>{{ __('Jumlah') }}</span></label>
-                     <x-text-input-suffix wire:model="qty_relative" suffix="{{ $circ['inv_stock']['uom'] }}" id="circ-qty" name="circ-qty"
-                     type="number" value="" min="1" placeholder="Qty" />
-                  </div>
-               @endif
-            </div>
+      </div>
+      <div class="grow">
+         <div class="text-xs text-neutral-500" :class="is_editing ? 'px-3 mb-2' : ''">
+            <span>{{ $circ['user']['name'] . ' - ' . $circ['user']['emp_id'] }}</span>
+            @if($circ['is_delegated'])
+               <span title="Didelegasikan"><i class="fa fa-handshake-angle"></i></span>
+            @endif
+         </div>
+         <div x-show="!is_editing" class="text-wrap">
+            {{ $circ['remarks'] }}
+         </div>
+         <div x-show="is_editing" class="flex flex-col gap-y-4">
+            <x-text-input wire:model="remarks" id="circ-remarks" />
+            @if($circ['type'] == 'deposit' || $circ['type'] == 'withdrawal')
+               <div>
+                  <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-qty"><span>{{ __('Jumlah') }}</span></label>
+                  <x-text-input-suffix wire:model="qty_relative" suffix="{{ $circ['inv_stock']['uom'] }}" id="circ-qty" name="circ-qty"
+                  type="number" value="" min="1" placeholder="Qty" />
+               </div>
+            @endif
          </div>
       </div>
    </div>
-   <div x-show="is_editing" class="p-6 flex items-center justify-between">
+   
+   <div x-show="is_editing" class="px-6 pb-6 flex items-center justify-between">
       <div class="{{ $circ['color'] }} text-sm font-bold uppercase">
          <i class="fa fa {{ $circ['icon'] }} me-2"></i>{{ $circ['type_friendly'] }}
       </div>
@@ -263,11 +292,11 @@ new class extends Component
    <div x-show="!is_editing" class="p-6 grid grid-cols-2 gap-4">
       <div class="flex flex-col">
          <span class="text-sm text-neutral-500">{{ __('Harga satuan') }}</span>
-         <span class="text-base">{{ $circ['unit_price'] }} {{ $circ['inv_curr']['name'] }}</span>
+         <span class="text-base">{{ $circ['unit_price'] }} {{ $curr_name }}</span>
       </div>
       <div class="flex flex-col">
          <span class="text-sm text-neutral-500">{{ __('Amount') }}</span>
-         <span class="text-base">{{ $circ['amount'] }} {{ $circ['inv_curr']['name'] }}</span>
+         <span class="text-base">{{ $circ['amount'] }} {{ $curr_name }}</span>
       </div>
    </div>
 
@@ -297,13 +326,11 @@ new class extends Component
          </x-text-button>
       </div>
       <div>
-         <div>
-            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="evalRemarks">{{ __('Keterangan evaluasi') }}</label>
-            <x-text-input wire:model="eval_remarks" id="eval-remarks" x-ref="evalRemarks" />
-         </div>
-         <div class="px-3 text-neutral-500 text-sm mt-2 text-wrap"><i class="fa fa-exclamation-triangle mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diralat.') }}</div>
+         <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="evalRemarks">{{ __('Keterangan evaluasi') }}</label>
+         <x-text-input wire:model="eval_remarks" id="eval-remarks" x-ref="evalRemarks" />
       </div>
-      <div class="flex justify-end mt-4">
+      <div class="px-3 text-neutral-500 text-sm text-wrap"><i class="fa fa-exclamation-triangle mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diralat.') }}</div>
+      <div class="flex justify-end">
          <div class="btn-group">
             <x-primary-button type="button" wire:click="evaluate('approve')"><i class="fa fa-thumbs-up mr-2"></i>{{ __('Setujui') }}</x-secondary-button>
             <x-primary-button type="button" wire:click="evaluate('reject')" class="h-full"><i class="fa fa-thumbs-down"></i></x-secondary-button>
@@ -313,7 +340,7 @@ new class extends Component
 
    @if($circ['eval_status'] === 'pending')
    <!-- Buttons -->
-   <div x-show="!is_editing && !is_evaluating" class="p-6 flex justify-between">
+   <div x-show="!is_editing && !is_evaluating" class="px-6 pb-6 flex justify-between">
       <div>
          @if($can_edit)
             <x-secondary-button type="button" x-on:click="is_editing = !is_editing;">{{ __('Edit') }}</x-secondary-button>

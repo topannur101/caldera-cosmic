@@ -134,7 +134,7 @@ class InvLegacyCirc extends Model
     {
         switch ($this->status) {
             case 0:
-                return 'fa-hourglass-half';
+                return 'fa-hourglass';
                 break;
             case 1:
                 return 'fa-thumbs-up';

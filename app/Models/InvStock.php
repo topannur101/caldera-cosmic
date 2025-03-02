@@ -47,7 +47,7 @@ class InvStock extends Model
             $circEval = Gate::inspect('eval', $circ);
             if ($circEval->denied())
             {
-                throw new \Exception(__('Kamu tidak memiliki wewenang untuk mengevaluasi sirkulasi ini'));
+                throw new \Exception(__('Tak ada wewenang untuk mengevaluasi sirkulasi ini'));
             };
 
             switch ($eval) {
@@ -55,7 +55,7 @@ class InvStock extends Model
     
                     if ($circ->eval_status !== 'pending')
                     {
-                        throw new \Exception(__('Sirkulasi sudah dievaluasi'));
+                        throw new \Exception(__('Sirkulasi ini sudah dievaluasi'));
                     }
 
                     $item = InvItem::find($circ['inv_stock']['inv_item_id']);
@@ -123,7 +123,7 @@ class InvStock extends Model
                 case 'reject':
                     if ($circ->eval_status !== 'pending')
                     {
-                        throw new \Exception(__('Sirkulasi sudah dievaluasi'));
+                        throw new \Exception(__('Sirkulasi ini sudah dievaluasi'));
                     }
 
                     $circ->update([
@@ -149,5 +149,10 @@ class InvStock extends Model
         }
 
         return $status;
+    }
+
+    public function inv_circs()
+    {
+        return $this->hasMany(InvCirc::class);
     }
 }

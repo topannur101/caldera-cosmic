@@ -101,7 +101,8 @@ new class extends Component {
 
       // amount should always be main currency (USD)
       if($amount > 0 && $this->curr_id !== 1) {
-         $amount = $amount / $this->curr_rate;
+         $amount     = $amount / $this->curr_rate;
+         $unit_price = $this->unit_price / $this->curr_rate;
       }
       
       $user = $this->userq ? User::where('emp_id', $this->userq)->first() : null;
@@ -118,7 +119,7 @@ new class extends Component {
 
       $circ = new InvCirc();
       $circ->amount       = $amount;
-      $circ->unit_price   = $this->unit_price; 
+      $circ->unit_price   = $unit_price; 
 
       $circ->type         = $this->type;
       $circ->inv_stock_id = $this->stock_id;

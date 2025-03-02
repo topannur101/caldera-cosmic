@@ -173,7 +173,7 @@ class extends Component {
                     placeholder="{{ __('Cari...') }}" autofocus autocomplete="q" />
                 <div class="btn-group w-full h-11 mt-5">
                     <x-checkbox-button wire:model.live="status" grow value="pending" name="status" id="status-pending">
-                        <div class="text-center my-auto"><i class="fa fa-hourglass-half"></i></div>
+                        <div class="text-center my-auto"><i class="fa fa-hourglass"></i></div>
                     </x-checkbox-button>
                     <x-checkbox-button wire:model.live="status" grow value="approved" name="status" id="status-approved">
                         <div class="text-center my-auto"><i class="fa fa-thumbs-up"></i></div>
