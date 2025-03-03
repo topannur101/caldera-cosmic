@@ -8,7 +8,7 @@ use Illuminate\View\Component;
 
 class InvTagSelector extends Component
 {
-    public $tags;
+    public array $tags;
     /**
      * Create a new component instance.
      */

@@ -28,7 +28,7 @@
       }
    }" class="flex items-center {{ $isQuery ? 'px-4' : '' }}">
    <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'tag-selector')" ::class="tag_list ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'">
-      <i class="fa fa-fw fa-tag me-3"></i><span x-text="tag_list ? tag_list : '{{ $isQuery ? __('Tag') : __('Tak ada tag') }}'"></span>
+      <i class="fa fa-fw fa-tag me-3"></i><span x-text="tag_list ? tag_list : '{{ $isQuery ? __('Tag') : __('Filter tag') }}'"></span>
    </x-text-button>
    
    <x-modal name="tag-selector" maxWidth="sm" focusable>
@@ -36,7 +36,7 @@
          <form wire:submit.prevent="save" class="p-6">
             <div class="flex justify-between items-start">
                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                  <i class="fa fa-fw fa-tag me-3"></i>{{ __('Pilih tag') }}
+                  <i class="fa fa-fw fa-tag me-3"></i>{{ __('Tag') }}
                </h2>
                <x-text-button type="button" x-on:click="$dispatch('close')">
                   <i class="fa fa-times"></i>

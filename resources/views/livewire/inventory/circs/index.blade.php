@@ -8,6 +8,7 @@ use App\Models\InvCirc;
 use App\Models\InvItem;
 use App\Models\InvArea;
 use App\Models\User;
+use Carbon\Carbon;
 
 new #[Layout('layouts.app')] 
 class extends Component {
@@ -31,6 +32,8 @@ class extends Component {
     public string $date_from = '';
 
     public string $date_to = '';
+
+    public array $users = [];
 
     public int $user_id = 0;
 
@@ -94,16 +97,31 @@ class extends Component {
             'inv_stock.inv_item',
             'inv_stock.inv_item.inv_area',
             'inv_curr',
+            'user'
         ])
         ->whereHas('inv_item', function($query) {
             $query->whereIn('inv_area_id', $this->area_ids);
         })
         ->whereIn('eval_status', $this->circ_eval_status)
         ->whereIn('type', $this->circ_types);
-        // ->whereBetween('updated_at', [$this->date_from, $this->date_to])
-        // ->where('user_id', $this->user_id)
-        // ->where('remarks', $this->remarks[0])
-        // ->where('eval_remarks', $this->remarks[1]);
+
+        if($this->date_from && $this->date_to) {
+            $from = Carbon::parse($this->date_from)->startOfDay();
+            $to = Carbon::parse($this->date_to)->endOfDay();
+            $inv_circs_query->whereBetween('updated_at', [$from, $to]);
+        }
+
+        if($this->user_id) {
+            $inv_circs_query->where('user_id', $this->user_id);
+        }
+
+        if($this->remarks[0]) {
+            $inv_circs_query->where('remarks', $this->remarks[0]);
+        }
+
+        if($this->remarks[1]) {
+            $inv_circs_query->where('eval_remarks', $this->remarks[1]);
+        }
 
         switch ($this->sort) {
             case 'updated':
@@ -125,9 +143,11 @@ class extends Component {
         }
 
         $inv_circs = $inv_circs_query->paginate($this->perPage);
+        $user_ids = $inv_circs_query->limit(1000)->get()->pluck('user_id')->unique();
+        $this->users = User::whereIn('id', $user_ids)->orderBy('name')->get()->toArray();
 
         return [
-            'inv_circs' => $inv_circs
+            'inv_circs' => $inv_circs,
         ];
     }
 
@@ -166,6 +186,14 @@ class extends Component {
     public function resetCircIds()
     {
         $this->reset(['circ_ids']);
+    }
+
+    public function updated($property)
+    {
+        $props = ['view', 'sort', 'area_ids', 'circ_eval_status', 'circ_types', 'date_from', 'date_to', 'user_id', 'remarks'];
+        if(in_array($property, $props)) {
+            $this->reset(['perPage']);
+        }
     }
 }
 
@@ -235,11 +263,11 @@ class extends Component {
                 </x-checkbox-button-t>
             </div>
         </div>
-        <div class="px-6 py-4 lg:py-0 flex items-center">
-            <x-text-button type="button" class="text-neutral-400 dark:text-neutral-600 text-xs font-semibold uppercase"><i class="fa fa-fw fa-calendar me-3"></i><span>{{ __('Tanggal') }}</span></x-text-button>
+        <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
+            <x-date-selector isQuery="true" class="text-xs font-semibold uppercase" />
         </div>
-        <div class="px-6 py-4 lg:py-0 flex items-center">
-            <x-text-button type="button" class="text-neutral-400 dark:text-neutral-600 text-xs font-semibold uppercase"><i class="fa fa-fw fa-user me-3"></i><span>{{ __('Pengguna') }}</span></x-text-button>
+        <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
+            <x-inv-user-selector isQuery="true" class="text-xs font-semibold uppercase" />
         </div>
         <div class="px-6 py-4 lg:py-0 grow flex items-center">
             <x-text-button type="button" class="text-neutral-400 dark:text-neutral-600 text-xs font-semibold uppercase"><span>{{ __('Keterangan') }}</span></x-text-button>
@@ -274,8 +302,8 @@ class extends Component {
             </div>
         </div>
     </div>
-    <div x-show="!ids.length">
-        <div class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full px-8">
+    <div class="h-12">
+        <div x-show="!ids.length" class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full h-full px-8">
             <div class="text-center sm:text-left">{{ $inv_circs->total() . ' ' . __('sirkulasi') }}</div>
             <div class="grow flex justify-center sm:justify-end">
                 <x-select wire:model.live="sort" class="mr-3">
@@ -295,22 +323,22 @@ class extends Component {
                 </div>
             </div>
         </div>
-    </div>
-    <div x-show="ids.length" x-cloak class="flex items-center justify-between h-[42px] px-8">
-        <div class="font-bold"><span x-text="ids.length"></span><span>{{ ' ' . __('dipilih') }}</span></div>
-        <div class="flex gap-x-2">
-            <x-secondary-button type="button" wire:click="printCircIds">
-                <div class="relative">
-                    <span wire:loading.class="opacity-0" wire:target="printCircIds"><i class="fa fa-print mr-2"></i>{{ __('Cetak') }}</span>
-                    <x-spinner wire:loading.class.remove="hidden" wire:target="printCircIds" class="hidden sm mono"></x-spinner>                
-                </div>                
-            </x-secondary-button>
-            <x-secondary-button type="button" wire:click="evalCircIds">
-                <div class="relative">
-                    <span wire:loading.class="opacity-0" wire:target="evalCircIds">{{ __('Evaluasi') }}</span>
-                    <x-spinner wire:loading.class.remove="hidden" wire:target="evalCircIds" class="hidden sm mono"></x-spinner>
-                </div>
-            </x-secondary-button>
+        <div x-show="ids.length" x-cloak class="flex items-center justify-between w-full h-full px-8">
+            <div class="font-bold"><span x-text="ids.length"></span><span>{{ ' ' . __('dipilih') }}</span></div>
+            <div class="flex gap-x-2">
+                <x-secondary-button type="button" wire:click="printCircIds">
+                    <div class="relative">
+                        <span wire:loading.class="opacity-0" wire:target="printCircIds"><i class="fa fa-print mr-2"></i>{{ __('Cetak') }}</span>
+                        <x-spinner wire:loading.class.remove="hidden" wire:target="printCircIds" class="hidden sm mono"></x-spinner>                
+                    </div>                
+                </x-secondary-button>
+                <x-secondary-button type="button" wire:click="evalCircIds">
+                    <div class="relative">
+                        <span wire:loading.class="opacity-0" wire:target="evalCircIds">{{ __('Evaluasi') }}</span>
+                        <x-spinner wire:loading.class.remove="hidden" wire:target="evalCircIds" class="hidden sm mono"></x-spinner>
+                    </div>
+                </x-secondary-button>
+            </div>
         </div>
     </div>
     <div wire:loading.class="cal-shimmer">
@@ -338,13 +366,11 @@ class extends Component {
             @switch($view)
                 @case('list')
                     <div class="p-0 sm:p-1 overflow-auto mt-6">
-                        <table class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table text-sm [&_th]:p-2 [&_td]:px-2 [&_td]:py-1">
+                        <table class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table text-sm [&_th]:px-1 [&_th]:py-3 [&_td]:p-1">
                             <tr class="uppercase text-xs">
                                 <th></th>
                                 <th>{{ __('Qty') }}</th>
-                                <th></th>
-                                <th>{{ __('Nama') }}</th>
-                                <th>{{ __('Deskripsi') }}</th>
+                                <th colspan="2">{{ __('Nama') . ' & ' . __('Deskripsi') }}</th>
                                 <th>{{ __('Kode') }}</th>
                                 <th>{{ __('Lokasi') }}</th>
                                 <th>{{ __('Pengguna') }}</th>

@@ -20,7 +20,8 @@
       'item_code',
       'item_loc',
       'checked' => false,
-      'disabled' => false
+      'disabled' => false,
+      'area_name'
     ])
 
 <tr class="text-nowrap hover:bg-caldy-500 hover:bg-opacity-10 {{ $eval_status == 'rejected' ? 'opacity-50 grayscale' : '' }}">
@@ -55,27 +56,25 @@
       </div>   
    </td>
    <td class="max-w-40 truncate">
-      {{ $item_name }}
+      <div class="truncate">{{ $item_name }}</div>
+      <div class="truncate text-xs text-neutral-500">{{ $item_desc }}</div>
    </td>
-   <td class="max-w-40 truncate">
-      {{ $item_desc }}
-   </td>
-   <td class="max-w-60">
+   <td class="max-w-40">
       @if($item_loc)
          <span>{{ $item_code }}</span>
       @else
          <span class="text-neutral-500">{{ __('Tanpa kode') }}</span>
       @endif
    </td>
-   <td class="max-w-60">
+   <td class="max-w-40">
       @if($item_loc)
          <span>{{ $item_loc }}</span>
       @else
          <span class="text-neutral-500">{{ __('Tanpa lokasi') }}</span>
       @endif
    </td>
-   <td class="max-w-60">
-      <div class="flex items-center gap-x-1">
+   <td class="max-w-32">
+      <div class="flex items-center truncate gap-x-1">
          <div>
             <div class="w-4 h-4 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                @if ($user_photo)
@@ -91,10 +90,10 @@
                @endif
             </div>
          </div>
-         <div>
-            <span>{{ $user_name }}</span> 
+         <div class="flex justify-between truncate w-full gap-x-2">
+            <div class="truncate">{{ $user_name }}</div> 
             @if($is_delegated)
-               <span title="{{ __('Didelegasikan') }}"><i class="fa fa-handshake-angle"></i></span>
+               <div title="{{ __('Didelegasikan') }}"><i class="fa fa-handshake-angle text-neutral-500 text-sm"></i></div>
             @endif
          </div>
       </div>
@@ -102,7 +101,13 @@
    <td class="max-w-60 truncate">
       {{ $remarks }}
    </td>
-   <td class="max-w-60">
+   @if($is_print)
+   <td class="max-w-40">
+      {{ $area_name }}
+   </td>
+   @else
+   <td class="max-w-40">
       {{ $updated_at }}
    </td>
+   @endif
 </tr>

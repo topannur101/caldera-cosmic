@@ -8,8 +8,8 @@ use Illuminate\View\Component;
 
 class InvLocSelector extends Component
 {
-    public $loc_parents;
-    public $loc_bins;
+    public array $loc_parents;
+    public array $loc_bins;
     /**
      * Create a new component instance.
      */

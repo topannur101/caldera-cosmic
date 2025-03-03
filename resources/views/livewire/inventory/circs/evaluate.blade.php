@@ -86,6 +86,9 @@ new #[Layout('layouts.app')] class extends Component {
    </div>
    @switch($view)
       @case('initial')
+         <div class="flex justify-center uppercase">
+            <x-pill color="neutral">{{ count($circ_ids) . ' ' . __('sirkulasi') }}</x-pill>
+         </div>
          <div>
             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="evalRemarks">{{ __('Keterangan evaluasi') }}</label>
             <x-text-input wire:model="eval_remarks" id="eval-remarks" />

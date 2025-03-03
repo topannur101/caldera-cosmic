@@ -6,15 +6,16 @@ use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class InvAreaSelector extends Component
+class DateSelector extends Component
 {
-    public array $areas;
+    
+    // what properties are needed?
     /**
      * Create a new component instance.
      */
-    public function __construct($areas = [])
+    public function __construct()
     {
-        $this->areas = $areas;
+        //
     }
 
     /**
@@ -22,6 +23,6 @@ class InvAreaSelector extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.inv-area-selector');
+        return view('components.date-selector');
     }
 }

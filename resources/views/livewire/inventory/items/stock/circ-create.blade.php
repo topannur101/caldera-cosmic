@@ -98,12 +98,13 @@ new class extends Component {
 
       $amount = 0;
       $amount = $this->unit_price * $this->qty_relative;
+      $unit_price = $this->unit_price;
 
       // amount should always be main currency (USD)
       if($amount > 0 && $this->curr_id !== 1) {
-         $amount     = $amount / $this->curr_rate;
-         $unit_price = $this->unit_price / $this->curr_rate;
-      }
+         $amount /= $this->curr_rate;
+         $unit_price /= $this->curr_rate;
+      } 
       
       $user = $this->userq ? User::where('emp_id', $this->userq)->first() : null;
       $user_id = (int) ($user ? $user->id : Auth::user()->id);

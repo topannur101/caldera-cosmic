@@ -172,6 +172,14 @@ class extends Component
     {
         $this->perPage += 24;
     }
+
+    public function updated($property)
+    {
+        $props = ['view', 'sort', 'area_ids', 'circ_eval_status', 'circ_types', 'date_from', 'date_to', 'user_id', 'remarks'];
+        if(in_array($property, $props)) {
+            $this->reset(['perPage']);
+        }
+    }
 };
 
 ?>
@@ -267,8 +275,8 @@ class extends Component
             </div>
         </div>
     </div>
-    <div class="w-full">
-        <div class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full px-8">
+    <div class="h-12">
+        <div class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full h-full px-8">
             <div class="text-center sm:text-left">{{ $inv_stocks->total() . ' ' . __('barang') }}</div>
             <div class="grow flex justify-center sm:justify-end">
                 <x-select wire:model.live="sort" class="mr-3">
@@ -293,115 +301,113 @@ class extends Component
             </div>
         </div>
     </div>
-    <div class="w-full">
-        <div wire:loading.class="cal-shimmer">
-            @if (!$inv_stocks->count())
-                @if (count($area_ids))
-                    <div wire:key="no-match" class="py-20">
-                        <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                            <i class="fa fa-ghost"></i>
-                        </div>
-                        <div class="text-center text-neutral-400 dark:text-neutral-600">
-                            {{ __('Tidak ada yang cocok') }}
-                        </div>
+    <div class="w-full" wire:loading.class="cal-shimmer">
+        @if (!$inv_stocks->count())
+            @if (count($area_ids))
+                <div wire:key="no-match" class="py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-ghost"></i>
                     </div>
-                @else
-                    <div wire:key="no-area" class="py-20">
-                        <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                            <i class="fa fa-tent relative"><i
-                                    class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
-                        </div>
-                        <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}
-                        </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">
+                        {{ __('Tidak ada yang cocok') }}
                     </div>
-                @endif
+                </div>
             @else
-                @switch($view)
-                    @case('grid')
-                        <div wire:key="grid"
-                            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mt-6 px-3 sm:px-0">
-                            @foreach ($inv_stocks as $inv_stock)
-                                <x-inv-card-grid
-                                :url="route('inventory.items.show', ['id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id ])"
-                                :name="$inv_stock->inv_item->name" 
-                                :desc="$inv_stock->inv_item->desc" 
-                                :uom="$inv_stock->uom"
-                                :loc="$inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' . $inv_stock->inv_item->inv_loc->bin ) : null" 
-                                :qty="$inv_stock->qty" 
-                                :photo="$inv_stock->inv_item->photo">
-                                </x-inv-card-grid>
-                            @endforeach
-                        </div>
-                    @break
-
-                    @case('list')
-                        <div wire:key="list" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto mt-6">
-                            <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
-                                <tr class="uppercase text-xs">
-                                    <th>{{ __('Qty') }}</th>
-                                    <th>{{ __('Nama') }}</th>
-                                    <th>{{ __('Kode') }}</th>
-                                    <th>{{ __('Harga') }}</th>
-                                    <th>{{ __('Lokasi') }} </th>
-                                    <th>{{ __('Tag') }} </th>
-                                    <th>{{ __('Area') }}</th>
-                                </tr>
-                                @foreach($inv_stocks as $inv_stock)
-                                    <tr>
-                                        <td>{{ $inv_stock->qty . ' ' . $inv_stock->uom }}</td>
-                                        <td class="font-bold"><x-link href="{{ route('inventory.items.show', [ 'id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id ]) }}" wire:navigate>{{ $inv_stock->inv_item->name }}</x-link></td>
-                                        <td>{{ $inv_stock->inv_item->desc }}</td>
-                                        <td>{{ $inv_stock->inv_item->code ?? __('Tanpa kode') }}</td>
-                                        <td>{{ $inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' .$inv_stock->inv_item->inv_loc->bin) : __('Tanpa lokasi') }}</td>
-                                        <td>{{ $inv_stock->inv_item->tags_facade() ?? null }}</td>
-                                        <td>{{ $inv_stock->inv_item->inv_area->name }}</td>
-                                    </tr>
-                                @endforeach
-                            </table>
-                        </div>
-                    @break
-
-                    @default
-                        <div wire:key="content" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2 mt-6">
-                            @foreach ($inv_stocks as $inv_stock)
-                                <x-inv-card-content 
-                                :url="route('inventory.items.show', ['id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id])"
-                                :name="$inv_stock->inv_item->name" 
-                                :desc="$inv_stock->inv_item->desc" 
-                                :code="$inv_stock->inv_item->code"
-                                :curr="$inv_stock->inv_curr->name" 
-                                :price="$inv_stock->unit_price" 
-                                :uom="$inv_stock->uom"
-                                :loc="$inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' . $inv_stock->inv_item->inv_loc->bin ) : null" 
-                                :tags="$inv_stock->inv_item->tags_facade() ?? null" 
-                                :qty="$inv_stock->qty" 
-                                :photo="$inv_stock->inv_item->photo">
-                                </x-inv-card-content>
-                            @endforeach
-                        </div>
-                @endswitch
-                <div wire:key="observer" class="flex items-center relative h-16">
-                    @if (!$inv_stocks->isEmpty())
-                        @if ($inv_stocks->hasMorePages())
-                            <div wire:key="more" x-data="{
-                                observe() {
-                                    const observer = new IntersectionObserver((inv_stocks) => {
-                                        inv_stocks.forEach(inv_stock => {
-                                            if (inv_stock.isIntersecting) {
-                                                @this.loadMore()
-                                            }
-                                        })
-                                    })
-                                    observer.observe(this.$el)
-                                }
-                            }" x-init="observe"></div>
-                            <x-spinner class="sm" />
-                        @else
-                            <div class="mx-auto">{{ __('Tidak ada lagi') }}</div>
-                        @endif
-                    @endif
+                <div wire:key="no-area" class="py-20">
+                    <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="fa fa-tent relative"><i
+                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}
+                    </div>
                 </div>
             @endif
-        </div>
+        @else
+            @switch($view)
+                @case('grid')
+                    <div wire:key="grid"
+                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mt-6 px-3 sm:px-0">
+                        @foreach ($inv_stocks as $inv_stock)
+                            <x-inv-card-grid
+                            :url="route('inventory.items.show', ['id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id ])"
+                            :name="$inv_stock->inv_item->name" 
+                            :desc="$inv_stock->inv_item->desc" 
+                            :uom="$inv_stock->uom"
+                            :loc="$inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' . $inv_stock->inv_item->inv_loc->bin ) : null" 
+                            :qty="$inv_stock->qty" 
+                            :photo="$inv_stock->inv_item->photo">
+                            </x-inv-card-grid>
+                        @endforeach
+                    </div>
+                @break
+
+                @case('list')
+                    <div wire:key="list" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto mt-6">
+                        <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                            <tr class="uppercase text-xs">
+                                <th>{{ __('Qty') }}</th>
+                                <th>{{ __('Nama') }}</th>
+                                <th>{{ __('Kode') }}</th>
+                                <th>{{ __('Harga') }}</th>
+                                <th>{{ __('Lokasi') }} </th>
+                                <th>{{ __('Tag') }} </th>
+                                <th>{{ __('Area') }}</th>
+                            </tr>
+                            @foreach($inv_stocks as $inv_stock)
+                                <tr>
+                                    <td>{{ $inv_stock->qty . ' ' . $inv_stock->uom }}</td>
+                                    <td class="font-bold"><x-link href="{{ route('inventory.items.show', [ 'id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id ]) }}" wire:navigate>{{ $inv_stock->inv_item->name }}</x-link></td>
+                                    <td>{{ $inv_stock->inv_item->desc }}</td>
+                                    <td>{{ $inv_stock->inv_item->code ?? __('Tanpa kode') }}</td>
+                                    <td>{{ $inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' .$inv_stock->inv_item->inv_loc->bin) : __('Tanpa lokasi') }}</td>
+                                    <td>{{ $inv_stock->inv_item->tags_facade() ?? null }}</td>
+                                    <td>{{ $inv_stock->inv_item->inv_area->name }}</td>
+                                </tr>
+                            @endforeach
+                        </table>
+                    </div>
+                @break
+
+                @default
+                    <div wire:key="content" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2 mt-6">
+                        @foreach ($inv_stocks as $inv_stock)
+                            <x-inv-card-content 
+                            :url="route('inventory.items.show', ['id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id])"
+                            :name="$inv_stock->inv_item->name" 
+                            :desc="$inv_stock->inv_item->desc" 
+                            :code="$inv_stock->inv_item->code"
+                            :curr="$inv_stock->inv_curr->name" 
+                            :price="$inv_stock->unit_price" 
+                            :uom="$inv_stock->uom"
+                            :loc="$inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' . $inv_stock->inv_item->inv_loc->bin ) : null" 
+                            :tags="$inv_stock->inv_item->tags_facade() ?? null" 
+                            :qty="$inv_stock->qty" 
+                            :photo="$inv_stock->inv_item->photo">
+                            </x-inv-card-content>
+                        @endforeach
+                    </div>
+            @endswitch
+            <div wire:key="observer" class="flex items-center relative h-16">
+                @if (!$inv_stocks->isEmpty())
+                    @if ($inv_stocks->hasMorePages())
+                        <div wire:key="more" x-data="{
+                            observe() {
+                                const observer = new IntersectionObserver((inv_stocks) => {
+                                    inv_stocks.forEach(inv_stock => {
+                                        if (inv_stock.isIntersecting) {
+                                            @this.loadMore()
+                                        }
+                                    })
+                                })
+                                observer.observe(this.$el)
+                            }
+                        }" x-init="observe"></div>
+                        <x-spinner class="sm" />
+                    @else
+                        <div class="mx-auto">{{ __('Tidak ada lagi') }}</div>
+                    @endif
+                @endif
+            </div>
+        @endif
     </div>
 </div>
