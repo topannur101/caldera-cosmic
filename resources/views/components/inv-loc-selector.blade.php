@@ -12,7 +12,7 @@
     }" class="flex items-center {{ $isQuery ? 'px-4' : '' }}">
     <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'loc-selector')" ::class="loc_name ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="fa fa-fw fa-map-marker-alt me-3"></i><span x-text="loc_name ? loc_name : '{{ $isQuery ? __('Lokasi') : __('Filter lokasi') }}'"></span></x-text-button>
     <x-modal name="loc-selector" maxWidth="sm" focusable>
-        <div class="p-6">
+        <div class="p-6 flex flex-col gap-y-6">
             <div class="flex justify-between items-start">
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                     <i class="fa fa-fw fa-map-marker-alt me-3"></i>{{ __('Lokasi') }}
@@ -20,8 +20,8 @@
                 <x-text-button type="button" x-on:click="$dispatch('close')">
                     <i class="fa fa-times"></i>
                 </x-text-button>
-                </div>
-                <div class="grid grid-cols-2 gap-y-6 gap-x-3 mt-6">        
+            </div>
+            <div class="grid grid-cols-2 gap-y-6 gap-x-3">        
                 <div>
                     <label for="loc-parent" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Induk') }}</label>
                     <x-text-input id="loc-parent" type="text" x-model="loc_parent" x-on:keydown.enter.prevent="$nextTick(() => { $refs.locBin.focus() })" />
@@ -40,7 +40,10 @@
                         @endforeach
                     </datalist>
                 </div>
-            </div>  
+            </div>              
+            <div class="flex justify-end">
+                <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="loc_parent = ''; loc_bin = ''; $dispatch('close');" x-show="loc_parent || loc_bin"><span class="text-red-500"><div class="px-1">{{ $isQuery ? __('Hapus filter lokasi') : __('Hapus lokasi') }}</div></span></x-text-button>
+            </div>
         </div>
     </x-modal>   
 </div>

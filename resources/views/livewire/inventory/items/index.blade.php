@@ -18,7 +18,7 @@ class extends Component
 
     public string $view = 'content';
 
-    public string $sort = '';
+    public string $sort = 'updated';
 
     public array $areas = [];
     
@@ -64,6 +64,7 @@ class extends Component
             $this->area_ids     = $savedParams['area_ids'] ?? [];
             $this->filter       = $savedParams['filter'] ?? '';
             $this->view         = $savedParams['view'] ?? 'content';
+            $this->sort         = $savedParams['sort'] ?? '';
         } else {
             $this->area_ids     = $areas->pluck('id')->toArray();
         }
@@ -85,7 +86,8 @@ class extends Component
             'tags'          => $tags,
             'area_ids'      => $this->area_ids,
             'filter'        => $this->filter,
-            'view'          => $this->view
+            'view'          => $this->view,
+            'sort'          => $this->sort
         ];
         
         session(['inv_search_params' => $inv_search_params]);
@@ -155,11 +157,67 @@ class extends Component
         })
         ->where('is_active', true);
 
+        switch ($this->sort) {
+            case 'updated':
+                $inv_search_query->orderByRaw('
+                (SELECT updated_at FROM inv_items 
+                WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                break;
+            case 'created':
+                $inv_search_query->orderByRaw('
+                (SELECT created_at FROM inv_items 
+                WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                break;
+            case 'loc':
+                $inv_search_query->orderByRaw('
+                (SELECT bin FROM inv_locs WHERE 
+                inv_locs.id = (SELECT inv_loc_id FROM inv_items 
+                WHERE inv_items.id = inv_stocks.inv_item_id)) ASC,
+
+                (SELECT parent FROM inv_locs WHERE 
+                inv_locs.id = (SELECT inv_loc_id FROM inv_items 
+                WHERE inv_items.id = inv_stocks.inv_item_id)) ASC');
+            case 'last_deposit':
+                $inv_search_query->orderByRaw('
+                (SELECT last_deposit FROM inv_items 
+                WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                break;
+            case 'last_withdrawal':
+                $inv_search_query->orderByRaw('
+                (SELECT last_withdrawal FROM inv_items 
+                WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                break;
+            case 'qty_low':
+                $inv_search_query->orderBy('qty');
+                break;
+            case 'qty_high':
+                $inv_search_query->orderByDesc('qty');
+                break;
+            case 'alpha':
+                $inv_search_query->orderByRaw('
+                (SELECT name FROM inv_items 
+                WHERE inv_items.id = inv_stocks.inv_item_id) ASC');
+                break;
+
+        }
+
         $inv_stocks = $inv_search_query->paginate($this->perPage);
 
         return [
             'inv_stocks' => $inv_stocks,
         ];
+    }
+
+    public function download()
+    {
+        // Create a unique token for this download request
+        $token = md5(uniqid());
+
+        // Store the token in the session
+        session()->put('inv_stocks_token', $token);
+        
+        // Redirect to a temporary route that will handle the streaming
+        return redirect()->route('download.inv-stocks', ['token' => $token]);
     }
 
     public function resetQuery()
@@ -180,6 +238,7 @@ class extends Component
             $this->reset(['perPage']);
         }
     }
+
 };
 
 ?>
@@ -205,7 +264,7 @@ class extends Component
                 <x-spinner class="sm mono"></x-spinner>
             </i>
             <div class="w-full md:w-40">
-                <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class=" h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
+                <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
                     type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
                 <datalist id="qwords">
                     @if (count($qwords))
@@ -264,7 +323,7 @@ class extends Component
                             <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset')}}
                         </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />
-                        <x-dropdown-link href="#" disabled="true">
+                        <x-dropdown-link href="#" wire:click.prevent="download">
                             <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV')}}
                         </x-dropdown-link>
                         <!-- <x-dropdown-link href="#">
@@ -275,17 +334,16 @@ class extends Component
             </div>
         </div>
     </div>
-    <div class="h-12">
+    <div class="h-auto sm:h-12">
         <div class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full h-full px-8">
             <div class="text-center sm:text-left">{{ $inv_stocks->total() . ' ' . __('barang') }}</div>
             <div class="grow flex justify-center sm:justify-end">
                 <x-select wire:model.live="sort" class="mr-3">
                     <option value="updated">{{ __('Diperbarui') }}</option>
                     <option value="created">{{ __('Dibuat') }}</option>
+                    <option value="loc">{{ __('Lokasi') }}</option>
                     <option value="last_deposit">{{ __('Terakhir ditambah') }}</option>
                     <option value="last_withdrawal">{{ __('Terakhir diambil') }}</option>
-                    <option value="unit_price_low">{{ __('Harga terendah') }}</option>
-                    <option value="unit_price_high">{{ __('Harga tertinggi') }}</option>
                     <option value="qty_low">{{ __('Qty terendah') }}</option>
                     <option value="qty_high">{{ __('Qty tertinggi') }}</option>
                     <option value="alpha">{{ __('Alfabet') }}</option>

@@ -33,7 +33,7 @@
    
    <x-modal name="tag-selector" maxWidth="sm" focusable>
       <div>
-         <form wire:submit.prevent="save" class="p-6">
+         <form wire:submit.prevent="save" class="p-6 flex flex-col gap-y-6">
             <div class="flex justify-between items-start">
                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                   <i class="fa fa-fw fa-tag me-3"></i>{{ __('Tag') }}
@@ -42,7 +42,7 @@
                   <i class="fa fa-times"></i>
                </x-text-button>
             </div>
-            <div class="grid grid-cols-1 gap-y-6 mt-6">
+            <div class="grid grid-cols-1 gap-y-6">
                <div class="flex flex-wrap gap-2 text-sm">
                   <div x-show="tags.length === 0" class="text-neutral-500 italic py-1">{{ __('Tak ada tag') }}</div>
                   <template x-for="tag in tags" :key="tag">
@@ -60,7 +60,10 @@
                      <option value="{{ $tag }}"></option>
                   @endforeach
                </datalist>
-            </div>  
+            </div>             
+            <div class="flex justify-end">
+               <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="tags = []; $dispatch('close');" x-show="tags.length"><span class="text-red-500"><div class="px-1">{{ $isQuery ? __('Hapus filter tag') : __('Hapus tag') }}</div></span></x-text-button>
+            </div> 
          </form>
       </div>
    </x-modal>                           

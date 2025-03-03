@@ -16,7 +16,7 @@
             }
          }
       }" class="flex items-center {{ $isQuery ? 'px-4' : '' }}">
-      <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'user-selector')" ::class="user_name ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="fa fa-fw fa-user me-3"></i><span x-text="user_name ? user_name : '{{ $isQuery ? __('Pengguna') : __('Filter pengguna') }}'"></span></x-text-button>
+      <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'user-selector')" ::class="user_name ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="fa fa-fw fa-user me-3"></i><span x-show="!user_name" x-text="'{{ $isQuery ? __('Pengguna') : __('Filter pengguna') }}'"></span><span class="max-w-16 truncate" x-show="user_name" x-text="user_name"></span></x-text-button>
       <x-modal name="user-selector" maxWidth="sm">
          <div class="grid grid-cols-1 gap-y-6 p-6">
             <div class="flex justify-between items-start">
@@ -45,9 +45,11 @@
                   </div>
                 </x-secondary-button>
                </template>
-               <x-secondary-button size="sm" type="button" x-on:click="user_id = 0;$dispatch('close');" x-show="user_id"><span class="text-red-500"><div class="px-1">{{ __('Hapus filter pengguna') }}</div></span></x-secondary-button>
                <div x-show="!users.length" class="text-sm">{{ __('Tak ada pengguna yang bisa dipilih') }}</div>
             </div>
-        </div>
+            <div class="flex justify-end">
+               <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="user_id = 0;$dispatch('close');" x-show="user_id"><span class="text-red-500"><div class="px-1">{{ __('Hapus filter pengguna') }}</div></span></x-text-button>
+            </div>
+         </div>
     </x-modal>   
 </div>

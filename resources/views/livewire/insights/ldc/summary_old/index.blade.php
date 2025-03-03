@@ -95,7 +95,7 @@ class extends Component {
     {
         switch ($this->view) {
             case 'hides':
-                $this->redirectRoute('download.ins-ldc-hides', 
+                $this->redirectRoute('downloads.ins-ldc-hides', 
                 [
                     'start_at'      => $this->start_at, 
                     'end_at'        => $this->end_at, 

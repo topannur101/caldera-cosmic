@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\InvItem;
+use App\Models\InvStock;
 use App\Models\InsLdcHide;
 use App\Models\InsRtcMetric;
 use Illuminate\Http\Request;
@@ -12,6 +14,163 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DownloadController extends Controller
 {
+    public function invStocks(Request $request, $token)
+    {
+        // Validate the token
+        if ($token !== session()->get('inv_stocks_token')) {
+            abort(403);
+        }
+        
+        // Clear the token
+        session()->forget('inv_stocks_token');
+        
+        // Get search parameters from session
+        $inv_search_params = session('inv_search_params', []);
+        
+        // Extract parameters
+        $q          = $inv_search_params['q'] ?? '';
+        $loc_parent = $inv_search_params['loc_parent'] ?? '';
+        $loc_bin    = $inv_search_params['loc_bin'] ?? '';
+        $tags       = $inv_search_params['tags'] ?? [];
+        $area_ids   = $inv_search_params['area_ids'] ?? [];
+        $filter     = $inv_search_params['filter'] ?? '';
+        $sort       = $inv_search_params['sort'] ?? 'updated';
+        
+        return response()->streamDownload(function () use ($q, $loc_parent, $loc_bin, $tags, $area_ids, $filter, $sort) {
+            // Open output stream
+            $handle = fopen('php://output', 'w');
+            
+            // Add CSV header row
+            fputcsv($handle, ['Name', 'Description', 'Code', 'Photo', 'Area Name', 'Location', 'Quantity']);
+            
+            // Build the same query as in the Livewire component
+            $query = InvStock::with([
+                'inv_item', 
+                'inv_curr',
+                'inv_item.inv_loc', 
+                'inv_item.inv_area', 
+                'inv_item.inv_tags'
+            ])
+            ->whereHas('inv_item', function ($query) use ($q, $loc_parent, $loc_bin, $tags, $area_ids, $filter) {
+                // search
+                $query->where(function ($subQuery) use ($q) {
+                    $subQuery->where('name', 'like', "%$q%")
+                                ->orWhere('code', 'like', "%$q%")
+                                ->orWhere('desc', 'like', "%$q%");
+                })
+                ->whereIn('inv_area_id', $area_ids);
+    
+                // location
+                $query->where(function ($subQuery) use ($loc_parent, $loc_bin) {
+                    if ($loc_parent || $loc_bin) {
+                        $subQuery->whereHas('inv_loc', function ($subSubQuery) use ($loc_parent, $loc_bin) {
+                            if ($loc_parent) {
+                                $subSubQuery->where('parent', 'like', "%$loc_parent%");
+                            }
+                            if ($loc_bin) {
+                                $subSubQuery->where('bin', 'like', "%$loc_bin%");
+                            }
+                        });
+                    }
+                });
+    
+                // tags
+                $query->where(function ($subQuery) use ($tags) {
+                    if (count($tags)) {
+                        $subQuery->whereHas('inv_tags', function ($subSubQuery) use ($tags) {
+                            $subSubQuery->whereIn('name', $tags);
+                        });
+                    }
+                });
+    
+                // filter
+                switch ($filter) {
+                    case 'no-code':
+                        $query->whereNull('code');
+                        break;
+                    case 'no-photo':
+                        $query->whereNull('photo');
+                        break;
+                    case 'no-location':
+                        $query->whereNull('inv_loc_id');
+                        break;
+                    case 'no-tags':
+                        $query->whereDoesntHave('inv_tags');
+                        break;
+                    case 'inactive':
+                        $query->where('is_active', false);
+                        break;
+                    default:
+                        $query->where('is_active', true);
+                        break;
+                }
+            })
+            ->where('is_active', true);
+    
+            // Apply sorting
+            switch ($sort) {
+                case 'updated':
+                    $query->orderByRaw('(SELECT updated_at FROM inv_items WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                    break;
+                case 'created':
+                    $query->orderByRaw('(SELECT created_at FROM inv_items WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                    break;
+                case 'loc':
+                    $query->orderByRaw('
+                    (SELECT bin FROM inv_locs WHERE 
+                    inv_locs.id = (SELECT inv_loc_id FROM inv_items 
+                    WHERE inv_items.id = inv_stocks.inv_item_id)) ASC,
+                    (SELECT parent FROM inv_locs WHERE 
+                    inv_locs.id = (SELECT inv_loc_id FROM inv_items 
+                    WHERE inv_items.id = inv_stocks.inv_item_id)) ASC');
+                    break;
+                case 'last_deposit':
+                    $query->orderByRaw('(SELECT last_deposit FROM inv_items WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                    break;
+                case 'last_withdrawal':
+                    $query->orderByRaw('(SELECT last_withdrawal FROM inv_items WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                    break;
+                case 'qty_low':
+                    $query->orderBy('qty');
+                    break;
+                case 'qty_high':
+                    $query->orderByDesc('qty');
+                    break;
+                case 'alpha':
+                    $query->orderByRaw('(SELECT name FROM inv_items WHERE inv_items.id = inv_stocks.inv_item_id) ASC');
+                    break;
+            }
+            
+            // Stream each record to avoid loading all records into memory at once
+            $query->chunk(100, function ($stocks) use ($handle) {
+                foreach ($stocks as $stock) {
+                    $location = '';
+                    if ($stock->inv_item->inv_loc) {
+                        $location = $stock->inv_item->inv_loc->parent . '-' . $stock->inv_item->inv_loc->bin;
+                    }
+                    
+                    fputcsv($handle, [
+                        $stock->inv_item->name ?? '',
+                        $stock->inv_item->desc ?? '',
+                        $stock->inv_item->code ?? '',
+                        $stock->inv_item->photo ?? '',
+                        $stock->inv_item->inv_area->name ?? '',
+                        $location,
+                        $stock->qty ?? 0
+                    ]);
+                }
+                
+                // Flush the output buffer to send data to the browser
+                ob_flush();
+                flush();
+            });
+            
+            // Close the output stream
+            fclose($handle);
+        }, 'inventory_stocks.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
     public function insRtcMetrics(Request $request)
     {
         if (! Auth::user() ) {

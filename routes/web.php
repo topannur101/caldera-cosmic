@@ -127,9 +127,11 @@ Route::prefix('insights')->group(function () {
 // Download route
 Route::name('download.')->group(function () {
 
-    Route::get('/download/ins-rtc-metrics', [DownloadController::class, 'insRtcMetrics'])->name('ins-rtc-metrics');
-    Route::get('/download/ins-rtc-clumps', [DownloadController::class, 'insRtcClumps'])->name('ins-rtc-clumps');
-    Route::get('/download/ins-ldc-hides', [DownloadController::class, 'insLdcHides'])->name('ins-ldc-hides');
+    Route::get('/download/inv-stocks/{token}', [DownloadController::class, 'invStocks'])    ->name('inv-stocks');
+    Route::get('/download/inv-circs/{token}', [DownloadController::class, 'invCircs'])      ->name('inv-circs');
+    Route::get('/download/ins-rtc-metrics', [DownloadController::class, 'insRtcMetrics'])   ->name('ins-rtc-metrics');
+    Route::get('/download/ins-rtc-clumps', [DownloadController::class, 'insRtcClumps'])     ->name('ins-rtc-clumps');
+    Route::get('/download/ins-ldc-hides', [DownloadController::class, 'insLdcHides'])       ->name('ins-ldc-hides');
 
 });
 

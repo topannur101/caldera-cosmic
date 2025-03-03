@@ -97,12 +97,12 @@ new #[Layout('layouts.app')] class extends Component {
     {
         switch ($this->view) {
             case 'raw':
-                $this->redirectRoute('download.ins-rtc-metrics', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
+                $this->redirectRoute('downloads.ins-rtc-metrics', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
                 $this->js('$dispatch("close")');
                 $this->js('toast("' . __('Pengunduhan dimulai...') . '", { type: "success" })');
                 break;
             case 'clumps':
-                $this->redirectRoute('download.ins-rtc-clumps', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
+                $this->redirectRoute('downloads.ins-rtc-clumps', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
                 $this->js('$dispatch("close")');
                 $this->js('toast("' . __('Pengunduhan dimulai...') . '", { type: "success" })');
                 break;

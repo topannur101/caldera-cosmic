@@ -22,6 +22,10 @@ window.calderaSetTheme  = calderaSetTheme;
 window.axios            = axios;
 window.escKey           = escKey;
 
+document.addEventListener('livewire:navigated', () => {
+    calderaSetTheme();
+});
+
 window.toast = function(message, options = {}) {
    let description = options.description || '';
    let type = options.type || 'default';

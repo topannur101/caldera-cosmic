@@ -29,7 +29,7 @@ class extends Component {
 
     public array $circ_types = ['deposit', 'withdrawal'];
 
-    public string $date_from = '';
+    public string $date_fr = '';
 
     public string $date_to = '';
 
@@ -61,21 +61,19 @@ class extends Component {
         $savedParams = session('inv_circs_params', []);
 
         if ($savedParams) {
-            $this->area_ids         = $savedParams['area_ids'] ?? [];
-            $this->circ_eval_status = $savedParams['circ_eval_status'] ?? [];
-            $this->circ_types       = $savedParams['circ_types'] ?? [];
-            $this->date_from        = $savedParams['date_from'] ?? '';
-            $this->date_to          = $savedParams['date_to'] ?? '';
-            $this->user_id          = $savedParams['user_id'] ?? 0;
-            $this->remarks          = $savedParams['remarks'] ?? ['', ''];
+            $this->area_ids         = $savedParams['area_ids']          ?? [];
+            $this->circ_eval_status = $savedParams['circ_eval_status']  ?? [];
+            $this->circ_types       = $savedParams['circ_types']        ?? [];
+            $this->date_fr          = $savedParams['date_fr']           ?? '';
+            $this->date_to          = $savedParams['date_to']           ?? '';
+            $this->user_id          = $savedParams['user_id']           ?? 0;
+            $this->remarks          = $savedParams['remarks']           ?? ['', ''];
         } else {
             $this->area_ids = $areas->pluck('id')->toArray();
         }
     }
 
-    #[On('circ-updated')]
-    #[On('circ-evaluated')]
-    public function with(): array
+    private function InvCircQuery()
     {
         $circ_remarks = trim ($this->remarks[0]);
         $eval_remarks = trim ($this->remarks[1]);
@@ -84,7 +82,7 @@ class extends Component {
             'area_ids'          => $this->area_ids,
             'circ_eval_status'  => $this->circ_eval_status,
             'circ_types'        => $this->circ_types,
-            'date_from'         => $this->date_from,
+            'date_fr'           => $this->date_fr,
             'date_to'           => $this->date_to,
             'user_id'           => $this->user_id,
             'remarks'           => [ $circ_remarks, $eval_remarks ],
@@ -105,10 +103,10 @@ class extends Component {
         ->whereIn('eval_status', $this->circ_eval_status)
         ->whereIn('type', $this->circ_types);
 
-        if($this->date_from && $this->date_to) {
-            $from = Carbon::parse($this->date_from)->startOfDay();
+        if($this->date_fr && $this->date_to) {
+            $fr = Carbon::parse($this->date_fr)->startOfDay();
             $to = Carbon::parse($this->date_to)->endOfDay();
-            $inv_circs_query->whereBetween('updated_at', [$from, $to]);
+            $inv_circs_query->whereBetween('updated_at', [$fr, $to]);
         }
 
         if($this->user_id) {
@@ -142,6 +140,15 @@ class extends Component {
 
         }
 
+        return $inv_circs_query;
+    }
+
+    #[On('circ-updated')]
+    #[On('circ-evaluated')]
+    public function with(): array
+    {
+        $inv_circs_query = $this->InvCircQuery();
+
         $inv_circs = $inv_circs_query->paginate($this->perPage);
         $user_ids = $inv_circs_query->limit(1000)->get()->pluck('user_id')->unique();
         $this->users = User::whereIn('id', $user_ids)->orderBy('name')->get()->toArray();
@@ -173,6 +180,15 @@ class extends Component {
         $this->dispatch('print-circ-ids', $this->circ_ids);
         $this->js('$dispatch("open-spotlight", "printing")');
     }
+
+    public function printAll()
+    {
+        $inv_circs_query = $this->InvCircQuery();
+        $circ_ids = $inv_circs_query->limit(500)->get()->pluck('id');
+        
+        $this->dispatch('print-circ-ids', $circ_ids);
+        $this->js('$dispatch("open-spotlight", "printing")');
+    }
     
     #[On('print-ready')]
     public function printExecute()
@@ -190,10 +206,22 @@ class extends Component {
 
     public function updated($property)
     {
-        $props = ['view', 'sort', 'area_ids', 'circ_eval_status', 'circ_types', 'date_from', 'date_to', 'user_id', 'remarks'];
+        $props = ['view', 'sort', 'area_ids', 'circ_eval_status', 'circ_types', 'date_fr', 'date_to', 'user_id', 'remarks'];
         if(in_array($property, $props)) {
             $this->reset(['perPage']);
         }
+    }
+
+    public function download()
+    {
+        // Create a unique token for this download request
+        $token = md5(uniqid());
+
+        // Store the token in the session
+        session()->put('inv_circs_token', $token);
+        
+        // Redirect to a temporary route that will handle the streaming
+        return redirect()->route('download.inv-circs', ['token' => $token]);
     }
 }
 
@@ -269,8 +297,8 @@ class extends Component {
         <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
             <x-inv-user-selector isQuery="true" class="text-xs font-semibold uppercase" />
         </div>
-        <div class="px-6 py-4 lg:py-0 grow flex items-center">
-            <x-text-button type="button" class="text-neutral-400 dark:text-neutral-600 text-xs font-semibold uppercase"><span>{{ __('Keterangan') }}</span></x-text-button>
+        <div class="grow flex items-center gap-x-4 p-4 lg:py-0 ">
+            <x-inv-remarks-filter isQuery="true" class="text-xs font-semibold uppercase" />
         </div>
         <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
             <x-inv-area-selector class="text-xs font-semibold uppercase" :$areas />
@@ -294,15 +322,15 @@ class extends Component {
                         <x-dropdown-link href="#" wire:click.prevent="download">
                             <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
                         </x-dropdown-link>
-                        <x-dropdown-link href="#" wire:click.prevent="download">
-                            <i class="fa fa-fw fa-print me-2"></i>{{ __('Cetak') }}
+                        <x-dropdown-link href="#" wire:click="printAll">
+                            <i class="fa fa-fw fa-print me-2"></i>{{ __('Cetak semua') }}
                         </x-dropdown-link>
                     </x-slot>
                 </x-dropdown>
             </div>
         </div>
     </div>
-    <div class="h-12">
+    <div class="h-auto sm:h-12">
         <div x-show="!ids.length" class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full h-full px-8">
             <div class="text-center sm:text-left">{{ $inv_circs->total() . ' ' . __('sirkulasi') }}</div>
             <div class="grow flex justify-center sm:justify-end">
@@ -316,10 +344,10 @@ class extends Component {
                 <div class="btn-group">
                     <x-radio-button wire:model.live="view" value="list" name="view" id="view-list"><i
                             class="fa fa-fw fa-grip-lines text-center m-auto"></i></x-radio-button>
-                    <x-radio-button wire:model.live="view" value="content" name="view" id="view-content"><i
+                    <!-- <x-radio-button wire:model.live="view" value="content" name="view" id="view-content"><i
                             class="fa fa-fw fa-list text-center m-auto"></i></x-radio-button>
                     <x-radio-button wire:model.live="view" value="grid" name="view" id="view-grid"><i
-                            class="fa fa-fw fa-border-all text-center m-auto"></i></x-radio-button>
+                            class="fa fa-fw fa-border-all text-center m-auto"></i></x-radio-button> -->
                 </div>
             </div>
         </div>
