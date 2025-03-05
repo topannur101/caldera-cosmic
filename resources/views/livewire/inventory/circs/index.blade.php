@@ -114,11 +114,11 @@ class extends Component {
         }
 
         if($this->remarks[0]) {
-            $inv_circs_query->where('remarks', $this->remarks[0]);
+            $inv_circs_query->where('remarks', 'like', "%{$this->remarks[0]}%");
         }
 
         if($this->remarks[1]) {
-            $inv_circs_query->where('eval_remarks', $this->remarks[1]);
+            $inv_circs_query->where('eval_remarks', 'like', "%{$this->remarks[0]}%");
         }
 
         switch ($this->sort) {
