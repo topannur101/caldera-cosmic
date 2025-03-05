@@ -305,12 +305,12 @@ class extends Component
                             <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
                         </x-dropdown-link>
                         @endcan
-                        <x-dropdown-link href="#" disabled="true">
-                            <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
-                        </x-dropdown-link>
-                        <!-- <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
+                        <!-- <x-dropdown-link href="#" disabled="true">
                             <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
                         </x-dropdown-link> -->
+                        <x-dropdown-link href="{{ route('inventory.items.mass-update') }}" wire:navigate>
+                            <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
+                        </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />
                         <!-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
                             <i class="fa fa-fw fa-map-marker-alt me-2"></i>{{ __('Kelola lokasi ')}}

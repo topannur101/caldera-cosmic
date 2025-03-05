@@ -1,5 +1,6 @@
 import './bootstrap';
 import axios from 'axios';
+import {TabulatorFull as Tabulator} from 'tabulator-tables';
 
 function calderaSetTheme()
 {
@@ -21,6 +22,7 @@ calderaSetTheme()
 window.calderaSetTheme  = calderaSetTheme;
 window.axios            = axios;
 window.escKey           = escKey;
+window.Tabulator        = Tabulator;
 
 document.addEventListener('livewire:navigated', () => {
     calderaSetTheme();
