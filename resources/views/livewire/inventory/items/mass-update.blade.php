@@ -10,14 +10,10 @@ class extends Component
 {
 
    public $items = [];
-   public $products = [];
-   public $columns = [];
-   public $tableData = [];
-   public $changedData = [];
+
     
    public function mount()
    {
-      $this->products = InvItem::all()->toArray();
       $this->items = [
          [
             'id'        => 1,
@@ -43,40 +39,10 @@ class extends Component
 
    public function validateItems()
    {
+      // checks if it's under 100
+      // categorize to Update items and Create items (ask area)
+      // return status of update for any reason (operation: update/create, status: success, fail )
       dd($this);
-   }
-
-   public function saveChanges($changes)
-   {
-       $changedData = json_decode($changes, true);
-       
-       $toCreate = [];
-       $toUpdate = [];
-       
-       foreach ($changedData as $row) {
-           if (isset($row['id']) && !empty($row['id'])) {
-               $toUpdate[] = $row;
-           } else {
-               $toCreate[] = $row;
-           }
-       }
-       
-       // Batch updates
-       if (!empty($toUpdate)) {
-           foreach ($toUpdate as $item) {
-               InvItem::find($item['id'])->update($item);
-           }
-       }
-       
-       // Batch creates
-       if (!empty($toCreate)) {
-           InvItem::insert($toCreate);
-       }
-       
-       // Refresh products
-       $this->products = InvItem::all()->toArray();
-       
-       return $this->dispatch('changes-saved', message: 'Successfully saved ' . (count($toCreate) + count($toUpdate)) . ' products');
    }
 
 };
@@ -115,18 +81,18 @@ class extends Component
                { title: 'desc', field: 'desc', width: 100 }, 
                { title: 'code', field: 'code', width: 100 }, 
                { title: 'location', field: 'location', width: 80 },
-               { title: 'tag 1', field: 'tag 1', width: 80, cssClass: "border-l-2 border-caldy-500" },
+               { title: 'tag 1', field: 'tag 1', width: 80, cssClass: "border-l-2" },
                { title: 'tag 2', field: 'tag 2', width: 80, },
                { title: 'tag 3', field: 'tag 3', width: 80, },
-               { title: 'curr 1', field: 'curr 1', cssClass: "border-l-2 border-caldy-500"},
+               { title: 'curr 1', field: 'curr 1', cssClass: "border-l-2"},
                { title: 'up 1', field: 'up 1', width: 80 },
                { title: 'uom 1', field: 'uom 1' },
 
-               { title: 'curr 2', field: 'curr 2', cssClass: "border-l-2 border-caldy-500"},
+               { title: 'curr 2', field: 'curr 2', cssClass: "border-l-2"},
                { title: 'up 2', field: 'up 2', width: 80 },
                { title: 'uom 2', field: 'uom 2' },
 
-               { title: 'curr 3', field: 'curr 3', cssClass: "border-l-2 border-caldy-500"},
+               { title: 'curr 3', field: 'curr 3', cssClass: "border-l-2"},
                { title: 'up 3', field: 'up 3', width: 80 },
                { title: 'uom 3', field: 'uom 3' },
             ];
@@ -136,7 +102,6 @@ class extends Component
                data: this.items,
                layout: "fitColumns",
                columns: columns,
-               // editable: true,
 
                //enable range selection
                selectableRange: 1,
@@ -145,7 +110,7 @@ class extends Component
                selectableRangeClearCells: true,
 
                //change edit trigger mode to make cell navigation smoother
-               // editTriggerEvent:"dblclick",
+               editTriggerEvent:"dblclick",
 
                //configure clipboard to allow copy and paste of range format data
                clipboard: true,
@@ -163,6 +128,7 @@ class extends Component
                   headerSort:false,
                   headerHozAlign:"center",
                   resizable:"header",
+                  editor: "input"
                },
             });
          },
@@ -173,10 +139,5 @@ class extends Component
             $wire.validateItems();
          }
    }));
-
-   // Listen for changes-saved event
-   document.addEventListener('changes-saved', (event) => {
-         alert(event.detail.message);
-   });
 </script>
 @endscript

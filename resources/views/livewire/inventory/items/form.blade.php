@@ -139,6 +139,14 @@ new class extends Component
          return;
       }
 
+      if (!$item->id && $item->code) {
+         $duplicate = InvItem::where('code', $item->code)->where('inv_area_id', $item->inv_area_id)->count();
+         if ($duplicate) {
+            $this->js('toast("' . __('Barang dengan kode tersebut di area ini sudah ada.') . '", { type: "danger" })');
+            return;
+         }
+      }
+
       $item->save();
 
       // detach tags
