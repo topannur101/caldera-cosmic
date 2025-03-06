@@ -1,9 +1,10 @@
 @import url('../../node_modules/@fortawesome/fontawesome-free/css/all.min.css');
-@import  url('../../node_modules/tabulator-tables/dist/css/tabulator.min.css');
+@import  url('../../public/tabulator_caldera.css');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 @layer base {
   :root {
@@ -604,7 +605,7 @@ input[type="checkbox"]:checked + label.custom-checkbox {
   }
 
   .cal-includes {
-    @apply text-caldy-500 text-yellow-500 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-600 dark:hover:bg-neutral-700 bg-green-500 bg-red-500 text-neutral-800 bg-red-200 dark:bg-red-900 bg-yellow-500 text-neutral-800 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800;
+    @apply border-l-2 border-caldy-500 text-caldy-500 text-yellow-500 bg-neutral-300 hover:bg-neutral-400 dark:bg-neutral-600 dark:hover:bg-neutral-700 bg-green-500 bg-red-500 text-neutral-800 bg-red-200 dark:bg-red-900 bg-yellow-500 text-neutral-800 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-800;
   }
 
   .cal-offscreen {

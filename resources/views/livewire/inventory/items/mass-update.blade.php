@@ -98,7 +98,7 @@ class extends Component
          <x-secondary-button type="button">{{ __('Panduan') }}</x-secondary-button>
          <x-secondary-button type="button" x-on:click="validate">{{ __('Validasi') }}</x-secondary-button>
       </div>
-      <div id="editor-table" wire:ignore></div>
+      <div class="bg-white dark:bg-neutral-800 shadow rounded-lg text-sm" id="editor-table" wire:ignore></div>
    </div>
 </div>
 
@@ -111,22 +111,24 @@ class extends Component
          editorInit() {
             const columns = [
                { title: 'id', field: 'id', width: 50 }, 
-               { title: 'name', field: 'name', width: 150 }, 
-               { title: 'desc', field: 'desc', width: 250 }, 
+               { title: 'name', field: 'name', width: 100 }, 
+               { title: 'desc', field: 'desc', width: 100 }, 
                { title: 'code', field: 'code', width: 100 }, 
-               { title: 'location', field: 'location', width: 150 },
-               { title: 'tag 1', field: 'tag 1', width: 100 },
-               { title: 'tag 2', field: 'tag 2', width: 100 },
-               { title: 'tag 3', field: 'tag 3', width: 100 },
-               { title: 'curr 1', field: 'curr 1', width: 80 },
-               { title: 'up 1', field: 'up 1', width: 120 }, 
-               { title: 'uom 1', field: 'uom 1', width: 80 },
-               { title: 'curr 2', field: 'curr 2', width: 80 },
-               { title: 'up 2', field: 'up 2', width: 120 },
-               { title: 'uom 2', field: 'uom 2', width: 80 },
-               { title: 'curr 3', field: 'curr 3', width: 80 },
-               { title: 'up 3', field: 'up 3', width: 120 },
-               { title: 'uom 3', field: 'uom 3', width: 80 },
+               { title: 'location', field: 'location', width: 80 },
+               { title: 'tag 1', field: 'tag 1', width: 80, cssClass: "border-l-2 border-caldy-500" },
+               { title: 'tag 2', field: 'tag 2', width: 80, },
+               { title: 'tag 3', field: 'tag 3', width: 80, },
+               { title: 'curr 1', field: 'curr 1', cssClass: "border-l-2 border-caldy-500"},
+               { title: 'up 1', field: 'up 1', width: 80 },
+               { title: 'uom 1', field: 'uom 1' },
+
+               { title: 'curr 2', field: 'curr 2', cssClass: "border-l-2 border-caldy-500"},
+               { title: 'up 2', field: 'up 2', width: 80 },
+               { title: 'uom 2', field: 'uom 2' },
+
+               { title: 'curr 3', field: 'curr 3', cssClass: "border-l-2 border-caldy-500"},
+               { title: 'up 3', field: 'up 3', width: 80 },
+               { title: 'uom 3', field: 'uom 3' },
             ];
 
             // Initialize Tabulator
@@ -160,9 +162,7 @@ class extends Component
                columnDefaults:{
                   headerSort:false,
                   headerHozAlign:"center",
-                  editor:"input",
                   resizable:"header",
-                  width:100,
                },
             });
          },
