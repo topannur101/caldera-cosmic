@@ -208,7 +208,7 @@ class extends Component {
     {
         $props = ['view', 'sort', 'area_ids', 'circ_eval_status', 'circ_types', 'date_fr', 'date_to', 'user_id', 'remarks'];
         if(in_array($property, $props)) {
-            $this->reset(['perPage']);
+            $this->reset(['perPage', 'circ_ids']);
         }
     }
 
@@ -222,6 +222,11 @@ class extends Component {
         
         // Redirect to a temporary route that will handle the streaming
         return redirect()->route('download.inv-circs', ['token' => $token]);
+    }
+
+    public function resetDates()
+    {
+        $this->reset(['date_fr', 'date_to']);
     }
 }
 

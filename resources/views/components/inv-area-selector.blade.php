@@ -27,23 +27,21 @@
     <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'area-selector')" ::class="areas_facade ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="fa fa-fw fa-tent me-3"></i><span x-text="areas_facade ? areas_facade : '{{ __('Area') }}'"></span></x-text-button>
     <x-modal name="area-selector" maxWidth="sm">
         <div class="p-6">
-            <form>
-                <div class="flex justify-between items-start">
+            <div class="flex justify-between items-start">
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                     <i class="fa fa-fw fa-tent me-3"></i>{{ __('Area') }}
                 </h2>
                 <x-text-button type="button" x-on:click="$dispatch('close')">
                     <i class="fa fa-times"></i>
                 </x-text-button>
-                </div>
-                <div class="grid grid-cols-1 gap-y-3 mt-6">
-                    @foreach($areas as $area)
-                        <x-checkbox 
-                            id="area-id-{{ $area['id'] }}" x-model="area_ids"
-                            value="{{ $area['id'] }}">{{ $area['name'] }}</x-checkbox>                    
-                    @endforeach
-                </div>                
-            </form>
+            </div>
+            <div class="grid grid-cols-1 gap-y-3 mt-6">
+                @foreach($areas as $area)
+                    <x-checkbox 
+                        id="area-id-{{ $area['id'] }}" x-model="area_ids"
+                        value="{{ $area['id'] }}">{{ $area['name'] }}</x-checkbox>                    
+                @endforeach
+            </div>   
         </div>
     </x-modal>   
 </div>

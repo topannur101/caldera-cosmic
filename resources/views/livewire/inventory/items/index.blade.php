@@ -41,6 +41,9 @@ class extends Component
 
     public string $filter = '';
 
+    #[Url]
+    public bool $is_deleted = false;
+
     public function mount()
     {
         $user_id = Auth::user()->id;
@@ -69,6 +72,9 @@ class extends Component
             $this->area_ids     = $areas->pluck('id')->toArray();
         }
 
+        if($this->is_deleted) {
+            $this->js('toast("' . __('Barang dihapus') . '", { type: "success" } )');
+        }
 
     }
 
@@ -309,7 +315,7 @@ class extends Component
                             <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
                         </x-dropdown-link> -->
                         <x-dropdown-link href="{{ route('inventory.items.mass-update') }}" wire:navigate>
-                            <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
+                            <i class="fa fa-fw me-2"></i>{{ __('Pembaruan massal')}}
                         </x-dropdown-link>
                         <hr class="border-neutral-300 dark:border-neutral-600" />
                         <!-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">

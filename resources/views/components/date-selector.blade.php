@@ -88,7 +88,7 @@
                 <x-secondary-button size="sm" type="button" x-on:click="setLastMonth();$dispatch('close');"><div class="px-1">{{ __('Bulan lalu') }}</div></x-secondary-button>
             </div>
             <div class="flex justify-end">
-                <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="date_fr = ''; date_to = ''; $dispatch('close');" x-show="date_fr || date_to"><span class="text-red-500"><div class="px-1">{{ __('Hapus filter tanggal') }}</div></span></x-text-button>
+                <x-text-button class="text-xs uppercase font-semibold" type="button" wire:click="resetDates" x-on:click="$dispatch('close');" x-show="date_fr || date_to"><span class="text-red-500"><div class="px-1">{{ __('Hapus filter tanggal') }}</div></span></x-text-button>
             </div>
         </div>
     </x-modal>  

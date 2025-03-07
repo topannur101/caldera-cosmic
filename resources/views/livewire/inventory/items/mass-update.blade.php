@@ -12,42 +12,8 @@ class extends Component
    public $items = [];
 
     
-   public function mount()
+   public function apply()
    {
-      $this->items = [
-         [
-            'id'        => 1,
-            'name'      => __('Barang uji coba'),
-            'desc'      => __('Deskripsi barang uji coba'),
-            'code'      => __('XXX10-19001'),
-            'location'  => 'Z9-99-99',
-            'tag 1'     => __('Contoh tag 1'),
-            'tag 2'     => __('Contoh tag 2'),
-            'tag 3'     => __('Contoh tag 3'),
-            'curr 1'    => 'IDR',
-            'up 1'      => 1.0,
-            'uom 1'     => 'EA',
-            'curr 2'    => 'USD',
-            'up 2'      => 2.0,
-            'uom 2'     => 'EA',
-            'curr 3'    => 'EA-R',
-            'up 3'      => 3.0,
-            'uom 3'     => 'PACK',
-         ]
-      ];
-   }
-
-   public function validateItems()
-   {
-      // remove the last entry if empty
-      if (!empty($this->items) && is_array(end($this->items))) {
-         $lastElement = end($this->items);
-         if (empty(array_filter($lastElement))) {
-             array_pop($this->items);
-         }
-     }
-     $count_id_exist = 0;
-     $cound_id_none = 0;
 
       if(count($this->items) > 100) {
          $this->js('toast("' . __('Hanya maksimal 100 entri yang diperbolehkan') . '", { type: "danger" })');
@@ -64,20 +30,105 @@ class extends Component
 
 ?>
 
-<x-slot name="title">{{ __('Perbarui massal') . ' — ' . __('Inventaris') }}</x-slot>
+<x-slot name="title">{{ __('Pembaruan massal') . ' — ' . __('Inventaris') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-inventory-sub>{{ __('Perbarui massal') }}</x-nav-inventory-sub>
+    <x-nav-inventory-sub>{{ __('Pembaruan massal') }}</x-nav-inventory-sub>
 </x-slot>
 
 <div class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+   <div wire:key="modals">
+      <x-modal name="warning">
+         <div class="p-6 space-y-4 text-sm">
+            <div class="flex justify-between items-start">
+                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                    <i class="fa fa-exclamation-triangle mr-2 text-yellow-600"></i>{{ __('Teralu banyak') }}
+                </h2>
+                <x-text-button type="button" x-on:click="$dispatch('close')">
+                    <i class="fa fa-times"></i>
+                </x-text-button>
+            </div>
+            <div>
+               {{ __('Entri yang dimasukkan melebihi 100, harap kurangi entri sebelum melanjutkan.') }}
+            </div>
+            <div class="flex items-center justify-end">
+               <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Paham') }}</x-secondary-button>
+            </div>
+         </div>
+      </x-modal>
+      <x-modal name="guide" maxWidth="lg">
+         <div class="p-6 space-y-4 text-sm">
+            <div class="flex justify-between items-start">
+                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                    {{ __('Panduan') }}
+                </h2>
+                <x-text-button type="button" x-on:click="$dispatch('close')">
+                    <i class="fa fa-times"></i>
+                </x-text-button>
+            </div>
+            <!-- Section 1: ID barang itu penting -->
+            <div class="p-6 border border-neutral-200 rounded-lg">
+               <div class="flex items-center space-x-2 mb-2">
+                  <i class="fas fa-info-circle text-neutral-500"></i>
+                  <h2 class="font-bold text-neutral-800">{{ __('ID barang itu penting') }}</h2>
+               </div>
+               <p class="text-neutral-600 leading-relaxed">
+                  {{ __('ID barang diberikan oleh Caldera. Gunakanlah ID tersebut untuk memperbarui identitas barang secara massal seperti nama, deskripsi, lokasi, tag, dan satuan unit.') }}
+               </p>
+            </div>
+
+            <!-- Section 2: Kosongkan ID untuk membuat barang baru -->
+            <div class="p-6 border border-neutral-200 rounded-lg">
+               <div class="flex items-center space-x-2 mb-2">
+                  <i class="fas fa-plus-circle text-neutral-500"></i>
+                  <h2 class="font-bold text-neutral-800">{{ __('Kosongkan ID untuk membuat barang baru') }}</h2>
+               </div>
+               <p class="text-neutral-600 leading-relaxed">
+                  {{ __('Jika ID dikosongkan, Caldera akan menganggap entri tersebut sebagai barang baru. Informasi yang wajib diisi untuk barang baru adalah: nama, deskripsi, area, dan unit stok.') }}
+               </p>
+            </div>
+
+            <!-- Section 3: Maksimum 100 entri -->
+            <div class="p-6 border border-neutral-200 rounded-lg">
+               <div class="flex items-center space-x-2 mb-2">
+                  <i class="fas fa-exclamation-triangle text-neutral-500"></i>
+                  <h2 class="font-bold text-neutral-800">{{ __('Maksimum 100 entri') }}</h2>
+               </div>
+               <p class="text-neutral-600 leading-relaxed">
+                  {{ __('Kamu dapat memperbarui atau membuat barang dengan jumlah maksimal 100 entri dalam sekali operasi.') }}
+               </p>
+            </div>
+
+            <!-- Section 4: Unduh backup -->
+            <div class="p-6 border border-neutral-200 rounded-lg">
+               <div class="flex items-center space-x-2 mb-2">
+                  <i class="fas fa-download text-neutral-500"></i>
+                  <h2 class="font-bold text-neutral-800">{{ __('Unduh backup') }}</h2>
+               </div>
+               <p class="text-neutral-600 leading-relaxed">
+                  {{ __('Kamu bisa mengunduh informasi seluruh barang dari suatu area sebagai tindakan pencegahan bila terjadi kesalahan.') }}
+               </p>
+            </div>
+            <div class="flex items-center justify-between">
+               <x-text-button type="button" class="uppercase tracking-wide font-bold text-xs">{{ __('Unduh backup') }}</x-text-button>
+               <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Paham') }}</x-secondary-button>
+            </div>
+         </div>
+      </x-modal>
+   </div>
    <div 
    x-data="editorData()"
    x-init="editorInit()">
-      <div class="mb-6">
-         <x-secondary-button type="button">{{ __('Unduh templat') }}</x-secondary-button>
-         <x-secondary-button type="button">{{ __('Panduan') }}</x-secondary-button>
-         <x-secondary-button type="button" x-on:click="validate">{{ __('Validasi') }}</x-secondary-button>
+      <div class="mb-6 flex justify-between">
+         <div class="px-3">
+            <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
+         </div>
+         <div class="flex gap-x-2">
+            <x-secondary-button type="button" x-on:click="editorDownload">{{ __('Unduh') }}</x-secondary-button>
+            <x-secondary-button type="button" x-on:click="editorReset">{{ __('Reset') }}</x-secondary-button>
+            <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')">{{ __('Panduan') }}</x-secondary-button>
+            <x-secondary-button type="button" x-on:click="editorApply">{{ __('Terapkan') }}</x-secondary-button>
+         </div>
       </div>
       <div class="bg-white dark:bg-neutral-800 shadow rounded-lg text-sm" id="editor-table" wire:ignore></div>
    </div>
@@ -88,6 +139,29 @@ class extends Component
    Alpine.data('editorData', () => ({
          table: null,
          items: @entangle('items'),
+         rowCount: 0,
+         defaultData: 
+            [
+               {
+                  id: 1,
+                  name: "Barang uji coba",
+                  desc: "Deskripsi barang uji coba",
+                  code: "XXX10-19001",
+                  location: "Z9-99-99",
+                  "tag 1": "Contoh tag 1",
+                  "tag 2": "Contoh tag 2",
+                  "tag 3": "Contoh tag 3",
+                  "curr 1": "IDR",
+                  "up 1": 1.0,
+                  "uom 1": "EA",
+                  "curr 2": "USD",
+                  "up 2": 2.0,
+                  "uom 2": "EA",
+                  "curr 3": "EA-R",
+                  "up 3": 3.0,
+                  "uom 3": "PACK"
+               }
+            ],
          
          editorInit() {
             const columns = [
@@ -114,9 +188,10 @@ class extends Component
 
             // Initialize Tabulator
             this.table = new Tabulator("#editor-table", {
-               data: this.items,
+               data: this.defaultData,
                layout: "fitColumns",
                columns: columns,
+               height: "480px",
 
                //enable range selection
                selectableRange: 1,
@@ -144,15 +219,49 @@ class extends Component
                   headerHozAlign:"center",
                   resizable:"header",
                   editor: "input"
-               },
+               }
+            });      
+            
+            this.table.on("dataLoaded", (data) => {
+
+               if (data.length > 100) {
+                  $dispatch('open-modal', 'warning');
+               }
+
+               // Check if the last row exists and is empty (all properties are empty strings)
+               if (data.length > 0) {
+                  const lastRow = data[data.length - 1];
+                  const isLastRowEmpty = Object.values(lastRow).every(value => value === "");
+
+                  // If the last row is empty, remove it
+                  if (isLastRowEmpty) {
+                     data.pop(); // Remove the last row from the data array
+                     this.table.setData(data);
+                  }
+               }
+
+               this.rowCount = data.length; // Update the row count
+            });
+
+            this.table.on("dataChanged", (data) => {             
+
+               this.rowCount = data.length; // Update the row count
             });
          },
          
-         validate() {
+         editorApply() {
             this.items = this.table.getData();
-            console.log(this.items);
-            $wire.validateItems();
-         }
+            $wire.apply();
+         },
+
+         editorReset() {
+            this.table.destroy();
+            this.editorInit();
+         },
+
+         editorDownload() {
+            this.table.download("csv", "mass_update_editor.csv"); 
+         },
    }));
 </script>
 @endscript
