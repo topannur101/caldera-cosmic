@@ -39,10 +39,25 @@ class extends Component
 
    public function validateItems()
    {
+      // remove the last entry if empty
+      if (!empty($this->items) && is_array(end($this->items))) {
+         $lastElement = end($this->items);
+         if (empty(array_filter($lastElement))) {
+             array_pop($this->items);
+         }
+     }
+     $count_id_exist = 0;
+     $cound_id_none = 0;
+
+      if(count($this->items) > 100) {
+         $this->js('toast("' . __('Hanya maksimal 100 entri yang diperbolehkan') . '", { type: "danger" })');
+      } else {
+         $this->js('toast("' . count($this->items) . ' ' . __('entri terdeteksi.') . '", { type: "success" })');
+      }
       // checks if it's under 100
       // categorize to Update items and Create items (ask area)
       // return status of update for any reason (operation: update/create, status: success, fail )
-      dd($this);
+      // dd($this);
    }
 
 };
