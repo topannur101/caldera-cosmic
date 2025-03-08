@@ -308,7 +308,7 @@ class extends Component {
             <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
             <div class="flex flex-row lg:flex-col">                
                 <div class="mb-1">
-                <label for="hides-sort"
+                    <label for="hides-sort"
                     class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Urut') }}</label>
                     <x-select id="hides-sort" wire:model.live="sort">
                         <option value="updated">{{ __('Diperbarui') }}</option>

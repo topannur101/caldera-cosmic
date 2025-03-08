@@ -90,7 +90,7 @@ new class extends Component
          'items.*.desc'    => ['required', 'max:256'],
          'items.*.code'    => ['nullable', 'alpha_dash', 'size:11'],
 
-         'loc_parent'   => ['required_with:loc_bin', 'alpha_dash','max:3'],
+         'loc_parent'   => ['required_with:loc_bin', 'alpha_num','max:3'],
          'loc_bin'      => ['required_with:loc_parent', 'alpha_dash','max:7'],
          'tags'         => ['array', 'max:5'],
          'tags.*'       => ['required', 'alpha_dash', 'max:20'],

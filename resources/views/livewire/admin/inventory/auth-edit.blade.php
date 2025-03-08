@@ -132,7 +132,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
             <div>{{ __('Barang') }}</div>
-            <x-checkbox id="item-manage" :disabled="!$is_superuser" wire:model="actions" value="item-manage">{{ __('Buat dan perbarui barang ') }}</x-checkbox>
+            <x-checkbox id="item-manage" :disabled="!$is_superuser" wire:model="actions" value="item-manage">{{ __('Buat, perbarui, dan unduh barang ') }}</x-checkbox>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
             <div>{{ __('Sirkulasi') }}</div>

@@ -60,12 +60,12 @@ $maxWidth = [
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
     >
-        <div class="absolute inset-0 bg-neutral-900 opacity-95"></div>
+        <div class="absolute inset-0 bg-neutral-200 dark:bg-neutral-900 opacity-95"></div>
     </div>
 
     <div
         x-show="show"
-        class="overflow-hidden transform opacity-100 translate-y-0 sm:scale-100 h-screen p-1 flex items-center text-white sm:w-full {{ $maxWidth }} sm:mx-auto"
+        class="overflow-hidden transform opacity-100 translate-y-0 sm:scale-100 h-screen p-1 flex items-center sm:w-full {{ $maxWidth }} sm:mx-auto"
     >
         {{ $slot }}
     </div>

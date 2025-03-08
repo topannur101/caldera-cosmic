@@ -260,8 +260,8 @@ class extends Component {
     <div wire:key="circs-spotlights">
         <x-spotlight name="printing" maxWidth="sm">
             <div class="w-full flex flex-col gap-y-6 pb-10 text-center ">
-                <div class="relative">
-                    <i class="text-4xl fa-solid fa-spinner fa-spin-pulse"></i>
+                <div class="h-16 relative">
+                    <x-spinner class="mono" />
                 </div>
                 <header>
                     <h2 class="text-xl font-medium">

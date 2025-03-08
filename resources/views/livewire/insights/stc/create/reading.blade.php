@@ -541,7 +541,7 @@ new class extends Component
    <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-6">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-x md:divide-y-0 divide-neutral-200 dark:text-white dark:divide-neutral-700">
          <div class="p-6">
-            <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6">{{ __('Mesin') }}</h1>
+            <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-window-maximize mr-3 text-neutral-500"></i>{{ __('Mesin') }}</h1>
             <div class="grid grid-cols-2 gap-x-3 mb-6">
                <div>
                   <label for="d-log-sequence"
@@ -612,7 +612,7 @@ new class extends Component
          </div>
          <div class="p-6">
             <div class="flex justify-between">
-               <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6">{{ __('Alat ukur') }}</h1>
+               <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-pager mr-3 text-neutral-500"></i>{{ __('Alat ukur') }}</h1>
                <div>
                   <input wire:model="file" type="file" class="hidden" x-ref="file" />
                   <x-secondary-button type="button" x-on:click="$refs.file.click()">{{ __('Unggah') }}</x-secondary-button>
@@ -656,7 +656,7 @@ new class extends Component
          </div>
          <div class="p-6">
             <div class="flex justify-between">
-               <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6">{{ __('Prediksi') }}</h1>
+               <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-square-root-variable mr-3 text-neutral-500"></i>{{ __('Prediksi') }}</h1>
                <div>
                   <x-secondary-button type="button" wire:click="calculatePrediction">{{ __('Hitung') }}</x-secondary-button>
                </div>

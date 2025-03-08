@@ -2,28 +2,85 @@
 
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
+use App\Models\InvArea;
 use App\Models\InvItem;
+use App\Models\User;
 
 
 new #[Layout('layouts.app')]
 class extends Component
 {
 
-   public $items = [];
+   public array $items = [];
+   public array $areas = [];
+   public int $area_id = 0;
 
+   public int $update_count = 0;
+   public int $create_count = 0;
+
+   public function mount()
+   {
+      $area_ids = [];
+
+      // superuser uses id 1
+      if (Auth::user()->id == 1) {
+         $area_ids = InvArea::all()->pluck('id');
+
+      } else {
+         $user = User::find(Auth::user()->id);
+         $areas = $user->inv_areas;
+
+         foreach ($areas as $area) {
+            $item = new InvItem;
+            $item->inv_area_id = $area->id;
+            $response = Gate::inspect('download', $item);
+
+            if ($response->allowed()) {
+               $area_ids[] = $area->id;
+            }
+         }
+      }
+
+      $this->areas = InvArea::whereIn('id', $area_ids)->get()->toArray();
+   }
     
    public function apply()
    {
 
       if(count($this->items) > 100) {
          $this->js('toast("' . __('Hanya maksimal 100 entri yang diperbolehkan') . '", { type: "danger" })');
+         return;
+
       } else {
          $this->js('toast("' . count($this->items) . ' ' . __('entri terdeteksi.') . '", { type: "success" })');
       }
-      // checks if it's under 100
-      // categorize to Update items and Create items (ask area)
-      // return status of update for any reason (operation: update/create, status: success, fail )
-      // dd($this);
+
+      $this->reset(['update_count', 'create_count', 'area_id']);
+
+      foreach ($this->items as $item) {
+         $item['id'] ? $this->update_count++ : $this->create_count++;
+      }
+
+      $this->js('$dispatch("open-modal", "commit")');
+
+   }
+
+   public function commit()
+   {
+      $this->js('toast("' . count($this->items) . ' ' . __('entri terdeteksi.') . '", { type: "success" })');
+   }
+
+   public function download($area_id)
+   {
+       // Create a unique token for this download request
+       $token = md5(uniqid());
+
+       // Store the token in the session
+       session()->put('inv_items_token', $token);
+       
+       $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
+       // Redirect to a temporary route that will handle the streaming
+       return redirect()->route('download.inv-items', ['token' => $token, 'area_id' => $area_id]);
    }
 
 };
@@ -56,8 +113,51 @@ class extends Component
             </div>
          </div>
       </x-modal>
-      <x-modal name="guide" maxWidth="lg">
+      <x-modal name="commit">
          <div class="p-6 space-y-4 text-sm">
+            <div class="flex justify-between items-start">
+                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Konfirmasi') }}
+                </h2>
+                <x-text-button type="button" x-on:click="$dispatch('close')">
+                    <i class="fa fa-times"></i>
+                </x-text-button>
+            </div>
+            <div>
+               <x-pill>{{ $update_count }}</x-pill>{{ ' ' . __('barang akan diperbarui.') }}
+            </div>
+            @if($create_count)
+            <div>
+               <x-pill>{{ $create_count }}</x-pill>{{ ' ' . __('barang akan dibuat.') }}
+            </div>
+            <div>
+               {{ __('Ke area mana barang baru tersebut akan diregistrasikan?') }}
+            </div>
+            <div>
+               <label for="area_id"
+               class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Area') }}</label>
+               <x-select wire:model="area_id" class="w-full">
+                  <option value=""></option>
+                  @foreach($areas as $area)
+                     <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
+                  @endforeach
+               </x-select>
+            </div>
+            @endif
+            <div>
+               <label for="password"
+               class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kata sandi') }}</label>
+               <x-text-input wire:model="password" id="password" class="block mt-1 w-full"
+                  type="password"
+                  name="password"
+                  required autocomplete="current-password" />
+            </div>
+            <div class="flex items-center justify-end">
+               <x-primary-button type="button" x-on:click="$dispatch('close')">{{ __('Terapkan') }}</x-secondary-button>
+            </div>
+         </div>
+      </x-modal>
+      <x-modal name="guide" maxWidth="lg">
+         <div x-data="{ backup: false }" class="p-6 space-y-4 text-sm">
             <div class="flex justify-between items-start">
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                     {{ __('Panduan') }}
@@ -67,7 +167,7 @@ class extends Component
                 </x-text-button>
             </div>
             <!-- Section 1: ID barang itu penting -->
-            <div class="p-6 border border-neutral-200 rounded-lg">
+            <div x-show="!backup" class="p-6 border border-neutral-200 rounded-lg">
                <div class="flex items-center space-x-2 mb-2">
                   <i class="fas fa-info-circle text-neutral-500"></i>
                   <h2 class="font-bold text-neutral-800">{{ __('ID barang itu penting') }}</h2>
@@ -78,7 +178,7 @@ class extends Component
             </div>
 
             <!-- Section 2: Kosongkan ID untuk membuat barang baru -->
-            <div class="p-6 border border-neutral-200 rounded-lg">
+            <div x-show="!backup" class="p-6 border border-neutral-200 rounded-lg">
                <div class="flex items-center space-x-2 mb-2">
                   <i class="fas fa-plus-circle text-neutral-500"></i>
                   <h2 class="font-bold text-neutral-800">{{ __('Kosongkan ID untuk membuat barang baru') }}</h2>
@@ -89,9 +189,9 @@ class extends Component
             </div>
 
             <!-- Section 3: Maksimum 100 entri -->
-            <div class="p-6 border border-neutral-200 rounded-lg">
+            <div x-show="!backup" class="p-6 border border-neutral-200 rounded-lg">
                <div class="flex items-center space-x-2 mb-2">
-                  <i class="fas fa-exclamation-triangle text-neutral-500"></i>
+                  <i class="fa fa-arrows-down-to-line text-neutral-500"></i>
                   <h2 class="font-bold text-neutral-800">{{ __('Maksimum 100 entri') }}</h2>
                </div>
                <p class="text-neutral-600 leading-relaxed">
@@ -100,20 +200,37 @@ class extends Component
             </div>
 
             <!-- Section 4: Unduh backup -->
-            <div class="p-6 border border-neutral-200 rounded-lg">
+            <div x-show="backup" class="p-6 border border-neutral-200 rounded-lg">
                <div class="flex items-center space-x-2 mb-2">
                   <i class="fas fa-download text-neutral-500"></i>
                   <h2 class="font-bold text-neutral-800">{{ __('Unduh backup') }}</h2>
                </div>
                <p class="text-neutral-600 leading-relaxed">
-                  {{ __('Kamu bisa mengunduh informasi seluruh barang dari suatu area sebagai tindakan pencegahan bila terjadi kesalahan.') }}
+                  {{ __('Kamu bisa mengunduh daftar lengkap barang dari suatu area sebagai tindakan pencegahan bila terjadi kesalahan.') }}
                </p>
             </div>
+            
+            <!-- Section 4: Unduh backup -->
+            <div x-show="backup" class="grid grid-cols-1 gap-y-2 p-6">
+               @foreach ($areas as $area)
+                  <div>
+                     <x-text-button type="button" wire:click="download({{ $area['id'] }})"><i class="fa fa-download mr-3"></i>{{ $area['name'] }}</x-text-button>
+                  </div>
+               @endforeach
+               @if (!count($areas))
+               <div class="text-neutral-500 italic">{{ __('Kamu tidak memiliki wewenang untuk mengunduh daftar barang di area manapun.') }}</div>
+
+               @endif
+            </div>
+
             <div class="flex items-center justify-between">
-               <x-text-button type="button" class="uppercase tracking-wide font-bold text-xs">{{ __('Unduh backup') }}</x-text-button>
+               <x-text-button x-show="backup" x-on:click="backup = false" type="button" class="uppercase tracking-wide font-bold text-xs">{{ __('Kembali') }}</x-text-button>
+               <x-text-button x-show="!backup" x-on:click="backup = true" type="button" class="uppercase tracking-wide font-bold text-xs">{{ __('Unduh backup') }}</x-text-button>
                <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Paham') }}</x-secondary-button>
             </div>
          </div>
+         <x-spinner-bg wire:loading.class.remove="hidden" wire:target="download"></x-spinner-bg>
+         <x-spinner wire:loading.class.remove="hidden" wire:target="download" class="hidden"></x-spinner>
       </x-modal>
    </div>
    <div 
@@ -124,10 +241,17 @@ class extends Component
             <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
          </div>
          <div class="flex gap-x-2">
-            <x-secondary-button type="button" x-on:click="editorDownload">{{ __('Unduh') }}</x-secondary-button>
-            <x-secondary-button type="button" x-on:click="editorReset">{{ __('Reset') }}</x-secondary-button>
-            <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')">{{ __('Panduan') }}</x-secondary-button>
-            <x-secondary-button type="button" x-on:click="editorApply">{{ __('Terapkan') }}</x-secondary-button>
+            <div class="btn-group">
+               <x-secondary-button type="button" x-on:click="editorDownload"><i class="fa fa-fw fa-download"></i></x-secondary-button>
+               <x-secondary-button type="button" x-on:click="editorReset"><i class="fa fa-fw fa-undo"></i></x-secondary-button>
+            </div>
+            <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')"><i class="fa fa-book fa-fw mr-2"></i>{{ __('Panduan') }}</x-secondary-button>
+            <x-secondary-button type="button" x-on:click="editorApply">
+               <div class="relative">
+                  <span wire:loading.class="opacity-0" wire:target="apply"><i class="fa fa-check mr-2"></i>{{ __('Terapkan') }}</span>
+                  <x-spinner wire:loading.class.remove="hidden" wire:target="apply" class="hidden sm mono"></x-spinner>                
+               </div>                
+            </x-secondary-button>
          </div>
       </div>
       <div class="bg-white dark:bg-neutral-800 shadow rounded-lg text-sm" id="editor-table" wire:ignore></div>

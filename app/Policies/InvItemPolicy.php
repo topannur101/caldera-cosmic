@@ -62,6 +62,16 @@ class InvItemPolicy
         : Response::deny( __('Kamu tak memiliki wewenang untuk mengelola barang di area ini'));
     }
 
+    public function download(User $user, InvItem $invItem): Response
+    {
+        $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();
+
+        $actions = json_decode($auth->actions ?? '{}', true);
+        return in_array('item-manage', $actions)
+        ? Response::allow()
+        : Response::deny( __('Kamu tak memiliki wewenang untuk mengunduh barang di area ini'));
+    }
+
     public function circEval(User $user, InvItem $invItem): bool
     {
         $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();

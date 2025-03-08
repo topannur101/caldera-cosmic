@@ -80,14 +80,14 @@ new #[Layout('layouts.app')] class extends Component {
 <div class="p-6 flex flex-col gap-y-6">
    <div class="flex justify-between items-start">
       <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-         {{ __('Evaluasi massal') }}
+         {{ __('Konfirmasi') }}
       </h2>
       <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
    </div>
    @switch($view)
       @case('initial')
-         <div class="flex justify-center uppercase">
-            <x-pill color="neutral">{{ count($circ_ids) . ' ' . __('sirkulasi') }}</x-pill>
+         <div class="text-sm">
+            <x-pill>{{ count($circ_ids) }}</x-pill>{{ ' ' . __('sirkulasi akan dievaluasi.') }}
          </div>
          <div>
             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="evalRemarks">{{ __('Keterangan evaluasi') }}</label>

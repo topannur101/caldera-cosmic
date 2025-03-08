@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\InvArea;
 use App\Models\InvItem;
 use App\Models\InvStock;
 use App\Models\InsLdcHide;
@@ -10,10 +11,128 @@ use App\Models\InsRtcMetric;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Database\Eloquent\Builder;
 
 class DownloadController extends Controller
 {
+    public function invItems(Request $request, $token)
+    {
+        // Validate the token
+        if ($token !== session()->get('inv_items_token')) {
+            abort(403);
+        }
+        
+        // Clear the token
+        session()->forget('inv_items_token');
+
+        $area_id = $request['area_id'];
+        $inv_item = new InvItem();
+        $inv_item->inv_area_id = $area_id;
+
+        Gate::authorize('download', $inv_item);        
+
+        $area = InvArea::find($area_id);
+       
+        return response()->streamDownload(function () use ($area_id) {
+            // Open output stream
+            $handle = fopen('php://output', 'w');
+            
+            // Add CSV header row
+            fputcsv($handle, [
+                'id', 'name', 'desc', 'code', 'location', 
+                'tag 1', 'tag 2', 'tag 3',
+                'curr 1', 'up 1', 'uom 1',
+                'curr 2', 'up 2', 'uom 2',
+                'curr 3', 'up 3', 'uom 3'
+            ]);
+            
+            // Build the same query as in the Livewire component
+            $query = InvItem::with([
+                'inv_loc',
+                'inv_tags',
+                'inv_stocks',
+                'inv_stocks.inv_curr'
+            ])->where('inv_area_id', $area_id);
+            
+            // Stream each record to avoid loading all records into memory at once
+            $query->chunk(100, function ($items) 
+            use ($handle)  
+            {
+                foreach ($items as $item) {
+                    $location = '';
+                    if ($item->inv_loc) {
+                        $location = $item->inv_loc->parent . '-' . $item->inv_loc->bin;
+                    }
+
+                    $tag_1  = '';
+                    $tag_2  = '';
+                    $tag_3  = '';
+                    $i      = 1;
+
+                    $tags = $item->inv_tags()->take(3)->get();
+                    foreach ($tags as $tag) {
+                        $tagVar     = 'tag_' . $i;
+                        $$tagVar    = $tag->name;
+                        $i++;
+                    }
+                    
+                    $curr_1 = '';
+                    $up_1   = '';
+                    $uom_1  = '';
+                    $curr_2 = '';
+                    $up_2   = '';
+                    $uom_2  = '';
+                    $curr_3 = '';
+                    $up_3   = '';
+                    $uom_3  = '';
+                    $i      = 1;
+
+                    $stocks = $item->inv_stocks()->where('is_active', true)->take(3)->get();
+                    foreach($stocks as $stock) {
+                        $currVar = 'curr_' . $i;
+                        $$currVar = $stock->inv_curr->name;
+
+                        $upVar = 'up_' . $i;
+                        $$upVar = $stock->unit_price;
+
+                        $uomVar = 'uom_' . $i;
+                        $$uomVar = $stock->uom;
+                    }
+                    
+                    fputcsv($handle, [
+                        $item->id ?? '',
+                        $item->name ?? '',
+                        $item->desc ?? '',
+                        $item->code ?? '',
+                        $location,
+                        $tag_1,
+                        $tag_2,
+                        $tag_3,
+                        $curr_1,
+                        $up_1,
+                        $uom_1,
+                        $curr_2,
+                        $up_2,
+                        $uom_2,
+                        $curr_3,
+                        $up_3,
+                        $uom_3
+                    ]);
+                }
+                
+                // // Flush the output buffer to send data to the browser
+                ob_flush();
+                flush();
+            });
+            
+            // Close the output stream
+            fclose($handle);
+        }, 'inventory_items_'. $area->name .'.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
     public function invStocks(Request $request, $token)
     {
         // Validate the token
@@ -171,6 +290,7 @@ class DownloadController extends Controller
             'Content-Type' => 'text/csv',
         ]);
     }
+
     public function insRtcMetrics(Request $request)
     {
         if (! Auth::user() ) {
