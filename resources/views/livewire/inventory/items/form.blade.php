@@ -92,7 +92,7 @@ new class extends Component
 
          'loc_parent'   => ['required_with:loc_bin', 'alpha_num','max:3'],
          'loc_bin'      => ['required_with:loc_parent', 'alpha_dash','max:7'],
-         'tags'         => ['array', 'max:5'],
+         'tags'         => ['array', 'max:3'],
          'tags.*'       => ['required', 'alpha_dash', 'max:20'],
 
          'stocks'                => ['array','min:1', 'max:3'],

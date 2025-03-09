@@ -70,7 +70,7 @@ return new class extends Migration
             $table->foreignId('inv_loc_id')->nullable()->constrained();
             $table->foreignId('inv_area_id')->constrained();
             $table->string('photo')->nullable();
-            $table->boolean('is_active');
+            $table->boolean('is_active')->default(false);
             $table->index('code');
             $table->index('inv_loc_id');
             $table->index('inv_area_id');
