@@ -11,6 +11,7 @@ use App\Models\InvItemTag;
 use App\Models\InvTag;
 use App\Models\InvStock;
 use App\Models\InvCurr;
+use Carbon\Carbon;
 
 
 new #[Layout('layouts.app')]
@@ -98,12 +99,60 @@ class extends Component
 
          foreach ($this->items as $item) {
             $this->result['items'][] = $item['id'] ? $this->updateOrCreateItem($item) : $this->updateOrCreateItem($item, false);
-         }
-
-         $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');         
+         }         
 
          $this->reset(['items']);
          $this->js('$dispatch("editor-reset")');
+         $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');        
+               
+         // CSV download
+         $filename = __('Hasil operasi massal') . ' ' . Carbon::now()->format('Y-m-d His') . '.csv';
+         $handle = fopen('php://temp', 'r+');
+         $headers = [
+            'id', 'name', 'desc', 'code', 'location', 'tag_1', 'tag_2', 'tag_3',
+            'curr_1', 'up_1', 'uom_1', 'curr_2', 'up_2', 'uom_2', 'curr_3', 'up_3', 'uom_3',
+            __('Tindakan'), __('Status'), __('Pesan')
+         ];
+         
+         fputcsv($handle, $headers);
+         
+         foreach ($this->result['items'] as $item) {
+            $row = [
+                  $item['id'] ?? '',
+                  $item['name'] ?? '',
+                  $item['desc'] ?? '',
+                  $item['code'] ?? '',
+                  $item['location'] ?? '',
+                  $item['tag_1'] ?? '',
+                  $item['tag_2'] ?? '',
+                  $item['tag_3'] ?? '',
+                  $item['curr_1'] ?? '',
+                  $item['up_1'] ?? '',
+                  $item['uom_1'] ?? '',
+                  $item['curr_2'] ?? '',
+                  $item['up_2'] ?? '',
+                  $item['uom_2'] ?? '',
+                  $item['curr_3'] ?? '',
+                  $item['up_3'] ?? '',
+                  $item['uom_3'] ?? '',
+
+                  $item['action'] ?? '',
+                  $item['status'] ?? '',
+                  $item['message'] ?? ''
+            ];            
+            fputcsv($handle, $row);
+         }
+         
+         rewind($handle);
+         
+         $csv = stream_get_contents($handle);
+         fclose($handle);
+         
+         return response()->streamDownload(function () use ($csv) {
+            echo $csv;
+         }, $filename, [
+            'Content-Type' => 'text/csv',
+         ]);
 
       } else {
 
@@ -336,7 +385,7 @@ class extends Component
       return $item;
    }
 
-   public function download($area_id)
+   public function downloadItems($area_id)
    {
        // Create a unique token for this download request
        $token = md5(uniqid());
@@ -353,10 +402,10 @@ class extends Component
 
 ?>
 
-<x-slot name="title">{{ __('Pembaruan massal') . ' — ' . __('Inventaris') }}</x-slot>
+<x-slot name="title">{{ __('Operasi massal') . ' — ' . __('Inventaris') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-inventory-sub>{{ __('Pembaruan massal') }}</x-nav-inventory-sub>
+    <x-nav-inventory-sub>{{ __('Operasi massal') }}</x-nav-inventory-sub>
 </x-slot>
 
 <div class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
@@ -458,40 +507,37 @@ class extends Component
                      <i class="fa fa-times"></i>
                   </x-text-button>
                </div>
-               <!-- Section 1: ID barang itu penting -->
+
+               <div x-show="!backup" class="p-6 border border-neutral-200 rounded-lg">
+                  <div class="flex items-center space-x-2 mb-2">
+                     <i class="fa fa-clipboard text-neutral-500"></i>
+                     <h2 class="font-bold text-neutral-800">{{ __('Salin dan tempel') }}</h2>
+                  </div>
+                  <p class="text-neutral-600 leading-relaxed">
+                     {{ __('Tempel daftar barang yang hendak kamu perbarui atau buat di kotak editor. Maksimal 100 entri dalam sekali operasi.') }}
+                  </p>
+               </div>
+
                <div x-show="!backup" class="p-6 border border-neutral-200 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
                      <i class="fas fa-info-circle text-neutral-500"></i>
-                     <h2 class="font-bold text-neutral-800">{{ __('ID barang itu penting') }}</h2>
+                     <h2 class="font-bold text-neutral-800">{{ __('Cantumkan ID barang jika...') }}</h2>
                   </div>
                   <p class="text-neutral-600 leading-relaxed">
-                     {{ __('ID barang diberikan oleh Caldera. Gunakanlah ID tersebut untuk memperbarui identitas barang secara massal seperti nama, deskripsi, lokasi, tag, dan satuan unit.') }}
+                     {{ __('Ingin memperbarui identitas barang secara massal seperti nama, deskripsi, kode, lokasi, tag, dan satuan unit.') }}
                   </p>
                </div>
 
-               <!-- Section 2: Kosongkan ID untuk membuat barang baru -->
                <div x-show="!backup" class="p-6 border border-neutral-200 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
                      <i class="fas fa-plus-circle text-neutral-500"></i>
-                     <h2 class="font-bold text-neutral-800">{{ __('Kosongkan ID untuk membuat barang baru') }}</h2>
+                     <h2 class="font-bold text-neutral-800">{{ __('Kosongkan ID barang jika...') }}</h2>
                   </div>
                   <p class="text-neutral-600 leading-relaxed">
-                     {{ __('Jika ID dikosongkan, Caldera akan menganggap entri tersebut sebagai barang baru. Informasi yang wajib diisi untuk barang baru adalah: nama, deskripsi, area, dan unit stok.') }}
+                     {{ __('Ingin membuat barang baru. Informasi yang wajib diisi untuk barang baru adalah: nama, deskripsi, area, dan unit stok.') }}
                   </p>
                </div>
 
-               <!-- Section 3: Maksimum 100 entri -->
-               <div x-show="!backup" class="p-6 border border-neutral-200 rounded-lg">
-                  <div class="flex items-center space-x-2 mb-2">
-                     <i class="fa fa-arrows-down-to-line text-neutral-500"></i>
-                     <h2 class="font-bold text-neutral-800">{{ __('Maksimum 100 entri') }}</h2>
-                  </div>
-                  <p class="text-neutral-600 leading-relaxed">
-                     {{ __('Kamu dapat memperbarui atau membuat barang dengan jumlah maksimal 100 entri dalam sekali operasi.') }}
-                  </p>
-               </div>
-
-               <!-- Section 4: Unduh backup -->
                <div x-show="backup" class="p-6 border border-neutral-200 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
                      <i class="fas fa-download text-neutral-500"></i>
@@ -506,7 +552,7 @@ class extends Component
                <div x-show="backup" class="grid grid-cols-1 gap-y-2 p-6">
                   @foreach ($areas as $area)
                      <div>
-                        <x-text-button type="button" wire:click="download({{ $area['id'] }})"><i class="fa fa-download mr-3"></i>{{ $area['name'] }}</x-text-button>
+                        <x-text-button type="button" wire:click="downloadItems({{ $area['id'] }})"><i class="fa fa-download mr-3"></i>{{ $area['name'] }}</x-text-button>
                      </div>
                   @endforeach
                </div>
@@ -662,7 +708,7 @@ class extends Component
          },
 
          editorReset() {
-            Livewire.navigate("{{ route('inventory.items.mass-update') }}");
+            Livewire.navigate("{{ route('inventory.items.bulk-operation') }}");
          },
 
          editorDownload() {
