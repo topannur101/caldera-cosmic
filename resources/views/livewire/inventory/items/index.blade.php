@@ -175,6 +175,7 @@ class extends Component
                 WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
                 break;
             case 'loc':
+                $inv_search_query->whereHas('inv_item.inv_loc');
                 $inv_search_query->orderByRaw('
                 (SELECT bin FROM inv_locs WHERE 
                 inv_locs.id = (SELECT inv_loc_id FROM inv_items 
@@ -257,89 +258,92 @@ class extends Component
     <x-nav-inventory></x-nav-inventory>
 </x-slot>
 
-<div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     <div wire:key="modals">
         <x-modal name="create-from-code">
             <livewire:inventory.items.create-from-code :$areas lazy />
         </x-modal>
     </div>
-    <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2 mb-6">
-        <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
-            <i wire:loading.remove class="fa fa-fw fa-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
-            <i wire:loading class="fa fa-fw relative">
-                <x-spinner class="sm mono"></x-spinner>
-            </i>
-            <div class="w-full md:w-40">
-                <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
-                    type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
-                <datalist id="qwords">
-                    @if (count($qwords))
-                        @foreach ($qwords as $qword)
-                            <option value="{{ $qword }}">
-                        @endforeach
-                    @endif
-                </datalist>
+    <div class="sticky top-0 z-50 py-6 bg-gradient-to-b from-neutral-100 via-neutral-100 to-transparent dark:from-neutral-900 dark:via-neutral-900 dark:to-transparent">
+        <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
+            <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
+                <i wire:loading.remove class="fa fa-fw fa-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
+                <i wire:loading class="fa fa-fw relative">
+                    <x-spinner class="sm mono"></x-spinner>
+                </i>
+                <div class="w-full md:w-40">
+                    <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
+                        type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
+                    <datalist id="qwords">
+                        @if (count($qwords))
+                            @foreach ($qwords as $qword)
+                                <option value="{{ $qword }}">
+                            @endforeach
+                        @endif
+                    </datalist>
+                </div>
             </div>
-        </div>
 
-        <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
-            <x-inv-loc-selector isQuery="true" class="text-xs font-semibold uppercase" />
-        </div>
+            <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
+                <x-inv-loc-selector isQuery="true" class="text-xs font-semibold uppercase" />
+            </div>
 
-        <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
-            <x-inv-tag-selector isQuery="true" class="text-xs font-semibold uppercase" />
-        </div>
+            <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
+                <x-inv-tag-selector isQuery="true" class="text-xs font-semibold uppercase" />
+            </div>
 
-        <div class="grow flex items-center gap-x-4 p-4 lg:py-0 ">
-            <x-inv-search-filter class="text-xs font-semibold uppercase" />
-        </div>
+            <div class="grow flex items-center gap-x-4 p-4 lg:py-0 ">
+                <x-inv-search-filter class="text-xs font-semibold uppercase" />
+            </div>
 
-        <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
-            <x-inv-area-selector class="text-xs font-semibold uppercase" :$areas />
-            <div>
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
-                    </x-slot>
-                    <x-slot name="content">
-                        @can('create', InvItem::class)
-                            <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'create-from-code')">
+            <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
+                <x-inv-area-selector class="text-xs font-semibold uppercase" :$areas />
+                <div>
+                    <x-dropdown align="right" width="48">
+                        <x-slot name="trigger">
+                            <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
+                        </x-slot>
+                        <x-slot name="content">
+                            @can('create', InvItem::class)
+                                <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'create-from-code')">
+                                    <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
+                                </x-dropdown-link>
+                            @else
+                            <x-dropdown-link href="#" disabled="true">
                                 <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
                             </x-dropdown-link>
-                        @else
-                        <x-dropdown-link href="#" disabled="true">
-                            <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
-                        </x-dropdown-link>
-                        @endcan
-                        <!-- <x-dropdown-link href="#" disabled="true">
-                            <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
-                        </x-dropdown-link> -->
-                        <x-dropdown-link href="{{ route('inventory.items.bulk-operation') }}" wire:navigate>
-                            <i class="fa fa-fw me-2"></i>{{ __('Operasi massal')}}
-                        </x-dropdown-link>
-                        <hr class="border-neutral-300 dark:border-neutral-600" />
-                        <!-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                            <i class="fa fa-fw fa-map-marker-alt me-2"></i>{{ __('Kelola lokasi ')}}
-                        </x-dropdown-link>
-                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                            <i class="fa fa-fw fa-tag me-2"></i>{{ __('Kelola tag ')}}
-                        </x-dropdown-link>
-                        <hr class="border-neutral-300 dark:border-neutral-600" /> -->
-                        <x-dropdown-link href="#" wire:click.prevent="resetQuery">
-                            <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset')}}
-                        </x-dropdown-link>
-                        <hr class="border-neutral-300 dark:border-neutral-600" />
-                        <x-dropdown-link href="#" wire:click.prevent="download">
-                            <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV')}}
-                        </x-dropdown-link>
-                        <!-- <x-dropdown-link href="#">
-                            <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
-                        </x-dropdown-link> -->
-                    </x-slot>
-                </x-dropdown>
+                            @endcan
+                            <!-- <x-dropdown-link href="#" disabled="true">
+                                <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
+                            </x-dropdown-link> -->
+                            <x-dropdown-link href="{{ route('inventory.items.bulk-operation') }}" wire:navigate>
+                                <i class="fa fa-fw me-2"></i>{{ __('Operasi massal')}}
+                            </x-dropdown-link>
+                            <hr class="border-neutral-300 dark:border-neutral-600" />
+                            <!-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
+                                <i class="fa fa-fw fa-map-marker-alt me-2"></i>{{ __('Kelola lokasi ')}}
+                            </x-dropdown-link>
+                            <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
+                                <i class="fa fa-fw fa-tag me-2"></i>{{ __('Kelola tag ')}}
+                            </x-dropdown-link>
+                            <hr class="border-neutral-300 dark:border-neutral-600" /> -->
+                            <x-dropdown-link href="#" wire:click.prevent="resetQuery">
+                                <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset')}}
+                            </x-dropdown-link>
+                            <hr class="border-neutral-300 dark:border-neutral-600" />
+                            <x-dropdown-link href="#" wire:click.prevent="download">
+                                <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV')}}
+                            </x-dropdown-link>
+                            <!-- <x-dropdown-link href="#">
+                                <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
+                            </x-dropdown-link> -->
+                        </x-slot>
+                    </x-dropdown>
+                </div>
             </div>
         </div>
     </div>
+
     <div class="h-auto sm:h-12">
         <div class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full h-full px-8">
             <div class="text-center sm:text-left">{{ $inv_stocks->total() . ' ' . __('barang') }}</div>
@@ -365,7 +369,7 @@ class extends Component
             </div>
         </div>
     </div>
-    <div class="w-full" wire:loading.class="cal-shimmer">
+    <div class="w-full  px-1" wire:loading.class="cal-shimmer">
         @if (!$inv_stocks->count())
             @if (count($area_ids))
                 <div wire:key="no-match" class="py-20">

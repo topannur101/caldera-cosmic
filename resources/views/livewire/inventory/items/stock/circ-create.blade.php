@@ -82,7 +82,7 @@ new class extends Component {
       $this->remarks = trim($this->remarks);
 
       $this->validate([
-         'type'         => ['required', 'in:deposit,withdrawal,capture'],
+         'type'         => ['required', 'in:deposit,capture,withdrawal'],
          'stock_id'     => ['required', 'exists:inv_stocks,id'],
          'qty_relative' => ['required', 'min:0', 'max:100000'],
          'remarks'      => ['required', 'string', 'max:256'],

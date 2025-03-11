@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\InvArea;
 use App\Models\InvItem;
 use App\Models\InvStock;
+use App\Models\InvCirc;
 use App\Models\InsLdcHide;
 use App\Models\InsRtcMetric;
 use Illuminate\Http\Request;
@@ -41,10 +42,10 @@ class DownloadController extends Controller
             // Add CSV header row
             fputcsv($handle, [
                 'id', 'name', 'desc', 'code', 'location', 
-                'tag 1', 'tag 2', 'tag 3',
-                'curr 1', 'up 1', 'uom 1',
-                'curr 2', 'up 2', 'uom 2',
-                'curr 3', 'up 3', 'uom 3'
+                'tag_0', 'tag_1', 'tag_2',
+                'curr_0', 'up_0', 'uom_0',
+                'curr_1', 'up_1', 'uom_1',
+                'curr_2', 'up_2', 'uom_2'
             ]);
             
             // Build the same query as in the Livewire component
@@ -65,10 +66,10 @@ class DownloadController extends Controller
                         $location = $item->inv_loc->parent . '-' . $item->inv_loc->bin;
                     }
 
+                    $tag_0  = '';
                     $tag_1  = '';
                     $tag_2  = '';
-                    $tag_3  = '';
-                    $i      = 1;
+                    $i      = 0;
 
                     $tags = $item->inv_tags()->take(3)->get();
                     foreach ($tags as $tag) {
@@ -77,16 +78,16 @@ class DownloadController extends Controller
                         $i++;
                     }
                     
+                    $curr_0 = '';
+                    $up_0   = '';
+                    $uom_0  = '';
                     $curr_1 = '';
                     $up_1   = '';
                     $uom_1  = '';
                     $curr_2 = '';
                     $up_2   = '';
                     $uom_2  = '';
-                    $curr_3 = '';
-                    $up_3   = '';
-                    $uom_3  = '';
-                    $i      = 1;
+                    $i      = 0;
 
                     $stocks = $item->inv_stocks()->where('is_active', true)->take(3)->get();
                     foreach($stocks as $stock) {
@@ -106,18 +107,18 @@ class DownloadController extends Controller
                         $item->desc ?? '',
                         $item->code ?? '',
                         $location,
+                        $tag_0,
                         $tag_1,
                         $tag_2,
-                        $tag_3,
+                        $curr_0,
+                        $up_0,
+                        $uom_0,
                         $curr_1,
                         $up_1,
                         $uom_1,
                         $curr_2,
                         $up_2,
-                        $uom_2,
-                        $curr_3,
-                        $up_3,
-                        $uom_3
+                        $uom_2
                     ]);
                 }
                 
@@ -133,6 +134,158 @@ class DownloadController extends Controller
         ]);
     }
 
+    public function invCircs(Request $request, $token)
+    {
+        // Validate the token
+        if ($token !== session()->get('inv_circs_token')) {
+            abort(403);
+        }
+        
+        // Clear the token
+        session()->forget('inv_circs_token');
+        
+        // Get search parameters from session
+        $inv_circs_params = session('inv_circs_params', []);
+        
+        // Extract parameters
+        $sort               = $inv_circs_params['sort']             ?? '';
+        $area_ids           = $inv_circs_params['area_ids']         ?? [];
+        $circ_eval_status   = $inv_circs_params['circ_eval_status'] ?? [];
+        $circ_types         = $inv_circs_params['circ_types']       ?? [];
+        $date_fr            = $inv_circs_params['date_fr']          ?? '';
+        $date_to            = $inv_circs_params['date_to']          ?? '';
+        $user_id            = $inv_circs_params['user_id']          ?? 0;
+        $remarks            = $inv_circs_params['remarks']          ?? ['', ''];
+    
+        
+        return response()->streamDownload(function () use ($sort, $area_ids, $circ_eval_status, $circ_types, $date_fr, $date_to, $user_id, $remarks) {
+            // Open output stream
+            $handle = fopen('php://output', 'w');
+            
+            // Add CSV header row
+            fputcsv($handle, [
+                'item_id', 'item_name', 'item_desc', 'item_code', 'item_location', 
+                'item_tag_0', 'item_tag_1', 'item_tag_2', 'item_area', 
+                'stock_id', 'stock_unit_price', 'stock_curr', 'stock_uom', 
+                'circ_type', 'circ_qty_relative', 'circ_unit_price', 'circ_amount', 
+                'circ_user_emp_id', 'circ_user_name', 'circ_remarks', 
+                'circ_eval_user_emp_id', 'circ_eval_user_name', 'circ_eval_remarks', 
+                'circ_eval_status', 'circ_is_delegated'
+            ]);
+            
+            // Build the same query as in the Livewire component
+            $inv_circs_query = InvCirc::with([
+                'inv_stock.inv_item',
+                'inv_stock.inv_item.inv_loc',
+                'inv_stock.inv_item.inv_tags',
+                'inv_stock.inv_item.inv_area',
+                'inv_stock',
+                'inv_stock.inv_curr',
+                'user',
+                'eval_user',
+            ])
+            ->whereHas('inv_item', function($query) use($area_ids) {
+                $query->whereIn('inv_area_id', $area_ids);
+            })
+            ->whereIn('eval_status', $circ_eval_status)
+            ->whereIn('type', $circ_types);
+    
+            if($date_fr && $date_to) {
+                $fr = Carbon::parse($date_fr)->startOfDay();
+                $to = Carbon::parse($date_to)->endOfDay();
+                $inv_circs_query->whereBetween('updated_at', [$fr, $to]);
+            }
+    
+            if($user_id) {
+                $inv_circs_query->where('user_id', $user_id);
+            }
+    
+            if($remarks[0]) {
+                $inv_circs_query->where('remarks', 'like', "%{$remarks[0]}%");
+            }
+    
+            if($remarks[1]) {
+                $inv_circs_query->where('eval_remarks', 'like', "%{$remarks[0]}%");
+            }
+    
+            switch ($sort) {
+                case 'updated':
+                    $inv_circs_query->orderByDesc('updated_at');
+                    break;
+                case 'qty_low':
+                    $inv_circs_query->orderBy('qty_relative');
+                    break;
+                case 'qty_high':
+                    $inv_circs_query->orderByDesc('qty_relative');
+                    break;
+                case 'amount_low':
+                    $inv_circs_query->orderBy('amount');
+                    break;
+                case 'amount_high':
+                    $inv_circs_query->orderByDesc('amount');
+                    break;
+    
+            }
+            
+            // Stream each record to avoid loading all records into memory at once
+            $inv_circs_query->chunk(100, function ($circs) use ($handle) {
+                foreach ($circs as $circ) {
+                    $location = '';
+                    if ($circ->inv_stock->inv_item->inv_loc) {
+                        $location = $circ->inv_stock->inv_item->inv_loc->parent . '-' . $circ->inv_stock->inv_item->inv_loc->bin;
+                    }
+
+                    $tags = $circ->inv_stock->inv_item->inv_tags->pluck('name')->toArray();
+                    
+                    fputcsv($handle, [
+
+                        $circ->inv_stock->inv_item->id ?? '',
+                        $circ->inv_stock->inv_item->name ?? '',
+                        $circ->inv_stock->inv_item->desc ?? '',
+                        $circ->inv_stock->inv_item->code ?? '',
+
+                        $location,
+                        $tags[0] ?? '',
+                        $tags[1] ?? '',
+                        $tags[2] ?? '',
+
+                        $circ->inv_stock->inv_item->inv_area->name ?? '',
+
+                        $circ->inv_stock->id ?? '',
+                        $circ->inv_stock->unit_price ?? '',
+                        $circ->inv_stock->inv_curr->name ?? '',
+                        $circ->inv_stock->uom ?? '',
+
+                        $circ->type,
+                        $circ->qty_relative,
+                        $circ->unit_price,
+                        $circ->amount,
+
+                        $circ->user->emp_id,
+                        $circ->user->name,
+                        $circ->remarks,
+
+                        $circ->eval_user?->emp_id,
+                        $circ->eval_user?->name,
+                        $circ->eval_remarks,
+
+                        $circ->eval_status,
+                        $circ->is_delegated,
+                    ]);
+                }
+                
+                // Flush the output buffer to send data to the browser
+                ob_flush();
+                flush();
+            });
+            
+            // Close the output stream
+            fclose($handle);
+        }, 'inventory_circs.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
     public function invStocks(Request $request, $token)
     {
         // Validate the token
@@ -144,31 +297,39 @@ class DownloadController extends Controller
         session()->forget('inv_stocks_token');
         
         // Get search parameters from session
-        $inv_search_params = session('inv_search_params', []);
+        $inv_circs_params = session('inv_search_params', []);
         
         // Extract parameters
-        $q          = $inv_search_params['q'] ?? '';
-        $loc_parent = $inv_search_params['loc_parent'] ?? '';
-        $loc_bin    = $inv_search_params['loc_bin'] ?? '';
-        $tags       = $inv_search_params['tags'] ?? [];
-        $area_ids   = $inv_search_params['area_ids'] ?? [];
-        $filter     = $inv_search_params['filter'] ?? '';
-        $sort       = $inv_search_params['sort'] ?? 'updated';
+        $q          = $inv_circs_params['q'] ?? '';
+        $loc_parent = $inv_circs_params['loc_parent'] ?? '';
+        $loc_bin    = $inv_circs_params['loc_bin'] ?? '';
+        $tags       = $inv_circs_params['tags'] ?? [];
+        $area_ids   = $inv_circs_params['area_ids'] ?? [];
+        $filter     = $inv_circs_params['filter'] ?? '';
+        $sort       = $inv_circs_params['sort'] ?? 'updated';
         
         return response()->streamDownload(function () use ($q, $loc_parent, $loc_bin, $tags, $area_ids, $filter, $sort) {
             // Open output stream
             $handle = fopen('php://output', 'w');
             
             // Add CSV header row
-            fputcsv($handle, ['Name', 'Description', 'Code', 'Photo', 'Area Name', 'Location', 'Quantity']);
+            fputcsv($handle, [
+                'stock_id','stock_unit_price','stock_curr','stock_uom','stock_qty',
+                'stock_updated_at',
+                'item_id','item_name','item_desc','item_code','item_location',
+                'item_tag_0','item_tag_1','item_tag_2',
+                'item_created_at','item_updated_at',
+                'item_last_deposit','item_last_withdrawal',
+                'item_area','item_photo'
+            ]);
             
             // Build the same query as in the Livewire component
             $query = InvStock::with([
-                'inv_item', 
                 'inv_curr',
+                'inv_item', 
                 'inv_item.inv_loc', 
+                'inv_item.inv_tags',
                 'inv_item.inv_area', 
-                'inv_item.inv_tags'
             ])
             ->whereHas('inv_item', function ($query) use ($q, $loc_parent, $loc_bin, $tags, $area_ids, $filter) {
                 // search
@@ -267,15 +428,33 @@ class DownloadController extends Controller
                     if ($stock->inv_item->inv_loc) {
                         $location = $stock->inv_item->inv_loc->parent . '-' . $stock->inv_item->inv_loc->bin;
                     }
+
+                    $tags = $stock->inv_item->inv_tags->pluck('name')->toArray();
                     
                     fputcsv($handle, [
+                        $stock->id ?? '',
+                        $stock->unit_price ?? '',
+                        $stock->inv_curr->name ?? '',
+                        $stock->uom ?? '',
+                        $stock->qty ?? '',
+                        $stock->updated_at ?? '',
+                        
+                        $stock->inv_item->id ?? '',
                         $stock->inv_item->name ?? '',
                         $stock->inv_item->desc ?? '',
                         $stock->inv_item->code ?? '',
-                        $stock->inv_item->photo ?? '',
-                        $stock->inv_item->inv_area->name ?? '',
+
                         $location,
-                        $stock->qty ?? 0
+                        $tags[0] ?? '',
+                        $tags[1] ?? '',
+                        $tags[2] ?? '',
+
+                        $stock->inv_item->created_at ?? '',
+                        $stock->inv_item->updated_at ?? '',
+                        $stock->inv_item->last_deposit ?? '',
+                        $stock->inv_item->last_withdrawal ?? '',
+                        $stock->inv_item->inv_area->name ?? '',
+                        $stock->inv_item->photo ?? '',
                     ]);
                 }
                 

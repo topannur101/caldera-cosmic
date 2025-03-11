@@ -61,6 +61,7 @@ class extends Component {
         $savedParams = session('inv_circs_params', []);
 
         if ($savedParams) {
+            $this->sort             = $savedParams['sort']              ?? '';
             $this->area_ids         = $savedParams['area_ids']          ?? [];
             $this->circ_eval_status = $savedParams['circ_eval_status']  ?? [];
             $this->circ_types       = $savedParams['circ_types']        ?? [];
@@ -243,7 +244,7 @@ class extends Component {
     <livewire:inventory.circs.print />
 </x-slot>
 
-<div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200"
+<div id="content" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200"
     x-data="{ 
         ids: @entangle('circ_ids'),
         status: @entangle('circ_eval_status').live, 
@@ -271,67 +272,69 @@ class extends Component {
             </div>
         </x-spotlight>
     </div>
-    <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2 mb-6">
-        <div class="flex justify-between px-8 lg:px-3 py-3 lg:py-0 divide-x divide-neutral-200 dark:divide-neutral-700">
-            <div class="btn-group h-9 pr-3">
-                <x-checkbox-button-t x-model="status" grow value="pending" name="circ_eval_status" id="circ_eval_status-pending">
-                    <div class="text-center my-auto"><i class="fa fa-fw fa-hourglass"></i></div>
-                </x-checkbox-button-t>
-                <x-checkbox-button-t x-model="status" grow value="approved" name="circ_eval_status" id="circ_eval_status-approved">
-                    <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-up"></i></div>
-                </x-checkbox-button-t>
-                <x-checkbox-button-t x-model="status" grow value="rejected" name="circ_eval_status" id="circ_eval_status-rejected">
-                    <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-down"></i></div>
-                </x-checkbox-button-t>
+    <div class="sticky top-0 z-50 py-6 bg-gradient-to-b from-neutral-100 via-neutral-100 to-transparent dark:from-neutral-900 dark:via-neutral-900 dark:to-transparent">
+        <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
+            <div class="flex justify-between px-8 lg:px-3 py-3 lg:py-0 divide-x divide-neutral-200 dark:divide-neutral-700">
+                <div class="btn-group h-9 pr-3">
+                    <x-checkbox-button-t x-model="status" grow value="pending" name="circ_eval_status" id="circ_eval_status-pending">
+                        <div class="text-center my-auto"><i class="fa fa-fw fa-hourglass"></i></div>
+                    </x-checkbox-button-t>
+                    <x-checkbox-button-t x-model="status" grow value="approved" name="circ_eval_status" id="circ_eval_status-approved">
+                        <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-up"></i></div>
+                    </x-checkbox-button-t>
+                    <x-checkbox-button-t x-model="status" grow value="rejected" name="circ_eval_status" id="circ_eval_status-rejected">
+                        <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-down"></i></div>
+                    </x-checkbox-button-t>
+                </div>
+                <div class="btn-group h-9 pl-3">
+                    <x-checkbox-button-t x-model="types" grow value="deposit" name="circ_types" id="circ_types-deposit">
+                        <div class="text-center my-auto"><i class="fa fa-fw fa-plus text-green-500"></i></div>
+                    </x-checkbox-button-t>
+                    <x-checkbox-button-t x-model="types" grow value="capture" name="circ_types" id="circ_types-capture">
+                        <div class="text-center my-auto"><i class="fa fa-fw fa-code-commit text-yellow-600"></i></div>
+                    </x-checkbox-button-t>
+                    <x-checkbox-button-t x-model="types" grow value="withdrawal" name="circ_types" id="circ_types-withdrawal">
+                        <div class="text-center my-auto"><i class="fa fa-fw fa-minus text-red-500"></i></div>
+                    </x-checkbox-button-t>
+                </div>
             </div>
-            <div class="btn-group h-9 pl-3">
-                <x-checkbox-button-t x-model="types" grow value="deposit" name="circ_types" id="circ_types-deposit">
-                    <div class="text-center my-auto"><i class="fa fa-fw fa-plus text-green-500"></i></div>
-                </x-checkbox-button-t>
-                <x-checkbox-button-t x-model="types" grow value="capture" name="circ_types" id="circ_types-capture">
-                    <div class="text-center my-auto"><i class="fa fa-fw fa-code-commit text-yellow-600"></i></div>
-                </x-checkbox-button-t>
-                <x-checkbox-button-t x-model="types" grow value="withdrawal" name="circ_types" id="circ_types-withdrawal">
-                    <div class="text-center my-auto"><i class="fa fa-fw fa-minus text-red-500"></i></div>
-                </x-checkbox-button-t>
+            <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
+                <x-date-selector isQuery="true" class="text-xs font-semibold uppercase" />
             </div>
-        </div>
-        <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
-            <x-date-selector isQuery="true" class="text-xs font-semibold uppercase" />
-        </div>
-        <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
-            <x-inv-user-selector isQuery="true" class="text-xs font-semibold uppercase" />
-        </div>
-        <div class="grow flex items-center gap-x-4 p-4 lg:py-0 ">
-            <x-inv-remarks-filter isQuery="true" class="text-xs font-semibold uppercase" />
-        </div>
-        <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
-            <x-inv-area-selector class="text-xs font-semibold uppercase" :$areas />
-            <div>
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
-                    </x-slot>
-                    <x-slot name="content">
-                        <x-dropdown-link href="{{ route('inventory.items.create') }}" wire:navigate>
-                            <i class="fa fa-fw fa-arrows-turn-right me-2"></i>{{ __('Sirkulasi massal')}}
-                        </x-dropdown-link>
-                        <x-dropdown-link href="{{ route('inventory.circs.summary.index') }}" wire:navigate>
-                            <i class="fa fa-fw fa-line-chart me-2"></i>{{ __('Ringkasan')}}
-                        </x-dropdown-link>
-                        <hr class="border-neutral-300 dark:border-neutral-600" />
-                        <x-dropdown-link href="#" wire:click.prevent="resetQuery">
-                            <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset')}}
-                        </x-dropdown-link>
-                        <hr class="border-neutral-300 dark:border-neutral-600" />
-                        <x-dropdown-link href="#" wire:click.prevent="download">
-                            <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
-                        </x-dropdown-link>
-                        <x-dropdown-link href="#" wire:click="printAll">
-                            <i class="fa fa-fw fa-print me-2"></i>{{ __('Cetak semua') }}
-                        </x-dropdown-link>
-                    </x-slot>
-                </x-dropdown>
+            <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
+                <x-inv-user-selector isQuery="true" class="text-xs font-semibold uppercase" />
+            </div>
+            <div class="grow flex items-center gap-x-4 p-4 lg:py-0 ">
+                <x-inv-remarks-filter isQuery="true" class="text-xs font-semibold uppercase" />
+            </div>
+            <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
+                <x-inv-area-selector class="text-xs font-semibold uppercase" :$areas />
+                <div>
+                    <x-dropdown align="right" width="48">
+                        <x-slot name="trigger">
+                            <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
+                        </x-slot>
+                        <x-slot name="content">
+                            <x-dropdown-link href="{{ route('inventory.circs.summary.index') }}" wire:navigate>
+                                <i class="fa fa-fw fa-line-chart me-2"></i>{{ __('Ringkasan')}}
+                            </x-dropdown-link>
+                            <x-dropdown-link href="{{ route('inventory.circs.bulk-operation') }}" wire:navigate>
+                                <i class="fa fa-fw me-2"></i>{{ __('Operasi massal')}}
+                            </x-dropdown-link>
+                            <hr class="border-neutral-300 dark:border-neutral-600" />
+                            <x-dropdown-link href="#" wire:click.prevent="resetQuery">
+                                <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset')}}
+                            </x-dropdown-link>
+                            <hr class="border-neutral-300 dark:border-neutral-600" />
+                            <x-dropdown-link href="#" wire:click.prevent="download">
+                                <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
+                            </x-dropdown-link>
+                            <x-dropdown-link href="#" wire:click="printAll">
+                                <i class="fa fa-fw fa-print me-2"></i>{{ __('Cetak semua') }}
+                            </x-dropdown-link>
+                        </x-slot>
+                    </x-dropdown>
+                </div>
             </div>
         </div>
     </div>
@@ -359,6 +362,7 @@ class extends Component {
         <div x-show="ids.length" x-cloak class="flex items-center justify-between w-full h-full px-8">
             <div class="font-bold"><span x-text="ids.length"></span><span>{{ ' ' . __('dipilih') }}</span></div>
             <div class="flex gap-x-2">
+                <x-secondary-button type="button" x-on:click="ids = []">{{ __('Batal pilih') }}  </x-secondary-button>
                 <x-secondary-button type="button" wire:click="printCircIds">
                     <div class="relative">
                         <span wire:loading.class="opacity-0" wire:target="printCircIds"><i class="fa fa-print mr-2"></i>{{ __('Cetak') }}</span>
@@ -367,7 +371,7 @@ class extends Component {
                 </x-secondary-button>
                 <x-secondary-button type="button" wire:click="evalCircIds">
                     <div class="relative">
-                        <span wire:loading.class="opacity-0" wire:target="evalCircIds">{{ __('Evaluasi') }}</span>
+                        <span wire:loading.class="opacity-0" wire:target="evalCircIds"><i class="fa fa-gavel mr-2"></i>{{ __('Evaluasi') }}</span>
                         <x-spinner wire:loading.class.remove="hidden" wire:target="evalCircIds" class="hidden sm mono"></x-spinner>
                     </div>
                 </x-secondary-button>

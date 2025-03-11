@@ -39,6 +39,11 @@ new class extends Component
       $this->resetPage();
    }
 
+   public function circsDownload()
+   {
+      $this->js('toast("' . __('Fitur ini sedang dalam tahap pengembangan') . '", { type: "danger" } )');
+   }
+
 }
 
 ?>
@@ -47,6 +52,24 @@ new class extends Component
    <div wire:key="stock-modals">
       <x-modal name="circ-show">
          <livewire:inventory.circs.circ-show />
+      </x-modal>
+      <x-modal name="circs-chart">
+         <div class="p-6 flex justify-between">
+            <h2 class="text-lg font-medium">
+               {{ __('Grafik sirkulasi') }}
+            </h2>
+            <div>
+               <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+            </div>
+         </div>
+         <div class="p-6">{{ __('Fitur ini sedang dalam tahap pengembangan') }}</div>
+
+         <!-- Buttons -->
+         <div class="p-6 flex justify-end">
+            <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Tutup') }}</x-secondary-button>
+         </div>
+         <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
+         <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
       </x-modal>
    </div>
    <div wire:loading.class="cal-shimmer">
@@ -74,6 +97,10 @@ new class extends Component
          </table>
          <div class="px-3 py-1">
             {{ $circs->onEachSide(1)->links(data: ['scrollTo' => false]) }}
+         </div>
+         <div class="btn-group flex justify-center p-1">
+            <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'circs-chart')"><i class="fa fa-fw fa-line-chart"></i></x-secondary-button>
+            <x-secondary-button type="button" wire:click="circsDownload"><i class="fa fa-fw fa-download"></i></x-secondary-button>
          </div>
       @else
          <div class="py-4 text-neutral-500 text-center">

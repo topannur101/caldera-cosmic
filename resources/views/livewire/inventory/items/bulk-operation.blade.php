@@ -17,8 +17,6 @@ use Carbon\Carbon;
 new #[Layout('layouts.app')]
 class extends Component
 {
-   public LoginForm $form;
-
    public array $items = 
       [
          [
@@ -27,18 +25,18 @@ class extends Component
             'desc' => 'Deskripsi barang uji coba',
             'code' => 'XXX10-19001',
             'location' => 'Z9-99-99',
-            'tag_1' => 'Contoh tag 1',
-            'tag_2' => 'Contoh tag 2',
-            'tag_3' => 'Contoh tag 3',
-            'curr_1' => 'IDR',
-            'up_1' => 1.0,
+            'tag_0' => 'contoh_tag',
+            'tag_1' => 'contoh_tag',
+            'tag_2' => 'contoh_tag',
+            'curr_0' => 'IDR',
+            'up_0' => 1.0,
+            'uom_0' => 'EA',
+            'curr_1' => 'USD',
+            'up_1' => 2.0,
             'uom_1' => 'EA',
-            'curr_2' => 'USD',
-            'up_2' => 2.0,
-            'uom_2' => 'EA',
-            'curr_3' => '',
-            'up_3' => '',
-            'uom_3' => ''
+            'curr_2' => '',
+            'up_2' => '',
+            'uom_2' => ''
          ]
       ];
 
@@ -83,7 +81,6 @@ class extends Component
          }
       }
 
-      $this->form->emp_id = $user->emp_id;
       $this->areas = InvArea::whereIn('id', $area_ids)->get()->toArray();
    }
     
@@ -98,65 +95,68 @@ class extends Component
          }
 
          foreach ($this->items as $item) {
-            $this->result['items'][] = $item['id'] ? $this->updateOrCreateItem($item) : $this->updateOrCreateItem($item, false);
+            $this->result['items'][] = ($item['id'] ?? false) ? $this->updateOrCreateItem($item) : $this->updateOrCreateItem($item, false);
          }         
 
          $this->reset(['items']);
          $this->js('$dispatch("editor-reset")');
-         $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');        
-               
-         // CSV download
-         $filename = __('Hasil operasi massal') . ' ' . Carbon::now()->format('Y-m-d His') . '.csv';
-         $handle = fopen('php://temp', 'r+');
-         $headers = [
-            'id', 'name', 'desc', 'code', 'location', 'tag_1', 'tag_2', 'tag_3',
-            'curr_1', 'up_1', 'uom_1', 'curr_2', 'up_2', 'uom_2', 'curr_3', 'up_3', 'uom_3',
-            __('Tindakan'), __('Status'), __('Pesan')
-         ];
-         
-         fputcsv($handle, $headers);
-         
-         foreach ($this->result['items'] as $item) {
-            $row = [
-                  $item['id'] ?? '',
-                  $item['name'] ?? '',
-                  $item['desc'] ?? '',
-                  $item['code'] ?? '',
-                  $item['location'] ?? '',
-                  $item['tag_1'] ?? '',
-                  $item['tag_2'] ?? '',
-                  $item['tag_3'] ?? '',
-                  $item['curr_1'] ?? '',
-                  $item['up_1'] ?? '',
-                  $item['uom_1'] ?? '',
-                  $item['curr_2'] ?? '',
-                  $item['up_2'] ?? '',
-                  $item['uom_2'] ?? '',
-                  $item['curr_3'] ?? '',
-                  $item['up_3'] ?? '',
-                  $item['uom_3'] ?? '',
 
-                  $item['action'] ?? '',
-                  $item['status'] ?? '',
-                  $item['message'] ?? ''
-            ];            
-            fputcsv($handle, $row);
+         if($this->result['update']['failure'] || $this->result['create']['failure']) {
+            $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');        
+               
+            // CSV download
+            $filename = __('Hasil operasi massal (barang)') . ' ' . Carbon::now()->format('Y-m-d His') . '.csv';
+            $handle = fopen('php://temp', 'r+');
+            $headers = [
+               'id', 'name', 'desc', 'code', 'location', 'tag_0', 'tag_1', 'tag_2',
+               'curr_0', 'up_0', 'uom_0', 'curr_1', 'up_1', 'uom_1', 'curr_2', 'up_2', 'uom_2',
+               __('Tindakan'), __('Status'), __('Pesan')
+            ];
+            
+            fputcsv($handle, $headers);
+            
+            foreach ($this->result['items'] as $item) {
+               $row = [
+                     ($item['id'] ?? '') == 0 ? '' : $item['id'],
+                     $item['name']        ?? '',
+                     $item['desc']        ?? '',
+                     $item['code']        ?? '',
+                     $item['location']    ?? '',
+                     $item['tag_0']       ?? '',
+                     $item['tag_1']       ?? '',
+                     $item['tag_2']       ?? '',
+                     $item['curr_0']      ?? '',
+                     ($item['up_0'] ?? '') == 0 ? '' : $item['up_0'],
+                     $item['uom_0']       ?? '',
+                     $item['curr_1']      ?? '',
+                     ($item['up_1'] ?? '') == 0 ? '' : $item['up_1'],
+                     $item['uom_1']       ?? '',
+                     $item['curr_2']      ?? '',
+                     ($item['up_2'] ?? '') == 0 ? '' : $item['up_2'],
+                     $item['uom_2']       ?? '',
+   
+                     $item['action']      ?? '',
+                     $item['status']      ?? '',
+                     $item['message']     ?? ''
+               ];            
+               fputcsv($handle, $row);
+            }
+            
+            rewind($handle);
+            
+            $csv = stream_get_contents($handle);
+            fclose($handle);
+            
+            return response()->streamDownload(function () use ($csv) {
+               echo $csv;
+            }, $filename, [
+               'Content-Type' => 'text/csv',
+            ]);
          }
-         
-         rewind($handle);
-         
-         $csv = stream_get_contents($handle);
-         fclose($handle);
-         
-         return response()->streamDownload(function () use ($csv) {
-            echo $csv;
-         }, $filename, [
-            'Content-Type' => 'text/csv',
-         ]);
 
       } else {
 
-         if(count($this->items) > 100) {
+         if(count($this->items) > 3000) {
             $this->js('toast("' . __('Hanya maksimal 100 entri yang diperbolehkan') . '", { type: "danger" })');
             return;
    
@@ -172,12 +172,12 @@ class extends Component
                 $this->items[$key][$childKey] = trim($childValue);
         
                 // Convert specific keys to uppercase
-                if (in_array($childKey, ['code', 'location', 'curr_1', 'uom_1', 'curr_2', 'uom_2', 'curr_3', 'uom_3'])) {
+                if (in_array($childKey, ['code', 'location', 'curr_0', 'uom_0', 'curr_1', 'uom_1', 'curr_2', 'uom_2'])) {
                     $this->items[$key][$childKey] = strtoupper($this->items[$key][$childKey]);
                 }
         
                 // Convert specific keys to lowercase
-                if (in_array($childKey, ['tag_1', 'tag_2', 'tag_3'])) {
+                if (in_array($childKey, ['tag_0', 'tag_1', 'tag_2'])) {
                     $this->items[$key][$childKey] = strtolower($this->items[$key][$childKey]);
                 }
         
@@ -186,14 +186,14 @@ class extends Component
                     $this->items[$key][$childKey] = (int)$this->items[$key][$childKey];
                 }
         
-                // Cast values with keys 'up_1', 'up_2', 'up_3' to float
-                if (in_array($childKey, ['up_1', 'up_2', 'up_3'])) {
+                // Cast values with keys 'up_0', 'up_1', 'up_2' to float
+                if (in_array($childKey, ['up_0', 'up_1', 'up_2'])) {
                     $this->items[$key][$childKey] = (float)$this->items[$key][$childKey];
                 }
             }
         
             // Increment update or create count after cleaning
-            if ($this->items[$key]['id']) {
+            if ($this->items[$key]['id'] ?? false) {
                 $this->update_count++;
             } else {
                 $this->create_count++;
@@ -242,11 +242,24 @@ class extends Component
          $item['loc_bin'] = isset($parts[1]) ? $parts[1] : '';
 
          $item['tags'] = [];
+         $item['tag_0'] ? array_push($item['tags'], $item['tag_0']) : false;
          $item['tag_1'] ? array_push($item['tags'], $item['tag_1']) : false;
          $item['tag_2'] ? array_push($item['tags'], $item['tag_2']) : false;
-         $item['tag_3'] ? array_push($item['tags'], $item['tag_3']) : false;
 
          $item['stocks'] = [];
+
+         $curr_0  = $item['curr_0']    ?? '';
+         $up_0    = $item['up_0']      ?? '';
+         $uom_0   = $item['uom_0']     ?? '';
+
+         if($curr_0 || $up_0 || $uom_0) {
+            $stock = [ 
+               'currency'     => $item['curr_0'],
+               'unit_price'   => $item['up_0'],
+               'uom'          => $item['uom_0']
+            ];
+            array_push($item['stocks'], $stock);
+         }
 
          $curr_1  = $item['curr_1']    ?? '';
          $up_1    = $item['up_1']      ?? '';
@@ -254,9 +267,9 @@ class extends Component
 
          if($curr_1 || $up_1 || $uom_1) {
             $stock = [ 
-               'currency' => $item['curr_1'],
-               'unit_price' => $item['up_1'],
-               'uom' => $item['uom_1']
+               'currency'     => $item['curr_1'],
+               'unit_price'   => $item['up_1'],
+               'uom'          => $item['uom_1']
             ];
             array_push($item['stocks'], $stock);
          }
@@ -267,22 +280,9 @@ class extends Component
 
          if($curr_2 || $up_2 || $uom_2) {
             $stock = [ 
-               'currency' => $item['curr_2'],
-               'unit_price' => $item['up_2'],
-               'uom' => $item['uom_2']
-            ];
-            array_push($item['stocks'], $stock);
-         }
-
-         $curr_3  = $item['curr_3']    ?? '';
-         $up_3    = $item['up_3']      ?? '';
-         $uom_3   = $item['uom_3']     ?? '';
-
-         if($curr_3 || $up_3 || $uom_3) {
-            $stock = [ 
-               'currency' => $item['curr_3'],
-               'unit_price' => $item['up_3'],
-               'uom' => $item['uom_3']
+               'currency'     => $item['curr_2'],
+               'unit_price'   => $item['up_2'],
+               'uom'          => $item['uom_2']
             ];
             array_push($item['stocks'], $stock);
          }
@@ -402,13 +402,13 @@ class extends Component
 
 ?>
 
-<x-slot name="title">{{ __('Operasi massal') . ' — ' . __('Inventaris') }}</x-slot>
+<x-slot name="title">{{ __('Operasi massal barang') . ' — ' . __('Inventaris') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-inventory-sub>{{ __('Operasi massal') }}</x-nav-inventory-sub>
+    <x-nav-inventory-sub>{{ __('Operasi massal barang') }}</x-nav-inventory-sub>
 </x-slot>
 
-<div class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+<div class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-700 dark:text-neutral-200">
    @if (count($areas))
       <div wire:key="modals">
          <x-modal name="warning">
@@ -439,30 +439,47 @@ class extends Component
                   </x-text-button>
                </div>
                @if(count($result['items']))
-                  <div class="p-6 border border-neutral-200 rounded-lg">
+                  @if($result['update']['success'] || $result['update']['failure'])
+                  <div class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                      <div class="flex items-center space-x-2 mb-2">
-                        <h2 class="font-bold text-neutral-800">{{ __('Pembaruan') }}</h2>
+                        <h2 class="font-bold text-xl">{{ __('Hasil pembaruan') }}</h2>
                      </div>
+                     @if($result['update']['success'])
                      <div>
                         <x-pill color="green">{{ $result['update']['success'] }}</x-pill>{{ ' ' . __('barang diperbarui.') }}                     
                      </div>
+                     @endif
+                     @if($result['update']['failure'])
                      <div>
                         <x-pill color="red">{{ $result['update']['failure'] }}</x-pill>{{ ' ' . __('barang gagal diperbarui.') }}                     
                      </div>
+                     @endif
                   </div>
-                  <div class="p-6 border border-neutral-200 rounded-lg">
+                  @endif
+                  @if($result['create']['success'] || $result['create']['failure'])
+                  <div class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                      <div class="flex items-center space-x-2 mb-2">
-                        <h2 class="font-bold text-neutral-800">{{ __('Pembuatan') }}</h2>
+                        <h2 class="font-bold text-xl">{{ __('Hasil pembuatan') }}</h2>
                      </div>
+                     @if($result['create']['success'])
                      <div>
                         <x-pill color="green">{{ $result['create']['success'] }}</x-pill>{{ ' ' . __('barang dibuat.') }}                     
                      </div>
+                     @endif
+                     @if($result['create']['failure'])
                      <div>
                         <x-pill color="red">{{ $result['create']['failure'] }}</x-pill>{{ ' ' . __('barang gagal dibuat.') }}                     
                      </div>
+                     @endif
                   </div>
-                  <div>
-                     {{ __('Rincian mengenai berhasil atau gagalnya setiap barang dapat dilihat pada file CSV yang seharusnya sudah terunduh.') }}
+                  @endif
+                  @if($result['create']['failure'] || $result['update']['failure'])
+                  <div class="p-4 text-xs text-neutral-800 dark:text-neutral-400 rounded-lg bg-neutral-200 dark:bg-neutral-900">
+                     <i class="fa fa-info-circle me-2"></i>{{ __('Alasan mengapa gagal dapat dilihat pada 3 kolom terakhir (Tindakan, Status, dan Pesan) pada CSV yang terunduh.') }}
+                  </div>
+                  @endif
+                  <div class="flex items-center justify-end">
+                     <x-primary-button type="button" x-on:click="$dispatch('close')">{{ __('Selesai') }}</x-secondary-button>
                   </div>
 
                @else
@@ -489,7 +506,7 @@ class extends Component
                   </div>
                   @endif
                   <div class="flex items-center justify-end">
-                     <x-primary-button type="button" wire:click="apply(true)">{{ __('Terapkan') }}</x-secondary-button>
+                     <x-secondary-button type="button" wire:click="apply(true)">{{ __('Lanjut') }}<i class="fa fa-chevron-right ml-2"></i></x-secondary-button>
                   </div>
                @endif
 
@@ -508,42 +525,42 @@ class extends Component
                   </x-text-button>
                </div>
 
-               <div x-show="!backup" class="p-6 border border-neutral-200 rounded-lg">
+               <div x-show="!backup" class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
                      <i class="fa fa-clipboard text-neutral-500"></i>
-                     <h2 class="font-bold text-neutral-800">{{ __('Salin dan tempel') }}</h2>
+                     <h2 class="font-bold text-xl">{{ __('Salin dan tempel') }}</h2>
                   </div>
-                  <p class="text-neutral-600 leading-relaxed">
-                     {{ __('Tempel daftar barang yang hendak kamu perbarui atau buat di kotak editor. Maksimal 100 entri dalam sekali operasi.') }}
+                  <p class="leading-relaxed">
+                     {{ __('Tempel daftar barang yang hendak kamu perbarui/buat di kotak editor. Maksimal 100 entri dalam sekali operasi.') }}
                   </p>
                </div>
 
-               <div x-show="!backup" class="p-6 border border-neutral-200 rounded-lg">
+               <div x-show="!backup" class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
                      <i class="fas fa-info-circle text-neutral-500"></i>
-                     <h2 class="font-bold text-neutral-800">{{ __('Cantumkan ID barang jika...') }}</h2>
+                     <h2 class="font-bold text-xl">{{ __('Cantumkan ID barang') }}</h2>
                   </div>
-                  <p class="text-neutral-600 leading-relaxed">
-                     {{ __('Ingin memperbarui identitas barang secara massal seperti nama, deskripsi, kode, lokasi, tag, dan satuan unit.') }}
+                  <p class="leading-relaxed">
+                     {{ __('... jika kamu ingin memperbarui identitas barang secara massal seperti nama, deskripsi, kode, lokasi, tag, dan satuan unit.') }}
                   </p>
                </div>
 
-               <div x-show="!backup" class="p-6 border border-neutral-200 rounded-lg">
+               <div x-show="!backup" class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
                      <i class="fas fa-plus-circle text-neutral-500"></i>
-                     <h2 class="font-bold text-neutral-800">{{ __('Kosongkan ID barang jika...') }}</h2>
+                     <h2 class="font-bold text-xl">{{ __('Kosongkan ID barang') }}</h2>
                   </div>
-                  <p class="text-neutral-600 leading-relaxed">
-                     {{ __('Ingin membuat barang baru. Informasi yang wajib diisi untuk barang baru adalah: nama, deskripsi, area, dan unit stok.') }}
+                  <p class="leading-relaxed">
+                     {{ __('... jika kamu ingin membuat barang baru. Informasi yang wajib diisi untuk barang baru adalah: nama, deskripsi, area, dan unit stok.') }}
                   </p>
                </div>
 
-               <div x-show="backup" class="p-6 border border-neutral-200 rounded-lg">
+               <div x-show="backup" class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
                      <i class="fas fa-download text-neutral-500"></i>
-                     <h2 class="font-bold text-neutral-800">{{ __('Unduh backup') }}</h2>
+                     <h2 class="font-bold text-xl">{{ __('Unduh backup') }}</h2>
                   </div>
-                  <p class="text-neutral-600 leading-relaxed">
+                  <p class="leading-relaxed">
                      {{ __('Kamu bisa mengunduh daftar lengkap barang dari suatu area sebagai tindakan pencegahan bila terjadi kesalahan.') }}
                   </p>
                </div>
@@ -558,7 +575,7 @@ class extends Component
                </div>
 
                <div class="flex items-center justify-between">
-                  <x-secondary-button x-show="backup" x-on:click="backup = false" type="button">{{ __('Kembali') }}</x-secondary-button>
+                  <x-secondary-button x-show="backup" x-on:click="backup = false" type="button"><i class="fa fa-chevron-left mr-2"></i>{{ __('Kembali') }}</x-secondary-button>
                   <x-text-button x-show="!backup" x-on:click="backup = true" type="button" class="uppercase tracking-wide font-bold text-xs">{{ __('Unduh backup') }}</x-text-button>
                   <x-primary-button x-show="!backup" type="button" x-on:click="$dispatch('close')">{{ __('Paham') }}</x-primary-button>
                </div>
@@ -570,8 +587,8 @@ class extends Component
       <div 
       x-data="editorData()"
       x-init="editorInit()">
-         <div class="mb-6 flex justify-between">
-            <div class="px-3">
+         <div class="mb-6 flex justify-between px-3">
+            <div>
                <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
             </div>
             <div class="flex gap-x-2">
@@ -616,9 +633,13 @@ class extends Component
                { title: 'desc', field: 'desc', width: 100 }, 
                { title: 'code', field: 'code', width: 100 }, 
                { title: 'location', field: 'location', width: 80 },
-               { title: 'tag_1', field: 'tag_1', width: 80, cssClass: "border-l-2" },
+               { title: 'tag_0', field: 'tag_0', width: 80, cssClass: "border-l-2" },
+               { title: 'tag_1', field: 'tag_1', width: 80, },
                { title: 'tag_2', field: 'tag_2', width: 80, },
-               { title: 'tag_3', field: 'tag_3', width: 80, },
+               { title: 'curr_0', field: 'curr_0', cssClass: "border-l-2"},
+               { title: 'up_0', field: 'up_0', width: 80 },
+               { title: 'uom_0', field: 'uom_0' },
+
                { title: 'curr_1', field: 'curr_1', cssClass: "border-l-2"},
                { title: 'up_1', field: 'up_1', width: 80 },
                { title: 'uom_1', field: 'uom_1' },
@@ -626,10 +647,6 @@ class extends Component
                { title: 'curr_2', field: 'curr_2', cssClass: "border-l-2"},
                { title: 'up_2', field: 'up_2', width: 80 },
                { title: 'uom_2', field: 'uom_2' },
-
-               { title: 'curr_3', field: 'curr_3', cssClass: "border-l-2"},
-               { title: 'up_3', field: 'up_3', width: 80 },
-               { title: 'uom_3', field: 'uom_3' },
             ];
             
             this.itemsDefault = this.itemsDefault ? this.itemsDefault : this.items,
@@ -712,7 +729,7 @@ class extends Component
          },
 
          editorDownload() {
-            this.table.download("csv", "mass_update_editor.csv"); 
+            this.table.download("csv", "bulk_operation_items.csv"); 
          },
    }));
 </script>
