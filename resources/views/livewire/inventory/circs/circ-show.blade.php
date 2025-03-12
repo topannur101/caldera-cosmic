@@ -332,8 +332,8 @@ new class extends Component
       <div class="px-3 text-neutral-500 text-sm text-wrap"><i class="fa fa-exclamation-triangle mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diralat.') }}</div>
       <div class="flex justify-end">
          <div class="btn-group">
-            <x-primary-button type="button" wire:click="evaluate('approve')"><i class="fa fa-thumbs-up mr-2"></i>{{ __('Setujui') }}</x-secondary-button>
-            <x-primary-button type="button" wire:click="evaluate('reject')" class="h-full"><i class="fa fa-thumbs-down"></i></x-secondary-button>
+            <x-secondary-button type="button" wire:click="evaluate('approve')"><i class="fa fa-thumbs-up mr-2"></i>{{ __('Setujui') }}</x-secondary-button>
+            <x-secondary-button type="button" wire:click="evaluate('reject')" class="h-full"><i class="fa fa-thumbs-down"></i></x-secondary-button>
          </div>
       </div>
    </div>
@@ -350,9 +350,9 @@ new class extends Component
       </div>
       <div>
          @if($can_eval)
-            <x-primary-button type="button" x-on:click="is_evaluating = !is_evaluating; setTimeout(function(){ $refs.evalRemarks.focus()}, 100)">{{ __('Evaluasi') }}</x-secondary-button>
+            <x-secondary-button type="button" x-on:click="is_evaluating = !is_evaluating; setTimeout(function(){ $refs.evalRemarks.focus()}, 100)"><i class="fa fa-gavel mr-2"></i>{{ __('Evaluasi') }}</x-secondary-button>
          @else
-            <x-primary-button type="button" disabled>{{ __('Evaluasi') }}</x-secondary-button>
+            <x-secondary-button type="button" disabled><i class="fa fa-gavel mr-2"></i>{{ __('Evaluasi') }}</x-secondary-button>
          @endif
       </div>
    </div>

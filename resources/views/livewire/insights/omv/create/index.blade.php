@@ -255,10 +255,8 @@ new #[Layout('layouts.app')] class extends Component {
                                     <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
                                 </div>
                                 <div class="grid grid-cols-6">
-                                    <div class="col-span-2 px-6 bg-caldy-500 bg-opacity-10 rounded-r-xl">
-                                        <div class="mt-6">
-                                            <x-pill class="uppercase">{{ __('Batch') }}</x-pill>     
-                                        </div>   
+                                    <div class="col-span-2 p-6 bg-caldy-500 bg-opacity-10 rounded-r-xl">
+                                        <x-pill class="uppercase">{{ __('Batch') }}</x-pill> 
                                         <div class="mt-6">
                                             <label for="batchCode"
                                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
@@ -275,82 +273,79 @@ new #[Layout('layouts.app')] class extends Component {
                                             <x-text-input id="batchColor" x-model="batchColor" type="text" />
                                         </div>
                                     </div>
-                                    <div class="col-span-4 px-6"> 
-                                        <div class="my-6">
-                                            <x-pill class="uppercase">{{ __('Pelaksana') }}</x-pill>     
-                                        </div>  
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 mt-6">
-                                            <div>
-                                                <label for="batchTeam"
-                                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
-                                                <x-select id="batchTeam" class="w-full" x-model="batchTeam">
-                                                    <option value=""></option>
-                                                    <option value="A">A</option>
-                                                    <option value="B">B</option>
-                                                    <option value="C">C</option>
-                                                </x-select>
-                                            </div>
-                                            <div x-data="{ open: false }" class="col-span-2"
-                                                x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
-                                                <div x-on:click.away="open = false">
-                                                    <label for="omv-user"
-                                                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
-                                                    <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user"
-                                                        x-on:change="open = true" x-ref="userq" x-on:focus="open = true"
-                                                        id="omv-user" type="text" autocomplete="off"
-                                                        placeholder="{{ __('Pengguna') }}" />
-                                                    <div class="relative" x-show="open" x-cloak>
-                                                        <div class="absolute top-1 left-0 w-full z-10">
-                                                            <livewire:layout.user-select />
+                                    <div class="col-span-4 px-6 flex flex-col gap-y-6"> 
+                                        <div>
+                                            <x-pill class="uppercase mb-6">{{ __('Pelaksana') }}</x-pill>     
+                                            <div class="grid grid-cols-3 gap-x-3">
+                                                <div>
+                                                    <label for="batchTeam"
+                                                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
+                                                    <x-select id="batchTeam" class="w-full" x-model="batchTeam">
+                                                        <option value=""></option>
+                                                        <option value="A">A</option>
+                                                        <option value="B">B</option>
+                                                        <option value="C">C</option>
+                                                    </x-select>
+                                                </div>
+                                                <div x-data="{ open: false }" class="col-span-2"
+                                                    x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
+                                                    <div x-on:click.away="open = false">
+                                                        <label for="omv-user"
+                                                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
+                                                        <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user"
+                                                            x-on:change="open = true" x-ref="userq" x-on:focus="open = true"
+                                                            id="omv-user" type="text" autocomplete="off"
+                                                            placeholder="{{ __('Pengguna') }}" />
+                                                        <div class="relative" x-show="open" x-cloak>
+                                                            <div class="absolute top-1 left-0 w-full z-10">
+                                                                <livewire:layout.user-select />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 mt-6">
-                                            
-                                        </div>
-                                        <div class="my-6">
-                                            <x-pill class="uppercase">{{ __('Komposisi') }}</x-pill>     
-                                        </div>       
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 mt-6">
-                                            <div>
-                                                <label for="batchOriginalKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Original') }}</label>
-                                                <x-text-input-suffix suffix="kg" id="batchOriginalKg" x-model="batchOriginalKg" type="number" />
-                                            </div>
-                                            <div>
-                                                <label for="batchBaseKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Base') }}</label>
-                                                <x-text-input-suffix suffix="kg" id="batchBaseKg" x-model="batchBaseKg" type="number" />
-                                            </div>
-                                            <div>
-                                                <label for="batchScrapKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Skrap') }}</label>
-                                                <x-text-input-suffix suffix="kg" id="batchScrapKg" x-model="batchScrapKg" type="number" />
-                                            </div>
-                                            <div>
-                                                
-                                            </div>
-                                            <div>
-                                                <label for="batchPigmentGr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pigmen') }}</label>
-                                                <x-text-input-suffix suffix="gr" id="batchPigmentGr" x-model="batchPigmentGr" type="number" />
-                                            </div>
-                                            <div>
-                                                <label for="batchIS75Gr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">IS75</label>
-                                                <x-text-input-suffix suffix="gr" id="batchIS75Gr" x-model="batchIS75Gr" type="number" />
-                                            </div>
-                                            <div>
-                                                <label for="batchRM001" class="block px-3 mb-2 uppercase text-xs text-neutral-500">RM001</label>
-                                                <x-text-input-suffix suffix="gr" id="batchRM001" x-model="batchRM001" type="number" />
-                                            </div>
-                                            <div>
-                                                <label for="batchTBZTD" class="block px-3 mb-2 uppercase text-xs text-neutral-500">TBZTD</label>
-                                                <x-text-input-suffix suffix="gr" id="batchTBZTD" x-model="batchTBZTD" type="number" />
-                                            </div>
+                                        <div>
+                                            <x-pill class="uppercase mb-6">{{ __('Komposisi') }}</x-pill>  
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label for="compOriginalKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Original') }}</label>
+                                                    <x-text-input-suffix suffix="kg" id="compOriginalKg" x-model="compOriginalKg" type="number" />
+                                                </div>
+                                                <div>
+                                                    <label for="compBaseKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Base') }}</label>
+                                                    <x-text-input-suffix suffix="kg" id="compBaseKg" x-model="compBaseKg" type="number" />
+                                                </div>
+                                                <div>
+                                                    <label for="compScrapKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Skrap') }}</label>
+                                                    <x-text-input-suffix suffix="kg" id="compScrapKg" x-model="compScrapKg" type="number" />
+                                                </div>
+                                                <div>
+
+                                                </div>
+                                                <div>
+                                                    <label for="compPigmentGr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pigmen') }}</label>
+                                                    <x-text-input-suffix suffix="gr" id="compPigmentGr" x-model="compPigmentGr" type="number" />
+                                                </div>
+                                                <div>
+                                                    <label for="compIS75Gr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">IS75</label>
+                                                    <x-text-input-suffix suffix="gr" id="compIS75Gr" x-model="compIS75Gr" type="number" />
+                                                </div>
+                                                <div>
+                                                    <label for="compRM001Gr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">RM001</label>
+                                                    <x-text-input-suffix suffix="gr" id="compRM001Gr" x-model="compRM001Gr" type="number" />
+                                                </div>
+                                                <div>
+                                                    <label for="compTBZTDGr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">TBZTD</label>
+                                                    <x-text-input-suffix suffix="gr" id="compTBZTDGr" x-model="compTBZTDGr" type="number" />
+                                                </div>
+                                            </div> 
                                         </div>
                                     </div>
                                 </div>
                             </div>    
                             <div class="p-6 flex justify-end">
-                                <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Tutup') }}</x-secondary-button>
+                                <x-primary-button type="button" x-on:click="$dispatch('close')">{{ __('Simpan') }}</x-primary-button>
                             </div>
                         </x-modal>
 
@@ -475,21 +470,6 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
                             </div>
                         </x-modal>
-
-                        {{-- <div class=" rounded-lg">
-                            <div class="p-6">
-                                <div class="flex justify-between w-full">
-                                    <div class="flex gap-x-3">
-                                        <div>Threhsold actual</div>
-                                        <div>Threhsold setting</div>
-                                        <div>Timeout to stop</div>
-                                    </div>
-                                    <div>
-                                        Progress bar autostop
-                                    </div>
-                                </div>                     
-                            </div>
-                        </div> --}}
 
                         <div x-show="!recipe" class="grow">
                             <div
@@ -622,13 +602,23 @@ new #[Layout('layouts.app')] class extends Component {
 
             const batchDefaults = {
                 batchCode: '',
-                batchMcs: '',
+                batchMCS: '',
                 batchColor: '',
                 batchEval: '',
                 batchType: '',
                 batchAmps: [],
                 batchImages: [],
                 batchStartTime: null,
+            };
+
+            const compDefaults = {
+                compOriginalKg: '',
+                compBaseKg: '',
+                compScrapKg: '',
+                compPigmentGr: '',
+                compIS75Gr: '',
+                compRM001Gr: '',
+                compTBZTDGr: '',
             };
 
             const pollDefaults = {
@@ -670,6 +660,7 @@ new #[Layout('layouts.app')] class extends Component {
                 return {
                     ...configDefaults,
                     ...batchDefaults,
+                    ...compDefaults,
                     ...pollDefaults,
                     ...recipeDefaults,
                     ...timerDefaults,
@@ -728,6 +719,7 @@ new #[Layout('layouts.app')] class extends Component {
                     reset(groups) {
                         if (groups.includes('batch')) {
                             Object.assign(this, batchDefaults);
+                            Object.assign(this, compDefaults);
                         }
                         if (groups.includes('poll')) {
                             clearInterval(this.pollingAId);
@@ -960,6 +952,8 @@ new #[Layout('layouts.app')] class extends Component {
                             server_ip: '{{ parse_url(url('/'), PHP_URL_HOST) }}',
                             recipe_id: this.recipe.id.toString(),
                             code: this.batchCode,
+                            mcs: this.batchMCS,
+                            color: this.batchColor,
                             line: this.batchLine,
                             team: this.batchTeam,
                             user_1_emp_id: '{{ Auth::user()->emp_id }}',
@@ -968,7 +962,7 @@ new #[Layout('layouts.app')] class extends Component {
                             start_at: this.formatDateTime(this.batchStartTime),
                             end_at: this.formatDateTime(batchEndTime),
                             images: this.batchImages,
-                            amps: this.batchAmps
+                            amps: this.batchAmps,
                         };
                         this.sendData(jsonData);
                         this.reset(['timer', 'recipe', 'batch', 'poll', 'recipesFiltered', 'slider'])

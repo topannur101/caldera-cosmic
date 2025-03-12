@@ -2,7 +2,9 @@
 
 <div x-data="{ 
         loc_parent: @entangle('loc_parent').live, 
+        loc_parents: @entangle('loc_parents').live,
         loc_bin: @entangle('loc_bin').live,
+        loc_bins: @entangle('loc_bins').live,
         get loc_name() {
             if (!this.loc_parent.trim() && !this.loc_bin.trim()) {
                 return '';
@@ -24,20 +26,20 @@
             <div class="grid grid-cols-2 gap-y-6 gap-x-3">        
                 <div>
                     <label for="loc-parent" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Induk') }}</label>
-                    <x-text-input id="loc-parent" type="text" x-model="loc_parent" x-on:keydown.enter.prevent="$nextTick(() => { $refs.locBin.focus() })" />
+                    <x-text-input id="loc-parent" list="loc_parents" type="text" x-model="loc_parent" x-on:keydown.enter.prevent="$nextTick(() => { $refs.locBin.focus() })" />
                     <datalist id="loc_parents">
-                        @foreach($loc_parents as $loc_parent)
-                            <option value="{{ $loc_parent }}"></option>
-                        @endforeach
+                        <template x-for="parent in loc_parents">
+                            <option :value="parent"></option>
+                        </template>
                     </datalist>
                 </div>                           
                 <div>
                     <label for="loc-bin" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Bin') }}</label>
-                    <x-text-input id="loc-bin" type="text" x-model="loc_bin" x-ref="locBin" x-on:keydown.enter.prevent="$dispatch('close')" />
+                    <x-text-input id="loc-bin" list="loc_bins" type="text" x-model="loc_bin" x-ref="locBin" x-on:keydown.enter.prevent="$dispatch('close')" />
                     <datalist id="loc_bins">
-                        @foreach($loc_bins as $loc_bin)
-                            <option value="{{ $loc_bin }}"></option>
-                        @endforeach
+                        <template x-for="bin in loc_bins">
+                            <option :value="bin"></option>
+                        </template>
                     </datalist>
                 </div>
             </div>              

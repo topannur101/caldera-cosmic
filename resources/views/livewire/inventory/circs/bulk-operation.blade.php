@@ -355,7 +355,7 @@ class extends Component
                      <x-pill>{{ $count }}</x-pill>{{ ' ' . __('sirkulasi akan dibuat.') }}
                   </div>
                   <div>
-                     <div class="mb-3">{{ __('Tindakan sirkulasi apa yang kamu lakukan?') }}</div>
+                     <div class="mb-3">{{ __('Tindakan sirkulasi apa yang akan kamu lakukan?') }}</div>
                      <div class="btn-group w-full">
                         <x-radio-button wire:model="type" grow value="deposit" name="type" id="type-deposit">
                               <div class="text-center my-auto">

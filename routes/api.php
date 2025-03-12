@@ -48,6 +48,8 @@ Route::post('/omv-metric', function (Request $request) {
     $validator = Validator::make($request->all(), [
         'recipe_id'         => 'required|exists:ins_omv_recipes,id',
         'code'              => 'nullable|string|max:20',
+        'mcs'               => 'nullable|string|max:10',
+        'color'             => 'nullable|string|max:20',
         'line'              => 'required|integer|min:1|max:99',
         'team'              => 'required|in:A,B,C',
         'user_1_emp_id'     => 'required|exists:users,emp_id',
@@ -95,9 +97,11 @@ Route::post('/omv-metric', function (Request $request) {
     }
 
     $code = strtoupper(trim($validated['code']));
+    $mcs = strtoupper(trim($validated['mcs']));
+    $color = strtoupper(trim($validated['color']));
     $batch = null;
     if ($code) {
-        $batch = InsRubberBatch::firstOrCreate(['code' => $code]);
+        $batch = InsRubberBatch::firstOrCreate(['code' => $code],['mcs' => $mcs, 'color' => $color]);
     }
 
     $amps = $validated['amps']; 

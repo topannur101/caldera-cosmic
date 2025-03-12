@@ -2,7 +2,8 @@
 
 <div x-data="{
       tags: @entangle('tags').live,
-      tag_input: '',
+      inv_tags: @entangle('inv_tags').live,
+      tag_input: @entangle('tag_input').live,
       get tag_list() {
          return this.tags.join(', ');
       },
@@ -54,11 +55,11 @@
                      </div>
                   </template>
                </div>
-               <x-text-input-icon id="tag-search" icon="fa fa-fw fa-search" type="text" x-model="tag_input" maxlength="20" placeholder="{{ __('Cari tag') }}" x-on:keydown.enter.prevent="tag_input ? addTag : $dispatch('close')" />
-               <datalist id="tags">
-                  @foreach($tags as $tag)
-                     <option value="{{ $tag }}"></option>
-                  @endforeach
+               <x-text-input-icon id="tag-search" list="inv_tags" icon="fa fa-fw fa-search" type="text" x-model="tag_input" maxlength="20" placeholder="{{ __('Cari tag') }}" x-on:keydown.enter.prevent="tag_input ? addTag : $dispatch('close')" />
+               <datalist id="inv_tags">
+                  <template x-for="tag in inv_tags">
+                        <option :value="tag"></option>
+                  </template>
                </datalist>
             </div>             
             <div class="flex justify-end">
