@@ -277,24 +277,24 @@ class extends Component {
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
             <div class="flex justify-between px-8 lg:px-3 py-3 lg:py-0 divide-x divide-neutral-200 dark:divide-neutral-700">
                 <div class="btn-group h-9 pr-3">
-                    <x-checkbox-button-t x-model="status" grow value="pending" name="circ_eval_status" id="circ_eval_status-pending">
+                    <x-checkbox-button-t title="{{ __('Tertunda') }}" x-model="status" grow value="pending" name="circ_eval_status" id="circ_eval_status-pending">
                         <div class="text-center my-auto"><i class="fa fa-fw fa-hourglass"></i></div>
                     </x-checkbox-button-t>
-                    <x-checkbox-button-t x-model="status" grow value="approved" name="circ_eval_status" id="circ_eval_status-approved">
+                    <x-checkbox-button-t title="{{ __('Disetujui') }}" x-model="status" grow value="approved" name="circ_eval_status" id="circ_eval_status-approved">
                         <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-up"></i></div>
                     </x-checkbox-button-t>
-                    <x-checkbox-button-t x-model="status" grow value="rejected" name="circ_eval_status" id="circ_eval_status-rejected">
+                    <x-checkbox-button-t title="{{ __('Ditolak') }}" x-model="status" grow value="rejected" name="circ_eval_status" id="circ_eval_status-rejected">
                         <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-down"></i></div>
                     </x-checkbox-button-t>
                 </div>
                 <div class="btn-group h-9 pl-3">
-                    <x-checkbox-button-t x-model="types" grow value="deposit" name="circ_types" id="circ_types-deposit">
+                    <x-checkbox-button-t title="{{ __('Tambah') }}" x-model="types" grow value="deposit" name="circ_types" id="circ_types-deposit">
                         <div class="text-center my-auto"><i class="fa fa-fw fa-plus text-green-500"></i></div>
                     </x-checkbox-button-t>
-                    <x-checkbox-button-t x-model="types" grow value="capture" name="circ_types" id="circ_types-capture">
+                    <x-checkbox-button-t title="{{ __('Catat') }}" x-model="types" grow value="capture" name="circ_types" id="circ_types-capture">
                         <div class="text-center my-auto"><i class="fa fa-fw fa-code-commit text-yellow-600"></i></div>
                     </x-checkbox-button-t>
-                    <x-checkbox-button-t x-model="types" grow value="withdrawal" name="circ_types" id="circ_types-withdrawal">
+                    <x-checkbox-button-t title="{{ __('Ambil') }}" x-model="types" grow value="withdrawal" name="circ_types" id="circ_types-withdrawal">
                         <div class="text-center my-auto"><i class="fa fa-fw fa-minus text-red-500"></i></div>
                     </x-checkbox-button-t>
                 </div>

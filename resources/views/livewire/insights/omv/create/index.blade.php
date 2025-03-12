@@ -120,45 +120,21 @@ new #[Layout('layouts.app')] class extends Component {
                                             :class="timerRemainingTime == 0 ? 'text-red-500' : ''"></div>
                                     </div>
                                 </div>
-                                <div class="flex">
-                                    <div class="px-2 py-4"
-                                        :class="!batchTeam && timerIsRunning ?
-                                            'bg-red-200 dark:bg-red-900 dark:text-white fa-fade' : ''">
-                                        <label for="batchTeam"
-                                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
-                                        <x-select id="batchTeam" x-model="batchTeam">
-                                            <option value=""></option>
-                                            <option value="A">A</option>
-                                            <option value="B">B</option>
-                                            <option value="C">C</option>
-                                        </x-select>
-                                    </div>
-                                    <div class="px-2 py-4 w-48"
-                                        :class="!userq && timerIsRunning ?
-                                            'bg-red-200 dark:bg-red-900 dark:text-white fa-fade' : ''"
-                                        wire:key="user-select" x-data="{ open: false }"
-                                        x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
-                                        <div x-on:click.away="open = false">
-                                            <label for="omv-user"
-                                                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
-                                            <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user"
-                                                x-on:change="open = true" x-ref="userq" x-on:focus="open = true"
-                                                id="omv-user" type="text" autocomplete="off"
-                                                placeholder="{{ __('Pengguna') }}" />
-                                            <div class="relative" x-show="open" x-cloak>
-                                                <div class="absolute top-1 left-0 w-full z-10">
-                                                    <livewire:layout.user-select />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                
+                                <x-secondary-button class="my-4" type="button" size="lg"
+                                    x-show="recipe" x-cloak 
+                                    x-on:click="$dispatch('open-modal', 'details')">
+                                    <span :class="(!batchTeam || !userq || !batchCode) ? 'text-red-500' : ''">{{ __('Rincian') }}<i x-show="!batchTeam || !userq || !batchCode" class="fa fa-exclamation-circle ml-3"></i></span>
+                                </x-secondary-button>
+                                
                                 <x-primary-button class="m-4" type="button" size="lg"
                                     @click="wizardOpen()" x-show="!timerIsRunning && !recipe"><i
                                         class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
-                                <x-primary-button class="m-4" type="button" size="lg"
+
+                                <x-primary-button class="m-4" type="button" size="lg" x-cloak
                                     @click="reset(['timer', 'recipe', 'batch', 'poll', 'recipesFiltered', 'slider'])"
                                     x-show="!timerIsRunning && recipe">{{ __('Batal') }}</x-primary-button>
+
                                 <x-primary-button class="m-4" type="button" size="lg"
                                     @click="$dispatch('open-spotlight', 'manual-stop')" x-cloak
                                     x-show="timerIsRunning">
@@ -171,6 +147,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         </div>
                                     </div>
                                 </x-primary-button>
+
                             </div>
                         </div>
 
@@ -251,12 +228,12 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="text-center pt-6">
                                 <i class="fa fa-exclamation-triangle text-4xl "></i>
                                 <h2 class="mt-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                                    {{ __('Tim atau Mitra kerja masih kosong') }}
+                                    {{ __('Rincian belum lengkap') }}
                                 </h2>
                             </div>
                             <div class="p-6">
                                 <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                                    {{ __('Harap lengkapi Tim dan Mitra kerja sebelum timer berhenti agar data sah dan dapat tersimpan.') }}
+                                    {{ __('Harap lengkapi Tim, Mitra kerja, dan Kode sebelum timer berhenti agar data sah dan dapat tersimpan.') }}
                                 </p>
                                 <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
                                     {{ __('Kelalaian dalam melengkapi informasi tersebut dapat menyebabkan datamu diabaikan oleh sistem.') }}
@@ -269,22 +246,118 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
                         </x-modal>
 
-                        <x-modal name="recipes" focusable>
-                            <div class="p-6">
-                                <!-- Step 1: Batch identity -->
-                                <div x-show="wizardStep === 1">
+                        <x-modal name="details" maxWidth="2xl" focusable>
+                            <div>
+                                <div class="flex justify-between items-start p-6">
                                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                                        {{ __('Identitas batch') }}
+                                        {{ __('Rincian') }}
                                     </h2>
-                                    <div class="mt-6">
-                                        <label for="batchCode"
+                                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+                                </div>
+                                <div class="grid grid-cols-6">
+                                    <div class="col-span-2 px-6 bg-caldy-500 bg-opacity-10 rounded-r-xl">
+                                        <div class="mt-6">
+                                            <x-pill class="uppercase">{{ __('Batch') }}</x-pill>     
+                                        </div>   
+                                        <div class="mt-6">
+                                            <label for="batchCode"
                                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
-                                        <x-text-input id="batchCode" x-model="batchCode" type="text"
-                                            @keydown.enter="wizardNextStep" />
+                                            <x-text-input id="batchCode" x-model="batchCode" type="text" />
+                                        </div>
+                                        <div class="mt-6">
+                                            <label for="batchMCS"
+                                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
+                                            <x-text-input id="batchMCS" x-model="batchMCS" type="text" />
+                                        </div>
+                                        <div class="mt-6">
+                                            <label for="batchColor"
+                                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Warna') }}</label>
+                                            <x-text-input id="batchColor" x-model="batchColor" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="col-span-4 px-6"> 
+                                        <div class="my-6">
+                                            <x-pill class="uppercase">{{ __('Pelaksana') }}</x-pill>     
+                                        </div>  
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 mt-6">
+                                            <div>
+                                                <label for="batchTeam"
+                                                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
+                                                <x-select id="batchTeam" class="w-full" x-model="batchTeam">
+                                                    <option value=""></option>
+                                                    <option value="A">A</option>
+                                                    <option value="B">B</option>
+                                                    <option value="C">C</option>
+                                                </x-select>
+                                            </div>
+                                            <div x-data="{ open: false }" class="col-span-2"
+                                                x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
+                                                <div x-on:click.away="open = false">
+                                                    <label for="omv-user"
+                                                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
+                                                    <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user"
+                                                        x-on:change="open = true" x-ref="userq" x-on:focus="open = true"
+                                                        id="omv-user" type="text" autocomplete="off"
+                                                        placeholder="{{ __('Pengguna') }}" />
+                                                    <div class="relative" x-show="open" x-cloak>
+                                                        <div class="absolute top-1 left-0 w-full z-10">
+                                                            <livewire:layout.user-select />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 mt-6">
+                                            
+                                        </div>
+                                        <div class="my-6">
+                                            <x-pill class="uppercase">{{ __('Komposisi') }}</x-pill>     
+                                        </div>       
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 mt-6">
+                                            <div>
+                                                <label for="batchOriginalKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Original') }}</label>
+                                                <x-text-input-suffix suffix="kg" id="batchOriginalKg" x-model="batchOriginalKg" type="number" />
+                                            </div>
+                                            <div>
+                                                <label for="batchBaseKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Base') }}</label>
+                                                <x-text-input-suffix suffix="kg" id="batchBaseKg" x-model="batchBaseKg" type="number" />
+                                            </div>
+                                            <div>
+                                                <label for="batchScrapKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Skrap') }}</label>
+                                                <x-text-input-suffix suffix="kg" id="batchScrapKg" x-model="batchScrapKg" type="number" />
+                                            </div>
+                                            <div>
+                                                
+                                            </div>
+                                            <div>
+                                                <label for="batchPigmentGr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pigmen') }}</label>
+                                                <x-text-input-suffix suffix="gr" id="batchPigmentGr" x-model="batchPigmentGr" type="number" />
+                                            </div>
+                                            <div>
+                                                <label for="batchIS75Gr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">IS75</label>
+                                                <x-text-input-suffix suffix="gr" id="batchIS75Gr" x-model="batchIS75Gr" type="number" />
+                                            </div>
+                                            <div>
+                                                <label for="batchRM001" class="block px-3 mb-2 uppercase text-xs text-neutral-500">RM001</label>
+                                                <x-text-input-suffix suffix="gr" id="batchRM001" x-model="batchRM001" type="number" />
+                                            </div>
+                                            <div>
+                                                <label for="batchTBZTD" class="block px-3 mb-2 uppercase text-xs text-neutral-500">TBZTD</label>
+                                                <x-text-input-suffix suffix="gr" id="batchTBZTD" x-model="batchTBZTD" type="number" />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>    
+                            <div class="p-6 flex justify-end">
+                                <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Tutup') }}</x-secondary-button>
+                            </div>
+                        </x-modal>
+
+                        <x-modal name="recipes" focusable>
+                            <div class="p-6">
                                 <!-- Step 2: Mixing Type -->
-                                <div x-show="wizardStep === 2">
+                                <div x-show="wizardStep === 1">
                                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                                         {{ __('Pilih tipe mixing') }}
                                     </h2>
@@ -350,7 +423,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
 
                                 <!-- Step 3: Recipe Selection -->
-                                <div x-show="wizardStep === 3">
+                                <div x-show="wizardStep === 2">
                                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                                         {{ __('Pilih resep') }}
                                     </h2>
@@ -391,11 +464,11 @@ new #[Layout('layouts.app')] class extends Component {
                                         @click="wizardPrevStep">
                                         {{ __('Mundur') }}
                                     </x-secondary-button>
-                                    <x-secondary-button type="button" x-show="wizardStep < 3"
+                                    <x-secondary-button type="button" x-show="wizardStep < 2 && recipeId"
                                         @click="wizardNextStep">
                                         {{ __('Maju') }}
                                     </x-secondary-button>
-                                    <x-primary-button type="button" x-show="wizardStep === 3 && recipeId"
+                                    <x-primary-button type="button" x-show="wizardStep === 2 && recipeId"
                                         @click="wizardFinish">
                                         {{ __('Terapkan') }}
                                     </x-primary-button>
@@ -549,6 +622,8 @@ new #[Layout('layouts.app')] class extends Component {
 
             const batchDefaults = {
                 batchCode: '',
+                batchMcs: '',
+                batchColor: '',
                 batchEval: '',
                 batchType: '',
                 batchAmps: [],
@@ -697,9 +772,7 @@ new #[Layout('layouts.app')] class extends Component {
                         this.loadRecipe(recipe);
                         this.$dispatch('close');
 
-                        if (!this.batchLine) {
-                            this.$dispatch('open-modal', 'omv-worker-unavailable');
-                        }
+                        this.$dispatch('open-modal', 'details');
 
                         this.pollingAId = setInterval(() => {
                             this.fetchLine();
@@ -733,9 +806,9 @@ new #[Layout('layouts.app')] class extends Component {
                     },
 
                     wizardNextStep() {
-                        if (this.wizardStep < 3) {
+                        if (this.wizardStep < 2) {
                             this.wizardStep++;
-                            if (this.wizardStep === 3) {
+                            if (this.wizardStep === 2) {
                                 this.filterRecipes();
                             }
                         }
@@ -817,7 +890,7 @@ new #[Layout('layouts.app')] class extends Component {
                         this.modifyClass('cal-nav-main-links-alt', 'remove', 'hidden');
 
                         // Show warning if batch or user is empty
-                        if (!this.batchTeam || !this.userq) {
+                        if (!this.batchTeam || !this.userq || this.batchCode) {
                             this.$dispatch('open-modal', 'input-incomplete');
                         }
 
