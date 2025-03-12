@@ -156,9 +156,14 @@ class DownloadController extends Controller
         $date_to            = $inv_circs_params['date_to']          ?? '';
         $user_id            = $inv_circs_params['user_id']          ?? 0;
         $remarks            = $inv_circs_params['remarks']          ?? ['', ''];
-    
+
+        $item_id = null;
+        if($request['item_id']) {
+            $sort = 'updated';
+            $item_id = $request['item_id'];
+        }     
         
-        return response()->streamDownload(function () use ($sort, $area_ids, $circ_eval_status, $circ_types, $date_fr, $date_to, $user_id, $remarks) {
+        return response()->streamDownload(function () use ($item_id, $sort, $area_ids, $circ_eval_status, $circ_types, $date_fr, $date_to, $user_id, $remarks) {
             // Open output stream
             $handle = fopen('php://output', 'w');
             

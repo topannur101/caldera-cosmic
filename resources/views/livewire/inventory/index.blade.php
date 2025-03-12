@@ -82,7 +82,7 @@ class extends Component {};
       x-transition:leave-start="opacity-100"
       x-transition:leave-end="opacity-0"
       x-init="setTimeout(() => { open = true }, 300)" 
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10"
       >
          <!-- Modal Container -->
          <div 

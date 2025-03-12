@@ -80,6 +80,7 @@ class extends Component {
         $eval_remarks = trim ($this->remarks[1]);
 
         $inv_circs_params = [
+            'sort'              => $this->sort,
             'area_ids'          => $this->area_ids,
             'circ_eval_status'  => $this->circ_eval_status,
             'circ_types'        => $this->circ_types,
@@ -272,7 +273,7 @@ class extends Component {
             </div>
         </x-spotlight>
     </div>
-    <div class="sticky top-0 z-50 py-6 bg-gradient-to-b from-neutral-100 via-neutral-100 to-transparent dark:from-neutral-900 dark:via-neutral-900 dark:to-transparent">
+    <div class="sticky top-0 z-10 py-6 bg-gradient-to-b from-neutral-100 via-neutral-100 to-transparent dark:from-neutral-900 dark:via-neutral-900 dark:to-transparent">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
             <div class="flex justify-between px-8 lg:px-3 py-3 lg:py-0 divide-x divide-neutral-200 dark:divide-neutral-700">
                 <div class="btn-group h-9 pr-3">

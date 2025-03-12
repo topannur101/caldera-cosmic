@@ -26,18 +26,18 @@
         </div>
         <div class="flex grow truncate py-4 pr-4">
             <div class="grow truncate">
-                <div class="px-2 sm:px-4 truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                <div title="{{ $name }}" class="px-2 sm:px-4 truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
                     <x-link :href="$url" wire:navigate>{{ $name }}</x-link>
                 </div>                        
-                <div class="px-2 sm:px-4 truncate text-sm text-neutral-600 dark:text-neutral-400">
+                <div title="{{ $desc }}" class="px-2 sm:px-4 truncate text-sm text-neutral-600 dark:text-neutral-400">
                     {{ $desc }}
                 </div>
                 <div class="px-2 sm:px-4 truncate mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                    <span>{{ $code ? $code : __('Tak ada kode')}}</span><span>{{ $price ? (' • ' . $curr  . ' ' . $price . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}</span>
+                    <span>{{ $code ? $code : __('Tak ada kode')}}</span><span title="{{ $price ? ($curr  . ' ' . $price . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}">{{ $price ? (' • ' . $curr  . ' ' . $price . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}</span>
                 </div>
                 <div class="px-2 sm:px-4 truncate mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                    <span class="mr-3"><i class="fa fa-map-marker-alt mr-2"></i>{{ $loc ? $loc : __('Tak ada lokasi') }}</span>
-                    <span><i class="fa fa-tag mr-2"></i>{{ $tags ? $tags : __('Tak ada tag') }}</span>                            
+                    <span title="{{ $loc }}" class="mr-3"><i class="fa fa-map-marker-alt mr-2"></i>{{ $loc ? $loc : __('Tak ada lokasi') }}</span>
+                    <span title="{{ $tags }}"><i class="fa fa-tag mr-2"></i>{{ $tags ? $tags : __('Tak ada tag') }}</span>                            
                 </div>
             </div>
             <div class="ml-2 text-right">

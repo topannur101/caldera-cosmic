@@ -282,15 +282,15 @@ new class extends Component
                      </div>
                      @endif
                   @else
-                     <div class="py-3"><i class="text-neutral-500 fa fa-fw fa-tent mr-2"></i>{{ $items[0]['area_name']}}</div>
-                     <div class="py-3 {{ $items[0]['is_active'] ? '' :'text-red-500' }}"><i class="fa fa-fw {{ $items[0]['is_active'] ? 'fa-check-circle text-neutral-500' :'fa-ban' }} mr-2"></i>{{ $items[0]['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
+                     <div class="py-2"><i class="text-neutral-500 fa fa-fw fa-tent mr-2"></i>{{ $items[0]['area_name']}}</div>
+                     <div class="py-2 {{ $items[0]['is_active'] ? '' :'text-red-500' }}"><i class="fa fa-fw {{ $items[0]['is_active'] ? 'fa-check-circle text-neutral-500' :'fa-ban' }} mr-2"></i>{{ $items[0]['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
                      @if($can_store)
-                        <div class="py-3"><x-link href="{{ route('inventory.items.edit', ['id' => $items[0]['id']] ) }}" wire:navigate><i class="text-neutral-500 fa fa-fw fa-pen mr-2"></i>{{ __('Edit barang') }}</x-text-link></div>
+                        <div class="py-2"><x-link href="{{ route('inventory.items.edit', ['id' => $items[0]['id']] ) }}" wire:navigate><i class="text-neutral-500 fa fa-fw fa-pen mr-2"></i>{{ __('Edit barang') }}</x-text-link></div>
                      @endif
-                     <div class="py-3"><span class="text-neutral-500">{{ __('ID barang') . ': ' }}</span>{{  $items[0]['id'] }}</div>
-                     <div class="py-3"><span class="text-neutral-500">{{ __('Terakhir diperbarui') . ': ' }}</span>{{  $items[0]['updated_at'] }}</div>
-                     <div class="py-3"><span class="text-neutral-500">{{ __('Terakhir ditambah') . ': ' }}</span>{{ ($items[0]['last_deposit'] ?: __('Tak pernah')) }}</div>
-                     <div class="py-3"><span class="text-neutral-500">{{ __('Terakhir diambil') . ': ' }}</span>{{ ($items[0]['last_withdrawal'] ?: __('Tak pernah')) }}</div>
+                     <div class="py-2"><span class="text-neutral-500">{{ __('ID barang') . ': ' }}</span>{{  $items[0]['id'] }}</div>
+                     <div class="py-2"><span class="text-neutral-500">{{ __('Terakhir diperbarui') . ': ' }}</span>{{  $items[0]['updated_at'] }}</div>
+                     <div class="py-2"><span class="text-neutral-500">{{ __('Terakhir ditambah') . ': ' }}</span>{{ ($items[0]['last_deposit'] ?: __('Tak pernah')) }}</div>
+                     <div class="py-2"><span class="text-neutral-500">{{ __('Terakhir diambil') . ': ' }}</span>{{ ($items[0]['last_withdrawal'] ?: __('Tak pernah')) }}</div>
                   @endif
                 </div>
             </div>
