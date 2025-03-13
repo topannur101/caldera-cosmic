@@ -93,7 +93,7 @@ new class extends Component
                      class="cursor-pointer inline-block pb-3 border-b-2 
                      @if($stock['id'] == $stock_id) text-neutral-800 font-bold dark:text-neutral-200 border-caldy-500 rounded-t-lg active dark:border-caldy-500 
                      @else border-transparent hover:text-neutral-600 hover:border-neutral-300 dark:hover:text-neutral-300 @endif">
-                        {{ $stock['unit_price'] . ' ' .$stock['inv_curr']['name'] . ' / ' . $stock['uom'] }}
+                        {{ number_format($stock['unit_price'], 0) . ' ' .$stock['inv_curr']['name'] . ' / ' . $stock['uom'] }}
                      </div>
                </li>
             @endforeach

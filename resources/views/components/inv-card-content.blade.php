@@ -33,7 +33,7 @@
                     {{ $desc }}
                 </div>
                 <div class="px-2 sm:px-4 truncate mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                    <span>{{ $code ? $code : __('Tak ada kode')}}</span><span title="{{ $price ? ($curr  . ' ' . $price . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}">{{ $price ? (' • ' . $curr  . ' ' . $price . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}</span>
+                    <span>{{ $code ? $code : __('Tak ada kode')}}</span><span title="{{ $price ? ($curr  . ' ' . number_format($price, 0) . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}">{{ $price ? (' • ' . $curr  . ' ' . number_format($price, 0) . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}</span>
                 </div>
                 <div class="px-2 sm:px-4 truncate mt-2 text-sm text-neutral-600 dark:text-neutral-400">
                     <span title="{{ $loc }}" class="mr-3"><i class="fa fa-map-marker-alt mr-2"></i>{{ $loc ? $loc : __('Tak ada lokasi') }}</span>
