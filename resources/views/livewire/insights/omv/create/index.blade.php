@@ -4,6 +4,7 @@ use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Layout;
 
 new #[Layout('layouts.app')] class extends Component {
+
     public string $userq = '';
     public int $user_id = 0;
 
@@ -309,35 +310,35 @@ new #[Layout('layouts.app')] class extends Component {
                                             <x-pill class="uppercase mb-6">{{ __('Komposisi') }}</x-pill>  
                                             <div class="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label for="compOriginalKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Original') }}</label>
-                                                    <x-text-input-suffix suffix="kg" id="compOriginalKg" x-model="compOriginalKg" type="number" />
+                                                    <label for="compBO" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Berat base original') }}</label>
+                                                    <x-text-input-suffix suffix="kg" id="compBO" x-model="compBO" type="number" />
                                                 </div>
                                                 <div>
-                                                    <label for="compBaseKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Base') }}</label>
-                                                    <x-text-input-suffix suffix="kg" id="compBaseKg" x-model="compBaseKg" type="number" />
+                                                    <label for="compBR" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Berat batch remixing') }}</label>
+                                                    <x-text-input-suffix suffix="kg" id="compBR" x-model="compBR" type="number" />
                                                 </div>
                                                 <div>
-                                                    <label for="compScrapKg" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Skrap') }}</label>
-                                                    <x-text-input-suffix suffix="kg" id="compScrapKg" x-model="compScrapKg" type="number" />
+                                                    <label for="compS" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Berat skrap') }}</label>
+                                                    <x-text-input-suffix suffix="kg" id="compS" x-model="compS" type="number" />
+                                                </div>
+                                            </div>
+                                            <hr class="border-neutral-300 dark:border-neutral-700 my-6" />
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label for="compP" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pigmen') }}</label>
+                                                    <x-text-input-suffix suffix="gr" id="compP" x-model="compP" type="number" />
                                                 </div>
                                                 <div>
-
+                                                    <label for="compI" class="block px-3 mb-2 uppercase text-xs text-neutral-500">IS75</label>
+                                                    <x-text-input-suffix suffix="gr" id="compI" x-model="compI" type="number" />
                                                 </div>
                                                 <div>
-                                                    <label for="compPigmentGr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pigmen') }}</label>
-                                                    <x-text-input-suffix suffix="gr" id="compPigmentGr" x-model="compPigmentGr" type="number" />
+                                                    <label for="compR" class="block px-3 mb-2 uppercase text-xs text-neutral-500">RM001</label>
+                                                    <x-text-input-suffix suffix="gr" id="compR" x-model="compR" type="number" />
                                                 </div>
                                                 <div>
-                                                    <label for="compIS75Gr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">IS75</label>
-                                                    <x-text-input-suffix suffix="gr" id="compIS75Gr" x-model="compIS75Gr" type="number" />
-                                                </div>
-                                                <div>
-                                                    <label for="compRM001Gr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">RM001</label>
-                                                    <x-text-input-suffix suffix="gr" id="compRM001Gr" x-model="compRM001Gr" type="number" />
-                                                </div>
-                                                <div>
-                                                    <label for="compTBZTDGr" class="block px-3 mb-2 uppercase text-xs text-neutral-500">TBZTD</label>
-                                                    <x-text-input-suffix suffix="gr" id="compTBZTDGr" x-model="compTBZTDGr" type="number" />
+                                                    <label for="compT" class="block px-3 mb-2 uppercase text-xs text-neutral-500">TBZTD</label>
+                                                    <x-text-input-suffix suffix="gr" id="compT" x-model="compT" type="number" />
                                                 </div>
                                             </div> 
                                         </div>
@@ -612,13 +613,13 @@ new #[Layout('layouts.app')] class extends Component {
             };
 
             const compDefaults = {
-                compOriginalKg: '',
-                compBaseKg: '',
-                compScrapKg: '',
-                compPigmentGr: '',
-                compIS75Gr: '',
-                compRM001Gr: '',
-                compTBZTDGr: '',
+                compBO: '',
+                compBR: '',
+                compS: '',
+                compP: '',
+                compI: '',
+                compR: '',
+                compT: '',
             };
 
             const pollDefaults = {
