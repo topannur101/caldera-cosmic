@@ -2,9 +2,11 @@
 
 <div x-data="{ 
         loc_parent: @entangle('loc_parent').live, 
-        loc_parents: @entangle('loc_parents').live,
         loc_bin: @entangle('loc_bin').live,
-        loc_bins: @entangle('loc_bins').live,
+
+        loc_parent_hints: @entangle('loc_parent_hints').live,
+        loc_bin_hints: @entangle('loc_bin_hints').live,
+
         get loc_name() {
             if (!this.loc_parent.trim() && !this.loc_bin.trim()) {
                 return '';
@@ -28,8 +30,8 @@
                     <label for="loc-parent" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Induk') }}</label>
                     <x-text-input id="loc-parent" list="loc_parents" type="text" x-model="loc_parent" x-on:keydown.enter.prevent="$nextTick(() => { $refs.locBin.focus() })" />
                     <datalist id="loc_parents">
-                        <template x-for="parent in loc_parents">
-                            <option :value="parent"></option>
+                        <template x-for="hint in loc_parent_hints">
+                            <option :value="hint"></option>
                         </template>
                     </datalist>
                 </div>                           
@@ -37,8 +39,8 @@
                     <label for="loc-bin" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Bin') }}</label>
                     <x-text-input id="loc-bin" list="loc_bins" type="text" x-model="loc_bin" x-ref="locBin" x-on:keydown.enter.prevent="$dispatch('close')" />
                     <datalist id="loc_bins">
-                        <template x-for="bin in loc_bins">
-                            <option :value="bin"></option>
+                        <template x-for="hint in loc_bin_hints">
+                            <option :value="hint"></option>
                         </template>
                     </datalist>
                 </div>

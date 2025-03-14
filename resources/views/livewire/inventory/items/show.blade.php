@@ -43,7 +43,7 @@ class extends Component
             $this->items[0]['name'] = $item->name;
             $this->items[0]['desc'] = $item->desc;
             $this->items[0]['code'] = $item->code;
-            $this->items[0]['loc_name'] = $item->inv_loc_id ? $item->inv_loc->parent . ' ' . $item->inv_loc->bin : '';
+            $this->items[0]['loc_name'] = $item->inv_loc_id ? $item->inv_loc->parent . '-' . $item->inv_loc->bin : '';
             $this->items[0]['tags_list'] = $item->inv_tags->pluck('name')->implode(', ');
             $this->items[0]['photo'] = $item->photo;
             $this->items[0]['area_id'] = $item->inv_area_id;

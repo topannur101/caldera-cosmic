@@ -48,7 +48,7 @@ class extends Component
             $this->items[0]['code']         = $item->code;
 
             // for is_editing false
-            $this->items[0]['loc_name']     = $item->inv_loc_id ? $item->inv_loc->parent . ' ' . $item->inv_loc->bin : '';
+            $this->items[0]['loc_name']     = $item->inv_loc_id ? ($item->inv_loc->parent . '-' . $item->inv_loc->bin) : '';
             
             // for is_editing true
             $this->loc_parent               = $item->inv_loc_id ? $item->inv_loc->parent  : '';

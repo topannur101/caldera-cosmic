@@ -19,6 +19,7 @@ class InvItem extends Model
         'is_active',
         'inv_loc_id',
         'inv_area_id',
+        'legacy_id'
     ];
 
     public function inv_loc()

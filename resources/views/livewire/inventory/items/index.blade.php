@@ -28,17 +28,17 @@ class extends Component
 
     public string $loc_parent = '';
 
-    public array $loc_parents = [];
-    
     public string $loc_bin = '';
-
-    public array $loc_bins = [];
-
+    
     public array $tags = [];
-
+    
     public string $tag_input = '';
+    
+    public array $loc_parent_hints = [];
+    
+    public array $loc_bin_hints = [];
 
-    public array $inv_tags = [];
+    public array $tag_hints = [];
     
     #[Url]
     public string $q = '';
@@ -252,41 +252,41 @@ class extends Component
         }
 
         if ($property == 'loc_parent') {
-            $loc_parent = trim($this->loc_parent);
-            if ($loc_parent) {
-                $loc_parents = InvLoc::where('parent', 'LIKE', '%' . $loc_parent . '%')
+            $hint = trim($this->loc_parent);
+            if ($hint) {
+                $hints = InvLoc::where('parent', 'LIKE', '%' . $hint . '%')
                     ->orderBy('parent')
                     ->limit(100)
                     ->get()
                     ->pluck('parent')
                     ->toArray();
-                $this->loc_parents = $loc_parents;
+                $this->loc_parent_hints = array_unique($hints);
             }
         }
 
         if ($property == 'loc_bin') {
-            $loc_bin = trim($this->loc_bin);
-            if ($loc_bin) {
-                $loc_bins = InvLoc::where('bin', 'LIKE', '%' . $loc_bin . '%')
+            $hint = trim($this->loc_bin);
+            if ($hint) {
+                $hints = InvLoc::where('bin', 'LIKE', '%' . $hint . '%')
                     ->orderBy('bin')
                     ->limit(100)
                     ->get()
                     ->pluck('bin')
                     ->toArray();
-                $this->loc_bins = $loc_bins;
+                $this->loc_bin_hints = array_unique($hints);
             }
         }
 
         if ($property == 'tag_input') {
-            $tag_input = trim($this->tag_input);
-            if ($tag_input) {
-                $tags = InvTag::where('name', 'LIKE', '%' . $tag_input . '%')
+            $hint = trim($this->tag_input);
+            if ($hint) {
+                $hints = InvTag::where('name', 'LIKE', '%' . $hint . '%')
                     ->orderBy('name')
                     ->limit(100)
                     ->get()
                     ->pluck('name')
                     ->toArray();
-                $this->inv_tags = $tags;
+                $this->tag_hints = $hints;
             }
         }
     }

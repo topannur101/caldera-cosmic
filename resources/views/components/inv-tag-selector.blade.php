@@ -2,8 +2,9 @@
 
 <div x-data="{
       tags: @entangle('tags').live,
-      inv_tags: @entangle('inv_tags').live,
       tag_input: @entangle('tag_input').live,
+      tag_hints: @entangle('tag_hints').live,
+
       get tag_list() {
          return this.tags.join(', ');
       },
@@ -55,10 +56,10 @@
                      </div>
                   </template>
                </div>
-               <x-text-input-icon id="tag-search" list="inv_tags" icon="fa fa-fw fa-search" type="text" x-model="tag_input" maxlength="20" placeholder="{{ __('Cari tag') }}" x-on:keydown.enter.prevent="tag_input ? addTag : $dispatch('close')" />
-               <datalist id="inv_tags">
-                  <template x-for="tag in inv_tags">
-                        <option :value="tag"></option>
+               <x-text-input-icon id="tag-search" list="tag_hints" icon="fa fa-fw fa-search" type="text" x-model="tag_input" maxlength="20" placeholder="{{ __('Cari tag') }}" x-on:keydown.enter.prevent="tag_input ? addTag : $dispatch('close')" />
+               <datalist id="tag_hints">
+                  <template x-for="hint in tag_hints">
+                        <option :value="hint"></option>
                   </template>
                </datalist>
             </div>             

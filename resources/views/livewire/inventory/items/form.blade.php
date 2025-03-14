@@ -77,13 +77,13 @@ new class extends Component
          $stock['uom']      = strtoupper(trim($stock['uom']));
       }
 
-      if (!$this->is_editing)
-      {
-         $item = InvItem::where('code', $this->items[0]['code'])->where('inv_area_id', $this->items[0]['area_id'])->count();
-         if ($item) {
-            $this->js('toast("' . __('Barang dengan item kode dan area tersebut sudah ada') . '", { type: "danger" } )');
-         }
-      }
+      // if (!$this->is_editing)
+      // {
+      //    $item = InvItem::where('code', $this->items[0]['code'])->where('inv_area_id', $this->items[0]['area_id'])->count();
+      //    if ($item) {
+      //       $this->js('toast("' . __('Barang dengan item kode dan area tersebut sudah ada') . '", { type: "danger" } )');
+      //    }
+      // }
 
       $this->validate([
          'items.*.name'    => ['required', 'max:128'],
@@ -139,12 +139,27 @@ new class extends Component
          return;
       }
 
-      if (!$item->id && $item->code) {
-         $duplicate = InvItem::where('code', $item->code)->where('inv_area_id', $item->inv_area_id)->count();
-         if ($duplicate) {
-            $this->js('toast("' . __('Barang dengan kode tersebut di area ini sudah ada.') . '", { type: "danger" })');
-            return;
+      $is_duplicate = false;
+      if ($item->code) {
+         $duplicate = InvItem::where('code', $item->code)->where('inv_area_id', $item->inv_area_id)->first();
+
+         // if new item duplicate
+         if (!$item->id && $duplicate) {
+            $is_duplicate = true;
          }
+
+         // if existing item duplicate
+         if ($item->id && $duplicate) {
+            if ($item->id !== $duplicate->id) {
+               $is_duplicate = true;
+            }
+         }
+         
+      }
+
+      if ($is_duplicate) {
+         $this->js('toast("' . __('Barang dengan kode tersebut di area ini sudah ada.') . '", { type: "danger" })');
+         return;
       }
 
       $item->save();
