@@ -20,7 +20,9 @@ class InvCirc extends Model
         'amount',
         'unit_price',
         'remarks',
-        'is_delegated'
+        'is_delegated',
+        'created_at',
+        'updated_at'
     ];
 
     protected $casts = [

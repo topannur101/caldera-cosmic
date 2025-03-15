@@ -80,7 +80,7 @@ new class extends Component
    @else
       <div class="flex justify-between items-start">
          <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            {{ __('Barang ini tidak dapat dihapus') }}
+            {{ __('Tidak dapat dihapus') }}
          </h2>
          <x-text-button type="button" x-on:click="$dispatch('close')">
             <i class="fa fa-times"></i>
@@ -90,9 +90,9 @@ new class extends Component
          {{ __('Maaf, barang ini tidak dapat dihapus karena memiliki sirkulasi yang disetujui. Jika kamu yakin bahwa barang ini layak dihapus, hubungi superuser.') }}
       </div>
       <div class="flex justify-end">
-         <x-secondary-button type="button" x-on:click="$dispatch('close')">
+         <x-primary-button type="button" x-on:click="$dispatch('close')">
             {{ __('Paham') }}
-         </x-secondary-button>
+         </x-primary-button>
       </div>
    @endif
    <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>

@@ -26,19 +26,17 @@ class extends Component
     
     public array $area_ids = [];
 
-    public string $loc_parent = '';
-
-    public string $loc_bin = '';
-    
     public array $tags = [];
     
-    public string $tag_input = '';
+    // public array $tag_hints = [];
+    
+    public string $loc_parent = '';    
+    
+    public string $loc_bin = '';
     
     public array $loc_parent_hints = [];
     
     public array $loc_bin_hints = [];
-
-    public array $tag_hints = [];
     
     #[Url]
     public string $q = '';
@@ -276,19 +274,6 @@ class extends Component
                 $this->loc_bin_hints = array_unique($hints);
             }
         }
-
-        if ($property == 'tag_input') {
-            $hint = trim($this->tag_input);
-            if ($hint) {
-                $hints = InvTag::where('name', 'LIKE', '%' . $hint . '%')
-                    ->orderBy('name')
-                    ->limit(100)
-                    ->get()
-                    ->pluck('name')
-                    ->toArray();
-                $this->tag_hints = $hints;
-            }
-        }
     }
 
 };
@@ -309,7 +294,7 @@ class extends Component
             <livewire:inventory.items.create-from-code :$areas lazy />
         </x-modal>
     </div>
-    <div class="sticky top-0 z-10 py-6 bg-gradient-to-b from-neutral-100 via-neutral-100 to-transparent dark:from-neutral-900 dark:via-neutral-900 dark:to-transparent">
+    <div class="static lg:sticky top-0 z-10 py-6 bg-gradient-to-b from-neutral-100 via-neutral-100 to-transparent dark:from-neutral-900 dark:via-neutral-900 dark:to-transparent">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
             <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
                 <i wire:loading.remove class="fa fa-fw fa-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
@@ -456,25 +441,40 @@ class extends Component
 
                 @case('list')
                     <div wire:key="list" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto mt-6">
-                        <table class="table table-sm table-truncate text-neutral-600 dark:text-neutral-400">
+                        <table class="text-neutral-600 dark:text-neutral-400 w-full table text-sm [&_th]:text-center [&_th]:px-2 [&_th]:py-3 [&_td]:px-2 [&_td]:py-1">
                             <tr class="uppercase text-xs">
-                                <th>{{ __('Qty') }}</th>
+                                <th>{{ __('ID') }}</th>
+                                <th></th>
                                 <th>{{ __('Nama') }}</th>
+                                <th>{{ __('Deskripsi') }}</th>
                                 <th>{{ __('Kode') }}</th>
+                                <th><i class="fa fa-map-marker-alt"></i></th>
+                                <th><i class="fa fa-tag"></i></th>
+                                <th>{{ __('Qty') }}</th>
                                 <th>{{ __('Harga') }}</th>
-                                <th>{{ __('Lokasi') }} </th>
-                                <th>{{ __('Tag') }} </th>
-                                <th>{{ __('Area') }}</th>
+                                <th><i class="fa fa-tent"></i></th>
                             </tr>
                             @foreach($inv_stocks as $inv_stock)
-                                <tr>
+                                <tr class="text-nowrap">
+                                    <td class="w-[1%]">{{ $inv_stock->inv_item->id }}</td>
+                                    <td class="w-[1%]">
+                                        <div class="rounded-sm overflow-hidden relative flex w-12 h-4 bg-neutral-200 dark:bg-neutral-700">
+                                            <div class="m-auto">
+                                                <svg xmlns="http://www.w3.org/2000/svg"  class="block w-4 h-4 fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 38.777 39.793"><path d="M19.396.011a1.058 1.058 0 0 0-.297.087L6.506 5.885a1.058 1.058 0 0 0 .885 1.924l12.14-5.581 15.25 7.328-15.242 6.895L1.49 8.42A1.058 1.058 0 0 0 0 9.386v20.717a1.058 1.058 0 0 0 .609.957l18.381 8.633a1.058 1.058 0 0 0 .897 0l18.279-8.529a1.058 1.058 0 0 0 .611-.959V9.793a1.058 1.058 0 0 0-.599-.953L20 .105a1.058 1.058 0 0 0-.604-.095zM2.117 11.016l16.994 7.562a1.058 1.058 0 0 0 .867-.002l16.682-7.547v18.502L20.6 37.026V22.893a1.059 1.059 0 1 0-2.117 0v14.224L2.117 29.432z" /></svg>
+                                            </div>
+                                            @if($inv_stock->inv_item->photo)
+                                                <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ '/storage/inv-items/' . $inv_stock->inv_item->photo }}" />
+                                            @endif
+                                        </div>   
+                                    </td>
+                                    <td class="max-w-40 truncate font-bold"><x-link href="{{ route('inventory.items.show', [ 'id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id ]) }}" wire:navigate>{{ $inv_stock->inv_item->name }}</x-link></td>
+                                    <td class="max-w-40 truncate">{{ $inv_stock->inv_item->desc }}</td>
+                                    <td>{{ $inv_stock->inv_item->code ?? '-' }}</td>
+                                    <td class="w-[1%]">{{ $inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' .$inv_stock->inv_item->inv_loc->bin) : '-' }}</td>
+                                    <td class="w-[1%]">{{ $inv_stock->inv_item->tags_facade() ?: '-' }}</td>
                                     <td>{{ $inv_stock->qty . ' ' . $inv_stock->uom }}</td>
-                                    <td class="font-bold"><x-link href="{{ route('inventory.items.show', [ 'id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id ]) }}" wire:navigate>{{ $inv_stock->inv_item->name }}</x-link></td>
-                                    <td>{{ $inv_stock->inv_item->desc }}</td>
-                                    <td>{{ $inv_stock->inv_item->code ?? __('Tanpa kode') }}</td>
-                                    <td>{{ $inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' .$inv_stock->inv_item->inv_loc->bin) : __('Tanpa lokasi') }}</td>
-                                    <td>{{ $inv_stock->inv_item->tags_facade() ?? null }}</td>
-                                    <td>{{ $inv_stock->inv_item->inv_area->name }}</td>
+                                    <td>{{ $inv_stock->inv_curr->name . ' ' . $inv_stock->unit_price }}</td>
+                                    <td class="w-[1%]">{{ $inv_stock->inv_item->inv_area->name }}</td>
                                 </tr>
                             @endforeach
                         </table>

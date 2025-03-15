@@ -170,20 +170,22 @@ class InvMigrate extends Command
                         'password' => '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC'
                     ]);
 
-                    InvCirc::create([
-                        'user_id'       => $user->id,
-                        'type'          => $ilog->iact_id == 3 ? 'withdrawal' : 'deposit',
-                        'eval_status'   => 'approved',
-                        'eval_user_id'  => $eval_user->id,
-                        'inv_stock_id'  => $stock->id,
-                        'qty_relative'  => abs($ilog->static_qty),
-                        'amount'        => $ilog->static_ttprice_usd * $ilog->static_qty,
-                        'unit_price'    => $ilog->static_ttprice_usd,
-                        'remarks'       => $ilog->ket ?? 'No remarks',
-                        'is_delegated'  => false,
-                        'created_at'    => $ilog->created_at,
-                        'updated_at'    => $ilog->updated_at
-                    ]);                    
+                    // InvCirc::withoutTimestamps(function () use ($user, $ilog, $eval_user, $stock) {
+                        InvCirc::create([
+                            'user_id'       => $user->id,
+                            'type'          => $ilog->iact_id == 3 ? 'withdrawal' : 'deposit',
+                            'eval_status'   => 'approved',
+                            'eval_user_id'  => $eval_user->id,
+                            'inv_stock_id'  => $stock->id,
+                            'qty_relative'  => abs($ilog->static_qty),
+                            'amount'        => $ilog->static_ttprice_usd * $ilog->static_qty,
+                            'unit_price'    => $ilog->static_ttprice_usd,
+                            'remarks'       => $ilog->ket ?? 'No remarks',
+                            'is_delegated'  => false,
+                            'created_at'    => $ilog->created_at,
+                            'updated_at'    => $ilog->updated_at
+                        ]);
+                    // });                   
                 }
 
             } else {

@@ -2,28 +2,70 @@
 
 <div x-data="{
       tags: @entangle('tags').live,
-      tag_input: @entangle('tag_input').live,
-      tag_hints: @entangle('tag_hints').live,
-
+      tag_input: '',
+      tag_hints: [],
       get tag_list() {
          return this.tags.join(', ');
       },
-      addTag() {
+      async updateHints() {
+         if (this.tag_input.trim() === '') {
+            this.tag_hints = [];
+            return;
+         }
+         
+         try {
+            const query = this.tag_input.toLowerCase().trim();
+            const response = await fetch(`/api/inv-tags?q=${encodeURIComponent(query)}`);
+            
+            if (response.ok) {
+               const data = await response.json();
+               // Filter out tags that are already selected and add space after each tag
+               this.tag_hints = data
+                  .filter(tag => !this.tags.includes(tag))
+                  .map(tag => tag + ' '); // Add space at the end for each hint
+            } else {
+               console.error('Failed to fetch tag suggestions');
+               this.tag_hints = [];
+            }
+         } catch (error) {
+            console.error('Error fetching tag suggestions:', error);
+            this.tag_hints = [];
+         }
+      },
+      watchTagInput() {
+         // Check if input contains a space or a comma
+         if (this.tag_input.includes(' ') || this.tag_input.includes(',')) {
+            // Remove the space or comma from the input
+            this.tag_input = this.tag_input.replace(/[ ,]/g, '');
+
+            // Process the tag if it's not empty
+            if (this.tag_input) {
+               this.addTag(this.tag_input);
+            }
+         }
+      },
+      addTag() { 
          let tag = this.tag_input.trim().toLowerCase();
-         if (!tag) return;
-         
-         if (this.tags.length >= 5) {
-               toast('{{ __('Hanya maksimal 5 tag diperbolehkan') }}', { type: 'danger' });
-               return;
-         }
-         
+
          if (this.tags.includes(tag)) {
-               toast('{{ __('Tag sudah ada') }}', { type: 'danger' });
-         } else {
-               this.tags.push(tag);
+            toast('{{ __('Tag sudah ada') }}', { type: 'danger' });
+            return;
          }
-         
-         this.tag_input = '';
+
+         if (this.tags.length >= 3) {
+            toast('{{ __('Hanya maksimal 3 tag diperbolehkan') }}', { type: 'danger' });
+            return;
+         }
+
+         if (!tag) {
+            this.$dispatch('close');            
+            return;
+
+         } else {
+            this.tags.push(tag);
+            this.tag_input = '';
+
+         }
       },
       removeTag(tag) {
          this.tags = this.tags.filter(t => t !== tag);
@@ -35,7 +77,7 @@
    
    <x-modal name="tag-selector" maxWidth="sm" focusable>
       <div>
-         <form wire:submit.prevent="save" class="p-6 flex flex-col gap-y-6">
+         <div class="p-6 flex flex-col gap-y-6">
             <div class="flex justify-between items-start">
                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                   <i class="fa fa-fw fa-tag me-3"></i>{{ __('Tag') }}
@@ -56,17 +98,26 @@
                      </div>
                   </template>
                </div>
-               <x-text-input-icon id="tag-search" list="tag_hints" icon="fa fa-fw fa-search" type="text" x-model="tag_input" maxlength="20" placeholder="{{ __('Cari tag') }}" x-on:keydown.enter.prevent="tag_input ? addTag : $dispatch('close')" />
+               <x-text-input-icon
+                  id="tag-search"
+                  list="tag_hints"
+                  icon="fa fa-fw fa-search"
+                  type="text"
+                  x-model="tag_input"
+                  maxlength="20"
+                  placeholder="{{ __('Cari tag') }}"
+                  x-on:input="updateHints(); watchTagInput()"
+                  x-on:keydown.enter="addTag" />
                <datalist id="tag_hints">
                   <template x-for="hint in tag_hints">
                         <option :value="hint"></option>
                   </template>
                </datalist>
-            </div>             
+            </div>            
             <div class="flex justify-end">
                <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="tags = []; $dispatch('close');" x-show="tags.length"><span class="text-red-500"><div class="px-1">{{ $isQuery ? __('Hapus filter tag') : __('Hapus tag') }}</div></span></x-text-button>
-            </div> 
-         </form>
+            </div>
+         </div>
       </div>
-   </x-modal>                           
+   </x-modal>                          
 </div>

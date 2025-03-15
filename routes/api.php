@@ -11,10 +11,26 @@ use App\Models\InsRubberBatch;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Models\InvTag;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
 // })->middleware('auth:sanctum');
+
+Route::get('/inv-tags', function(Request $request) {
+    $q = trim($request['q']);
+    $hints = [];
+    if ($q) {
+        $hints = InvTag::where('name', 'LIKE', '%' . $q . '%')
+            ->orderBy('name')
+            ->limit(100)
+            ->get()
+            ->pluck('name')
+            ->toArray();
+    }
+
+    return response()->json($hints);
+});
 
 Route::get('/time', function() {
     $currentTime = Carbon::now('UTC');

@@ -72,6 +72,7 @@ new class extends Component {
             updated_at="{{ $circ->updated_at }}" 
             remarks="{{ $circ->remarks }}" 
             eval_icon="{{ $circ->eval_icon() }}"
+            item_id="{{ $circ->inv_stock->inv_item->id }}"
             item_photo="{{ $circ->inv_stock->inv_item->photo }}"
             item_name="{{ $circ->inv_stock->inv_item->name }}"
             item_desc="{{ $circ->inv_stock->inv_item->desc }}"

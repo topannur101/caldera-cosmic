@@ -40,14 +40,26 @@ new class extends Component
    ];
 
    public string $loc_parent  = '';
+
    public string $loc_bin     = '';
+
    public array $areas        = [];
+
    public array $tags         = [];
+
    public array $loc_parents  = [];
+
    public array $loc_bins     = [];
+
    public array $stocks       = [];
+
    public array $currencies   = [];
+
    public bool $can_store     = false;
+
+   public array $loc_parent_hints = [];
+    
+   public array $loc_bin_hints = [];
 
    public function mount()
    {
@@ -222,6 +234,35 @@ new class extends Component
    public function insertPhoto($photo)
    {
       $this->items[0]['photo'] = $photo;
+   }
+
+   public function updated($property)
+   {
+       if ($property == 'loc_parent') {
+           $hint = trim($this->loc_parent);
+           if ($hint) {
+               $hints = InvLoc::where('parent', 'LIKE', '%' . $hint . '%')
+                   ->orderBy('parent')
+                   ->limit(100)
+                   ->get()
+                   ->pluck('parent')
+                   ->toArray();
+               $this->loc_parent_hints = array_unique($hints);
+           }
+       }
+
+       if ($property == 'loc_bin') {
+           $hint = trim($this->loc_bin);
+           if ($hint) {
+               $hints = InvLoc::where('bin', 'LIKE', '%' . $hint . '%')
+                   ->orderBy('bin')
+                   ->limit(100)
+                   ->get()
+                   ->pluck('bin')
+                   ->toArray();
+               $this->loc_bin_hints = array_unique($hints);
+           }
+       }
    }
 
 };
