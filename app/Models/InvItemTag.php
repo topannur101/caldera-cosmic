@@ -12,4 +12,9 @@ class InvItemTag extends Model
         'inv_item_id',
         'inv_tag_id'
     ];
+
+    public function inv_item()
+    {
+        return $this->belongsTo(InvItem::class);
+    }
 }
