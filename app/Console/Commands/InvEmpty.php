@@ -69,7 +69,7 @@ class InvEmpty extends Command
             ->get();
         foreach ($stocks as $stock) {
             $stock->delete();
-            $this->info('Stock ID: ' . $circ->id . ' deleted');
+            $this->info('Stock ID: ' . $stock->id . ' deleted');
         }
 
         InvItemTag::with(['inv_item'])
