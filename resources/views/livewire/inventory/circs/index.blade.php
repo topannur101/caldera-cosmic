@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\InvCirc;
 use App\Models\InvItem;
 use App\Models\InvArea;
+use App\Models\InvCurr;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -413,6 +414,7 @@ class extends Component {
                                 <th>{{ __('Lokasi') }}</th>
                                 <th>{{ __('Pengguna') }}</th>
                                 <th>{{ __('Keterangan') }}</th>
+                                <th>{{ __('Amt')  . ' ('. InvCurr::find(1)->name . ')' }}</th>
                                 <th>{{ __('Diperbarui') }}</th>
                             </tr>
                             @foreach ($inv_circs as $circ)
@@ -431,6 +433,8 @@ class extends Component {
                                     eval_user_emp_id="{{ $circ->eval_user?->emp_id }}" 
                                     updated_at="{{ $circ->updated_at }}" 
                                     remarks="{{ $circ->remarks }}" 
+                                    amount="{{ $circ->amount }}"
+                                    curr="{{ InvCurr::find(1)->name }}"
                                     eval_icon="{{ $circ->eval_icon() }}"
                                     item_id="{{ $circ->inv_stock->inv_item->id }}"
                                     item_photo="{{ $circ->inv_stock->inv_item->photo }}"

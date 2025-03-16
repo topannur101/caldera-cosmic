@@ -2,12 +2,22 @@
    <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
        <div>
            <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
-            @if(request()->is('inventory/items*'))
-               <x-link href="{{ route('inventory.items.index') }}" class="inline-block py-6"
+            @if(request()->is('inventory/items/bulk-operation'))
+                <x-link href="{{ route('inventory.items.index') }}" class="inline-block py-6"
+                wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="hidden sm:inline ml-4"><span>{{ $slot }}</span></span>
+
+            @elseif(request()->is('inventory/items/bulk-operation*'))
+                <x-link href="{{ route('inventory.items.bulk-operation.index') }}" class="inline-block py-6"
+                wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="hidden sm:inline ml-4"><span>{{ $slot }}</span></span>
+
+            @elseif(request()->is('inventory/items/*'))
+                <x-link href="{{ route('inventory.items.index') }}" class="inline-block py-6"
                    wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="hidden sm:inline ml-4"><span>{{ $slot }}</span></span>
+
             @elseif(request()->is('inventory/circs*'))
                 <x-link href="{{ route('inventory.circs.index') }}" class="inline-block py-6"
                 wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="hidden sm:inline ml-4"><span>{{ $slot }}</span></span>
+                
             @else
                 {{ $slot }}            
             @endif

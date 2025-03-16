@@ -447,11 +447,11 @@ new class extends Component
                   const unit_price = this.is_secondary_currency ? (this.secondary_unit_price ? this.secondary_unit_price : 0) : this.main_unit_price;
 
                   if (!uom) {
-                     toast('{{ __('Uom wajib diisi') }}', { type: 'danger' });
+                     toast('{{ __('Satuan wajib diisi') }}', { type: 'danger' });
                      return;
                   }
                   if (this.stocks.some((stock, index) => stock.currency === currency && stock.uom === uom && index !== this.editingIndex)) {
-                     toast('{{ __('Mata uang dan uom tersebut sudah ada') }}', { type: 'danger' });
+                     toast('{{ __('Mata uang dan satuan tersebut sudah ada') }}', { type: 'danger' });
                      return;
                   }
 
@@ -522,7 +522,7 @@ new class extends Component
                      </div>                    
                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-3 gap-y-6 mt-6">
                         <div>
-                           <label for="stock-uom" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('UOM') }}</label>
+                           <label for="stock-uom" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Satuan') }}</label>
                            <x-text-input id="stock-uom" type="text" x-model="uom_input" maxlength="5" x-on:keydown.enter.prevent="$nextTick(() => { $refs.mainUnitPrice.focus() })"></x-text-input>
                         </div>    
                         <div class="col-span-1 sm:col-span-2">

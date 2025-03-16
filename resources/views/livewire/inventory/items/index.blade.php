@@ -346,7 +346,7 @@ class extends Component
                             <!-- <x-dropdown-link href="#" disabled="true">
                                 <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
                             </x-dropdown-link> -->
-                            <x-dropdown-link href="{{ route('inventory.items.bulk-operation') }}" wire:navigate>
+                            <x-dropdown-link href="{{ route('inventory.items.bulk-operation.index') }}" wire:navigate>
                                 <i class="fa fa-fw me-2"></i>{{ __('Operasi massal')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />

@@ -13,6 +13,8 @@
       'eval_user_emp_id',
       'updated_at',
       'remarks',
+      'amount',
+      'curr',
       'eval_icon',
       'item_id',
       'item_photo',
@@ -104,6 +106,11 @@
    <td class="max-w-60 truncate">
       {{ $remarks }}
    </td>
+   @if(!$is_print)
+   <td class="max-w-40 text-right font-mono">
+      {{ $amount }}
+   </td>
+   @endif
    @if($is_print)
    <td class="max-w-40">
       {{ $area_name }}

@@ -164,7 +164,11 @@ Route::middleware('auth')->group(function () {
             Route::middleware('can:create,' . \App\Models\InvItem::class)->group(function () {
                 Volt::route('/items/create',    'inventory.items.create')       ->name('create');
             });
-            Volt::route('/items/bulk-operation',    'inventory.items.bulk-operation')   ->name('bulk-operation');
+            Volt::route('/items/bulk-operation',                    'inventory.items.bulk-operation.index')             ->name('bulk-operation.index');
+            Volt::route('/items/bulk-operation/create-new',         'inventory.items.bulk-operation.create-new')        ->name('bulk-operation.create-new');
+            Volt::route('/items/bulk-operation/update-basic',       'inventory.items.bulk-operation.update-basic')      ->name('bulk-operation.update-basic');
+            Volt::route('/items/bulk-operation/update-location',    'inventory.items.bulk-operation.update-location')   ->name('bulk-operation.update-location');
+            Volt::route('/items/bulk-operation/update-stock',       'inventory.items.bulk-operation.update-stock')      ->name('bulk-operation.update-stock');
             Volt::route('/items/{id}',              'inventory.items.show')             ->name('show');
             Volt::route('/items/{id}/edit',         'inventory.items.edit')             ->name('edit');
             Volt::route('/items/',                  'inventory.items.index')            ->name('index');
