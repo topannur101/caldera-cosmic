@@ -65,18 +65,10 @@
       <div class="truncate text-xs text-neutral-500">{{ $item_desc }}</div>
    </td>
    <td class="max-w-40">
-      @if($item_loc)
-         <span>{{ $item_code }}</span>
-      @else
-         <span class="text-neutral-500">{{ __('Tanpa kode') }}</span>
-      @endif
+      <span>{{ $item_code ?: '-' }}</span>
    </td>
    <td class="max-w-40">
-      @if($item_loc)
-         <span>{{ $item_loc }}</span>
-      @else
-         <span class="text-neutral-500">{{ __('Tanpa lokasi') }}</span>
-      @endif
+      <span>{{ $item_loc ?: '-' }}</span>
    </td>
    <td class="max-w-32">
       <div class="flex items-center truncate gap-x-1">

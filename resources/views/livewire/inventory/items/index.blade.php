@@ -244,8 +244,8 @@ class extends Component
 
     public function updated($property)
     {
-        $props = ['view', 'sort', 'area_ids', 'circ_eval_status', 'circ_types', 'date_from', 'date_to', 'user_id', 'remarks'];
-        if(in_array($property, $props)) {
+        $resetProps = ['q', 'view', 'sort', 'area_ids', 'loc_parent', 'loc_bin', 'tags'];
+        if(in_array($property, $resetProps)) {
             $this->reset(['perPage']);
         }
 
