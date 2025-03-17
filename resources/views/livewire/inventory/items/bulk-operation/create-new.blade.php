@@ -211,12 +211,11 @@ class extends Component
          $item['loc_bin'] = isset($parts[1]) ? $parts[1] : '';
 
          $item['tags'] = [];
-         $item['tag_0'] ? array_push($item['tags'], $item['tag_0']) : false;
-         $item['tag_1'] ? array_push($item['tags'], $item['tag_1']) : false;
-         $item['tag_2'] ? array_push($item['tags'], $item['tag_2']) : false;
+         $item['tag_0'] ??= array_push($item['tags'], $item['tag_0']);
+         $item['tag_1'] ??= array_push($item['tags'], $item['tag_1']);
+         $item['tag_2'] ??= array_push($item['tags'], $item['tag_2']);
 
          $item['stocks'] = [];
-
          $curr_0  = $item['curr_0']    ?? '';
          $up_0    = $item['up_0']      ?? '';
          $uom_0   = $item['uom_0']     ?? '';

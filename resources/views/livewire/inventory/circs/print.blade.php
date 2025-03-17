@@ -49,8 +49,8 @@ new class extends Component {
          <th>{{ __('Qty') }}</th>
          <th colspan="2">{{ __('Nama') . ' & ' . __('Deskripsi') }}</th>
          <th>{{ __('Kode') }}</th>
-         <th>{{ __('Lokasi') }}</th>
-         <th>{{ __('Pengguna') }}</th>
+         <th><i class="fa fa-map-marker-alt"></i></th>
+         <th><i class="fa fa-user"></i></th>
          <th>{{ __('Keterangan') }}</th>
          <th>{{ __('Area') }}</th>
       </tr>

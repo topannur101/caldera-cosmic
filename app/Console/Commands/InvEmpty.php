@@ -8,6 +8,7 @@ use App\Models\InvCirc;
 use App\Models\InvStock;
 use App\Models\InvItem;
 use App\Models\InvItemTag;
+use App\Models\ComItem;
 
 class InvEmpty extends Command
 {
@@ -82,7 +83,19 @@ class InvEmpty extends Command
         foreach ($items as $item) {
             $item->delete();
             $this->info('Item ID: ' . $item->id . ' deleted');
+
+            $comments = ComItem::where([
+                'model_name' => 'InvItem',
+                'model_id'  => $item->id, 
+            ])->get();
+
+            foreach ($comments as $comment) {
+                $comment->delete();
+                $this->info('Comment ID: ' . $comment->id . ' deleted');
+            }
         }
+
+
 
         $this->info('Operation completed. Bye!');        
     }

@@ -198,10 +198,9 @@ class extends Component
          }
 
          $item['tags'] = [];
-         $item['tag_0'] ? array_push($item['tags'], $item['tag_0']) : false;
-         $item['tag_1'] ? array_push($item['tags'], $item['tag_1']) : false;
-         $item['tag_2'] ? array_push($item['tags'], $item['tag_2']) : false;
-
+         $item['tag_0'] ??= array_push($item['tags'], $item['tag_0']);
+         $item['tag_1'] ??= array_push($item['tags'], $item['tag_1']);
+         $item['tag_2'] ??= array_push($item['tags'], $item['tag_2']);
 
          $validator = Validator::make(
             $item,

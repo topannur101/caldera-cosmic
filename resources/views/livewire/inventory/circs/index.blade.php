@@ -364,19 +364,21 @@ class extends Component {
         <div x-show="ids.length" x-cloak class="flex items-center justify-between w-full h-full px-8">
             <div class="font-bold"><span x-text="ids.length"></span><span>{{ ' ' . __('dipilih') }}</span></div>
             <div class="flex gap-x-2">
-                <x-secondary-button type="button" x-on:click="ids = []">{{ __('Batal pilih') }}  </x-secondary-button>
-                <x-secondary-button type="button" wire:click="printCircIds">
-                    <div class="relative">
-                        <span wire:loading.class="opacity-0" wire:target="printCircIds"><i class="fa fa-print mr-2"></i>{{ __('Cetak') }}</span>
-                        <x-spinner wire:loading.class.remove="hidden" wire:target="printCircIds" class="hidden sm mono"></x-spinner>                
-                    </div>                
-                </x-secondary-button>
-                <x-secondary-button type="button" wire:click="evalCircIds">
-                    <div class="relative">
-                        <span wire:loading.class="opacity-0" wire:target="evalCircIds"><i class="fa fa-gavel mr-2"></i>{{ __('Evaluasi') }}</span>
-                        <x-spinner wire:loading.class.remove="hidden" wire:target="evalCircIds" class="hidden sm mono"></x-spinner>
-                    </div>
-                </x-secondary-button>
+                <x-secondary-button type="button" x-on:click="ids = []">{{ __('Batal') }}  </x-secondary-button>
+                <div class="btn-group">
+                    <x-secondary-button type="button" wire:click="printCircIds">
+                        <div class="relative">
+                            <span wire:loading.class="opacity-0" wire:target="printCircIds"><i class="fa fa-print"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
+                            <x-spinner wire:loading.class.remove="hidden" wire:target="printCircIds" class="hidden sm mono"></x-spinner>                
+                        </div>                
+                    </x-secondary-button>
+                    <x-secondary-button type="button" wire:click="evalCircIds">
+                        <div class="relative">
+                            <span wire:loading.class="opacity-0" wire:target="evalCircIds"><i class="fa fa-gavel"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Evaluasi') }}</span></span>
+                            <x-spinner wire:loading.class.remove="hidden" wire:target="evalCircIds" class="hidden sm mono"></x-spinner>
+                        </div>
+                    </x-secondary-button>
+                </div>
             </div>
         </div>
     </div>
@@ -411,10 +413,10 @@ class extends Component {
                                 <th>{{ __('Qty') }}</th>
                                 <th colspan="2">{{ __('Nama') . ' & ' . __('Deskripsi') }}</th>
                                 <th>{{ __('Kode') }}</th>
-                                <th>{{ __('Lokasi') }}</th>
-                                <th>{{ __('Pengguna') }}</th>
+                                <th><i class="fa fa-map-marker-alt"></i></th>
+                                <th><i class="fa fa-user"></i></th>
                                 <th>{{ __('Keterangan') }}</th>
-                                <th>{{ __('Amt')  . ' ('. InvCurr::find(1)->name . ')' }}</th>
+                                <th class="flex justify-end">{{ 'Σ ' . InvCurr::find(1)->name }}</th>
                                 <th>{{ __('Diperbarui') }}</th>
                             </tr>
                             @foreach ($inv_circs as $circ)

@@ -99,7 +99,7 @@
       {{ $remarks }}
    </td>
    @if(!$is_print)
-   <td class="max-w-40 text-right font-mono">
+   <td class="max-w-40 text-right font-mono {{ $amount > 1000 ? 'text-red-500' : '' }}">
       {{ $amount }}
    </td>
    @endif

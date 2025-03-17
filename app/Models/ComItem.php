@@ -20,6 +20,8 @@ class ComItem extends Model
         'user_id',
         'parent_id',
         'content',
+        'created_at',
+        'updated_at'
     ];
     
     public function user(): BelongsTo

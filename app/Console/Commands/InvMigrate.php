@@ -11,6 +11,8 @@ use App\Models\InvArea;
 use App\Models\InvLoc;
 use App\Models\InvCirc;
 use App\Models\User;
+use App\Models\ComItem;
+use App\Models\ComFile;
 
 
 class InvMigrate extends Command
@@ -188,13 +190,42 @@ class InvMigrate extends Command
                     // });                   
                 }
 
+                $legacy_comments = DB::connection('caldera_legacy')->table('comments')
+                ->where('commentable', 'Igood')
+                ->where('commentable_id', $igood->id)
+                ->get();
+        
+                foreach ($legacy_comments as $legacy_comment) {
+                    $user_legacy = DB::connection('caldera_legacy')->table('users')->find($legacy_comment->user_id);
+                    $user = User::firstOrCreate([
+                        'emp_id' => 'TT' . $user_legacy->tt
+                    ], [
+                        'name' => $user_legacy->name . ' ' . $user_legacy->lastname,
+                        'photo' => $user_legacy->image,
+                        'password' => '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC'
+                    ]);
+
+                    if ($user && $legacy_comment->content && $item->id) {
+                        ComItem::create([
+                            'model_name' => 'InvItem',
+                            'model_id'  => $item->id,
+                            'user_id' => $user->id,       
+                            'content' => $legacy_comment->content,
+                            'created_at' => $legacy_comment->created_at,
+                            'updated_at' => $legacy_comment->updated_at    
+                        ]);
+                        
+                        $this->info('Comment for legacy item ID: ' . $igood->id . ' created.');
+                    }
+                }
+
             } else {
                 $item->delete();
                 $this->warn('Stock for legacy item ID: ' . $igood->id . ' was not created. Item destroyed.');
             } 
             
         }
-        
+        $this->info('Operation completed. Bye!');
         return 0; // Exit successfully        
     }
 }
