@@ -252,7 +252,6 @@ class extends Component {
         status: @entangle('circ_eval_status').live, 
         types: @entangle('circ_types').live,
         lastChecked: null,
-        lastChecked: null,
         handleCheck(event, id) {
             if (event.shiftKey && this.lastChecked !== null) {
                 console.log('shift selection');
@@ -343,7 +342,7 @@ class extends Component {
             <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
                 <x-inv-area-selector class="text-xs font-semibold uppercase" :$areas />
                 <div>
-                    <x-dropdown align="right" width="48">
+                    <x-dropdown align="right" width="56">
                         <x-slot name="trigger">
                             <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
                         </x-slot>
@@ -352,7 +351,7 @@ class extends Component {
                                 <i class="fa fa-fw fa-line-chart me-2"></i>{{ __('Ringkasan')}}
                             </x-dropdown-link>
                             <x-dropdown-link href="{{ route('inventory.circs.bulk-operation') }}" wire:navigate>
-                                <i class="fa fa-fw me-2"></i>{{ __('Operasi massal')}}
+                                <i class="fa fa-fw me-2"></i>{{ __('Operasi massal sirkulasi')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="resetQuery">
@@ -395,7 +394,7 @@ class extends Component {
         <div x-show="ids.length" x-cloak class="flex items-center justify-between w-full h-full px-8">
             <div class="font-bold"><span x-text="ids.length"></span><span>{{ ' ' . __('dipilih') }}</span></div>
             <div class="flex gap-x-2">
-                <x-secondary-button type="button" x-on:click="ids = []">{{ __('Batal') }}  </x-secondary-button>
+                <x-secondary-button type="button" x-on:click="ids = []; lastChecked = null">{{ __('Batal') }}  </x-secondary-button>
                 <div class="btn-group">
                     <x-secondary-button type="button" wire:click="printCircIds">
                         <div class="relative">

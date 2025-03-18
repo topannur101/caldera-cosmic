@@ -329,7 +329,7 @@ class extends Component
             <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
                 <x-inv-area-selector class="text-xs font-semibold uppercase" :$areas />
                 <div>
-                    <x-dropdown align="right" width="48">
+                    <x-dropdown align="right" width="56">
                         <x-slot name="trigger">
                             <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
                         </x-slot>
@@ -347,7 +347,7 @@ class extends Component
                                 <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
                             </x-dropdown-link> -->
                             <x-dropdown-link href="{{ route('inventory.items.bulk-operation.index') }}" wire:navigate>
-                                <i class="fa fa-fw me-2"></i>{{ __('Operasi massal')}}
+                                <i class="fa fa-fw me-2"></i>{{ __('Operasi massal barang')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <!-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
