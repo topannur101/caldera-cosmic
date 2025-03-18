@@ -140,45 +140,49 @@ class DownloadController extends Controller
         if ($token !== session()->get('inv_circs_token')) {
             abort(403);
         }
-        
+    
         // Clear the token
         session()->forget('inv_circs_token');
-        
-        // Get search parameters from session
-        $inv_circs_params = session('inv_circs_params', []);
-        
-        // Extract parameters
-        $sort               = $inv_circs_params['sort']             ?? '';
-        $area_ids           = $inv_circs_params['area_ids']         ?? [];
-        $circ_eval_status   = $inv_circs_params['circ_eval_status'] ?? [];
-        $circ_types         = $inv_circs_params['circ_types']       ?? [];
-        $date_fr            = $inv_circs_params['date_fr']          ?? '';
-        $date_to            = $inv_circs_params['date_to']          ?? '';
-        $user_id            = $inv_circs_params['user_id']          ?? 0;
-        $remarks            = $inv_circs_params['remarks']          ?? ['', ''];
-
-        $item_id = null;
-        if($request['item_id']) {
-            $sort = 'updated';
-            $item_id = $request['item_id'];
-        }     
-        
-        return response()->streamDownload(function () use ($item_id, $sort, $area_ids, $circ_eval_status, $circ_types, $date_fr, $date_to, $user_id, $remarks) {
-            // Open output stream
-            $handle = fopen('php://output', 'w');
-            
-            // Add CSV header row
-            fputcsv($handle, [
-                'item_id', 'item_name', 'item_desc', 'item_code', 'item_location', 
-                'item_tag_0', 'item_tag_1', 'item_tag_2', 'item_area', 
-                'stock_id', 'stock_unit_price', 'stock_curr', 'stock_uom', 
-                'circ_type', 'circ_qty_relative', 'circ_unit_price', 'circ_amount', 
-                'circ_user_emp_id', 'circ_user_name', 'circ_remarks', 
-                'circ_eval_user_emp_id', 'circ_eval_user_name', 'circ_eval_remarks', 
-                'circ_eval_status', 'circ_is_delegated'
-            ]);
-            
-            // Build the same query as in the Livewire component
+    
+        // Check if stock_id is present in the request
+        if ($request->has('stock_id')) {
+            $stock_id = $request['stock_id'];
+            $date_to = Carbon::now();
+            $date_fr = Carbon::now()->subYear();
+    
+            $inv_circs_query = InvCirc::with([
+                'inv_stock.inv_item',
+                'inv_stock.inv_item.inv_loc',
+                'inv_stock.inv_item.inv_tags',
+                'inv_stock.inv_item.inv_area',
+                'inv_stock',
+                'inv_stock.inv_curr',
+                'user',
+                'eval_user',
+            ])
+            ->where('inv_stock_id', $stock_id)
+            ->whereBetween('updated_at', [$date_fr, $date_to])
+            ->limit(500);
+    
+        } else {
+            // Get search parameters from session
+            $inv_circs_params = session('inv_circs_params', []);
+    
+            // Extract parameters
+            $sort = $inv_circs_params['sort'] ?? '';
+            $area_ids = $inv_circs_params['area_ids'] ?? [];
+            $circ_eval_status = $inv_circs_params['circ_eval_status'] ?? [];
+            $circ_types = $inv_circs_params['circ_types'] ?? [];
+            $date_fr = $inv_circs_params['date_fr'] ?? '';
+            $date_to = $inv_circs_params['date_to'] ?? '';
+            $user_id = $inv_circs_params['user_id'] ?? 0;
+            $remarks = $inv_circs_params['remarks'] ?? ['', ''];
+            $item_id = null;
+            if ($request['item_id']) {
+                $sort = 'updated';
+                $item_id = $request['item_id'];
+            }
+    
             $inv_circs_query = InvCirc::with([
                 'inv_stock.inv_item',
                 'inv_stock.inv_item.inv_loc',
@@ -195,21 +199,21 @@ class DownloadController extends Controller
             ->whereIn('eval_status', $circ_eval_status)
             ->whereIn('type', $circ_types);
     
-            if($date_fr && $date_to) {
+            if ($date_fr && $date_to) {
                 $fr = Carbon::parse($date_fr)->startOfDay();
                 $to = Carbon::parse($date_to)->endOfDay();
                 $inv_circs_query->whereBetween('updated_at', [$fr, $to]);
             }
     
-            if($user_id) {
+            if ($user_id) {
                 $inv_circs_query->where('user_id', $user_id);
             }
     
-            if($remarks[0]) {
+            if ($remarks[0]) {
                 $inv_circs_query->where('remarks', 'like', "%{$remarks[0]}%");
             }
     
-            if($remarks[1]) {
+            if ($remarks[1]) {
                 $inv_circs_query->where('eval_remarks', 'like', "%{$remarks[0]}%");
             }
     
@@ -229,9 +233,24 @@ class DownloadController extends Controller
                 case 'amount_high':
                     $inv_circs_query->orderByDesc('amount');
                     break;
-    
             }
-            
+        }
+    
+        return response()->streamDownload(function () use ($inv_circs_query) {
+            // Open output stream
+            $handle = fopen('php://output', 'w');
+    
+            // Add CSV header row
+            fputcsv($handle, [
+                'item_id', 'item_name', 'item_desc', 'item_code', 'item_location',
+                'item_tag_0', 'item_tag_1', 'item_tag_2', 'item_area',
+                'stock_id', 'stock_unit_price', 'stock_curr', 'stock_uom',
+                'circ_type', 'circ_qty_relative', 'circ_unit_price', 'circ_amount',
+                'circ_user_emp_id', 'circ_user_name', 'circ_remarks',
+                'circ_eval_user_emp_id', 'circ_eval_user_name', 'circ_eval_remarks',
+                'circ_eval_status', 'circ_is_delegated'
+            ]);
+    
             // Stream each record to avoid loading all records into memory at once
             $inv_circs_query->chunk(100, function ($circs) use ($handle) {
                 foreach ($circs as $circ) {
@@ -239,51 +258,42 @@ class DownloadController extends Controller
                     if ($circ->inv_stock->inv_item->inv_loc) {
                         $location = $circ->inv_stock->inv_item->inv_loc->parent . '-' . $circ->inv_stock->inv_item->inv_loc->bin;
                     }
-
                     $tags = $circ->inv_stock->inv_item->inv_tags->pluck('name')->toArray();
-                    
+    
                     fputcsv($handle, [
-
                         $circ->inv_stock->inv_item->id ?? '',
                         $circ->inv_stock->inv_item->name ?? '',
                         $circ->inv_stock->inv_item->desc ?? '',
                         $circ->inv_stock->inv_item->code ?? '',
-
                         $location,
                         $tags[0] ?? '',
                         $tags[1] ?? '',
                         $tags[2] ?? '',
-
                         $circ->inv_stock->inv_item->inv_area->name ?? '',
-
                         $circ->inv_stock->id ?? '',
                         $circ->inv_stock->unit_price ?? '',
                         $circ->inv_stock->inv_curr->name ?? '',
                         $circ->inv_stock->uom ?? '',
-
                         $circ->type,
                         $circ->qty_relative,
                         $circ->unit_price,
                         $circ->amount,
-
                         $circ->user->emp_id,
                         $circ->user->name,
                         $circ->remarks,
-
                         $circ->eval_user?->emp_id,
                         $circ->eval_user?->name,
                         $circ->eval_remarks,
-
                         $circ->eval_status,
                         $circ->is_delegated,
                     ]);
                 }
-                
+    
                 // Flush the output buffer to send data to the browser
                 ob_flush();
                 flush();
             });
-            
+    
             // Close the output stream
             fclose($handle);
         }, 'inventory_circs.csv', [

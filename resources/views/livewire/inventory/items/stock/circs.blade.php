@@ -41,7 +41,14 @@ new class extends Component
 
    public function circsDownload()
    {
-      $this->js('toast("' . __('Fitur ini sedang dalam tahap pengembangan') . '", { type: "danger" } )');
+      // Create a unique token for this download request
+      $token = md5(uniqid());
+
+      // Store the token in the session
+      session()->put('inv_circs_token', $token);
+      
+      // Redirect to a temporary route that will handle the streaming
+      return redirect()->route('download.inv-circs', ['token' => $token, 'stock_id' => $this->stock_id ]);
    }
 
 }
