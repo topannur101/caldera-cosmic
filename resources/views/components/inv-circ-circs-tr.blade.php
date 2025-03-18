@@ -38,7 +38,8 @@
             id="{{ 'circ-' . $id }}"
             type="checkbox"
             value="{{ $id }}"
-            x-model="ids">
+            x-model="ids"
+            x-on:click="handleCheck($event, '{{ $id }}')">
          <i class="fa fa-fw {{ $eval_icon }}"></i>
       </label>
    </td>
@@ -95,7 +96,7 @@
          </div>
       </div>
    </td>
-   <td class="max-w-60 truncate">
+   <td class="max-w-60 truncate" title="{{ $remarks }}">
       {{ $remarks }}
    </td>
    @if(!$is_print)

@@ -250,7 +250,38 @@ class extends Component {
     x-data="{ 
         ids: @entangle('circ_ids'),
         status: @entangle('circ_eval_status').live, 
-        types: @entangle('circ_types').live
+        types: @entangle('circ_types').live,
+        lastChecked: null,
+        lastChecked: null,
+        handleCheck(event, id) {
+            if (event.shiftKey && this.lastChecked !== null) {
+                console.log('shift selection');
+                // Find the positions of both selected items in the full list of all IDs
+                const allIds = this.getAllIds(); // You'll need to define this function to get all available IDs
+                const start = allIds.indexOf(this.lastChecked);
+                const end = allIds.indexOf(id);
+                console.log('Start:', start, 'End:', end);
+                
+                if (start !== -1 && end !== -1) {
+                    // Sort to handle selection in either direction
+                    const [lower, upper] = start < end ? [start, end] : [end, start];
+                    
+                    // Select all IDs in the range
+                    for (let i = lower; i <= upper; i++) {
+                        const currentId = allIds[i];
+                        if (!this.ids.includes(currentId)) {
+                            this.ids.push(currentId);
+                        }
+                    }
+                }
+            }
+            this.lastChecked = id;
+            console.log('lastChecked: ' + this.lastChecked);
+        },
+        getAllIds() {
+        return Array.from(document.querySelectorAll('input[type=checkbox][id^=circ-]'))
+                .map(checkbox => checkbox.value);
+        }
     }">
     <div wire:key="circs-modals">
       <x-modal name="circ-show">
@@ -420,7 +451,7 @@ class extends Component {
                                 <th>{{ __('Diperbarui') }}</th>
                             </tr>
                             @foreach ($inv_circs as $circ)
-                                <x-inv-circ-circs-tr
+                                <x-inv-circ-circs-tr                                    
                                     id="{{ $circ->id }}"
                                     color="{{ $circ->type_color() }}" 
                                     icon="{{ $circ->type_icon() }}" 

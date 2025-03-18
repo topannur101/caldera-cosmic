@@ -46,7 +46,7 @@
                @endif
                <span class="mx-1">•</span><span>{{ $updated_at_friendly }}</span>
             </div>
-            <div class="truncate">
+            <div class="truncate" title="{{ $remarks }}">
                {{ $remarks }}
             </div>
          </div>
