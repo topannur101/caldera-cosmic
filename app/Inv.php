@@ -6,6 +6,13 @@ use Carbon\Carbon;
 use App\Models\InvCirc;
 use App\Models\InvItem;
 use Illuminate\Database\Eloquent\Builder;
+use Exception;
+use DOMDocument;
+use DOMXPath;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Support\Facades\Storage;
+use Str;
 
 class Inv
 {
@@ -214,5 +221,225 @@ class Inv
         }
 
         return $circs;
+    }
+
+    public static function photoSniff($item_code, $ci_session): array
+    {
+        $status = [
+            'success' => false,
+            'photo' => '',
+            'message' => __('Tak diketahui')
+        ];
+
+        try {
+
+            $from_date = Carbon::now()->subYears(2)->format('Y-m-d');
+            $to_date = Carbon::now()->format('Y-m-d');
+
+            $curl = curl_init();
+            
+            curl_setopt_array($curl, [
+                CURLOPT_URL => "https://ttconsumable.t2group.co.kr/purchase_request/fetch_data/1",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => "POST",
+                CURLOPT_POSTFIELDS => "action=fetch_data&from_date={$from_date}&to_date={$to_date}&status=Complete&item_code={$item_code}&req_id=%25",
+                CURLOPT_HTTPHEADER => [
+                    "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
+                    "Accept: application/json, text/javascript, */*; q=0.01",
+                    "Accept-Language: en-US,en;q=0.5",
+                    "Accept-Encoding: gzip, deflate, br, zstd",
+                    "Referer: https://ttconsumable.t2group.co.kr/purchase_request",
+                    "Origin: https://ttconsumable.t2group.co.kr",
+                    "Sec-GPC: 1",
+                    "Connection: keep-alive",
+                    "Cookie: loginFrom=T2; ci_session={$ci_session}",
+                    "Sec-Fetch-Dest: empty",
+                    "Sec-Fetch-Mode: no-cors",
+                    "Sec-Fetch-Site: same-origin",
+                    "Content-Type: application/x-www-form-urlencoded; charset=UTF-8",
+                    "X-Requested-With: XMLHttpRequest",
+                    "Priority: u=0",
+                    "Pragma: no-cache",
+                    "Cache-Control: no-cache"
+                ],
+                CURLOPT_SSL_VERIFYPEER => false, // Bypass SSL verification
+            ]);
+
+            $response = curl_exec($curl);
+            $err = curl_error($curl);
+
+            curl_close($curl);
+
+            if ($err) {
+                throw new Exception($err);                
+            }
+
+            // Decode the JSON response
+            $data = json_decode($response, true);
+
+            // Extract the request_list string
+            $request_list = $data['request_list'] ?? '';
+
+            // Use a regular expression to find the number in the specific position
+            preg_match('/<td style=\\"padding:.4rem .4rem\\">(\\d+)<\\/td>/', $request_list, $matches);
+
+            // The number you want is in $matches[1]
+            $req_id = $matches[1] ?? null;
+
+            if (!$req_id) {
+                throw new Exception(__('PR yang mengandung item code tsb tidak ditemukan'));
+            }
+
+            $url = "https://ttconsumable.t2group.co.kr/request_detail/fetch_data?reqID={$req_id}";
+
+            $headers = [
+                "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
+                "Accept: application/json, text/javascript, */*; q=0.01",
+                "Accept-Language: en-US,en;q=0.5",
+                "Accept-Encoding: gzip, deflate, br, zstd",
+                "X-Requested-With: XMLHttpRequest",
+                "Sec-GPC: 1",
+                "Connection: keep-alive",
+                "Referer: https://ttconsumable.t2group.co.kr/purchase_request",
+                "Cookie: loginFrom=T2; ci_session={$ci_session}",
+                "Sec-Fetch-Dest: empty",
+                "Sec-Fetch-Mode: cors",
+                "Sec-Fetch-Site: same-origin",
+                "Priority: u=0"
+            ];
+
+            $ch = curl_init();
+
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            $response = curl_exec($ch);
+
+            if (curl_errno($ch)) {
+                throw new Exception($ch);
+            }
+
+            $img_src = null;
+            $data = json_decode($response, true);
+            $data_detail = $data['data_detail'] ?? null;
+
+            if ($data_detail) {
+                $dom = new DOMDocument;
+                libxml_use_internal_errors(true);
+                $dom->loadHTML($data_detail);
+                libxml_clear_errors();
+
+                $xpath = new DOMXPath($dom);
+                $query = "//tr[td[text()='$item_code']]//img";
+                $img = $xpath->query($query)->item(0);
+
+                if ($img) {
+                    $img_src = $img->getAttribute('src'); 
+                }
+            }
+
+            if (!$img_src) {
+                throw new Exception(__('Gambar tidak ditemukan'));
+            }
+
+            curl_close($ch);   
+            
+            $content = file_get_contents($img_src);
+
+            // Create an instance of ImageManager
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($content)
+            ->scale(600, 600)
+            ->toJpeg(70);
+
+            // Generate the filename
+            $time = Carbon::now()->format('YmdHis');
+            $rand = Str::random(5);
+            $photo = $time . '_' . $rand . '.jpg';
+
+            // Store the image
+            $is_stored = Storage::put('/public/inv-items/' . $photo, $image);
+
+            if (!$is_stored) {
+                $photo = null;
+                throw new Exception(__('Tidak dapat menyimpan foto'));
+                
+            }
+
+            $status = [
+                'success'   => true,
+                'photo'     => $photo,
+                'message'   => __('Foto berhasil disalin')
+            ];          
+            
+
+        } catch (\Throwable $th) {
+            $status = [
+                'success'   => false,
+                'photo'     => '',
+                'message'   => $th->getMessage()
+            ];
+        }
+
+        return $status;
+    }
+
+    public static function getCiSession($user_name): string
+    {
+        $ci_session = '';
+        
+        $url = "https://ttconsumable.t2group.co.kr/?empcd={$user_name}";
+        $headers = [
+            "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
+            "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language: en-US,en;q=0.5",
+            "Accept-Encoding: gzip, deflate, br, zstd",
+            "Sec-GPC: 1",
+            "Upgrade-Insecure-Requests: 1",
+            "Connection: keep-alive",
+            "Sec-Fetch-Dest: document",
+            "Sec-Fetch-Mode: navigate",
+            "Sec-Fetch-Site: none",
+            "Sec-Fetch-User: ?1",
+            "Priority: u=0, i"
+        ];
+        
+        $cookieFile = tempnam(sys_get_temp_dir(), 'cookies');
+        $ch = curl_init();
+        
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false); // Handle redirects manually
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieFile); // Save cookies
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile); // Read cookies
+        curl_setopt($ch, CURLOPT_HEADER, true); // Include headers in the output
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        
+        $response = curl_exec($ch);
+        
+        $ci_session = null;
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+        } else {
+            // Separate headers and body
+            $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+            $headers = substr($response, 0, $header_size);
+        
+            echo "Headers:\n" . $headers;
+        
+            // Extract the ci_session cookie
+            if (preg_match('/Set-Cookie: ci_session=([^;]+)/', $headers, $matches)) {
+                $ci_session = $matches[1];
+            } 
+        }
+
+        return $ci_session;
     }
 }
