@@ -20,12 +20,18 @@ class extends Component {
 
     #[Url]
     public $start_at;
+
     #[Url]
     public $end_at;
+
     #[Url]
     public $line;
+
     #[Url]
     public $team;
+
+    #[Url]
+    public $mcs;
 
     public $perPage = 20;
 
@@ -37,21 +43,25 @@ class extends Component {
         $this->line = trim($this->line);
         $this->team = trim($this->team);
 
-        $query = InsOmvMetric::join('ins_omv_recipes', 'ins_omv_metrics.ins_omv_recipe_id', '=', 'ins_omv_recipes.id')
-            ->join('users as user1', 'ins_omv_metrics.user_1_id', '=', 'user1.id')
-            ->leftJoin('users as user2', 'ins_omv_metrics.user_2_id', '=', 'user2.id')
-            ->select(
-                'ins_omv_metrics.*',
-                'ins_omv_metrics.start_at as start_at',
-                'ins_omv_metrics.end_at as end_at',
-                'ins_omv_recipes.name as recipe_name',
-                'ins_omv_recipes.type as recipe_type',
-                'user1.name as user_1_name',
-                'user2.name as user_2_name',
-                'user1.emp_id as user_1_emp_id',
-                'user2.emp_id as user_2_emp_id'
-            )
-            ->whereBetween('ins_omv_metrics.start_at', [$start, $end]);
+        $query = InsOmvMetric::with(['ins_omv_recipe', 'user_1', 'user_2', 'ins_rubber_batch'])
+            ->whereBetween('start_at', [$start, $end]);
+        
+
+        // $query = InsOmvMetric::join('ins_omv_recipes', 'ins_omv_metrics.ins_omv_recipe_id', '=', 'ins_omv_recipes.id')
+        //     ->join('users as user1', 'ins_omv_metrics.user_1_id', '=', 'user1.id')
+        //     ->leftJoin('users as user2', 'ins_omv_metrics.user_2_id', '=', 'user2.id')
+        //     ->select(
+        //         'ins_omv_metrics.*',
+        //         'ins_omv_metrics.start_at as start_at',
+        //         'ins_omv_metrics.end_at as end_at',
+        //         'ins_omv_recipes.name as recipe_name',
+        //         'ins_omv_recipes.type as recipe_type',
+        //         'user1.name as user_1_name',
+        //         'user2.name as user_2_name',
+        //         'user1.emp_id as user_1_emp_id',
+        //         'user2.emp_id as user_2_emp_id'
+        //     )
+        //     ->whereBetween('ins_omv_metrics.start_at', [$start, $end]);
 
 
             if ($this->line)
@@ -64,31 +74,11 @@ class extends Component {
                 $query->where('ins_omv_metrics.team', $this->team);
             }
 
-    
-        // switch ($this->ftype) {
-        //     case 'recipe':
-        //         $query->where('ins_omv_recipes.name', 'LIKE', '%' . $this->fquery . '%');
-        //         break;
-        //     case 'line':
-        //         $query->where('ins_omv_metrics.line', 'LIKE', '%' . $this->fquery . '%');
-        //         break;
-        //     case 'team':
-        //         $query->where('ins_omv_metrics.team', 'LIKE', '%' . $this->fquery . '%');
-        //         break;
-        //     case 'emp_id':
-        //         $query->where(function (Builder $query) {
-        //             $query->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
-        //                 ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
-        //         });
-        //         break;
-        //     default:
-        //         $query->where(function (Builder $query) {
-        //             $query->orWhere('ins_omv_recipes.name', 'LIKE', '%' . $this->fquery . '%')
-        //                 ->orWhere('user1.emp_id', 'LIKE', '%' . $this->fquery . '%')
-        //                 ->orWhere('user2.emp_id', 'LIKE', '%' . $this->fquery . '%');
-        //         });
-        //         break;
-        // }
+            if ($this->mcs) {
+                $query->whereHas('ins_rubber_batch', function ($query) {
+                    $query->where('mcs', $this->mcs);
+                });
+            }
 
         return $query->orderBy('start_at', 'DESC');
     }
@@ -135,7 +125,14 @@ class extends Component {
         ];
 
         $columns = [
-            'ID', __('Kode'), __('Tipe'), __('Resep'), __('Line'), __('Team'), __('Operator 1'), __('Operator 2'), __('Evaluasi'), __('Durasi'), __('Jumlah Gambar'), __('Awal'), __('Akhir')
+            'ID', __('Kode'), 'MCS', __('Tipe'), __('Resep'), __('Line'), __('Team'), __('Operator 1'), __('Operator 2'), __('Evaluasi'), __('Durasi'), __('Jumlah Gambar'), __('Awal'), __('Akhir'),
+            __('Base original') . ' (kg)',
+            __('Batch remixing') . ' (kg)',
+            __('Skrap') . ' (kg)',
+            __('Pigmen') . ' (gr)',
+            __('IS75') . ' (gr)',
+            __('RM001') . ' (gr)',
+            __('TBZTD') . ' (gr)',            
         ];
 
         $callback = function () use ($columns) {
@@ -147,17 +144,25 @@ class extends Component {
                     fputcsv($file, [
                         $metric->id,
                         $metric->ins_rubber_batch->code ?? '',
+                        $metric->ins_rubber_batch->mcs ?? '',
                         strtoupper($metric->recipe_type),
-                        $metric->recipe_name,
+                        $metric->ins_omv_recipe->name,
                         $metric->line,
                         $metric->team,
-                        $metric->user_1_emp_id . ' - ' . $metric->user_1_name,
-                        $metric->user_2_emp_id . ' - ' . $metric->user_2_name,
+                        $metric->user_1->emp_id . ' - ' . $metric->user_1->name,
+                        $metric->user_2->emp_id . ' - ' . $metric->user_2->name,
                         $metric->evalHuman(),
                         $metric->duration(),
                         $metric->capturesCount(),
                         $metric->start_at,
                         $metric->end_at,
+                        $metric->ins_rubber_batch->composition(0),
+                        $metric->ins_rubber_batch->composition(1),
+                        $metric->ins_rubber_batch->composition(2),
+                        $metric->ins_rubber_batch->composition(3),
+                        $metric->ins_rubber_batch->composition(4),
+                        $metric->ins_rubber_batch->composition(5),
+                        $metric->ins_rubber_batch->composition(6),
                     ]);
                 }
             });
@@ -239,6 +244,11 @@ class extends Component {
                         <option value="C"></option>
                     </datalist>
                 </div>
+                <div class="w-full lg:w-28">
+                    <label for="batch-mcs"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">MCS</label>
+                    <x-text-input id="batch-mcs" wire:model.live="mcs" type="text" list="batch-mcss" />
+                </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grow flex justify-between gap-x-2 items-center">
@@ -319,6 +329,7 @@ class extends Component {
                     <tr class="uppercase text-xs">
                         <th>{{ __('ID') }}</th>
                         <th>{{ __('Kode') }}</th>
+                        <th>MCS</th>
                         <th>{{ __('Tipe') }}</th>
                         <th>{{ __('Resep') }}</th>
                         <th>{{ __('L') }}</th>
@@ -335,6 +346,7 @@ class extends Component {
                         x-on:click="$dispatch('open-modal', 'batch-show'); $dispatch('batch-show', { omv_metric_id: '{{ $metric->id }}', view: 'omv'})">
                             <td>{{ $metric->id }}</td>
                             <td>{{ $metric->ins_rubber_batch->code ?? '' }}</td>
+                            <td>{{ $metric->ins_rubber_batch->mcs ?? '' }}</td>
                             <td>{{ strtoupper($metric->ins_omv_recipe->type) }}</td>
                             <td>{{ $metric->ins_omv_recipe->name }}</td>
                             <td>{{ $metric->line }}</td>

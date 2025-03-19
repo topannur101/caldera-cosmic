@@ -80,6 +80,8 @@ Route::post('/omv-metric', function (Request $request) {
         'amps'              => 'nullable|array',
         'amps.*.taken_at'   => 'required|numeric',
         'amps.*.value'      => 'required|integer',
+        'composition'       => 'required|size:7|array',
+        'composition.*'     => 'nullable|min:0|max:5000|numeric',
     ]);
 
     if ($validator->fails()) {
@@ -117,7 +119,15 @@ Route::post('/omv-metric', function (Request $request) {
     $color = strtoupper(trim($validated['color']));
     $batch = null;
     if ($code) {
-        $batch = InsRubberBatch::firstOrCreate(['code' => $code],['mcs' => $mcs, 'color' => $color]);
+        $batch = InsRubberBatch::firstOrCreate(
+            [
+                'code' => $code
+            ], 
+            [
+                'mcs' => $mcs, 
+                'color' => $color,
+                'composition' => json_encode($validated['composition']),
+            ]);
     }
 
     $amps = $validated['amps']; 

@@ -84,7 +84,6 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="threshold-amp"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">Ampere threshold</label>
                         <x-text-input id="threshold-amp" x-model="thresholdAmp" type="number" step="1" min="0" max="200"></x-text-input> 
-
                     </div>
                 </x-modal>
             </div>
@@ -310,35 +309,35 @@ new #[Layout('layouts.app')] class extends Component {
                                             <x-pill class="uppercase mb-6">{{ __('Komposisi') }}</x-pill>  
                                             <div class="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label for="compBO" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Berat base original') }}</label>
-                                                    <x-text-input-suffix suffix="kg" id="compBO" x-model="compBO" type="number" />
+                                                    <label for="comp0" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Berat base original') }}</label>
+                                                    <x-text-input-suffix suffix="kg" id="comp0" x-model="comp0" type="number" />
                                                 </div>
                                                 <div>
-                                                    <label for="compBR" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Berat batch remixing') }}</label>
-                                                    <x-text-input-suffix suffix="kg" id="compBR" x-model="compBR" type="number" />
+                                                    <label for="comp1" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Berat batch remixing') }}</label>
+                                                    <x-text-input-suffix suffix="kg" id="comp1" x-model="comp1" type="number" />
                                                 </div>
                                                 <div>
-                                                    <label for="compS" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Berat skrap') }}</label>
-                                                    <x-text-input-suffix suffix="kg" id="compS" x-model="compS" type="number" />
+                                                    <label for="comp2" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Berat skrap') }}</label>
+                                                    <x-text-input-suffix suffix="kg" id="comp2" x-model="comp2" type="number" />
                                                 </div>
                                             </div>
                                             <hr class="border-neutral-300 dark:border-neutral-700 my-6" />
                                             <div class="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label for="compP" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pigmen') }}</label>
-                                                    <x-text-input-suffix suffix="gr" id="compP" x-model="compP" type="number" />
+                                                    <label for="comp3" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pigmen') }}</label>
+                                                    <x-text-input-suffix suffix="gr" id="comp3" x-model="comp3" type="number" />
                                                 </div>
                                                 <div>
-                                                    <label for="compI" class="block px-3 mb-2 uppercase text-xs text-neutral-500">IS75</label>
-                                                    <x-text-input-suffix suffix="gr" id="compI" x-model="compI" type="number" />
+                                                    <label for="comp4" class="block px-3 mb-2 uppercase text-xs text-neutral-500">IS75</label>
+                                                    <x-text-input-suffix suffix="gr" id="comp4" x-model="comp4" type="number" />
                                                 </div>
                                                 <div>
-                                                    <label for="compR" class="block px-3 mb-2 uppercase text-xs text-neutral-500">RM001</label>
-                                                    <x-text-input-suffix suffix="gr" id="compR" x-model="compR" type="number" />
+                                                    <label for="comp5" class="block px-3 mb-2 uppercase text-xs text-neutral-500">RM001</label>
+                                                    <x-text-input-suffix suffix="gr" id="comp5" x-model="comp5" type="number" />
                                                 </div>
                                                 <div>
-                                                    <label for="compT" class="block px-3 mb-2 uppercase text-xs text-neutral-500">TBZTD</label>
-                                                    <x-text-input-suffix suffix="gr" id="compT" x-model="compT" type="number" />
+                                                    <label for="comp6" class="block px-3 mb-2 uppercase text-xs text-neutral-500">TBZTD</label>
+                                                    <x-text-input-suffix suffix="gr" id="comp6" x-model="comp6" type="number" />
                                                 </div>
                                             </div> 
                                         </div>
@@ -613,13 +612,13 @@ new #[Layout('layouts.app')] class extends Component {
             };
 
             const compDefaults = {
-                compBO: '',
-                compBR: '',
-                compS: '',
-                compP: '',
-                compI: '',
-                compR: '',
-                compT: '',
+                comp0: '',
+                comp1: '',
+                comp2: '',
+                comp3: '',
+                comp4: '',
+                comp5: '',
+                comp6: '',
             };
 
             const pollDefaults = {
@@ -883,7 +882,7 @@ new #[Layout('layouts.app')] class extends Component {
                         this.modifyClass('cal-nav-main-links-alt', 'remove', 'hidden');
 
                         // Show warning if batch or user is empty
-                        if (!this.batchTeam || !this.userq || this.batchCode) {
+                        if (!this.batchTeam || !this.userq || !this.batchCode) {
                             this.$dispatch('open-modal', 'input-incomplete');
                         }
 
@@ -964,6 +963,7 @@ new #[Layout('layouts.app')] class extends Component {
                             end_at: this.formatDateTime(batchEndTime),
                             images: this.batchImages,
                             amps: this.batchAmps,
+                            composition: [ this.comp0, this.comp1, this.comp2, this.comp3, this.comp4, this.comp5, this.comp6 ]
                         };
                         this.sendData(jsonData);
                         this.reset(['timer', 'recipe', 'batch', 'poll', 'recipesFiltered', 'slider'])

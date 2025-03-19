@@ -27,6 +27,7 @@ new class extends Component
         'rdc_tests_count'   => '',
         'created_at'        => '',
         'updated_at'        => '',
+        'composition'       => [0,0,0,0,0,0,0],
     ];
 
     public string $view = '';
@@ -42,6 +43,7 @@ new class extends Component
             $this->batch['model']            = $batch->model ?: '?';
             $this->batch['color']            = $batch->color ?: '?';
             $this->batch['mcs']              = $batch->mcs ?: '?';
+            $this->batch['composition']      = json_decode(($batch->composition ?: '[0,0,0,0,0,0,0]'), true);
             $this->batch['created_at']       = $batch->created_at ?: '';
             $this->batch['updated_at']       = $batch->updated_at ?: '';
 
@@ -152,6 +154,7 @@ new class extends Component
                 @default
                     <div class="grid grid-cols-3 gap-x-6">
                     <div>
+                        <x-pill class="uppercase mb-3">{{ __('Lini masa') }}</x-pill>    
                         <ol class="relative border-s border-neutral-200 dark:border-neutral-700">                  
                             <li @if( $batch['omv_eval'] ) wire:click="showBatch({{ $batch_id }}, 'omv')" @endif tabindex="0" class="ms-3 px-3 py-4 cursor-pointer rounded hover:bg-caldy-500 hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-caldy-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition ease-in-out duration-150">
                                 <div class="absolute w-3 h-3 bg-neutral-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-neutral-900 dark:bg-neutral-700"></div>
@@ -180,58 +183,128 @@ new class extends Component
                             </li>
                         </ol>
                     </div>
-                    <div class="col-span-2">
-                        <div class="px-1 py-3 text-neutral-500 dark:text-neutral-400 text-xs uppercase">{{ __('Informasi batch') }}</div>
-                        <table class="table table-xs table-col-heading-fit">
-                            <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                    {{ __('Model') . ': ' }}
-                                </td>
-                                <td>
-                                    {{ $batch['model'] }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                    {{ __('Warna') . ': ' }}
-                                </td>
-                                <td>
-                                    {{ $batch['color'] }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                    {{ __('MCS') . ': ' }}
-                                </td>
-                                <td>
-                                    {{ $batch['mcs'] }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                    {{ __('Uji rheo') . ': ' }}
-                                </td>
-                                <td>
-                                    {{ $batch['rdc_tests_count'] . ' kali' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                    {{ __('Dibuat') . ': ' }}
-                                </td>
-                                <td>
-                                    {{ $batch['created_at'] }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                    {{ __('Diperbarui') . ': ' }}
-                                </td>
-                                <td>
-                                    {{ $batch['updated_at'] }}
-                                </td>
-                            </tr>
-                        </table>
+                    <div class="col-span-2 flex flex-col gap-y-4">
+                        <div>
+                            <x-pill class="uppercase mb-3">{{ __('Informasi batch') }}</x-pill>                         
+                            <table class="table table-xs table-col-heading-fit">
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Model') . ': ' }}
+                                    </td>
+                                    <td>
+                                        {{ $batch['model'] }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Warna') . ': ' }}
+                                    </td>
+                                    <td>
+                                        {{ $batch['color'] }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('MCS') . ': ' }}
+                                    </td>
+                                    <td>
+                                        {{ $batch['mcs'] }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Uji rheo') . ': ' }}
+                                    </td>
+                                    <td>
+                                        {{ $batch['rdc_tests_count'] . ' kali' }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Dibuat') . ': ' }}
+                                    </td>
+                                    <td>
+                                        {{ $batch['created_at'] }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Diperbarui') . ': ' }}
+                                    </td>
+                                    <td>
+                                        {{ $batch['updated_at'] }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div>
+                            <x-pill class="uppercase mb-3">{{ __('Komposisi') }}</x-pill>    
+                            <table class="table table-xs table-col-heading-fit">
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Base original') . ': ' }}
+                                    </td>
+                                    <td>
+                                        {{ $batch['composition'][0] }}
+                                    </td>
+                                    <td>kg</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Batch remixing') . ': ' }}
+                                    </td>
+                                    <td>
+                                        {{ $batch['composition'][1] }}
+                                    </td>
+                                    <td>kg</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Skrap') . ': ' }}
+                                    </td>
+                                    <td>
+                                        {{ $batch['composition'][2] }}
+                                    </td>
+                                    <td>kg</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('Pigmen') . ': ' }}
+                                    </td>
+                                    <td>
+                                        {{ $batch['composition'][3] }}
+                                    </td>
+                                    <td>gr</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('IS75') . ': ' }}
+                                    </td>
+                                    <td>
+                                    {{ $batch['composition'][4] }}
+                                    </td>
+                                    <td>gr</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('RM001') . ': ' }}
+                                    </td>
+                                    <td>
+                                    {{ $batch['composition'][5] }}
+                                    </td>
+                                    <td>gr</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-neutral-500 dark:text-neutral-400 text-sm">
+                                        {{ __('TBZTD') . ': ' }}
+                                    </td>
+                                    <td>
+                                    {{ $batch['composition'][6] }}
+                                    </td>
+                                    <td>gr</td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
                 </div>
             @endswitch
