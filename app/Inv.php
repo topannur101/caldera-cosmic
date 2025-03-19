@@ -349,8 +349,16 @@ class Inv
             }
 
             curl_close($ch);   
+
+            $options = array(
+                "ssl" => array(
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ),
+            );
             
-            $content = file_get_contents($img_src);
+            $context = stream_context_create($options);
+            $content = file_get_contents($img_src, false, $context);
 
             // Create an instance of ImageManager
             $manager = new ImageManager(new Driver());
