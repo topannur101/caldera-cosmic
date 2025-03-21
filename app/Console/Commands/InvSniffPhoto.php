@@ -72,12 +72,12 @@ class InvSniffPhoto extends Command
 
                 if (!$item->code) {
                     $this->info("Barang dengan ID {$item->id}, tidak memiliki item code.");
-                    break;
+                    continue;
                 }
 
                 if ($item->photo) {
                     $this->info("Barang dengan ID {$item->id}, sudah memiliki foto.");
-                    break;
+                    continue;
                 }
 
                 $result = Inv::photoSniff($item->code, $ci_session);
