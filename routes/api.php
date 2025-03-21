@@ -119,7 +119,7 @@ Route::post('/omv-metric', function (Request $request) {
     $color = strtoupper(trim($validated['color']));
     $batch = null;
     if ($code) {
-        $batch = InsRubberBatch::firstOrCreate(
+        $batch = InsRubberBatch::updateOrCreate(
             [
                 'code' => $code
             ], 
