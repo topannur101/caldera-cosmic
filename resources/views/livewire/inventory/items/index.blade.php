@@ -343,6 +343,10 @@ class extends Component
                                 <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
                             </x-dropdown-link>
                             @endcan
+                            <hr class="border-neutral-300 dark:border-neutral-600" />
+                            <x-dropdown-link href="{{ route('inventory.items.summary') }}" wire:navigate>
+                                <i class="fa fa-fw fa-line-chart me-2"></i>{{ __('Ringkasan barang')}}
+                            </x-dropdown-link>
                             <!-- <x-dropdown-link href="#" disabled="true">
                                 <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
                             </x-dropdown-link> -->

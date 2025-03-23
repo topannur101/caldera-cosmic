@@ -12,4 +12,9 @@ class InvTag extends Model
     protected $fillable = [
         'name'
     ];
+
+    public function inv_items()
+    {
+        return $this->hasManyThrough(InvItem::class, InvItemTag::class, 'inv_tag_id', 'id', 'id', 'inv_item_id');
+    }
 }
