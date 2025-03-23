@@ -233,7 +233,7 @@ class Inv
 
         try {
 
-            $from_date = Carbon::now()->subYears(5)->format('Y-m-d');
+            $from_date = Carbon::now()->subYears(10)->format('Y-m-d');
             $to_date = Carbon::now()->format('Y-m-d');
 
             $curl = curl_init();

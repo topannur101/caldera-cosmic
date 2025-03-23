@@ -307,30 +307,53 @@ class extends Component
    {
       $now = now();
 
-      $oneWeekAgo = $now->copy()->subDays(7);
-      $twoWeeksAgo = $now->copy()->subDays(14);
-      $threeWeeksAgo = $now->copy()->subDays(21);
-      $oneMonthAgo = $now->copy()->subDays(28);
-      $twoMonthsAgo = $now->copy()->subDays(58);
-      $threeMonthsAgo = $now->copy()->subDays(88);
+      $oneWeekAgo       = $now->copy()->subDays(7);
+      $twoWeeksAgo      = $now->copy()->subDays(14);
+      $threeWeeksAgo    = $now->copy()->subDays(21);
+      $oneMonthAgo      = $now->copy()->subDays(28);
+      $twoMonthsAgo     = $now->copy()->subDays(58);
+      $threeMonthsAgo   = $now->copy()->subDays(88);
+
+      $lessthanOneWeekCount = InvItem::where('last_withdrawal', '>', $oneWeekAgo)
+      ->where('inv_area_id', $this->area_id)
+      ->count();
   
-      $oneWeekCount = InvItem::whereBetween('last_withdrawal', [$twoWeeksAgo, $oneWeekAgo])->count();
-      $twoWeeksCount = InvItem::whereBetween('last_withdrawal', [$threeWeeksAgo, $twoWeeksAgo])->count();
-      $threeWeeksCount = InvItem::whereBetween('last_withdrawal', [$oneMonthAgo, $threeWeeksAgo])->count();
-      $oneMonthCount = InvItem::whereBetween('last_withdrawal', [$twoMonthsAgo, $oneMonthAgo])->count();
-      $twoMonthsCount = InvItem::whereBetween('last_withdrawal', [$threeMonthsAgo, $twoMonthsAgo])->count();
-      $threeMonthsCount = InvItem::where('last_withdrawal', '<', $threeMonthsAgo)->count();
-      $neverCount = InvItem::whereNull('last_withdrawal')->orWhere('last_withdrawal', '')->count();
+      $oneWeekCount     = InvItem::whereBetween('last_withdrawal', [$oneWeekAgo, $twoWeeksAgo])
+      ->where('inv_area_id', $this->area_id)
+      ->count();
+
+      $twoWeeksCount    = InvItem::whereBetween('last_withdrawal', [$threeWeeksAgo, $twoWeeksAgo])
+      ->where('inv_area_id', $this->area_id)
+      ->count();
+
+      $threeWeeksCount  = InvItem::whereBetween('last_withdrawal', [$oneMonthAgo, $threeWeeksAgo])
+      ->where('inv_area_id', $this->area_id)
+      ->count();
+
+      $oneMonthCount    = InvItem::whereBetween('last_withdrawal', [$twoMonthsAgo, $oneMonthAgo])
+      ->where('inv_area_id', $this->area_id)
+      ->count();
+
+      $twoMonthsCount   = InvItem::whereBetween('last_withdrawal', [$threeMonthsAgo, $twoMonthsAgo])
+      ->where('inv_area_id', $this->area_id)
+      ->count();
+
+      $threeMonthsCount = InvItem::where('last_withdrawal', '<', $threeMonthsAgo)
+      ->where('inv_area_id', $this->area_id)
+      ->count();
+
+      $neverCount = InvItem::whereNull('last_withdrawal')->where('inv_area_id', $this->area_id)
+      ->count();
   
       $data = [
          'type' => 'bar',
          'data' => [
-         'labels' => [__('1 minggu yang lalu'), __('2 minggu yang lalu'), __('3 minggu yang lalu'), __('1 bulan yang lalu'), __('2 bulan yang lalu'), __('3 bulan yang lalu'), __('Tidak pernah')],
+         'labels' => [ '> ' . __('1 minggu'), __('1 minggu'), __('2 minggu'), __('3 minggu'), __('1 bulan'), __('2 bulan'), __('3 bulan'), __('Tak pernah diambil')],
               'datasets' => [
                   [
                       'label' => 'Aging',
-                      'data' => [$oneWeekCount, $twoWeeksCount, $threeWeeksCount, $oneMonthCount, $twoMonthsCount, $threeMonthsCount, $neverCount],
-                      'backgroundColor' => ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF'],
+                      'data' => [$lessthanOneWeekCount, $oneWeekCount, $twoWeeksCount, $threeWeeksCount, $oneMonthCount, $twoMonthsCount, $threeMonthsCount, $neverCount],
+                      'backgroundColor' => ['#666666', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF'],
                   ],
               ],
           ],
@@ -418,7 +441,7 @@ class extends Component
          <div 
             wire:ignore
             id="aging-container" 
-            class="overflow-hidden"
+            class="h-64 overflow-hidden"
             wire:key="aging-container">
          </div>  
       </div>
