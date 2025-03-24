@@ -186,8 +186,8 @@ Route::middleware('auth')->group(function () {
 
         });
 
-        Route::name('inventory.reqs.')->group(function () {
-            Volt::route('/reqs',              'inventory.reqs.index')   ->name('index');
+        Route::name('inventory.orders.')->group(function () {
+            Volt::route('/orders',                  'inventory.orders.index')           ->name('index');
         });
 
     });
