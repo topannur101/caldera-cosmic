@@ -22,7 +22,9 @@ class InsOmvMetric extends Model
         'eval',
         'start_at',
         'end_at',
-        'ins_rubber_batch_id'
+        'ins_rubber_batch_id',
+        'data',
+        'kwh_usage'
     ];
 
     protected $casts = [

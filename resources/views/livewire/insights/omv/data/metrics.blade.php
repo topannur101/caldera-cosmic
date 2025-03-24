@@ -338,8 +338,8 @@ class extends Component {
                         <th>{{ __('Evaluasi') }}</th>
                         <th>{{ __('Durasi') }}</th>
                         <th><i class="fa fa-images"></i></th>
-                        <th>{{ __('Awal') }}</th>
-                        <th>{{ __('Akhir') }}</th>
+                        <th>{{ __('Mulai') }}</th>
+                        <th>kWh</th>
                     </tr>
                     @foreach ($metrics as $metric)
                     <tr wire:key="metric-tr-{{ $metric->id . $loop->index }}" tabindex="0"
@@ -359,7 +359,7 @@ class extends Component {
                             <td>{{ $metric->duration() }}</td>
                             <td>{{ $metric->capturesCount() }}</td>
                             <td>{{ $metric->start_at }}</td>
-                            <td>{{ $metric->end_at }}</td>
+                            <td>{{ $metric->kwh_usage }}</td>
                         </tr>
                     @endforeach
                 </table>

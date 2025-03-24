@@ -134,7 +134,7 @@ Route::post('/omv-metric', function (Request $request) {
     $filteredAmps = [];
 
     // limit the array if it's too big then just return empty filteredamps altogether
-    if (count($amps) < 10000) {
+    if (count($validated['amps']) < 10000) {
         $maxTakenAt = null;
         // Traverse the array from the last element to the first
         for ($i = count($amps) - 1; $i >= 0; $i--) {
@@ -148,8 +148,22 @@ Route::post('/omv-metric', function (Request $request) {
             }
         }
     }
-    $filteredAmps = array_reverse($filteredAmps);
 
+    $amps = array_reverse($filteredAmps);
+
+    $voltage = 220; // Voltage in Volts
+    $kwhUsage = 0; // Initialize total energy
+
+    for ($i = 1; $i < count($amps); $i++) {
+        // Use average current of the interval
+        $avgCurrent = ($amps[$i]['value'] + $amps[$i - 1]['value']) / 2;
+        $timeInterval = ($amps[$i]['taken_at'] - $amps[$i - 1]['taken_at']) / 3600; // Convert time interval to hours
+        
+        // Calculate energy for the interval (including power factor)
+        $energy = (sqrt(3) * $avgCurrent * $voltage * $timeInterval) / 1000;
+        $kwhUsage += $energy; // Sum up the energy
+    }
+    
     $omvMetric = new InsOmvMetric();
     $omvMetric->ins_omv_recipe_id = $validated['recipe_id'];
     $omvMetric->line = $validated['line'];
@@ -159,8 +173,9 @@ Route::post('/omv-metric', function (Request $request) {
     $omvMetric->eval = strtolower($validated['eval']); // converting eval to lowercase
     $omvMetric->start_at = $validated['start_at'];
     $omvMetric->end_at = $validated['end_at'];
-    $omvMetric->data = json_encode(['amps' => $filteredAmps]);
+    $omvMetric->data = json_encode(['amps' => $amps]);
     $omvMetric->ins_rubber_batch_id = $batch ? $batch->id : null;
+    $omvMetric->kwh_usage = $kwhUsage;
     $omvMetric->save();
     
     $captureMessages = [];

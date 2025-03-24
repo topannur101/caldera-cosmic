@@ -534,6 +534,9 @@ class InsStc
                     ],
                     'legend' => [
                         'display' => false
+                    ],
+                    'datalabels' => [
+                        'display' => false
                     ]
                 ]
             ]
