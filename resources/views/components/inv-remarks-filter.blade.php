@@ -24,12 +24,12 @@
             <div class="grid grid-cols-1 gap-y-6 gap-x-3 mt-6">        
                 <div>
                     <label for="circ-remarks" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keterangan sirkulasi') }}</label>
-                    <x-text-input id="circ-remarks" type="text" x-model="circ_remarks" x-on:keydown.enter.prevent="$nextTick(() => { $refs.evalRemarks.focus() })" />
+                    <x-text-input id="circ-remarks" autocomplete="circ-remarks" type="text" x-model="circ_remarks" x-on:keydown.enter.prevent="$nextTick(() => { $refs.evalRemarks.focus() })" />
                     </datalist>
                 </div>                           
                 <div>
                     <label for="eval-remarks" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keterangan evaluasi') }}</label>
-                    <x-text-input id="eval-remarks" type="text" x-model="eval_remarks" x-ref="evalRemarks" x-on:keydown.enter.prevent="$dispatch('close')" />
+                    <x-text-input id="eval-remarks" autocomplete="eval-remarks" type="text" x-model="eval_remarks" x-ref="evalRemarks" x-on:keydown.enter.prevent="$dispatch('close')" />
                 </div>
                 <div class="flex justify-end">
                     <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="circ_remarks = ''; eval_remarks = ''; $dispatch('close');" x-show="circ_remarks || eval_remarks"><span class="text-red-500"><div class="px-1">{{ __('Hapus filter keterangan') }}</div></span></x-text-button>

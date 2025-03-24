@@ -92,7 +92,7 @@ new #[Layout('layouts.app')] class extends Component {
          </div>
          <div>
             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="evalRemarks">{{ __('Keterangan evaluasi') }}</label>
-            <x-text-input wire:model="eval_remarks" id="eval-remarks" />
+            <x-text-input wire:model="eval_remarks" id="eval-remarks" autocomplete="eval-remarks" />
          </div>
          <div class="px-3 text-neutral-500 text-sm text-wrap"><i class="fa fa-exclamation-triangle mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diralat.') }}</div>
          <div class="flex justify-end">

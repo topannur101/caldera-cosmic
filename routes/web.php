@@ -164,12 +164,12 @@ Route::middleware('auth')->group(function () {
             Route::middleware('can:create,' . \App\Models\InvItem::class)->group(function () {
                 Volt::route('/items/create',    'inventory.items.create')       ->name('create');
             });
-            Volt::route('/items/summary',                           'inventory.items.summary')                          ->name('summary');
             Volt::route('/items/bulk-operation',                    'inventory.items.bulk-operation.index')             ->name('bulk-operation.index');
             Volt::route('/items/bulk-operation/create-new',         'inventory.items.bulk-operation.create-new')        ->name('bulk-operation.create-new');
             Volt::route('/items/bulk-operation/update-basic',       'inventory.items.bulk-operation.update-basic')      ->name('bulk-operation.update-basic');
             Volt::route('/items/bulk-operation/update-location',    'inventory.items.bulk-operation.update-location')   ->name('bulk-operation.update-location');
             Volt::route('/items/bulk-operation/update-stock',       'inventory.items.bulk-operation.update-stock')      ->name('bulk-operation.update-stock');
+            Volt::route('/items/summary',                           'inventory.items.summary')                          ->name('summary');
             Volt::route('/items/{id}',              'inventory.items.show')             ->name('show');
             Volt::route('/items/{id}/edit',         'inventory.items.edit')             ->name('edit');
             Volt::route('/items/',                  'inventory.items.index')            ->name('index');
@@ -179,7 +179,7 @@ Route::middleware('auth')->group(function () {
         Route::name('inventory.circs.')->group(function () {
 
             Volt::route('/circs/bulk-operation',    'inventory.circs.bulk-operation')   ->name('bulk-operation');
-            Volt::route('/circs/summary/',          'inventory.circs.summary.index')    ->name('summary.index');
+            Volt::route('/circs/summary/',          'inventory.circs.summary')          ->name('summary');
             Volt::route('/circs/create',            'inventory.circs.create')           ->name('create');
             Volt::route('/circs/print',             'inventory.circs.print')            ->name('print');
             Volt::route('/circs',                   'inventory.circs.index')            ->name('index');

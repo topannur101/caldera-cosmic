@@ -347,7 +347,7 @@ class extends Component {
                             <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
                         </x-slot>
                         <x-slot name="content">
-                            <x-dropdown-link href="{{ route('inventory.circs.summary.index') }}" wire:navigate>
+                            <x-dropdown-link href="{{ route('inventory.circs.summary') }}" wire:navigate>
                                 <i class="fa fa-fw fa-line-chart me-2"></i>{{ __('Ringkasan sirkulasi')}}
                             </x-dropdown-link>
                             <x-dropdown-link href="{{ route('inventory.circs.bulk-operation') }}" wire:navigate>

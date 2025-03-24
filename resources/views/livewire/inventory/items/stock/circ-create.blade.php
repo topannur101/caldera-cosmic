@@ -160,7 +160,7 @@ new class extends Component {
       @endif
       <div>
          <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-{{ $type }}-remarks">{{ __('Keterangan') }}</label>
-         <x-text-input wire:model="remarks" id="circ-{{ $type }}-remarks" />
+         <x-text-input wire:model="remarks" id="circ-{{ $type }}-remarks" autocomplete="circ-remarks" />
       </div>
       @if($can_eval)
       <div
