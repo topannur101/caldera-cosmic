@@ -19,7 +19,8 @@ class InvStock extends Model
         'unit_price',
         'is_active',
         'inv_item_id',
-        'inv_curr_id'
+        'inv_curr_id',
+        'amount_main'
     ];
 
     public function inv_item()
@@ -86,6 +87,15 @@ class InvStock extends Model
                         throw new \Exception(__('Pengambilan melebihi qty stok'));
                     }
 
+                    $amount_main = 0;
+                    if ($qty_end > 0 && $this->unit_price > 0 && $this->inv_curr->rate > 0) {
+                        $amount_main = abs(
+                            ($this->inv_curr_id === 1) 
+                            ? $qty_end * $this->unit_price
+                            : $qty_end * $this->unit_price / $this->inv_curr->rate
+                        );
+                    }
+
                     $circ->update([
                         'eval_user_id'  => Auth::user()->id,
                         'eval_status'   => 'approved', 
@@ -96,8 +106,9 @@ class InvStock extends Model
                         case 'deposit':
                         case 'withdrawal':
                             $this->update([
-                                'qty' => $qty_end,
-                                'is_active' => true
+                                'qty'           => $qty_end,
+                                'is_active'     => true,
+                                'amount_main'   => $amount_main
                             ]);
         
                             $item->is_active = true;

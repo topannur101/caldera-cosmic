@@ -9,6 +9,7 @@ use App\Models\InvArea;
 use App\Models\User;
 use App\Models\InvCurr;
 use App\Models\InvTag;
+use Illuminate\Support\Facades\Cache;
 
 new #[Layout('layouts.app')]
 class extends Component
@@ -32,7 +33,6 @@ class extends Component
        }
 
        $this->areas = $areas->toArray();
-       $this->area_id = $areas->first()->id;
 
    }
 
@@ -217,90 +217,103 @@ class extends Component
 
    public function value()
    {
-      // Get the main currency rate (assuming the first entry is the main currency)
-      $mainCurrency = InvCurr::first();
-      $mainCurrencyId = $mainCurrency->id;
-
-      // Get all tags related to the selected area
-      $tags = InvTag::whereHas('inv_items', function($query) {
-         $query->where('inv_area_id', $this->area_id);
-      })->get();
-
-      $data = [
-         'type' => 'bar',
-         'data' => [
+       // Get the main currency rate (assuming the first entry is the main currency)
+       $mainCurrency = InvCurr::first();
+       $mainCurrencyId = $mainCurrency->id;
+   
+       // Get all tags related to the selected area
+       $tags = InvTag::whereHas('inv_items', function($query) {
+           $query->where('inv_area_id', $this->area_id);
+       })->get();
+   
+       $data = [
+           'type' => 'bar',
+           'data' => [
                'labels' => [],
                'datasets' => [
-                  [
-                     'label' => 'Total Value',
-                     'data' => [],
-                     'backgroundColor' => [],
-                  ],
+                   [
+                       'label' => 'Total Value',
+                       'data' => [],
+                       'backgroundColor' => [],
+                   ],
                ],
-         ],
-         'options' => [
+           ],
+           'options' => [
                'responsive' => true,
                'maintainAspectRatio' => false,
                'indexAxis' => 'y', // This makes the chart horizontal
                'scales' => [
-                  'x' => [
-                     'beginAtZero' => true,
-                  ],
-                  'y' => [
-                     'beginAtZero' => true,
-                  ],
+                   'x' => [
+                       'beginAtZero' => true,
+                   ],
+                   'y' => [
+                       'beginAtZero' => true,
+                   ],
                ],
                'plugins' => [
-                  'legend' => [
-                     'display' => false, // This shows the legend
-                  ],
-                  'datalabels' => [
-                     'anchor' => 'center',
-                     'align' => 'center',
-                     'color' => 'white',
-                     'font' => [
+                   'legend' => [
+                       'display' => false, // This shows the legend
+                   ],
+                   'datalabels' => [
+                       'anchor' => 'center',
+                       'align' => 'center',
+                       'color' => 'white',
+                       'font' => [
                            'weight' => 'bold',
-                     ],
-                     'formatter' => function($value) {
-                           return $value;
-                     },
-                  ],
+                       ],
+                   ],
                ],
-         ],
-      ];
-
-      foreach ($tags as $tag) {
-         $totalValue = 0;
-
-         // Get all items with this tag and in the selected area
-         $items = $tag->inv_items()->where('inv_area_id', $this->area_id)->get();
-
-         foreach ($items as $item) {
+           ],
+       ];
+   
+       foreach ($tags as $tag) {
+           $totalValue = 0;
+   
+           // Get all items with this tag and in the selected area
+           $items = $tag->inv_items()->where('inv_area_id', $this->area_id)->get();
+   
+           foreach ($items as $item) {
                // Get all stocks for this item
                $stocks = $item->inv_stocks;
-
+   
                foreach ($stocks as $stock) {
-                  $unitPrice = $stock->unit_price;
-                  $qty = $stock->qty;
-                  $currencyRate = $stock->inv_curr->rate;
-
-                  // Convert unit price to main currency if necessary
-                  if ($stock->inv_curr_id != $mainCurrencyId) {
-                     $unitPrice /= $currencyRate;
-                  }
-
-                  // Calculate total value
-                  $totalValue += $qty * $unitPrice;
+                   $totalValue += $stock->amount_main;
                }
-         }
-
-         // Add tag name and total value to the data
-         $data['data']['labels'][] = $tag->name;
-         $data['data']['datasets'][0]['data'][] = $totalValue;
-         $data['data']['datasets'][0]['backgroundColor'][] = '#' . substr(md5(rand()), 0, 6); // Random color
-      }
-
-      return $data;
+           }
+   
+           // Add tag name and total value to the data
+           $data['data']['labels'][] = $tag->name;
+           $data['data']['datasets'][0]['data'][] = round($totalValue, 2);
+       }
+   
+       // Calculate total value for items with no tags
+       $noTagValue = 0;
+       $noTagItems = InvItem::where('inv_area_id', $this->area_id)->whereDoesntHave('inv_tags')->get();
+   
+       foreach ($noTagItems as $item) {
+           // Get all stocks for this item
+           $stocks = $item->inv_stocks;
+   
+           foreach ($stocks as $stock) {
+               $unitPrice = $stock->unit_price;
+               $qty = $stock->qty;
+               $currencyRate = $stock->inv_curr->rate;
+   
+               // Convert unit price to main currency if necessary
+               if ($stock->inv_curr_id != $mainCurrencyId) {
+                   $unitPrice /= $currencyRate;
+               }
+   
+               // Calculate total value
+               $noTagValue += $qty * $unitPrice;
+           }
+       }
+   
+       // Add no tag value to the data
+       $data['data']['labels'][] = __('Tanpa tag');
+       $data['data']['datasets'][0]['data'][] = round($noTagValue, 2);
+   
+       return $data;
    }
 
    public function aging()
@@ -403,11 +416,22 @@ class extends Component
 
 <div class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-700 dark:text-neutral-200">
    @vite(['resources/js/apexcharts.js'])
-   <x-select wire:model.live="area_id" class="mb-6">
-      @foreach ($areas as $area)
-         <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
-      @endforeach
-   </x-select>
+   <div class="flex gap-x-6 items-center mb-6">
+      <x-select wire:model.live="area_id">
+         <option value="0"></option>
+         @foreach ($areas as $area)
+            <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
+         @endforeach
+      </x-select>
+      <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
+         <div class="relative w-3">
+            <x-spinner class="sm mono"></x-spinner>
+         </div>
+         <div>
+            {{ __('Melakukan kalkulasi...') }}
+         </div>
+      </div>
+   </div>
    <div class="grid grid-cols-3 gap-4">
       <div class="col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
          <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Ketidaklengkapan info dasar') }}</label>
