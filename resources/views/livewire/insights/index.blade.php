@@ -158,7 +158,7 @@ class extends Component {
             <img class="dark:invert absolute top-0 left-0 w-full h-full object-cover opacity-70" src="/insight-banner.jpg" />
             <div class="absolute top-0 left-0 flex h-full items-center px-4 lg:px-8 text-neutral-500">
                 <div>
-                    <div class="text-2xl mb-2 font-medium">{{ __('Wawasan') }}</div>
+                    <div wire:click="recalculate" class="text-2xl mb-2 font-medium">{{ __('Wawasan') }}</div>
                     <div>{{ __('Platform analitik untuk proses manufaktur yang lebih terkendali.') }}</div>
                 </div>
             </div>

@@ -197,10 +197,11 @@ class extends Component
             throw new Exception ($response->message());
          }
 
-         $item['tags'] = [];
-         $item['tag_0'] ??= array_push($item['tags'], $item['tag_0']);
-         $item['tag_1'] ??= array_push($item['tags'], $item['tag_1']);
-         $item['tag_2'] ??= array_push($item['tags'], $item['tag_2']);
+         $item['tags'] = array_filter([
+            $item['tag_0'] ?? null, 
+            $item['tag_1'] ?? null, 
+            $item['tag_2'] ?? null
+        ]);
 
          $validator = Validator::make(
             $item,
