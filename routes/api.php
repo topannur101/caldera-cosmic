@@ -151,17 +151,19 @@ Route::post('/omv-metric', function (Request $request) {
 
     $amps = array_reverse($filteredAmps);
 
-    $voltage = 220; // Voltage in Volts
-    $kwhUsage = 0; // Initialize total energy
+    $voltage = 380; // Voltase
+    $kwhUsage = 0;  // Total energi, diinisiasi dengan 0
 
     for ($i = 1; $i < count($amps); $i++) {
-        // Use average current of the interval
+        // Hitung rerata arus per interval
         $avgCurrent = ($amps[$i]['value'] + $amps[$i - 1]['value']) / 2;
-        $timeInterval = ($amps[$i]['taken_at'] - $amps[$i - 1]['taken_at']) / 3600; // Convert time interval to hours
+
+        // Hitung durasi interval lalu konversi dari detik ke jam
+        $timeInterval = ($amps[$i]['taken_at'] - $amps[$i - 1]['taken_at']) / 3600; 
         
-        // Calculate energy for the interval (including power factor)
+        // Hitung energi per interval
         $energy = (sqrt(3) * $avgCurrent * $voltage * $timeInterval) / 1000;
-        $kwhUsage += $energy; // Sum up the energy
+        $kwhUsage += $energy; // Jumlahkan total energi semua interval
     }
     
     $omvMetric = new InsOmvMetric();

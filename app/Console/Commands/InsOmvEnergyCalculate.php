@@ -32,7 +32,7 @@ class InsOmvEnergyCalculate extends Command
             $data = json_decode($metric->data, true);
             $amps = $data['amps'] ?? [];
 
-            $voltage = 220; // Voltage in Volts
+            $voltage = 380; // Voltage in Volts
             $kwhUsage = 0; // Initialize total energy
 
             for ($i = 1; $i < count($amps); $i++) {
