@@ -544,12 +544,11 @@ new class extends Component
                            <label for="secondary-unit-price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
                            <x-text-input-curr curr="secondary_currency" id="secondary-unit-price" x-ref="secondaryUnitPrice" x-on:keydown.enter.prevent=""
                                           type="number" x-model="secondary_unit_price" min="0"></x-text-input>
-                        </div>                       
-                        
-                        <div class="px-3 col-span-1 sm:col-span-2">
-                           <x-toggle x-model="is_secondary_currency">{{ __('Gunakan mata uang sekunder') }}</x-toggle>
                         </div>
                      </div>
+                     <div class="px-3 mt-6">
+                           <x-toggle x-model="is_secondary_currency">{{ __('Gunakan mata uang sekunder') }}</x-toggle>
+                        </div>
                      <div class="flex justify-end mt-6">
                         <x-primary-button type="button" x-on:click="addStock">
                            <span x-text="editingIndex !== null ? '{{ __('Terapkan') }}' : '{{ __('Buat') }}'"></span>

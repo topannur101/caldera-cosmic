@@ -125,14 +125,16 @@ class extends Component {
         ];
 
         $columns = [
-            'ID', __('Kode'), 'MCS', __('Tipe'), __('Resep'), __('Line'), __('Team'), __('Operator 1'), __('Operator 2'), __('Evaluasi'), __('Durasi'), __('Jumlah Gambar'), __('Awal'), __('Akhir'),
+            'ID', __('Kode'), 
+            'Model', __('Warna'), 'MCS',
+            __('Tipe'), __('Resep'), __('Line'), __('Team'), __('Operator 1'), __('Operator 2'), __('Evaluasi'), __('Durasi'), 'kWh', __('Jumlah Gambar'), __('Awal'), __('Akhir'),
             __('Base original') . ' (kg)',
             __('Batch remixing') . ' (kg)',
             __('Skrap') . ' (kg)',
             __('Pigmen') . ' (gr)',
             __('IS75') . ' (gr)',
             __('RM001') . ' (gr)',
-            __('TBZTD') . ' (gr)',            
+            __('TBZTD') . ' (gr)',   
         ];
 
         $callback = function () use ($columns) {
@@ -144,6 +146,8 @@ class extends Component {
                     fputcsv($file, [
                         $metric->id,
                         $metric->ins_rubber_batch->code ?? '',
+                        $metric->ins_rubber_batch->model ?? '',
+                        $metric->ins_rubber_batch->color ?? '',
                         $metric->ins_rubber_batch->mcs ?? '',
                         strtoupper($metric->recipe_type),
                         $metric->ins_omv_recipe->name,
@@ -153,16 +157,17 @@ class extends Component {
                         $metric->user_2->emp_id . ' - ' . $metric->user_2->name,
                         $metric->evalHuman(),
                         $metric->duration(),
+                        $metric->kwh_usage,
                         $metric->capturesCount(),
                         $metric->start_at,
                         $metric->end_at,
-                        $metric->ins_rubber_batch->composition(0),
-                        $metric->ins_rubber_batch->composition(1),
-                        $metric->ins_rubber_batch->composition(2),
-                        $metric->ins_rubber_batch->composition(3),
-                        $metric->ins_rubber_batch->composition(4),
-                        $metric->ins_rubber_batch->composition(5),
-                        $metric->ins_rubber_batch->composition(6),
+                        $metric->ins_rubber_batch?->composition(0),
+                        $metric->ins_rubber_batch?->composition(1),
+                        $metric->ins_rubber_batch?->composition(2),
+                        $metric->ins_rubber_batch?->composition(3),
+                        $metric->ins_rubber_batch?->composition(4),
+                        $metric->ins_rubber_batch?->composition(5),
+                        $metric->ins_rubber_batch?->composition(6),
                     ]);
                 }
             });
@@ -329,6 +334,8 @@ class extends Component {
                     <tr class="uppercase text-xs">
                         <th>{{ __('ID') }}</th>
                         <th>{{ __('Kode') }}</th>
+                        <th>{{ __('Model') }}</th>
+                        <th>{{ __('Warna') }}</th>
                         <th>MCS</th>
                         <th>{{ __('Tipe') }}</th>
                         <th>{{ __('Resep') }}</th>
@@ -337,16 +344,18 @@ class extends Component {
                         <th>{{ __('Operator') }}</th>
                         <th>{{ __('Evaluasi') }}</th>
                         <th>{{ __('Durasi') }}</th>
+                        <th>kWh</th>
                         <th><i class="fa fa-images"></i></th>
                         <th>{{ __('Mulai') }}</th>
-                        <th>kWh</th>
                     </tr>
                     @foreach ($metrics as $metric)
                     <tr wire:key="metric-tr-{{ $metric->id . $loop->index }}" tabindex="0"
                         x-on:click="$dispatch('open-modal', 'batch-show'); $dispatch('batch-show', { omv_metric_id: '{{ $metric->id }}', view: 'omv'})">
                             <td>{{ $metric->id }}</td>
-                            <td>{{ $metric->ins_rubber_batch->code ?? '' }}</td>
-                            <td>{{ $metric->ins_rubber_batch->mcs ?? '' }}</td>
+                            <td>{{ $metric->ins_rubber_batch->code ?? '-' }}</td>
+                            <td>{{ $metric->ins_rubber_batch->model ?? '-' }}</td>
+                            <td>{{ $metric->ins_rubber_batch->color ?? '-' }}</td>
+                            <td>{{ $metric->ins_rubber_batch->mcs ?? '-' }}</td>
                             <td>{{ strtoupper($metric->ins_omv_recipe->type) }}</td>
                             <td>{{ $metric->ins_omv_recipe->name }}</td>
                             <td>{{ $metric->line }}</td>
@@ -357,9 +366,9 @@ class extends Component {
                                 color="{{ $metric->eval === 'on_time' ? 'green' : ($metric->eval === 'on_time_manual' ? 'yellow' : ($metric->eval === 'too_late' || $metric->eval === 'too_soon' ? 'red' : 'neutral')) }}">{{ $metric->evalHuman() }}</x-pill>
                             </td>
                             <td>{{ $metric->duration() }}</td>
+                            <td>{{ $metric->kwh_usage }}</td>
                             <td>{{ $metric->capturesCount() }}</td>
                             <td>{{ $metric->start_at }}</td>
-                            <td>{{ $metric->kwh_usage }}</td>
                         </tr>
                     @endforeach
                 </table>
