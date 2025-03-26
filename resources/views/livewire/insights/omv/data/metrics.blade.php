@@ -154,7 +154,7 @@ class extends Component {
                         $metric->line,
                         $metric->team,
                         $metric->user_1->emp_id . ' - ' . $metric->user_1->name,
-                        $metric->user_2->emp_id . ' - ' . $metric->user_2->name,
+                        $metric->user_2?->emp_id . ' - ' . $metric->user_2?->name,
                         $metric->evalHuman(),
                         $metric->duration(),
                         $metric->kwh_usage,
