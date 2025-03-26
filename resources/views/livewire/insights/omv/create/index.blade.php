@@ -263,14 +263,19 @@ new #[Layout('layouts.app')] class extends Component {
                                             <x-text-input id="batchCode" x-model="batchCode" type="text" />
                                         </div>
                                         <div class="mt-6">
-                                            <label for="batchMCS"
-                                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
-                                            <x-text-input id="batchMCS" x-model="batchMCS" type="text" />
+                                            <label for="batchModel"
+                                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Model') }}</label>
+                                            <x-text-input id="batchModel" x-model="batchModel" type="text" />
                                         </div>
                                         <div class="mt-6">
                                             <label for="batchColor"
                                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Warna') }}</label>
                                             <x-text-input id="batchColor" x-model="batchColor" type="text" />
+                                        </div>
+                                        <div class="mt-6">
+                                            <label for="batchMCS"
+                                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
+                                            <x-text-input id="batchMCS" x-model="batchMCS" type="text" />
                                         </div>
                                     </div>
                                     <div class="col-span-4 px-6 flex flex-col gap-y-6"> 
@@ -602,8 +607,9 @@ new #[Layout('layouts.app')] class extends Component {
 
             const batchDefaults = {
                 batchCode: '',
-                batchMCS: '',
+                batchModel: '',
                 batchColor: '',
+                batchMCS: '',
                 batchEval: '',
                 batchType: '',
                 batchAmps: [],
@@ -952,8 +958,9 @@ new #[Layout('layouts.app')] class extends Component {
                             server_ip: '{{ parse_url(url('/'), PHP_URL_HOST) }}',
                             recipe_id: this.recipe.id.toString(),
                             code: this.batchCode,
-                            mcs: this.batchMCS,
+                            model: this.batchModel,
                             color: this.batchColor,
+                            mcs: this.batchMCS,
                             line: this.batchLine,
                             team: this.batchTeam,
                             user_1_emp_id: '{{ Auth::user()->emp_id }}',

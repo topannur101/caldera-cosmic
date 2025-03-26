@@ -205,12 +205,12 @@ class InsRtcFetch extends Command
             // Tarik data MODBUS ke semua perangkat
             foreach ($devices as $device) {
                 
-                $fc2 = ReadCoilsBuilder::newReadInputDiscretes('tcp://' . $device->ip_address . ':8503', $unit_id)
+                $fc2 = ReadCoilsBuilder::newReadInputDiscretes('tcp://' . $device->ip_address . ':502', $unit_id)
                     ->coil(0, 'is_correcting')
                     // ->coil(1, 'is_holding')
                     ->build();
 
-                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://' . $device->ip_address . ':8503', $unit_id)
+                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://' . $device->ip_address . ':502', $unit_id)
                     ->int16(0, 'sensor_left')
                     ->int16(1, 'sensor_right')
                     // something missing here

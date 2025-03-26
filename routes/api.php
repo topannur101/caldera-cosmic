@@ -64,8 +64,9 @@ Route::post('/omv-metric', function (Request $request) {
     $validator = Validator::make($request->all(), [
         'recipe_id'         => 'required|exists:ins_omv_recipes,id',
         'code'              => 'nullable|string|max:20',
-        'mcs'               => 'nullable|string|max:10',
+        'model'             => 'nullable|string|max:30',    
         'color'             => 'nullable|string|max:20',
+        'mcs'               => 'nullable|string|max:10',
         'line'              => 'required|integer|min:1|max:99',
         'team'              => 'required|in:A,B,C',
         'user_1_emp_id'     => 'required|exists:users,emp_id',
@@ -114,9 +115,11 @@ Route::post('/omv-metric', function (Request $request) {
         ], 400);
     }
 
-    $code = strtoupper(trim($validated['code']));
-    $mcs = strtoupper(trim($validated['mcs']));
-    $color = strtoupper(trim($validated['color']));
+    $code   = strtoupper(trim($validated['code']));
+    $model  = strtoupper(trim($validated['model']));
+    $color  = strtoupper(trim($validated['color']));
+    $mcs    = strtoupper(trim($validated['mcs']));
+
     $batch = null;
     if ($code) {
         $batch = InsRubberBatch::updateOrCreate(
@@ -124,8 +127,9 @@ Route::post('/omv-metric', function (Request $request) {
                 'code' => $code
             ], 
             [
-                'mcs' => $mcs, 
+                'model' => $model,
                 'color' => $color,
+                'mcs' => $mcs, 
                 'composition' => json_encode($validated['composition']),
             ]);
     }
@@ -153,6 +157,8 @@ Route::post('/omv-metric', function (Request $request) {
 
     $voltage = 380; // Voltase
     $kwhUsage = 0;  // Total energi, diinisiasi dengan 0
+    $powerFactor = 0.85;
+    $calibrationFactor = 0.8;
 
     for ($i = 1; $i < count($amps); $i++) {
         // Hitung rerata arus per interval
@@ -162,7 +168,7 @@ Route::post('/omv-metric', function (Request $request) {
         $timeInterval = ($amps[$i]['taken_at'] - $amps[$i - 1]['taken_at']) / 3600; 
         
         // Hitung energi per interval
-        $energy = (sqrt(3) * $avgCurrent * $voltage * $timeInterval) / 1000;
+        $energy = (sqrt(3) * $avgCurrent * $voltage * $timeInterval * $powerFactor * $calibrationFactor) / 1000;
         $kwhUsage += $energy; // Jumlahkan total energi semua interval
     }
     

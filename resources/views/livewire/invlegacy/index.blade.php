@@ -11,7 +11,7 @@
     <div class="relative">
         @if (Auth::user()->id ?? false)
             <div class="max-w-xl lg:max-w-2xl mx-auto px-4 py-16">
-                <h2 class="text-4xl font-extrabold dark:text-white">{{ __('Selamat datang di Inventaris') }}</h2>
+                <h2 class="text-4xl font-bold dark:text-white">{{ __('Selamat datang di Inventaris') }}</h2>
                 <p class="mt-4 mb-12 text-lg text-neutral-500">{{ __('Cari dan buat sirkulasi barang.') }}</p>
                 <p class="mb-4 text-lg font-normal text-neutral-500 dark:text-neutral-400">
                     {{ __('Mulai dengan mengklik menu navigasi di pojok kanan atas.') }}</p>
@@ -43,7 +43,7 @@
                             <div
                                 class="w-full pb-6 space-y-6 sm:max-w-md lg:max-w-lg md:space-y-4 lg:space-y-8 xl:space-y-9 sm:pr-5 lg:pr-0 md:pb-0">
                                 <h1
-                                    class="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-300 sm:text-5xl md:text-4xl lg:text-5xl xl:text-6xl">
+                                    class="text-4xl font-bold tracking-tight text-neutral-900 dark:text-neutral-300 sm:text-5xl md:text-4xl lg:text-5xl xl:text-6xl">
                                         <span class="block xl:inline">{{ __('Kelola inventaris dengan mudah') }}</span>
                                 </h1>
                                 <p class="mx-auto text-base text-neutral-500 sm:max-w-md lg:text-xl md:max-w-3xl">

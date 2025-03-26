@@ -34,6 +34,8 @@ class InsOmvEnergyCalculate extends Command
 
             $voltage = 380; // Voltage in Volts
             $kwhUsage = 0; // Initialize total energy
+            $powerFactor = 0.85;
+            $calibrationFactor = 0.8;
 
             for ($i = 1; $i < count($amps); $i++) {
                 // Use average current of the interval
@@ -41,7 +43,7 @@ class InsOmvEnergyCalculate extends Command
                 $timeInterval = ($amps[$i]['taken_at'] - $amps[$i - 1]['taken_at']) / 3600; // Convert time interval to hours
                 
                 // Calculate energy for the interval (including power factor)
-                $energy = (sqrt(3) * $avgCurrent * $voltage * $timeInterval) / 1000;
+                $energy = (sqrt(3) * $avgCurrent * $voltage * $timeInterval * $powerFactor * $calibrationFactor) / 1000;
                 $kwhUsage += $energy; // Sum up the energy
             }
 
