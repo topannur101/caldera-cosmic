@@ -655,7 +655,7 @@ class extends Component
          },
 
          editorDownload() {
-            this.table.download("csv", "{{ __('operasi-massal-buat-baru') }}.csv"); 
+            this.table.download("csv", "operasi-massal-buat-baru.csv"); 
          },
    }));
 </script>

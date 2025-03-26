@@ -94,7 +94,7 @@ new #[Layout('layouts.app')] class extends Component {
             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="evalRemarks">{{ __('Keterangan evaluasi') }}</label>
             <x-text-input wire:model="eval_remarks" id="eval-remarks" autocomplete="eval-remarks" />
          </div>
-         <div class="px-3 text-neutral-500 text-sm text-wrap"><i class="fa fa-exclamation-triangle mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diralat.') }}</div>
+         <div class="px-3 text-neutral-500 text-sm text-wrap"><i class="fa fa-exclamation-triangle mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diedit') }}</div>
          <div class="flex justify-end">
             <div class="btn-group">
                <x-secondary-button type="button" wire:click="evaluate('approve')"><i class="fa fa-thumbs-up mr-2"></i>{{ __('Setujui') }}</x-secondary-button>

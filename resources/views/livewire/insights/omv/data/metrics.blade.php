@@ -132,9 +132,9 @@ class extends Component {
             __('Batch remixing') . ' (kg)',
             __('Skrap') . ' (kg)',
             __('Pigmen') . ' (gr)',
-            __('IS75') . ' (gr)',
-            __('RM001') . ' (gr)',
-            __('TBZTD') . ' (gr)',   
+            'IS75' . ' (gr)',
+            'RM001' . ' (gr)',
+            'TBZTD' . ' (gr)',   
         ];
 
         $callback = function () use ($columns) {

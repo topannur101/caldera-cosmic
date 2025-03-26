@@ -278,7 +278,7 @@ new class extends Component
                                 </tr>
                                 <tr>
                                     <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                        {{ __('IS75') . ': ' }}
+                                        {{ 'IS75' . ': ' }}
                                     </td>
                                     <td>
                                     {{ $batch['composition'][4] }}
@@ -287,7 +287,7 @@ new class extends Component
                                 </tr>
                                 <tr>
                                     <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                        {{ __('RM001') . ': ' }}
+                                        {{ 'RM001' . ': ' }}
                                     </td>
                                     <td>
                                     {{ $batch['composition'][5] }}
@@ -296,7 +296,7 @@ new class extends Component
                                 </tr>
                                 <tr>
                                     <td class="text-neutral-500 dark:text-neutral-400 text-sm">
-                                        {{ __('TBZTD') . ': ' }}
+                                        {{ 'TBZTD' . ': ' }}
                                     </td>
                                     <td>
                                     {{ $batch['composition'][6] }}
