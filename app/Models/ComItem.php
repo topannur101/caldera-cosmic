@@ -20,6 +20,7 @@ class ComItem extends Model
         'user_id',
         'parent_id',
         'content',
+        'url',
         'created_at',
         'updated_at'
     ];

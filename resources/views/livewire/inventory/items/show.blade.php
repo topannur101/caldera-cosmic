@@ -34,6 +34,7 @@ class extends Component
      public bool $is_updated = false;
 
      public bool $can_store = false;
+     public bool $can_view = false;
 
     public function mount()
     {
@@ -55,8 +56,8 @@ class extends Component
 
             $store = Gate::inspect('store', $item);
             $this->can_store = $store->allowed();
-
-            Gate::authorize('view', $item);
+            $view = Gate::inspect('view', $item);
+            $this->can_view = $view->allowed();
         }
     }
 
@@ -71,9 +72,16 @@ class extends Component
 </x-slot>
 
 <div class="py-12 max-w-5xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200" x-init="$wire.is_updated ? toast('{{ __('Barang disimpan') }}', { type: 'success' }) : null">
-    <livewire:inventory.items.form :$items :$can_store />
-    <hr class="border-neutral-200 dark:border-neutral-800 my-8" />
-    <div class="max-w-lg mx-auto px-6 md:px-0">
-        <livewire:comments.index model_name="InvItem" :model_id="$items[0]['id']" />
-    </div>
+    @if($can_view)
+        <livewire:inventory.items.form :$items :$can_store />
+        <hr class="border-neutral-200 dark:border-neutral-800 my-8" />
+        <div class="max-w-lg mx-auto px-6 md:px-0">
+            <livewire:comments.index model_name="InvItem" :model_id="$items[0]['id']" />
+        </div>
+    @else    
+        <div class="text-center w-72 py-20 mx-auto">
+            <i class="fa fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
+            <div class="text-neutral-500">{{ __('Kamu tidak memiliki wewenang untuk melihat barang di area ini.') }}</div>
+        </div>
+    @endif
 </div>

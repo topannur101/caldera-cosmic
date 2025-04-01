@@ -1,6 +1,12 @@
-@props(['align' => 'right', 'width' => '48', 'contentClasses' => 'py-1 bg-white dark:bg-neutral-700'])
+@props([
+    'align' => 'right', 
+    'width' => '48', 
+    'contentClasses' => 'py-1 bg-white dark:bg-neutral-700',
+    'fullHeight' => false,
+])
 
 @php
+
 switch ($align) {
     case 'left':
         $alignmentClasses = 'ltr:origin-top-left rtl:origin-top-right start-0';
@@ -19,14 +25,19 @@ switch ($width) {
         $width = 'w-48';
         break;
 
-    case '56':
-        $width = 'w-56';
+    case '60':
+        $width = 'w-60';
+        break;
+
+    case '80':
+        $width = 'w-80';
         break;
 }
+
 @endphp
 
-<div class="relative" x-data="{ open: false }" @click.outside="open = false" @close.stop="open = false">
-    <div @click="open = ! open">
+<div class="relative {{ $fullHeight ? 'h-full' : '' }}" x-data="{ open: false }" @click.outside="open = false" @close.stop="open = false">
+    <div @click="open = ! open" class="{{ $fullHeight ? 'h-full' : '' }}">
         {{ $trigger }}
     </div>
 

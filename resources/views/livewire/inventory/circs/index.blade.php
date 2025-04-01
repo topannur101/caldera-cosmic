@@ -342,7 +342,7 @@ class extends Component {
             <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
                 <x-inv-area-selector class="text-xs font-semibold uppercase" :$areas />
                 <div>
-                    <x-dropdown align="right" width="56">
+                    <x-dropdown align="right" width="60">
                         <x-slot name="trigger">
                             <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
                         </x-slot>

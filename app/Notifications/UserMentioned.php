@@ -7,16 +7,18 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class UserTagged extends Notification
+class UserMentioned extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    protected $com_item; // Add this property declaration
+    
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct($com_item) // Add parameter to constructor
     {
-        //
+        $this->com_item = $com_item; // Store the passed value
     }
 
     /**
@@ -48,7 +50,11 @@ class UserTagged extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            //
+            'user_id'      => $this->com_item->user_id,
+            'model_name'   => $this->com_item->model_name,     
+            'model_id'     => $this->com_item->model_id,
+            'content'      => $this->com_item->content,
+            'url'          => $this->com_item->url,
         ];
     }
 }

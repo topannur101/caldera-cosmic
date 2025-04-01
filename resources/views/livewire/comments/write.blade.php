@@ -7,6 +7,7 @@ use Livewire\WithFileUploads;
 use Livewire\Attributes\Renderless;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+use App\Notifications\UserMentioned;
 
 new class extends Component {
 
@@ -20,6 +21,7 @@ new class extends Component {
     public $user_id;
     public $content;
     public $files = [];
+    public $url;
 
     public function placeholder()
     {
@@ -28,6 +30,7 @@ new class extends Component {
 
     public function mount()
     {
+        $this->url = request()->getRequestUri();
         $this->user_id = Auth::user()->id;
     }
 
@@ -54,19 +57,25 @@ new class extends Component {
         ], [
             'content.required_without' => __('Isi komentar atau unggah lampiran')
         ]);
-        
-        $com_item = ComItem::create([
+
+        $com_item = new ComItem([
             'user_id'       => $this->user_id,
             'content'       => $this->content,
             'model_name'    => $this->model_name,
             'model_id'      => $this->model_id,
+            'url'           => $this->url
         ]);
 
         if ($this->parent_id) {
-            $com_item->update([
-                'parent_id' => $this->parent_id,
-            ]);
+            $com_item->parent_id = $this->parent_id;
         }
+
+        $com_item->save();
+
+        // notify user mentioned
+        $users = $com_item->getMentionedUsers();
+        Notification::send($users, new UserMentioned($com_item));
+        
 
         // handle files here
         foreach($this->files as $file) {
