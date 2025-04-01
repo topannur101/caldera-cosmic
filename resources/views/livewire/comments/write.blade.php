@@ -7,7 +7,8 @@ use Livewire\WithFileUploads;
 use Livewire\Attributes\Renderless;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
-use App\Notifications\UserMentioned;
+use App\Notifications\ComMention;
+use App\Notifications\ComReply;
 
 new class extends Component {
 
@@ -30,7 +31,7 @@ new class extends Component {
 
     public function mount()
     {
-        $this->url = request()->getRequestUri();
+        $this->url = request()->getPathInfo();
         $this->user_id = Auth::user()->id;
     }
 
@@ -42,7 +43,7 @@ new class extends Component {
             $this->users = User::where(function (Builder $query) use ($q) {
                 $query->orWhere('name', 'LIKE', '%'.$q.'%')
                       ->orWhere('emp_id', 'LIKE', '%'.$q.'%');
-            })->where('is_active', 1)->get();
+            })->where('is_active', 1)->take(5)->get();
         } else {
             $this->users = [];
         }
@@ -73,9 +74,17 @@ new class extends Component {
         $com_item->save();
 
         // notify user mentioned
-        $users = $com_item->getMentionedUsers();
-        Notification::send($users, new UserMentioned($com_item));
-        
+        $mentionedUsers = $com_item->getMentionedUsers();
+        Notification::send($mentionedUsers, new ComMention($com_item));
+
+        $mentionedUserIds = $mentionedUsers->pluck('id')->toArray();
+        $threadUserIds = $com_item->getThreadUserIds();
+
+        // Filter out the mentioned user IDs from the thread user IDs
+        $mentionedUserIds[] = auth()->id();
+        $filteredThreadUserIds = array_diff($threadUserIds, $mentionedUserIds);
+        $filteredThreadUser = User::whereIn('id', $filteredThreadUserIds)->get();
+        Notification::send($filteredThreadUser, new ComReply($com_item));        
 
         // handle files here
         foreach($this->files as $file) {

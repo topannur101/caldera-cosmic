@@ -29,8 +29,8 @@ switch ($width) {
         $width = 'w-60';
         break;
 
-    case '80':
-        $width = 'w-80';
+    case '72':
+        $width = 'w-72';
         break;
 }
 

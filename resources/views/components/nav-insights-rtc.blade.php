@@ -5,7 +5,7 @@
                 <x-link href="{{ route('insights') }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Kendali tebal calendar') }}</span><span class="sm:hidden inline">{{ __('RTC') }}</span></span>
             </h2>
         </div>
-        <div class="space-x-6 -my-px ml-10 flex">
+        <div class="sm:space-x-6 -my-px ml-10 flex">
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insights.rtc.index') }}" :active="request()->routeIs('insights.rtc.index')" wire:navigate>
                 <i class="fa fa-heart-pulse text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
             </x-nav-link>

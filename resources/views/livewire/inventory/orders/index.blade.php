@@ -39,8 +39,9 @@ class extends Component {
 
 <div id="content" class="relative py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     @vite(['resources/js/apexcharts.js'])
-    <div class="text-center">
+    <div class="text-center w-72 py-20 mx-auto">
+        <i class="fa fa-person-digging text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
         <div class="text-xl mb-3">{{ __('Sepi juga ya...') }}</div>
-        <div class="text-sm">{{ __('Fitur pesanan PR/Memo sedang dalam tahap pengembangan.') }}</div>
+        <div class="text-neutral-500">{{ __('Fitur pesanan PR/Memo sedang dalam tahap pengembangan.')  }}</div>
     </div>
 </div>

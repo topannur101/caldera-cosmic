@@ -5,7 +5,7 @@
                 <x-link href="{{ route('insights') }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Sistem data kulit') }}</span><span class="sm:hidden inline">{{ __('LDC') }}</span></span>
             </h2>
         </div>
-        <div class="space-x-6 -my-px ml-10 flex">
+        <div class="sm:space-x-6 -my-px ml-10 flex">
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('insights.ldc.create.index') }}" :active="request()->routeIs('insights.ldc.create.index')" wire:navigate>
                 <i class="fa fa-pen text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Buat') }}</span>
             </x-nav-link>

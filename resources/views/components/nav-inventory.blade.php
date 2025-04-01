@@ -7,7 +7,7 @@
                </div>
            </h2>
        </div>
-       <div class="space-x-6 -my-px ml-10 flex">
+       <div class="sm:space-x-6 -my-px ml-10 flex">
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('inventory.items.index') }}" :active="request()->is('inventory/items*')" wire:navigate>
                 <i class="fa fa-cube text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Barang ') }}</span>
             </x-nav-link>

@@ -56,6 +56,21 @@ class ComItem extends Model
         
         return collect(); // Return empty collection if no mentions
     }
+
+    public function getThreadUserIds(): array
+    {
+        $thread_user_ids = [];
+        if ($this->parent_id) {
+            $parent_comment = ComItem::find($this->parent_id);
+            if ($parent_comment) {
+                $thread_user_ids     = $parent_comment->children->pluck('user_id')->toArray();
+                $thread_user_ids[]   = $parent_comment->user_id;
+                $thread_user_ids     = array_unique($thread_user_ids);
+            }
+        }
+        return $thread_user_ids;
+
+    }
     
     public function parseContent()
     {
