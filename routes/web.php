@@ -12,7 +12,6 @@ Volt::route('/', 'home')->name('home');
 Volt::route('/inventory',       'inventory.index')->name('inventory');
 Volt::route('/machines',        'machines.index')->name('machines');
 Volt::route('/projects',        'projects.index')->name('projects');
-Volt::route('/notifications',   'notifications')->name('notifications');
 
 // Insights routes
 Route::prefix('insights')->group(function () {
@@ -135,6 +134,8 @@ Route::name('download.')->group(function () {
 
 // All routes that needs to be authenticated
 Route::middleware('auth')->group(function () {
+
+    Volt::route('/notifications',   'notifications')->name('notifications');
 
     // Account routes
     Route::prefix('account')->group(function () {

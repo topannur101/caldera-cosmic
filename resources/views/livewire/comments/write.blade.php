@@ -31,7 +31,7 @@ new class extends Component {
 
     public function mount()
     {
-        $this->url = request()->getPathInfo();
+        $this->url = url()->current();
         $this->user_id = Auth::user()->id;
     }
 

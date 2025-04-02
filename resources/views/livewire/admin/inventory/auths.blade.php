@@ -41,6 +41,13 @@ class extends Component {
         ];
     }
 
+    public function updating($property)
+    {
+        if ($property == 'q') {
+            $this->reset('perPage');
+        }
+    }
+
     public function loadMore()
     {
         $this->perPage += 10;
