@@ -7,6 +7,8 @@ use App\Models\User;
 new #[Layout('layouts.app')] 
 class extends Component {
 
+    public string $view = 'all';
+
     public function with(): array
     {
       $notifications = [];
@@ -80,12 +82,14 @@ class extends Component {
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <h1 class="px-6 text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Notifikasi') }}</h1>
-        <div class="p-6 flex flex-col sm:flex-row gap-y-6 justify-between">
+        <div class="p-6 flex flex-col sm:flex-row gap-y-6 justify-between items-center">
           <div class="btn-group">
-              <x-radio-button wire:model.live="view" value="read" name="view" id="view-list">{{ __('Semua') }}</x-radio-button>
-              <x-radio-button wire:model.live="view" value="unread" name="view" id="view-content">{{ __('Belum dibaca') }}</x-radio-button>
+              <x-radio-button wire:model.live="view" value="all" name="view" id="view-all">{{ __('Semua') }}</x-radio-button>
+              <x-radio-button wire:model.live="view" value="unread" name="view" id="view-unread">{{ __('Belum dibaca') }}</x-radio-button>
           </div>
-          <x-text-button type="button" class="uppercase tracking-wide font-bold text-xs" wire:click="markAllRead"><i class="fa fa-check mr-2"></i>{{ __('Tandai semua sebagai sudah dibaca') }}</x-secondary-button>
+          <div>
+              <x-text-button type="button" class="uppercase tracking-wide font-bold text-xs" wire:click="markAllRead"><i class="fa fa-check mr-2"></i>{{ __('Tandai semua sudah dibaca') }}</x-secondary-button>
+          </div>
 
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">

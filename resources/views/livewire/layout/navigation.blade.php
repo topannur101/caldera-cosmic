@@ -57,6 +57,9 @@ new class extends Component {
                                 <span class="font-bold">' . $user?->name . '</span>
                                 ' . __('menyebutmu') . ': ' . e($notification['data']['content']) . '
                             </div>
+                            <div class="text-xs text-neutral-500">
+                                '. $notification->created_at->diffForHumans() .'
+                            </div>
                         </div>
                     </div>';
                     break;
@@ -77,12 +80,11 @@ new class extends Component {
                                 <span class="font-bold">' . $user?->name . '</span>
                                 ' . __('membalas') . ': ' . e($notification['data']['content']) . '
                             </div>
+                            <div class="text-xs text-neutral-500">
+                                '. $notification->created_at->diffForHumans() .'
+                            </div>
                         </div>
                     </div>';
-                    break;
-                
-                default:
-                    # code...
                     break;
             }
         }
