@@ -21,6 +21,8 @@ class CheckNotification
             
             if ($notification) {
                 $notification->markAsRead();
+                $ackCount = auth()->user()->unreadNotifications->count();
+                session()->put('ackCount', $ackCount);
             }
         }
 

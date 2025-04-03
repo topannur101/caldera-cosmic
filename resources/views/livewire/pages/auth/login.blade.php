@@ -14,13 +14,15 @@ new #[Layout('layouts.guest')] class extends Component
     #[Url]
     public string $redirect = '';
 
+    public string $media_bg = '';
+
     /**
      * Handle an incoming authentication request.
      */
     public function mount()
     {
+        $this->js('$wire.media_bg = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";');
         $this->redirect = $this->redirect ?: route('home', absolute: false);
-        $this->js('$wire.form.bgm = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";');
     }
 
     public function login(): void
@@ -34,23 +36,35 @@ new #[Layout('layouts.guest')] class extends Component
         Auth::user()->update(['seen_at' => now()]);
 
         $accountPref = Pref::where('user_id', Auth::user()->id)->where('name', 'account')->first();
-        $accountPref ? $data = json_decode($accountPref->data, true) : $data = '';
+        $data = $accountPref 
+            ? json_decode($accountPref->data, true) 
+            : '';
 
         $pref_lang   = isset($data['lang'])      ? $data['lang']     : 'id';
         $pref_bg     = isset($data['bg'])        ? $data['bg']       : 'auto';
         $pref_accent = isset($data['accent'])    ? $data['accent']   : 'purple';
         $pref_mblur  = $data['mblur'] ?? false;
 
-        $bg = $pref_bg == 'auto' ? ($this->form->bgm == 'dark' ? 'dark' : null) : ($pref_bg == 'dark' ? 'dark' : null);
+        // either dark or light
+        $bg = $pref_bg == 'auto' 
+            ? ($this->media_bg == 'dark' ? 'dark' : 'light') 
+            : ($pref_bg == 'dark' ? 'dark' : 'light');
 
-        session(['bg'       => $bg]);
-        session(['mblur'    => $pref_mblur]);
-        session(['lang'     => $pref_lang]);
-        session(['accent'   => $pref_accent]);
+        // set server session
+        session([
+            'lang'     => $pref_lang,
+            'bg'       => $bg,
+            'accent'   => $pref_accent,
+            'mblur'    => $pref_mblur,
+        ]);
+
+        // set client storage
+        $this->js("localStorage.setItem('theme', '{$bg}');");
 
         // navigate: false to reload page
         $this->redirectIntended(default: $this->redirect, navigate: true);
     }
+
 }; ?>
 
 <div>
@@ -59,7 +73,7 @@ new #[Layout('layouts.guest')] class extends Component
 
     <form wire:submit="login">
         <!-- Theme input -->
-        <input type="hidden" wire:model="form.bgm" id="bgm" name="bgm" />
+        <input type="hidden" wire:model="form.media_bg" id="media_bg" name="media_bg" />
 
         <!-- Email Address -->
         {{-- <div>

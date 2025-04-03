@@ -75,7 +75,7 @@ class extends Component
     @if($can_view)
         <livewire:inventory.items.form :$items :$can_store />
         <hr class="border-neutral-200 dark:border-neutral-800 my-8" />
-        <div class="max-w-lg mx-auto px-6 md:px-0">
+        <div id="comments" class="max-w-lg mx-auto px-6 md:px-0">
             <livewire:comments.index model_name="InvItem" :model_id="$items[0]['id']" />
         </div>
     @else    

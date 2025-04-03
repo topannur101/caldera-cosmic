@@ -294,7 +294,7 @@ class extends Component
             <livewire:inventory.items.create-from-code :$areas lazy />
         </x-modal>
     </div>
-    <div class="static lg:sticky top-0 z-10 py-6 bg-gradient-to-b from-neutral-100 via-neutral-100 to-transparent dark:from-neutral-900 dark:via-neutral-900 dark:to-transparent">
+    <div class="static lg:sticky top-0 z-10 py-6 ">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
             <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
                 <i wire:loading.remove class="fa fa-fw fa-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>

@@ -18,9 +18,6 @@ class LoginForm extends Form
     #[Validate('required|string')]
     public string $password = '';
 
-    #[Validate('nullable|string')]
-    public string $bgm = '';
-
     // #[Validate('boolean')]
     // public bool $remember = false;
 

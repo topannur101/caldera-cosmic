@@ -127,6 +127,78 @@
   }
 }
 
+body.anggun>div {
+  background-image: url('/storage/preset/anggun.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.manis>div {
+  background-image: url('/storage/preset/manis.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.syahdu>div {
+  background-image: url('/storage/preset/syahdu.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.lembut>div {
+  background-image: url('/storage/preset/lembut.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.bising>div {
+  background-image: url('/storage/preset/bising.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.langit>div {
+  background-image: url('/storage/preset/langit.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.garang>div {
+  background-image: url('/storage/preset/garang.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.bobotoh>div {
+  background-image: url('/storage/preset/bobotoh.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.melankolis>div {
+  background-image: url('/storage/preset/melankolis.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.kusut>div {
+  background-image: url('/storage/preset/kusut.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.asimilasi>div {
+  background-image: url('/storage/preset/asimilasi.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body.spektrum>div {
+  background-image: url('/storage/preset/spektrum.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
 
 /* latin-ext */
 @font-face {

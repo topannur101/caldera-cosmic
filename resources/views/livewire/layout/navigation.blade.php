@@ -13,8 +13,14 @@ new class extends Component {
         'photo'     => '',
     ];
 
+    public int $ackCount = 0;
+
+    public int $unreadCount = 0;
+
     public function mount()
     {
+        $this->ackCount = session('ackCount', 0);
+
         if (auth()->user()) {
             $this->user = [
                 'id'        => auth()->id(),
@@ -27,17 +33,15 @@ new class extends Component {
 
     public function with(): array
     {
-        $unreadCount = 0;
         $notifications = [];
 
         $user = auth()->user();
         if ($user) {
-            $unreadCount = min($user->unreadNotifications->count(), 99);
-            $notifications = $user->notifications()->orderBy('created_at', 'desc')->take(20)->get();
+            $this->unreadCount  = min($user->unreadNotifications->count(), 99);
+            $notifications      = $user->notifications()->orderBy('created_at', 'desc')->take(20)->get();
         }    
 
         return [
-            'unreadCount'   => $unreadCount,
             'notifications' => $notifications
         ];
     }
@@ -45,18 +49,16 @@ new class extends Component {
     public function logout(Logout $logout): void
     {
         $logout();
-
+        
         $this->redirect('/', navigate: false);
     }
 
-    // public function markAsRead(string $id)
-    // {
-    //     $notification = Auth::user()->notifications()->where('id', $id)->first();
+    public function ackNotif()
+    {
+        session()->put('ackCount', $this->unreadCount);
+        $this->ackCount = $this->unreadCount;        
+    }
 
-    //     if ($notification) {
-    //         $notification->markAsRead();
-    //     }
-    // }
 }; ?>
 
 <nav x-data="{ open: false }" class="bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700">
@@ -96,23 +98,23 @@ new class extends Component {
             </div>
 
             @if($user['id'] && !request()->is('notifications'))
-            <div class="my-auto">
+            <div class="my-auto text-neutral-700 dark:text-neutral-300">
                 <x-dropdown align="right" width="72">
                     <x-slot name="trigger">
-                        <button
+                        <button wire:click="ackNotif" x-on:click="document.getElementById('cal-notif-counter').remove()"
                             class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-neutral-500 dark:text-neutral-400 bg-white dark:bg-neutral-800 hover:text-neutral-700 dark:hover:text-neutral-300 focus:outline-none transition ease-in-out duration-150">
                             <i class="fa fa-bell"></i>
-                            @if($unreadCount)
-                                <x-pill color="red" class="ml-2">{{ $unreadCount }}</x-pill>
+                            @if($unreadCount && ($ackCount !== $unreadCount))
+                                <x-pill id="cal-notif-counter" color="red" class="ml-2">{{ $unreadCount }}</x-pill>
                             @endif
                         </button>
                     </x-slot>
 
                     <x-slot name="content">
-                        <div class="h-96 overflow-y-auto">
+                        <div class="max-h-96 overflow-y-auto">
+                            <div class="px-4 py-2 text-lg">{{ __('Notifikasi') }}</div>
                             @if(count($notifications) == 0)
-                                <div @click="open = false" class="px-4 py-2 text-center text-sm leading-5 
-                                text-neutral-700 dark:text-neutral-300">
+                                <div @click="open = false" class="p-4 text-center text-sm leading-5">
                                     {{ __('Tidak ada notifikasi') }}
                                 </div>
                             @endif
