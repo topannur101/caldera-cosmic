@@ -47,11 +47,11 @@ class FeatureAnnounce extends Command
                     Fitur ini berlaku di halaman apapun yang mengandung komentar (contoh: halaman Inventaris barang).
                     <br><br>
                     Untuk membalas komentar, klik tombol balas di bawah komentar yang ingin kamu balas. <br><br>
-                    <img src="/storage/announcements/comment_reply.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;"><br>
-                    <img src="/storage/announcements/comment_notification.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;"><br>
+                    <img src="/announcements/comment_reply.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;"><br>
+                    <img src="/announcements/comment_notification.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;"><br>
                     <br><br>
                     Untuk menyebut seseorang, ketikkan @ diikuti dengan nama atau nomor karyawan orang tersebut.<br><br>
-                    <img src="/storage/announcements/comment_mention.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;"><br>
+                    <img src="/announcements/comment_mention.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;"><br>
                     ',
                 ] 
             ],

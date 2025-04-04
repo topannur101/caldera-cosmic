@@ -532,7 +532,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="anggun" wire:model.live="preset" id="preset-anggun"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-anggun" style="background-image:url('/storage/preset/anggun-thumbnail.jpg');background-size:cover"
+                        <label for="preset-anggun" style="background-image:url('/preset/anggun-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div class="flex gap-1 text-pink-600"><i class="fa fa-square"></i>
@@ -550,7 +550,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="manis" wire:model.live="preset" id="preset-manis"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-manis" style="background-image:url('/storage/preset/manis-thumbnail.jpg');background-size:cover"
+                        <label for="preset-manis" style="background-image:url('/preset/manis-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div class="flex gap-1 text-orange-600"><i class="fa fa-square"></i>
@@ -568,7 +568,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="syahdu" wire:model.live="preset" id="preset-syahdu"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-syahdu" style="background-image:url('/storage/preset/syahdu-thumbnail.jpg');background-size:cover"
+                        <label for="preset-syahdu" style="background-image:url('/preset/syahdu-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div class="flex gap-1 text-green-600"><i class="fa fa-square"></i>
@@ -586,7 +586,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="lembut" wire:model.live="preset" id="preset-lembut"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-lembut" style="background-image:url('/storage/preset/lembut-thumbnail.jpg');background-size:cover"
+                        <label for="preset-lembut" style="background-image:url('/preset/lembut-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div style="color: rgb(181, 99, 0);" class="flex gap-1"><i class="fa fa-square"></i>
@@ -604,7 +604,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="bising" wire:model.live="preset" id="preset-bising"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-bising" style="background-image:url('/storage/preset/bising-thumbnail.jpg');background-size:cover"
+                        <label for="preset-bising" style="background-image:url('/preset/bising-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div style="color: rgb(122, 122, 122);" class="flex gap-1"><i class="fa fa-square"></i>
@@ -622,7 +622,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="langit" wire:model.live="preset" id="preset-langit"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-langit" style="background-image:url('/storage/preset/langit-thumbnail.jpg');background-size:cover"
+                        <label for="preset-langit" style="background-image:url('/preset/langit-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div class="flex gap-1 text-blue-600"><i class="fa fa-square"></i>
@@ -647,7 +647,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="garang" wire:model.live="preset" id="preset-garang"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-garang" style="background-image:url('/storage/preset/garang-thumbnail.jpg');background-size:cover"
+                        <label for="preset-garang" style="background-image:url('/preset/garang-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div class="flex gap-1 text-yellow-600"><i class="fa fa-square"></i>
@@ -665,7 +665,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="bobotoh" wire:model.live="preset" id="preset-bobotoh"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-bobotoh" style="background-image:url('/storage/preset/bobotoh-thumbnail.jpg');background-size:cover"
+                        <label for="preset-bobotoh" style="background-image:url('/preset/bobotoh-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div class="flex gap-1 text-blue-600"><i class="fa fa-square"></i>
@@ -683,7 +683,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="melankolis" wire:model.live="preset" id="preset-melankolis"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-melankolis" style="background-image:url('/storage/preset/melankolis-thumbnail.jpg');background-size:cover"
+                        <label for="preset-melankolis" style="background-image:url('/preset/melankolis-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div class="flex gap-1 text-teal-600"><i class="fa fa-square"></i>
@@ -701,7 +701,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="kusut" wire:model.live="preset" id="preset-kusut"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-kusut" style="background-image:url('/storage/preset/kusut-thumbnail.jpg');background-size:cover"
+                        <label for="preset-kusut" style="background-image:url('/preset/kusut-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div style="color: rgb(90, 160, 85);" class="flex gap-1"><i class="fa fa-square"></i>
@@ -719,7 +719,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="asimilasi" wire:model.live="preset" id="preset-asimilasi"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-asimilasi" style="background-image:url('/storage/preset/asimilasi-thumbnail.jpg');background-size:cover"
+                        <label for="preset-asimilasi" style="background-image:url('/preset/asimilasi-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div style="color: rgb(255, 105, 134);" class="flex gap-1"><i class="fa fa-square"></i>
@@ -737,7 +737,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div>
                         <input type="radio" value="spektrum" wire:model.live="preset" id="preset-spektrum"
                             class="peer hidden [&:checked_+_label_svg]:block" />
-                        <label for="preset-spektrum" style="background-image:url('/storage/preset/spektrum-thumbnail.jpg');background-size:cover"
+                        <label for="preset-spektrum" style="background-image:url('/preset/spektrum-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
                                 <div style="color: rgb(127, 99, 204);" class="flex gap-1"><i class="fa fa-square"></i>
