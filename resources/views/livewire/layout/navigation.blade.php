@@ -101,7 +101,7 @@ new class extends Component {
             <div class="my-auto text-neutral-700 dark:text-neutral-300">
                 <x-dropdown align="right" width="72">
                     <x-slot name="trigger">
-                        <button wire:click="ackNotif" x-on:click="document.getElementById('cal-notif-counter').remove()"
+                        <button wire:click="ackNotif" x-on:click="document.getElementById('cal-notif-counter')?.remove()"
                             class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-neutral-500 dark:text-neutral-400 bg-white dark:bg-neutral-800 hover:text-neutral-700 dark:hover:text-neutral-300 focus:outline-none transition ease-in-out duration-150">
                             <i class="fa fa-bell"></i>
                             @if($unreadCount && ($ackCount !== $unreadCount))

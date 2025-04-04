@@ -40,10 +40,11 @@ new #[Layout('layouts.guest')] class extends Component
             ? json_decode($accountPref->data, true) 
             : '';
 
-        $pref_lang   = isset($data['lang'])      ? $data['lang']     : 'id';
-        $pref_bg     = isset($data['bg'])        ? $data['bg']       : 'auto';
-        $pref_accent = isset($data['accent'])    ? $data['accent']   : 'purple';
-        $pref_mblur  = $data['mblur'] ?? false;
+        $pref_lang      = isset($data['lang'])      ? $data['lang']     : 'id';
+        $pref_bg        = isset($data['bg'])        ? $data['bg']       : 'auto';
+        $pref_accent    = isset($data['accent'])    ? $data['accent']   : 'purple';
+        $pref_mblur     = $data['mblur'] ?? false;
+        $pref_pattern   = isset($data['pattern'])   ? $data['pattern']  : '';
 
         // either dark or light
         $bg = $pref_bg == 'auto' 
@@ -56,6 +57,7 @@ new #[Layout('layouts.guest')] class extends Component
             'bg'       => $bg,
             'accent'   => $pref_accent,
             'mblur'    => $pref_mblur,
+            'pattern'  => $pref_pattern,
         ]);
 
         // set client storage

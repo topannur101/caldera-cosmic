@@ -8,10 +8,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Resources\InsRtcMetricResource;
 use App\Http\Resources\InsRtcRecipeResource;
 
-Volt::route('/', 'home')->name('home');
-Volt::route('/inventory',       'inventory.index')->name('inventory');
-Volt::route('/machines',        'machines.index')->name('machines');
-Volt::route('/projects',        'projects.index')->name('projects');
+Volt::route('/',                    'home')                 ->name('home');
+Volt::route('/inventory',           'inventory.index')      ->name('inventory');
+Volt::route('/machines',            'machines.index')       ->name('machines');
+Volt::route('/projects',            'projects.index')       ->name('projects');
+Volt::route('/contact',             'contact')              ->name('contact');
+Volt::route('/announcements/{id}',  'announcements.show')   ->name('announcements.show');
 
 // Insights routes
 Route::prefix('insights')->group(function () {

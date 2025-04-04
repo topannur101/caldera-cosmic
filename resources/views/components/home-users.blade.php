@@ -2,7 +2,7 @@
     'bg-blue-200 dark:bg-blue-700', 'bg-green-200 dark:bg-green-700','bg-yellow-200 dark:bg-yellow-700'
 ]])
 
-<div class="text-neutral-500 text-sm mb-10">
+<div class="max-w-4xl mx-auto text-neutral-500 text-sm mb-10">
    <div class="{{ $centered ? 'text-center' : '' }} mb-8">
        <div class="mb-1">{{ __('Waktu server:') . ' ' . $time }}</div>
        <div>{{ $users->count() + $guests->count() . ' ' . __('pengguna daring') }}</div>

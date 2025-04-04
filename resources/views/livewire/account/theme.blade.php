@@ -524,7 +524,7 @@ new #[Layout('layouts.app')] class extends Component {
                 @break
 
             @case('patterned')
-            <div class="p-6 mb-6">
+            <div class="p-6">
                 <h2 class="text-lg font-medium mb-3">
                     <i class="text-neutral-500 fa fa-sun mr-2"></i>{{ __('Corak cerah') }}
                 </h2>

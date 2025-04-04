@@ -28,58 +28,9 @@ class extends Component {
 ?>
 
 <div wire:poll.9s class="relative">
-    <svg wire:ignore class="absolute top-0 left-0 min-h-screen" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-        <defs>
-            <radialGradient id="Gradient1" cx="50%" cy="50%" fx="0.441602%" fy="50%" r=".5">
-                <animate attributeName="fx" dur="68s" values="0%;3%;0%" repeatCount="indefinite"></animate>
-                <stop offset="0%" stop-color="rgba(255, 0, 255, 0.1)"></stop>
-                <stop offset="100%" stop-color="rgba(255, 0, 255, 0)"></stop>
-            </radialGradient>
-            <radialGradient id="Gradient2" cx="50%" cy="50%" fx="2.68147%" fy="50%" r=".5">
-                <animate attributeName="fx" dur="47s" values="0%;3%;0%" repeatCount="indefinite"></animate>
-                <stop offset="0%" stop-color="rgba(255, 255, 0, 0.1)"></stop>
-                <stop offset="100%" stop-color="rgba(255, 255, 0, 0)"></stop>
-            </radialGradient>
-            <radialGradient id="Gradient3" cx="50%" cy="50%" fx="0.836536%" fy="50%" r=".5">
-                <animate attributeName="fx" dur="43s" values="0%;3%;0%" repeatCount="indefinite"></animate>
-                <stop offset="0%" stop-color="rgba(0, 255, 255, 0.1)"></stop>
-                <stop offset="100%" stop-color="rgba(0, 255, 255, 0)"></stop>
-            </radialGradient>
-            <radialGradient id="Gradient4" cx="50%" cy="50%" fx="4.56417%" fy="50%" r=".5">
-                <animate attributeName="fx" dur="46s" values="0%;5%;0%" repeatCount="indefinite"></animate>
-                <stop offset="0%" stop-color="rgba(0, 255, 0, 0.1)"></stop>
-                <stop offset="100%" stop-color="rgba(0, 255, 0, 0)"></stop>
-            </radialGradient>
-            <radialGradient id="Gradient5" cx="50%" cy="50%" fx="2.65405%" fy="50%" r=".5">
-                <animate attributeName="fx" dur="49s" values="0%;5%;0%" repeatCount="indefinite"></animate>
-                <stop offset="0%" stop-color="rgba(0, 0, 255, 0.1)"></stop>
-                <stop offset="100%" stop-color="rgba(0, 0, 255, 0)"></stop>
-            </radialGradient>
-            <radialGradient id="Gradient6" cx="50%" cy="50%" fx="0.981338%" fy="50%" r=".5">
-                <animate attributeName="fx" dur="51s" values="0%;5%;0%" repeatCount="indefinite"></animate>
-                <stop offset="0%" stop-color="rgba(255, 0, 0, 0.1)"></stop>
-                <stop offset="100%" stop-color="rgba(255, 0, 0, 0)"></stop>
-            </radialGradient>
-        </defs>
-        <rect x="13.744%" y="1.18473%" width="100%" height="100%" fill="url(#Gradient1)" transform="rotate(334.41 50 50)">
-            <animate attributeName="x" dur="40s" values="25%;0%;25%" repeatCount="indefinite"></animate>
-            <animate attributeName="y" dur="42s" values="0%;25%;0%" repeatCount="indefinite"></animate>
-            <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="14s" repeatCount="indefinite"></animateTransform>
-        </rect>
-        <rect x="-2.17916%" y="35.4267%" width="100%" height="100%" fill="url(#Gradient2)" transform="rotate(255.072 50 50)">
-            <animate attributeName="x" dur="46s" values="-25%;0%;-25%" repeatCount="indefinite"></animate>
-            <animate attributeName="y" dur="48s" values="0%;50%;0%" repeatCount="indefinite"></animate>
-            <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="24s" repeatCount="indefinite"></animateTransform>
-        </rect>
-        <rect x="9.00483%" y="14.5733%" width="100%" height="100%" fill="url(#Gradient3)" transform="rotate(139.903 50 50)">
-            <animate attributeName="x" dur="50s" values="0%;25%;0%" repeatCount="indefinite"></animate>
-            <animate attributeName="y" dur="24s" values="0%;25%;0%" repeatCount="indefinite"></animate>
-            <animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="18s" repeatCount="indefinite"></animateTransform>
-        </rect>
-    </svg>
     
     @if (Auth::user()->id ?? false)
-        <div class="max-w-4xl mx-auto py-8 px-4 lg:px-8">
+        <div class="py-32 px-4 lg:px-8 relative overflow-hidden">
             <div class="container relative max-w-2xl mx-auto text-center tracking-widest text-neutral-500 ">
                 <div class="card-container w-full my-auto">
                     <div class="card relative h-40">
@@ -97,10 +48,11 @@ class extends Component {
                 </div>                
             </div>
             <x-home-users :$time :$users :$guests centered="true" ></x-home-users>
+            <x-aurora />
         </div>
     @else
         <!-- Section 2 -->
-        <section class="px-2 pt-32 md:px-0">
+        <section class="px-2 py-32 md:px-0 relative overflow-hidden">
             <div class="container items-center max-w-6xl px-8 mx-auto xl:px-5">
                 <div class="flex flex-wrap sm:-mx-3">
                     <div class="w-full md:w-1/2 md:px-3">
@@ -137,19 +89,38 @@ class extends Component {
                         <x-home-users :$time :$users :$guests></x-home-users>
                     </div>
                     <div class="w-full md:w-1/2">
-                        <div class="w-full h-auto overflow-hidden rounded-md shadow-xl sm:rounded-xl">
+                        <div class="w-full h-auto aspect-video sm:aspect-auto overflow-hidden rounded-md shadow-xl sm:rounded-xl">
                             <img src="/home.jpg" class="dark:invert">
                         </div>
                     </div>
                 </div>
             </div>
+            <x-aurora />
         </section>
     @endif
+    
+    <footer class="max-w-6xl mx-auto">
+        <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
+            <div class="sm:flex sm:items-center sm:justify-between">
+                <a href="/" class="flex items-center mb-4 sm:mb-0 space-x-3 rtl:space-x-reverse">
+                    <img src="/favicon-32x32.png" class="h-8" alt="Flowbite Logo" />
+                    <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Caldera</span>
+                </a>
+                <ul class="flex flex-wrap items-center mb-6 text-sm font-medium text-neutral-500 sm:mb-0 dark:text-neutral-400">
+                    <li>
+                        <a href="{{ route('contact') }}" class="hover:underline me-4 md:me-6">{{ __('Kontak') }}</a>
+                    </li>
+                    <!-- <li>
+                        <a href="#" class="hover:underline me-4 md:me-6">{{ __('Pengumuman') }}</a>
+                    </li> -->
+                </ul>
+            </div>
+            <hr class="my-6 border-neutral-200 sm:mx-auto dark:border-neutral-700 lg:my-8" />
+            <span class="block text-sm text-neutral-500 sm:text-center dark:text-neutral-400">{{ __('Oleh dept. MM untuk PT. TKG Taekwang Indonesia') }}</span>
+        </div>
+    </footer>
 
     <style>
-        body>div {
-            overflow: hidden;
-        }
         /* entire container, keeps perspective */
         .card-container {
             -webkit-perspective: 1000px;

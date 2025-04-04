@@ -61,22 +61,7 @@ new class extends Component
          <livewire:inventory.circs.circ-show />
       </x-modal>
       <x-modal name="circs-chart">
-         <div class="p-6 flex justify-between">
-            <h2 class="text-lg font-medium">
-               {{ __('Grafik sirkulasi') }}
-            </h2>
-            <div>
-               <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
-            </div>
-         </div>
-         <div class="p-6">{{ __('Fitur ini sedang dalam tahap pengembangan') }}</div>
-
-         <!-- Buttons -->
-         <div class="p-6 flex justify-end">
-            <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('Tutup') }}</x-secondary-button>
-         </div>
-         <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
-         <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
+         <livewire:inventory.items.stock.circs-chart :$stock_id lazy />
       </x-modal>
    </div>
    <div wire:loading.class="cal-shimmer">

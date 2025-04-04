@@ -4,21 +4,20 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ComMention extends Notification implements ShouldQueue
+class FeatureNew extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected $com_item; // Add this property declaration
+    protected $feature; // Add this property declaration
     
     /**
      * Create a new notification instance.
      */
-    public function __construct($com_item) // Add parameter to constructor
+    public function __construct($feature) // Add parameter to constructor
     {
-        $this->com_item = $com_item; // Store the passed value
+        $this->feature = $feature; // Store the passed value
     }
 
     /**
@@ -31,6 +30,7 @@ class ComMention extends Notification implements ShouldQueue
         return ['database'];
     }
 
+
     /**
      * Get the array representation of the notification.
      *
@@ -39,11 +39,9 @@ class ComMention extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'user_id'      => $this->com_item->user_id,
-            'model_name'   => $this->com_item->model_name,     
-            'model_id'     => $this->com_item->model_id,
-            'content'      => $this->com_item->content,
-            'url'          => $this->com_item->url,
+            'icon'          => $this->feature['icon'],
+            'content'       => $this->feature['content'],
+            'url'           => $this->feature['url'],
         ];
     }
 }
