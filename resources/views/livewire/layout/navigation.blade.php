@@ -94,6 +94,9 @@ new class extends Component {
                     <x-nav-link :href="route('projects')" :active="request()->routeIs('projects*')" wire:navigate>
                         {{ __('Proyek ') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('caldy')" :active="request()->routeIs('caldy*')" wire:navigate>
+                        <i class="fa fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -229,6 +232,9 @@ new class extends Component {
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('projects')" :active="request()->routeIs('projects*')" wire:navigate>
                 {{ __('Proyek') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('caldy')" :active="request()->routeIs('caldy*')" wire:navigate>
+                <i class="fa fa-fw me-2 fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>{{ __('Caldy AI') }}
             </x-responsive-nav-link>
         </div>
 

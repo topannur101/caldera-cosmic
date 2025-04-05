@@ -7,6 +7,8 @@ use App\Models\InsRtcRecipe;
 use Illuminate\Support\Facades\Route;
 use App\Http\Resources\InsRtcMetricResource;
 use App\Http\Resources\InsRtcRecipeResource;
+use App\Services\OllamaClient;
+use Illuminate\Http\Request;
 
 Volt::route('/',                    'home')                 ->name('home');
 Volt::route('/inventory',           'inventory.index')      ->name('inventory');
@@ -190,6 +192,17 @@ Route::middleware('auth')->group(function () {
             Volt::route('/orders',                  'inventory.orders.index')           ->name('index');
         });
 
+    });
+
+    // Caldy AI routes
+    Route::prefix('caldy')->group(function () {
+
+        // Route::name('caldy.')->group(function () {
+
+        //     Volt::route('/caldy',  'caldy.chat')     ->name('caldy.chat');
+        // });
+
+        Volt::route('/', 'caldy.index')->name('caldy');
     });
 
     // Administration routes
