@@ -4,12 +4,25 @@ use Livewire\Volt\Component;
 use App\Models\ComFile;
 use App\Models\ComItem;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Storage;
 
 new class extends Component {
     
     public $model_name;
     public $model_id;  
+
+    #[Url]
+    public string   $notif_id = '';
+
+    public int      $highlight_id = 0;
+
+    public function mount()
+    {
+        $notif              = $this->notif_id ? auth()->user()->notifications()->where('id', $this->notif_id)->first() : null;
+        $com_item           = $notif    ? ComItem::find($notif->data['com_item_id'] ?? false) : null;
+        $this->highlight_id = $com_item ? $com_item->id : 0;
+    }
     
     #[On('comment-added')]
     public function with(): array
@@ -34,6 +47,12 @@ new class extends Component {
             $this->js('notyf.error("'.__('Berkas tidak ditemukan').'")');
         }
     }
+
+    #[On('scroll-to-comment')]
+    public function scrollToComment()
+    {
+        $this->js("document.getElementById('comment-highlight')?.scrollIntoView({ behavior: 'smooth', block: 'center' });");
+    }
 };
 
 ?>
@@ -47,7 +66,7 @@ new class extends Component {
     @if ($comments->count())
         @foreach ($comments as $comment)
             <hr class=" border-neutral-200 dark:border-neutral-800" />
-            <div wire:key="comment-{{ $comment->id }}" class="flex gap-x-4 my-4">
+            <div wire:key="comment-{{ $comment->id }}" id="{{ $comment->id === $highlight_id ? 'comment-highlight' : '' }}" class="flex gap-x-4 py-4 {{ $comment->id === $highlight_id ? 'bg-caldy-500 bg-opacity-10' : '' }}">
                 <div>
                     <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                         @if ($comment->user->photo)
@@ -117,7 +136,7 @@ new class extends Component {
                     }" x-on:click.away="open = false" x-ref="container">
                         @foreach ($comment->children as $child)
                             <hr class=" border-neutral-200 dark:border-neutral-800 mt-4" />
-                            <div wire:key="child-{{ $child->id }}" class="flex gap-x-4 my-4">
+                            <div wire:key="child-{{ $child->id }}" id="{{ $child->id === $highlight_id ? 'comment-highlight' : '' }}" class="flex gap-x-4 py-4 {{ $child->id === $highlight_id ? 'bg-caldy-500 bg-opacity-10' : '' }}">
                                 <div>
                                     <div
                                         class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
@@ -185,3 +204,11 @@ new class extends Component {
         @endforeach
     @endif
 </div>
+
+@script
+    @if($highlight_id)
+        <script>
+            $wire.$dispatch('scroll-to-comment');
+        </script>
+    @endif
+@endscript

@@ -39,11 +39,12 @@ class ComReply extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'user_id'      => $this->com_item->user_id,
-            'model_name'   => $this->com_item->model_name,     
-            'model_id'     => $this->com_item->model_id,
-            'content'      => $this->com_item->content,
-            'url'          => $this->com_item->url,
+            'com_item_id'   => $this->com_item->id,
+            'user_id'       => $this->com_item->user_id,
+            'model_name'    => $this->com_item->model_name,     
+            'model_id'      => $this->com_item->model_id,
+            'content'       => $this->com_item->content,
+            'url'           => $this->com_item->url,
         ];
     }
 }
