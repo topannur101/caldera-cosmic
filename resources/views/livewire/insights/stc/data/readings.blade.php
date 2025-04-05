@@ -126,7 +126,7 @@ new class extends Component {
     {
         switch ($type) {
             case 'dsums':
-                $this->js('toast("' . __('Pengunduhan dimulai...') . '", { type: "success" })');
+                $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
                 $filename = 'd_sums_export_' . now()->format('Y-m-d_His') . '.csv';
 
                 $headers = [
@@ -177,7 +177,7 @@ new class extends Component {
                 break;
 
             case 'dlogs':
-                $this->js('toast("' . __('Pengunduhan dimulai...') . '", { type: "success" })');
+                $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
                 $filename = 'd_logs_export_' . now()->format('Y-m-d_His') . '.csv';
 
                 $headers = [

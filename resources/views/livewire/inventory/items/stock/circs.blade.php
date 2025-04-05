@@ -46,6 +46,8 @@ new class extends Component
 
       // Store the token in the session
       session()->put('inv_circs_token', $token);
+
+      $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');  
       
       // Redirect to a temporary route that will handle the streaming
       return redirect()->route('download.inv-circs', ['token' => $token, 'stock_id' => $this->stock_id ]);

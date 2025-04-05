@@ -104,7 +104,7 @@ class extends Component {
                     'ftype'         => $this->ftype,
                 ]);
                 $this->js('$dispatch("close")');
-                $this->js('toast("' . __('Pengunduhan dimulai...') . '", { type: "success" })');
+                $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
                 break;
         }
     }

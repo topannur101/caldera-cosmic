@@ -28,7 +28,7 @@ new class extends Component {
         $file = ComFile::find($id);
 
         if ($file && Storage::exists('/public/com-files/' . $file->name ?? '')) {
-            $this->js('notyf.success("'.__('Pengunduhan dimulai...').'")'); 
+            $this->js('notyf.success("'.__('Unduhan dimulai...').'")'); 
             return Storage::download('/public/com-files/' . $file->name, $file->client_name);
         } else {
             $this->js('notyf.error("'.__('Berkas tidak ditemukan').'")');

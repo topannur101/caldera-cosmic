@@ -75,7 +75,7 @@ class FeatureAnnounce extends Command
         $user_selection = $this->choice('Select user to send feature announcement', [
             'superuser'     => 'Superuser account (user with id 1)',
             'active_users'  => 'All active users',
-            'recent_users'  => 'All users with seen_at less than 3 months',
+            'recent_users'  => 'All users with seen_at less than 6 months',
             'all_users'     => 'All users',
         ]);
 
@@ -83,7 +83,7 @@ class FeatureAnnounce extends Command
         $users = match ($user_selection) {
             'superuser'     => User::where('id', 1)->get(),
             'active_users'  => User::where('is_active', 1)->get(),
-            'recent_users'  => User::where('seen_at', '<', now()->subMonths(3))->get(),
+            'recent_users'  => User::where('seen_at', '>', now()->subMonths(6))->get(),
             'all_users'     => User::all(),
             default         => null,
         };
