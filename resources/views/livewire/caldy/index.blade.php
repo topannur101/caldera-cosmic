@@ -214,11 +214,14 @@ class extends Component {
       
       <!-- Input area fixed at bottom -->
       <div class="sticky bottom-0 left-0 w-full bg-white dark:bg-neutral-800 p-4 border-t dark:border-neutral-700">
+      @if(Auth::user()->id === 1)  
         <div class="flex items-center gap-2">
           <div class="flex-shrink-0">
             <i class="fa fa-fw fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>
           </div>
           <div class="relative flex-grow">
+            
+            
             <input 
               wire:model="prompt" 
               wire:keydown.enter="submit" 
@@ -227,6 +230,7 @@ class extends Component {
               placeholder="Ask AI..." 
               x-on:keydown.enter="$nextTick(() => document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight)"
             />
+            
             <button 
               wire:click="submit" 
               type="button" 
@@ -247,6 +251,15 @@ class extends Component {
             </button>
           </div>
         </div>
+        @else
+        <div class="text-sm">
+          <i class="fa fa-lock mr-2"></i>{{ __('Akses ke Caldy AI hanya diperbolehkan untuk pengguna tertentu') }}
+          <p class="text-neutral-500 mt-2">
+            {{  __('Caldy AI sedang dalam tahap pengembangan, jika sudah siap untuk digunakan publik, kami akan beritahu lewat notifikasi.') }}
+          </p>
+        </div>
+          
+          @endif
       </div>
       
       <!-- Auto-scroll script -->
