@@ -512,6 +512,73 @@ class extends Component
             }
         }
 
+        // First, create a row for items with no tags
+        $noTagData = [
+            'tag_name' => __('Tanpa tag'),
+            'gt_100_days' => 0,
+            'gt_90_days' => 0,
+            'gt_60_days' => 0,
+            'gt_30_days' => 0,
+            'lt_30_days' => 0,
+            'total' => 0,
+        ];
+
+        // Get items with no tags
+        $itemsWithNoTags = InvItem::where('inv_area_id', $this->area_id)
+        ->where('is_active', true)
+        ->whereDoesntHave('inv_tags')
+        ->get();
+
+        foreach ($itemsWithNoTags as $item) {
+            // For each item, get all stocks
+            $stocks = $item->inv_stocks;
+
+            foreach ($stocks as $stock) {
+                // Calculate the value in base currency
+                $value = $stock->qty * $stock->unit_price;
+                
+                // Convert currency if needed
+                if ($stock->inv_curr_id != 1) {
+                    $value = $value / $stock->inv_curr->rate;
+                }
+
+                // Determine which aging bucket this item belongs to based on last_withdrawal
+                if ($item->last_withdrawal) {
+                    $lastWithdrawal = Carbon::parse($item->last_withdrawal);
+                    
+                    if ($lastWithdrawal <= $gt_100_days) {
+                        $noTagData['gt_100_days'] += $value;
+                        $this->totals['gt_100_days'] += $value;
+                    } elseif ($lastWithdrawal <= $gt_90_days) {
+                        $noTagData['gt_90_days'] += $value;
+                        $this->totals['gt_90_days'] += $value;
+                    } elseif ($lastWithdrawal <= $gt_60_days) {
+                        $noTagData['gt_60_days'] += $value;
+                        $this->totals['gt_60_days'] += $value;
+                    } elseif ($lastWithdrawal <= $gt_30_days) {
+                        $noTagData['gt_30_days'] += $value;
+                        $this->totals['gt_30_days'] += $value;
+                    } else {
+                        $noTagData['lt_30_days'] += $value;
+                        $this->totals['lt_30_days'] += $value;
+                    }
+                } else {
+                    // If no last_withdrawal date, put in the oldest category
+                    $noTagData['gt_100_days'] += $value;
+                    $this->totals['gt_100_days'] += $value;
+                }
+
+                // Add to total
+                $noTagData['total'] += $value;
+                $this->totals['total'] += $value;
+            }
+        }
+
+        // Only add no-tag row if there are actually items without tags
+        if ($noTagData['total'] > 0) {
+            $this->agingData->push($noTagData);
+        }
+
    }
 
 };
