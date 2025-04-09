@@ -650,7 +650,7 @@ class extends Component
       </div>
 
    </div>
-   <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 mt-6">
+   <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 mt-4">
    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Barang yang menua berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
 
         @if ($area_id == 0)
