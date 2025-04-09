@@ -9,7 +9,8 @@ use App\Models\InvArea;
 use App\Models\User;
 use App\Models\InvCurr;
 use App\Models\InvTag;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Collection;
+use Carbon\Carbon;
 
 new #[Layout('layouts.app')]
 class extends Component
@@ -20,6 +21,17 @@ class extends Component
    public array $tags = [];
 
    public array $areas = [];
+
+   public Collection $agingData;
+
+   public array $totals = [
+       'gt_100_days' => 0,
+       'gt_90_days' => 0,
+       'gt_60_days' => 0,
+       'gt_30_days' => 0,
+       'lt_30_days' => 0,
+       'total' => 0,
+   ];
 
    public function mount()
    {
@@ -39,42 +51,44 @@ class extends Component
    #[On('update')]
    public function update()
    {
-      $this->js("
-      let container = '';
-      let canvas = '';
+        $this->agingTable();
 
-      const incompleteBasics = " . json_encode($this->incompleteBasics()) . ";
-      container = \$wire.\$el.querySelector('#incomplete-basics-container');
-      container.innerHTML = '';
-      canvas = document.createElement('canvas');
-      canvas.id = 'incomplete-basics';
-      container.appendChild(canvas);
-      new Chart(canvas, incompleteBasics);
+        $this->js("
+        let container = '';
+        let canvas = '';
 
-      const status = " . json_encode($this->status()) . ";
-      container = \$wire.\$el.querySelector('#status-container');
-      container.innerHTML = '';
-      canvas = document.createElement('canvas');
-      canvas.id = 'status';
-      container.appendChild(canvas);
-      new Chart(canvas, status);
+        const incompleteBasics = " . json_encode($this->incompleteBasics()) . ";
+        container = \$wire.\$el.querySelector('#incomplete-basics-container');
+        container.innerHTML = '';
+        canvas = document.createElement('canvas');
+        canvas.id = 'incomplete-basics';
+        container.appendChild(canvas);
+        new Chart(canvas, incompleteBasics);
 
-      const value = " . json_encode($this->value()) . ";
-      container = \$wire.\$el.querySelector('#value-container');
-      container.innerHTML = '';
-      canvas = document.createElement('canvas');
-      canvas.id = 'value';
-      container.appendChild(canvas);
-      new Chart(canvas, value);
+        const status = " . json_encode($this->status()) . ";
+        container = \$wire.\$el.querySelector('#status-container');
+        container.innerHTML = '';
+        canvas = document.createElement('canvas');
+        canvas.id = 'status';
+        container.appendChild(canvas);
+        new Chart(canvas, status);
 
-      const aging = " . json_encode($this->aging()) . ";
-      container = \$wire.\$el.querySelector('#aging-container');
-      container.innerHTML = '';
-      canvas = document.createElement('canvas');
-      canvas.id = 'aging';
-      container.appendChild(canvas);
-      new Chart(canvas, aging);
-      ");
+        const value = " . json_encode($this->value()) . ";
+        container = \$wire.\$el.querySelector('#value-container');
+        container.innerHTML = '';
+        canvas = document.createElement('canvas');
+        canvas.id = 'value';
+        container.appendChild(canvas);
+        new Chart(canvas, value);
+
+        const aging = " . json_encode($this->aging()) . ";
+        container = \$wire.\$el.querySelector('#aging-container');
+        container.innerHTML = '';
+        canvas = document.createElement('canvas');
+        canvas.id = 'aging';
+        container.appendChild(canvas);
+        new Chart(canvas, aging);
+        ");
 
    }
 
@@ -404,6 +418,102 @@ class extends Component
       return $data;
    }
 
+   public function agingTable()
+   {
+        $now = Carbon::now();
+        $gt_100_days = $now->copy()->subDays(100);
+        $gt_90_days = $now->copy()->subDays(90);
+        $gt_60_days = $now->copy()->subDays(60);
+        $gt_30_days = $now->copy()->subDays(30);
+
+        // Reset totals
+        $this->totals = [
+            'gt_100_days' => 0,
+            'gt_90_days' => 0,
+            'gt_60_days' => 0,
+            'gt_30_days' => 0,
+            'lt_30_days' => 0,
+            'total' => 0,
+        ];
+
+        // Get all tags that have active items in the selected area
+        $tags = InvTag::whereHas('inv_items', function($query) {
+            $query->where('inv_area_id', $this->area_id)
+                ->where('is_active', true);
+        })->get();
+
+        $this->agingData = collect();
+
+        foreach ($tags as $tag) {
+            $tagData = [
+                'tag_name' => $tag->name, // Assuming the tag has a name field
+                'gt_100_days' => 0,
+                'gt_90_days' => 0,
+                'gt_60_days' => 0,
+                'gt_30_days' => 0,
+                'lt_30_days' => 0,
+                'total' => 0,
+            ];
+
+            // Get all active items with this tag and in the selected area
+            $items = $tag->inv_items()
+                ->where('inv_area_id', $this->area_id)
+                ->where('is_active', true)
+                ->get();
+
+            foreach ($items as $item) {
+                // For each item, get all stocks
+                $stocks = $item->inv_stocks;
+
+                foreach ($stocks as $stock) {
+                    // Calculate the value in base currency
+                    $value = $stock->qty * $stock->unit_price;
+                    
+                    // Convert currency if needed
+                    if ($stock->inv_curr_id != 1) {
+                        $value = $value / $stock->inv_curr->rate;
+                    }
+
+                    // Determine which aging bucket this item belongs to based on last_withdrawal
+                    if ($item->last_withdrawal) {
+                        $lastWithdrawal = Carbon::parse($item->last_withdrawal);
+                        
+                        if ($lastWithdrawal <= $gt_100_days) {
+                            $tagData['gt_100_days'] += $value;
+                            $this->totals['gt_100_days'] += $value;
+                        } elseif ($lastWithdrawal <= $gt_90_days) {
+                            $tagData['gt_90_days'] += $value;
+                            $this->totals['gt_90_days'] += $value;
+                        } elseif ($lastWithdrawal <= $gt_60_days) {
+                            $tagData['gt_60_days'] += $value;
+                            $this->totals['gt_60_days'] += $value;
+                        } elseif ($lastWithdrawal <= $gt_30_days) {
+                            $tagData['gt_30_days'] += $value;
+                            $this->totals['gt_30_days'] += $value;
+                        } else {
+                            $tagData['lt_30_days'] += $value;
+                            $this->totals['lt_30_days'] += $value;
+                        }
+                    } else {
+                        // If no last_withdrawal date, put in the oldest category
+                        $tagData['gt_100_days'] += $value;
+                        $this->totals['gt_100_days'] += $value;
+                    }
+
+                    // Add to total
+                    $tagData['total'] += $value;
+                    $this->totals['total'] += $value;
+                }
+            }
+
+            // Only add tags that have items
+            if ($tagData['total'] > 0) {
+                $this->agingData->push($tagData);
+            }
+        }
+
+   }
+
 };
 
 ?>
@@ -451,25 +561,79 @@ class extends Component
             wire:key="status-container">
          </div>  
       </div>
-      <div class="col-span-3 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-         <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Nilai barang berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
-         <div 
-            wire:ignore
-            id="value-container" 
-            class="overflow-hidden"
-            wire:key="value-container">
-         </div>  
+      <div class="col-span-3 grid grid-cols-2 gap-4">
+        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Nilai barang berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
+            <div 
+                wire:ignore
+                id="value-container" 
+                class="overflow-hidden"
+                wire:key="value-container">
+            </div>  
+        </div>
+        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Barang yang menua') }}</label>
+            <div 
+                wire:ignore
+                id="aging-container" 
+                class="h-64 overflow-hidden"
+                wire:key="aging-container">
+            </div>  
+        </div>
       </div>
-      <div class="col-span-3 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-         <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Barang yang menua') }}</label>
-         <div 
-            wire:ignore
-            id="aging-container" 
-            class="h-64 overflow-hidden"
-            wire:key="aging-container">
-         </div>  
-      </div>
+
    </div>
+   <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 mt-6">
+   <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Barang yang menua berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
+
+        @if ($area_id == 0)
+            <div class="py-4 text-neutral-500 text-center">
+                {{ __('Pilih area untuk melihat data aging') }}
+            </div>
+        @elseif ($agingData->isEmpty())
+            <div class="py-4 text-neutral-500 text-center">
+            {{ __('Tidak ada data aging untuk area yang dipilih') }}
+            </div>
+        @else
+            <table class="table table-sm text-sm mt-4">
+                <thead>
+                    <tr class="bg-light">
+                        <th>{{ __('Tag')}}</th>
+                        <th>{{ '> 100' . __(' hari')}}</th>
+                        <th>{{ '> 90' . __(' hari')}}</th>
+                        <th>{{ '> 60' . __(' hari')}}</th>
+                        <th>{{ '> 30' . __(' hari')}}</th>
+                        <th>{{ '< 30' . __(' hari')}}</th>
+                        <th>{{ __('Total tag')}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($agingData as $tag)
+                        <tr>
+                            <td>{{ $tag['tag_name'] }}</td>
+                            <td>{{ number_format($tag['gt_100_days'], 2) }}</td>
+                            <td>{{ number_format($tag['gt_90_days'], 2) }}</td>
+                            <td>{{ number_format($tag['gt_60_days'], 2) }}</td>
+                            <td>{{ number_format($tag['gt_30_days'], 2) }}</td>
+                            <td>{{ number_format($tag['lt_30_days'], 2) }}</td>
+                            <td class="font-weight-bold">{{ number_format($tag['total'], 2) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr class="bg-light font-weight-bold">
+                        <td>{{ __('Total aging')}}</td>
+                        <td>{{ number_format($totals['gt_100_days'], 2) }}</td>
+                        <td>{{ number_format($totals['gt_90_days'], 2) }}</td>
+                        <td>{{ number_format($totals['gt_60_days'], 2) }}</td>
+                        <td>{{ number_format($totals['gt_30_days'], 2) }}</td>
+                        <td>{{ number_format($totals['lt_30_days'], 2) }}</td>
+                        <td>{{ number_format($totals['total'], 2) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        @endif
+    </div>
 </div>
 
 @script
