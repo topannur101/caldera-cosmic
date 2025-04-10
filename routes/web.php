@@ -12,9 +12,11 @@ use Illuminate\Http\Request;
 
 Volt::route('/',                    'home')                 ->name('home');
 Volt::route('/inventory',           'inventory.index')      ->name('inventory');
+Volt::route('/inventory/help',      'inventory.help')       ->name('inventory.help');
 Volt::route('/machines',            'machines.index')       ->name('machines');
 Volt::route('/projects',            'projects.index')       ->name('projects');
 Volt::route('/contact',             'contact')              ->name('contact');
+
 Volt::route('/announcements/{id}',  'announcements.show')   ->name('announcements.show');
 
 // Insights routes

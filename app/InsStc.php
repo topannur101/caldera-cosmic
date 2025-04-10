@@ -4,9 +4,113 @@ namespace App;
 
 use Carbon\Carbon;
 use InvalidArgumentException;
+use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
 
 class InsStc
 {
+    public static function buildRegisterRequest($type, $ip, $port, $unit_id)
+    {
+        switch ($type) {
+            case 'lower_pv_r':
+                return ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$port}", $unit_id)
+                    ->int16(110, 'lower_pv_r_1')
+                    ->int16(111, 'lower_pv_r_2')
+                    ->int16(112, 'lower_pv_r_3')
+                    ->int16(113, 'lower_pv_r_4')
+                    ->int16(114, 'lower_pv_r_5')
+                    ->int16(115, 'lower_pv_r_6')
+                    ->int16(116, 'lower_pv_r_7')
+                    ->int16(117, 'lower_pv_r_8')
+                    ->build();
+                    
+            case 'lower_sv_w':
+                return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
+                    ->int16(150, 'lower_sv_w_1')
+                    ->int16(151, 'lower_sv_w_2')
+                    ->int16(152, 'lower_sv_w_3')
+                    ->int16(153, 'lower_sv_w_4')
+                    ->int16(154, 'lower_sv_w_5')
+                    ->int16(155, 'lower_sv_w_6')
+                    ->int16(156, 'lower_sv_w_7')
+                    ->int16(157, 'lower_sv_w_8')
+                    ->build();
+                    
+            case 'lower_sv_r':
+                return ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$port}", $unit_id)
+                    ->int16(140, 'lower_sv_r_1')
+                    ->int16(141, 'lower_sv_r_2')
+                    ->int16(142, 'lower_sv_r_3')
+                    ->int16(143, 'lower_sv_r_4')
+                    ->int16(144, 'lower_sv_r_5')
+                    ->int16(145, 'lower_sv_r_6')
+                    ->int16(146, 'lower_sv_r_7')
+                    ->int16(147, 'lower_sv_r_8')
+                    ->build();
+                    
+            case 'lower_sv_p':
+                return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
+                    ->int16(130, 'lower_sv_p_1')
+                    ->int16(131, 'lower_sv_p_2')
+                    ->int16(132, 'lower_sv_p_3')
+                    ->int16(133, 'lower_sv_p_4')
+                    ->int16(134, 'lower_sv_p_5')
+                    ->int16(135, 'lower_sv_p_6')
+                    ->int16(136, 'lower_sv_p_7')
+                    ->int16(137, 'lower_sv_p_8')
+                    ->build();
+                    
+
+            case 'upper_pv_r':
+                return ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$port}", $unit_id)
+                    ->int16(210, 'upper_pv_r_1')
+                    ->int16(211, 'upper_pv_r_2')
+                    ->int16(212, 'upper_pv_r_3')
+                    ->int16(213, 'upper_pv_r_4')
+                    ->int16(214, 'upper_pv_r_5')
+                    ->int16(215, 'upper_pv_r_6')
+                    ->int16(216, 'upper_pv_r_7')
+                    ->int16(217, 'upper_pv_r_8')
+                    ->build();
+                    
+            case 'upper_sv_w':
+                return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
+                    ->int16(250, 'upper_sv_w_1')
+                    ->int16(251, 'upper_sv_w_2')
+                    ->int16(252, 'upper_sv_w_3')
+                    ->int16(253, 'upper_sv_w_4')
+                    ->int16(254, 'upper_sv_w_5')
+                    ->int16(255, 'upper_sv_w_6')
+                    ->int16(256, 'upper_sv_w_7')
+                    ->int16(257, 'upper_sv_w_8')
+                    ->build();
+                    
+            case 'upper_sv_r':
+                return ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$port}", $unit_id)
+                    ->int16(240, 'upper_sv_r_1')
+                    ->int16(241, 'upper_sv_r_2')
+                    ->int16(242, 'upper_sv_r_3')
+                    ->int16(243, 'upper_sv_r_4')
+                    ->int16(244, 'upper_sv_r_5')
+                    ->int16(245, 'upper_sv_r_6')
+                    ->int16(246, 'upper_sv_r_7')
+                    ->int16(247, 'upper_sv_r_8')
+                    ->build();
+                    
+            case 'upper_sv_p':
+                return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
+                    ->int16(230, 'upper_sv_p_1')
+                    ->int16(231, 'upper_sv_p_2')
+                    ->int16(232, 'upper_sv_p_3')
+                    ->int16(233, 'upper_sv_p_4')
+                    ->int16(234, 'upper_sv_p_5')
+                    ->int16(235, 'upper_sv_p_6')
+                    ->int16(236, 'upper_sv_p_7')
+                    ->int16(237, 'upper_sv_p_8')
+                    ->build();
+                    
+        }
+    }
+
     private static array $sectionRatios = [
         'preheat' => 0.06,
         'section_1' => 0.11,

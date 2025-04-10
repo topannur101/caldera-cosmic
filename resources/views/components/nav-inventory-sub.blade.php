@@ -18,8 +18,10 @@
                 <x-link href="{{ route('inventory.circs.index') }}" class="inline-block py-6"
                 wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="hidden sm:inline ml-4"><span>{{ $slot }}</span></span>
                 
-            @else
-                {{ $slot }}            
+            @else           
+                <x-link href="{{ route('inventory') }}" class="inline-block py-6"
+                wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="hidden sm:inline ml-4"><span>{{ $slot }}</span></span>    
+
             @endif
            </h2>
        </div>

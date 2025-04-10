@@ -10,6 +10,7 @@ use App\Models\InsStcMachine;
 use Carbon\Carbon;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
+use ModbusTcpClient\Network\NonBlockingClient;
 
 new class extends Component
 {
@@ -47,7 +48,10 @@ new class extends Component
     public string $latency = '';
 
     public string $duration = '';
+    
     public int $duration_min = 0;
+
+    public string $sv_error_msg = '';
 
     public function mount()
     {
@@ -89,29 +93,53 @@ new class extends Component
         $this->d_sum['sv_friendly'] = '';
 
         $machine_id = $this->d_sum['ins_stc_machine_id'];
-        $position = $this->d_sum['position'];
-
+        $position   = $this->d_sum['position'];
+        
         if ($machine_id && $position) {
-            $m_log = InsStcMachine::find($machine_id)?->ins_stc_m_log($position)->first();
+            try {
+                
+                $machine        = InsStcMachine::find($machine_id);
+                $ip             = $machine->ip_address;
+                $port           = 503;
+                $unit_id        = 1;
+                $sv_r_request   = InsStc::buildRegisterRequest($position . '_sv_r', $ip, $port, $unit_id);
+                $sv_r           = [];
 
-            if ($m_log) {
+                if (strpos($ip, '127.') !== 0) {
+                
+                    $sv_r_response  = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($sv_r_request);
+                    $sv_r_data      = $sv_r_response->getData();    
+                    $sv_r           = array_values($sv_r_data);                 
 
-                $allAboveZero = true;
-                for ($i = 1; $i <= 8; $i++) {
-                    $property = 'sv_r_'.$i;
-                    if ($m_log->$property <= 0) {
-                        $allAboveZero = false;
-                        break;
-                    }
+                } else {
+                    $this->js('toast("'.__('SV tidak tersedia pada mesin dan posisi yang dipilih.').'", { type: "info" })');
+
                 }
-                if ($allAboveZero) {
-                    for ($i = 1; $i <= 8; $i++) {
-                        $property = 'sv_r_'.$i;
-                        $this->d_sum['sv_values'][] = $m_log->$property;
+
+                if ($sv_r) {
+
+                    $allAboveZero = true;
+                    foreach($sv_r as $value) {
+                        if ($value <= 0) {
+                            $allAboveZero = false;
+                            $this->js('toast("'.__('SV dari mesin dan posisi yang dipilih tidak sah karena mengandung nilai kurang dari atau sama dengan 0.').'", { type: "info" })');
+                            break;
+                        }
+                    }
+
+                    if ($allAboveZero) {
+                        $this->d_sum['sv_values'] = $sv_r;
                         $this->d_sum['sv_used'] = 'm_log';
                         $this->d_sum['sv_used_friendly'] = __('SV otomatis');
+                        $this->js('toast("'.__('SV dari mesin dan posisi yang dipilih berhasil diambil.').'", { type: "info" })');
+
                     }
+
                 }
+
+            } catch (\Throwable $th) {
+                $this->sv_error_msg = $th->getMessage();
+                $this->js('$dispatch("open-modal", "retrieve-sv-error")');
 
             }
         }
@@ -533,11 +561,37 @@ new class extends Component
 
 
 <div>
-   <div wire:key="modals">
-      <x-modal name="reading-review" maxWidth="2xl">
-         <livewire:insights.stc.create.reading-review />
-      </x-modal>
-   </div>
+    <div wire:key="modals">
+        <x-modal name="reading-review" maxWidth="2xl">
+            <livewire:insights.stc.create.reading-review />
+        </x-modal>
+        <x-modal name="retrieve-sv-error" maxWidth="sm">
+            <div class="text-center pt-6">
+                <i class="fa fa-exclamation-triangle text-4xl "></i>
+                <h2 class="mt-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                    {{ __('SV tidak dapat diambil') }}
+                </h2>
+            </div>
+            <div class="p-6 flex flex-col gap-y-3 text-sm">
+                <p>
+                    {{ __('SV tidak dapat diambil pada mesin dan posisi yang kamu pilih dengan alasan:.') }}
+                </p>
+                <hr class="border-neutral-300 dark:border-neutral-600" />
+                <p class="text-xs text-neutral-500 font-mono">
+                    {{ $sv_error_msg }}
+                </p>
+                <hr class="border-neutral-300 dark:border-neutral-600" />
+                <p>
+                    {{ __('Kamu dapat menunjukan pesan ini ke penanggung jawab sistem untuk diinvestigasi lebih lanjut atau isi SV secara manual.') }}
+                </p>
+                <div class="mt-6 flex justify-end">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                        {{ __('Paham') }}
+                    </x-primary-button>
+                </div>
+            </div>
+        </x-modal>
+    </div>
    <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-6">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-x md:divide-y-0 divide-neutral-200 dark:text-white dark:divide-neutral-700">
          <div class="p-6">

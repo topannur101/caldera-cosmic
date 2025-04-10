@@ -33,13 +33,23 @@ class extends Component {};
                            {{ __('Satu tempat untuk segala keperluan inventaris, mulai dari manajemen barang, pencatatan keluar masuk, hingga kebutuhan analisis.') }}
                         </p>
                      </div>
-                     @if (Auth::user()->id ?? false)
-
-                     @else
-                        <div class="relative flex flex-col sm:flex-row sm:space-x-4">
+                     <div class="relative flex flex-col sm:flex-row sm:space-x-4">
+                           @guest
                            <a href="{{ route('login', ['redirect' => url()->current()]) }}" wire:navigate
                                  class="flex items-center w-full px-6 py-3 my-6 text-lg text-white bg-caldy-600 rounded-md sm:mb-0 hover:bg-caldy-700 sm:w-auto">
                                  {{ __('Masuk') }}
+                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-1" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12">
+                                    </line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                 </svg>
+                           </a>
+                           @endguest
+                           <a href="{{ route('inventory.help') }}" wire:navigate
+                                 class="flex items-center w-full px-6 py-3 my-6 text-lg text-white bg-neutral-600 rounded-md sm:mb-0 hover:bg-neutral-700 sm:w-auto">
+                                 {{ __('Tonton panduan') }}
                                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-1" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
@@ -59,7 +69,6 @@ class extends Component {};
                               {{-- <x-link href="#">Terapkan di departemenmu</x-link> --}}
                            </div>
                         </div>
-                     @endif
                </div>
                <div class="w-full md:w-1/2">
                   <div class="w-full h-auto overflow-hidden rounded-md shadow-xl sm:rounded-xl">
