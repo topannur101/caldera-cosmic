@@ -94,9 +94,7 @@ class InvEmpty extends Command
                 $this->info('Comment ID: ' . $comment->id . ' deleted');
             }
         }
-
-
-
+        
         $this->info('Operation completed. Bye!');        
     }
 }

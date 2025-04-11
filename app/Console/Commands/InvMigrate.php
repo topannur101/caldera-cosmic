@@ -140,6 +140,8 @@ class InvMigrate extends Command
                     'uom'         => $uom,
                 ],[
                     'qty'         => max($igood->qty, 0),
+                    'qty_min'     => $igood->qty_min ?? 0,
+                    'qty_max'     => $igood->qty_max ?? 0,
                     'unit_price'  => $igood->ttprice,
                     'is_active'   => true
                 ]);
@@ -212,7 +214,8 @@ class InvMigrate extends Command
                             'user_id' => $user->id,       
                             'content' => $legacy_comment->content,
                             'created_at' => $legacy_comment->created_at,
-                            'updated_at' => $legacy_comment->updated_at    
+                            'updated_at' => $legacy_comment->updated_at,
+                            'url' => 'http://172.70.66.131/inventory/items/' . $item->id
                         ]);
                         
                         $this->info('Comment for legacy item ID: ' . $igood->id . ' created.');

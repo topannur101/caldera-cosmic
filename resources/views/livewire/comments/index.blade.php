@@ -88,7 +88,7 @@ new class extends Component {
                         {{-- <div><i class="fa fa-ellipsis"></i></div> --}}
                     </div>
                     @if($comment->content || $comment->files->count())
-                        <div>{!! nl2br($comment->parseContent()) !!}</div>
+                        <div class="break-all">{!! nl2br($comment->parseContent()) !!}</div>
 
                     @else
                         <div class="text-neutral-500 italic">{{ __('Komentar dihapus') }}</div>
@@ -161,7 +161,7 @@ new class extends Component {
                                         {{-- <div><i class="fa fa-ellipsis"></i></div> --}}
                                     </div>
                                     @if($child->content || $child->files->count())
-                                        <div>{!! nl2br($child->parseContent()) !!}</div>
+                                        <div class="break-all">{!! nl2br($child->parseContent()) !!}</div>
 
                                     @else
                                         <div class="text-neutral-500 italic">{{ __('Komentar dihapus') }}</div>
@@ -205,10 +205,10 @@ new class extends Component {
     @endif
 </div>
 
-@script
-    @if($highlight_id)
+@if($highlight_id > 0)
+    @script
         <script>
             $wire.$dispatch('scroll-to-comment');
         </script>
-    @endif
-@endscript
+    @endscript
+@endif

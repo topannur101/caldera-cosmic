@@ -20,7 +20,9 @@ class InvStock extends Model
         'is_active',
         'inv_item_id',
         'inv_curr_id',
-        'amount_main'
+        'amount_main',
+        'qty_min',
+        'qty_max',
     ];
 
     public function inv_item()

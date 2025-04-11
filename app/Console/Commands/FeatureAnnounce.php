@@ -34,7 +34,7 @@ class FeatureAnnounce extends Command
             'theme_patterned' => [
                 'icon'      => 'fa-solid fa-brush',
                 'content'   => 'Tema bercorak kini telah hadir. Jadikan Calderamu lebih personal, klik disini untuk mengubah temamu.',
-                'url'       => route('account.theme', ['mode' => 'patterned'])
+                'url'       => 'http://172.70.66.131/account/theme?mode=patterned',
             ],
 
             'comment_mentions' => [
@@ -131,7 +131,7 @@ class FeatureAnnounce extends Command
                     'title'     => $feature['post']['title'],
                     'content'   => $feature['post']['content'],
                 ]);
-                $feature['url'] = route('announcements.show', ['id' => $post->id] );
+                $feature['url'] = 'http://172.70.66.131/announcements/'.$post->id;
             }
 
             foreach ($users as $user) {
