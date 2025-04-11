@@ -2,13 +2,13 @@
 
 use App\Models\InsStcMLog;
 use App\Models\InsStcDSum;
+use App\Models\InsStcMachine;
 use App\Models\InsOmvMetric;
 use App\Models\InsRtcClump;
 use App\Models\InsRdcTest;
 use App\Models\InsLdcHide;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
@@ -17,7 +17,7 @@ use Livewire\Attributes\On;
 new #[Layout('layouts.app')] 
 class extends Component {
 
-    public int $stc_m_logs_recent = 0;
+    public int $stc_machines_count = 0;
     public int $stc_d_sums_recent = 0;
     public int $omv_lines_recent = 0;
     public int $rtc_lines_recent = 0;
@@ -30,7 +30,7 @@ class extends Component {
         $this->calculateMetrics();
     }
 
-    private function pingAureliaService()
+    private function pingAureliaService(): bool      
     {
         try {
 
@@ -48,6 +48,34 @@ class extends Component {
         }
 
         return false;
+    }
+
+    private function pingStcMachine(): int
+    {
+        $count = 0;
+        $machines = InsStcMachine::all();
+        foreach ($machines as $machine) {
+            if (strpos($machine->ip, '127.') !== 0) {
+                try {
+                    exec("ping -n 1 " . $machine->ip_address, $output, $status);
+                    if ($status === 0) {
+                        ++$count;
+                    }
+
+                } catch (\Exception $e) {
+                    $this->js('console.log(' . $e->getMessage() . ')');
+                }
+            } 
+        }
+
+        return $count;                
+    }
+
+    private function getCachedStcMCount(): int 
+    {
+        return Cache::remember('stc_machines_count', now()->addMinutes(30), function () {
+            return $this->pingStcMachine();
+        });
     }
 
     private function getCachedStcMLogs(): int 
@@ -124,13 +152,13 @@ class extends Component {
 
     public function calculateMetrics()
     {
-        $this->stc_m_logs_recent = $this->getCachedStcMLogs();
-        $this->stc_d_sums_recent = $this->getCachedStcDSums();
-        $this->omv_lines_recent = $this->getCachedOmvLines();
-        $this->rtc_lines_recent = $this->getCachedRtcLines();
-        $this->rdc_machines_recent = $this->getCachedRdcMachines();
-        $this->ldc_codes_recent = $this->getCachedLdcCodes();
-        $this->is_aurelia_up = Cache::remember('is_aurelia_up', now()->addMinutes(30), function () {
+        $this->stc_machines_count   = $this->getCachedStcMCount();
+        $this->stc_d_sums_recent    = $this->getCachedStcDSums();
+        $this->omv_lines_recent     = $this->getCachedOmvLines();
+        $this->rtc_lines_recent     = $this->getCachedRtcLines();
+        $this->rdc_machines_recent  = $this->getCachedRdcMachines();
+        $this->ldc_codes_recent     = $this->getCachedLdcCodes();
+        $this->is_aurelia_up        = Cache::remember('is_aurelia_up', now()->addMinutes(30), function () {
             return $this->pingAureliaService();
         });
     }
@@ -138,7 +166,7 @@ class extends Component {
     #[On('recalculate')]
     public function recalculate()
     {
-        Cache::forget('stc_m_logs_recent');
+        Cache::forget('stc_machines_count');
         Cache::forget('stc_d_sums_recent');
         Cache::forget('omv_lines_recent');
         Cache::forget('rtc_lines_recent');
@@ -240,8 +268,8 @@ class extends Component {
                                     <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kendali chamber IP') }}</div>
                                     <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                         <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
-                                            <div class="w-2 h-2 {{ $stc_m_logs_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
-                                            <div>{{ $stc_m_logs_recent > 0 ? $stc_m_logs_recent . ' ' . __('line ') : __('luring') }}</div>
+                                            <div class="w-2 h-2 {{ $stc_machines_count > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
+                                            <div>{{ $stc_machines_count > 0 ? $stc_machines_count . ' ' . __('line ') : __('luring') }}</div>
                                             <div>•</div>
                                             <div>{{ __('Data HB') . ': ' . $stc_d_sums_recent . ' ' . __('line ') }}</div>
                                         </div>

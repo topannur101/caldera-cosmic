@@ -70,9 +70,9 @@ class extends Component {
 
                             </h1>
                             <p class="mx-auto text-base text-neutral-500 sm:max-w-md lg:text-xl md:max-w-3xl">
-                                {{ __('Manfaatkan kekuatan data real-time untuk membantu menyelesaikan tugasmu atau membuat keputusan dari ikhtisar.') }}
+                                {{ __('Manfaatkan kekuatan data real-time untuk membantu menyelesaikan tugas dan membuat keputusan.') }}
                             </p>
-                            <div class="relative flex flex-col sm:flex-row sm:space-x-4">
+                            <!-- <div class="relative flex flex-col sm:flex-row sm:space-x-4">
                                 <a href="{{ route('login') }}" wire:navigate
                                     class="flex items-center w-full px-6 py-3 mb-3 text-lg text-white bg-caldy-600 rounded-md sm:mb-0 hover:bg-caldy-700 sm:w-auto">
                                     {{ __('Masuk') }}
@@ -83,7 +83,7 @@ class extends Component {
                                         <polyline points="12 5 19 12 12 19"></polyline>
                                     </svg>
                                 </a>
-                            </div>
+                            </div> -->
                         </div>
                         <div class="pr-0 md:pr-8"><hr class="border-neutral-300 dark:border-neutral-800 my-10" /></div>
                         <x-home-users :$time :$users :$guests></x-home-users>
