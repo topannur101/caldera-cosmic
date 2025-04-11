@@ -55,7 +55,7 @@ class extends Component {
         $count = 0;
         $machines = InsStcMachine::all();
         foreach ($machines as $machine) {
-            if (strpos($machine->ip, '127.') !== 0) {
+            if (strpos($machine->ip_address, '127.') !== 0) {
                 try {
                     exec("ping -n 1 " . $machine->ip_address, $output, $status);
                     if ($status === 0) {

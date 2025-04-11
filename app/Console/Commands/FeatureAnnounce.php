@@ -6,6 +6,8 @@ use App\Models\Announcement;
 use Illuminate\Console\Command;
 use App\Notifications\FeatureNew;
 use App\Models\User;
+use App\Models\InvCirc;
+use Carbon\Carbon;
 
 class FeatureAnnounce extends Command
 {
@@ -55,6 +57,23 @@ class FeatureAnnounce extends Command
                     ',
                 ] 
             ],
+
+            'inv_video_guide' => [
+                'icon'      => 'fa-solid fa-cube',
+                'content'   => 'Panduan video Inventaris kini tersedia. Pelajari lebih lanjut',
+                'post'      =>
+                [
+                    'title'     => 'Panduan video Inventaris',
+                    'content'   => '
+                    <img src="/announcements/inv_video_guide_nav_1.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    <img src="/announcements/inv_video_guide_nav_2.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br><br>
+                    Kini kamu dapat menonton video panduan cara menggunakan sistem Inventaris. 
+                    Akses melalui navigasi > Inventaris > Tonton panduan. Panduan ini berguna baik untuk pengguna lama yang ingin mengingat kembali atau untuk training pengguna baru.
+                    ',
+                ] 
+            ],
         ];
         
         // Prepare the choices array with indices and content
@@ -73,19 +92,21 @@ class FeatureAnnounce extends Command
         }
 
         $user_selection = $this->choice('Select user to send feature announcement', [
-            'superuser'     => 'Superuser account (user with id 1)',
-            'active_users'  => 'All active users',
-            'recent_users'  => 'All users with seen_at less than 6 months',
-            'all_users'     => 'All users',
+            'superuser'         => 'Superuser account (user with id 1)',
+            'active_users'      => 'All active users',
+            'recent_users'      => 'All users with seen_at less than 6 months',
+            'all_users'         => 'All users',
+            'inventory_users'   => 'All inventory users by recent circulations'
         ]);
 
 
         $users = match ($user_selection) {
-            'superuser'     => User::where('id', 1)->get(),
-            'active_users'  => User::where('is_active', 1)->get(),
-            'recent_users'  => User::where('seen_at', '>', now()->subMonths(6))->get(),
-            'all_users'     => User::all(),
-            default         => null,
+            'superuser'         => User::where('id', 1)->get(),
+            'active_users'      => User::where('is_active', 1)->get(),
+            'recent_users'      => User::where('seen_at', '>', now()->subMonths(6))->get(),
+            'all_users'         => User::all(),
+            'inventory_users'   => User::whereIn('id', $this->getInventoryUserIds())->get(),
+            default             => null,
         };
 
         $url_or_post = isset($feature['url']) ? ('URL: ' . $feature['url']) : ( 'Post title: ' . $feature['post']['title'] );
@@ -121,5 +142,14 @@ class FeatureAnnounce extends Command
         
         }
 
+    }
+
+    public function getInventoryUserIds()
+    {
+        $user_ids = InvCirc::where('created_at', '>=', Carbon::now()->subMonths(12))
+            ->distinct()
+            ->pluck('user_id');  
+        
+        return $user_ids;
     }
 }
