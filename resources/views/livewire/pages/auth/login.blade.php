@@ -62,9 +62,11 @@ new #[Layout('layouts.guest')] class extends Component
 
         // set client storage
         $this->js("localStorage.setItem('theme', '{$bg}');");
-
-        // navigate: false to reload page
-        $this->redirectIntended(default: $this->redirect, navigate: true);
+        if (Auth::user()->password == '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC') {
+            $this->redirect(route('account.insecure-password'));
+        } else {
+            $this->redirectIntended(default: $this->redirect, navigate: true);
+        }
     }
 
 }; ?>

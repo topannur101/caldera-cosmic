@@ -20,7 +20,9 @@ new class extends Component
         try {
             $validated = $this->validate([
                 'current_password' => ['required', 'string', 'current_password'],
-                'password' => ['required', 'string', Password::defaults(), 'confirmed'],
+                'password' => ['required', 'string', Password::defaults(), 'confirmed', 'not_in:opop1212'],
+            ],[
+                'password.not_in' => __('Kata sandi tidak boleh opop1212'),
             ]);
         } catch (ValidationException $e) {
             $this->reset('current_password', 'password', 'password_confirmation');

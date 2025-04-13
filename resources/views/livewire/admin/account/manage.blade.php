@@ -31,7 +31,7 @@ class extends Component {
 
         $validator = Validator::make(
             ['password_option' => $this->password_option ],
-            ['password_option' => 'required|integer|min:1|max:2'],
+            ['password_option' => 'required|integer|lte:1|gte:1'],
             [
                 'min' => __('Kata sandi wajib dipilih')
             ]
@@ -47,13 +47,9 @@ class extends Component {
             $user = User::find($this->user_id);
             $password = '';
             switch ($this->password_option) {
-                // 11223344
-                case 1:
-                    $password = '$2y$12$nxdoZHJWSasGm3nr1wQAc.zuun0lZ3TGHC6gm8iUMHCpUhart4beS';
-                    break;
                 
                 // opop1212
-                case 2:
+                case 1:
                     $password = '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC';
                     break;
             }
@@ -230,8 +226,7 @@ class extends Component {
                                 {{ __('Atur kata sandi pengguna ini menjadi:') }}
                             </div>
                             <div>
-                                <x-radio wire:model="password_option" id="password_option-1" name="password_option" value="1">11223344</x-radio>
-                                <x-radio wire:model="password_option" id="password_option-2" name="password_option" value="2">opop1212</x-radio>
+                                <x-radio wire:model="password_option" id="password_option-2" name="password_option" value="1">opop1212</x-radio>
                             </div>
                             <div>{{ __('Peringatan: Ketika mengklik tombol dibawah berikut, Caldera tidak akan menanyakan konfirmasi dan kata sandi akan diatur sesuai dengan kata sandi yang dipilih.') }}</div>
                         </div>

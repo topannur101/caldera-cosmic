@@ -153,6 +153,7 @@ Route::middleware('auth')->group(function () {
             Volt::route('/language',    'account.language')     ->name('language');
             Volt::route('/theme',       'account.theme')        ->name('theme');
             Volt::route('/edit',        'account.edit')         ->name('edit');
+            Volt::route('/insecure-password', 'account.insecure-password')->name('insecure-password');
 
         });
 
