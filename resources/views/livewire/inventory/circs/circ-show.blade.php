@@ -90,6 +90,7 @@ new class extends Component
             $this->qty_relative  = $circ->qty_relative;
             $this->remarks       = $circ->remarks;
             $this->userq         = $circ->user->emp_id;
+            $this->dispatch('userq-updated', $this->userq);
 
             $circ = $circ->toArray();
             $this->circ = array_merge($this->circ, $circ);

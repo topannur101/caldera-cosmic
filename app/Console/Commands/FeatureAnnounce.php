@@ -60,7 +60,7 @@ class FeatureAnnounce extends Command
 
             'inv_video_guide' => [
                 'icon'      => 'fa-solid fa-cube',
-                'content'   => 'Panduan video Inventaris kini tersedia. Pelajari lebih lanjut',
+                'content'   => 'Panduan video Inventaris kini tersedia. Pelajari lebih lanjut.',
                 'post'      =>
                 [
                     'title'     => 'Panduan video Inventaris',
@@ -74,6 +74,23 @@ class FeatureAnnounce extends Command
                     ',
                 ] 
             ],
+
+            'inv_circ_user_edit' => [
+                'icon'      => 'fa-solid fa-cube',
+                'content'   => 'Kini kamu dapat mengubah pengguna pada sirkulasi yang telah dibuat. Pelajari lebih lanjut.',
+                'post'      =>
+                [
+                    'title'     => 'Mengubah pengguna pada sirkulasi',
+                    'content'   => '
+                    <br>
+                    <img src="/announcements/inv_circ_edit_user.png" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    Kamu dapat mengubah pengguna pada suatu sirkulasi selama sirkulasi tersebut masih tertunda.
+                    ',
+                ] 
+            ],
+
+            
         ];
         
         // Prepare the choices array with indices and content
