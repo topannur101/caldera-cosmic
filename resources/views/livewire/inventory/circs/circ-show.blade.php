@@ -2,9 +2,11 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
 use App\Models\InvCirc;
 use App\Models\InvStock;
 use App\Models\InvCurr;
+use App\Models\User;
 
 new class extends Component
 {
@@ -57,6 +59,15 @@ new class extends Component
    public string $remarks = '';
    public string $eval_remarks = '';
 
+   public string $userq = '';
+   public int $user_id = 0;
+
+   #[Renderless]
+   public function updatedUserq()
+   {
+       $this->dispatch('userq-updated', $this->userq);
+   }
+
    public function mount()
    {
       $this->curr_name = InvCurr::find(1)->name;
@@ -78,6 +89,7 @@ new class extends Component
 
             $this->qty_relative  = $circ->qty_relative;
             $this->remarks       = $circ->remarks;
+            $this->userq         = $circ->user->emp_id;
 
             $circ = $circ->toArray();
             $this->circ = array_merge($this->circ, $circ);
@@ -117,10 +129,12 @@ new class extends Component
 
    public function update()
    {
-      $this->remarks = trim($this->remarks);
+      $this->userq         = trim($this->userq);
+      $this->remarks       = trim($this->remarks);
 
       $this->validate([
-         'qty_relative' => ['required', 'min:0', 'max:100000'],
+         'userq'        => ['required', 'exists:users,emp_id'],
+         'qty_relative' => ['required', 'gte:0', 'lte:100000'],
          'remarks'      => ['required', 'string', 'max:256'],
       ]);
 
@@ -129,6 +143,15 @@ new class extends Component
       if (!$circ) {
          $this->handleNotFound();
       }
+
+      $user = $this->userq ? User::where('emp_id', $this->userq)->first() : null;
+      $user_id = (int) ($user ? $user->id : Auth::user()->id);
+      $auth_id = (int) Auth::user()->id;
+      
+      $is_delegated = false;
+      if ($user_id !== $auth_id) {
+         $is_delegated = true;
+      } 
 
       // withdrawal and capture qty_relative cannot be 0
       if ($circ->type == 'deposit' || $circ->type == 'withdrawal') {
@@ -150,6 +173,9 @@ new class extends Component
 
       $circ->qty_relative = $this->qty_relative;
       $circ->remarks      = $this->remarks;
+
+      $circ->user_id      = $user_id;
+      $circ->is_delegated = $is_delegated;
       
 
       $response = Gate::inspect('edit', $circ);
@@ -224,7 +250,7 @@ new class extends Component
    </div>   
 
    <hr class="border-neutral-300 dark:border-neutral-700" />
-   <div class="p-6 flex gap-x-3">
+   <div x-show="!is_editing" class="p-6 flex gap-x-3">
       <div>
          <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
          @if ($circ['user']['photo'])
@@ -239,26 +265,50 @@ new class extends Component
          </div>
       </div>
       <div class="grow">
-         <div class="text-xs text-neutral-500" :class="is_editing ? 'px-3 mb-2' : ''">
+         <div class="text-xs text-neutral-500">
             <span>{{ $circ['user']['name'] . ' - ' . $circ['user']['emp_id'] }}</span>
             @if($circ['is_delegated'])
                <span title="Didelegasikan"><i class="fa fa-handshake-angle"></i></span>
             @endif
          </div>
-         <div x-show="!is_editing" class="text-wrap">
+         <div class="text-wrap">
             {{ $circ['remarks'] }}
          </div>
-         <div x-show="is_editing" class="flex flex-col gap-y-4">
-            <x-text-input wire:model="remarks" id="circ-remarks" autocomplete="circ-remarks" />
-            @if($circ['type'] == 'deposit' || $circ['type'] == 'withdrawal')
-               <div>
-                  <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-qty"><span>{{ __('Jumlah') }}</span></label>
-                  <x-text-input-suffix wire:model="qty_relative" suffix="{{ $circ['inv_stock']['uom'] }}" id="circ-qty" name="circ-qty"
-                  type="number" value="" min="1" placeholder="Qty" />
+      </div>
+   </div>
+   <div x-show="is_editing" class="p-6 flex flex-col gap-y-4">
+      <div 
+         x-data="{ open: false, userq: @entangle('userq').live }" 
+         x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
+         <div x-on:click.away="open = false">
+            <label for="circ-user" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengguna') }}</label>
+            <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user"
+               x-on:change="open = true" x-ref="userq" x-on:focus="open = true"
+               id="circ-user" type="text" autocomplete="off"
+               placeholder="{{ __('Pengguna') }}" />
+            <div class="relative" x-show="open" x-cloak>
+               <div class="absolute top-1 left-0 w-full z-10">
+                  <livewire:layout.user-select />
                </div>
-            @endif
+            </div>
          </div>
       </div>
+      <div>
+         <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-remarks"><span>{{ __('Keterangan') }}</span></label>
+         <x-text-input wire:model="remarks" id="circ-remarks" autocomplete="circ-remarks" />
+      </div>
+      @if($circ['type'] == 'deposit' || $circ['type'] == 'withdrawal')
+         <div>
+            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-qty"><span>{{ __('Jumlah') }}</span></label>
+            <x-text-input-suffix wire:model="qty_relative" suffix="{{ $circ['inv_stock']['uom'] }}" id="circ-qty" name="circ-qty"
+            type="number" value="" min="1" placeholder="Qty" />
+         </div>
+      @endif
+      @if ($errors->any())
+         <div>
+               <x-input-error :messages="$errors->first()" />
+         </div>
+      @endif
    </div>
    
    <div x-show="is_editing" class="px-6 pb-6 flex items-center justify-between">

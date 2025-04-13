@@ -84,7 +84,7 @@ new class extends Component {
       $this->validate([
          'type'         => ['required', 'in:deposit,capture,withdrawal'],
          'stock_id'     => ['required', 'exists:inv_stocks,id'],
-         'qty_relative' => ['required', 'min:0', 'max:100000'],
+         'qty_relative' => ['required', 'gte:0', 'lte:100000'],
          'remarks'      => ['required', 'string', 'max:256'],
       ]);
 
