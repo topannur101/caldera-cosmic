@@ -30,6 +30,9 @@ export default {
                     950: 'rgb(var(--color-950) / <alpha-value>)'
                 },
             },
+            maxWidth: {
+                '8xl': '88rem',
+            },
         },
     },
 

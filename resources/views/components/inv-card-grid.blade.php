@@ -2,6 +2,7 @@
     'url', 
     'name', 
     'desc', 
+    'code',
     'uom', 
     'loc', 
     'qty',  
@@ -24,11 +25,14 @@
             </div>
         </div>
         <div class="truncate py-2 lg:py-3">
-            <div class="px-2 sm:px-4 truncate text-md font-medium text-neutral-900 dark:text-neutral-100">
+            <div class="py-1 px-2 sm:px-4 truncate text-md font-medium text-neutral-900 dark:text-neutral-100">
                 <x-link :href="$url" wire:navigate>{{ $name }}</x-link>
             </div>                       
-            <div class="px-2 sm:px-4 truncate text-sm text-neutral-600 dark:text-neutral-400">
+            <div class="py-1 px-2 sm:px-4 truncate text-sm text-neutral-600 dark:text-neutral-400">
                 {{ $desc }}
+            </div>
+            <div class="px-2 sm:px-4 truncate text-sm text-neutral-600 dark:text-neutral-400">
+                {{ $code ?? __('Tak ada kode') }}
             </div>
             <div class="px-2 sm:px-4 truncate mt-2 text-sm text-neutral-600 dark:text-neutral-400">
                 <span class="mr-3"><i class="fa fa-map-marker-alt mr-2"></i>{{ $loc ? $loc : __('Tak ada lokasi') }}</span>                          

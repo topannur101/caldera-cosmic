@@ -288,7 +288,7 @@ class extends Component
     <x-nav-inventory></x-nav-inventory>
 </x-slot>
 
-<div id="content" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="py-6 max-w-8xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     <div wire:key="modals">
         <x-modal name="create-from-code">
             <livewire:inventory.items.create-from-code :$areas lazy />
@@ -434,6 +434,7 @@ class extends Component
                             :url="route('inventory.items.show', ['id' => $inv_stock->inv_item_id, 'stock_id' => $inv_stock->id ])"
                             :name="$inv_stock->inv_item->name" 
                             :desc="$inv_stock->inv_item->desc" 
+                            :code="$inv_stock->inv_item->code"
                             :uom="$inv_stock->uom"
                             :loc="$inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' . $inv_stock->inv_item->inv_loc->bin ) : null" 
                             :qty="$inv_stock->qty" 

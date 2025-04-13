@@ -246,7 +246,7 @@ class extends Component {
     <livewire:inventory.circs.print />
 </x-slot>
 
-<div id="content" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200"
+<div id="content" class="py-6 max-w-8xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200"
     x-data="{ 
         ids: @entangle('circ_ids'),
         status: @entangle('circ_eval_status').live, 
