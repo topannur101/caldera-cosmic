@@ -159,7 +159,7 @@ class extends Component {
   <div 
     id="caldy-container"
     class="grow overflow-y-auto px-3 sm:px-0"
-    x-data="scrollWatcher"
+    x-data="{ ...scrollWatcher()}"
     x-init="init()">
     @if(count($messages) == 1)
     <div id="caldy-start" class="h-[calc(100vh-8rem)] flex items-center justify-center">
@@ -218,9 +218,9 @@ class extends Component {
       </button>
     </form>
   </div>
-  <script wire:ignore>
-    document.addEventListener('alpine:init', () => {
-      Alpine.data('scrollWatcher', () => ({
+  <script>
+    function scrollWatcher() {
+      return {
         init() {
           const container = document.getElementById('caldy-container');
           let shouldAutoScroll = true;
@@ -245,7 +245,7 @@ class extends Component {
               shouldAutoScroll = isAtBottom();
           });
         }
-      }));
-    });
+      }
+    }
   </script>
 </div>
