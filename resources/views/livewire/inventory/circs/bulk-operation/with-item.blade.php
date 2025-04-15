@@ -169,6 +169,7 @@ class extends Component
 
    private function createCirc(array $circ)
    {
+      $inv_item_new = false;
       $inv_circ = new InvCirc();
       $inv_circ->type = $this->type;
 
@@ -197,7 +198,6 @@ class extends Component
 
          if(!$inv_item) {
             throw new Exception(__('Barang gagal dibuat'));
-
          }
 
          $response = Gate::inspect('circCreate', $inv_item);
@@ -237,13 +237,13 @@ class extends Component
             }
 
             $inv_item->save();
+            $inv_item_new = true;
          }
 
          $curr = InvCurr::where('name', $circ['curr'])->first();
 
          if (!$curr) {
-            throw new Exception(__('Mata uang tidak dikenal'));
-            
+            throw new Exception(__('Mata uang tidak dikenal'));            
          }
 
          $stock = InvStock::where('inv_item_id', $inv_item->id)
@@ -283,9 +283,18 @@ class extends Component
 
          $inv_circ->save();   
 
-         $status  = __('Berhasil');
-         $message = __('Sirkulasi dibuat');
-         $this->result['success']++;
+         if ($inv_item_new) {
+            $status  = __('Berhasil');
+            $message = __('Sirkulasi dibuat');
+            $this->result['success']++;
+
+         } else {
+            $status  = __('Berhasil');
+            $message = __('Sirkulasi dibuat dengan barang baru');
+            $this->result['success']++;
+
+         }
+
       
 
       } catch (\Throwable $th) {

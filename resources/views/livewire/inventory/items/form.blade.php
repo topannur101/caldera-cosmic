@@ -36,6 +36,7 @@ new class extends Component
          'updated_at'      => '',
          'last_deposit'    => '',
          'last_withdrawal' => '',
+         'comments_count' => 0
       ]
    ];
 
@@ -352,7 +353,7 @@ new class extends Component
             </div>
         </div>
         <div class="grow">
-            <div class="bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg divide-y divide-neutral-200 dark:divide-neutral-700">
+            <div class="relative bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg divide-y divide-neutral-200 dark:divide-neutral-700">
                @if($is_editing)
                   <div class="grid gap-y-4 py-6">
                      <div class="px-6">
@@ -364,14 +365,18 @@ new class extends Component
                         <x-text-input id="item-desc" wire:model="items.0.desc" type="text" />                        
                      </div>
                   </div>
-                  @else
+               @else
                   <div class="grid gap-y-2 py-6">
+                     @if($items[0]['comments_count'])
+                     <div x-on:click="document.getElementById('comments').scrollIntoView({ behavior: 'smooth' });" class="cursor-pointer absolute font-bold text-xs px-2 py-1 text-white bg-red-500 border-2 border-white rounded-full -top-3 right-8 dark:border-neutral-900">
+                        <i class="fa fa-comment mr-1"></i>{{ $items[0]['comments_count'] }}</div>
+                     @endif
                      <h1 class="px-6 text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $items[0]['name'] }}</h1>
                      <p class="px-6">{{ $items[0]['desc'] }}</p>
                   </div>
-                  @endif
+               @endif
                 
-                @if($is_editing)                
+               @if($is_editing)                
                   <div class="p-6 grid grid-cols-1 gap-y-3">
                      <div>
                         <label for="item-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
@@ -384,13 +389,13 @@ new class extends Component
                         <x-inv-tag-selector />
                      </div>
                   </div>
-                @else
+               @else
                   <div class="px-6 py-4 flex flex-col md:flex-row gap-x-6 gap-y-3 text-neutral-500 text-sm">                    
                      <div>{{ $items[0]['code'] ?: __('TAK ADA KODE') }}</div>
                      <div><i class="fa fa-fw fa-map-marker-alt mr-2"></i>{{ $items[0]['loc_name'] ?: __('Tak ada lokasi') }}</div>
                      <div><i class="fa fa-fw fa-tag mr-2"></i>{{ $items[0]['tags_list'] ?: __('Tak ada tag') }}</div>
                   </div>
-                @endif
+               @endif
 
             </div>
             @if($is_editing)

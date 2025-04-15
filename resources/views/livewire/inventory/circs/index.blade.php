@@ -372,7 +372,7 @@ class extends Component {
     </div>
     <div class="h-auto sm:h-12">
         <div x-show="!ids.length" class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full h-full px-8">
-            <div class="text-center sm:text-left">{{ $inv_circs->total() . ' ' . __('sirkulasi') }}</div>
+            <div class="text-center sm:text-left">{{ ($inv_circs->total() > 9999 ? ( '9999+' ) : $inv_circs->total()) . ' ' . __('sirkulasi') }}</div>
             <div class="grow flex justify-center sm:justify-end">
                 <x-select wire:model.live="sort" class="mr-3">
                     <option value="updated">{{ __('Diperbarui') }}</option>

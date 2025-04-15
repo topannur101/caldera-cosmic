@@ -53,6 +53,7 @@ class extends Component
             $this->items[0]['updated_at'] = $item->updated_at->diffForHumans();
             $this->items[0]['last_withdrawal'] = $item->last_withdrawal;
             $this->items[0]['last_deposit'] = $item->last_deposit;
+            $this->items[0]['comments_count'] = $item->comments->count();
 
             $store = Gate::inspect('store', $item);
             $this->can_store = $store->allowed();

@@ -62,4 +62,10 @@ class InvItem extends Model
         return $this->hasMany(InvStock::class)->where('is_active', true);
     }
 
+    public function comments()
+    {
+        return $this->hasMany(ComItem::class, 'model_id')
+            ->where('model_name', 'InvItem');
+    }
+
 }
