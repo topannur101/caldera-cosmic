@@ -89,6 +89,21 @@ class FeatureAnnounce extends Command
                     ',
                 ] 
             ],
+            'inv_circ_bulk_with_item' => [
+                'icon'      => 'fa-solid fa-cube',
+                'content'   => 'Kini operasi massal sirkulasi memiliki mode dengan tambah barang secara langsung dan menyesuaikan dengan tabel CR. Pelajari lebih lanjut.',
+                'post'      =>
+                [
+                    'title'     => 'Sirkulasi massal dengan barang baru',
+                    'content'   => '
+                    <img src="/announcements/inv_circ_bulk_with_item_1.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    <img src="/announcements/inv_circ_bulk_with_item_2.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br><br>
+                    Kini kamu dapat melakukan operasi massal sirkulasi dan bila barang tidak ditemukan akan dibuat secara otomatis. Mode baru ini juga menyesuaikan dengan format tabel CR agar lebih mudah saat copy & paste. Akses pada halaman Sirkulasi > Operasi massal > Dengan barang baru. <br><br><b>Catatan:</b> Informasi barang yang dimasukkan (Nama, Deskripsi, UOM dan Harga satuan) hanya akan digunakan saat membuat barang baru jika barang dengan kode yang ditentukan tidak dapat ditemukan. Informasi tersebut tidak akan digunakan untuk memperbarui barang yang sudah ada.
+                    ',
+                ] 
+            ],
 
             
         ];
