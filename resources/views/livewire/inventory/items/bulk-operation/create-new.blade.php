@@ -513,7 +513,7 @@ class extends Component
       <div 
       x-data="editorData()"
       x-init="editorInit()">
-         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-6">
+         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa fa-fw fa-star-of-life mr-3"></i>{{ __('Buat barang baru') }}</h1>
             <div class="flex gap-x-2">
                <div class="px-2 my-auto">
@@ -557,7 +557,7 @@ class extends Component
             const columns = [
                { title: 'name', field: 'name', width: 150 }, 
                { title: 'desc', field: 'desc', width: 150 }, 
-               { title: 'code', field: 'code', width: 100 }, 
+               { title: 'code', field: 'code', width: 110 }, 
                { title: 'location', field: 'location', width: 80 },
                { title: 'tag_0', field: 'tag_0', width: 80, cssClass: "border-l-2" },
                { title: 'tag_1', field: 'tag_1', width: 80, },

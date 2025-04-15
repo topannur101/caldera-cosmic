@@ -424,7 +424,7 @@ class extends Component
       <div 
       x-data="editorData()"
       x-init="editorInit()">
-         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-6">
+         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa fa-fw fa-cube mr-3"></i>{{ __('Perbarui info dasar') }}</h1>
             <div class="flex gap-x-2">
                <div class="px-2 my-auto">
@@ -469,7 +469,7 @@ class extends Component
                { title: 'id', field: 'id', width: 50 }, 
                { title: 'name', field: 'name', width: 200 }, 
                { title: 'desc', field: 'desc', width: 200 }, 
-               { title: 'code', field: 'code', width: 100 }, 
+               { title: 'code', field: 'code', width: 110 }, 
                { title: 'tag_0', field: 'tag_0', width: 150, cssClass: "border-l-2" },
                { title: 'tag_1', field: 'tag_1', width: 150, },
                { title: 'tag_2', field: 'tag_2', width: 150, },

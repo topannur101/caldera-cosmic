@@ -447,11 +447,12 @@ class extends Component
       <div 
       x-data="editorData()"
       x-init="editorInit()">
-         <div class="mb-6 flex justify-between px-3">
-            <div>
-               <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
-            </div>
+         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa fa-fw fa-arrow-right-arrow-left mr-3"></i>{{ __('Sirkulasi saja') }}</h1>
             <div class="flex gap-x-2">
+               <div class="px-2 my-auto">
+                  <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
+               </div>
                <div class="btn-group">
                   <x-secondary-button type="button" x-on:click="editorDownload"><i class="fa fa-fw fa-download"></i></x-secondary-button>
                   <x-secondary-button type="button" x-on:click="editorReset"><i class="fa fa-fw fa-undo"></i></x-secondary-button>
@@ -489,7 +490,7 @@ class extends Component
          editorInit() {
             const columns = [
                { title: 'item_id', field: 'item_id', width: 80 }, 
-               { title: 'item_code', field: 'item_code', width: 100 }, 
+               { title: 'item_code', field: 'item_code', width: 110 }, 
                { title: 'curr', field: 'curr', width: 80},
                { title: 'qty_relative', field: 'qty_relative', width: 100 },
                { title: 'uom', field: 'uom', width: 80 },
@@ -572,7 +573,7 @@ class extends Component
          },
 
          editorReset() {
-            Livewire.navigate("{{ route('inventory.circs.bulk-operation') }}");
+            Livewire.navigate("{{ route('inventory.circs.bulk-operation.index') }}");
          },
 
          editorDownload() {

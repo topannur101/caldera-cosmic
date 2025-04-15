@@ -1,25 +1,37 @@
 <?php
 
+use App\Livewire\Forms\LoginForm;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use App\Models\InvArea;
 use App\Models\InvItem;
 use App\Models\User;
-use App\Models\InvLoc;
+use App\Models\InvCurr;
+use App\Models\InvCirc;
+use App\Models\InvStock;
 use Carbon\Carbon;
 
 
 new #[Layout('layouts.app')]
 class extends Component
 {
-   public array $items = 
+   public string $type = ''; // deposit, capture, withdrawal
+   public array $circs =
+   [
       [
-         [
-            'id' => 1,
-            'code' => 'XXX10-19001',
-            'location' => 'Z9-99-99',
-         ]
-      ];
+         'item_code'    => '', // user defined
+         'item_name'    => '',
+         'item_desc'    => '',
+         'type'         => '', // global
+         'curr'         => '', // user defined
+         'uom'          => '', // user defined
+         'inv_stock_id' => 0,  // based on item_id, curr, and uom
+         'qty_relative' => 0,  // user defined
+         'amount'       => 0,  // automatic calculation
+         'unit_price'   => 0,  // copy from inv_stock unit_price
+         'remarks'      => ''  // user defined
+      ]
+   ];
 
    public array $areas = [];
    public int $area_id = 0;
@@ -27,9 +39,9 @@ class extends Component
    public int $count = 0;
 
    public array $result = [
-      'items' => [],
-      'success' => 0,
-      'failure' => 0,
+      'circs'     => [],
+      'success'   => 0,
+      'failure'   => 0,
    ];
 
    public function mount()
@@ -47,7 +59,7 @@ class extends Component
          foreach ($areas as $area) {
             $item = new InvItem;
             $item->inv_area_id = $area->id;
-            $response = Gate::inspect('download', $item);
+            $response = Gate::inspect('circCreate', $item);
 
             if ($response->allowed()) {
                $area_ids[] = $area->id;
@@ -63,38 +75,46 @@ class extends Component
       if ($is_confirmed) {
 
          $this->validate([
-            'area_id' => ['required', 'exists:inv_areas,id']
+            'area_id'   => ['required', 'exists:inv_areas,id'],
+            'type'      => ['required', 'in:deposit,capture,withdrawal']
          ]);
 
-         foreach ($this->items as $item) {
-            $this->result['items'][] = $this->updateItem($item);
-         }         
+         foreach ($this->circs as $circ) {
+            $this->result['circs'][] = $this->createCirc($circ);
+         } 
 
-         $this->reset(['items']);
+         $this->reset(['circs']);
          $this->js('$dispatch("editor-reset")');
 
          if($this->result['failure']) {
             $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');        
                
             // CSV download
-            $filename = __('Hasil operasi massal (perbarui lokasi)') . ' ' . Carbon::now()->format('Y-m-d His') . '.csv';
+            $filename = __('Hasil operasi massal (sirkulasi)') . ' ' . Carbon::now()->format('Y-m-d His') . '.csv';
             $handle = fopen('php://temp', 'r+');
             $headers = [
-               'id', 'code', 'location',
-               __('Tindakan'), __('Status'), __('Pesan')
+               'item_code', 'item_name', 'item_desc', 'qty_relative', 'uom', 'currency', 'unit_price', 'remarks',
+               __('Area'), __('Tindakan'), __('Status'), __('Pesan')
             ];
             
             fputcsv($handle, $headers);
             
-            foreach ($this->result['items'] as $item) {
+            foreach ($this->result['circs'] as $circ) {
                $row = [
-                     ($item['id'] ?? '') == 0 ? '' : $item['id'],
-                     $item['code']        ?? '',
-                     $item['location']    ?? '',
+
+                     $circ['item_code']   ?? '',
+                     $circ['item_name']   ?? '',
+                     $circ['item_desc']   ?? '',
+                     $circ['uom']         ?? '',
+                     $circ['qty_relative'] ?? '',
+                     $circ['curr']        ?? '',
+                     $circ['up']          ?? '',
+                     $circ['remarks']     ?? '',
    
-                     $item['action']      ?? '',
-                     $item['status']      ?? '',
-                     $item['message']     ?? ''
+                     $circ['area']        ?? '',
+                     $circ['action']      ?? '',
+                     $circ['status']      ?? '',
+                     $circ['message']     ?? ''
                ];            
                fputcsv($handle, $row);
             }
@@ -113,33 +133,32 @@ class extends Component
 
       } else {
 
-         if(count($this->items) > 3000) {
+         if(count($this->circs) > 100) {
             $this->js('toast("' . __('Hanya maksimal 100 entri yang diperbolehkan') . '", { type: "danger" })');
             return;
    
          }
-   
-         $this->reset(['count', 'area_id', 'result']);
 
-         foreach ($this->items as $key => $item) {
+         $this->reset(['count', 'area_id', 'type', 'result']);
 
-            // Iterate over the children of $item
-            foreach ($item as $childKey => $childValue) {
-               // Trim all child items
-               $this->items[$key][$childKey] = trim($childValue);
-      
-               // Convert specific keys to uppercase
-               if (in_array($childKey, ['code', 'location'])) {
-                  $this->items[$key][$childKey] = strtoupper($this->items[$key][$childKey]);
-               }
+         foreach ($this->circs as $key => $circ) {
 
-               // Cast value with key 'id' to integer
-               if ($childKey === 'id') {
-                  $this->items[$key][$childKey] = (int)$this->items[$key][$childKey];
-               }
-            }
+            // Iterate over the children of $circ
+            foreach ($circ as $childKey => $childValue) {
+                // Trim all child items
+                $this->circs[$key][$childKey] = trim($childValue);
         
-            // Increment update or create count after cleaning
+                // Convert specific keys to uppercase
+                if (in_array($childKey, ['item_code', 'curr', 'uom'])) {
+                    $this->circs[$key][$childKey] = strtoupper($this->circs[$key][$childKey]);
+                }
+        
+                // Cast values with key 'qty_relative' to integer
+                if (in_array($childKey, ['qty_relative', 'up'])) {
+                    $this->circs[$key][$childKey] = (float)$this->circs[$key][$childKey];
+                }
+            }
+
             $this->count++;
         }
    
@@ -148,50 +167,51 @@ class extends Component
 
    }
 
-   private function updateItem(array $item)
-   {      
+   private function createCirc(array $circ)
+   {
+      $inv_circ = new InvCirc();
+      $inv_circ->type = $this->type;
+
+      $area = InvArea::find($this->area_id);
+
       try {
 
          $inv_item = null;
 
-         if ($item['id'] ?? false) {
-            $inv_item = InvItem::find($item['id']);
-
-         } elseif ($item['code']) {
-            $inv_item = InvItem::where('code', $item['code'])
+         if ($circ['item_code']) {
+            $inv_item = InvItem::where('code', $circ['item_code'])
                ->where('inv_area_id', $this->area_id)
                ->first();
 
             if(!$inv_item) {
-               throw new Exception(__('Barang dengan kode item ini tidak ditemukan di area yang dipilih'));
+               $inv_item = new InvItem([
+                  'inv_area_id'  => $this->area_id,
+                  'name'         => $circ['item_name'],
+                  'desc'         => $circ['item_desc'],
+                  'code'         => $circ['item_code'],
+                  'is_active'    => false
+               ]);
 
             }
          }
 
-         if($inv_item) {
-            if($inv_item->inv_area_id !== $this->area_id) {
-               throw new Exception(__('Barang dengan ID ini bukan untuk area yang dipilih'));
-            }
-
-         } else {
-            throw new Exception(__('Barang tidak ditemukan'));
+         if(!$inv_item) {
+            throw new Exception(__('Barang gagal dibuat'));
 
          }
 
-         $response = Gate::inspect('store', $inv_item);
+         $response = Gate::inspect('circCreate', $inv_item);
          if($response->denied()) {
             throw new Exception ($response->message());
          }
 
-         $parts = explode('-', $item['location'], 2);
-         $item['loc_parent'] = $parts[0];
-         $item['loc_bin'] = isset($parts[1]) ? $parts[1] : '';
-
          $validator = Validator::make(
-            $item,
+            $circ,
             [
-               'loc_parent'   => ['required_with:loc_bin', 'alpha_num','max:3'],
-               'loc_bin'      => ['required_with:loc_parent', 'alpha_dash','max:7'],
+               'curr'         => ['exists:inv_currs,name'],
+               'uom'          => ['required', 'alpha_dash', 'max:5'],
+               'qty_relative' => ['required', 'min:0', 'max:100000'],
+               'remarks'      => ['required', 'string', 'max:256'],
             ]
          );
 
@@ -201,58 +221,95 @@ class extends Component
             throw new Exception($errorMessage);
          }
 
-         $loc_id = null;
-         if ($item['loc_parent'] && $item['loc_bin']) {
-            $loc_id = InvLoc::firstOrCreate([
-               'parent' => $item['loc_parent'],
-               'bin'    => $item['loc_bin'],
-            ])->id;
+         if (!$inv_item->id) {
+            $validator = Validator::make(
+               $circ,
+               [
+                  'item_name'  => ['required', 'max:128'],
+                  'item_desc'  => ['required', 'max:256'],
+               ]
+            );
+   
+            if ($validator->fails()) {
+               $errors = $validator->errors()->all();
+               $errorMessage = implode(', ', $errors);
+               throw new Exception($errorMessage);
+            }
+
+            $inv_item->save();
          }
 
-         $inv_item->inv_loc_id = $loc_id;
-         $inv_item->save();
-         
-         $status  = __('Berhasil');
-         $message = __('Lokasi barang diperbarui');
+         $curr = InvCurr::where('name', $circ['curr'])->first();
 
+         if (!$curr) {
+            throw new Exception(__('Mata uang tidak dikenal'));
+            
+         }
+
+         $stock = InvStock::where('inv_item_id', $inv_item->id)
+            ->where('uom', $circ['uom'])
+            ->where('inv_curr_id', $curr->id)
+            ->first();
+
+         if (!$stock) {
+            $stock = InvStock::create([
+               'uom'          => $circ['uom'],
+               'unit_price'   => $circ['up'],
+               'inv_curr_id'  => $curr->id,
+               'inv_item_id'  => $inv_item->id,
+            ]);
+         }
+
+         $amount = 0;
+         $amount = $stock->unit_price * $circ['qty_relative'];
+         $unit_price = $stock->unit_price;
+   
+         // amount should always be main currency (USD)
+         if($amount > 0 && $curr->id !== 1) {
+            $amount /= $curr->rate;
+            $unit_price /= $curr->rate;
+         }
+
+         $inv_circ->amount       = $amount;
+         $inv_circ->unit_price   = $unit_price; 
+   
+         $inv_circ->type         = $this->type;
+         $inv_circ->inv_stock_id = $stock->id;
+         $inv_circ->qty_relative = $circ['qty_relative'];
+         $inv_circ->remarks      = $circ['remarks'];
+   
+         $inv_circ->user_id      = Auth::user()->id;
+         $inv_circ->is_delegated = false;
+
+         $inv_circ->save();   
+
+         $status  = __('Berhasil');
+         $message = __('Sirkulasi dibuat');
          $this->result['success']++;
+      
 
       } catch (\Throwable $th) {
          $status  = __('Gagal');
          $message = $th->getMessage();
-
-        $this->result['failure']++;
+         $this->result['failure']++;
       }
 
-      $action = __('Perbarui lokasi');
-      $item['action']   = $action;
-      $item['status']   = $status;
-      $item['message']  = $message;
+      $circ['area']     = $area?->name;
+      $circ['action']   = $inv_circ->type_friendly();
+      $circ['status']   = $status;
+      $circ['message']  = $message;
 
-      return $item;
-   }
-
-   public function downloadItems($area_id)
-   {
-       // Create a unique token for this download request
-       $token = md5(uniqid());
-
-       // Store the token in the session
-       session()->put('inv_items_token', $token);
-       
-       $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
-       // Redirect to a temporary route that will handle the streaming
-       return redirect()->route('download.inv-items', ['token' => $token, 'area_id' => $area_id]);
+      return $circ;
    }
 
 };
 
 ?>
 
-<x-slot name="title">{{ __('Perbarui lokasi') . ' — ' . __('Inventaris') }}</x-slot>
+<x-slot name="title">{{ __('Operasi massal sirkulasi') . ' — ' . __('Inventaris') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-inventory-sub>{{ __('Operasi massal barang') }}</x-nav-inventory-sub>
+    <x-nav-inventory-sub>{{ __('Operasi massal sirkulasi') }}</x-nav-inventory-sub>
 </x-slot>
 
 <div class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-700 dark:text-neutral-200">
@@ -285,20 +342,20 @@ class extends Component
                      <i class="fa fa-times"></i>
                   </x-text-button>
                </div>
-               @if(count($result['items']))
+               @if(count($result['circs']))
                   @if($result['success'] || $result['failure'])
                   <div class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                      <div class="flex items-center space-x-2 mb-2">
-                        <h2 class="font-bold text-xl">{{ __('Hasil pembaruan') }}</h2>
+                        <h2 class="font-bold text-xl">{{ __('Hasil') }}</h2>
                      </div>
                      @if($result['success'])
                      <div>
-                        <x-pill color="green">{{ $result['success'] }}</x-pill>{{ ' ' . __('lokasi barang diperbarui.') }}                     
+                        <x-pill color="green">{{ $result['success'] }}</x-pill>{{ ' ' . __('sirkulasi dibuat.') }}                     
                      </div>
                      @endif
                      @if($result['failure'])
                      <div>
-                        <x-pill color="red">{{ $result['failure'] }}</x-pill>{{ ' ' . __('lokasi barang gagal diperbarui.') }}                     
+                        <x-pill color="red">{{ $result['failure'] }}</x-pill>{{ ' ' . __('sirkulasi gagal dibuat.') }}                     
                      </div>
                      @endif
                   </div>
@@ -311,13 +368,30 @@ class extends Component
                   <div class="flex items-center justify-end">
                      <x-primary-button type="button" x-on:click="$dispatch('close')">{{ __('Selesai') }}</x-secondary-button>
                   </div>
-
                @else
                   <div>
-                     <x-pill>{{ $count }}</x-pill>{{ ' ' . __('lokasi barang akan diperbarui.') }}
+                     <x-pill>{{ $count }}</x-pill>{{ ' ' . __('sirkulasi akan dibuat.') }}
                   </div>
                   <div>
-                     {{ __('Di area mana lokasi barang tersebut akan diperbarui?') }}
+                     <div class="mb-3">{{ __('Tindakan sirkulasi apa yang akan kamu lakukan?') }}</div>
+                     <div class="btn-group w-full">
+                        <x-radio-button wire:model="type" grow value="deposit" name="type" id="type-deposit">
+                              <div class="text-center my-auto">
+                                 <i class="fa fa-fw fa-plus text-green-500 text-lg"></i>
+                              </div>
+                        </x-radio-button>
+                        <x-radio-button wire:model="type" grow value="capture" name="type" id="type-capture">
+                              <div class="text-center my-auto">
+                                 <i class="fa fa-fw fa-code-commit text-yellow-600 text-lg"></i>
+                              </div>
+                        </x-radio-button>
+                        <x-radio-button wire:model="type" grow value="withdrawal" name="type" id="type-withdrawal">
+                              <div class="text-center my-auto">
+                                 <i class="fa fa-fw fa-minus text-red-500 text-lg"></i>
+                              </div>
+                        </x-radio-button>
+                     </div>
+                     <x-input-error :messages="$errors->get('type')" class="mt-2" />
                   </div>
                   <div>
                      <label for="area_id"
@@ -340,7 +414,7 @@ class extends Component
             <x-spinner wire:loading.class.remove="hidden" wire:target="apply" class="hidden"></x-spinner>
          </x-modal>
          <x-modal name="guide" maxWidth="lg">
-            <div x-data="{ backup: false }" class="p-6 space-y-4 text-sm">
+            <div class="p-6 space-y-4 text-sm">
                <div class="flex justify-between items-start">
                   <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                      {{ __('Panduan') }}
@@ -350,39 +424,38 @@ class extends Component
                   </x-text-button>
                </div>
 
-               <div x-show="!backup" class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+               <div class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
                      <i class="fa fa-clipboard text-neutral-500"></i>
                      <h2 class="font-bold text-xl">{{ __('Salin dan tempel') }}</h2>
                   </div>
                   <p class="leading-relaxed">
-                     {{ __('Tempel daftar barang yang hendak kamu perbarui lokasinya di kotak editor. Maksimal 100 entri dalam sekali operasi.') }}
+                     {{ __('Tempel daftar sirkulasi yang hendak kamu lakukan di kotak editor. Maksimal 100 entri dalam sekali operasi.') }}
                   </p>
                </div>
 
-               <div x-show="backup" class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+               <div class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
-                     <i class="fas fa-download text-neutral-500"></i>
-                     <h2 class="font-bold text-xl">{{ __('Unduh backup') }}</h2>
+                     <i class="fas fa-info-circle text-neutral-500"></i>
+                     <h2 class="font-bold text-xl">{{ __('Gunakan kode item') }}</h2>
                   </div>
                   <p class="leading-relaxed">
-                     {{ __('Kamu bisa mengunduh daftar lengkap barang dari suatu area sebagai tindakan pencegahan bila terjadi kesalahan.') }}
+                     {{ __('Sirkulasi akan dibuat pada barang dengan kode item yang kamu tentukan. Caldera akan mencari barang dengan kode item di area yang dipilih.') }}
                   </p>
                </div>
-               
-               <!-- Section 4: Unduh backup -->
-               <div x-show="backup" class="grid grid-cols-1 gap-y-2 p-6">
-                  @foreach ($areas as $area)
-                     <div>
-                        <x-text-button type="button" wire:click="downloadItems({{ $area['id'] }})"><i class="fa fa-download mr-3"></i>{{ $area['name'] }}</x-text-button>
-                     </div>
-                  @endforeach
+
+               <div class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+                  <div class="flex items-center space-x-2 mb-2">
+                     <i class="fas fa-arrow-right-arrow-left text-neutral-500"></i>
+                     <h2 class="font-bold text-xl">{{ __('Pilih tipe sirkulasi dan area') }}</h2>
+                  </div>
+                  <p class="leading-relaxed">
+                     {{ __('Sirkulasi massal hanya bisa dilakukan pada satu tindakan (Tambah, Ambil, atau Catat) dan pada satu area saja dalam sekali operasi.') }}
+                  </p>
                </div>
 
-               <div class="flex items-center justify-between">
-                  <x-secondary-button x-show="backup" x-on:click="backup = false" type="button"><i class="fa fa-chevron-left mr-2"></i>{{ __('Kembali') }}</x-secondary-button>
-                  <x-text-button x-show="!backup" x-on:click="backup = true" type="button" class="uppercase tracking-wide font-bold text-xs">{{ __('Unduh backup') }}</x-text-button>
-                  <x-primary-button x-show="!backup" type="button" x-on:click="$dispatch('close')">{{ __('Paham') }}</x-primary-button>
+               <div class="flex items-center justify-end">
+                  <x-primary-button type="button" x-on:click="$dispatch('close')">{{ __('Paham') }}</x-primary-button>
                </div>
             </div>
             <x-spinner-bg wire:loading.class.remove="hidden" wire:target="download"></x-spinner-bg>
@@ -393,16 +466,16 @@ class extends Component
       x-data="editorData()"
       x-init="editorInit()">
          <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa fa-fw fa-map-marker-alt mr-3"></i>{{ __('Perbarui lokasi') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa fa-fw fa-cube mr-3"></i>{{ __('Dengan barang baru') }}</h1>
             <div class="flex gap-x-2">
                <div class="px-2 my-auto">
                   <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
                </div>
                <div class="btn-group">
                   <x-secondary-button type="button" x-on:click="editorDownload"><i class="fa fa-fw fa-download"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="fa fa-fw fa-undo"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')"><i class="far fa-fw fa-question-circle"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorReset"><i class="fa fa-fw fa-undo"></i></x-secondary-button>
                </div>
+               <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')">{{ __('Panduan') }}</x-secondary-button>
                <x-secondary-button type="button" x-on:click="editorApply">
                   <div class="relative">
                      <span wire:loading.class="opacity-0" wire:target="apply"><i class="fa fa-check mr-2"></i>{{ __('Terapkan') }}</span>
@@ -415,11 +488,11 @@ class extends Component
       </div>
 
    @else
+
       <div class="text-center w-72 py-20 mx-auto">
          <i class="fa fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
-         <div class="text-neutral-500">{{ __('Kamu tidak memiliki wewenang untuk mengelola barang di area manapun.') }}</div>
+         <div class="text-neutral-500">{{ __('Kamu tidak memiliki wewenang untuk membuat sirkulasi di area manapun.') }}</div>
       </div>
-
    @endif
 
 </div>
@@ -428,23 +501,28 @@ class extends Component
 <script type="module">   
    Alpine.data('editorData', () => ({
          table: null,
-         items: @entangle('items'),
-         itemsDefault: null,
+         circs: @entangle('circs'),
+         circsDefault: null,
          rowCount: 0,            
          
          editorInit() {
             const columns = [
-               { title: 'id', field: 'id', width: 50 }, 
-               { title: 'code', field: 'code', width: 110 }, 
-               { title: 'location', field: 'location', width: 80 },
+               { title: 'item_code', field: 'item_code', width: 110 },
+               { title: 'item_name', field: 'item_name', width: 200 }, 
+               { title: 'item_desc', field: 'item_desc', width: 200 }, 
+               { title: 'uom', field: 'uom', width: 80 },
+               { title: 'qty_relative', field: 'qty_relative', width: 100 },
+               { title: 'currency', field: 'curr', width: 80},
+               { title: 'unit_price', field: 'up', width: 80},
+               { title: 'remarks', field: 'remarks', width: 300 }, 
             ];
             
-            this.itemsDefault = this.itemsDefault ? this.itemsDefault : this.items,
+            this.circsDefault = this.circsDefault ? this.circsDefault : this.circs,
 
             // Initialize Tabulator
             this.table = new Tabulator("#editor-table", {
                
-               data: this.itemsDefault,
+               data: this.circsDefault,
                layout: "fitColumns",
                columns: columns,
                height: "calc(100vh - 19rem)",
@@ -510,16 +588,16 @@ class extends Component
          },
          
          editorApply() {
-            this.items = this.table.getData();
+            this.circs = this.table.getData();
             $wire.apply();
          },
 
          editorReset() {
-            Livewire.navigate("{{ route('inventory.items.bulk-operation.update-location') }}");
+            Livewire.navigate("{{ route('inventory.circs.bulk-operation.index') }}");
          },
 
          editorDownload() {
-            this.table.download("csv", "operasi-massal-perbarui-lokasi.csv"); 
+            this.table.download("csv", "bulk_operation_circulations.csv"); 
          },
    }));
 </script>

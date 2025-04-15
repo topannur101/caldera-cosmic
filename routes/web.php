@@ -183,11 +183,13 @@ Route::middleware('auth')->group(function () {
 
         Route::name('inventory.circs.')->group(function () {
 
-            Volt::route('/circs/bulk-operation',    'inventory.circs.bulk-operation')   ->name('bulk-operation');
-            Volt::route('/circs/summary/',          'inventory.circs.summary')          ->name('summary');
-            Volt::route('/circs/create',            'inventory.circs.create')           ->name('create');
-            Volt::route('/circs/print',             'inventory.circs.print')            ->name('print');
-            Volt::route('/circs',                   'inventory.circs.index')            ->name('index');
+            Volt::route('/circs/bulk-operation',                    'inventory.circs.bulk-operation.index')             ->name('bulk-operation.index');
+            Volt::route('/circs/bulk-operation/circ-only',          'inventory.circs.bulk-operation.circ-only')         ->name('bulk-operation.circ-only');
+            Volt::route('/circs/bulk-operation/with-item',          'inventory.circs.bulk-operation.with-item')         ->name('bulk-operation.with-item');
+            Volt::route('/circs/summary/',                          'inventory.circs.summary')                          ->name('summary');
+            Volt::route('/circs/create',                            'inventory.circs.create')                           ->name('create');
+            Volt::route('/circs/print',                             'inventory.circs.print')                            ->name('print');
+            Volt::route('/circs',                                   'inventory.circs.index')                            ->name('index');
 
         });
 

@@ -473,7 +473,7 @@ class extends Component
       <div 
       x-data="editorData()"
       x-init="editorInit()">
-         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-6">
+         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa fa-fw fa-money-check-dollar mr-3"></i>{{ __('Perbarui unit stok') }}</h1>
             <div class="flex gap-x-2">
                <div class="px-2 my-auto">
@@ -516,7 +516,7 @@ class extends Component
          editorInit() {
             const columns = [
                { title: 'id', field: 'id', width: 50 }, 
-               { title: 'code', field: 'code', width: 100 }, 
+               { title: 'code', field: 'code', width: 110 }, 
 
                { title: 'curr_0', field: 'curr_0', cssClass: "border-l-2", width: 80},
                { title: 'up_0', field: 'up_0', width: 150 },

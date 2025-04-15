@@ -630,7 +630,7 @@ class extends Component
                { title: 'id', field: 'id', width: 50 }, 
                { title: 'name', field: 'name', width: 100 }, 
                { title: 'desc', field: 'desc', width: 100 }, 
-               { title: 'code', field: 'code', width: 100 }, 
+               { title: 'code', field: 'code', width: 110 }, 
                { title: 'location', field: 'location', width: 80 },
                { title: 'tag_0', field: 'tag_0', width: 80, cssClass: "border-l-2" },
                { title: 'tag_1', field: 'tag_1', width: 80, },

@@ -350,7 +350,7 @@ class extends Component {
                             <x-dropdown-link href="{{ route('inventory.circs.summary') }}" wire:navigate>
                                 <i class="fa fa-fw fa-line-chart me-2"></i>{{ __('Ringkasan sirkulasi')}}
                             </x-dropdown-link>
-                            <x-dropdown-link href="{{ route('inventory.circs.bulk-operation') }}" wire:navigate>
+                            <x-dropdown-link href="{{ route('inventory.circs.bulk-operation.index') }}" wire:navigate>
                                 <i class="fa fa-fw me-2"></i>{{ __('Operasi massal sirkulasi')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
