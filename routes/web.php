@@ -208,7 +208,6 @@ Route::middleware('auth')->group(function () {
         // });
 
         Volt::route('/',    'caldy.index')  ->name('caldy');
-        Volt::route('/2',   'caldy.index2') ->name('caldy2');
     });
 
     // Administration routes

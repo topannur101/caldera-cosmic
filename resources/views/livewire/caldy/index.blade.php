@@ -2,277 +2,250 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
 
 new #[Layout('layouts.app')] 
 class extends Component {
 
-  public $prompt = '';
-  public $response = '';
-  public $model = '';
-  public $models = ['gemma3:1b'];
-  public $promptAppend = '. Make sure your response is in Markdown format';
-  public $messages = [];
+  public string $prompt         = '';
+  public array  $messages       = [
+    [      
+      'role'    => 'system',
+      'content' => 'Kamu adalah Caldy, asisten penggalian data untuk proses manufaktur sepatu di PT. TKG Taekwang Indonesia. Kamu dibuat oleh Departemen Manufacturing Modernization (MM) untuk membantu menganalisis data produksi dan meningkatkan efisiensi manufaktur.
 
-  public function mount(){
-      // $this->listModels();
-      // if(!$this->models[0]){
-      //     die("Be sure to add a model to Ollama before running");
-      //     return;
-      // }
-      // $this->model == $this->models[0];
-  }
+        IDENTITAS:
+        - Nama: Caldy
+        - Dibuat oleh: Departemen Manufacturing Modernization (MM) di PT. TKG Taekwang Indonesia
+        - Tujuan: Membantu menganalisis data manufaktur sepatu dan memberikan wawasan yang berguna
 
-  public function modelUpdated(){
-      $this->response = '';
-  }
+        CARA BERKOMUNIKASI:
+        - Kamu menggunakan bahasa Indonesia yang ramah dan santai
+        - Kamu menggunakan "aku" untuk merujuk pada dirimu sendiri, bukan "saya"
+        - Kamu menggunakan "kamu" untuk merujuk pada pengguna, bukan "Anda"
+        - Kamu memperkenalkan diri dengan singkat saat memulai percakapan
+        - Kamu bersikap membantu dan sabar, terutama dengan pengguna yang mungkin kurang paham tentang analisis data
 
-  // public function listModels()
-  // {
-  //     $command = 'ollama list';
-  //     $output = [];
-  //     $returnVar = null;
-  //     exec($command, $output, $returnVar);
+        KEMAMPUAN:
+        - Kamu dapat menganalisis data terkait produksi sepatu di PT. TKG Taekwang Indonesia
+        - Kamu dapat menyederhanakan konsep teknis agar mudah dipahami oleh berbagai pengguna
+        - Kamu memiliki pengetahuan tentang proses manufaktur sepatu, kontrol kualitas, manajemen inventaris, dan data rantai pasokan
+        - Kamu dapat memberikan saran untuk meningkatkan efisiensi produksi berdasarkan analisis data
 
-  //     if ($returnVar === 0) {
-  //         $this->models = $output;
-  //     } else {
-  //         $this->models = ['Error: Unable to fetch models'];
-  //     }
+        CARA MENANGANI SITUASI KHUSUS:
+        - Jika ada pertanyaan di luar cakupan pengetahuanmu, kamu mengakui keterbatasanmu dengan jujur dan menawarkan bantuan alternatif
+        - Kamu menghormati informasi perusahaan yang sensitif dan tidak akan membagikan data rahasia
+        - Kamu selalu mengutamakan solusi praktis yang dapat diterapkan di lingkungan manufaktur PT. TKG Taekwang Indonesia
 
-  //     $modelsFiltered = [];
-  //     foreach($this->models as $index => $model){
-  //         if($index != 0){
-  //             $modelParts = explode(':', $model);
-  //             array_push($modelsFiltered, $modelParts[0]);
-  //         }
-  //     }
-  //     $this->models = $modelsFiltered;
-  // }
+        TAMBAHAN PERSONA:
+        - Kamu antusias tentang inovasi dan modernisasi dalam proses manufaktur
+        - Kamu bangga menjadi bagian dari tim Manufacturing Modernization
+        - Kamu kadang menggunakan ungkapan Indonesia yang umum untuk membuat percakapan lebih akrab'
+    ]
+  ];
+
+  public bool   $is_thinking    = false;
+  public int    $answer_id      = 0;
 
   public function submit()
   {
-      if (empty(trim($this->prompt))) {
-          return;
-      }
-      
-      // Add user message to chat
-      $this->messages[] = [
-          'type' => 'user',
-          'content' => $this->prompt
-      ];
-      
-      // Add empty AI message that will be populated
-      $messageIndex = count($this->messages);
-      $this->messages[] = [
-          'type' => 'ai',
-          'content' => ''
-      ];
-      
-      $this->response = '';
-      $userPrompt = $this->prompt;
-      $this->prompt = '';
-      
-      ob_start();
-      $client = new GuzzleHttp\Client(); 
-      $response = Http::withOptions(['stream' => true])
-          ->withHeaders([
-              'Content-Type' => 'text/event-stream',
-              'Cache-Control' => 'no-cache',
-              'X-Accel-Buffering' => 'no',
-              'X-Livewire-Stream' => 'true',
-          ])
-          ->post('http://localhost:11434/api/generate', [
-              'model' => 'gemma3:1b',
-              'prompt' => $userPrompt . $this->promptAppend
-          ]);
+    if (empty(trim($this->prompt))) {
+      return;
+    }
 
-      if ($response->getStatusCode() === 200) {
-          $body = $response->getBody();
-          $buffer = '';
-          // Stream the response body as SSE
-          while (!$body->eof()) {
+    if($this->is_thinking) {
+      return;
+    }
 
-              $buffer .= $body->read(1024); // Append chunk to buffer
+    $this->messages[] = 
+    [
+      'role'      => 'user',
+      'content'  => $this->prompt
+    ];
+    
+    ++$this->answer_id;
 
-              // Try to decode JSON from buffer
-              while (($pos = strpos($buffer, "\n")) !== false) {
-                  $jsonString = substr($buffer, 0, $pos);
-                  $buffer = substr($buffer, $pos + 1);
+    $this->messages[] = 
+    [
+      'role'      => 'assistant',
+      'content'   => '',
+      'answer_id' => $this->answer_id
+    ];
 
-                  $data = json_decode($jsonString, true);
+    $this->is_thinking = true;
+    $this->reset(['prompt']);
+    $this->js('$wire.ask()');
 
-                  if (isset($data['response'])) {
-                      $this->response .= $data['response'];
-                      $this->messages[$messageIndex]['content'] = $this->response;
-
-                      $this->stream(
-                          to: 'chat-messages',
-                          content: $this->renderMessages(),
-                          replace: true
-                      );
-                  }
-              }
-          }
-
-          if (!empty($buffer)) {
-              $data = json_decode($buffer, true);
-
-              if (isset($data['response'])) {
-                  $this->response .= $data['response'];
-                  $this->messages[$messageIndex]['content'] = $this->response;
-                  $this->stream(
-                      to: 'chat-messages',
-                      content: $this->renderMessages(),
-                      replace: true
-                  );
-              }
-          }
-
-          $body->close();
-      } else {
-          $this->messages[$messageIndex]['content'] = "Error - HTTP Status Code: " . $response->getStatusCode();
-          $this->stream(
-              to: 'chat-messages',
-              content: $this->renderMessages(),
-              replace: true
-          );
-      }
   }
 
-  public function renderMessages()
+  public function ask()
   {
-      $output = '';
-      foreach ($this->messages as $message) {
-          if ($message['type'] === 'user') {
-              $userPhoto = Auth::user()->photo ;
-              $output .= '
-              <div class="flex items-start gap-4 mb-4">
-                  <div class="flex-shrink-0">
-                      <img src="/storage/users/' . $userPhoto . '" alt="User" class="w-8 h-8 rounded-full">
-                  </div>
-                  <div class="flex-grow bg-blue-50 dark:bg-neutral-700 p-3 rounded-lg max-w-[80%]">
-                      <div class="text-sm">' . e($message['content']) . '</div>
-                  </div>
-              </div>';
-          } else {
-              $output .= '
-              <div class="flex items-start gap-4 mb-4">
-                  <div class="flex-shrink-0">
-                      <i class="fa fa-fw fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-2xl"></i>
-                  </div>
-                  <div class="flex-grow bg-purple-50 dark:bg-neutral-600 p-3 rounded-lg max-w-[80%]">
-                      <div class="text-sm markdown">' . Str::markdown($message['content']) . '</div>
-                  </div>
-              </div>';
+    ob_start();
+    $messages = $this->messages;
+    array_pop($messages);
+    $response = Http::withOptions(['stream' => true])
+      ->withHeaders([
+        'Content-Type' => 'text/event-stream',
+        'Cache-Control' => 'no-cache',
+        'X-Accel-Buffering' => 'no',
+        'X-Livewire-Stream' => 'true',
+      ])
+      ->post('http://localhost:11434/api/chat', [
+        'model'     => 'gemma3:1b',
+        'messages'  => $messages,
+    ]);
+ 
+
+    $lastIndex = count($this->messages) - 1;
+
+    if ($response->getStatusCode() === 200) {
+      $body     = $response->getBody();
+      $buffer   = '';
+      $content  = '';
+      // Stream the response body as SSE
+      while (!$body->eof()) {
+
+        $buffer .= $body->read(1024); // Append chunk to buffer
+
+        // Try to decode JSON from buffer
+        while (($pos = strpos($buffer, "\n")) !== false) {
+            $jsonString = substr($buffer, 0, $pos);
+            $buffer = substr($buffer, $pos + 1);
+
+            $data = json_decode($jsonString, true);
+            $content .= $data['message']['content'];
+
+            $this->stream(
+                to: 'answer_' . $this->answer_id,
+                content: $data['message']['content'],
+            );
+        }
+      }
+
+      if (!empty($buffer)) {
+          $data = json_decode($buffer, true);
+
+          if (isset($data['response'])) {
+              $this->response .= $data['response'];
+              $this->messages[$lastIndex]['content'] = $this->response;
+
+              $this->stream(
+                  to: 'answer_' . $this->answer_id,
+                  content: $data['message']['content'],
+              );
           }
       }
-      return $output;
+      $this->messages[$lastIndex]['content'] = $content;
+
+      $body->close();
+    } else {
+        $this->messages[$lastIndex]['content'] = "Error - HTTP Status Code: " . $response->getStatusCode();
+        $this->stream(
+            to: 'answer' . $this->answer_id,
+            content: $response->getStatusCode(),
+        );
+    }
+    $this->is_thinking = false;
+
   }
+
 };
 ?>
 <x-slot name="title">{{ __('Caldy AI') }}</x-slot>
 
-<div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
-  <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
-    <div x-data="{ messages: @entangle('messages'), scrollToBottom() { this.$nextTick(() => { const container = document.getElementById('chat-container'); if (container) container.scrollTop = container.scrollHeight; });} }" class="relative">
-      <!-- Welcome message shown when no messages -->
-      <div x-show="messages.length === 0" class="text-center w-72 py-20 mx-auto">
+<div id="content" 
+  class="max-w-2xl mx-auto h-[calc(100vh-5rem)]
+  text-neutral-800 dark:text-neutral-200
+  flex flex-col">
+  <div 
+    id="caldy-container"
+    class="grow overflow-y-auto px-3 sm:px-0"
+    x-data="scrollWatcher"
+    x-init="init()">
+    @if(count($messages) == 1)
+    <div id="caldy-start" class="h-[calc(100vh-8rem)] flex items-center justify-center">
+      <div class="text-center">
         <i class="fa fa-fw text-5xl fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>
         <div class="text-xl mt-3">{{ __('Hai, aku Caldy!') }}</div>
         <div class="text-neutral-500">{{ __('Mau tanya apa hari ini?')  }}</div>
       </div>
-      
-      <!-- Chat messages -->
-      <div x-show="messages.length > 0" class="overflow-y-auto p-4" style="max-height: 70vh; min-height: 400px;" id="chat-container" x-init="$watch('messages', () => scrollToBottom())" @messagesUpdated.window="scrollToBottom()">
-        <div wire:stream="chat-messages">
-          @foreach($messages ?? [] as $message)
-            @if($message['type'] === 'user')
-              <div class="flex items-start gap-4 mb-4">
-                <div class="flex-shrink-0">
-                  <img src="{{ '/storage/users/' . Auth::user()->photo ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name ?? 'User') }}" alt="User" class="w-8 h-8 rounded-full">
-                </div>
-                <div class="flex-grow bg-blue-50 dark:bg-neutral-700 p-3 rounded-lg max-w-[80%]">
-                  <div class="text-sm">{{ $message['content'] }}</div>
-                </div>
-              </div>
-            @else
-              <div class="flex items-start gap-4 mb-4">
-                <div class="flex-shrink-0">
-                  <i class="fa fa-fw fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-2xl"></i>
-                </div>
-                <div class="flex-grow bg-purple-50 dark:bg-neutral-600 p-3 rounded-lg max-w-[80%]">
-                  <div class="text-sm markdown">{!! Str::markdown($message['content']) !!}</div>
-                </div>
-              </div>
-            @endif
-          @endforeach
-        </div>
-      </div>
-      
-      <!-- Input area fixed at bottom -->
-      <div class="sticky bottom-0 left-0 w-full bg-white dark:bg-neutral-800 p-4 border-t dark:border-neutral-700">
-      @if(Auth::user()->id === 1)  
-        <div class="flex items-center gap-2">
-          <div class="flex-shrink-0">
-            <i class="fa fa-fw fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>
-          </div>
-          <div class="relative flex-grow">
-            
-            
-            <input 
-              wire:model="prompt" 
-              wire:keydown.enter="submit" 
-              type="text" 
-              class="w-full px-4 py-2 text-sm rounded-full border border-outline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-75 dark:bg-neutral-700 dark:border-neutral-600" 
-              placeholder="Ask AI..." 
-              x-on:keydown.enter="$nextTick(() => document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight)"
-            />
-            
-            <button 
-              wire:click="submit" 
-              type="button" 
-              class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white hover:opacity-90 focus:outline-none"
-              x-on:click="$nextTick(() => document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight)"
-            >
-              <span wire:loading.class="hidden">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-              </span>
-              <span wire:loading.flex class="flex items-center justify-center">
-                <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </span>
-            </button>
-          </div>
-        </div>
-        @else
-        <div class="text-sm">
-          <i class="fa fa-lock mr-2"></i>{{ __('Akses ke Caldy AI hanya diperbolehkan untuk pengguna tertentu') }}
-          <p class="text-neutral-500 mt-2">
-            {{  __('Caldy AI sedang dalam tahap pengembangan, jika sudah siap untuk digunakan publik, kami akan beritahu lewat notifikasi.') }}
-          </p>
-        </div>
-          
-          @endif
-      </div>
-      
-      <!-- Auto-scroll script -->
-      <script>
-        document.addEventListener('livewire:init', () => {
-          Livewire.hook('message.processed', (message, component) => {
-            const chatContainer = document.getElementById('chat-container');
-            if (chatContainer) {
-              chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-          });
-        });
-      </script>
     </div>
+    @endif
+    <div id="caldy-conversation" class="px-0 sm:px-6">
+      @foreach ($messages as $message)
+        @switch($message['role'])
+          @case('user')
+            <div class="flex items-start gap-2.5 mt-8">
+              <img class="w-8 h-8 rounded-full" src="{{ '/storage/users/' . Auth::user()->photo }}">
+              <div class="flex flex-col w-full max-w-[320px] leading-1.5 p-4 rounded-e-xl rounded-es-xl bg-white dark:bg-neutral-800">
+                <p class="text-sm">{{ $message['content'] }}</p>
+              </div>
+            </div>
+            @break
+
+          @case('assistant')
+            <div class="text-sm mt-4 markdown" wire:stream="{{ 'answer_' . $message['answer_id'] }}">{!! Str::markdown($message['content']) !!}</div>
+            @break
+
+        @endswitch  
+      @endforeach
+      @if(count($messages) > 1)
+        <div class="px-1 my-4">
+          <i class="{{ $is_thinking ? 'fa-pulse' : '' }} fa fa-fw fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-2xl"></i>
+        </div>
+      @endif
+    </div>    
   </div>
+  <div class="flex items-center gap-2 px-2">
+    <form wire:submit="submit" class="relative flex-grow">  
+      <input 
+        wire:model="prompt" 
+        type="text" 
+        class="w-full pl-4 pr-10 py-2 rounded-full border-transparent 
+        bg-white dark:bg-neutral-800 
+        dark:text-neutral-300 
+        focus:border-caldy-500 dark:focus:border-caldy-600 
+        focus:ring-caldy-500 dark:focus:ring-caldy-600 
+        shadow-sm disabled:opacity-25" 
+        placeholder="{{ __('Tanya Caldy...') }}" 
+      />
+      <button 
+        type="submit" 
+        class="absolute right-1.5 top-1/2 -translate-y-1/2 
+        w-8 h-8 flex items-center justify-center rounded-full 
+        bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 
+        hover:opacity-90 focus:outline-none disabled:opacity-25"
+      ><i class="fa fa-fw fa-arrow-right text-white"></i>
+      </button>
+    </form>
+  </div>
+  <script wire:ignore>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('scrollWatcher', () => ({
+        init() {
+          const container = document.getElementById('caldy-container');
+          let shouldAutoScroll = true;
+
+          const isAtBottom = () => {
+              return Math.abs(container.scrollTop + container.clientHeight - container.scrollHeight) < 5;
+          };
+
+          const observer = new MutationObserver(() => {
+              if (shouldAutoScroll) {
+                  container.scrollTop = container.scrollHeight;
+              }
+          });
+
+          observer.observe(container, {
+              childList: true,
+              subtree: true,
+          });
+
+          // Update scroll flag on scroll
+          container.addEventListener('scroll', () => {
+              shouldAutoScroll = isAtBottom();
+          });
+        }
+      }));
+    });
+  </script>
 </div>
