@@ -30,6 +30,18 @@ class InvCirc extends Model
         'updated_at' => 'datetime:Y-m-d H:i',
     ];
 
+
+    public function getCreatedAtAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->setTimezone('Asia/Jakarta');
+    }
+
+    public function getUpdatedAtAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->setTimezone('Asia/Jakarta');
+    }
+
+
     public function type_color(): string
     {
         $color = '';
