@@ -104,6 +104,11 @@ new class extends Component {
                   </div>
                </div>
             @endforeach
+            @if($circs->count() % 3 === 1)
+               <div class="inline-block w-[6cm] h-[2.5cm]">.</div><div class="inline-block w-[6cm] h-[2.5cm]">.</div>
+            @elseif($circs->count() % 3 === 2)
+               <div class="inline-block w-[6cm] h-[2.5cm]">.</div>
+            @endif
          </div>
          @break
       @case('label-large')
@@ -123,6 +128,11 @@ new class extends Component {
                   </div>
                </div>
             @endforeach
+            @if($circs->count() % 3 === 1)
+               <div class="inline-block w-[8.5cm] h-[5.5cm]">.</div><div class="inline-block w-[8.5cm] h-[5.5cm]">.</div>
+            @elseif($circs->count() % 3 === 2)
+               <div class="inline-block w-[8.5cm] h-[5.5cm]">.</div>
+            @endif
          </div>
          @break
    @endswitch

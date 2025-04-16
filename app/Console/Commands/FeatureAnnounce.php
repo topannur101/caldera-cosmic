@@ -105,6 +105,29 @@ class FeatureAnnounce extends Command
                 ] 
             ],
 
+            'inv_label_print' => [
+                'icon'      => 'fa-solid fa-cube',
+                'content'   => 'Kini kamu dapat mencetak label untuk visual barang. Pelajari lebih lanjut.',
+                'post'      =>
+                [
+                    'title'     => 'Mencetak label',
+                    'content'   => '
+                    Kini kamu dapat mencetak label untuk visual barang. Saat ini terdapat dua ukuran label: kecil (6cm x 2.5cm) dan besar (8.5cm x 5.5cm). Buat sirkulasi catat pada barang-barang yang ingin dicetak labelnya. Masuk ke halaman sirkulasi dan gunakan filter yang dibutuhkan untuk mengerucutkan daftar. Klik menu "Cetak semua sebagai..." lalu pilih "Label kecil/besar" dan klik tombol "Cetak".
+                    <br>
+                    <img src="/announcements/inv_label_print_1.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    <img src="/announcements/inv_label_print_2.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    <img src="/announcements/inv_label_print_3.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    <img src="/announcements/inv_label_print_4.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    <img src="/announcements/inv_label_print_5.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+
+                    ',
+                ] 
+            ],
+
             
         ];
         
