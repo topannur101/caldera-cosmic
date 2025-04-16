@@ -44,6 +44,10 @@ class extends Component {
 
     public string $eval_remarks = '';
 
+    public string $print_page = 'approval-form';
+
+    public bool $print_commit = false;
+
     public function mount()
     {
         $user_id = Auth::user()->id;
@@ -180,16 +184,16 @@ class extends Component {
 
     public function printCircIds()
     {
-        $this->dispatch('print-circ-ids', $this->circ_ids);
+        $this->dispatch('print-circ-ids', $this->circ_ids, $this->print_page);
         $this->js('$dispatch("open-spotlight", "printing")');
     }
 
     public function printAll()
-    {
+    {   
         $inv_circs_query = $this->InvCircQuery();
         $circ_ids = $inv_circs_query->limit(500)->get()->pluck('id');
-        
-        $this->dispatch('print-circ-ids', $circ_ids);
+     
+        $this->dispatch('print-circ-ids', $circ_ids, $this->print_page);
         $this->js('$dispatch("open-spotlight", "printing")');
     }
     
@@ -243,7 +247,7 @@ class extends Component {
 </x-slot>
 
 <x-slot name="printable">    
-    <livewire:inventory.circs.print />
+    <livewire:inventory.circs.print.index />
 </x-slot>
 
 <div id="content" class="py-6 max-w-8xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200"
@@ -283,12 +287,36 @@ class extends Component {
         }
     }">
     <div wire:key="circs-modals">
-      <x-modal name="circ-show">
-         <livewire:inventory.circs.circ-show />
-      </x-modal>
-      <x-modal name="circs-evaluate" focusable>
-        <livewire:inventory.circs.evaluate />
-      </x-modal>
+        <x-modal name="circ-show">
+            <livewire:inventory.circs.circ-show />
+        </x-modal>
+        <x-modal name="circs-evaluate" focusable>
+            <livewire:inventory.circs.evaluate />
+        </x-modal>
+        <x-modal name="print-all" focusable>
+            <div class="p-6 flex flex-col gap-y-6">
+                <div class="flex justify-between items-start">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        <i class="fa fa-print mr-2"></i>
+                        {{ __('Cetak semua sebagai...') }}
+                    </h2>
+                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+                </div>
+                <div x-data="{ page: @entangle('print_page') }">
+                    <x-radio x-model="page" id="page-approval-form" name="page-approval-form" value="approval-form">{{ __('Formulir persetujuan') }}</x-radio>
+                    <x-radio x-model="page" id="page-label-small" name="page-label-small" value="label-small">{{  __('Label kecil') }}</x-radio>
+                    <x-radio x-model="page" id="page-label-large" name="page-label-large" value="label-large">{{  __('Label besar') }}</x-radio>
+                </div>
+                <div class="flex justify-end">
+                    <x-secondary-button type="button" wire:click="printAll" x-on:click="$dispatch('close')">
+                        <div class="relative">
+                            <span wire:loading.class="opacity-0" wire:target="printAll"><i class="fa fa-print"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
+                            <x-spinner wire:loading.class.remove="hidden" wire:target="printAll" class="hidden sm mono"></x-spinner>                
+                        </div>  
+                    </x-secondary-button>
+                </div>
+            </div>
+        </x-modal>
     </div>
     <div wire:key="circs-spotlights">
         <x-spotlight name="printing" maxWidth="sm">
@@ -361,8 +389,8 @@ class extends Component {
                             <x-dropdown-link href="#" wire:click.prevent="download">
                                 <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
                             </x-dropdown-link>
-                            <x-dropdown-link href="#" wire:click="printAll">
-                                <i class="fa fa-fw fa-print me-2"></i>{{ __('Cetak semua') }}
+                            <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'print-all')">
+                                <i class="fa fa-fw fa-print me-2"></i>{{ __('Cetak semua...') }}
                             </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
