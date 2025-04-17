@@ -11,14 +11,14 @@ use App\Models\InvItemTag;
 use App\Models\ComItem;
 use Carbon\Carbon;
 
-class InvUpdateWithdrawal extends Command
+class InvCalibrateUsed extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:inv-update-withdrawal';
+    protected $signature = 'app:inv-calibrate-used';
 
     /**
      * The console command description.
@@ -49,55 +49,41 @@ class InvUpdateWithdrawal extends Command
         }
         
         // Confirm the operation
-        if (!$this->confirm('Do you wish to proceed to update last_withdrawal on all items from ' . $inv_area->name. ' inventory area?')) {
+        if (!$this->confirm('Do you wish to proceed to calibrate qty on all items from ' . $inv_area->name. ' inventory area?')) {
             $this->info('Operation cancelled');
             return 0; // Exit successfully but without doing the operation
         }
 
-        $items = InvItem::where('inv_area_id', $inv_area->id)->update([
-            'last_withdrawal' => null
-        ]);
-        
-        $this->info('Last withdrawal of all items has been reset'); 
-        
         $stocks = InvStock::with(['inv_item'])
         ->whereHas('inv_item', function($query) use ($inv_area) {
             $query->where('inv_area_id', $inv_area->id);
         })
+        ->where('uom', 'LIKE', '%-B')
         ->get();
 
         foreach ($stocks as $stock) {
+            $uom_e   = substr($stock->uom, 0, -2);
+            $stock_e = InvStock::where('inv_item_id', $stock->inv_item_id)->where('uom', $uom_e)->where('inv_curr_id', $stock->inv_curr_id)->first();
 
-            $clw = '';
-            $clw = $stock->inv_item->last_withdrawal;
+            if ($stock_e) {
+                $qty = $stock_e->qty - $stock->qty;
 
-            $olc = $stock->inv_circs()
-                ->where('type', 'withdrawal')
-                ->where('eval_status', 'approved')
-                ->latest('updated_at')->first();
-            
-            $olw = $olc ? $olc->updated_at : null;
+                if ($qty >= 0) {
+                    $stock_e->update([
+                        'qty' => $qty
+                    ]);
+                    $this->info('Qty calibrated for stock ID: ' . $stock->id . ' (Item ID: ' . $stock_e->inv_item->id . ')');
+    
+                } else {
+                    $this->info('[!] Qty negative for stock ID: ' . $stock->id . ' (Item ID: ' . $stock_e->inv_item->id . ')');
+                }
 
-            if (!$clw && $olw) {
-                $stock->inv_item->update([
-                    'last_withdrawal' => $olw
-                ]);
-                $this->info('Last withdrawal of item ID: ' . $stock->inv_item->id . ' updated'); 
-                continue;
+            } else {
+                $this->info('No equivalent unit stock found for stock ID: ' . $stock->id);
             }
 
-            if ($clw && $olw) {
-                if ($olw->gt($clw)) {
-                    $stock->inv_item->update([
-                        'last_withdrawal' => $olw
-                    ]);
-                    $this->info('Last withdrawal of item ID: ' . $stock->inv_item->id . ' updated'); 
-                    continue;
-                }  
-            }            
-         
         }
-        
-        $this->info('Operation completed. Bye!');        
+
+
     }
 }
