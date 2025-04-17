@@ -168,15 +168,14 @@ class extends Component
                     $query->where('is_active', false);
                     break;
 
-                case 'wd-never':
-                    $query->whereNull('last_withdrawal');
-                    break;
-
                 case 'gt-100-days':
-                    $now            = Carbon::now();
-                    $sub_100_days   = $now->copy()->subDays(100);
-                    $query->where('last_withdrawal', '>', $sub_100_days);
-                    break;
+                    $now = Carbon::now();
+                    $sub_100_days = $now->copy()->subDays(100);
+                    $query->where(function ($q) use ($sub_100_days) {
+                    $q->where('last_withdrawal', '>', $sub_100_days)
+                    ->orWhereNull('last_withdrawal');
+                    });
+                    break;                        
 
                 case 'gt-90-days':
                     $now            = Carbon::now();

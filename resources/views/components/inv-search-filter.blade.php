@@ -12,8 +12,6 @@
                return `{{ __('Tanpa tag') }}`;
             case 'inactive':
                return `{{ __('Barang nonaktif') }}`;
-            case 'wd-never':
-                return `{{ __('Tak pernah diambil') }}`;
             case 'gt-100-days':
                 return `{{ '> 100' . __(' hari') }}`;
             case 'gt-90-days':
@@ -57,7 +55,6 @@
                     {{ __('Barang yang menua') }}
                 </label>  
                 <div>
-                    <x-radio x-model="filter" id="filter-never" name="filter-never" value="wd-never">{{ __('Tak pernah diambil') }}</x-radio>
                     <x-radio x-model="filter" id="filter-gt-100-days" name="filter-gt-100-days" value="gt-100-days">{{ '> 100' . __(' hari') }}</x-radio>
                     <x-radio x-model="filter" id="filter-gt-90-days" name="filter-gt-90-days" value="gt-90-days">{{ '> 90' . __(' hari') }}</x-radio>
                     <x-radio x-model="filter" id="filter-gt-60-days" name="filter-gt-60-days" value="gt-60-days">{{ '> 60' . __(' hari') }}</x-radio>
