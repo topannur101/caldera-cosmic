@@ -10,6 +10,7 @@ use Livewire\Volt\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
+use Carbon\Carbon;
 
 new #[Layout('layouts.app')]
 class extends Component
@@ -26,10 +27,10 @@ class extends Component
     
     public array $area_ids = [];
 
+    #[Url]
     public array $tags = [];
     
     // public array $tag_hints = [];
-    
     public string $loc_parent = '';    
     
     public string $loc_bin = '';
@@ -43,6 +44,7 @@ class extends Component
     
     public array $qwords = []; // caldera: do you need it?
 
+    #[Url]
     public string $filter = '';
 
     #[Url]
@@ -67,9 +69,9 @@ class extends Component
             $this->q            = $savedParams['q'] ?? '';
             $this->loc_parent   = $savedParams['loc_parent'] ?? '';
             $this->loc_bin      = $savedParams['loc_bin'] ?? '';
-            $this->tags         = $savedParams['tags'] ?? [];
+            $this->tags         = $this->tags ? ($this->tags[0] ? [$this->tags[0]]: []): ($savedParams['tags'] ?? []);
             $this->area_ids     = $savedParams['area_ids'] ?? [];
-            $this->filter       = $savedParams['filter'] ?? '';
+            $this->filter       = $this->filter ?: ($savedParams['filter'] ?? '');
             $this->view         = $savedParams['view'] ?? 'content';
             $this->sort         = $savedParams['sort'] ?? '';
         } else {
@@ -143,23 +145,66 @@ class extends Component
                 }
             });
 
+            
             // filter
             switch ($this->filter) {
                 case 'no-code':
                     $query->whereNull('code');
                     break;
+
                 case 'no-photo':
                     $query->whereNull('photo');
                     break;
+
                 case 'no-location':
                     $query->whereNull('inv_loc_id');
                     break;
+
                 case 'no-tags':
                     $query->whereDoesntHave('inv_tags');
                     break;
+
                 case 'inactive':
                     $query->where('is_active', false);
                     break;
+
+                case 'wd-never':
+                    $query->whereNull('last_withdrawal');
+                    break;
+
+                case 'gt-100-days':
+                    $now            = Carbon::now();
+                    $sub_100_days   = $now->copy()->subDays(100);
+                    $query->where('last_withdrawal', '>', $sub_100_days);
+                    break;
+
+                case 'gt-90-days':
+                    $now            = Carbon::now();
+                    $sub_100_days   = $now->copy()->subDays(100);
+                    $sub_90_days    = $now->copy()->subDays(90);
+                    $query->whereBetween('last_withdrawal', [$sub_100_days, $sub_90_days]);
+                    break;
+
+                case 'gt-60-days':
+                    $now            = Carbon::now();
+                    $sub_90_days    = $now->copy()->subDays(90);
+                    $sub_60_days    = $now->copy()->subDays(60);
+                    $query->whereBetween('last_withdrawal', [$sub_90_days, $sub_60_days]);
+                    break;
+
+                case 'gt-30-days':
+                    $now            = Carbon::now();
+                    $sub_60_days    = $now->copy()->subDays(60);
+                    $sub_30_days    = $now->copy()->subDays(30);
+                    $query->whereBetween('last_withdrawal', [$sub_60_days, $sub_30_days]);
+                    break;
+
+                case 'lt-30-days':
+                    $now            = Carbon::now();
+                    $sub_30_days    = $now->copy()->subDays(30);
+                    $query->where('last_withdrawal', '<', $sub_30_days);
+                    break;
+
                 default:
                     $query->where('is_active', true);
                     break;

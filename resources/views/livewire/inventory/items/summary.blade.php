@@ -138,7 +138,7 @@ class extends Component
                      'backgroundColor' => '#FFCE56',
                  ],
                  [
-                     'label' => __('Tanpa tag'),
+                     'label' => '',
                      'data' => [$noTagCount],
                      'backgroundColor' => '#4BC0C0',
                  ],
@@ -519,7 +519,7 @@ class extends Component
 
         // First, create a row for items with no tags
         $noTagData = [
-            'tag_name' => __('Tanpa tag'),
+            'tag_name' => '',
             'gt_100_days' => 0,
             'gt_90_days' => 0,
             'gt_60_days' => 0,
@@ -669,7 +669,7 @@ class extends Component
         @else
             <table class="table table-sm text-sm mt-4">
                 <thead>
-                    <tr class="bg-light">
+                    <tr>
                         <th>{{ __('Tag')}}</th>
                         <th>{{ '> 100' . __(' hari')}}</th>
                         <th>{{ '> 90' . __(' hari')}}</th>
@@ -682,25 +682,43 @@ class extends Component
                 <tbody>
                     @foreach ($agingData as $tag)
                         <tr>
-                            <td>{{ $tag['tag_name'] }}</td>
-                            <td>{{ number_format($tag['gt_100_days'], 2) }}</td>
-                            <td>{{ number_format($tag['gt_90_days'], 2) }}</td>
-                            <td>{{ number_format($tag['gt_60_days'], 2) }}</td>
-                            <td>{{ number_format($tag['gt_30_days'], 2) }}</td>
-                            <td>{{ number_format($tag['lt_30_days'], 2) }}</td>
-                            <td class="font-weight-bold">{{ number_format($tag['total'], 2) }}</td>
+                            <td>{{ $tag['tag_name'] ?: __('Tanpa tag') }}</td>
+                            <td>
+                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']], 'filter' => 'gt-100-days' ]) }}" 
+                                wire:navigate>{{ number_format($tag['gt_100_days'], 2) }}</a>
+                            </td>
+                            <td>
+                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']], 'filter' => 'gt-90-days' ]) }}" 
+                                wire:navigate>{{ number_format($tag['gt_90_days'], 2) }}</a>
+                            </td>                            
+                            <td>
+                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']], 'filter' => 'gt-60-days' ]) }}" 
+                                wire:navigate>{{ number_format($tag['gt_60_days'], 2) }}</a>
+                            </td>
+                            <td>
+                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']], 'filter' => 'gt-30-days' ]) }}" 
+                                wire:navigate>{{ number_format($tag['gt_30_days'], 2) }}</a>
+                            </td>
+                            <td>
+                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']], 'filter' => 'lt-30-days' ]) }}" 
+                                wire:navigate>{{ number_format($tag['lt_30_days'], 2) }}</a>
+                            </td>
+                            <td class="font-weight-bold">
+                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']] ]) }}" 
+                                wire:navigate>{{ number_format($tag['total'], 2) }}</a>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
-                    <tr class="bg-light font-weight-bold">
-                        <td>{{ __('Total aging')}}</td>
-                        <td>{{ number_format($totals['gt_100_days'], 2) }}</td>
-                        <td>{{ number_format($totals['gt_90_days'], 2) }}</td>
-                        <td>{{ number_format($totals['gt_60_days'], 2) }}</td>
-                        <td>{{ number_format($totals['gt_30_days'], 2) }}</td>
-                        <td>{{ number_format($totals['lt_30_days'], 2) }}</td>
-                        <td>{{ number_format($totals['total'], 2) }}</td>
+                    <tr class="bg-light">
+                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ __('Total aging')}}</td>
+                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_100_days'], 2) }}</td>
+                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_90_days'], 2) }}</td>
+                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_60_days'], 2) }}</td>
+                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_30_days'], 2) }}</td>
+                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['lt_30_days'], 2) }}</td>
+                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['total'], 2) }}</td>
                     </tr>
                 </tfoot>
             </table>
