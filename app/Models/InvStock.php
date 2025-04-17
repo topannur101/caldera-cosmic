@@ -91,11 +91,11 @@ class InvStock extends Model
 
                     $amount_main = 0;
                     if ($qty_end > 0 && $this->unit_price > 0 && $this->inv_curr->rate > 0) {
-                        $amount_main = abs(
+                        $amount_main = max(
                             ($this->inv_curr_id === 1) 
                             ? $qty_end * $this->unit_price
                             : $qty_end * $this->unit_price / $this->inv_curr->rate
-                        );
+                            , 0);
                     }
 
                     $circ->update([

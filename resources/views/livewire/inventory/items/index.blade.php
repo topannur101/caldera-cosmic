@@ -5,6 +5,7 @@ use App\Models\InvStock;
 use App\Models\InvArea;
 use App\Models\InvLoc;
 use App\Models\InvTag;
+use App\Models\InvCurr;
 use App\Models\User;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
@@ -248,6 +249,12 @@ class extends Component
             case 'qty_high':
                 $inv_search_query->orderByDesc('qty');
                 break;
+            case 'amt_low':
+                $inv_search_query->orderBy('amount_main');
+                break;
+            case 'amt_high':
+                $inv_search_query->orderByDesc('amount_main');
+                break;
             case 'alpha':
                 $inv_search_query->orderByRaw('
                 (SELECT name FROM inv_items 
@@ -434,6 +441,8 @@ class extends Component
                     <option value="last_withdrawal">{{ __('Terakhir diambil') }}</option>
                     <option value="qty_low">{{ __('Qty terendah') }}</option>
                     <option value="qty_high">{{ __('Qty tertinggi') }}</option>
+                    <option value="amt_low">{{ __('Amount terendah') }}</option>
+                    <option value="amt_high">{{ __('Amount tertinggi') }}</option>
                     <option value="alpha">{{ __('Alfabet') }}</option>
                 </x-select>
                 <div class="btn-group">
@@ -501,6 +510,7 @@ class extends Component
                                 <th><i class="fa fa-tag"></i></th>
                                 <th>{{ __('Qty') }}</th>
                                 <th>{{ __('Harga') }}</th>
+                                <th>{{ 'Σ (' . InvCurr::find(1)->name . ')' }}</th>
                                 <th><i class="fa fa-tent"></i></th>
                             </tr>
                             @foreach($inv_stocks as $inv_stock)
@@ -523,6 +533,7 @@ class extends Component
                                     <td class="w-[1%]">{{ $inv_stock->inv_item->tags_facade() ?: '-' }}</td>
                                     <td>{{ $inv_stock->qty . ' ' . $inv_stock->uom }}</td>
                                     <td>{{ $inv_stock->inv_curr->name . ' ' . $inv_stock->unit_price }}</td>
+                                    <td>{{ $inv_stock->amount_main }}</td>
                                     <td class="w-[1%]">{{ $inv_stock->inv_item->inv_area->name }}</td>
                                 </tr>
                             @endforeach
