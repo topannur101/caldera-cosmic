@@ -249,6 +249,7 @@ class extends Component
                        'label' => 'Total Value',
                        'data' => [],
                        'backgroundColor' => [],
+                       'barThickness' => 20
                    ],
                ],
            ],
@@ -638,7 +639,7 @@ class extends Component
             <div 
                 wire:ignore
                 id="value-container" 
-                class="overflow-hidden"
+                class="overflow-hidden "
                 wire:key="value-container">
             </div>  
         </div>
