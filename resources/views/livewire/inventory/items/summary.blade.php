@@ -481,15 +481,19 @@ class extends Component
                         if ($lastWithdrawal <= $gt_100_days) {
                             $tagData['gt_100_days'] += $value;
                             $this->totals['gt_100_days'] += $value;
+
                         } elseif ($lastWithdrawal <= $gt_90_days) {
                             $tagData['gt_90_days'] += $value;
                             $this->totals['gt_90_days'] += $value;
+
                         } elseif ($lastWithdrawal <= $gt_60_days) {
                             $tagData['gt_60_days'] += $value;
                             $this->totals['gt_60_days'] += $value;
+
                         } elseif ($lastWithdrawal <= $gt_30_days) {
                             $tagData['gt_30_days'] += $value;
                             $this->totals['gt_30_days'] += $value;
+                            
                         } else {
                             $tagData['lt_30_days'] += $value;
                             $this->totals['lt_30_days'] += $value;
