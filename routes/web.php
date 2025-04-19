@@ -174,6 +174,7 @@ Route::middleware('auth')->group(function () {
             Volt::route('/items/bulk-operation/update-basic',       'inventory.items.bulk-operation.update-basic')      ->name('bulk-operation.update-basic');
             Volt::route('/items/bulk-operation/update-location',    'inventory.items.bulk-operation.update-location')   ->name('bulk-operation.update-location');
             Volt::route('/items/bulk-operation/update-stock',       'inventory.items.bulk-operation.update-stock')      ->name('bulk-operation.update-stock');
+            Volt::route('/items/bulk-operation/pull-photos',        'inventory.items.bulk-operation.pull-photos')       ->name('bulk-operation.pull-photos');
             Volt::route('/items/summary',                           'inventory.items.summary')                          ->name('summary');
             Volt::route('/items/{id}',              'inventory.items.show')             ->name('show');
             Volt::route('/items/{id}/edit',         'inventory.items.edit')             ->name('edit');

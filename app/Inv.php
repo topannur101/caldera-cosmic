@@ -432,21 +432,17 @@ class Inv
         
         $response = curl_exec($ch);
         
-        $ci_session = null;
-        if (curl_errno($ch)) {
-            echo 'Error:' . curl_error($ch);
-        } else {
-            // Separate headers and body
-            $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-            $headers = substr($response, 0, $header_size);
+        $ci_session = '';
         
-            echo "Headers:\n" . $headers;
-        
-            // Extract the ci_session cookie
-            if (preg_match('/Set-Cookie: ci_session=([^;]+)/', $headers, $matches)) {
-                $ci_session = $matches[1];
-            } 
-        }
+        // Separate headers and body
+        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $headers = substr($response, 0, $header_size);
+    
+    
+        // Extract the ci_session cookie
+        if (preg_match('/Set-Cookie: ci_session=([^;]+)/', $headers, $matches)) {
+            $ci_session = $matches[1];
+        } 
 
         return $ci_session;
     }

@@ -14,7 +14,6 @@ class InvItem extends Model
         'name',
         'desc',
         'code',
-        'inv_area_id',
         'photo',
         'is_active',
         'inv_loc_id',
