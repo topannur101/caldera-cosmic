@@ -316,7 +316,7 @@ class extends Component
                      <div 
                         x-cloak 
                         :class="step > 1 ? '' : 'hidden'" 
-                        class="mt-2" x-text="items.length > 0 ? items.length + '{{ __(' barang') }}' : ''">                      
+                        class="mt-2" x-text="items.length + '{{ __(' barang') }}'">                      
                      </div>
                   </li>
                   <li class="mb-10 ms-6">
@@ -354,6 +354,11 @@ class extends Component
                         <x-primary-button type="button" x-on:click="$dispatch('open-modal', 'confirm-update-items')">
                            {{ __('Perbarui yang dipilih')}}
                         </x-primary-button>
+                     </div>
+                     <div
+                        x-cloak 
+                        :class="step > 3 ? '' : 'hidden'" 
+                        class="mt-2" x-text="indexes.length + '{{ __(' dipilih') }}'">                      
                      </div>
                   </li>
                   <li class="ms-6">
