@@ -21,7 +21,7 @@ class extends Component
 
    public string $gw_username = '';
 
-   public string $step = 'initial';
+   public int $step = 0;
 
    public array $indexes = [];
 
@@ -49,7 +49,6 @@ class extends Component
       }
 
       $this->areas = InvArea::whereIn('id', $area_ids)->get()->toArray();
-      $this->area_id = 1;
    }
 
    public function checkItems()
@@ -86,7 +85,7 @@ class extends Component
          'gw_username' => ['required', 'string', 'max:20'],
       ]);
 
-      $this->step = 'pulling';
+      $this->step = 2;
       $this->js('window.dispatchEvent(escKey)'); 
       $this->js('$wire.pullPhotos()');
    }
@@ -132,7 +131,7 @@ class extends Component
          }     
       }
 
-      $this->step = 'pulled';
+      $this->step = 3;
 
    }
 
@@ -183,8 +182,8 @@ class extends Component
             <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
             <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
          </x-modal>
-         <x-modal name="confirm-items-update" focusable>
-            <form wire:submit="checkUsername" class="p-6">
+         <x-modal name="confirm-update-items" focusable>
+            <form wire:submit="updateItems" class="p-6">
                <div class="flex justify-between items-center text-lg mb-6 font-medium text-neutral-900 dark:text-neutral-100">
                   <h2>
                      {{ __('Username groupware') }}
@@ -218,99 +217,146 @@ class extends Component
             <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
          </x-modal>
       </div>
-      <div x-data="{ ...app(), code:'', items: @entangle('items'), step: @entangle('step'), progress: @entangle('progress'), indexes: @entangle('indexes') }" x-init="observeProgress()" class="px-4 sm:px-0">
+      <div x-data="{ ...app(), code:'', areas:@entangle('areas'), area_id:@entangle('area_id'), items: @entangle('items'), step: @entangle('step'), progress: @entangle('progress'), indexes: @entangle('indexes') }" x-init="observeProgress()" class="px-4 sm:px-0">
          <div class="flex flex-col items-center gap-y-8 sm:flex-row">
             <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">
                <i class="fa fa-images mr-2"></i>
                {{ __('Tarik foto') }}</h1>
-            <div class="flex gap-x-3 px-8 h-11">
-               <div :class="step == 'initial' ? '' : 'hidden'" class="h-full">
-                  <form class="btn-group h-full" x-on:submit.prevent="addItems()">
-                     <x-text-input x-model="code" id="item-code" placeholder="{{ __('Kode') }}"></x-text-input->
-                     <x-secondary-button type="submit">
-                        <i class="fa fa-fw fa-chevron-down"></i>
-                     </x-secondary-button>
-                  </form>
-               </div>
-               <x-link-secondary-button ::class="step == 'pulling' ? 'hidden' : ''" class="flex items-center h-full" href="{{ route('inventory.items.bulk-operation.pull-photos') }}">
-                     {{ __('Ulangi') }}
-               </x-link-secondary-button>
-               <x-primary-button ::class="step == 'initial' ? '' : 'hidden'" type="button" x-on:click="$dispatch('open-modal', 'ask-gw-username')">
-                  {{ __('Tarik')}}
-               </x-primary-button>
-               <x-primary-button ::class="step == 'pulled' ? '' : 'hidden'" type="button" x-on:click="$dispatch('open-modal', 'confirm-items-update')">
-                  {{ __('Perbarui')}}
-               </x-primary-button>
-               <div x-cloak :class="step == 'pulling' ? '' : 'hidden'" class="flex flex-col h-full justify-center gap-y-1 w-72">
-                  <div class="text-sm"><span wire:stream="progress">{{ $progress }}</span>{{ __('% Mengambil foto...') }}</div>
-                  <div class="relative w-full bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700">
-                     <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
-                        :style="'width:' + progress + '%'" style="width:0%;"></div>
+            <x-link-secondary-button class="flex items-center h-full" href="{{ route('inventory.items.bulk-operation.pull-photos') }}">
+               <i class="fa fa-undo mr-2"></i>{{ __('Ulangi dari awal') }}
+            </x-link-secondary-button>
+         </div>
+         <div class="flex gap-x-6 w-full mt-6">
+            <div>
+               <ol class="sticky w-72 mt-6 top-6 text-neutral-500 border-s border-neutral-200 dark:border-neutral-700 dark:text-neutral-400">                  
+                  <li class="mb-10 ms-6">            
+                     <span class="absolute flex items-center justify-center w-8 h-8 bg-green-200 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 dark:bg-green-900">
+                        <i class="fa fa-fw fa-tent text-sm"></i>
+                     </span>
+                     <h3 class="font-medium leading-tight">{{ __('Pilih area')}}</h3>
+                     <div class="mt-2">
+                        <x-select x-model="area_id" ::class="step > 0 ? 'hidden' : ''" class="w-full" x-on:change="step = 1">
+                           <option value=""></option>
+                           <template x-for="area in areas">
+                              <option :value="area.id" x-text="area.name"></option>
+                           </template>
+                        </x-select>
+                        <div x-cloak :class="step > 0 ? '' : 'hidden'" x-text="area_id ? areas.find(area => area.id == area_id).name : ''">
+                        </div>
+                     </div>
+                  </li>
+                  <li class="mb-10 ms-6">
+                     <span :class="step > 0 ? 'bg-green-200 dark:bg-green-900' : 'bg-neutral-100 dark:bg-neutral-700'" class="absolute flex items-center justify-center w-8 h-8 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 ">
+                        <i class="fa fa-fw fa-cube text-sm"></i>
+                     </span>
+                     <h3 class="font-medium leading-tight">{{ __('Masukkan kode')}}</h3>
+                     <div x-cloak :class="step == 1 ? '' : 'hidden'" class="mt-2">
+                        <form class="btn-group" x-on:submit.prevent="addItems()">
+                           <x-text-input x-model="code" id="item-code" placeholder="{{ __('Kode barang') }}"></x-text-input->
+                           <x-secondary-button type="submit">
+                              <i class="fa fa-fw fa-chevron-right"></i>
+                           </x-secondary-button>
+                        </form>
+                        <x-primary-button type="button" class="mt-2" x-on:click="$dispatch('open-modal', 'ask-gw-username')">
+                           {{ __('Lanjut')}}
+                        </x-primary-button>
+                     </div>
+                  </li>
+                  <li class="mb-10 ms-6">
+                     <span :class="step > 1 ? 'bg-green-200 dark:bg-green-900' : 'bg-neutral-100 dark:bg-neutral-700'" class="absolute flex items-center justify-center w-8 h-8 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 ">
+                        <i class="fa fa-fw fa-image text-sm"></i>
+                     </span>
+                     <h3 class="font-medium leading-tight">{{ __('Tarik foto')}}</h3>
+                     <div x-cloak :class="step == 2 ? '' : 'hidden'" class="mt-2">
+                        <div class="text-sm"><span wire:stream="progress">{{ $progress }}</span>{{ __('% menarik foto...') }}</div>
+                        <div class="mt-2 relative w-full bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700">
+                           <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
+                              :style="'width:' + progress + '%'" style="width:0%;"></div>
+                        </div>
+                     </div>
+                  </li>
+                  <li class="mb-10 ms-6">
+                     <span :class="step > 2 ? 'bg-green-200 dark:bg-green-900' : 'bg-neutral-100 dark:bg-neutral-700'" class="absolute flex items-center justify-center w-8 h-8 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 ">
+                        <i class="fa fa-fw fa-list-check text-sm"></i>
+                     </span>
+                     <h3 class="font-medium leading-tight">{{ __('Tinjau foto')}}</h3>
+                     <div x-cloak :class="step == 3 ? '' : 'hidden'" class="mt-2">
+                        <x-primary-button type="button" x-on:click="$dispatch('open-modal', 'confirm-update-items')">
+                           {{ __('Perbarui')}}
+                        </x-primary-button>
+                     </div>
+                  </li>
+                  <li class="ms-6">
+                     <span :class="step > 3 ? 'bg-green-200 dark:bg-green-900' : 'bg-neutral-100 dark:bg-neutral-700'" class="absolute flex items-center justify-center w-8 h-8 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 ">
+                        <i class="fa fa-fw fa-check-circle text-sm"></i>
+                     </span>
+                     <h3 class="font-medium leading-tight">{{ __('Selesai')}}</h3>
+                  </li>
+               </ol>
+            </div>
+            <div wire:key="list" class="grow flex items-center justify-center bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto">
+               <div :class="items.length > 0 ? 'hidden' : ''">
+                  <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                     <i class="fa fa-cube relative"><i class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                   </div>
+                  <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada barang') }}</div>
                </div>
-            </div>
-         </div>
-         <div wire:key="list" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto mt-6">
-            <div :class="items.length > 0 ? 'hidden' : ''" class="py-20">
-               <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                  <i class="fa fa-cube relative"><i class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
-               </div>
-               <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Masukkan kode barang') }}</div>
-            </div>
-            <table x-cloak :class="items.length > 0 ? '' : 'hidden'" class="text-neutral-600 dark:text-neutral-400 w-full table text-sm [&_th]:text-center [&_th]:px-2 [&_th]:py-3 [&_td]:px-2 [&_td]:py-1">
-               <tr class="uppercase text-xs">
-                  <th class="w-[1%]">{{ __('Kode') }}</th>
-                  <th class="w-[1%]">{{ __('ID') }}</th>
-                  <th class="max-w-40 text-wrap">{{ __('Nama') }}</th>
-                  <th class="w-[1%]">{{ __('Sebelum') }}</th>
-                  <th class="w-[1%]">{{ __('Sesudah') }}</th>
-                  <th class="w-[1%]">{{ __('Perbarui') }}</th>
-                  <th class="w-[240px] text-wrap">{{ __('Status') }}</th>
-               </tr>
-               <template x-for="item in items">
-                  <tr class="text-nowrap">
-                     <td x-text="item.code" class="w-[1%]"></td>
-                     <td x-text="item.id" class="w-[1%]"></td>
-                     <td class="max-w-40 text-wrap">
-                        <div x-text="item.name" class="text-wrap"></div>
-                        <div x-text="item.desc" class="text-wrap text-xs text-neutral-500"></div>
-                     </td>
-                     <td class="w-[1%]">
-                        <div class="rounded-sm overflow-hidden relative flex w-32 h-24 bg-neutral-200 dark:bg-neutral-700">
-                           <div class="m-auto">
-                              <svg xmlns="http://www.w3.org/2000/svg"  class="block w-8 h-8 fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 38.777 39.793"><path d="M19.396.011a1.058 1.058 0 0 0-.297.087L6.506 5.885a1.058 1.058 0 0 0 .885 1.924l12.14-5.581 15.25 7.328-15.242 6.895L1.49 8.42A1.058 1.058 0 0 0 0 9.386v20.717a1.058 1.058 0 0 0 .609.957l18.381 8.633a1.058 1.058 0 0 0 .897 0l18.279-8.529a1.058 1.058 0 0 0 .611-.959V9.793a1.058 1.058 0 0 0-.599-.953L20 .105a1.058 1.058 0 0 0-.604-.095zM2.117 11.016l16.994 7.562a1.058 1.058 0 0 0 .867-.002l16.682-7.547v18.502L20.6 37.026V22.893a1.059 1.059 0 1 0-2.117 0v14.224L2.117 29.432z" /></svg>
-                           </div>
-                           <template x-if="item.photo">
-                              <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" :src="'/storage/inv-items/' + item.photo" />
-                           </template>
-                        </div>   
-                     </td>
-                     <td class="w-[1%]">
-                        <div class="rounded-sm overflow-hidden relative flex w-32 h-24 bg-neutral-200 dark:bg-neutral-700">
-                           <div class="m-auto">
-                              <i class="fa far fa-question-circle text-neutral-800 dark:text-neutral-200 opacity-25 text-3xl"></i>
-                           </div>
-                           <template x-if="item.photo_new">
-                              <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" :src="'/storage/inv-items/' + item.photo_new" />
-                           </template>
-                        </div>   
-                     </td>
-                     <td class="text-center">
-                        <label :for="item.index">
-                           <input 
-                              type="checkbox"
-                              class="w-5 h-5 text-caldy-600 bg-neutral-100 border-neutral-300 rounded focus:ring-2 focus:ring-caldy-500 dark:focus:ring-caldy-600 dark:ring-offset-neutral-800 dark:bg-neutral-700 dark:border-neutral-600"
-                              :id="item.index"
-                              :value="item.index"
-                              :disabled="item.photo_new ? false : true"
-                              x-model="indexes">
-                        </label>
-                     </td>
-                     <td x-text="item.status" class="w-[240px] text-wrap"></td>
+               <table x-cloak :class="items.length > 0 ? '' : 'hidden'" class="text-neutral-600 dark:text-neutral-400 w-full table text-sm [&_th]:text-center [&_th]:px-2 [&_th]:py-3 [&_td]:px-2 [&_td]:py-1">
+                  <tr class="uppercase text-xs">
+                     <th class="w-[1%]"></th>
+                     <th class="w-[1%]">{{ __('Kode') }}</th>
+                     <th class="w-[1%]">{{ __('Sebelum') }}</th>
+                     <th class="w-[1%]">{{ __('Sesudah') }}</th>
+                     <th class="w-[1%]">{{ __('ID') }}</th>
+                     <th class="max-w-40 text-wrap">{{ __('Nama') }}</th>
+                     <th class="w-[240px] text-wrap">{{ __('Status') }}</th>
                   </tr>
-               </template>
-            </table>
+                  <template x-for="item in items">
+                     <tr class="text-nowrap">
+                        <td class="pl-3 text-center">
+                           <label :for="item.index">
+                              <input 
+                                 type="checkbox"
+                                 class="w-5 h-5 text-caldy-600 bg-neutral-100 border-neutral-300 rounded focus:ring-2 focus:ring-caldy-500 dark:focus:ring-caldy-600 dark:ring-offset-neutral-800 dark:bg-neutral-700 dark:border-neutral-600"
+                                 :id="item.index"
+                                 :value="item.index"
+                                 :disabled="item.photo_new ? false : true"
+                                 x-model="indexes">
+                           </label>
+                        </td>
+                        <td x-text="item.code" class="w-[1%]"></td>
+                        <td class="w-[1%]">
+                           <div class="rounded-sm overflow-hidden relative flex w-32 h-24 bg-neutral-200 dark:bg-neutral-700">
+                              <div class="m-auto">
+                                 <svg xmlns="http://www.w3.org/2000/svg"  class="block w-8 h-8 fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 38.777 39.793"><path d="M19.396.011a1.058 1.058 0 0 0-.297.087L6.506 5.885a1.058 1.058 0 0 0 .885 1.924l12.14-5.581 15.25 7.328-15.242 6.895L1.49 8.42A1.058 1.058 0 0 0 0 9.386v20.717a1.058 1.058 0 0 0 .609.957l18.381 8.633a1.058 1.058 0 0 0 .897 0l18.279-8.529a1.058 1.058 0 0 0 .611-.959V9.793a1.058 1.058 0 0 0-.599-.953L20 .105a1.058 1.058 0 0 0-.604-.095zM2.117 11.016l16.994 7.562a1.058 1.058 0 0 0 .867-.002l16.682-7.547v18.502L20.6 37.026V22.893a1.059 1.059 0 1 0-2.117 0v14.224L2.117 29.432z" /></svg>
+                              </div>
+                              <template x-if="item.photo">
+                                 <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" :src="'/storage/inv-items/' + item.photo" />
+                              </template>
+                           </div>   
+                        </td>
+                        <td class="w-[1%]">
+                           <div class="rounded-sm overflow-hidden relative flex w-32 h-24 bg-neutral-200 dark:bg-neutral-700">
+                              <div class="m-auto">
+                                 <i class="fa far fa-question-circle text-neutral-800 dark:text-neutral-200 opacity-25 text-3xl"></i>
+                              </div>
+                              <template x-if="item.photo_new">
+                                 <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" :src="'/storage/inv-items/' + item.photo_new" />
+                              </template>
+                           </div>   
+                        </td>                        
+                        <td x-text="item.id" class="w-[1%]"></td>
+                        <td class="max-w-40 text-wrap">
+                           <div x-text="item.name" class="text-wrap"></div>
+                           <div x-text="item.desc" class="text-wrap text-xs text-neutral-500"></div>
+                        </td>
+                        <td x-text="item.status" class="w-[240px] text-wrap"></td>
+                     </tr>
+                  </template>
+               </table>
+            </div>
          </div>
+
       </div>
 
    @else
