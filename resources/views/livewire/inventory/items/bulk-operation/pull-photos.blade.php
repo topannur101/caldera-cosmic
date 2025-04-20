@@ -25,6 +25,11 @@ class extends Component
 
    public array $indexes = [];
 
+   public array $results_grouped = [
+      'success' => [],
+      'failure' => []
+   ];
+
    public function mount()
    {
       $area_ids = [];
@@ -40,7 +45,7 @@ class extends Component
          foreach ($areas as $area) {
             $item = new InvItem;
             $item->inv_area_id = $area->id;
-            $response = Gate::inspect('download', $item);
+            $response = Gate::inspect('store', $item);
 
             if ($response->allowed()) {
                $area_ids[] = $area->id;
@@ -130,9 +135,65 @@ class extends Component
             );      
          }     
       }
-
       $this->step = 3;
+   }
 
+   public function updateItems()
+   {
+      $results = [];
+      foreach ($this->items as $item) {
+
+         if (!$item['index'] || !count($this->indexes)) {
+            continue;
+         }
+         
+         if (!in_array($item['index'], $this->indexes)) {
+            continue;
+         }
+
+         try {
+            $inv_item = InvItem::where('id', $item['id'])->where('inv_area_id', $this->area_id)->first();
+
+            if (!$inv_item) {
+               throw new Exception(__('Barang tidak ditemukan'), 1);
+            }
+
+            $store = Gate::inspect('store', $inv_item);
+            if ($store->denied()) {
+                throw new \Exception(__('Tak ada wewenang untuk mengelola barang ini'));
+            };
+
+            $inv_item->update([
+               'photo' => $item['photo_new']
+            ]);
+
+            $results[] = [
+               'success' => true,
+               'message' => __('Foto barang berhasil diperbarui'),
+            ];
+
+
+         } catch (\Throwable $th) {
+            $results[] = [
+               'success' => false,
+               'message' => $th->getMessage(),
+            ];
+         }
+      }
+
+      foreach ($results as $result) {
+         $key = $result['success'] ? 'success' : 'failure';
+         $message = $result['message'];
+      
+         if (isset($this->results_grouped[$key][$message])) {
+               $this->results_grouped[$key][$message]++;
+         } else {
+               $this->results_grouped[$key][$message] = 1;
+         }
+      }
+
+      $this->step = 4;
+      $this->js('window.dispatchEvent(escKey)');
    }
 
 };
@@ -186,30 +247,21 @@ class extends Component
             <form wire:submit="updateItems" class="p-6">
                <div class="flex justify-between items-center text-lg mb-6 font-medium text-neutral-900 dark:text-neutral-100">
                   <h2>
-                     {{ __('Username groupware') }}
+                     {{ __('Konfirmasi') }}
                   </h2>
                   <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
                </div>
                <div class="py-3 text-5xl text-center">
-                     <i class="fa fa-image relative text-neutral-300 dark:text-neutral-600">
-                        <i class="fa fa-download absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
-                     </i>
+                  <i class="fa fa-cube relative text-neutral-300 dark:text-neutral-600">
+                     <i class="fa fa-image absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
+                  </i>
                </div>
                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                     {{ __('Caldera membutuhkan username groupware untuk menarik gambar dari sistem TTCons.') }}
+                  {{ __('Barang yang dipilih akan diperbarui fotonya dengan foto yang berhasil ditarik dari sistem TTCons.') }}
                </p>
-               <div class="mt-6">
-                  <label for="gw_username" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Username groupware') }}</label>
-                  <x-text-input wire:model="gw_username" id="gw_username" type="text" />
-                  <div wire:key="error-gw_username">
-                     @error('gw_username')
-                        <x-input-error messages="{{ $message }}" class="mt-2" />
-                     @enderror
-                  </div>
-               </div>
                <div class="mt-6 flex justify-end">
                   <x-primary-button type="submit" class="ml-3">
-                     {{ __('Tarik foto') }}
+                     {{ __('Lanjutkan') }}
                   </x-primary-button>
                </div>
             </form>
@@ -261,6 +313,11 @@ class extends Component
                            {{ __('Lanjut')}}
                         </x-primary-button>
                      </div>
+                     <div 
+                        x-cloak 
+                        :class="step > 1 ? '' : 'hidden'" 
+                        class="mt-2" x-text="items.length > 0 ? items.length + '{{ __(' barang') }}' : ''">                      
+                     </div>
                   </li>
                   <li class="mb-10 ms-6">
                      <span :class="step > 1 ? 'bg-green-200 dark:bg-green-900' : 'bg-neutral-100 dark:bg-neutral-700'" class="absolute flex items-center justify-center w-8 h-8 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 ">
@@ -268,11 +325,24 @@ class extends Component
                      </span>
                      <h3 class="font-medium leading-tight">{{ __('Tarik foto')}}</h3>
                      <div x-cloak :class="step == 2 ? '' : 'hidden'" class="mt-2">
-                        <div class="text-sm"><span wire:stream="progress">{{ $progress }}</span>{{ __('% menarik foto...') }}</div>
-                        <div class="mt-2 relative w-full bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700">
-                           <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
-                              :style="'width:' + progress + '%'" style="width:0%;"></div>
+                        <div class="flex justify-between text-sm">
+                           <div>
+                              {{ __('Menarik foto...') }}
+                           </div>
+                           <div><span wire:stream="progress">{{ $progress }}</span>%</div>
                         </div>
+                        <div class="cal-shimmer mt-2 relative w-full bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700">
+                           <div 
+                              class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
+                              :style="'width:' + progress + '%'" 
+                              style="width:0%;">
+                           </div>
+                        </div>
+                     </div>
+                     <div 
+                        x-cloak 
+                        :class="step > 2 ? '' : 'hidden'" 
+                        class="mt-2" x-text="`${items.filter(item => item.photo_new).length}{{ __(' foto') }}`">                      
                      </div>
                   </li>
                   <li class="mb-10 ms-6">
@@ -282,7 +352,7 @@ class extends Component
                      <h3 class="font-medium leading-tight">{{ __('Tinjau foto')}}</h3>
                      <div x-cloak :class="step == 3 ? '' : 'hidden'" class="mt-2">
                         <x-primary-button type="button" x-on:click="$dispatch('open-modal', 'confirm-update-items')">
-                           {{ __('Perbarui')}}
+                           {{ __('Perbarui yang dipilih')}}
                         </x-primary-button>
                      </div>
                   </li>
@@ -301,12 +371,12 @@ class extends Component
                   </div>
                   <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada barang') }}</div>
                </div>
-               <table x-cloak :class="items.length > 0 ? '' : 'hidden'" class="text-neutral-600 dark:text-neutral-400 w-full table text-sm [&_th]:text-center [&_th]:px-2 [&_th]:py-3 [&_td]:px-2 [&_td]:py-1">
+               <table x-cloak :class="items.length > 0 && step < 4 ? '' : 'hidden'" class="text-neutral-600 dark:text-neutral-400 w-full table text-sm [&_th]:text-center [&_th]:px-2 [&_th]:py-3 [&_td]:px-2 [&_td]:py-1">
                   <tr class="uppercase text-xs">
                      <th class="w-[1%]"></th>
                      <th class="w-[1%]">{{ __('Kode') }}</th>
-                     <th class="w-[1%]">{{ __('Sebelum') }}</th>
-                     <th class="w-[1%]">{{ __('Sesudah') }}</th>
+                     <th class="w-[1%]">{{ __('Caldera') }}</th>
+                     <th class="w-[1%]">{{ __('TTCons') }}</th>
                      <th class="w-[1%]">{{ __('ID') }}</th>
                      <th class="max-w-40 text-wrap">{{ __('Nama') }}</th>
                      <th class="w-[240px] text-wrap">{{ __('Status') }}</th>
@@ -354,6 +424,34 @@ class extends Component
                      </tr>
                   </template>
                </table>
+               <div  x-cloak :class="step == 4 ? '' : 'hidden'" class="flex flex-col gap-y-3">
+                  <div>
+                     <h3 class="font-bold text-xs uppercase tracking-wide">{{ __('Berhasil') }}</h3>
+                     <ul class="list-inside text-sm text-neutral-500">
+                        @foreach($results_grouped['success'] as $message => $count)
+                           <li>
+                              <x-pill class="font-mono" color="green">{{ $count }}</x-badge><span class="ml-2">{{ $message }}</span>
+                           </li>
+                        @endforeach
+                        @if(!$results_grouped['success'])
+                           <li>{{ __('Tidak ada yang berhasil') }}</li>
+                        @endif
+                     </ul>
+                  </div>
+                  <div>
+                     <h3 class="font-bold text-xs uppercase tracking-wide">{{ __('Gagal') }}</h3>
+                     <ul class="list-inside text-sm text-neutral-500">
+                        @foreach($results_grouped['failure'] as $message => $count)
+                           <li>
+                              <x-pill class="font-mono" color="red">{{ $count }}</x-badge><span class="ml-2">{{ $message }}</span>
+                           </li>
+                        @endforeach
+                        @if(!$results_grouped['failure'])
+                           <li>{{ __('Tidak ada yang gagal') }}</li>
+                        @endif
+                     </ul>
+                  </div>
+               </div>
             </div>
          </div>
 
@@ -382,10 +480,16 @@ class extends Component
             },
 
             addItem(code) {
-               const codeTrimmed = code.trim();
-               if (codeTrimmed) {
+               const codeClean = code.trim().toUpperCase();
+               const existingItem = this.items.find(item => item.code == codeClean);
+
+               if (existingItem) {
+                  return;
+               }
+
+               if (codeClean) {
                   this.items.unshift({
-                     code: codeTrimmed,
+                     code: codeClean,
                      id: null,
                      name: '',
                      desc: '',
