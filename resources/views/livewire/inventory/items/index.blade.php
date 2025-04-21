@@ -50,6 +50,8 @@ class extends Component
     #[Url]
     public bool $is_deleted = false;
 
+    public string $download_as = 'inv_stocks';
+
     public function mount()
     {
         $user_id = Auth::user()->id;
@@ -111,7 +113,7 @@ class extends Component
             'inv_item.inv_area', 
             'inv_item.inv_tags'
         ])
-        ->whereHas('inv_item', function ($query) use ($q, $loc_parent, $loc_bin, $tags) {
+            ->whereHas('inv_item', function ($query) use ($q, $loc_parent, $loc_bin, $tags) {
             // search
             $query->where(function ($subQuery) use ($q) {
                 $subQuery->where('name', 'like', "%$q%")
@@ -208,8 +210,7 @@ class extends Component
                     $query->where('is_active', true);
                     break;
             }
-        })
-        ->where('is_active', true);
+        });
 
         switch ($this->sort) {
             case 'updated':
@@ -272,13 +273,19 @@ class extends Component
     public function download()
     {
         // Create a unique token for this download request
-        $token = md5(uniqid());
+        $token = md5(uniqid());        
 
-        // Store the token in the session
-        session()->put('inv_stocks_token', $token);
-        
-        // Redirect to a temporary route that will handle the streaming
-        return redirect()->route('download.inv-stocks', ['token' => $token]);
+        switch ($this->download_as) {
+            case 'inv_stocks':
+                session()->put('inv_stocks_token', $token);
+                return redirect()->route('download.inv-stocks', ['token' => $token]);
+                break;
+
+            case 'inv_items':
+                session()->put('inv_items_token', $token);
+                return redirect()->route('download.inv-items', ['token' => $token]);
+                break;            
+        }  
     }
 
     public function resetQuery()
@@ -342,6 +349,29 @@ class extends Component
     <div wire:key="modals">
         <x-modal name="create-from-code">
             <livewire:inventory.items.create-from-code :$areas lazy />
+        </x-modal>
+        <x-modal name="download" focusable>
+            <div class="p-6 flex flex-col gap-y-6">
+                <div class="flex justify-between items-start">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        <i class="fa fa-download mr-2"></i>
+                        {{ __('Unduh sebagai...') }}
+                    </h2>
+                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+                </div>
+                <div x-data="{ download_as: @entangle('download_as') }">
+                    <x-radio x-model="download_as" id="as-inv_stocks" name="as-inv_stocks" value="inv_stocks">{{ __('Daftar unit stok') }}</x-radio>
+                    <x-radio x-model="download_as" id="as-inv_items" name="as-inv_items" value="inv_items">{{  __('Daftar barang') }}</x-radio>
+                </div>
+                <div class="flex justify-end">
+                    <x-secondary-button type="button" wire:click="download" x-on:click="$dispatch('close')">
+                        <div class="relative">
+                            <span wire:loading.class="opacity-0" wire:target="download"><i class="fa fa-download"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Unduh') }}</span></span>
+                            <x-spinner wire:loading.class.remove="hidden" wire:target="download" class="hidden sm mono"></x-spinner>                
+                        </div>  
+                    </x-secondary-button>
+                </div>
+            </div>
         </x-modal>
     </div>
     <div class="static lg:sticky top-0 z-10 py-6 ">
@@ -415,8 +445,11 @@ class extends Component
                                 <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
-                            <x-dropdown-link href="#" wire:click.prevent="download">
+                            <!-- <x-dropdown-link href="#" wire:click.prevent="download('inv_stocks')">
                                 <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV')}}
+                            </x-dropdown-link> -->
+                            <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'download')">
+                                <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai...') }}
                             </x-dropdown-link>
                             <!-- <x-dropdown-link href="#">
                                 <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}

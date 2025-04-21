@@ -319,11 +319,11 @@ class extends Component
        $token = md5(uniqid());
 
        // Store the token in the session
-       session()->put('inv_items_token', $token);
+       session()->put('inv_items_backup_token', $token);
        
        $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
        // Redirect to a temporary route that will handle the streaming
-       return redirect()->route('download.inv-items', ['token' => $token, 'area_id' => $area_id]);
+       return redirect()->route('download.inv-items-backup', ['token' => $token, 'area_id' => $area_id]);
    }
 
 };

@@ -76,7 +76,7 @@ class extends Component {
 
     public function download()
     {
-      $this->redirectRoute('download.inv-items', []);
+      $this->redirectroute('download.inv-items-backup', []);
       $this->js('$dispatch("close")');
       $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
     }

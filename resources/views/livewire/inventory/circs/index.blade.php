@@ -44,7 +44,7 @@ class extends Component {
 
     public string $eval_remarks = '';
 
-    public string $print_page = 'approval-form';
+    public string $print_as = 'approval-form';
 
     public bool $print_commit = false;
 
@@ -184,16 +184,16 @@ class extends Component {
 
     public function printCircIds()
     {
-        $this->dispatch('print-circ-ids', $this->circ_ids, $this->print_page);
+        $this->dispatch('print-circ-ids', $this->circ_ids, 'approval-form');
         $this->js('$dispatch("open-spotlight", "printing")');
     }
 
-    public function printAll()
+    public function printAs()
     {   
         $inv_circs_query = $this->InvCircQuery();
         $circ_ids = $inv_circs_query->limit(500)->get()->pluck('id');
      
-        $this->dispatch('print-circ-ids', $circ_ids, $this->print_page);
+        $this->dispatch('print-circ-ids', $circ_ids, $this->print_as);
         $this->js('$dispatch("open-spotlight", "printing")');
     }
     
@@ -302,16 +302,16 @@ class extends Component {
                     </h2>
                     <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
                 </div>
-                <div x-data="{ page: @entangle('print_page') }">
-                    <x-radio x-model="page" id="page-approval-form" name="page-approval-form" value="approval-form">{{ __('Formulir persetujuan') }}</x-radio>
-                    <x-radio x-model="page" id="page-label-small" name="page-label-small" value="label-small">{{  __('Label kecil') }}</x-radio>
-                    <x-radio x-model="page" id="page-label-large" name="page-label-large" value="label-large">{{  __('Label besar') }}</x-radio>
+                <div x-data="{ print_as: @entangle('print_as') }">
+                    <x-radio x-model="print_as" id="as-approval-form" name="as-approval-form" value="approval-form">{{ __('Formulir persetujuan') }}</x-radio>
+                    <x-radio x-model="print_as" id="as-label-small" name="as-label-small" value="label-small">{{  __('Label kecil') }}</x-radio>
+                    <x-radio x-model="print_as" id="as-label-large" name="as-label-large" value="label-large">{{  __('Label besar') }}</x-radio>
                 </div>
                 <div class="flex justify-end">
-                    <x-secondary-button type="button" wire:click="printAll" x-on:click="$dispatch('close')">
+                    <x-secondary-button type="button" wire:click="printAs" x-on:click="$dispatch('close')">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="printAll"><i class="fa fa-print"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
-                            <x-spinner wire:loading.class.remove="hidden" wire:target="printAll" class="hidden sm mono"></x-spinner>                
+                            <span wire:loading.class="opacity-0" wire:target="printAs"><i class="fa fa-print"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
+                            <x-spinner wire:loading.class.remove="hidden" wire:target="printAs" class="hidden sm mono"></x-spinner>                
                         </div>  
                     </x-secondary-button>
                 </div>
