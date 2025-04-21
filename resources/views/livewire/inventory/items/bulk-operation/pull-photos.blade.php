@@ -379,14 +379,14 @@ class extends Component
                <table x-cloak :class="items.length > 0 && step < 4 ? '' : 'hidden'" class="text-neutral-600 dark:text-neutral-400 w-full table text-sm [&_th]:text-center [&_th]:px-2 [&_th]:py-3 [&_td]:px-2 [&_td]:py-1">
                   <tr class="uppercase text-xs">
                      <th class="w-[1%]"></th>
-                     <th class="w-[1%]">{{ __('Kode') }}</th>
+                     <th class="max-w-32 truncate">{{ __('Kode') }}</th>
                      <th class="w-[1%]">{{ __('Caldera') }}</th>
                      <th class="w-[1%]">{{ __('TTCons') }}</th>
                      <th class="w-[1%]">{{ __('ID') }}</th>
                      <th class="max-w-40 text-wrap">{{ __('Nama') }}</th>
                      <th class="w-[240px] text-wrap">{{ __('Status') }}</th>
                   </tr>
-                  <template x-for="item in items">
+                  <template x-for="item in items"> class="max-w-32"
                      <tr class="text-nowrap">
                         <td class="pl-3 text-center">
                            <label :for="item.index">
@@ -399,7 +399,7 @@ class extends Component
                                  x-model="indexes">
                            </label>
                         </td>
-                        <td x-text="item.code" class="w-[1%]"></td>
+                        <td x-text="item.code" class="max-w-32 truncate"></td>
                         <td class="w-[1%]">
                            <div class="rounded-sm overflow-hidden relative flex w-32 h-24 bg-neutral-200 dark:bg-neutral-700">
                               <div class="m-auto">

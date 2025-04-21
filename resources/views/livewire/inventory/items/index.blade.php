@@ -28,10 +28,10 @@ class extends Component
     
     public array $area_ids = [];
 
-    #[Url]
     public array $tags = [];
     
     // public array $tag_hints = [];
+    
     public string $loc_parent = '';    
     
     public string $loc_bin = '';
@@ -45,7 +45,6 @@ class extends Component
     
     public array $qwords = []; // caldera: do you need it?
 
-    #[Url]
     public string $filter = '';
 
     #[Url]
@@ -70,9 +69,9 @@ class extends Component
             $this->q            = $savedParams['q'] ?? '';
             $this->loc_parent   = $savedParams['loc_parent'] ?? '';
             $this->loc_bin      = $savedParams['loc_bin'] ?? '';
-            $this->tags         = $this->tags ? ($this->tags[0] ? [$this->tags[0]]: []): ($savedParams['tags'] ?? []);
+            $this->tags         = $savedParams['tags'] ?? [];
             $this->area_ids     = $savedParams['area_ids'] ?? [];
-            $this->filter       = $this->filter ?: ($savedParams['filter'] ?? '');
+            $this->filter       = $savedParams['filter'] ?? '';
             $this->view         = $savedParams['view'] ?? 'content';
             $this->sort         = $savedParams['sort'] ?? '';
         } else {

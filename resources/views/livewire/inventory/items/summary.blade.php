@@ -33,6 +33,8 @@ class extends Component
        'total' => 0,
    ];
 
+   public float $progress = 0;
+
    public function mount()
    {
        $user_id = Auth::user()->id;
@@ -51,7 +53,12 @@ class extends Component
    #[On('update')]
    public function update()
    {
-        $this->agingTable();
+        $this->agingTable(); // 2
+
+        // incomplete basics 4
+        // status 2 
+        // value 2
+        // aging 8
 
         $this->js("
         let container = '';
@@ -97,23 +104,223 @@ class extends Component
        $this->update();
    }
 
+   public function agingTable()
+   {
+        $now = Carbon::now();
+        $gt_100_days = $now->copy()->subDays(100);
+        $gt_90_days = $now->copy()->subDays(90);
+        $gt_60_days = $now->copy()->subDays(60);
+        $gt_30_days = $now->copy()->subDays(30);
+
+        // Reset totals
+        $this->totals = [
+            'gt_100_days' => 0,
+            'gt_90_days' => 0,
+            'gt_60_days' => 0,
+            'gt_30_days' => 0,
+            'lt_30_days' => 0,
+            'total' => 0,
+        ];
+
+        // Get all tags that have active items in the selected area
+        $tags = InvTag::whereHas('inv_items', function($query) {
+            $query->where('inv_area_id', $this->area_id)
+                ->where('is_active', true);
+        })->get();
+
+        $this->agingData = collect();
+
+        foreach ($tags as $key => $tag) {
+            $tagData = [
+                'tag_name' => $tag->name, // Assuming the tag has a name field
+                'gt_100_days' => 0,
+                'gt_90_days' => 0,
+                'gt_60_days' => 0,
+                'gt_30_days' => 0,
+                'lt_30_days' => 0,
+                'total' => 0,
+            ];
+
+            // Get all active items with this tag and in the selected area
+            $items = $tag->inv_items()
+                ->where('inv_area_id', $this->area_id)
+                ->where('is_active', true)
+                ->get();
+
+            foreach ($items as $item) {
+                // For each item, get all stocks
+                $stocks = $item->inv_stocks;
+
+                foreach ($stocks as $stock) {
+                    // Calculate the value in base currency
+                    $value = $stock->amount_main;
+
+                    // Determine which aging bucket this item belongs to based on last_withdrawal
+                    if ($item->last_withdrawal) {
+                        $lastWithdrawal = Carbon::parse($item->last_withdrawal);
+                        
+                        if ($lastWithdrawal <= $gt_100_days) {
+                            $tagData['gt_100_days'] += $value;
+                            $this->totals['gt_100_days'] += $value;
+
+                        } elseif ($lastWithdrawal <= $gt_90_days) {
+                            $tagData['gt_90_days'] += $value;
+                            $this->totals['gt_90_days'] += $value;
+
+                        } elseif ($lastWithdrawal <= $gt_60_days) {
+                            $tagData['gt_60_days'] += $value;
+                            $this->totals['gt_60_days'] += $value;
+
+                        } elseif ($lastWithdrawal <= $gt_30_days) {
+                            $tagData['gt_30_days'] += $value;
+                            $this->totals['gt_30_days'] += $value;
+                            
+                        } else {
+                            $tagData['lt_30_days'] += $value;
+                            $this->totals['lt_30_days'] += $value;
+                        }
+                    } else {
+                        // If no last_withdrawal date, put in the oldest category
+                        $tagData['gt_100_days'] += $value;
+                        $this->totals['gt_100_days'] += $value;
+                    }
+
+                    // Add to total
+                    $tagData['total'] += $value;
+                    $this->totals['total'] += $value;
+                }
+            }
+
+            // Only add tags that have items
+            if ($tagData['total'] > 0) {
+                $this->agingData->push($tagData);
+            }
+
+            $this->progress += (($key + 1) / $tags->count() / 5.555);
+            $this->stream(
+               to: 'progress',
+               content: floor(round($this->progress, 3) / 10),
+               replace: true
+            );      
+        } 
+
+        // First, create a row for items with no tags
+        $noTagData = [
+            'tag_name' => '',
+            'gt_100_days' => 0,
+            'gt_90_days' => 0,
+            'gt_60_days' => 0,
+            'gt_30_days' => 0,
+            'lt_30_days' => 0,
+            'total' => 0,
+        ];
+
+        // Get items with no tags
+        $itemsWithNoTags = InvItem::where('inv_area_id', $this->area_id)
+        ->where('is_active', true)
+        ->whereDoesntHave('inv_tags')
+        ->get();
+
+        foreach ($itemsWithNoTags as $key => $item) {
+            // For each item, get all stocks
+            $stocks = $item->inv_stocks;
+
+            foreach ($stocks as $stock) {
+                // Calculate the value in base currency
+                $value = $stock->amount_main;
+
+                // Determine which aging bucket this item belongs to based on last_withdrawal
+                if ($item->last_withdrawal) {
+                    $lastWithdrawal = Carbon::parse($item->last_withdrawal);
+                    
+                    if ($lastWithdrawal <= $gt_100_days) {
+                        $noTagData['gt_100_days'] += $value;
+                        $this->totals['gt_100_days'] += $value;
+                    } elseif ($lastWithdrawal <= $gt_90_days) {
+                        $noTagData['gt_90_days'] += $value;
+                        $this->totals['gt_90_days'] += $value;
+                    } elseif ($lastWithdrawal <= $gt_60_days) {
+                        $noTagData['gt_60_days'] += $value;
+                        $this->totals['gt_60_days'] += $value;
+                    } elseif ($lastWithdrawal <= $gt_30_days) {
+                        $noTagData['gt_30_days'] += $value;
+                        $this->totals['gt_30_days'] += $value;
+                    } else {
+                        $noTagData['lt_30_days'] += $value;
+                        $this->totals['lt_30_days'] += $value;
+                    }
+                } else {
+                    // If no last_withdrawal date, put in the oldest category
+                    $noTagData['gt_100_days'] += $value;
+                    $this->totals['gt_100_days'] += $value;
+                }
+
+                // Add to total
+                $noTagData['total'] += $value;
+                $this->totals['total'] += $value;
+            }
+
+            $this->progress += ($key + 1) / $itemsWithNoTags->count() / 5.555;
+            $this->stream(
+                to: 'progress',
+                content: floor(round($this->progress, 3) / 10),
+                replace: true
+             );   
+             
+        }  
+
+        // Only add no-tag row if there are actually items without tags
+        if ($noTagData['total'] > 0) {
+            $this->agingData->push($noTagData);
+        }
+
+   }
+
    public function incompleteBasics()
    {
-      $noPhotoCount = InvItem::where(function($query) {
-         $query->whereNull('photo')->orWhere('photo', '');
-     })->where('inv_area_id', $this->area_id)->count();
-     
-     $noCodeCount = InvItem::where(function($query) {
-         $query->whereNull('code')->orWhere('code', '');
-     })->where('inv_area_id', $this->area_id)->count();
+        $noPhotoCount = InvItem::where(function($query) {
+            $query->whereNull('photo')->orWhere('photo', '');
+        })->where('inv_area_id', $this->area_id)->count();
 
-      $noLocCount    = InvItem::whereNull('inv_loc_id')
-         ->where('inv_area_id', $this->area_id)
-         ->count();
+        $this->progress += 5.555;
+        $this->stream(
+            to: 'progress',
+            content: floor(round($this->progress, 3) / 10),
+            replace: true
+        ); 
+        
+        $noCodeCount = InvItem::where(function($query) {
+            $query->whereNull('code')->orWhere('code', '');
+        })->where('inv_area_id', $this->area_id)->count();
 
-      $noTagCount    = InvItem::doesntHave('inv_tags')
-         ->where('inv_area_id', $this->area_id)
-         ->count();
+        $this->progress += 5.555;
+        $this->stream(
+            to: 'progress',
+            content: floor(round($this->progress, 3) / 10),
+            replace: true
+        ); 
+
+        $noLocCount    = InvItem::whereNull('inv_loc_id')
+            ->where('inv_area_id', $this->area_id)
+            ->count();
+
+        $this->progress += 5.555;
+        $this->stream(
+            to: 'progress',
+            content: floor(round($this->progress, 3) / 10),
+            replace: true
+        ); 
+
+        $noTagCount    = InvItem::doesntHave('inv_tags')
+            ->where('inv_area_id', $this->area_id)
+            ->count();
+
+        $this->progress += 5.555;
+        $this->stream(
+            to: 'progress',
+            content: floor(round($this->progress, 3) / 10),
+            replace: true
+        ); 
 
       $totalCount = $noPhotoCount + $noCodeCount + $noLocCount + $noTagCount;
 
@@ -188,9 +395,23 @@ class extends Component
       ->where('inv_area_id', $this->area_id)
       ->count();
 
+      $this->progress += 5.555;
+      $this->stream(
+          to: 'progress',
+          content: floor(round($this->progress, 3) / 10),
+          replace: true
+       ); 
+
       $inactiveCount = InvItem::where('is_active', false)
       ->where('inv_area_id', $this->area_id)
       ->count();
+
+      $this->progress += 5.555;
+      $this->stream(
+          to: 'progress',
+          content: floor(round($this->progress, 3) / 10),
+          replace: true
+       ); 
 
       $data = [
          'type' => 'doughnut',
@@ -224,7 +445,7 @@ class extends Component
                   ],
                ],
          ],
-      ];
+      ]; 
 
       return $data;
    }
@@ -281,7 +502,7 @@ class extends Component
            ],
        ];
    
-       foreach ($tags as $tag) {
+       foreach ($tags as $key => $tag) {
            $totalValue = 0;
    
            // Get all items with this tag and in the selected area
@@ -299,6 +520,13 @@ class extends Component
            // Add tag name and total value to the data
            $data['data']['labels'][] = $tag->name;
            $data['data']['datasets'][0]['data'][] = round($totalValue, 2);
+
+           $this->progress += ($key + 1) / $tags->count() / 5.555;
+           $this->stream(
+               to: 'progress',
+               content: floor(round($this->progress, 3) / 10),
+               replace: true
+            ); 
        }
    
        // Calculate total value for items with no tags
@@ -322,13 +550,20 @@ class extends Component
                // Calculate total value
                $noTagValue += $qty * $unitPrice;
            }
+
+           $this->progress += ($key + 1) / $noTagItems->count() / 5.555;
+           $this->stream(
+                to: 'progress',
+                content: floor(round($this->progress, 3) / 10),
+                replace: true
+            ); 
        }
    
        // Add no tag value to the data
        $data['data']['labels'][] = __('Tanpa tag');
        $data['data']['datasets'][0]['data'][] = round($noTagValue, 2);
-   
-       return $data;
+
+        return $data;
    }
 
    public function aging()
@@ -345,33 +580,89 @@ class extends Component
       $lessthanOneWeekCount = InvItem::where('last_withdrawal', '>', $oneWeekAgo)
       ->where('inv_area_id', $this->area_id)
       ->count();
+
+        $this->progress += 5.555;
+        $this->stream(
+            to: 'progress',
+            content: floor(round($this->progress, 3) / 10),
+            replace: true
+        ); 
   
       $oneWeekCount     = InvItem::whereBetween('last_withdrawal', [$oneWeekAgo, $twoWeeksAgo])
       ->where('inv_area_id', $this->area_id)
       ->count();
 
+      $this->progress += 5.555;
+      $this->stream(
+          to: 'progress',
+          content: floor(round($this->progress, 3) / 10),
+          replace: true
+      );
+
       $twoWeeksCount    = InvItem::whereBetween('last_withdrawal', [$threeWeeksAgo, $twoWeeksAgo])
       ->where('inv_area_id', $this->area_id)
       ->count();
+
+      $this->progress += 5.555;
+      $this->stream(
+          to: 'progress',
+          content: floor(round($this->progress, 3) / 10),
+          replace: true
+      );
 
       $threeWeeksCount  = InvItem::whereBetween('last_withdrawal', [$oneMonthAgo, $threeWeeksAgo])
       ->where('inv_area_id', $this->area_id)
       ->count();
 
+      $this->progress += 5.555;
+      $this->stream(
+          to: 'progress',
+          content: floor(round($this->progress, 3) / 10),
+          replace: true
+      );
+
       $oneMonthCount    = InvItem::whereBetween('last_withdrawal', [$twoMonthsAgo, $oneMonthAgo])
       ->where('inv_area_id', $this->area_id)
       ->count();
+
+      $this->progress += 5.555;
+      $this->stream(
+          to: 'progress',
+          content: floor(round($this->progress, 3) / 10),
+          replace: true
+      );
 
       $twoMonthsCount   = InvItem::whereBetween('last_withdrawal', [$threeMonthsAgo, $twoMonthsAgo])
       ->where('inv_area_id', $this->area_id)
       ->count();
 
+      $this->progress += 5.555;
+      $this->stream(
+          to: 'progress',
+          content: floor(round($this->progress, 3) / 10),
+          replace: true
+      );
+
       $threeMonthsCount = InvItem::where('last_withdrawal', '<', $threeMonthsAgo)
       ->where('inv_area_id', $this->area_id)
       ->count();
 
+      $this->progress += 5.555;
+      $this->stream(
+          to: 'progress',
+          content: floor(round($this->progress, 3) / 10),
+          replace: true
+      );
+
       $neverCount = InvItem::whereNull('last_withdrawal')->where('inv_area_id', $this->area_id)
       ->count();
+
+      $this->progress += 5.555;
+      $this->stream(
+          to: 'progress',
+          content: floor(round($this->progress, 3) / 10),
+          replace: true
+      );
   
       $data = [
          'type' => 'bar',
@@ -414,176 +705,29 @@ class extends Component
                   ],
               ],
           ],
-      ];
+      ];   
   
       return $data;
    }
 
-   public function agingTable()
+   public function redirectToItems($tag, $agingBucket)
    {
-        $now = Carbon::now();
-        $gt_100_days = $now->copy()->subDays(100);
-        $gt_90_days = $now->copy()->subDays(90);
-        $gt_60_days = $now->copy()->subDays(60);
-        $gt_30_days = $now->copy()->subDays(30);
+        session()->forget('inv_search_params');
 
-        // Reset totals
-        $this->totals = [
-            'gt_100_days' => 0,
-            'gt_90_days' => 0,
-            'gt_60_days' => 0,
-            'gt_30_days' => 0,
-            'lt_30_days' => 0,
-            'total' => 0,
+        $inv_search_params = [
+            'tags'          => [$tag],
+            'area_ids'      => [$this->area_id],
+            'view'          => 'list',
+            'sort'          => 'amt-high'
         ];
 
-        // Get all tags that have active items in the selected area
-        $tags = InvTag::whereHas('inv_items', function($query) {
-            $query->where('inv_area_id', $this->area_id)
-                ->where('is_active', true);
-        })->get();
-
-        $this->agingData = collect();
-
-        foreach ($tags as $tag) {
-            $tagData = [
-                'tag_name' => $tag->name, // Assuming the tag has a name field
-                'gt_100_days' => 0,
-                'gt_90_days' => 0,
-                'gt_60_days' => 0,
-                'gt_30_days' => 0,
-                'lt_30_days' => 0,
-                'total' => 0,
-            ];
-
-            // Get all active items with this tag and in the selected area
-            $items = $tag->inv_items()
-                ->where('inv_area_id', $this->area_id)
-                ->where('is_active', true)
-                ->get();
-
-            foreach ($items as $item) {
-                // For each item, get all stocks
-                $stocks = $item->inv_stocks;
-
-                foreach ($stocks as $stock) {
-                    // Calculate the value in base currency
-                    $value = $stock->qty * $stock->unit_price;
-                    
-                    // Convert currency if needed
-                    if ($stock->inv_curr_id != 1) {
-                        $value = $value / $stock->inv_curr->rate;
-                    }
-
-                    // Determine which aging bucket this item belongs to based on last_withdrawal
-                    if ($item->last_withdrawal) {
-                        $lastWithdrawal = Carbon::parse($item->last_withdrawal);
-                        
-                        if ($lastWithdrawal <= $gt_100_days) {
-                            $tagData['gt_100_days'] += $value;
-                            $this->totals['gt_100_days'] += $value;
-
-                        } elseif ($lastWithdrawal <= $gt_90_days) {
-                            $tagData['gt_90_days'] += $value;
-                            $this->totals['gt_90_days'] += $value;
-
-                        } elseif ($lastWithdrawal <= $gt_60_days) {
-                            $tagData['gt_60_days'] += $value;
-                            $this->totals['gt_60_days'] += $value;
-
-                        } elseif ($lastWithdrawal <= $gt_30_days) {
-                            $tagData['gt_30_days'] += $value;
-                            $this->totals['gt_30_days'] += $value;
-                            
-                        } else {
-                            $tagData['lt_30_days'] += $value;
-                            $this->totals['lt_30_days'] += $value;
-                        }
-                    } else {
-                        // If no last_withdrawal date, put in the oldest category
-                        $tagData['gt_100_days'] += $value;
-                        $this->totals['gt_100_days'] += $value;
-                    }
-
-                    // Add to total
-                    $tagData['total'] += $value;
-                    $this->totals['total'] += $value;
-                }
-            }
-
-            // Only add tags that have items
-            if ($tagData['total'] > 0) {
-                $this->agingData->push($tagData);
-            }
+        if ($agingBucket) {
+            $inv_search_params['filter'] = $agingBucket;
         }
+        
+        session(['inv_search_params' => $inv_search_params]);
 
-        // First, create a row for items with no tags
-        $noTagData = [
-            'tag_name' => '',
-            'gt_100_days' => 0,
-            'gt_90_days' => 0,
-            'gt_60_days' => 0,
-            'gt_30_days' => 0,
-            'lt_30_days' => 0,
-            'total' => 0,
-        ];
-
-        // Get items with no tags
-        $itemsWithNoTags = InvItem::where('inv_area_id', $this->area_id)
-        ->where('is_active', true)
-        ->whereDoesntHave('inv_tags')
-        ->get();
-
-        foreach ($itemsWithNoTags as $item) {
-            // For each item, get all stocks
-            $stocks = $item->inv_stocks;
-
-            foreach ($stocks as $stock) {
-                // Calculate the value in base currency
-                $value = $stock->qty * $stock->unit_price;
-                
-                // Convert currency if needed
-                if ($stock->inv_curr_id != 1) {
-                    $value = $value / $stock->inv_curr->rate;
-                }
-
-                // Determine which aging bucket this item belongs to based on last_withdrawal
-                if ($item->last_withdrawal) {
-                    $lastWithdrawal = Carbon::parse($item->last_withdrawal);
-                    
-                    if ($lastWithdrawal <= $gt_100_days) {
-                        $noTagData['gt_100_days'] += $value;
-                        $this->totals['gt_100_days'] += $value;
-                    } elseif ($lastWithdrawal <= $gt_90_days) {
-                        $noTagData['gt_90_days'] += $value;
-                        $this->totals['gt_90_days'] += $value;
-                    } elseif ($lastWithdrawal <= $gt_60_days) {
-                        $noTagData['gt_60_days'] += $value;
-                        $this->totals['gt_60_days'] += $value;
-                    } elseif ($lastWithdrawal <= $gt_30_days) {
-                        $noTagData['gt_30_days'] += $value;
-                        $this->totals['gt_30_days'] += $value;
-                    } else {
-                        $noTagData['lt_30_days'] += $value;
-                        $this->totals['lt_30_days'] += $value;
-                    }
-                } else {
-                    // If no last_withdrawal date, put in the oldest category
-                    $noTagData['gt_100_days'] += $value;
-                    $this->totals['gt_100_days'] += $value;
-                }
-
-                // Add to total
-                $noTagData['total'] += $value;
-                $this->totals['total'] += $value;
-            }
-        }
-
-        // Only add no-tag row if there are actually items without tags
-        if ($noTagData['total'] > 0) {
-            $this->agingData->push($noTagData);
-        }
-
+        $this->redirect(route('inventory.items.index'), navigate: true);
    }
 
 };
@@ -596,138 +740,177 @@ class extends Component
     <x-nav-inventory-sub>{{ __('Ringkasan barang') }}</x-nav-inventory-sub>
 </x-slot>
 
-<div class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-700 dark:text-neutral-200">
-   @vite(['resources/js/apexcharts.js'])
-   <div class="flex gap-x-6 items-center mb-6">
-      <x-select wire:model.live="area_id">
-         <option value="0"></option>
-         @foreach ($areas as $area)
-            <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
-         @endforeach
-      </x-select>
-      <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-         <div class="relative w-3">
-            <x-spinner class="sm mono"></x-spinner>
-         </div>
-         <div>
-            {{ __('Melakukan kalkulasi...') }}
-         </div>
-      </div>
-   </div>
-   <div class="grid grid-cols-3 gap-4">
-      <div class="col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-         <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Ketidaklengkapan info dasar') }}</label>
-         <div 
-            wire:ignore
-            id="incomplete-basics-container" 
-            class="h-32 overflow-hidden"
-            wire:key="incomplete-basics-container">
-         </div>  
-      </div>
-      <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-         <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Status barang') }}</label>
-         <div 
-            wire:ignore
-            id="status-container" 
-            class="h-32 overflow-hidden"
-            wire:key="status-container">
-         </div>  
-      </div>
-      <div class="col-span-3 grid grid-cols-2 gap-4">
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-            <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Nilai barang berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
-            <div 
-                wire:ignore
-                id="value-container" 
-                class="overflow-hidden "
-                wire:key="value-container">
-            </div>  
-        </div>
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-            <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Barang yang menua') }}</label>
-            <div 
-                wire:ignore
-                id="aging-container" 
-                class="h-64 overflow-hidden"
-                wire:key="aging-container">
-            </div>  
-        </div>
-      </div>
-
-   </div>
-   <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 mt-4">
-   <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Barang yang menua berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
-
-        @if ($area_id == 0)
-            <div class="py-4 text-neutral-500 text-center">
-                {{ __('Pilih area untuk melihat data aging') }}
+<div 
+    x-data="{ ...app(), areas: @entangle('areas'), area_id:@entangle('area_id'), progress: @entangle('progress') }" x-init="observeProgress()" 
+    class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-700 dark:text-neutral-200">
+    @vite(['resources/js/apexcharts.js'])
+    <div class="flex gap-x-6 items-center mb-6">
+        <x-select x-model="area_id" x-on:change="progress = 0; $wire.$dispatch('update');">
+            <option value="0"></option>
+            <template x-for="area in areas">
+                <option :value="area.id" x-text="area.name"></option>
+            </template>
+        </x-select>
+        <div wire:loading.class.remove="hidden" class="hidden">
+            <div class="w-72">
+                <div class="flex justify-between text-sm">
+                    <div>
+                        {{ __('Melakukan kalkulasi...') }}
+                    </div>
+                    <div><span wire:stream="progress">{{ round($progress / 10, 0)  }}</span>%</div>
+                </div>
+                <div class="cal-shimmer mt-1 relative w-full bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700">
+                    <div 
+                        class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
+                        :style="'width:' + progress + '%'" 
+                        style="width:0%;">
+                    </div>
+                </div>
             </div>
-        @elseif ($agingData->isEmpty())
-            <div class="py-4 text-neutral-500 text-center">
-            {{ __('Tidak ada data aging untuk area yang dipilih') }}
-            </div>
-        @else
-            <table class="table table-sm text-sm mt-4">
-                <thead>
-                    <tr>
-                        <th>{{ __('Tag')}}</th>
-                        <th>{{ '> 100' . __(' hari')}}</th>
-                        <th>{{ '> 90' . __(' hari')}}</th>
-                        <th>{{ '> 60' . __(' hari')}}</th>
-                        <th>{{ '> 30' . __(' hari')}}</th>
-                        <th>{{ '< 30' . __(' hari')}}</th>
-                        <th>{{ __('Total tag')}}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($agingData as $tag)
-                        <tr>
-                            <td>{{ $tag['tag_name'] ?: __('Tanpa tag') }}</td>
-                            <td>
-                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']], 'filter' => 'gt-100-days' ]) }}" 
-                                wire:navigate>{{ number_format($tag['gt_100_days'], 2) }}</a>
-                            </td>
-                            <td>
-                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']], 'filter' => 'gt-90-days' ]) }}" 
-                                wire:navigate>{{ number_format($tag['gt_90_days'], 2) }}</a>
-                            </td>                            
-                            <td>
-                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']], 'filter' => 'gt-60-days' ]) }}" 
-                                wire:navigate>{{ number_format($tag['gt_60_days'], 2) }}</a>
-                            </td>
-                            <td>
-                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']], 'filter' => 'gt-30-days' ]) }}" 
-                                wire:navigate>{{ number_format($tag['gt_30_days'], 2) }}</a>
-                            </td>
-                            <td>
-                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']], 'filter' => 'lt-30-days' ]) }}" 
-                                wire:navigate>{{ number_format($tag['lt_30_days'], 2) }}</a>
-                            </td>
-                            <td class="font-weight-bold">
-                                <a href="{{ route('inventory.items.index', ['tags' => [$tag['tag_name']] ]) }}" 
-                                wire:navigate>{{ number_format($tag['total'], 2) }}</a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-                <tfoot>
-                    <tr class="bg-light">
-                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ __('Total aging')}}</td>
-                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_100_days'], 2) }}</td>
-                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_90_days'], 2) }}</td>
-                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_60_days'], 2) }}</td>
-                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_30_days'], 2) }}</td>
-                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['lt_30_days'], 2) }}</td>
-                        <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['total'], 2) }}</td>
-                    </tr>
-                </tfoot>
-            </table>
-        @endif
+        </div>
     </div>
-</div>
+    <div :class="area_id ? 'hidden' : ''" class="py-12">
+        <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+            <i class="fa fa-tent relative"><i class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+        </div>
+        <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}</div>
+    </div>
+    <div x-cloak :class="area_id ? '' : 'hidden'">
+        <div class="grid grid-cols-3 gap-4">
+            <div class="col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+                <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Ketidaklengkapan info dasar') }}</label>
+                <div 
+                    wire:ignore
+                    id="incomplete-basics-container" 
+                    class="h-32 overflow-hidden"
+                    wire:key="incomplete-basics-container">
+                </div>  
+            </div>
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+                <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Status barang') }}</label>
+                <div 
+                    wire:ignore
+                    id="status-container" 
+                    class="h-32 overflow-hidden"
+                    wire:key="status-container">
+                </div>  
+            </div>
+            <div class="col-span-3 grid grid-cols-2 gap-4">
+                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Nilai barang berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
+                    <div 
+                        wire:ignore
+                        id="value-container" 
+                        class="overflow-hidden "
+                        wire:key="value-container">
+                    </div>  
+                </div>
+                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Barang yang menua') }}</label>
+                    <div 
+                        wire:ignore
+                        id="aging-container" 
+                        class="h-64 overflow-hidden"
+                        wire:key="aging-container">
+                    </div>  
+                </div>
+            </div>
+        </div>
+        <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 mt-4">
+            <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Barang yang menua berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
+            @if ($agingData)
+                <table class="table table-sm text-sm mt-4">
+                    <thead>
+                        <tr>
+                            <th>{{ __('Tag')}}</th>
+                            <th>{{ '> 100' . __(' hari')}}</th>
+                            <th>{{ '> 90' . __(' hari')}}</th>
+                            <th>{{ '> 60' . __(' hari')}}</th>
+                            <th>{{ '> 30' . __(' hari')}}</th>
+                            <th>{{ '< 30' . __(' hari')}}</th>
+                            <th>{{ __('Total tag')}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($agingData as $tag)
+                            <tr>
+                                <td>{{ $tag['tag_name'] ?: __('Tanpa tag') }}</td>
+                                <td>
+                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'gt-100-days')">{{ number_format($tag['gt_100_days'], 2) }}</x-text-button>
+                                </td>
+                                <td>
+                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'gt-90-days')">{{ number_format($tag['gt_90_days'], 2) }}</x-text-button>
+                                </td>                            
+                                <td>
+                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'gt-60-days')">{{ number_format($tag['gt_60_days'], 2) }}</x-text-button>
+                                </td>
+                                <td>
+                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'gt-30-days')">{{ number_format($tag['gt_30_days'], 2) }}</x-text-button>
+                                </td>
+                                <td>
+                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'lt-30-days')">{{ number_format($tag['lt_30_days'], 2) }}</x-text-button>
+                                </td>
+                                <td class="font-weight-bold">
+                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'total')">{{ number_format($tag['total'], 2) }}</x-text-button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-light">
+                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ __('Total aging')}}</td>
+                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_100_days'], 2) }}</td>
+                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_90_days'], 2) }}</td>
+                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_60_days'], 2) }}</td>
+                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_30_days'], 2) }}</td>
+                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['lt_30_days'], 2) }}</td>
+                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['total'], 2) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+            @else
+                <div class="py-4 text-neutral-500 text-center">
+                    {{ __('Tidak ada data aging untuk area yang dipilih') }}
+                </div>
 
-@script
-<script>
-    $wire.$dispatch('update');
-</script>
-@endscript
+            @endif
+            <x-spinner-bg wire:loading.class.remove="hidden" wire:target="redirectToItems"></x-spinner-bg>
+            <x-spinner wire:loading.class.remove="hidden" wire:target="redirectToItems" class="hidden"></x-spinner>
+        </div>
+    </div>
+    <script>
+      function app() {
+         return {
+            observeProgress() {               
+               const streamElement = document.querySelector('[wire\\:stream="progress"]');
+               
+               if (streamElement) {
+                  const observer = new MutationObserver((mutations) => {
+                        mutations.forEach(mutation => {
+                           if (mutation.type === 'characterData' || mutation.type === 'childList') {
+                              const currentValue = streamElement.textContent;
+                              console.log('Stream value updated:', currentValue);
+                              
+                              // Do something with the captured value
+                              this.handleProgress(currentValue);
+                           }
+                        });
+                  });
+                  
+                  observer.observe(streamElement, { 
+                     characterData: true, 
+                     childList: true,
+                     subtree: true 
+                  });
+               }
+
+            },
+
+            handleProgress(value) {
+               this.progress = value;
+            }
+         };
+      }
+   </script>
+</div>
