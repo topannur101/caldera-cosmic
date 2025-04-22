@@ -116,7 +116,7 @@ new class extends Component {
             @break
 
          @case('no_uom_suffix_b')
-            {{ __('Unit stok baru akan dibuat dengan rincian sebagai berikut:') }}
+            {{ __('Unit stok untuk barang bekas akan dibuat dengan rincian sebagai berikut:') }}
             <div x-data="{ unit_price_reference: @entangle('unit_price_reference'), unit_price: @entangle('unit_price'), curr_name: @entangle('curr_name'), uom: @entangle('uom'), rate: @entangle('rate') }" class="mt-4">
                <div class="grid grid-cols-1 gap-y-4">
                   <hr class="border-neutral-300 dark:border-neutral-600" />
