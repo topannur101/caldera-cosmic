@@ -147,6 +147,20 @@ class extends Component
                 }
             });
 
+            switch ($this->filter) {
+                case 'gt-100-days':               
+                case 'gt-90-days':
+                case 'gt-60-days':
+                case 'gt-30-days':
+                case 'lt-60-days':
+                    $now            = Carbon::now();
+                    $sub_100_days   = $now->copy()->subDays(100);
+                    $sub_90_days    = $now->copy()->subDays(90);
+                    $sub_60_days    = $now->copy()->subDays(60);
+                    $sub_30_days    = $now->copy()->subDays(30);
+                    break;
+            }
+
             
             // filter
             switch ($this->filter) {
@@ -171,39 +185,26 @@ class extends Component
                     break;
 
                 case 'gt-100-days':
-                    $now = Carbon::now();
-                    $sub_100_days = $now->copy()->subDays(100);
                     $query->where(function ($q) use ($sub_100_days) {
-                    $q->where('last_withdrawal', '>', $sub_100_days)
-                    ->orWhereNull('last_withdrawal');
+                        $q->where('last_withdrawal', '<', $sub_100_days)
+                        ->orWhereNull('last_withdrawal');
                     });
                     break;                        
 
                 case 'gt-90-days':
-                    $now            = Carbon::now();
-                    $sub_100_days   = $now->copy()->subDays(100);
-                    $sub_90_days    = $now->copy()->subDays(90);
                     $query->whereBetween('last_withdrawal', [$sub_100_days, $sub_90_days]);
                     break;
 
                 case 'gt-60-days':
-                    $now            = Carbon::now();
-                    $sub_90_days    = $now->copy()->subDays(90);
-                    $sub_60_days    = $now->copy()->subDays(60);
                     $query->whereBetween('last_withdrawal', [$sub_90_days, $sub_60_days]);
                     break;
 
                 case 'gt-30-days':
-                    $now            = Carbon::now();
-                    $sub_60_days    = $now->copy()->subDays(60);
-                    $sub_30_days    = $now->copy()->subDays(30);
                     $query->whereBetween('last_withdrawal', [$sub_60_days, $sub_30_days]);
                     break;
 
                 case 'lt-30-days':
-                    $now            = Carbon::now();
-                    $sub_30_days    = $now->copy()->subDays(30);
-                    $query->where('last_withdrawal', '<', $sub_30_days);
+                    $query->where('last_withdrawal', '>', $sub_30_days);
                     break;
 
                 default:
@@ -336,8 +337,6 @@ class extends Component
 };
 
 ?>
-
-
 
 <x-slot name="title">{{ __('Cari') . ' — ' . __('Inventaris') }}</x-slot>
 

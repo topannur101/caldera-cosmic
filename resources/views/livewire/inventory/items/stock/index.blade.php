@@ -12,6 +12,12 @@ new class extends Component {
    public int $stock_qty = 0;
 
    #[Reactive]
+   public int $stock_qty_min = 0;
+
+   #[Reactive]
+   public int $stock_qty_max = 0;
+
+   #[Reactive]
    public string $stock_uom = '';
 
    #[Reactive]
@@ -34,9 +40,23 @@ new class extends Component {
 ?>
 
 <div class="flex flex-col md:flex-row gap-y-4 justify-between items-center">
-   <div class="flex gap-x-2 items-baseline">
-      <div class="text-4xl">{{ $stock_qty }}</div>
-      <div class="text-sm font-bold">{{ $stock_uom }}</div>
+   <div>
+      <table class="text-sm text-neutral-500">
+         <tr>
+            <td>{{ __('Min') . ': ' }}</td>
+            <td>
+               <livewire:inventory.items.stock.qty_limit type="min" :$stock_id :stock_qty_limit="$stock_qty_min" />
+            </td>
+            <td>{{ $stock_uom }}</td>
+         </tr>
+         <tr>
+            <td>{{ __('Maks') . ': ' }}</td>
+            <td>
+               <livewire:inventory.items.stock.qty_limit type="max" :$stock_id :stock_qty_limit="$stock_qty_max" />
+            </td>
+            <td>{{ $stock_uom }}</td>
+         </tr>
+      </table>
    </div>
    <div class="relative sm:static flex gap-x-2">
       @if($can_create)
