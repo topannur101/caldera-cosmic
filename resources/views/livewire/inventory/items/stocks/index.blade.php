@@ -24,7 +24,7 @@ new class extends Component
 
    public bool $can_create = false;
 
-   #[On('limit-updated')]
+   #[On('qty-limit-updated')]
    #[On('circ-evaluated')]
    public function init()
    {
@@ -38,6 +38,13 @@ new class extends Component
 
       $this->stocks  = $stocks ? $stocks->toArray() : [];  
       $this->area_id = $stocks ? $stocks[0]['inv_item']['inv_area_id'] : 0;
+   }
+
+   #[On('used-unit-created')]
+   public function switchStock($stock_id)
+   {
+      $this->stock_id = $stock_id;
+      $this->init();
    }
 
    public function mount()
@@ -93,20 +100,20 @@ new class extends Component
 ?>
 
 <div class="relative mt-6 flex flex-col gap-6 bg-white dark:bg-neutral-800 shadow rounded-none sm:rounded-lg">
-   <div class="flex flex-col">
-      <div class="p-4 text-sm text-neutral-500 border-b border-neutral-200 dark:border-neutral-700">
-         <ul class="flex flex-wrap gap-x-3 uppercase">
+   <div class="flex flex-col py-2">
+      <div class="px-4 text-sm text-neutral-500 border-b border-neutral-200 dark:border-neutral-700">
+         <ul class="flex flex-wrap uppercase">
             @foreach($stocks as $stock)
                <li>
                   <div wire:click="$set('stock_id', {{ $stock['id'] }})"
-                     class="cursor-pointer inline-block p-3 border-2 min-w-32 rounded-lg
+                     class="cursor-pointer inline-block px-6 py-3 border-b-2
                      @if($stock['id'] == $stock_id) text-neutral-800 dark:text-neutral-200 border-caldy-500 active dark:border-caldy-500 
                      @else border-transparent hover:text-neutral-600 hover:border-neutral-300 dark:hover:text-neutral-300 @endif">
-                     <div class="flex gap-x-2 items-baseline">
-                        <div class="text-2xl font-bold">{{ $stock['qty'] }}</div>
+                     <div class="flex gap-x-1 items-baseline justify-center">
+                        <div class="text-xl font-bold">{{ $stock['qty'] }}</div>
                         <div class="text-sm font-extrabold">{{ $stock['uom'] }}</div>
                      </div>
-                     <div class="mt-1">
+                     <div class="text-center text-xs">
                         {{ $stock['inv_curr']['name'] . ' ' . number_format($stock['unit_price'], 0) }}
                      </div>
                   </div>
@@ -117,7 +124,7 @@ new class extends Component
       <div class="p-6">
          <livewire:inventory.items.stock.index :$stock_id :$stock_qty :$stock_qty_min :$stock_qty_max :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval :$can_create  />
       </div>
-      <div class="pb-6 truncate">
+      <div class="truncate">
          <livewire:inventory.items.stock.circs :$stock_id />
       </div>
          <!-- <div class="flex justify-between items-center mb-4">

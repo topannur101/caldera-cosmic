@@ -41,28 +41,47 @@ new class extends Component {
 
 <div class="flex flex-col md:flex-row gap-y-4 justify-between items-center">
    <div>
+      <div wire:key="modals">
+         <x-modal name="edit-qty-limit">
+            <livewire:inventory.items.stock.edit-qty-limit :$stock_id :$stock_qty_min :$stock_qty_max />
+         </x-modal>
+         <x-modal name="create-used-unit" maxWidth="sm">
+            <livewire:inventory.items.stock.create-used-unit :$stock_id />
+         </x-modal>
+      </div>
       <table class="text-sm text-neutral-500">
          <tr>
             <td>{{ __('Min') . ': ' }}</td>
-            <td>
-               <livewire:inventory.items.stock.qty_limit type="min" :$stock_id :stock_qty_limit="$stock_qty_min" />
-            </td>
+            <td class="px-2">{{ $stock_qty_min }}</td>
             <td>{{ $stock_uom }}</td>
          </tr>
          <tr>
             <td>{{ __('Maks') . ': ' }}</td>
-            <td>
-               <livewire:inventory.items.stock.qty_limit type="max" :$stock_id :stock_qty_limit="$stock_qty_max" />
-            </td>
+            <td class="px-2">{{ $stock_qty_max }}</td>
             <td>{{ $stock_uom }}</td>
          </tr>
       </table>
    </div>
-   <div class="relative sm:static flex gap-x-2">
+   <div class="relative sm:static flex items-center gap-x-2">
       @if($can_create)
          <livewire:inventory.items.stock.create-circ type="deposit"    :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
          <livewire:inventory.items.stock.create-circ type="capture"    :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
          <livewire:inventory.items.stock.create-circ type="withdrawal" :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
       @endif
+      <div>
+         <x-dropdown align="right">
+            <x-slot name="trigger">
+               <x-text-button><i class="fa fa-fw fa-ellipsis-v hidden sm:inline"></i><i class="fa fa-fw fa-ellipsis-h sm:hidden inline"></i></x-text-button>
+            </x-slot>
+            <x-slot name="content">
+               <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'edit-qty-limit'); $wire.$dispatch('edit-qty-limit');">
+                  {{ __('Edit batas qty') }}
+               </x-dropdown-link>
+               <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'create-used-unit'); $wire.$dispatch('create-used-unit');">
+                  {{ __('Buat unit stok bekas') }}
+               </x-dropdown-link>
+            </x-slot>
+         </x-dropdown>
+      </div>
    </div>
 </div>
