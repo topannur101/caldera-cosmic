@@ -66,7 +66,7 @@ new class extends Component {
 
          $item = $stock->inv_item;
 
-         $itemEval = Gate::inspect('view', $item);
+         $itemEval = Gate::inspect('circCreate', $item);
          if ($itemEval->denied())
          {
              throw new \Exception( $itemEval->message() );
