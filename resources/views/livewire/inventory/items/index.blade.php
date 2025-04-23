@@ -152,7 +152,7 @@ class extends Component
                 case 'gt-90-days':
                 case 'gt-60-days':
                 case 'gt-30-days':
-                case 'lt-60-days':
+                case 'lt-30-days':
                     $now            = Carbon::now();
                     $sub_100_days   = $now->copy()->subDays(100);
                     $sub_90_days    = $now->copy()->subDays(90);
