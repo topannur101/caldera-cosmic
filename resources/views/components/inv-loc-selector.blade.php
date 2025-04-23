@@ -46,7 +46,7 @@
                 </div>
             </div>              
             <div class="flex justify-end">
-                <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="loc_parent = ''; loc_bin = ''; $dispatch('close');" x-show="loc_parent || loc_bin"><span class="text-red-500"><div class="px-1">{{ $isQuery ? __('Hapus filter lokasi') : __('Hapus lokasi') }}</div></span></x-text-button>
+                <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="loc_parent = ''; loc_bin = ''; $dispatch('close');" x-show="loc_parent || loc_bin"><span class="text-red-500"><div class="px-1">{{ __('Reset') }}</div></span></x-text-button>
             </div>
         </div>
     </x-modal>   

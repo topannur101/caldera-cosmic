@@ -53,12 +53,8 @@ class extends Component
    #[On('update')]
    public function update()
    {
-        $this->agingTable(); // 2
-
-        // incomplete basics 4
-        // status 2 
-        // value 2
-        // aging 8
+        $this->agingTable();
+        $this->js('updateTable(' . json_encode($this->agingData) . ')');
 
         $this->js("
         let container = '';
@@ -80,14 +76,6 @@ class extends Component
         container.appendChild(canvas);
         new Chart(canvas, status);
 
-        const value = " . json_encode($this->value()) . ";
-        container = \$wire.\$el.querySelector('#value-container');
-        container.innerHTML = '';
-        canvas = document.createElement('canvas');
-        canvas.id = 'value';
-        container.appendChild(canvas);
-        new Chart(canvas, value);
-
         const aging = " . json_encode($this->aging()) . ";
         container = \$wire.\$el.querySelector('#aging-container');
         container.innerHTML = '';
@@ -107,10 +95,10 @@ class extends Component
    public function agingTable()
    {
         $now = Carbon::now();
-        $gt_100_days = $now->copy()->subDays(100);
-        $gt_90_days = $now->copy()->subDays(90);
-        $gt_60_days = $now->copy()->subDays(60);
-        $gt_30_days = $now->copy()->subDays(30);
+        $sub_100_days = $now->copy()->subDays(100);
+        $sub_90_days = $now->copy()->subDays(90);
+        $sub_60_days = $now->copy()->subDays(60);
+        $sub_30_days = $now->copy()->subDays(30);
 
         // Reset totals
         $this->totals = [
@@ -126,7 +114,7 @@ class extends Component
         $tags = InvTag::whereHas('inv_items', function($query) {
             $query->where('inv_area_id', $this->area_id)
                 ->where('is_active', true);
-        })->get();
+        })->orderBy('name')->get();
 
         $this->agingData = collect();
 
@@ -159,19 +147,19 @@ class extends Component
                     if ($item->last_withdrawal) {
                         $lastWithdrawal = Carbon::parse($item->last_withdrawal);
                         
-                        if ($lastWithdrawal <= $gt_100_days) {
+                        if ($lastWithdrawal <= $sub_100_days) {
                             $tagData['gt_100_days'] += $value;
                             $this->totals['gt_100_days'] += $value;
 
-                        } elseif ($lastWithdrawal <= $gt_90_days) {
+                        } elseif ($lastWithdrawal <= $sub_90_days) {
                             $tagData['gt_90_days'] += $value;
                             $this->totals['gt_90_days'] += $value;
 
-                        } elseif ($lastWithdrawal <= $gt_60_days) {
+                        } elseif ($lastWithdrawal <= $sub_60_days) {
                             $tagData['gt_60_days'] += $value;
                             $this->totals['gt_60_days'] += $value;
 
-                        } elseif ($lastWithdrawal <= $gt_30_days) {
+                        } elseif ($lastWithdrawal <= $sub_30_days) {
                             $tagData['gt_30_days'] += $value;
                             $this->totals['gt_30_days'] += $value;
                             
@@ -242,16 +230,16 @@ class extends Component
                 if ($item->last_withdrawal) {
                     $lastWithdrawal = Carbon::parse($item->last_withdrawal);
                     
-                    if ($lastWithdrawal <= $gt_100_days) {
+                    if ($lastWithdrawal <= $sub_100_days) {
                         $noTagData['gt_100_days'] += $value;
                         $this->totals['gt_100_days'] += $value;
-                    } elseif ($lastWithdrawal <= $gt_90_days) {
+                    } elseif ($lastWithdrawal <= $sub_90_days) {
                         $noTagData['gt_90_days'] += $value;
                         $this->totals['gt_90_days'] += $value;
-                    } elseif ($lastWithdrawal <= $gt_60_days) {
+                    } elseif ($lastWithdrawal <= $sub_60_days) {
                         $noTagData['gt_60_days'] += $value;
                         $this->totals['gt_60_days'] += $value;
-                    } elseif ($lastWithdrawal <= $gt_30_days) {
+                    } elseif ($lastWithdrawal <= $sub_30_days) {
                         $noTagData['gt_30_days'] += $value;
                         $this->totals['gt_30_days'] += $value;
                     } else {
@@ -363,7 +351,7 @@ class extends Component
                      'backgroundColor' => '#FFCE56',
                  ],
                  [
-                     'label' => '',
+                     'label' => __('Tanpa tag'),
                      'data' => [$noTagCount],
                      'backgroundColor' => '#4BC0C0',
                  ],
@@ -448,7 +436,6 @@ class extends Component
                'plugins' => [
                   'legend' => [
                      'display' => true,
-                     'position' => 'right',
                   ],
                   'datalabels' => [
                      'anchor' => 'center',
@@ -468,154 +455,18 @@ class extends Component
       return $data;
    }
 
-   public function value()
-   {
-       // Get the main currency rate (assuming the first entry is the main currency)
-       $mainCurrency = InvCurr::first();
-       $mainCurrencyId = $mainCurrency->id;
-   
-       // Get all tags related to the selected area
-       $tags = InvTag::whereHas('inv_items', function($query) {
-           $query->where('inv_area_id', $this->area_id);
-       })->get();
-   
-       $data = [
-           'type' => 'bar',
-           'data' => [
-               'labels' => [],
-               'datasets' => [
-                   [
-                       'label' => 'Total Value',
-                       'data' => [],
-                       'backgroundColor' => [],
-                       'barThickness' => 20
-                   ],
-               ],
-           ],
-           'options' => [
-               'responsive' => true,
-               'maintainAspectRatio' => false,
-               'indexAxis' => 'y', // This makes the chart horizontal
-               'scales' => [
-                   'x' => [
-                       'beginAtZero' => true,
-                   ],
-                   'y' => [
-                       'beginAtZero' => true,
-                   ],
-               ],
-               'plugins' => [
-                   'legend' => [
-                       'display' => false, // This shows the legend
-                   ],
-                   'datalabels' => [
-                       'anchor' => 'center',
-                       'align' => 'center',
-                       'color' => 'white',
-                       'font' => [
-                           'weight' => 'bold',
-                       ],
-                   ],
-               ],
-           ],
-       ];
-   
-       foreach ($tags as $key => $tag) {
-           $totalValue = 0;
-   
-           // Get all items with this tag and in the selected area
-           $items = $tag->inv_items()->where('inv_area_id', $this->area_id)->get();
-   
-           foreach ($items as $item) {
-               // Get all stocks for this item
-               $stocks = $item->inv_stocks;
-   
-               foreach ($stocks as $stock) {
-                   $totalValue += $stock->amount_main;
-               }
-           }
-   
-           // Add tag name and total value to the data
-           $data['data']['labels'][] = $tag->name;
-           $data['data']['datasets'][0]['data'][] = round($totalValue, 2);
-
-           $this->progress += ($key + 1) / $tags->count() / 2.80;
-           $this->stream(
-               to: 'progress',
-               content: min(floor($this->progress / 10), 100),
-               replace: true
-            ); 
-       }
-
-       if (!$tags->count()) {
-            $this->progress += 2.80;
-            $this->stream(
-                to: 'progress',
-                content: min(floor($this->progress / 10), 100),
-                replace: true
-            ); 
-        }
-    
-       // Calculate total value for items with no tags
-       $noTagValue = 0;
-       $noTagItems = InvItem::where('inv_area_id', $this->area_id)->whereDoesntHave('inv_tags')->get();
-   
-       foreach ($noTagItems as $item) {
-           // Get all stocks for this item
-           $stocks = $item->inv_stocks;
-   
-           foreach ($stocks as $stock) {
-               $unitPrice = $stock->unit_price;
-               $qty = $stock->qty;
-               $currencyRate = $stock->inv_curr->rate;
-   
-               // Convert unit price to main currency if necessary
-               if ($stock->inv_curr_id != $mainCurrencyId) {
-                   $unitPrice /= $currencyRate;
-               }
-   
-               // Calculate total value
-               $noTagValue += $qty * $unitPrice;
-           }
-
-           $this->progress += ($key + 1) / $noTagItems->count() / 2.80;
-           $this->stream(
-                to: 'progress',
-                content: min(floor($this->progress / 10), 100),
-                replace: true
-            ); 
-       }
-
-       if (!$noTagItems->count()) {
-            $this->progress += 2.80;
-            $this->stream(
-                to: 'progress',
-                content: min(floor($this->progress / 10), 100),
-                replace: true
-            ); 
-        }
-   
-       // Add no tag value to the data
-       $data['data']['labels'][] = __('Tanpa tag');
-       $data['data']['datasets'][0]['data'][] = round($noTagValue, 2);
-
-        return $data;
-   }
-
    public function aging()
    {
       $now = now();
 
-      $oneWeekAgo       = $now->copy()->subDays(7);
-      $twoWeeksAgo      = $now->copy()->subDays(14);
-      $threeWeeksAgo    = $now->copy()->subDays(21);
-      $oneMonthAgo      = $now->copy()->subDays(28);
-      $twoMonthsAgo     = $now->copy()->subDays(58);
-      $threeMonthsAgo   = $now->copy()->subDays(88);
+      $sub_100_days = $now->copy()->subDays(100);
+      $sub_90_days  = $now->copy()->subDays(90);
+      $sub_60_days  = $now->copy()->subDays(60);
+      $sub_30_days  = $now->copy()->subDays(30);
 
-      $lessthanOneWeekCount = InvItem::where('last_withdrawal', '>', $oneWeekAgo)
-      ->where('inv_area_id', $this->area_id)
-      ->count();
+      $lt30DaysCount = InvItem::where('last_withdrawal', '>', $sub_30_days)
+        ->where('inv_area_id', $this->area_id)
+        ->count();
 
         $this->progress += 2.80;
         $this->stream(
@@ -624,9 +475,9 @@ class extends Component
             replace: true
         ); 
   
-      $oneWeekCount     = InvItem::whereBetween('last_withdrawal', [$oneWeekAgo, $twoWeeksAgo])
-      ->where('inv_area_id', $this->area_id)
-      ->count();
+      $gt30DaysCount = InvItem::whereBetween('last_withdrawal', [$sub_60_days, $sub_30_days])
+        ->where('inv_area_id', $this->area_id)
+        ->count();
 
       $this->progress += 2.80;
       $this->stream(
@@ -635,9 +486,9 @@ class extends Component
           replace: true
       );
 
-      $twoWeeksCount    = InvItem::whereBetween('last_withdrawal', [$threeWeeksAgo, $twoWeeksAgo])
-      ->where('inv_area_id', $this->area_id)
-      ->count();
+      $gt60DaysCount= InvItem::whereBetween('last_withdrawal', [$sub_90_days, $sub_60_days])
+        ->where('inv_area_id', $this->area_id)
+        ->count();
 
       $this->progress += 2.80;
       $this->stream(
@@ -646,9 +497,9 @@ class extends Component
           replace: true
       );
 
-      $threeWeeksCount  = InvItem::whereBetween('last_withdrawal', [$oneMonthAgo, $threeWeeksAgo])
-      ->where('inv_area_id', $this->area_id)
-      ->count();
+      $gt90DaysCount = InvItem::whereBetween('last_withdrawal', [$sub_100_days, $sub_90_days])
+        ->where('inv_area_id', $this->area_id)
+        ->count();
 
       $this->progress += 2.80;
       $this->stream(
@@ -657,41 +508,12 @@ class extends Component
           replace: true
       );
 
-      $oneMonthCount    = InvItem::whereBetween('last_withdrawal', [$twoMonthsAgo, $oneMonthAgo])
-      ->where('inv_area_id', $this->area_id)
-      ->count();
-
-      $this->progress += 2.80;
-      $this->stream(
-          to: 'progress',
-          content: min(floor($this->progress / 10), 100),
-          replace: true
-      );
-
-      $twoMonthsCount   = InvItem::whereBetween('last_withdrawal', [$threeMonthsAgo, $twoMonthsAgo])
-      ->where('inv_area_id', $this->area_id)
-      ->count();
-
-      $this->progress += 2.80;
-      $this->stream(
-          to: 'progress',
-          content: min(floor($this->progress / 10), 100),
-          replace: true
-      );
-
-      $threeMonthsCount = InvItem::where('last_withdrawal', '<', $threeMonthsAgo)
-      ->where('inv_area_id', $this->area_id)
-      ->count();
-
-      $this->progress += 2.80;
-      $this->stream(
-          to: 'progress',
-          content: min(floor($this->progress / 10), 100),
-          replace: true
-      );
-
-      $neverCount = InvItem::whereNull('last_withdrawal')->where('inv_area_id', $this->area_id)
-      ->count();
+      $gt100DaysCount = InvItem::where(function ($q) use ($sub_100_days) {
+            $q->where('last_withdrawal', '<', $sub_100_days)
+            ->orWhereNull('last_withdrawal');
+        })
+        ->where('inv_area_id', $this->area_id)
+        ->count();
 
       $this->progress += 2.80;
       $this->stream(
@@ -703,12 +525,12 @@ class extends Component
       $data = [
          'type' => 'bar',
          'data' => [
-         'labels' => [ '> ' . __('1 minggu'), __('1 minggu'), __('2 minggu'), __('3 minggu'), __('1 bulan'), __('2 bulan'), __('3 bulan'), __('Tak pernah diambil')],
+         'labels' => [ '> ' . __('100 hari'), '> ' . __('90 hari'), '> ' . __('60 hari'), '> ' . __('30 hari'), '< ' . __('30 hari')],
               'datasets' => [
                   [
                       'label' => 'Aging',
-                      'data' => [$lessthanOneWeekCount, $oneWeekCount, $twoWeeksCount, $threeWeeksCount, $oneMonthCount, $twoMonthsCount, $threeMonthsCount, $neverCount],
-                      'backgroundColor' => ['#666666', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF'],
+                      'data' => [$gt100DaysCount, $gt90DaysCount, $gt60DaysCount, $gt30DaysCount, $lt30DaysCount],
+                      'backgroundColor' => ['#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF'],
                   ],
               ],
           ],
@@ -812,107 +634,40 @@ class extends Component
         <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}</div>
     </div>
     <div x-cloak :class="area_id ? '' : 'hidden'">
-        <div class="grid grid-cols-3 gap-4">
-            <div class="col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-                <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Ketidaklengkapan info dasar') }}</label>
+        <div class="grid grid-cols-6 gap-4">
+            <div class="col-span-3 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+                <label class="mb-6 block uppercase text-xs text-neutral-500">{{ __('Ketidaklengkapan info dasar') }}</label>
                 <div 
                     wire:ignore
                     id="incomplete-basics-container" 
-                    class="h-32 overflow-hidden"
+                    class="h-56 overflow-hidden"
                     wire:key="incomplete-basics-container">
                 </div>  
             </div>
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-                <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Status barang') }}</label>
+                <label class="mb-6 block uppercase text-xs text-neutral-500">{{ __('Status barang') }}</label>
                 <div 
                     wire:ignore
                     id="status-container" 
-                    class="h-32 overflow-hidden"
+                    class="h-56 overflow-hidden"
                     wire:key="status-container">
                 </div>  
             </div>
-            <div class="col-span-3 grid grid-cols-2 gap-4">
-                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Nilai barang berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
-                    <div 
-                        wire:ignore
-                        id="value-container" 
-                        class="overflow-hidden "
-                        wire:key="value-container">
-                    </div>  
-                </div>
-                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-                    <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Barang yang menua') }}</label>
-                    <div 
-                        wire:ignore
-                        id="aging-container" 
-                        class="h-64 overflow-hidden"
-                        wire:key="aging-container">
-                    </div>  
-                </div>
+            <div class="col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+                <label class="mb-6 block uppercase text-xs text-neutral-500">{{ __('Jumlah barang yang menua') }}</label>
+                <div 
+                    wire:ignore
+                    id="aging-container" 
+                    class="h-56 overflow-hidden"
+                    wire:key="aging-container">
+                </div>  
             </div>
         </div>
-        <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 mt-4">
-            <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Barang yang menua berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
-            @if ($agingData)
-                <table class="table table-sm text-sm mt-4">
-                    <thead>
-                        <tr>
-                            <th>{{ __('Tag')}}</th>
-                            <th>{{ '> 100' . __(' hari')}}</th>
-                            <th>{{ '> 90' . __(' hari')}}</th>
-                            <th>{{ '> 60' . __(' hari')}}</th>
-                            <th>{{ '> 30' . __(' hari')}}</th>
-                            <th>{{ '< 30' . __(' hari')}}</th>
-                            <th>{{ __('Total tag')}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($agingData as $tag)
-                            <tr>
-                                <td>{{ $tag['tag_name'] ?: __('Tanpa tag') }}</td>
-                                <td>
-                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'gt-100-days')">{{ number_format($tag['gt_100_days'], 2) }}</x-text-button>
-                                </td>
-                                <td>
-                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'gt-90-days')">{{ number_format($tag['gt_90_days'], 2) }}</x-text-button>
-                                </td>                            
-                                <td>
-                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'gt-60-days')">{{ number_format($tag['gt_60_days'], 2) }}</x-text-button>
-                                </td>
-                                <td>
-                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'gt-30-days')">{{ number_format($tag['gt_30_days'], 2) }}</x-text-button>
-                                </td>
-                                <td>
-                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'lt-30-days')">{{ number_format($tag['lt_30_days'], 2) }}</x-text-button>
-                                </td>
-                                <td class="font-weight-bold">
-                                    <x-text-button type="button" wire:click="redirectToItems('{{ $tag['tag_name'] }}', 'total')">{{ number_format($tag['total'], 2) }}</x-text-button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-light">
-                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ __('Total aging')}}</td>
-                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_100_days'], 2) }}</td>
-                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_90_days'], 2) }}</td>
-                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_60_days'], 2) }}</td>
-                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['gt_30_days'], 2) }}</td>
-                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['lt_30_days'], 2) }}</td>
-                            <td class="font-weight-bold border-t border-neutral-300 dark:border-neutral-700">{{ number_format($totals['total'], 2) }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-                
-            @else
-                <div class="py-4 text-neutral-500 text-center">
-                    {{ __('Tidak ada data aging untuk area yang dipilih') }}
-                </div>
-
-            @endif
-            <x-spinner-bg wire:loading.class.remove="hidden" wire:target="redirectToItems"></x-spinner-bg>
-            <x-spinner wire:loading.class.remove="hidden" wire:target="redirectToItems" class="hidden"></x-spinner>
+        <div class="mt-4">
+            <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 min-h-56">                
+                <label class="mb-6 block uppercase text-xs text-neutral-500">{{ __('Barang yang menua berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
+                <div id="aging-data-table"></div>             
+            </div>
         </div>
     </div>
     <script>
@@ -945,7 +700,169 @@ class extends Component
 
             handleProgress(value) {
                this.progress = value;
-            }
+            },
+
+            agingTable: null,
+            updateTable(tableData) {
+                const that = this;
+                // Create Tabulator
+                this.agingTable = new Tabulator("#aging-data-table", {
+                    data: tableData,
+                    layout: "fitColumns",
+                    responsiveLayout: "collapse",
+                    columns: [
+                        {
+                            title: "{{ __('Nama tag') }}", 
+                            field: "tag_name", 
+                            sorter: "string",
+                            formatter: function(cell) {
+                                let value = cell.getValue();
+                                let tag = value ? value : "";
+                                let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
+
+                                let url = tag ? 
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&ignore_params=true" : 
+                                    "{{ url('/inventory/items') }}?filter=no-tags" + areaParam + "&ignore_params=true";
+                                return "<a href='" + url + "' wire:navigate>" + value + "</a>";
+                            },
+                            formatterParams: {
+                                allowHTML: true
+                            }
+                        },
+                        {
+                            title: "{{ '> '. __('100 hari') }}", 
+                            field: "gt_100_days", 
+                            sorter: "number", 
+                            formatter: function(cell) {
+                                let value = cell.getValue();
+                                let tag = cell.getRow().getData().tag_name;
+                                let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
+
+                                let url = tag ? 
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-100-days" + areaParam + "&ignore_params=true" : 
+                                    "{{ url('/inventory/items') }}?aging=gt-100-days&filter=no-tags" + areaParam + "&ignore_params=true";
+                                return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
+                            },
+                            formatterParams: {
+                                allowHTML: true
+                            },
+                            headerSortStartingDir: "desc", 
+                            bottomCalc: "sum", 
+                            bottomCalcFormatter: "money", 
+                            bottomCalcFormatterParams: {precision: 2}
+                        },
+                        {
+                            title: "{{ '> '. __('90 hari') }}", 
+                            field: "gt_90_days", 
+                            sorter: "number", 
+                            formatter: function(cell) {
+                                let value = cell.getValue();
+                                let tag = cell.getRow().getData().tag_name;
+                                let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
+
+                                let url = tag ? 
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-90-days" + areaParam + "&ignore_params=true" : 
+                                    "{{ url('/inventory/items') }}?aging=gt-90-days&filter=no-tags" + areaParam + "&ignore_params=true";
+                                return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
+                            },
+                            formatterParams: {
+                                allowHTML: true
+                            },
+                            bottomCalc: "sum", 
+                            bottomCalcFormatter: "money", 
+                            bottomCalcFormatterParams: {precision: 2}
+                        },
+                        {
+                            title: "{{ '> '. __('60 hari') }}", 
+                            field: "gt_60_days", 
+                            sorter: "number", 
+                            formatter: function(cell) {
+                                let value = cell.getValue();
+                                let tag = cell.getRow().getData().tag_name;
+                                let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
+
+                                let url = tag ? 
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-60-days" + areaParam + "&ignore_params=true" : 
+                                    "{{ url('/inventory/items') }}?aging=gt-60-days&filter=no-tags" + areaParam + "&ignore_params=true";
+                                return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
+                            },
+                            formatterParams: {
+                                allowHTML: true
+                            },
+                            bottomCalc: "sum", 
+                            bottomCalcFormatter: "money", 
+                            bottomCalcFormatterParams: {precision: 2}
+                        },
+                        {
+                            title: "{{ '> '. __('30 hari') }}", 
+                            field: "gt_30_days", 
+                            sorter: "number", 
+                            formatter: function(cell) {
+                                let value = cell.getValue();
+                                let tag = cell.getRow().getData().tag_name;
+                                let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
+
+                                let url = tag ? 
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-30-days" + areaParam + "&ignore_params=true" : 
+                                    "{{ url('/inventory/items') }}?aging=gt-30-days&filter=no-tags" + areaParam + "&ignore_params=true";
+                                return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
+                            },
+                            formatterParams: {
+                                allowHTML: true
+                            },
+                            bottomCalc: "sum", 
+                            bottomCalcFormatter: "money", 
+                            bottomCalcFormatterParams: {precision: 2}
+                        },
+                        {
+                            title: "{{ '< '. __('30 hari') }}", 
+                            field: "lt_30_days", 
+                            sorter: "number", 
+                            formatter: function(cell) {
+                                let value = cell.getValue();
+                                let tag = cell.getRow().getData().tag_name;
+                                let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
+
+                                let url = tag ? 
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=lt-30-days" + areaParam + "&ignore_params=true" : 
+                                    "{{ url('/inventory/items') }}?aging=lt-30-days&filter=no-tags" + areaParam + "&ignore_params=true";
+                                return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
+                            },
+                            formatterParams: {
+                                allowHTML: true
+                            },
+                            bottomCalc: "sum", 
+                            bottomCalcFormatter: "money", 
+                            bottomCalcFormatterParams: {precision: 2}
+                        },
+                        {
+                            title: "{{ __('Total') }}", 
+                            field: "total", 
+                            sorter: "number", 
+                            formatter: function(cell) {
+                                let value = cell.getValue();
+                                let tag = cell.getRow().getData().tag_name;
+                                let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
+                                
+                                let url = tag ? 
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&ignore_params=true" : 
+                                    "{{ url('/inventory/items') }}?filter=no-tags" + areaParam + "&ignore_params=true";
+                                return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
+                            },
+                            formatterParams: {
+                                allowHTML: true
+                            },
+                            bottomCalc: "sum", 
+                            bottomCalcFormatter: "money", 
+                            bottomCalcFormatterParams: {precision: 2}
+                        }
+                    ],
+                    rowHeader:{resizable: false, frozen: true, width:40, hozAlign:"center", formatter: "rownum", cssClass:"range-header-col", editor:false},
+                    initialSort: [
+                        {column: "tag_name", dir: "asc"}
+                    ],
+                });
+            },
          };
       }
    </script>

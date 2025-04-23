@@ -115,7 +115,7 @@
                </datalist>
             </div>            
             <div class="flex justify-end">
-               <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="tags = []; $dispatch('close');" x-show="tags.length"><span class="text-red-500"><div class="px-1">{{ $isQuery ? __('Hapus filter tag') : __('Hapus tag') }}</div></span></x-text-button>
+               <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="tags = []; $dispatch('close');" x-show="tags.length"><span class="text-red-500"><div class="px-1">{{ __('Reset') }}</div></span></x-text-button>
             </div>
          </div>
       </div>

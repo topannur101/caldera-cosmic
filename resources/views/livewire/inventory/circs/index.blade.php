@@ -63,17 +63,23 @@ class extends Component {
 
         $this->areas = $areas->toArray();
 
-        $savedParams = session('inv_circs_params', []);
+        $circsParams = session('inv_circs_params', []);
 
-        if ($savedParams) {
-            $this->sort             = $savedParams['sort']              ?? '';
-            $this->area_ids         = $savedParams['area_ids']          ?? [];
-            $this->circ_eval_status = $savedParams['circ_eval_status']  ?? [];
-            $this->circ_types       = $savedParams['circ_types']        ?? [];
-            $this->date_fr          = $savedParams['date_fr']           ?? '';
-            $this->date_to          = $savedParams['date_to']           ?? '';
-            $this->user_id          = $savedParams['user_id']           ?? 0;
-            $this->remarks          = $savedParams['remarks']           ?? ['', ''];
+        if ($circsParams) {
+            $this->sort             = $circsParams['sort']              ?? '';
+            $this->area_ids         = $circsParams['area_ids']          ?? [];
+            $this->circ_eval_status = $circsParams['circ_eval_status']  ?? [];
+            $this->circ_types       = $circsParams['circ_types']        ?? [];
+            $this->date_fr          = $circsParams['date_fr']           ?? '';
+            $this->date_to          = $circsParams['date_to']           ?? '';
+            $this->user_id          = $circsParams['user_id']           ?? 0;
+            $this->remarks          = $circsParams['remarks']           ?? ['', ''];
+        }
+
+        $areasParam = session('inv_areas_param', []);
+
+        if ($areasParam) {
+            $this->area_ids = $areasParam ?? [];
         } else {
             $this->area_ids = $areas->pluck('id')->toArray();
         }
@@ -86,7 +92,6 @@ class extends Component {
 
         $inv_circs_params = [
             'sort'              => $this->sort,
-            'area_ids'          => $this->area_ids,
             'circ_eval_status'  => $this->circ_eval_status,
             'circ_types'        => $this->circ_types,
             'date_fr'           => $this->date_fr,
@@ -96,6 +101,7 @@ class extends Component {
         ];
 
         session(['inv_circs_params' => $inv_circs_params]);
+        session(['inv_areas_param' => $this->area_ids]);
 
         $inv_circs_query = InvCirc::with([
             'inv_stock',

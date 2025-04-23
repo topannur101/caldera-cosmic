@@ -26,8 +26,10 @@ class extends Component
 
     public array $areas = [];
     
+    #[Url]
     public array $area_ids = [];
 
+    #[Url]
     public array $tags = [];
     
     // public array $tag_hints = [];
@@ -45,15 +47,22 @@ class extends Component
     
     public array $qwords = []; // caldera: do you need it?
 
+    #[Url]
     public string $filter = '';
+
+    #[Url]
+    public string $aging = '';
 
     #[Url]
     public bool $is_deleted = false;
 
+    #[Url]
+    public bool $ignore_params = false;
+
     public string $download_as = 'inv_stocks';
 
     public function mount()
-    {
+    {        
         $user_id = Auth::user()->id;
 
         if ($user_id === 1) {
@@ -65,19 +74,28 @@ class extends Component
 
         $this->areas = $areas->toArray();
 
-        $savedParams = session('inv_search_params', []);
+        if (!$this->ignore_params) {
+            $itemsParams = session('inv_items_params', []);
+
+            if ($itemsParams) {
+                $this->q            = $itemsParams['q'] ?? '';
+                $this->loc_parent   = $itemsParams['loc_parent'] ?? '';
+                $this->loc_bin      = $itemsParams['loc_bin'] ?? '';
+                $this->tags         = $itemsParams['tags'] ?? [];
+                $this->area_ids     = $itemsParams['area_ids'] ?? [];
+                $this->filter       = $itemsParams['filter'] ?? '';
+                $this->aging        = $itemsParams['aging'] ?? '';
+                $this->view         = $itemsParams['view'] ?? 'content';
+                $this->sort         = $itemsParams['sort'] ?? '';
+            }
+            
+            $areasParam  = session('inv_areas_param', []);
     
-        if ($savedParams) {
-            $this->q            = $savedParams['q'] ?? '';
-            $this->loc_parent   = $savedParams['loc_parent'] ?? '';
-            $this->loc_bin      = $savedParams['loc_bin'] ?? '';
-            $this->tags         = $savedParams['tags'] ?? [];
-            $this->area_ids     = $savedParams['area_ids'] ?? [];
-            $this->filter       = $savedParams['filter'] ?? '';
-            $this->view         = $savedParams['view'] ?? 'content';
-            $this->sort         = $savedParams['sort'] ?? '';
-        } else {
-            $this->area_ids     = $areas->pluck('id')->toArray();
+            if ($areasParam) {
+                $this->area_ids     = $areasParam ?? [];
+            } else {
+                $this->area_ids     = $areas->pluck('id')->toArray();
+            }
         }
 
         if($this->is_deleted) {
@@ -93,20 +111,22 @@ class extends Component
         $loc_bin    = trim($this->loc_bin);
         $tags       = $this->tags;
 
-        $inv_search_params = [
+        $inv_items_params = [
             'q'             => $q,
             'loc_parent'    => $loc_parent,
             'loc_bin'       => $loc_bin,
             'tags'          => $tags,
             'area_ids'      => $this->area_ids,
             'filter'        => $this->filter,
+            'aging'         => $this->aging,
             'view'          => $this->view,
             'sort'          => $this->sort
         ];
-        
-        session(['inv_search_params' => $inv_search_params]);
 
-        $inv_search_query = InvStock::with([
+        session(['inv_items_params' => $inv_items_params]);
+        session(['inv_areas_param' => $this->area_ids]);
+
+        $inv_items_query = InvStock::with([
             'inv_item', 
             'inv_curr',
             'inv_item.inv_loc', 
@@ -114,7 +134,7 @@ class extends Component
             'inv_item.inv_tags'
         ])
             ->whereHas('inv_item', function ($query) use ($q, $loc_parent, $loc_bin, $tags) {
-            // search
+            // items
             $query->where(function ($subQuery) use ($q) {
                 $subQuery->where('name', 'like', "%$q%")
                          ->orWhere('code', 'like', "%$q%")
@@ -147,20 +167,6 @@ class extends Component
                 }
             });
 
-            switch ($this->filter) {
-                case 'gt-100-days':               
-                case 'gt-90-days':
-                case 'gt-60-days':
-                case 'gt-30-days':
-                case 'lt-30-days':
-                    $now            = Carbon::now();
-                    $sub_100_days   = $now->copy()->subDays(100);
-                    $sub_90_days    = $now->copy()->subDays(90);
-                    $sub_60_days    = $now->copy()->subDays(60);
-                    $sub_30_days    = $now->copy()->subDays(30);
-                    break;
-            }
-
             
             // filter
             switch ($this->filter) {
@@ -184,6 +190,28 @@ class extends Component
                     $query->where('is_active', false);
                     break;
 
+                default:
+                    $query->where('is_active', true);
+                    break;
+            }
+
+            switch ($this->aging) {
+                case 'gt-100-days':               
+                case 'gt-90-days':
+                case 'gt-60-days':
+                case 'gt-30-days':
+                case 'lt-30-days':
+                    $now            = Carbon::now();
+                    $sub_100_days   = $now->copy()->subDays(100);
+                    $sub_90_days    = $now->copy()->subDays(90);
+                    $sub_60_days    = $now->copy()->subDays(60);
+                    $sub_30_days    = $now->copy()->subDays(30);
+                    break;
+            }
+
+            
+            // aging
+            switch ($this->aging) {
                 case 'gt-100-days':
                     $query->where(function ($q) use ($sub_100_days) {
                         $q->where('last_withdrawal', '<', $sub_100_days)
@@ -206,27 +234,25 @@ class extends Component
                 case 'lt-30-days':
                     $query->where('last_withdrawal', '>', $sub_30_days);
                     break;
-
-                default:
-                    $query->where('is_active', true);
-                    break;
             }
         });
 
+        
+
         switch ($this->sort) {
             case 'updated':
-                $inv_search_query->orderByRaw('
+                $inv_items_query->orderByRaw('
                 (SELECT updated_at FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
                 break;
             case 'created':
-                $inv_search_query->orderByRaw('
+                $inv_items_query->orderByRaw('
                 (SELECT created_at FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
                 break;
             case 'loc':
-                $inv_search_query->whereHas('inv_item.inv_loc');
-                $inv_search_query->orderByRaw('
+                $inv_items_query->whereHas('inv_item.inv_loc');
+                $inv_items_query->orderByRaw('
                 (SELECT bin FROM inv_locs WHERE 
                 inv_locs.id = (SELECT inv_loc_id FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id)) ASC,
@@ -235,36 +261,36 @@ class extends Component
                 inv_locs.id = (SELECT inv_loc_id FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id)) ASC');
             case 'last_deposit':
-                $inv_search_query->orderByRaw('
+                $inv_items_query->orderByRaw('
                 (SELECT last_deposit FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
                 break;
             case 'last_withdrawal':
-                $inv_search_query->orderByRaw('
+                $inv_items_query->orderByRaw('
                 (SELECT last_withdrawal FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
                 break;
             case 'qty_low':
-                $inv_search_query->orderBy('qty');
+                $inv_items_query->orderBy('qty');
                 break;
             case 'qty_high':
-                $inv_search_query->orderByDesc('qty');
+                $inv_items_query->orderByDesc('qty');
                 break;
             case 'amt_low':
-                $inv_search_query->orderBy('amount_main');
+                $inv_items_query->orderBy('amount_main');
                 break;
             case 'amt_high':
-                $inv_search_query->orderByDesc('amount_main');
+                $inv_items_query->orderByDesc('amount_main');
                 break;
             case 'alpha':
-                $inv_search_query->orderByRaw('
+                $inv_items_query->orderByRaw('
                 (SELECT name FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id) ASC');
                 break;
 
         }
 
-        $inv_stocks = $inv_search_query->paginate($this->perPage);
+        $inv_stocks = $inv_items_query->paginate($this->perPage);
 
         return [
             'inv_stocks' => $inv_stocks,
@@ -291,7 +317,7 @@ class extends Component
 
     public function resetQuery()
     {
-        session()->forget('inv_search_params');
+        session()->forget('inv_items_params');
         $this->redirect(route('inventory.items.index'), navigate: true);
     }
 
@@ -402,7 +428,7 @@ class extends Component
             </div>
 
             <div class="grow flex items-center gap-x-4 p-4 lg:py-0 ">
-                <x-inv-search-filter class="text-xs font-semibold uppercase" />
+                <x-inv-items-filter class="text-xs font-semibold uppercase" />
             </div>
 
             <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
