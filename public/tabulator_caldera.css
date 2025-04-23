@@ -388,7 +388,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .tabulator .tabulator-footer .tabulator-page:not(disabled):hover {
-    @apply cursor-pointer bg-black bg-opacity-20 text-white;
+    @apply cursor-pointer bg-caldy-500 bg-opacity-20 text-white;
   }
 }
 
@@ -415,7 +415,7 @@
 }
 
 .tabulator .tabulator-alert {
-  @apply absolute flex items-center top-0 left-0 z-50 h-full w-full bg-black bg-opacity-40 text-center;
+  @apply absolute flex items-center top-0 left-0 z-50 h-full w-full bg-caldy-500 bg-opacity-40 text-center;
 }
 
 .tabulator .tabulator-alert .tabulator-alert-msg {
@@ -432,7 +432,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .tabulator-row.tabulator-selectable:hover {
-    @apply bg-neutral-500 cursor-pointer;
+    @apply bg-caldy-500 bg-opacity-30 cursor-pointer;
   }
 }
 
@@ -564,12 +564,12 @@
 }
 
 .tabulator-row .tabulator-cell .tabulator-data-tree-control {
-  @apply inline-flex justify-center items-center align-middle h-[11px] w-[11px] mr-[5px] border border-neutral-800 rounded bg-black bg-opacity-10 overflow-hidden;
+  @apply inline-flex justify-center items-center align-middle h-[11px] w-[11px] mr-[5px] border border-neutral-800 rounded bg-caldy-500 bg-opacity-10 overflow-hidden;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .tabulator-row .tabulator-cell .tabulator-data-tree-control:hover {
-    @apply cursor-pointer bg-black bg-opacity-20;
+    @apply cursor-pointer bg-caldy-500 bg-opacity-20;
   }
 }
 
@@ -621,7 +621,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .tabulator-row.tabulator-group:hover {
-    @apply cursor-pointer bg-black bg-opacity-10;
+    @apply cursor-pointer bg-caldy-500 bg-opacity-10;
   }
 }
 
@@ -838,7 +838,7 @@ body.tabulator-print-fullscreen-hide > *:not(.tabulator-print-fullscreen) {
 
 @media (hover: hover) and (pointer: fine) {
   .tabulator-print-table .tabulator-print-table-group:hover {
-    @apply cursor-pointer bg-black bg-opacity-10;
+    @apply cursor-pointer bg-caldy-500 bg-opacity-10;
   }
 }
 
@@ -885,12 +885,12 @@ body.tabulator-print-fullscreen-hide > *:not(.tabulator-print-fullscreen) {
 }
 
 .tabulator-print-table .tabulator-data-tree-control {
-  @apply inline-flex justify-center items-center align-middle h-[11px] w-[11px] mr-[5px] border border-neutral-800 rounded bg-black bg-opacity-10 overflow-hidden;
+  @apply inline-flex justify-center items-center align-middle h-[11px] w-[11px] mr-[5px] border border-neutral-800 rounded bg-caldy-500 bg-opacity-10 overflow-hidden;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .tabulator-print-table .tabulator-data-tree-control:hover {
-    @apply cursor-pointer bg-black bg-opacity-20;
+    @apply cursor-pointer bg-caldy-500 bg-opacity-20;
   }
 }
 
