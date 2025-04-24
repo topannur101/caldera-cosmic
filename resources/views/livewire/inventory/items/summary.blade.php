@@ -35,6 +35,8 @@ class extends Component
 
    public float $progress = 0;
 
+   public float $aging_tag_highest = 0;
+
    public function mount()
    {
        $user_id = Auth::user()->id;
@@ -279,6 +281,8 @@ class extends Component
         if ($noTagData['total'] > 0) {
             $this->agingData->push($noTagData);
         }
+
+        $this->aging_tag_highest = $this->agingData->max('total');
 
    }
 
@@ -599,7 +603,7 @@ class extends Component
 </x-slot>
 
 <div 
-    x-data="{ ...app(), areas: @entangle('areas'), area_id:@entangle('area_id'), progress: @entangle('progress') }" x-init="observeProgress()" 
+    x-data="{ ...app(), areas: @entangle('areas'), area_id:@entangle('area_id'), progress: @entangle('progress'), aging_tag_highest: @entangle('aging_tag_highest') }" x-init="observeProgress()" 
     class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-700 dark:text-neutral-200">
     @vite(['resources/js/apexcharts.js'])
     <div class="flex gap-x-6 items-center mb-6">
@@ -721,12 +725,57 @@ class extends Component
                                 let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
 
                                 let url = tag ? 
-                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&ignore_params=true" : 
-                                    "{{ url('/inventory/items') }}?filter=no-tags" + areaParam + "&ignore_params=true";
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&ignore_params=true&sort=amt_high&view=list" : 
+                                    "{{ url('/inventory/items') }}?filter=no-tags" + areaParam + "&ignore_params=true&sort=amt_high&view=list";
                                 return "<a href='" + url + "' wire:navigate>" + value + "</a>";
                             },
                             formatterParams: {
                                 allowHTML: true
+                            }
+                        },
+                        {
+                            title: "{{ __('Total') }}", 
+                            field: "total", 
+                            sorter: "number", 
+                            formatter: function(cell) {
+                                let value = cell.getValue();
+                                let tag = cell.getRow().getData().tag_name;
+                                let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
+                                
+                                let url = tag ? 
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + areaParam + "&ignore_params=true&sort=amt_high&view=list" : 
+                                    "{{ url('/inventory/items') }}?filter=no-tags" + areaParam + "&ignore_params=true&sort=amt_high&view=list";
+                                return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
+                            },
+                            formatterParams: {
+                                allowHTML: true
+                            },
+                            bottomCalc: "sum", 
+                            bottomCalcFormatter: "money", 
+                            bottomCalcFormatterParams: {precision: 2}
+                        },
+                        {
+                            title: "{{ __('Proportion') }}",
+                            field: "proportion",
+                            sorter: "number",
+                            hozAlign: "left",
+                            formatter: "progress",
+                            width: 200,
+                            formatterParams: {
+                                min: 0,
+                                max: 100,
+                            },
+                            mutator: function(value, data, type, params, component) {
+                                // The table data might not be fully loaded during the first mutations
+                                // So we recalculate the max value each time to be safe
+                                let tableData = component.getTable().getData();
+                                let maxTotal = that.aging_tag_highest; 
+                                
+                                // Calculate percentage (0-100)
+                                let percentage = maxTotal > 0 ? (parseFloat(data.total) / maxTotal) * 100 : 0;
+                                
+                                // Round to 2 decimal places for cleaner display
+                                return Math.round(percentage * 100) / 100;
                             }
                         },
                         {
@@ -739,8 +788,8 @@ class extends Component
                                 let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
 
                                 let url = tag ? 
-                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-100-days" + areaParam + "&ignore_params=true" : 
-                                    "{{ url('/inventory/items') }}?aging=gt-100-days&filter=no-tags" + areaParam + "&ignore_params=true";
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-100-days" + areaParam + "&ignore_params=true&sort=amt_high&view=list" : 
+                                    "{{ url('/inventory/items') }}?aging=gt-100-days&filter=no-tags" + areaParam + "&ignore_params=true&sort=amt_high&view=list";
                                 return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
                             },
                             formatterParams: {
@@ -761,8 +810,8 @@ class extends Component
                                 let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
 
                                 let url = tag ? 
-                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-90-days" + areaParam + "&ignore_params=true" : 
-                                    "{{ url('/inventory/items') }}?aging=gt-90-days&filter=no-tags" + areaParam + "&ignore_params=true";
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-90-days" + areaParam + "&ignore_params=true&sort=amt_high&view=list" : 
+                                    "{{ url('/inventory/items') }}?aging=gt-90-days&filter=no-tags" + areaParam + "&ignore_params=true&sort=amt_high&view=list";
                                 return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
                             },
                             formatterParams: {
@@ -782,8 +831,8 @@ class extends Component
                                 let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
 
                                 let url = tag ? 
-                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-60-days" + areaParam + "&ignore_params=true" : 
-                                    "{{ url('/inventory/items') }}?aging=gt-60-days&filter=no-tags" + areaParam + "&ignore_params=true";
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-60-days" + areaParam + "&ignore_params=true&sort=amt_high&view=list" : 
+                                    "{{ url('/inventory/items') }}?aging=gt-60-days&filter=no-tags" + areaParam + "&ignore_params=true&sort=amt_high&view=list";
                                 return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
                             },
                             formatterParams: {
@@ -803,8 +852,8 @@ class extends Component
                                 let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
 
                                 let url = tag ? 
-                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-30-days" + areaParam + "&ignore_params=true" : 
-                                    "{{ url('/inventory/items') }}?aging=gt-30-days&filter=no-tags" + areaParam + "&ignore_params=true";
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=gt-30-days" + areaParam + "&ignore_params=true&sort=amt_high&view=list" : 
+                                    "{{ url('/inventory/items') }}?aging=gt-30-days&filter=no-tags" + areaParam + "&ignore_params=true&sort=amt_high&view=list";
                                 return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
                             },
                             formatterParams: {
@@ -824,29 +873,8 @@ class extends Component
                                 let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
 
                                 let url = tag ? 
-                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=lt-30-days" + areaParam + "&ignore_params=true" : 
-                                    "{{ url('/inventory/items') }}?aging=lt-30-days&filter=no-tags" + areaParam + "&ignore_params=true";
-                                return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
-                            },
-                            formatterParams: {
-                                allowHTML: true
-                            },
-                            bottomCalc: "sum", 
-                            bottomCalcFormatter: "money", 
-                            bottomCalcFormatterParams: {precision: 2}
-                        },
-                        {
-                            title: "{{ __('Total') }}", 
-                            field: "total", 
-                            sorter: "number", 
-                            formatter: function(cell) {
-                                let value = cell.getValue();
-                                let tag = cell.getRow().getData().tag_name;
-                                let areaParam = that.area_id ? "&area_ids[0]=" + that.area_id : "";
-                                
-                                let url = tag ? 
-                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&ignore_params=true" : 
-                                    "{{ url('/inventory/items') }}?filter=no-tags" + areaParam + "&ignore_params=true";
+                                    "{{ url('/inventory/items') }}?tags[0]=" + encodeURIComponent(tag) + "&aging=lt-30-days" + areaParam + "&ignore_params=true&sort=amt_high&view=list" : 
+                                    "{{ url('/inventory/items') }}?aging=lt-30-days&filter=no-tags" + areaParam + "&ignore_params=true&sort=amt_high&view=list";
                                 return "<a href='" + url + "' wire:navigate>" + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + "</a>";
                             },
                             formatterParams: {

@@ -20,8 +20,10 @@ class extends Component
 
     public int $perPage = 24;
 
+    #[Url]
     public string $view = 'content';
 
+    #[Url]
     public string $sort = 'updated';
 
     public array $areas = [];
