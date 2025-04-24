@@ -190,7 +190,7 @@ class DownloadController extends Controller
         session()->forget('inv_items_token');
         
         // Get search parameters from session
-        $savedParams = session('inv_search_params', []);
+        $savedParams = session('inv_items_params', []);
         
         // Extract parameters
         $q            = $savedParams['q'] ?? '';
@@ -564,7 +564,7 @@ class DownloadController extends Controller
         session()->forget('inv_stocks_token');
         
         // Get search parameters from session
-        $inv_circs_params = session('inv_search_params', []);
+        $inv_circs_params = session('inv_items_params', []);
         
         // Extract parameters
         $q          = $inv_circs_params['q'] ?? '';
@@ -687,6 +687,7 @@ class DownloadController extends Controller
                     $query->orderByRaw('(SELECT name FROM inv_items WHERE inv_items.id = inv_stocks.inv_item_id) ASC');
                     break;
             }
+            
             
             // Stream each record to avoid loading all records into memory at once
             $query->chunk(100, function ($stocks) use ($handle) {

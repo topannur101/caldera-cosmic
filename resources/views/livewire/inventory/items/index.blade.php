@@ -308,12 +308,10 @@ class extends Component
             case 'inv_stocks':
                 session()->put('inv_stocks_token', $token);
                 return redirect()->route('download.inv-stocks', ['token' => $token]);
-                break;
 
             case 'inv_items':
                 session()->put('inv_items_token', $token);
-                return redirect()->route('download.inv-items', ['token' => $token]);
-                break;            
+                return redirect()->route('download.inv-items', ['token' => $token]);            
         }  
     }
 
