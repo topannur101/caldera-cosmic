@@ -186,7 +186,7 @@ class extends Component
                 $this->agingData->push($tagData);
             }
 
-            $this->progress += (($key + 1) / $tags->count() / 1.30);
+            $this->progress += (($key + 1) / $tags->count() / 1.34);
             $this->stream(
                to: 'progress',
                content: min(floor($this->progress / 10), 100),
@@ -195,7 +195,7 @@ class extends Component
         } 
 
         if (!$tags->count()) {
-            $this->progress += 1.30;
+            $this->progress += 1.34;
             $this->stream(
                 to: 'progress',
                 content: min(floor($this->progress / 10), 100),
@@ -259,7 +259,7 @@ class extends Component
                 $this->totals['total'] += $value;
             }
 
-            $this->progress += ($key + 1) / $itemsWithNoTags->count() / 1.30;
+            $this->progress += ($key + 1) / $itemsWithNoTags->count() / 1.34;
             $this->stream(
                 to: 'progress',
                 content: min(floor($this->progress / 10), 100),
@@ -269,7 +269,7 @@ class extends Component
         }  
 
         if (!$itemsWithNoTags->count()) {
-            $this->progress += 1.30;
+            $this->progress += 1.34;
             $this->stream(
                 to: 'progress',
                 content: min(floor($this->progress / 10), 100),
@@ -292,7 +292,7 @@ class extends Component
             $query->whereNull('photo')->orWhere('photo', '');
         })->where('inv_area_id', $this->area_id)->count();
 
-        $this->progress += 1.30;
+        $this->progress += 1.34;
         $this->stream(
             to: 'progress',
             content: min(floor($this->progress / 10), 100),
@@ -303,7 +303,7 @@ class extends Component
             $query->whereNull('code')->orWhere('code', '');
         })->where('inv_area_id', $this->area_id)->count();
 
-        $this->progress += 1.30;
+        $this->progress += 1.34;
         $this->stream(
             to: 'progress',
             content: min(floor($this->progress / 10), 100),
@@ -314,7 +314,7 @@ class extends Component
             ->where('inv_area_id', $this->area_id)
             ->count();
 
-        $this->progress += 1.30;
+        $this->progress += 1.34;
         $this->stream(
             to: 'progress',
             content: min(floor($this->progress / 10), 100),
@@ -325,7 +325,7 @@ class extends Component
             ->where('inv_area_id', $this->area_id)
             ->count();
 
-        $this->progress += 1.30;
+        $this->progress += 1.34;
         $this->stream(
             to: 'progress',
             content: min(floor($this->progress / 10), 100),
@@ -405,7 +405,7 @@ class extends Component
       ->where('inv_area_id', $this->area_id)
       ->count();
 
-      $this->progress += 1.30;
+      $this->progress += 1.34;
       $this->stream(
           to: 'progress',
           content: min(floor($this->progress / 10), 100),
@@ -416,7 +416,7 @@ class extends Component
       ->where('inv_area_id', $this->area_id)
       ->count();
 
-      $this->progress += 1.30;
+      $this->progress += 1.34;
       $this->stream(
           to: 'progress',
           content: min(floor($this->progress / 10), 100),
@@ -472,7 +472,7 @@ class extends Component
         ->where('inv_area_id', $this->area_id)
         ->count();
 
-        $this->progress += 1.30;
+        $this->progress += 1.34;
         $this->stream(
             to: 'progress',
             content: min(floor($this->progress / 10), 100),
@@ -483,7 +483,7 @@ class extends Component
         ->where('inv_area_id', $this->area_id)
         ->count();
 
-      $this->progress += 1.30;
+      $this->progress += 1.34;
       $this->stream(
           to: 'progress',
           content: min(floor($this->progress / 10), 100),
@@ -494,7 +494,7 @@ class extends Component
         ->where('inv_area_id', $this->area_id)
         ->count();
 
-      $this->progress += 1.30;
+      $this->progress += 1.34;
       $this->stream(
           to: 'progress',
           content: min(floor($this->progress / 10), 100),
@@ -505,7 +505,7 @@ class extends Component
         ->where('inv_area_id', $this->area_id)
         ->count();
 
-      $this->progress += 1.30;
+      $this->progress += 1.34;
       $this->stream(
           to: 'progress',
           content: min(floor($this->progress / 10), 100),
@@ -519,7 +519,7 @@ class extends Component
         ->where('inv_area_id', $this->area_id)
         ->count();
 
-      $this->progress += 1.30;
+      $this->progress += 1.34;
       $this->stream(
           to: 'progress',
           content: min(floor($this->progress / 10), 100),

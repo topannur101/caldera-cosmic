@@ -513,7 +513,7 @@ class extends Component
             </div>
         </div>
     </div>
-    <div class="w-full  px-1" wire:loading.class="cal-shimmer">
+    <div class="w-full  px-1">
         @if (!$inv_stocks->count())
             @if (count($area_ids))
                 <div wire:key="no-match" class="py-20">
