@@ -124,7 +124,7 @@ class InsStc
         'postheat' => 0.06,
     ];
 
-    public static array $target_values = [ 75, 73, 68, 63, 58, 53, 48, 43 ];
+    public static array $target_values = [ 75, 73, 68, 63, 58, 53, 43, 43 ];
 
     public static function groupValuesBySection($values): array
     {
