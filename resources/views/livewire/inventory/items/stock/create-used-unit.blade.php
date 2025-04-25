@@ -56,7 +56,7 @@ new class extends Component {
    {
       try {
          $this->validate([
-            'unit_price' => 'required|numeric|gte:0|lte:10000',
+            'unit_price' => 'required|numeric|gte:0|lte:100000000',
          ]);
 
          $stock = InvStock::find($this->stock_id);

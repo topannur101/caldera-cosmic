@@ -169,6 +169,9 @@ class extends Component
                 }
             });
 
+            // active stock only
+            $query->where('is_active', true);
+
             
             // filter
             switch ($this->filter) {
