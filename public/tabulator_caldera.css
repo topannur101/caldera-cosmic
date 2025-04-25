@@ -225,7 +225,7 @@
 }
 
 .tabulator .tabulator-header .tabulator-frozen {
-  @apply sticky left-0 z-10 bg-neutral-200 dark:bg-neutral-800;
+  @apply sticky left-0 z-10 bg-neutral-100 dark:bg-neutral-800;
 }
 
 .tabulator .tabulator-header .tabulator-frozen.tabulator-frozen-left {
@@ -510,7 +510,7 @@
 }
 
 .tabulator-row .tabulator-cell.tabulator-frozen {
-  @apply inline-block sticky left-0 bg-inherit z-10 bg-caldy-500 dark:bg-neutral-800;
+  @apply inline-block sticky left-0 bg-inherit z-10 bg-neutral-100 dark:bg-neutral-800;
 }
 
 .tabulator-row .tabulator-cell.tabulator-frozen.tabulator-frozen-left {
