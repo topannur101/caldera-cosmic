@@ -146,7 +146,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .tabulator .tabulator-header .tabulator-col.tabulator-sortable.tabulator-col-sorter-element:hover {
-    @apply cursor-pointer bg-caldy-500 bg-opacity-50;
+    @apply cursor-pointer bg-caldy-500 bg-opacity-30;
   }
 }
 
@@ -311,7 +311,7 @@
 }
 
 .tabulator .tabulator-footer {
-  @apply border-t border-neutral-500 bg-caldy-500 text-neutral-700 font-bold whitespace-nowrap select-none;
+  @apply border-t border-neutral-500 text-neutral-700 dark:text-neutral-300 font-bold whitespace-nowrap select-none;
 }
 
 .tabulator .tabulator-footer .tabulator-footer-contents {
@@ -339,11 +339,11 @@
 }
 
 .tabulator .tabulator-footer .tabulator-calcs-holder {
-  @apply box-border w-full text-left bg-caldy-500 border-b border-t border-neutral-200 dark:border-neutral-700 overflow-hidden;
+  @apply box-border w-full text-left border-t border-neutral-200 dark:border-neutral-700 overflow-hidden;
 }
 
 .tabulator .tabulator-footer .tabulator-calcs-holder .tabulator-row {
-  @apply inline-block bg-caldy-500 bg-opacity-50;
+  @apply inline-block;
 }
 
 .tabulator .tabulator-footer .tabulator-calcs-holder .tabulator-row .tabulator-col-resize-handle {
@@ -922,9 +922,9 @@ body.tabulator-print-fullscreen-hide > *:not(.tabulator-print-fullscreen) {
   @apply text-black;
 }
 
-.tabulator .tabulator-footer .tabulator-calcs-holder {
+/* .tabulator .tabulator-footer .tabulator-calcs-holder {
   @apply border-b border-white;
-}
+} */
 
 .tabulator .tabulator-footer .tabulator-spreadsheet-tabs .tabulator-spreadsheet-tab {
   @apply font-normal;
@@ -934,9 +934,9 @@ body.tabulator-print-fullscreen-hide > *:not(.tabulator-print-fullscreen) {
   @apply text-red-600 font-bold;
 }
 
-.tabulator-row {
+/* .tabulator-row {
   @apply border-b border-neutral-200 dark:border-neutral-700;
-}
+} */
 
 .tabulator-row .tabulator-cell:last-of-type {
   @apply border-r-0;

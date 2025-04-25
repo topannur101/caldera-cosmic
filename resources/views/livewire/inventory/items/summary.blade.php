@@ -637,14 +637,14 @@ class extends Component
         </div>
         <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}</div>
     </div>
-    <div x-cloak :class="area_id ? '' : 'hidden'">
+    <div x-cloak :class="area_id ? (agingTable ? '' : 'cal-shimmer') : 'hidden'">
         <div class="grid grid-cols-6 gap-4">
             <div class="col-span-3 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
                 <label class="mb-6 block uppercase text-xs text-neutral-500">{{ __('Ketidaklengkapan info dasar') }}</label>
                 <div 
                     wire:ignore
                     id="incomplete-basics-container" 
-                    class="h-56 overflow-hidden"
+                    class="h-48 overflow-hidden"
                     wire:key="incomplete-basics-container">
                 </div>  
             </div>
@@ -653,7 +653,7 @@ class extends Component
                 <div 
                     wire:ignore
                     id="status-container" 
-                    class="h-56 overflow-hidden"
+                    class="h-48 overflow-hidden"
                     wire:key="status-container">
                 </div>  
             </div>
@@ -662,15 +662,15 @@ class extends Component
                 <div 
                     wire:ignore
                     id="aging-container" 
-                    class="h-56 overflow-hidden"
+                    class="h-48 overflow-hidden"
                     wire:key="aging-container">
                 </div>  
             </div>
         </div>
         <div class="mt-4">
-            <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 min-h-56">                
-                <label class="mb-6 block uppercase text-xs text-neutral-500">{{ __('Barang yang menua berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
-                <div id="aging-data-table"></div>             
+            <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg min-h-48 overflow-hidden">                
+                <label class="p-4 mb-6 block uppercase text-xs text-neutral-500">{{ __('Barang yang menua berdasarkan tag') . ' (' . InvCurr::find(1)->name . ')'}}</label>
+                <div id="aging-data-table" class="-mr-px"></div>             
             </div>
         </div>
     </div>
@@ -764,6 +764,7 @@ class extends Component
                             formatterParams: {
                                 min: 0,
                                 max: 100,
+                                elementClass: "bg-caldy-500"
                             },
                             mutator: function(value, data, type, params, component) {
                                 // The table data might not be fully loaded during the first mutations

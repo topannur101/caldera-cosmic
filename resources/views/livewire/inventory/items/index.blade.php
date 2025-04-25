@@ -128,7 +128,7 @@ class extends Component
         session(['inv_items_params' => $inv_items_params]);
         session(['inv_areas_param' => $this->area_ids]);
 
-        $inv_items_query = InvStock::with([
+        $inv_stocks_query = InvStock::with([
             'inv_item', 
             'inv_curr',
             'inv_item.inv_loc', 
@@ -148,11 +148,9 @@ class extends Component
             $query->where(function ($subQuery) use ($loc_parent, $loc_bin) {
                 if ($loc_parent || $loc_bin) {
                     $subQuery->whereHas('inv_loc', function ($subSubQuery) use ($loc_parent, $loc_bin) {
-
                         if ($loc_parent) {
                             $subSubQuery->where('parent', 'like', "%$loc_parent%");
                         }
-
                         if ($loc_bin) {
                             $subSubQuery->where('bin', 'like', "%$loc_bin%");
                         }
@@ -168,10 +166,6 @@ class extends Component
                     });
                 }
             });
-
-            // active stock only
-            $query->where('is_active', true);
-
             
             // filter
             switch ($this->filter) {
@@ -240,24 +234,25 @@ class extends Component
                     $query->where('last_withdrawal', '>', $sub_30_days);
                     break;
             }
-        });
-
+        });  
         
+        // active inv_stocks only
+        $inv_stocks_query->where('is_active', true);        
 
         switch ($this->sort) {
             case 'updated':
-                $inv_items_query->orderByRaw('
+                $inv_stocks_query->orderByRaw('
                 (SELECT updated_at FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
                 break;
             case 'created':
-                $inv_items_query->orderByRaw('
+                $inv_stocks_query->orderByRaw('
                 (SELECT created_at FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
                 break;
             case 'loc':
-                $inv_items_query->whereHas('inv_item.inv_loc');
-                $inv_items_query->orderByRaw('
+                $inv_stocks_query->whereHas('inv_item.inv_loc');
+                $inv_stocks_query->orderByRaw('
                 (SELECT bin FROM inv_locs WHERE 
                 inv_locs.id = (SELECT inv_loc_id FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id)) ASC,
@@ -266,36 +261,36 @@ class extends Component
                 inv_locs.id = (SELECT inv_loc_id FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id)) ASC');
             case 'last_deposit':
-                $inv_items_query->orderByRaw('
+                $inv_stocks_query->orderByRaw('
                 (SELECT last_deposit FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
                 break;
             case 'last_withdrawal':
-                $inv_items_query->orderByRaw('
+                $inv_stocks_query->orderByRaw('
                 (SELECT last_withdrawal FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
                 break;
             case 'qty_low':
-                $inv_items_query->orderBy('qty');
+                $inv_stocks_query->orderBy('qty');
                 break;
             case 'qty_high':
-                $inv_items_query->orderByDesc('qty');
+                $inv_stocks_query->orderByDesc('qty');
                 break;
             case 'amt_low':
-                $inv_items_query->orderBy('amount_main');
+                $inv_stocks_query->orderBy('amount_main');
                 break;
             case 'amt_high':
-                $inv_items_query->orderByDesc('amount_main');
+                $inv_stocks_query->orderByDesc('amount_main');
                 break;
             case 'alpha':
-                $inv_items_query->orderByRaw('
+                $inv_stocks_query->orderByRaw('
                 (SELECT name FROM inv_items 
                 WHERE inv_items.id = inv_stocks.inv_item_id) ASC');
                 break;
 
         }
 
-        $inv_stocks = $inv_items_query->paginate($this->perPage);
+        $inv_stocks = $inv_stocks_query->paginate($this->perPage);
 
         return [
             'inv_stocks' => $inv_stocks,

@@ -573,9 +573,10 @@ class DownloadController extends Controller
         $tags       = $inv_circs_params['tags'] ?? [];
         $area_ids   = $inv_circs_params['area_ids'] ?? [];
         $filter     = $inv_circs_params['filter'] ?? '';
+        $aging      = $inv_circs_params['aging'] ?? '';
         $sort       = $inv_circs_params['sort'] ?? 'updated';
         
-        return response()->streamDownload(function () use ($q, $loc_parent, $loc_bin, $tags, $area_ids, $filter, $sort) {
+        return response()->streamDownload(function () use ($q, $loc_parent, $loc_bin, $tags, $area_ids, $filter, $aging, $sort) {
             // Open output stream
             $handle = fopen('php://output', 'w');
             
@@ -598,12 +599,12 @@ class DownloadController extends Controller
                 'inv_item.inv_tags',
                 'inv_item.inv_area', 
             ])
-            ->whereHas('inv_item', function ($query) use ($q, $loc_parent, $loc_bin, $tags, $area_ids, $filter) {
+            ->whereHas('inv_item', function ($query) use ($q, $loc_parent, $loc_bin, $tags, $area_ids, $filter, $aging) {
                 // search
                 $query->where(function ($subQuery) use ($q) {
                     $subQuery->where('name', 'like', "%$q%")
-                                ->orWhere('code', 'like', "%$q%")
-                                ->orWhere('desc', 'like', "%$q%");
+                             ->orWhere('code', 'like', "%$q%")
+                             ->orWhere('desc', 'like', "%$q%");
                 })
                 ->whereIn('inv_area_id', $area_ids);
     
@@ -629,30 +630,76 @@ class DownloadController extends Controller
                         });
                     }
                 });
-    
+               
                 // filter
                 switch ($filter) {
                     case 'no-code':
                         $query->whereNull('code');
                         break;
+    
                     case 'no-photo':
                         $query->whereNull('photo');
                         break;
+    
                     case 'no-location':
                         $query->whereNull('inv_loc_id');
                         break;
+    
                     case 'no-tags':
                         $query->whereDoesntHave('inv_tags');
                         break;
+    
                     case 'inactive':
                         $query->where('is_active', false);
                         break;
+    
                     default:
                         $query->where('is_active', true);
                         break;
                 }
-            })
-            ->where('is_active', true);
+
+                switch ($aging) {
+                    case 'gt-100-days':               
+                    case 'gt-90-days':
+                    case 'gt-60-days':
+                    case 'gt-30-days':
+                    case 'lt-30-days':
+                        $now            = Carbon::now();
+                        $sub_100_days   = $now->copy()->subDays(100);
+                        $sub_90_days    = $now->copy()->subDays(90);
+                        $sub_60_days    = $now->copy()->subDays(60);
+                        $sub_30_days    = $now->copy()->subDays(30);
+                        break;
+                }
+
+                switch ($aging) {
+                    case 'gt-100-days':
+                        $query->where(function ($q) use ($sub_100_days) {
+                            $q->where('last_withdrawal', '<', $sub_100_days)
+                            ->orWhereNull('last_withdrawal');
+                        });
+                        break;                        
+    
+                    case 'gt-90-days':
+                        $query->whereBetween('last_withdrawal', [$sub_100_days, $sub_90_days]);
+                        break;
+    
+                    case 'gt-60-days':
+                        $query->whereBetween('last_withdrawal', [$sub_90_days, $sub_60_days]);
+                        break;
+    
+                    case 'gt-30-days':
+                        $query->whereBetween('last_withdrawal', [$sub_60_days, $sub_30_days]);
+                        break;
+    
+                    case 'lt-30-days':
+                        $query->where('last_withdrawal', '>', $sub_30_days);
+                        break;
+                }
+
+            });
+
+            $query->where('is_active', true);
     
             // Apply sorting
             switch ($sort) {
