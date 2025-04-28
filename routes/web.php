@@ -201,6 +201,23 @@ Route::middleware('auth')->group(function () {
 
     });
 
+    // projects routes
+    Route::prefix('projects')->group(function () {
+
+        Route::name('projects.schedule.')->group(function () {
+            Volt::route('/schedule/',  'projects.schedule.index')   ->name('index');
+        });
+
+        Route::name('projects.tasks.')->group(function () {
+            Volt::route('/tasks',       'projects.tasks.index')    ->name('index');
+        });
+
+        Route::name('projects.summary.')->group(function () {
+            Volt::route('/summary',     'projects.summary.index')   ->name('index');
+        });
+
+    });
+
     // Caldy AI routes
     Route::prefix('caldy')->group(function () {
 

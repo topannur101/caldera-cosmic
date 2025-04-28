@@ -9,7 +9,7 @@ class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('Inventaris') }}</x-slot>
+<x-slot name="title">{{ __('Proyek') }}</x-slot>
 
 @if (Auth::user()->id ?? false)
    <x-slot name="header">

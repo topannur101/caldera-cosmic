@@ -17,6 +17,11 @@ use App\Models\InvTag;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
+Route::get('/ins-rubber-batches/recents', function() {
+    $batches = InsRubberBatch::orderBy('updated_at', 'desc')->limit(10)->get();
+    return response()->json($batches);
+});
+
 Route::get('/inv-tags', function(Request $request) {
     $q = trim($request['q']);
     $hints = [];
