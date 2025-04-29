@@ -33,7 +33,6 @@ class extends Component
         }
 
         $this->areas = $areas->toArray();
-
     }
 
     public function resetDates()

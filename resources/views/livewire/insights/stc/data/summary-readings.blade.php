@@ -49,7 +49,7 @@ new class extends Component {
 
     public function with(): array
     {
-        $machines = InsStcMachine::orderBy('line')->get()->toArray();
+        $machines = InsStcMachine::whereNot('code', 'like', 'test%')->orderBy('line')->get()->toArray();
 
         foreach ($machines as $key => $machine) {
             $upper_d_sum = InsStcDSum::where('position', 'upper')
@@ -153,6 +153,27 @@ new class extends Component {
                 </div>
             </div>
         </x-modal>
+        <x-modal name="auto-machines-help">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Mesin otomatis') }}
+                    </h2>
+                    <x-text-button type="button" x-on:click="$dispatch('close')"><i
+                            class="fa fa-times"></i></x-text-button>
+                </div>
+                <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
+                    <div>
+                        {{ __('Untuk saat ini, tidak semua model mesin chamber IP dapat dikontrol otomatis. Hanya mesin model lama saja yang bisa dikontrol secara otomatis, disorot dengan warna aksen.') }}
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                        {{ __('Paham') }}
+                    </x-primary-button>
+                </div>
+            </div>
+        </x-modal>
     </div>
     <div class="flex justify-between gap-8 flex-col lg:flex-row">
         <div class="px-8 py-4 text-sm">
@@ -180,12 +201,17 @@ new class extends Component {
     <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg h-80 p-4 mb-8"
     id="recents-chart-container" wire:key="recents-chart-container" wire:ignore>
     </div>
+    <div class="px-8 text-sm mb-8">{{ __('Mesin yang memungkinkan jalan otomatis disorot dengan warna') }}<x-text-button type="button"
+            class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'auto-machines-help')"><i
+                class="far fa-question-circle"></i></x-text-button></div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         @foreach ($machines as $machine)
-            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg text-sm">
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg text-sm overflow-hidden">
                 <div class="flex">
                     <div
-                        class="flex items-center border-r border-neutral-100 dark:border-neutral-700 p-4 font-mono text-2xl">
+                        class="flex items-center 
+                        border-r border-neutral-100 dark:border-neutral-700 
+                        p-4 font-mono text-2xl {{ (substr($machine['code'], 0, 3) == 'OLD' ) ? 'bg-caldy-500 bg-opacity-20' : '' }}">
                         {{ sprintf('%02d', $machine['line']) }}
                     </div>
                     <div class="grow">
