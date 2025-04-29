@@ -18,8 +18,13 @@ use App\Models\InvTag;
 // })->middleware('auth:sanctum');
 
 Route::get('/ins-rubber-batches/recents', function() {
-    $batches = InsRubberBatch::orderBy('updated_at', 'desc')->limit(10)->get();
+    $batches = InsRubberBatch::latest('updated_at')->limit(19)->get();
     return response()->json($batches);
+});
+
+Route::get('/ins-rubber-batches/{code}', function($code) {
+    $batch = InsRubberBatch::where('code', $code)->latest('updated_at')->first();
+    return response()->json($batch);
 });
 
 Route::get('/inv-tags', function(Request $request) {

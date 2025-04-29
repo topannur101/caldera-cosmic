@@ -309,6 +309,8 @@ class DownloadController extends Controller
                 'curr_0', 'up_0', 'uom_0', 'qty_0', 'amt_0', 'qmin_0', 'qmax_0',
                 'curr_1', 'up_1', 'uom_1', 'qty_1', 'amt_1', 'qmin_1', 'qmax_1',
                 'curr_2', 'up_2', 'uom_2', 'qty_2', 'amt_2', 'qmin_2', 'qmax_2',
+                'created_at', 'updated_at', 'last_withdrawal', 'last_deposit', 
+                'is_active', 'area_name',
             ]);
             
             // Stream each record to avoid loading all records into memory at once
@@ -421,6 +423,14 @@ class DownloadController extends Controller
                         $amt_2, 
                         $qmin_2, 
                         $qmax_2,
+
+                        $item->created_at,
+                        $item->updated_at,
+                        $item->last_withdrawal,
+                        $item->last_deposit,
+                        $item->is_active,
+                        $item->inv_area->name
+                        
                     ]);
                 }
                 
