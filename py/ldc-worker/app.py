@@ -25,6 +25,9 @@ MM2_TO_FT2 = 0.00001076391  # Conversion factor from mm² to ft²
 WEBSOCKET_PORT = 32998
 MAX_CONCURRENT_TASKS = 100
 
+# Variable to store the last sent code
+last_sent_code = None
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Check for admin privileges
@@ -73,6 +76,14 @@ def convert_to_ft2(mm2_value):
 
 semaphore = Semaphore(MAX_CONCURRENT_TASKS)
 async def broadcast_to_clients(data):
+    global last_sent_code
+    
+    # Check if this is the same code as the last one sent
+    current_code = data.get('code')
+    if current_code == last_sent_code:
+        logger.debug(f"Skipping duplicate code: {current_code}")
+        return
+        
     async with semaphore:
         """Broadcast data to all connected WebSocket clients"""
         for connection in active_connections:
@@ -82,6 +93,10 @@ async def broadcast_to_clients(data):
             except Exception as e:
                 logger.error(f"Failed to send to client {id(connection)}: {str(e)}")
                 active_connections.remove(connection)
+        
+        # Update the last sent code after successful broadcast
+        last_sent_code = current_code
+        logger.debug(f"Updated last_sent_code to: {last_sent_code}")
 
 def parse_chunked_http_payload(payload):
     """Parse an HTTP payload with chunked transfer encoding to extract JSON data."""
