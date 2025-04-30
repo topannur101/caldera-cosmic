@@ -146,76 +146,111 @@ new class extends Component
     }
 
     private function extractData()
-    {
-        $rows = array_map('str_getcsv', file($this->file->getPathname()));
-        $skipRows = 3;
-        $tempColumn = 3;
+    {        
+        // Configuration constants - moved to the top for easy modification
+        $skipRows           = 3;
+        $tempColumn         = 3;
+        $maxLogs            = 100;
+        $minRequiredLogs    = 4;
+        $excelEpochOffset   = 25569; // Days between Unix epoch and Excel epoch
+        $secondsPerDay      = 86400;
+        $minTemp            = 0;
+        $maxTemp            = 99;
+        $stdDevThreshold    = 1.0; // Standard deviation threshold to consider fluctuation significant
 
-        for ($i = 0; $i < $skipRows; $i++) {
-            array_shift($rows);
-        }
+        try {
+            // Check if file exists
+            $filePath = $this->file->getPathname();
+            if (!file_exists($filePath)) {
+                throw new \Exception(__('Berkas tidak ditemukan'));
+            }
 
-        $logs = [];
-        $logTempMinEnd = 38;
+            // Read and parse CSV file
+            $csvData = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if ($csvData === false) {
+                throw new \Exception(__('Gagal membaca berkas CSV'));
+            }
 
-        foreach ($rows as $row) {
-            if (isset($row[0]) && isset($row[$tempColumn]) && $row[0] !== '' && $row[$tempColumn] !== '') {
-                $excel_ts = (float) (($row[1] - 25569) * 86400);
-                $taken_at = Carbon::createFromTimestamp($excel_ts)->format('Y-m-d H:i');
-                $temp = max(0, min(99, (float) $row[$tempColumn]));
-                $timestamp = (float) $row[1];
-
+            $rows = array_map('str_getcsv', $csvData);
+            
+            // Skip header rows
+            $rows = array_slice($rows, $skipRows);
+            
+            // Process valid rows
+            $logs = [];
+            $uniqueTimestamps = []; // Track unique timestamps
+            foreach ($rows as $row) {
+                // Validate row data
+                if (!isset($row[0], $row[1], $row[$tempColumn]) || 
+                    empty($row[0]) || 
+                    !is_numeric($row[1]) || 
+                    !is_numeric($row[$tempColumn])) {
+                    continue;
+                }
+                
+                // Convert Excel timestamp to Unix timestamp
+                $excelTimestamp = (float)$row[1];
+                
+                // Skip duplicate timestamps
+                if (in_array($excelTimestamp, $uniqueTimestamps)) {
+                    continue;
+                }
+                
+                $uniqueTimestamps[] = $excelTimestamp;
+                $unixTimestamp = ($excelTimestamp - $excelEpochOffset) * $secondsPerDay;
+                
+                // Format date
+                $takenAt = Carbon::createFromTimestamp($unixTimestamp)->format('Y-m-d H:i');
+                
+                // Normalize temperature within valid range
+                $temperature = max($minTemp, min($maxTemp, (float)$row[$tempColumn]));
+                
                 $logs[] = [
-                    'taken_at' => $taken_at,
-                    'temp' => $temp,
-                    'timestamp' => $timestamp,
+                    'taken_at'  => $takenAt,
+                    'temp'      => $temperature,
+                    'timestamp' => $excelTimestamp,
                 ];
             }
-        }
-
-        // Sort logs by timestamp first
-        usort($logs, function ($a, $b) {
-            return $a['timestamp'] <=> $b['timestamp'];
-        });
-
-        // Keep first 100 logs
-        $logs = array_slice($logs, 0, 100);
-
-        // If fewer than 4 logs, return empty
-        if (count($logs) < 4) {
-            $this->js('toast("'.__('Tidak cukup data yang sah ditemukan').'", { type: "danger" })');
-
-            return;
-        }
-
-        // Filter out low temperatures in the last half
-        $halfIndex = floor(count($logs) / 2);
-        $logs = array_filter($logs, function ($item) use ($halfIndex, $logTempMinEnd, $logs) {
-            $index = array_search($item, $logs);
-
-            // For the last half, apply end temperature threshold
-            if ($index >= $halfIndex) {
-                return $item['temp'] >= $logTempMinEnd;
+            
+            // Sort logs chronologically
+            usort($logs, fn($a, $b) => $a['timestamp'] <=> $b['timestamp']);
+            
+            // Limit to maximum number of logs
+            $logs = array_slice($logs, 0, $maxLogs);
+            
+            // Check if we have enough data
+            if (count($logs) < $minRequiredLogs) {
+                $this->showError(__('Tidak cukup data yang sah ditemukan'));
+                return null;
+            }
+            
+            // Calculate the standard deviation and minimum end temperature
+            // based on the last 4 data points
+            $last4Temps = array_slice(array_column($logs, 'temp'), -4);
+            $minEndTemp = $this->calculateMinEndTemp($last4Temps, $stdDevThreshold);
+            
+            // Filter out low temperatures in the second half of the logs
+            $halfIndex = (int)floor(count($logs) / 2);
+            $filteredLogs = [];
+            
+            foreach ($logs as $index => $log) {
+                // Keep first half logs or second half logs with sufficient temperature
+                if ($index < $halfIndex || $log['temp'] >= $minEndTemp) {
+                    $filteredLogs[] = $log;
+                }
             }
 
-            // Keep all logs from first half as-is
-            return true;
-        });
-
-        // Reindex the logs
-        $logs = array_values($logs);
-
-        if (empty($logs)) {
-            $this->js('toast("'.__('Tidak ada data yang sah ditemukan').'", { type: "danger" })');
-        } else {
+            if (count($filteredLogs) < 20) {
+                $this->js('toast("'.__('Baris data yang sah kurang dari 20').'", { type: "danger" })'); 
+            }
             
-            $temps = array_map(fn ($item) => $item['temp'], $logs);
+            $temps = array_map(fn ($item) => $item['temp'], $filteredLogs);
             $medians = InsStc::getMediansBySection($temps);
 
             $validator = Validator::make(
                 [
-                    'started_at' => $logs[0]['taken_at'],
-                    'ended_at' => $logs[array_key_last($logs)]['taken_at'],
+                    'started_at' => $filteredLogs[0]['taken_at'],
+                    'ended_at' => $filteredLogs[array_key_last($filteredLogs)]['taken_at'],
                     'preheat' => $medians['preheat'],
                     'section_1' => $medians['section_1'],
                     'section_2' => $medians['section_2'],
@@ -249,7 +284,7 @@ new class extends Component
                 $this->reset(['file']);
 
             } else {
-                $this->logs     = $logs;
+                $this->logs     = $filteredLogs;
                 $validatedData  = $validator->validated();
                 $started_at     = Carbon::parse($validatedData['started_at']);
                 $ended_at       = Carbon::parse($validatedData['ended_at']);
@@ -270,7 +305,7 @@ new class extends Component
                 // prepare for HMI charts
                 $chart_logs = array_map(function($item) {
                     return (int)round($item['temp']);
-                }, $logs);
+                }, $filteredLogs);
 
                 $chart_length = 60;
 
@@ -283,7 +318,39 @@ new class extends Component
 
                 $this->chart_logs = $chart_logs;
             }
+            
+        } catch (\Exception $e) {
+            $this->showError(__('Galat saat memproses data: ') . $e->getMessage());
+            return null;
         }
+    }
+
+    private function showError(string $message): void
+    {
+        $this->js('toast("' . $message . '", { type: "danger" })');
+    }
+
+    private function calculateMinEndTemp(array $temperatures, float $stdDevThreshold): float
+    {
+        // Calculate mean
+        $count = count($temperatures);
+        $sum = array_sum($temperatures);
+        $mean = $sum / $count;
+        
+        // Calculate standard deviation
+        $variance = 0;
+        foreach ($temperatures as $temp) {
+            $variance += pow($temp - $mean, 2);
+        }
+        $stdDev = sqrt($variance / $count);
+        
+        // If standard deviation is high, use max temperature + 1
+        // Otherwise use a default value (38) which was in the original code
+        if ($stdDev > $stdDevThreshold) {
+            return max($temperatures) + 1;
+        }
+        
+        return 38; // Default minimum end temperature
     }
 
     private function resetPrediction()
