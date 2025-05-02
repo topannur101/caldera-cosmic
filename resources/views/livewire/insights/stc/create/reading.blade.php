@@ -156,7 +156,7 @@ new class extends Component
         $secondsPerDay      = 86400;
         $minTemp            = 0;
         $maxTemp            = 99;
-        $stdDevThreshold    = 1.0; // Standard deviation threshold to consider fluctuation significant
+        $stdDevThreshold    = 0.5; // Standard deviation threshold to consider fluctuation significant
 
         try {
             // Check if file exists
@@ -346,11 +346,11 @@ new class extends Component
         
         // If standard deviation is high, use max temperature + 1
         // Otherwise use a default value (38) which was in the original code
-        if ($stdDev > $stdDevThreshold) {
+        if ($stdDev < $stdDevThreshold) {
             return max($temperatures) + 1;
         }
         
-        return 38; // Default minimum end temperature
+        return 35; // Default minimum end temperature
     }
 
     private function resetPrediction()
