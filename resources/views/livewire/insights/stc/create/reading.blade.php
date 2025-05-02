@@ -228,17 +228,26 @@ new class extends Component
             // based on the last 4 data points
             $last4Temps = array_slice(array_column($logs, 'temp'), -4);
             $minEndTemp = $this->calculateMinEndTemp($last4Temps, $stdDevThreshold);
-            
+
             // Filter out low temperatures in the second half of the logs
             $halfIndex = (int)floor(count($logs) / 2);
-            $filteredLogs = [];
             
+            $filteredLogs = [];
+            $rejectedLogs = [];
+            
+            // First pass: filter based on position and temperature
             foreach ($logs as $index => $log) {
                 // Keep first half logs or second half logs with sufficient temperature
-                if ($index < $halfIndex || $log['temp'] >= $minEndTemp) {
+                if ($index < $halfIndex || $log['temp'] > $minEndTemp) {
                     $filteredLogs[] = $log;
+                } else {
+                    $rejectedLogs[] = $log;
                 }
             }
+            
+            // Add the first 4 rejected logs to our filtered results
+            $firstRejected = array_slice($rejectedLogs, 0,2);
+            $filteredLogs = array_merge($filteredLogs, $firstRejected);
 
             if (count($filteredLogs) < 20) {
                 $this->js('toast("'.__('Baris data yang sah kurang dari 20').'", { type: "danger" })'); 
