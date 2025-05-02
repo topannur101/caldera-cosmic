@@ -157,6 +157,7 @@ new class extends Component
         $minTemp            = 0;
         $maxTemp            = 99;
         $stdDevThreshold    = 0.5; // Standard deviation threshold to consider fluctuation significant
+        $minTempLimit       = 35;
 
         try {
             // Check if file exists
@@ -226,8 +227,8 @@ new class extends Component
             
             // Calculate the standard deviation and minimum end temperature
             // based on the last 4 data points
-            $last4Temps = array_slice(array_column($logs, 'temp'), -4);
-            $minEndTemp = $this->calculateMinEndTemp($last4Temps, $stdDevThreshold);
+            $lastTemps  = array_slice(array_column($logs, 'temp'), -4);
+            $minEndTemp = max($minTempLimit, $this->calculateMinEndTemp($lastTemps, $stdDevThreshold, $minTempLimit));
 
             // Filter out low temperatures in the second half of the logs
             $halfIndex = (int)floor(count($logs) / 2);
@@ -339,7 +340,7 @@ new class extends Component
         $this->js('toast("' . $message . '", { type: "danger" })');
     }
 
-    private function calculateMinEndTemp(array $temperatures, float $stdDevThreshold): float
+    private function calculateMinEndTemp(array $temperatures, float $stdDevThreshold, float $minTempLimit): float
     {
         // Calculate mean
         $count = count($temperatures);
@@ -359,7 +360,7 @@ new class extends Component
             return max($temperatures) + 1;
         }
         
-        return 35; // Default minimum end temperature
+        return $minTempLimit; // Default minimum end temperature
     }
 
     private function resetPrediction()
