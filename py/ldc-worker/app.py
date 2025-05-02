@@ -12,6 +12,7 @@ from datetime import datetime
 from weakref import WeakSet
 from asyncio import Semaphore
 import gc
+from collections import deque
 
 # Set up logging
 logging.basicConfig(
@@ -24,9 +25,10 @@ logger = logging.getLogger(__name__)
 MM2_TO_FT2 = 0.00001076391  # Conversion factor from mm² to ft²
 WEBSOCKET_PORT = 32998
 MAX_CONCURRENT_TASKS = 100
+MAX_CACHED_CODES = 500  # Store the last 500 sent codes
 
-# Variable to store the last sent code
-last_sent_code = None
+# Cache to store the last sent codes
+sent_codes_cache = deque(maxlen=MAX_CACHED_CODES)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -76,11 +78,10 @@ def convert_to_ft2(mm2_value):
 
 semaphore = Semaphore(MAX_CONCURRENT_TASKS)
 async def broadcast_to_clients(data):
-    global last_sent_code
-    
-    # Check if this is the same code as the last one sent
+    # Check if this is the same code as one we've sent recently
     current_code = data.get('code')
-    if current_code == last_sent_code:
+    
+    if current_code in sent_codes_cache:
         logger.debug(f"Skipping duplicate code: {current_code}")
         return
         
@@ -94,9 +95,9 @@ async def broadcast_to_clients(data):
                 logger.error(f"Failed to send to client {id(connection)}: {str(e)}")
                 active_connections.remove(connection)
         
-        # Update the last sent code after successful broadcast
-        last_sent_code = current_code
-        logger.debug(f"Updated last_sent_code to: {last_sent_code}")
+        # Add the code to our cache after successful broadcast
+        sent_codes_cache.append(current_code)
+        logger.debug(f"Added code to cache: {current_code}, cache size: {len(sent_codes_cache)}")
 
 def parse_chunked_http_payload(payload):
     """Parse an HTTP payload with chunked transfer encoding to extract JSON data."""
