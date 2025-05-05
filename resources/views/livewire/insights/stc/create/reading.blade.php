@@ -156,7 +156,7 @@ new class extends Component
         $secondsPerDay      = 86400;
         $minTemp            = 0;
         $maxTemp            = 99;
-        $stdDevThreshold    = 0.5; // Standard deviation threshold to consider fluctuation significant
+        $stdDevThreshold    = 1; // Standard deviation threshold to consider fluctuation significant
         $minTempLimit       = 32;
         $maxTempLimit       = 42;
 
@@ -358,7 +358,7 @@ new class extends Component
         // If standard deviation is high, use max temperature + 1
         // Otherwise use a default value (38) which was in the original code
         if ($stdDev < $stdDevThreshold) {
-            $endTemp = max($temperatures) + 1;
+            $endTemp = max($temperatures) + 2;
         }
 
         $cappedEndTemp = max($minTempLimit, min($endTemp, $maxTempLimit));

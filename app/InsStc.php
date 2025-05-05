@@ -199,8 +199,8 @@ class InsStc
     public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id): array
     {
         $target_values  = Self::$target_values;
-        $svp_highs      = [ 90, 85, 80, 75, 70, 65, 60, 55 ];
-        $svp_lows       = [ 70, 65, 60, 55, 50, 45, 40, 35 ];
+        $svp_highs      = [ 83, 78, 73, 68, 63, 58, 53, 48 ];
+        $svp_lows       = [ 73, 68, 63, 58, 53, 48, 43, 38 ];
 
         // Validate input arrays have same length
         if (count($hb_values) !== count($target_values) || count($sv_values) !== count($target_values)) {
