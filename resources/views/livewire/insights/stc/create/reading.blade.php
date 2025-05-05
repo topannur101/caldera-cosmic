@@ -157,7 +157,8 @@ new class extends Component
         $minTemp            = 0;
         $maxTemp            = 99;
         $stdDevThreshold    = 0.5; // Standard deviation threshold to consider fluctuation significant
-        $minTempLimit       = 35;
+        $minTempLimit       = 32;
+        $maxTempLimit       = 42;
 
         try {
             // Check if file exists
@@ -228,7 +229,7 @@ new class extends Component
             // Calculate the standard deviation and minimum end temperature
             // based on the last 4 data points
             $lastTemps  = array_slice(array_column($logs, 'temp'), -4);
-            $minEndTemp = max($minTempLimit, $this->calculateMinEndTemp($lastTemps, $stdDevThreshold, $minTempLimit));
+            $endTemp    = $this->calculateEndTemp($lastTemps, $stdDevThreshold, $minTempLimit, $maxTempLimit);
 
             // Filter out low temperatures in the second half of the logs
             $halfIndex = (int)floor(count($logs) / 2);
@@ -239,7 +240,7 @@ new class extends Component
             // First pass: filter based on position and temperature
             foreach ($logs as $index => $log) {
                 // Keep first half logs or second half logs with sufficient temperature
-                if ($index < $halfIndex || $log['temp'] > $minEndTemp) {
+                if ($index < $halfIndex || $log['temp'] > $endTemp) {
                     $filteredLogs[] = $log;
                 } else {
                     $rejectedLogs[] = $log;
@@ -340,7 +341,7 @@ new class extends Component
         $this->js('toast("' . $message . '", { type: "danger" })');
     }
 
-    private function calculateMinEndTemp(array $temperatures, float $stdDevThreshold, float $minTempLimit): float
+    private function calculateEndTemp(array $temperatures, float $stdDevThreshold, float $minTempLimit, float $maxTempLimit): float
     {
         // Calculate mean
         $count = count($temperatures);
@@ -357,10 +358,12 @@ new class extends Component
         // If standard deviation is high, use max temperature + 1
         // Otherwise use a default value (38) which was in the original code
         if ($stdDev < $stdDevThreshold) {
-            return max($temperatures) + 1;
+            $endTemp = max($temperatures) + 1;
         }
+
+        $cappedEndTemp = max($minTempLimit, min($endTemp, $maxTempLimit));
         
-        return $minTempLimit; // Default minimum end temperature
+        return $cappedEndTemp;
     }
 
     private function resetPrediction()

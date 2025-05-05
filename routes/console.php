@@ -9,3 +9,4 @@ use Illuminate\Support\Facades\Schedule;
 // })->purpose('Display an inspiring quote')->hourly();
 
 Schedule::command('app:ins-omv-cleanup')->daily();
+Schedule::command('app:inv-empty-resolved')->daily();
