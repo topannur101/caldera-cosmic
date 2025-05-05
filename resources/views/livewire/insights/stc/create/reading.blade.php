@@ -357,6 +357,7 @@ new class extends Component
         
         // If standard deviation is high, use max temperature + 1
         // Otherwise use a default value (38) which was in the original code
+        $endTemp = $minTempLimit;
         if ($stdDev < $stdDevThreshold) {
             $endTemp = max($temperatures) + 2;
         }
