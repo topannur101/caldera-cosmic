@@ -231,20 +231,34 @@ new class extends Component
             // Start with half the logs
             $halfIndex = intval($totalLogs / 2);
 
-            // Initialize array to store end temperatures from different window sizes
+            // Initialize array to store end temperatures from different calculations
             $endTempResults = [];
 
-            // Iterate from half logs down to 2 logs
-            for ($i = $halfIndex; $i >= 2; $i--) {
-                // Get the last $i temperatures
-                $lastTemps = array_slice(array_column($logs, 'temp'), -$i);
+            // APPROACH 1: Check decreasing window sizes from half logs down to 2
+            for ($windowSize = $halfIndex; $windowSize >= 2; $windowSize--) {
+                // Get the last $windowSize temperatures
+                $lastTemps = array_slice(array_column($logs, 'temp'), -$windowSize);
                 // Calculate end temperature for this window
                 $endTemp = $this->calculateEndTemp($lastTemps, $stdDevThreshold, $minTempLimit, $maxTempLimit);
                 // Store the result
                 $endTempResults[] = $endTemp;
             }
 
-            // Find the maximum end temperature from all window sizes
+            // APPROACH 2: Sliding window of 10 from halfway point to end
+            $windowSize = 10;
+            // Only proceed if we have enough logs for this approach
+            if ($totalLogs >= $halfIndex + $windowSize) {
+                for ($startIndex = $halfIndex; $startIndex <= $totalLogs - $windowSize; $startIndex++) {
+                    // Get the window of temperatures
+                    $windowTemps = array_slice(array_column($logs, 'temp'), $startIndex, $windowSize);
+                    // Calculate end temperature for this window
+                    $endTemp = $this->calculateEndTemp($windowTemps, $stdDevThreshold, $minTempLimit, $maxTempLimit);
+                    // Store the result
+                    $endTempResults[] = $endTemp;
+                }
+            }
+
+            // Find the maximum end temperature from both approaches
             $endTemp = !empty($endTempResults) ? max($endTempResults) : $minTempLimit;
 
             $filteredLogs = [];
