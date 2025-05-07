@@ -226,27 +226,27 @@ new class extends Component
                 return null;
             }
 
-            $endTemp30 = $minTempLimit;
-            if (count($logs) > 30) {
-                $lastTemps30    = array_slice(array_column($logs, 'temp'), -30);
-                $endTemp30      = $this->calculateEndTemp($lastTemps30, $stdDevThreshold, $minTempLimit, $maxTempLimit);    
+            // Get total number of logs
+            $totalLogs = count($logs);
+            // Start with half the logs
+            $halfIndex = intval($totalLogs / 2);
+
+            // Initialize array to store end temperatures from different window sizes
+            $endTempResults = [];
+
+            // Iterate from half logs down to 2 logs
+            for ($i = $halfIndex; $i >= 2; $i--) {
+                // Get the last $i temperatures
+                $lastTemps = array_slice(array_column($logs, 'temp'), -$i);
+                // Calculate end temperature for this window
+                $endTemp = $this->calculateEndTemp($lastTemps, $stdDevThreshold, $minTempLimit, $maxTempLimit);
+                // Store the result
+                $endTempResults[] = $endTemp;
             }
-            
-            // Calculate the standard deviation and minimum end temperature
-            $lastTemps20    = array_slice(array_column($logs, 'temp'), -20);
-            $endTemp20      = $this->calculateEndTemp($lastTemps20, $stdDevThreshold, $minTempLimit, $maxTempLimit);
 
-            $lastTemps10    = array_slice(array_column($logs, 'temp'), -10);
-            $endTemp10      = $this->calculateEndTemp($lastTemps10, $stdDevThreshold, $minTempLimit, $maxTempLimit);
-            
-            $lastTemps5     = array_slice(array_column($logs, 'temp'), -5);
-            $endTemp5       = $this->calculateEndTemp($lastTemps5, $stdDevThreshold, $minTempLimit, $maxTempLimit);
+            // Find the maximum end temperature from all window sizes
+            $endTemp = !empty($endTempResults) ? max($endTempResults) : $minTempLimit;
 
-            $endTemp        = max([$endTemp30, $endTemp20, $endTemp10, $endTemp5]) + 2;
-
-            // Filter out low temperatures in the second half of the logs
-            $halfIndex = (int) floor(count($logs) / 2);
-            
             $filteredLogs = [];
             $rejectedLogs = [];
             
