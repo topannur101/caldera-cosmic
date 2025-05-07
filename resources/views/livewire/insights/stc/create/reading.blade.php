@@ -151,7 +151,7 @@ new class extends Component
         $skipRows           = 3;
         $tempColumn         = 3;
         $maxLogs            = 100;
-        $minRequiredLogs    = 10;
+        $minRequiredLogs    = 20;
         $excelEpochOffset   = 25569; // Days between Unix epoch and Excel epoch
         $secondsPerDay      = 86400;
         $minTemp            = 0;
@@ -225,19 +225,27 @@ new class extends Component
                 $this->showError(__('Tidak cukup data yang sah ditemukan'));
                 return null;
             }
+
+            $endTemp30 = $minTempLimit;
+            if (count($logs) > 30) {
+                $lastTemps30    = array_slice(array_column($logs, 'temp'), -30);
+                $endTemp30      = $this->calculateEndTemp($lastTemps30, $stdDevThreshold, $minTempLimit, $maxTempLimit);    
+            }
             
             // Calculate the standard deviation and minimum end temperature
-            // based on the last 4 data points
+            $lastTemps20    = array_slice(array_column($logs, 'temp'), -20);
+            $endTemp20      = $this->calculateEndTemp($lastTemps20, $stdDevThreshold, $minTempLimit, $maxTempLimit);
+
             $lastTemps10    = array_slice(array_column($logs, 'temp'), -10);
             $endTemp10      = $this->calculateEndTemp($lastTemps10, $stdDevThreshold, $minTempLimit, $maxTempLimit);
             
             $lastTemps5     = array_slice(array_column($logs, 'temp'), -5);
             $endTemp5       = $this->calculateEndTemp($lastTemps5, $stdDevThreshold, $minTempLimit, $maxTempLimit);
 
-            $endTemp        = max($endTemp10, $endTemp5);
+            $endTemp        = max([$endTemp30, $endTemp20, $endTemp10, $endTemp5]) + 2;
 
             // Filter out low temperatures in the second half of the logs
-            $halfIndex = (int)floor(count($logs) / 2);
+            $halfIndex = (int) floor(count($logs) / 2);
             
             $filteredLogs = [];
             $rejectedLogs = [];
@@ -252,7 +260,7 @@ new class extends Component
                 }
             }
             
-            // Add the first 4 rejected logs to our filtered results
+            // Add the first 2 rejected logs to our filtered results
             $firstRejected = array_slice($rejectedLogs, 0,2);
             $filteredLogs = array_merge($filteredLogs, $firstRejected);
 
