@@ -135,6 +135,17 @@ new class extends Component {
         $this->js("window.print()");
     }
 
+    public function download()
+    {
+        // Create a unique token for this download request
+        $token = md5(uniqid());        
+
+        session()->put('ins_stc_d_logs_token', $token);
+        session()->put('ins_stc_d_logs_id', $this->id);
+        
+        return redirect()->route('download.ins-stc-d-logs', ['token' => $token]);
+    }
+
 };
 
 ?>
@@ -281,7 +292,8 @@ new class extends Component {
             </div>         
         </div>
     </div>
-    <div class="flex justify-end items-end mt-6">
+    <div class="flex gap-x-3 justify-end items-end mt-6">
+        <x-secondary-button type="button" wire:click="download"><i class="fa fa-download me-2"></i>{{ __('Unduh CSV') }}</x-primary-button>
         <x-primary-button type="button" wire:click="printPrepare"><i class="fa fa-print me-2"></i>{{ __('Cetak') }}</x-primary-button>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>

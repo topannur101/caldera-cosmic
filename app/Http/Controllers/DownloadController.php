@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InsStcDLog;
 use Carbon\Carbon;
 use App\Models\InvArea;
 use App\Models\InvItem;
@@ -17,6 +18,53 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DownloadController extends Controller
 {
+    public function insStcDLogs(Request $request, $token)
+    {
+        // Validate the token
+        if ($token !== session()->get('ins_stc_d_logs_token')) {
+            abort(403);
+        }
+    
+        // Clear the token
+        session()->forget('ins_stc_d_logs_token');
+
+        $id = session()->get('ins_stc_d_logs_id');
+
+        $ins_stc_d_logs_query = InsStcDLog::where('ins_stc_d_sum_id', $id)
+            ->orderBy('taken_at');
+    
+        return response()->streamDownload(function () use ($ins_stc_d_logs_query) {
+            // Open output stream
+            $handle = fopen('php://output', 'w');
+    
+            // Add CSV header row
+            fputcsv($handle, [
+                'd_sum_id', 'taken_at', 'temp',
+            ]);
+    
+            // Stream each record to avoid loading all records into memory at once
+            $ins_stc_d_logs_query->chunk(100, function ($d_logs) use ($handle) {
+                foreach ($d_logs as $d_log) {
+    
+                    fputcsv($handle, [
+                        $d_log->ins_stc_d_sum_id ?? '',
+                        $d_log->taken_at ?? '',
+                        $d_log->temp ?? '',
+                    ]);
+                }
+    
+                // Flush the output buffer to send data to the browser
+                ob_flush();
+                flush();
+            });
+    
+            // Close the output stream
+            fclose($handle);
+        }, 'ins_stc_d_logs.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
     public function invCircs(Request $request, $token)
     {
         // Validate the token
