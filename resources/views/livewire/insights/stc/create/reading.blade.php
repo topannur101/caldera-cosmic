@@ -151,7 +151,7 @@ new class extends Component
         $skipRows           = 3;
         $tempColumn         = 3;
         $maxLogs            = 100;
-        $minRequiredLogs    = 4;
+        $minRequiredLogs    = 10;
         $excelEpochOffset   = 25569; // Days between Unix epoch and Excel epoch
         $secondsPerDay      = 86400;
         $minTemp            = 0;
@@ -228,7 +228,7 @@ new class extends Component
             
             // Calculate the standard deviation and minimum end temperature
             // based on the last 4 data points
-            $lastTemps  = array_slice(array_column($logs, 'temp'), -4);
+            $lastTemps  = array_slice(array_column($logs, 'temp'), -10);
             $endTemp    = $this->calculateEndTemp($lastTemps, $stdDevThreshold, $minTempLimit, $maxTempLimit);
 
             // Filter out low temperatures in the second half of the logs
@@ -359,7 +359,7 @@ new class extends Component
         // Otherwise use a default value (38) which was in the original code
         $endTemp = $minTempLimit;
         if ($stdDev < $stdDevThreshold) {
-            $endTemp = max($temperatures) + 2;
+            $endTemp = ceil(max($temperatures));
         }
 
         $cappedEndTemp = max($minTempLimit, min($endTemp, $maxTempLimit));
