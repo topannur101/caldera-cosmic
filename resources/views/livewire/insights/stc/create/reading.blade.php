@@ -228,8 +228,13 @@ new class extends Component
             
             // Calculate the standard deviation and minimum end temperature
             // based on the last 4 data points
-            $lastTemps  = array_slice(array_column($logs, 'temp'), -10);
-            $endTemp    = $this->calculateEndTemp($lastTemps, $stdDevThreshold, $minTempLimit, $maxTempLimit);
+            $lastTemps10    = array_slice(array_column($logs, 'temp'), -10);
+            $endTemp10      = $this->calculateEndTemp($lastTemps10, $stdDevThreshold, $minTempLimit, $maxTempLimit);
+            
+            $lastTemps5     = array_slice(array_column($logs, 'temp'), -5);
+            $endTemp5       = $this->calculateEndTemp($lastTemps5, $stdDevThreshold, $minTempLimit, $maxTempLimit);
+
+            $endTemp        = max($endTemp10, $endTemp5);
 
             // Filter out low temperatures in the second half of the logs
             $halfIndex = (int)floor(count($logs) / 2);
