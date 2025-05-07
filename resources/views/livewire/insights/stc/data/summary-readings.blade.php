@@ -199,11 +199,27 @@ new class extends Component {
         </div>
     </div>
     <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg h-80 p-4 mb-8"
-    id="recents-chart-container" wire:key="recents-chart-container" wire:ignore>
+        id="recents-chart-container" wire:key="recents-chart-container" wire:ignore>
     </div>
-    <div class="px-8 text-sm mb-8">{{ __('Mesin yang memungkinkan jalan otomatis disorot dengan warna') }}<x-text-button type="button"
-            class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'auto-machines-help')"><i
-                class="far fa-question-circle"></i></x-text-button></div>
+    <div class="px-8 flex flex-col sm:flex-row gap-x-6 gap-y-3 text-sm mb-8">
+        <div class="flex items-center gap-x-2">
+            <i class="fa-regular fa-square text-lg text-neutral-500"></i>
+            <div>{{ __('Mesin baru') }}</div>
+        </div>
+        <div class="flex items-center gap-x-2">
+            <i class="fa-solid fa-square text-lg text-caldy-500 opacity-50"></i>
+            <div>{{ __('Mesin lama') }}</div>
+        </div>
+        <div class="flex items-center gap-x-2">
+            <div class="fa-fw flex items-center justify-center">
+                <i class="fa fa-certificate text-lg text-caldy-500"></i>
+                <i class="absolute fa fa-check text-xs text-white"></i>
+            </div>
+            <div>{{ __('Kontrol otomatis') }}</div>
+        </div>
+        <div>
+        </div>
+    </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         @foreach ($machines as $machine)
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg text-sm overflow-hidden">
@@ -212,7 +228,17 @@ new class extends Component {
                         class="flex items-center 
                         border-r border-neutral-100 dark:border-neutral-700 
                         p-4 font-mono text-2xl {{ (substr($machine['code'], 0, 3) == 'OLD' ) ? 'bg-caldy-500 bg-opacity-20' : '' }}">
-                        {{ sprintf('%02d', $machine['line']) }}
+                        <div>
+                            <div>
+                                {{ sprintf('%02d', $machine['line']) }}
+                            </div>
+                            @if(strpos($machine['ip_address'], '127.') !== 0)
+                                <div class="fa-fw flex items-center justify-center">
+                                    <i class="fa fa-certificate text-lg text-caldy-500"></i>
+                                    <i class="absolute fa fa-check text-xs text-white"></i>
+                                </div>
+                            @endif
+                        </div>    
                     </div>
                     <div class="grow">
                         <div
