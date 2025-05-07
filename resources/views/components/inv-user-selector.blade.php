@@ -47,8 +47,8 @@
                   </div>
                 </x-secondary-button>
                </template>
-               <div x-show="!users.length" class="text-sm">{{ __('Tak ada pengguna yang bisa dipilih') }}</div>
             </div>
+            <div x-show="!users.length" class="text-sm text-center text-neutral-500">{{ __('Tak ada pengguna yang bisa dipilih') }}</div>
             <div class="flex justify-end">
                <x-text-button class="text-xs uppercase font-semibold" type="button" x-on:click="user_id = 0;$dispatch('close');" x-show="user_id"><span class="text-red-500"><div class="px-1">{{ __('Hapus filter pengguna') }}</div></span></x-text-button>
             </div>

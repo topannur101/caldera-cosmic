@@ -174,7 +174,7 @@ class DownloadController extends Controller
                 'circ_type', 'circ_qty_relative', 'circ_unit_price', 'circ_amount',
                 'circ_user_emp_id', 'circ_user_name', 'circ_remarks',
                 'circ_eval_user_emp_id', 'circ_eval_user_name', 'circ_eval_remarks',
-                'circ_eval_status', 'circ_is_delegated'
+                'circ_eval_status', 'circ_is_delegated', 'circ_created_at', 'circ_updated_at'
             ]);
     
             // Stream each record to avoid loading all records into memory at once
@@ -212,6 +212,8 @@ class DownloadController extends Controller
                         $circ->eval_remarks,
                         $circ->eval_status,
                         $circ->is_delegated,
+                        $circ->created_at,
+                        $circ->updated_at
                     ]);
                 }
     

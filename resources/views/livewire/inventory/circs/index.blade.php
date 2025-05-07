@@ -48,6 +48,11 @@ class extends Component {
 
     public bool $print_commit = false;
 
+    #[Url]
+    public string $q = '';
+    
+    public array $qwords = []; // caldera: do you need it?
+
     public function mount()
     {
         $user_id = Auth::user()->id;
@@ -66,6 +71,7 @@ class extends Component {
         $circsParams = session('inv_circs_params', []);
 
         if ($circsParams) {
+            $this->q                = $circsParams['q']                 ?? '';
             $this->sort             = $circsParams['sort']              ?? '';
             $this->area_ids         = $circsParams['area_ids']          ?? [];
             $this->circ_eval_status = $circsParams['circ_eval_status']  ?? [];
@@ -87,10 +93,12 @@ class extends Component {
 
     private function InvCircQuery()
     {
-        $circ_remarks = trim ($this->remarks[0]);
-        $eval_remarks = trim ($this->remarks[1]);
+        $q              = trim($this->q);
+        $circ_remarks   = trim ($this->remarks[0]);
+        $eval_remarks   = trim ($this->remarks[1]);
 
         $inv_circs_params = [
+            'q'                 => $q,
             'sort'              => $this->sort,
             'circ_eval_status'  => $this->circ_eval_status,
             'circ_types'        => $this->circ_types,
@@ -110,8 +118,14 @@ class extends Component {
             'inv_curr',
             'user'
         ])
-        ->whereHas('inv_item', function($query) {
-            $query->whereIn('inv_area_id', $this->area_ids);
+        ->whereHas('inv_item', function ($query) use ($q) {
+            // items
+            $query->where(function ($subQuery) use ($q) {
+                $subQuery->where('name', 'like', "%$q%")
+                         ->orWhere('code', 'like', "%$q%")
+                         ->orWhere('desc', 'like', "%$q%");
+            })
+            ->whereIn('inv_area_id', $this->area_ids);
         })
         ->whereIn('eval_status', $this->circ_eval_status)
         ->whereIn('type', $this->circ_types);
@@ -340,6 +354,23 @@ class extends Component {
     </div>
     <div class="static lg:sticky top-0 z-10 py-6 ">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
+            <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
+                <i wire:loading.remove class="fa fa-fw fa-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
+                <i wire:loading class="fa fa-fw relative">
+                    <x-spinner class="sm mono"></x-spinner>
+                </i>
+                <div class="w-full md:w-32">
+                    <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
+                        type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
+                    <datalist id="qwords">
+                        @if (count($qwords))
+                            @foreach ($qwords as $qword)
+                                <option value="{{ $qword }}">
+                            @endforeach
+                        @endif
+                    </datalist>
+                </div>
+            </div>
             <div class="flex justify-between px-8 lg:px-3 py-3 lg:py-0 divide-x divide-neutral-200 dark:divide-neutral-700">
                 <div class="btn-group h-9 pr-3">
                     <x-checkbox-button-t title="{{ __('Tertunda') }}" x-model="status" grow value="pending" name="circ_eval_status" id="circ_eval_status-pending">
@@ -446,7 +477,7 @@ class extends Component {
             </div>
         </div>
     </div>
-    <div wire:loading.class="cal-shimmer">
+    <div>
         @if (!$inv_circs->count())
             @if (count($area_ids))
                 <div wire:key="no-match" class="py-20">

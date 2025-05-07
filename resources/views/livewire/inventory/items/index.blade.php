@@ -404,7 +404,7 @@ class extends Component
                 <i wire:loading class="fa fa-fw relative">
                     <x-spinner class="sm mono"></x-spinner>
                 </i>
-                <div class="w-full md:w-40">
+                <div class="w-full md:w-32">
                     <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
                         type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
                     <datalist id="qwords">

@@ -2,12 +2,6 @@
 <div x-data="{
         date_fr: @entangle('date_fr').live,
         date_to: @entangle('date_to').live,
-        get date_facade() {
-            if (!this.date_fr.trim() || !this.date_to.trim()) {
-                return '';
-            }
-            return `${this.date_fr} — ${this.date_to}`.trim();
-        },
         setToday() {
             const today = new Date();
             this.date_fr = this.formatDate(today);
@@ -58,7 +52,17 @@
             return date.toISOString().split('T')[0];
         }
     }" class="flex items-center {{ $isQuery ? 'px-4' : '' }}">
-    <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'date-selector')" ::class="date_facade ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="fa fa-fw fa-calendar me-3"></i><span x-text="date_facade ? date_facade : '{{ $isQuery ? __('Tanggal') : __('Tanggal manapun') }}'"></span></x-text-button>
+    <x-text-button {{ $attributes->merge(['class' => '']) }} 
+        type="button" 
+        x-on:click.prevent="$dispatch('open-modal', 'date-selector')"
+        ::class="date_fr && date_to ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'">
+        <i class="fa fa-fw fa-calendar me-3"></i>
+        <div x-show="!date_fr || !date_to">{{ $isQuery ? __('Tanggal') : __('Tanggal manapun') }}</div>
+        <div x-show="date_fr && date_to">
+            <div x-text="date_fr"></div>
+            <div x-text="date_to"></div>
+        </div>
+    </x-text-button>
     <x-modal name="date-selector" maxWidth="sm">
         <div class="grid grid-cols-1 gap-y-6 p-6">
             <div class="flex justify-between items-start">
