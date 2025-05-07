@@ -219,7 +219,7 @@ new class extends Component {
         </div>
         <div class="flex items-center gap-x-2">
             <div class="fa-fw flex items-center justify-center">
-                <i class="fa fa-square text-lg text-caldy-500 opacity-10"></i>
+                <i class="fa fa-square text-lg text-red-500 opacity-10"></i>
                 <span class="absolute fa text-xs text-red-500">0</span>
             </div>
             <div>{{ __('Suhu di luar standar') }}</div>
