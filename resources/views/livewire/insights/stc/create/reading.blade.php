@@ -156,7 +156,7 @@ new class extends Component
         $secondsPerDay      = 86400;
         $minTemp            = 0;
         $maxTemp            = 99;
-        $stdDevThreshold    = 1; // Standard deviation threshold to consider fluctuation significant
+        $stdDevThreshold    = 2.0; // Standard deviation threshold to consider fluctuation significant
         $minTempLimit       = 32;
         $maxTempLimit       = 42;
 
