@@ -78,8 +78,6 @@ class DownloadController extends Controller
         // Check if stock_id is present in the request
         if ($request->has('stock_id')) {
             $stock_id = $request['stock_id'];
-            $date_to = Carbon::now();
-            $date_fr = Carbon::now()->subYear();
     
             $inv_circs_query = InvCirc::with([
                 'inv_stock.inv_item',
@@ -92,7 +90,6 @@ class DownloadController extends Controller
                 'eval_user',
             ])
             ->where('inv_stock_id', $stock_id)
-            ->whereBetween('updated_at', [$date_fr, $date_to])
             ->limit(500);
     
         } else {
