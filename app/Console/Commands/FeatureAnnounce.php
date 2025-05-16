@@ -128,6 +128,26 @@ class FeatureAnnounce extends Command
                 ] 
             ],
 
+            'inv_specific_search' => [
+                'icon'      => 'fa-solid fa-cube',
+                'content'   => 'Kini kamu dapat mencari barang dengan nama, deskripsi, dan kode item secara spesifik.',
+                'post'      =>
+                [
+                    'title'     => 'Pencarian spesifik',
+                    'content'   => '
+                    Kini kamu dapat mencari barnag dengan nama, deskripsi, dan kode item secara spesifik. Tekan tombol rantai untuk menyalakan dan mematikan fitur ini. Rantai lepas berarti kamu dapat mencari barang dengan informasi spesifik. Rantai tersambung berarti kamu mencari barang dengan cara klasik (mencari pada nama, deskripsi, dan kode sekaligus).
+                    <br><br>
+                    <img src="/announcements/inv_specific_1.jpeg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    <img src="/announcements/inv_specific_2.jpeg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    <img src="/announcements/inv_specific_3.jpeg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    ',
+                ] 
+            ],
+
+            
+
             
         ];
         
