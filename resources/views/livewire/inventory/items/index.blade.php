@@ -46,6 +46,15 @@ class extends Component
     
     #[Url]
     public string $q = '';
+
+    #[Url]
+    public string $name = '';
+
+    #[Url]
+    public string $desc = '';
+
+    #[Url]
+    public string $code = '';
     
     public array $qwords = []; // caldera: do you need it?
 
@@ -57,6 +66,9 @@ class extends Component
 
     #[Url]
     public bool $is_deleted = false;
+
+    #[Url]
+    public bool $is_linked = true;
 
     #[Url]
     public bool $ignore_params = false;
@@ -81,6 +93,10 @@ class extends Component
 
             if ($itemsParams) {
                 $this->q            = $itemsParams['q'] ?? '';
+                $this->name         = $itemsParams['name'] ?? '';
+                $this->desc         = $itemsParams['desc'] ?? '';
+                $this->code         = $itemsParams['code'] ?? '';
+                $this->is_linked    = $itemsParams['is_linked'] ?? true;
                 $this->loc_parent   = $itemsParams['loc_parent'] ?? '';
                 $this->loc_bin      = $itemsParams['loc_bin'] ?? '';
                 $this->tags         = $itemsParams['tags'] ?? [];
@@ -109,12 +125,19 @@ class extends Component
     public function with(): array
     {
         $q          = trim($this->q);
+        $name       = trim($this->name);
+        $desc       = trim($this->desc);
+        $code       = trim($this->code);
         $loc_parent = trim($this->loc_parent);
         $loc_bin    = trim($this->loc_bin);
         $tags       = $this->tags;
 
         $inv_items_params = [
             'q'             => $q,
+            'name'          => $name,
+            'desc'          => $desc,
+            'code'          => $code,
+            'is_linked'     => $this->is_linked,
             'loc_parent'    => $loc_parent,
             'loc_bin'       => $loc_bin,
             'tags'          => $tags,
@@ -135,14 +158,34 @@ class extends Component
             'inv_item.inv_area', 
             'inv_item.inv_tags'
         ])
-            ->whereHas('inv_item', function ($query) use ($q, $loc_parent, $loc_bin, $tags) {
-            // items
-            $query->where(function ($subQuery) use ($q) {
-                $subQuery->where('name', 'like', "%$q%")
-                         ->orWhere('code', 'like', "%$q%")
-                         ->orWhere('desc', 'like', "%$q%");
-            })
-            ->whereIn('inv_area_id', $this->area_ids);
+            ->whereHas('inv_item', function ($query) use ($q, $name, $desc, $code, $loc_parent, $loc_bin, $tags) {
+
+        
+            // items (if linked)
+            if($this->is_linked) {
+                $query->where(function ($subQuery) use ($q) {
+                    $subQuery->where('name', 'like', "%$q%")
+                             ->orWhere('code', 'like', "%$q%")
+                             ->orWhere('desc', 'like', "%$q%");
+                });
+
+            } else {
+
+                if($name) {
+                    $query->where('name', 'like', "%$name%");
+                }
+
+                if($desc) {
+                    $query->where('desc', 'like', "%$desc%");
+                }
+
+                if($code) {
+                    $query->where('code', 'like', "%$code%");
+                }
+
+            }
+
+            $query->whereIn('inv_area_id', $this->area_ids);
 
             // location
             $query->where(function ($subQuery) use ($loc_parent, $loc_bin) {
@@ -399,12 +442,12 @@ class extends Component
     </div>
     <div class="static lg:sticky top-0 z-10 py-6 ">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
-            <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
+            <div x-data="{ is_linked: @entangle('is_linked').live }" class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
                 <i wire:loading.remove class="fa fa-fw fa-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
                 <i wire:loading class="fa fa-fw relative">
                     <x-spinner class="sm mono"></x-spinner>
                 </i>
-                <div class="w-full md:w-32">
+                <div x-show="is_linked" class="w-full md:w-32">
                     <x-text-input-t wire:model.live="q" id="inv-q" name="inv-q" class="h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
                         type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
                     <datalist id="qwords">
@@ -415,7 +458,25 @@ class extends Component
                         @endif
                     </datalist>
                 </div>
+                <div x-cloak x-show="!is_linked" class="w-full md:w-24">
+                    <x-text-input-t wire:model.live="name" id="inv-name" name="inv-name" class="h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
+                        type="search" placeholder="{{ __('Nama') }}" autocomplete="inv-name" />
+                </div>
+                <div x-cloak x-show="!is_linked" class="w-full md:w-28">
+                    <x-text-input-t wire:model.live="desc" id="inv-desc" name="inv-desc" class="h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
+                        type="search" placeholder="{{ __('Deskripsi') }}" autocomplete="inv-desc" />
+                </div>
+                <div x-cloak x-show="!is_linked" class="w-full md:w-24">
+                    <x-text-input-t wire:model.live="code" id="inv-code" name="inv-code" class="h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
+                        type="search" placeholder="{{ __('Kode') }}" autocomplete="inv-code" />
+                </div>
+                <x-text-button type="button" x-on:click="is_linked = !is_linked">
+                    <i x-show="is_linked" class="fa fa-fw fa-link"></i>
+                    <i x-cloak x-show="!is_linked" class="fa fa-fw fa-link-slash"></i>
+                </x-text-button>
             </div>
+
+            
 
             <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
                 <x-inv-loc-selector isQuery="true" class="text-xs font-semibold uppercase" />
