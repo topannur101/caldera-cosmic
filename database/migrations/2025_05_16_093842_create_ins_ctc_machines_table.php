@@ -14,6 +14,13 @@ return new class extends Migration
         Schema::create('ins_ctc_machines', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->integer('line')->unsigned()->unique();
+            $table->ipAddress('ip_address');
+
+            $table->index('line');
+            $table->unique(['line', 'ip_address']);
+            
         });
     }
 

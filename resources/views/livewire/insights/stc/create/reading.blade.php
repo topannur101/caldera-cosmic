@@ -55,7 +55,8 @@ new class extends Component
 
     public function mount()
     {
-        $this->machines = InsStcMachine::all()->toArray();
+        $this->machines = InsStcMachine::whereNot('code', 'like', 'test%')->orderBy('line')->get()->toArray();
+        $this->checkRecents();
         $this->d_sum['sv_used_friendly'] = __('SV manual');
     }
 
@@ -454,6 +455,7 @@ new class extends Component
         $is_applied = $this->push();
 
         $this->save($is_applied);
+        $this->checkRecents();
 
         if ($is_applied) {
             $this->js('toast("' . __('Berhasil') . '", { description: "' . __('Data tersimpan dan mesin telah disetel dengan SV prediksi') . '", type: "success" })');
@@ -659,6 +661,28 @@ new class extends Component
         }
 
     }
+
+    private function checkRecents()
+    {
+        foreach ($this->machines as $key => $machine) {
+            $recentExists = InsStcDSum::where('position', 'upper')
+                ->where('ins_stc_machine_id', $machine['id'])
+                ->where('created_at', '>=', Carbon::now()->subHours(5))
+                ->latest('created_at')
+                ->count();
+            
+            $this->machines[$key]['upper_uploaded'] = (bool) $recentExists ? true : false;
+
+            $recentExists = InsStcDSum::where('position', 'lower')
+            ->where('ins_stc_machine_id', $machine['id'])
+            ->where('created_at', '>=', Carbon::now()->subHours(5))
+            ->latest('created_at')
+            ->count();
+        
+        $this->machines[$key]['lower_uploaded'] = (bool) $recentExists ? true : false;
+        }
+
+    }
 }
 
 ?>
@@ -700,176 +724,184 @@ new class extends Component
             </div>
         </x-modal>
     </div>
-   <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-x md:divide-y-0 divide-neutral-200 dark:text-white dark:divide-neutral-700">
-         <div class="p-6">
-            <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-window-maximize mr-3 text-neutral-500"></i>{{ __('Mesin') }}</h1>
-            <div class="grid grid-cols-2 gap-x-3 mb-6">
-               <div>
-                  <label for="d-log-sequence"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Urutan') }}</label>
-                  <x-select class="w-full" id="d-log-sequence" wire:model="d_sum.sequence">
-                        <option value=""></option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                  </x-select>
-               </div>
-               <div>
-                  <label for="d-log-speed"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kecepatan') }}</label>
-                  <x-text-input-suffix suffix="RPM" id="d-log-speed" wire:model="d_sum.speed" type="number"
-                        step=".01" autocomplete="off" />
-               </div>
+    <div class="flex items-center justify-center mb-6 gap-2 text-xs">
+        @foreach ($machines as $machine)
+            <div class="btn-group">
+                <x-text-button type="button" class="px-1 bg-caldy-600 {{ $machine['upper_uploaded'] ? 'bg-opacity-80 text-white' : 'bg-opacity-15 dark:bg-opacity-10 text-caldy-700'}}" x-on:click="$wire.set('d_sum.position', 'upper', false); $wire.set('d_sum.ins_stc_machine_id', '{{ $machine['id'] }}');">{{ $machine['line'] . ' △' }}</x-text-button>
+                <x-text-button type="button" class="px-1 bg-caldy-600 {{ $machine['lower_uploaded'] ? 'bg-opacity-80 text-white' : 'bg-opacity-15 dark:bg-opacity-10 text-caldy-700'}}" x-on:click="$wire.set('d_sum.position', 'lower', false); $wire.set('d_sum.ins_stc_machine_id', '{{ $machine['id'] }}');">{{ $machine['line'] . ' ▽' }}</x-text-button>
             </div>
-            <div class="grid grid-cols-2 gap-x-3 mb-6">
-               <div>
-                  <label for="d-log-machine_id"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                  <x-select class="w-full" id="d-log-machine_id" wire:model.live="d_sum.ins_stc_machine_id">
+        @endforeach
+    </div>
+    <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-x md:divide-y-0 divide-neutral-200 dark:text-white dark:divide-neutral-700">
+            <div class="p-6">
+                <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-window-maximize mr-3 text-neutral-500"></i>{{ __('Mesin') }}</h1>
+                <div class="grid grid-cols-2 gap-x-3 mb-6">
+                    <div>
+                        <label for="d-log-sequence"
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Urutan') }}</label>
+                        <x-select class="w-full" id="d-log-sequence" wire:model="d_sum.sequence">
+                            <option value=""></option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </x-select>
+                    </div>
+                    <div>
+                        <label for="d-log-speed"
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kecepatan') }}</label>
+                        <x-text-input-suffix suffix="RPM" id="d-log-speed" wire:model="d_sum.speed" type="number"
+                            step=".01" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-x-3 mb-6">
+                    <div>
+                        <label for="d-log-machine_id"
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                        <x-select class="w-full" id="d-log-machine_id" wire:model.live="d_sum.ins_stc_machine_id">
+                            <option value="0"></option>
+                            @foreach ($machines as $machine)
+                                <option value="{{ $machine['id'] }}">{{ $machine['line'] }}</option>
+                            @endforeach
+                        </x-select>
+                    </div>
+                    <div>
+                        <label for="d-log-position"
+                            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
+                        <x-select class="w-full" id="d-log-position" wire:model.live="d_sum.position">
+                            <option value=""></option>
+                            <option value="upper">{{ '△ ' . __('Atas') }}</option>
+                            <option value="lower">{{ '▽ ' . __('Bawah') }}</option>
+                        </x-select>
+                    </div>
+                </div>
+                <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                    <span>{{ __('SV') }}</span>
+                    @if($d_sum['sv_used'] == 'm_log')
+                        <i class="fa fa-lock ms-2"></i>
+                    @endif
+                </label>
+                @if($d_sum['sv_used'] == 'm_log')
+                    <div class="grid grid-cols-8">
+                        <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.0" />
+                        <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.1" />
+                        <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.2" />
+                        <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.3" />
+                        <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.4" />
+                        <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.5" />
+                        <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.6" />
+                        <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.7" />
+                    </div>
+                @else
+                    <div class="grid grid-cols-8">
+                        <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.0" />
+                        <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.1" />
+                        <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.2" />
+                        <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.3" />
+                        <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.4" />
+                        <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.5" />
+                        <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.6" />
+                        <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.7" />
+                    </div>
+                @endif
+            </div>
+            <div class="p-6">
+                <div class="flex justify-between">
+                    <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-pager mr-3 text-neutral-500"></i>{{ __('Alat ukur') }}</h1>
+                    <div>
+                        <input wire:model="file" type="file" class="hidden" x-ref="file" />
+                        <x-secondary-button type="button" x-on:click="$refs.file.click()">{{ __('Unggah') }}</x-secondary-button>
+                    </div>
+                </div>   
+                <div class="mb-6">
+                    <label for="d-log-device_code"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
+                    <x-text-input id="d-log-device_code" wire:model="device_code" type="text"
+                        placeholder="Scan atau ketik..." />
+                </div>
+                <div class="grid grid-cols-2 gap-x-3 mb-6">
+                    <div>
+                        <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Latensi') }}</label>
+                        <x-text-input-t placeholder="{{ __('Menunggu...') }}" disabled wire:model="latency"></x-text-input-t>
+                    </div>
+                    <div>
+                        <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Durasi') }}</label>
+                        <x-text-input-t placeholder="{{ __('Menunggu...') }}" disabled wire:model="duration"></x-text-input-t>
+                    </div>
+                </div>
+                <label class="flex justify-between px-3 mb-2 uppercase text-xs text-neutral-500">
+                <div>{{ __('HB') }}</div>
+                    @if($logs)
+                        <x-text-button
+                            x-on:click.prevent="$dispatch('open-modal', 'reading-review'); $dispatch('reading-review', { logs: '{{ json_encode($logs) }}', sv_temps: '{{ json_encode($d_sum['sv_values']) }}' })"
+                            class="uppercase text-xs text-neutral-500" 
+                            type="button"><i class="fa fa-eye mr-1"></i>{{ __('Tinjau') }}</x-text-button>
+                    @endif
+                </label>
+                <div class="grid grid-cols-8">
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.0" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.1" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.2" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.3" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.4" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.5" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.6" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.7" />
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="flex justify-between">
+                    <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-square-root-variable mr-3 text-neutral-500"></i>{{ __('Prediksi') }}</h1>
+                    <div>
+                        <x-secondary-button type="button" wire:click="calculatePrediction">{{ __('Hitung') }}</x-secondary-button>
+                    </div>
+                </div> 
+                <div class="mb-6">
+                    <label for="adj-formula_id"
+                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Formula') }}</label>
+                    <x-select class="w-full" id="adj-formula_id" wire:model.live="d_sum.formula_id" disabled>
                         <option value="0"></option>
-                        @foreach ($machines as $machine)
-                           <option value="{{ $machine['id'] }}">{{ $machine['line'] }}</option>
-                        @endforeach
-                  </x-select>
-               </div>
-               <div>
-                  <label for="d-log-position"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
-                  <x-select class="w-full" id="d-log-position" wire:model.live="d_sum.position">
-                        <option value=""></option>
-                        <option value="upper">{{ '△ ' . __('Atas') }}</option>
-                        <option value="lower">{{ '▽ ' . __('Bawah') }}</option>
-                  </x-select>
-               </div>
+                        <option value="411">{{ __('v4.1.1 - Diff aggresive') }}</option>
+                        <option value="412">{{ __('v4.1.2 - Diff delicate') }}</option>
+                        <option value="421">{{ __('v4.2.1 - Ratio') }}</option>
+                    </x-select>
+                </div>
+                <div class="mb-6">
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Referensi SV') }}</label>
+                    <x-text-input-t wire:model="d_sum.sv_used_friendly" placeholder="{{ __('Menunggu...') }}" disabled></x-text-input-t>
+                </div>
+                <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('SVP') }}</label>
+                <div class="grid grid-cols-8">
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.0" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.1" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.2" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.3" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.4" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.5" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.6" />
+                    <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.7" />
+                </div>
+                <div class="grid grid-cols-8 text-neutral-500 text-xs text-center">
+                    <div>{{ $d_sum['svp_values_rel'][0] }}</div>
+                    <div>{{ $d_sum['svp_values_rel'][1] }}</div>
+                    <div>{{ $d_sum['svp_values_rel'][2] }}</div>
+                    <div>{{ $d_sum['svp_values_rel'][3] }}</div>
+                    <div>{{ $d_sum['svp_values_rel'][4] }}</div>
+                    <div>{{ $d_sum['svp_values_rel'][5] }}</div>
+                    <div>{{ $d_sum['svp_values_rel'][6] }}</div>
+                    <div>{{ $d_sum['svp_values_rel'][7] }}</div>
+                </div>
             </div>
-            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">
-               <span>{{ __('SV') }}</span>
-               @if($d_sum['sv_used'] == 'm_log')
-                  <i class="fa fa-lock ms-2"></i>
-               @endif
-            </label>
-            @if($d_sum['sv_used'] == 'm_log')
-               <div class="grid grid-cols-8">
-                  <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.0" />
-                  <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.1" />
-                  <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.2" />
-                  <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.3" />
-                  <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.4" />
-                  <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.5" />
-                  <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.6" />
-                  <x-text-input-t class="text-center" disabled wire:model="d_sum.sv_values.7" />
-               </div>
-            @else
-               <div class="grid grid-cols-8">
-                  <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.0" />
-                  <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.1" />
-                  <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.2" />
-                  <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.3" />
-                  <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.4" />
-                  <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.5" />
-                  <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.6" />
-                  <x-text-input-t class="text-center" placeholder="0" wire:model="d_sum.sv_values.7" />
-               </div>
-            @endif
-         </div>
-         <div class="p-6">
-            <div class="flex justify-between">
-               <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-pager mr-3 text-neutral-500"></i>{{ __('Alat ukur') }}</h1>
-               <div>
-                  <input wire:model="file" type="file" class="hidden" x-ref="file" />
-                  <x-secondary-button type="button" x-on:click="$refs.file.click()">{{ __('Unggah') }}</x-secondary-button>
-               </div>
-            </div>   
-            <div class="mb-6">
-               <label for="d-log-device_code"
-                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
-               <x-text-input id="d-log-device_code" wire:model="device_code" type="text"
-                  placeholder="Scan atau ketik..." />
-            </div>
-            <div class="grid grid-cols-2 gap-x-3 mb-6">
-               <div>
-                  <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Latensi') }}</label>
-                  <x-text-input-t placeholder="{{ __('Menunggu...') }}" disabled wire:model="latency"></x-text-input-t>
-               </div>
-               <div>
-                  <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Durasi') }}</label>
-                  <x-text-input-t placeholder="{{ __('Menunggu...') }}" disabled wire:model="duration"></x-text-input-t>
-               </div>
-            </div>
-            <label class="flex justify-between px-3 mb-2 uppercase text-xs text-neutral-500">
-               <div>{{ __('HB') }}</div>
-               @if($logs)
-               <x-text-button
-                  x-on:click.prevent="$dispatch('open-modal', 'reading-review'); $dispatch('reading-review', { logs: '{{ json_encode($logs) }}', sv_temps: '{{ json_encode($d_sum['sv_values']) }}' })"
-                  class="uppercase text-xs text-neutral-500" 
-                  type="button"><i class="fa fa-eye mr-1"></i>{{ __('Tinjau') }}</x-text-button>
-               @endif
-            </label>
-            <div class="grid grid-cols-8">
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.0" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.1" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.2" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.3" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.4" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.5" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.6" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.hb_values.7" />
-            </div>
-         </div>
-         <div class="p-6">
-            <div class="flex justify-between">
-               <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-square-root-variable mr-3 text-neutral-500"></i>{{ __('Prediksi') }}</h1>
-               <div>
-                  <x-secondary-button type="button" wire:click="calculatePrediction">{{ __('Hitung') }}</x-secondary-button>
-               </div>
-            </div> 
-            <div class="mb-6">
-               <label for="adj-formula_id"
-                  class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Formula') }}</label>
-               <x-select class="w-full" id="adj-formula_id" wire:model.live="d_sum.formula_id" disabled>
-                  <option value="0"></option>
-                  <option value="411">{{ __('v4.1.1 - Diff aggresive') }}</option>
-                  <option value="412">{{ __('v4.1.2 - Diff delicate') }}</option>
-                  <option value="421">{{ __('v4.2.1 - Ratio') }}</option>
-               </x-select>
-            </div>
-            <div class="mb-6">
-               <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Referensi SV') }}</label>
-               <x-text-input-t wire:model="d_sum.sv_used_friendly" placeholder="{{ __('Menunggu...') }}" disabled></x-text-input-t>
-            </div>
-            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('SVP') }}</label>
-            <div class="grid grid-cols-8">
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.0" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.1" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.2" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.3" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.4" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.5" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.6" />
-               <x-text-input-t class="text-center" placeholder="0" disabled wire:model="d_sum.svp_values.7" />
-            </div>
-            <div class="grid grid-cols-8 text-neutral-500 text-xs text-center">
-               <div>{{ $d_sum['svp_values_rel'][0] }}</div>
-               <div>{{ $d_sum['svp_values_rel'][1] }}</div>
-               <div>{{ $d_sum['svp_values_rel'][2] }}</div>
-               <div>{{ $d_sum['svp_values_rel'][3] }}</div>
-               <div>{{ $d_sum['svp_values_rel'][4] }}</div>
-               <div>{{ $d_sum['svp_values_rel'][5] }}</div>
-               <div>{{ $d_sum['svp_values_rel'][6] }}</div>
-               <div>{{ $d_sum['svp_values_rel'][7] }}</div>
-            </div>
-         </div>
-      </div>
-      <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
-      <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
-   </div>
-   <div class="flex justify-between px-6">
-      <div class="flex gap-x-3">
-      @if ($errors->any())
-         <i class="fa fa-exclamation-circle text-red-500"></i>
-         <x-input-error :messages="$errors->first()" />
-      @endif
-      </div>      
-      <x-primary-button type="button" wire:click="send">{{ __('Kirim') }}</x-primary-button>
-   </div>
+        </div>
+        <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
+        <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
+    </div>
+    <div class="flex justify-between px-6">
+        <div class="flex gap-x-3">
+        @if ($errors->any())
+            <i class="fa fa-exclamation-circle text-red-500"></i>
+            <x-input-error :messages="$errors->first()" />
+        @endif
+        </div>      
+        <x-primary-button type="button" wire:click="send">{{ __('Kirim') }}</x-primary-button>
+    </div>
 </div>
