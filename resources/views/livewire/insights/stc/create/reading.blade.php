@@ -667,7 +667,7 @@ new class extends Component
         foreach ($this->machines as $key => $machine) {
             $recentExists = InsStcDSum::where('position', 'upper')
                 ->where('ins_stc_machine_id', $machine['id'])
-                ->where('created_at', '>=', Carbon::now()->subHours(3))
+                ->where('created_at', '>=', Carbon::now()->subHour())
                 ->latest('created_at')
                 ->count();
             
@@ -675,7 +675,7 @@ new class extends Component
 
             $recentExists = InsStcDSum::where('position', 'lower')
             ->where('ins_stc_machine_id', $machine['id'])
-            ->where('created_at', '>=', Carbon::now()->subHours(3))
+            ->where('created_at', '>=', Carbon::now()->subHour())
             ->latest('created_at')
             ->count();
         

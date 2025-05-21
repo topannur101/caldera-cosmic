@@ -98,6 +98,24 @@ class extends Component
                </div>
             </div>
          </a>
+         <a href="{{ route('inventory.items.bulk-operation.update-limit') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
+            <div class="flex items-center">
+               <div class="px-6 py-3">
+                  <i class="fa fa-fw fa-arrows-up-to-line"></i>
+               </div>
+               <div class="py-3 grow">
+                  <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Perbarui batas qty') }}</div>
+                  <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
+                     <div class="flex items-center gap-x-2 text-sm text-neutral-500">
+                        {{ __('Perbarui batas minimum dan maksimum barang') }}
+                     </div>
+                  </div>
+               </div>
+               <div class="px-6 py-3 text-lg">
+                  <i class="fa fa-chevron-right"></i>
+               </div>
+            </div>
+         </a>
          <a href="{{ route('inventory.items.bulk-operation.update-status') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
