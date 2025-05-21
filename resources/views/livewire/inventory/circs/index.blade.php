@@ -105,11 +105,12 @@ class extends Component {
             'date_fr'           => $this->date_fr,
             'date_to'           => $this->date_to,
             'user_id'           => $this->user_id,
+            'area_ids'          => $this->area_ids,
             'remarks'           => [ $circ_remarks, $eval_remarks ],
         ];
 
         session(['inv_circs_params' => $inv_circs_params]);
-        session(['inv_areas_param' => $this->area_ids]);
+        session(['inv_areas_param'  => $this->area_ids]);
 
         $inv_circs_query = InvCirc::with([
             'inv_stock',

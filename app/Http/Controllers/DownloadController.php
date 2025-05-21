@@ -95,8 +95,9 @@ class DownloadController extends Controller
         } else {
             // Get circs parameters from session
             $inv_circs_params = session('inv_circs_params', []);
-    
+            
             // Extract parameters
+            $q = $inv_circs_params['q'] ?? '';
             $sort = $inv_circs_params['sort'] ?? '';
             $area_ids = $inv_circs_params['area_ids'] ?? [];
             $circ_eval_status = $inv_circs_params['circ_eval_status'] ?? [];
@@ -116,8 +117,12 @@ class DownloadController extends Controller
                 'user',
                 'eval_user',
             ])
-            ->whereHas('inv_item', function($query) use($area_ids) {
-                $query->whereIn('inv_area_id', $area_ids);
+            ->whereHas('inv_item', function($query) use($q, $area_ids) {
+                $query->where(function ($subQuery) use ($q) {
+                    $subQuery->where('name', 'like', "%$q%")
+                             ->orWhere('code', 'like', "%$q%")
+                             ->orWhere('desc', 'like', "%$q%");
+                })->whereIn('inv_area_id', $area_ids);
             })
             ->whereIn('eval_status', $circ_eval_status)
             ->whereIn('type', $circ_types);
