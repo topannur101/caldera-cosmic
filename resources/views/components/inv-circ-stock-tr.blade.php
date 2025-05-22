@@ -10,6 +10,7 @@
       'eval_status',
       'eval_user_name',
       'eval_user_emp_id',
+      'updated_at',
       'updated_at_friendly',
       'remarks',
       'eval_icon'
@@ -38,13 +39,15 @@
                @endif
             </div>
          </div>
-         <div class="truncate">
-            <div class="text-xs text-neutral-400 dark:text-neutral-600">
-               <span>{{ $user_name }}</span> 
+         <div class="truncate w-full">
+           <div class="flex gap-x-1 text-xs text-neutral-400 dark:text-neutral-600">
+               <div>{{ $user_name }}</div> 
                @if($is_delegated)
-                  <span title="{{ __('Didelegasikan') }}"><i class="fa fa-handshake-angle"></i></span>
+                  <div title="{{ __('Didelegasikan') }}"><i class="fa fa-handshake-angle"></i></div>
                @endif
-               <span class="mx-1">•</span><span>{{ $updated_at_friendly }}</span>
+               <div>•</div>
+               <div class="grow truncate">{{ $updated_at_friendly }}</div>
+               <div class="font-mono truncate">{{ $updated_at }}</div>
             </div>
             <div class="truncate" title="{{ $remarks }}">
                {{ $remarks }}

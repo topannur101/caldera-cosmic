@@ -84,11 +84,9 @@ class extends Component {
 
         $areasParam = session('inv_areas_param', []);
 
-        if ($areasParam) {
-            $this->area_ids = $areasParam ?? [];
-        } else {
-            $this->area_ids = $areas->pluck('id')->toArray();
-        }
+        $areasParam 
+        ? $this->area_ids = $areasParam ?? [] 
+        : $this->area_ids = $areas->pluck('id')->toArray();
     }
 
     private function InvCircQuery()

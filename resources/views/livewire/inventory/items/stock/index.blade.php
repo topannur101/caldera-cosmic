@@ -49,7 +49,7 @@ new class extends Component {
             <livewire:inventory.items.stock.create-used-unit :$stock_id />
          </x-modal>
       </div>
-      <table class="text-sm text-neutral-500">
+      <table class="text-sm text-neutral-500 mx-auto md:mx-0">
          <tr>
             <td>{{ __('Min') . ': ' }}</td>
             <td class="px-2">{{ $stock_qty_min }}</td>
@@ -61,6 +61,9 @@ new class extends Component {
             <td>{{ $stock_uom }}</td>
          </tr>
       </table>
+      <div class="text-sm text-neutral-500 mt-2">
+         {{ __('Diambil :days hari sekali', ['days' => 0]) }}
+      </div>
    </div>
    <div class="relative sm:static flex items-center gap-x-2">
       @if($can_create)

@@ -109,11 +109,9 @@ class extends Component
             
             $areasParam  = session('inv_areas_param', []);
     
-            if ($areasParam) {
-                $this->area_ids     = $areasParam ?? [];
-            } else {
-                $this->area_ids     = $areas->pluck('id')->toArray();
-            }
+            $areasParam 
+            ? $this->area_ids = $areasParam ?? [] 
+            : $this->area_ids = $areas->pluck('id')->toArray();
         }
 
         if($this->is_deleted) {
@@ -440,7 +438,7 @@ class extends Component
             </div>
         </x-modal>
     </div>
-    <div class="static lg:sticky top-0 z-10 py-6 ">
+    <div class="static lg:sticky top-0 z-10 py-6">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
             <div x-data="{ is_linked: @entangle('is_linked').live }" class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
                 <i wire:loading.remove class="fa fa-fw fa-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
@@ -474,9 +472,7 @@ class extends Component
                     <i x-show="is_linked" class="fa fa-fw fa-link"></i>
                     <i x-cloak x-show="!is_linked" class="fa fa-fw fa-link-slash"></i>
                 </x-text-button>
-            </div>
-
-            
+            </div>            
 
             <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
                 <x-inv-loc-selector isQuery="true" class="text-xs font-semibold uppercase" />

@@ -83,6 +83,7 @@ new class extends Component
                   eval_status="{{ $circ->eval_status }}"
                   eval_user_name="{{ $circ->eval_user?->name }}" 
                   eval_user_emp_id="{{ $circ->eval_user?->emp_id }}" 
+                  updated_at="{{ $circ->updated_at }}"
                   updated_at_friendly="{{ $circ->updated_at->diffForHumans() }}" 
                   remarks="{{ $circ->remarks }}" 
                   eval_icon="{{ $circ->eval_icon() }}">
