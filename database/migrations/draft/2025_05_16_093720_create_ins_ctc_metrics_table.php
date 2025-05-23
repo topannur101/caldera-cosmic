@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->foreignId('ins_ctc_machine_id')->nullable()->
+            $table->foreignId('ins_ctc_machine_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('ins_rubber_batch_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('ins_ctc_recipe_id')->nullable()->constrained();
             $table->boolean('is_auto')->default(0);

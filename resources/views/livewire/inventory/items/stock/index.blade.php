@@ -21,6 +21,9 @@ new class extends Component {
    public string $stock_uom = '';
 
    #[Reactive]
+   public float $stock_wf = 0;
+
+   #[Reactive]
    public int $curr_id = 1;
 
    #[Reactive]
@@ -62,7 +65,11 @@ new class extends Component {
          </tr>
       </table>
       <div class="text-sm text-neutral-500 mt-2">
-         {{ __('Diambil :days hari sekali', ['days' => 0]) }}
+         @if ($stock_wf < 1 && $stock_wf > 0)
+            {{ __('Diambil :days kali sehari', ['days' => round(1 / $stock_wf, 2)]) }}
+         @else
+            {{ __('Diambil :days hari sekali', ['days' => round($stock_wf, 0)]) }}
+         @endif         
       </div>
    </div>
    <div class="relative sm:static flex items-center gap-x-2">

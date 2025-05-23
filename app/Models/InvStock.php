@@ -23,6 +23,7 @@ class InvStock extends Model
         'amount_main',
         'qty_min',
         'qty_max',
+        'wf',
     ];
 
     public function inv_item()
@@ -108,6 +109,7 @@ class InvStock extends Model
                         case 'deposit':
                         case 'withdrawal':
                             $this->update([
+                                'wf'            => $this->calculateWf(),
                                 'qty'           => $qty_end,
                                 'is_active'     => true,
                                 'amount_main'   => $amount_main
@@ -162,6 +164,31 @@ class InvStock extends Model
         }
 
         return $status;
+    }
+
+    public function calculateWf()
+    {
+        $withdrawals = $this->inv_circs()
+            ->where('eval_status', 'approved')
+            ->where('type', 'withdrawal')
+            ->orderBy('updated_at', 'asc')
+            ->take(500)
+            ->get();
+
+        if ($withdrawals->isEmpty()) {
+            return 0;
+        }
+
+        $minDate = $withdrawals->first()->updated_at;
+        $maxDate = $withdrawals->last()->updated_at;
+        $daysCount = $minDate->diffInDays($maxDate);
+        $totalQty = $withdrawals->sum('qty_relative');
+
+        if ($daysCount > 0 && $totalQty > 0) {
+            return min($daysCount / $totalQty, 999);
+        }
+
+        return 0;
     }
 
     public function inv_circs()

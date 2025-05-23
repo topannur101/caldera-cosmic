@@ -18,6 +18,8 @@ new class extends Component
 
    public int $stock_qty_max = 0;
 
+   public float $stock_wf = 0;
+
    public array $stocks = [];
 
    public bool $can_eval = false;
@@ -67,6 +69,7 @@ new class extends Component
             $this->stock_qty  = $stock['qty'];
             $this->stock_qty_min  = $stock['qty_min'];
             $this->stock_qty_max  = $stock['qty_max'];
+            $this->stock_wf   = $stock['wf'];
             $stock_uom        = $stock['uom'];
             $curr_id          = $stock['inv_curr_id'];
             $curr_rate        = $stock['inv_curr']['rate'];
@@ -80,6 +83,7 @@ new class extends Component
             $this->stock_qty  = $stock['qty'];
             $this->stock_qty_min  = $stock['qty_min'];
             $this->stock_qty_max  = $stock['qty_max'];
+            $this->stock_wf   = $stock['wf'];
             $stock_uom        = $stock['uom'];
             $curr_id          = $stock['inv_curr_id'];
             $curr_rate        = $stock['inv_curr']['rate'];
@@ -122,7 +126,18 @@ new class extends Component
          </ul>
       </div> 
       <div class="p-6">
-         <livewire:inventory.items.stock.index :$stock_id :$stock_qty :$stock_qty_min :$stock_qty_max :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval :$can_create  />
+         <livewire:inventory.items.stock.index 
+         :$stock_id 
+         :$stock_qty 
+         :$stock_qty_min 
+         :$stock_qty_max 
+         :$stock_uom 
+         :$stock_wf
+         :$curr_id 
+         :$curr_rate 
+         :$unit_price 
+         :$can_eval 
+         :$can_create  />
       </div>
       <div class="truncate">
          <livewire:inventory.items.stock.circs :$stock_id />
