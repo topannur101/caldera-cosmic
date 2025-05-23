@@ -179,6 +179,10 @@ class InvStock extends Model
             return 0;
         }
 
+        if ($withdrawals->count() < 10) {
+            return 0;
+        }
+
         $minDate = $withdrawals->first()->updated_at;
         $maxDate = $withdrawals->last()->updated_at;
         $daysCount = $minDate->diffInDays($maxDate);
