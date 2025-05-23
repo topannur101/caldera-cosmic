@@ -441,6 +441,22 @@ class extends Component
                 </div>
             </div>
         </x-modal>
+        <x-modal name="hidden-warning" focusable>
+            <div class="p-6 flex flex-col gap-y-6">
+                <div class="flex justify-between items-start">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Potensi barang tersembunyi') }}
+                    </h2>
+                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+                </div>
+                <div class="text-sm">{{ __('Menggunakan penyortiran "Jarang diambil", "Sering diambil" dan "Lokasi" akan menyebabkan barang yang tidak memiliki frekuensi pengambilan atau lokasi menjadi tersaring.') }}</div>
+                <div class="flex justify-end">
+                    <x-primary-button type="button" x-on:click="$dispatch('close')">
+                        {{ __('Paham') }}
+                    </x-primary-button>
+                </div>
+            </div>
+        </x-modal>
     </div>
     <div class="static lg:sticky top-0 z-10 py-6">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
@@ -548,7 +564,12 @@ class extends Component
     <div class="h-auto sm:h-12">
         <div class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full h-full px-8">
             <div class="text-center sm:text-left">{{ $inv_stocks->total() . ' ' . __('barang') }}</div>
-            <div class="grow flex justify-center sm:justify-end">
+            <div class="grow flex items-center justify-center sm:justify-end">
+                @if($sort == 'wf_low' || $sort == 'wf_high' || $sort == 'loc')
+                <x-text-button type="button" x-on:click="$dispatch('open-modal', 'hidden-warning')" class="mr-3">
+                    <i class="fa fa-fw fa-exclamation-triangle text-yellow-500"></i>
+                </x-text-button>
+                @endif
                 <x-select wire:model.live="sort" class="mr-3">
                     <option value="updated">{{ __('Diperbarui') }}</option>
                     <option value="created">{{ __('Dibuat') }}</option>
