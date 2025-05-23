@@ -69,7 +69,7 @@ new class extends Component
             $this->stock_qty  = $stock['qty'];
             $this->stock_qty_min  = $stock['qty_min'];
             $this->stock_qty_max  = $stock['qty_max'];
-            $this->stock_wf   = $stock['wf'];
+            $this->stock_wf   = $stock['wf'] > 0 ? $stock['wf'] : 0;
             $stock_uom        = $stock['uom'];
             $curr_id          = $stock['inv_curr_id'];
             $curr_rate        = $stock['inv_curr']['rate'];
@@ -83,7 +83,7 @@ new class extends Component
             $this->stock_qty  = $stock['qty'];
             $this->stock_qty_min  = $stock['qty_min'];
             $this->stock_qty_max  = $stock['qty_max'];
-            $this->stock_wf   = $stock['wf'];
+            $this->stock_wf   = $stock['wf'] > 0 ? $stock['wf'] : 0;
             $stock_uom        = $stock['uom'];
             $curr_id          = $stock['inv_curr_id'];
             $curr_rate        = $stock['inv_curr']['rate'];

@@ -184,8 +184,8 @@ class InvStock extends Model
         $daysCount = $minDate->diffInDays($maxDate);
         $totalQty = $withdrawals->sum('qty_relative');
 
-        if ($daysCount > 0 && $totalQty > 0) {
-            return min($daysCount / $totalQty, 999);
+        if ($daysCount > 1 && $totalQty > 0) {
+            return max(0.001, min($daysCount / $totalQty, 999));
         }
 
         return 0;

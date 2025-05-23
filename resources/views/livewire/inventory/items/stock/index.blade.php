@@ -66,8 +66,8 @@ new class extends Component {
       </table>
       <div class="text-sm text-neutral-500 mt-2">
          @if ($stock_wf < 1 && $stock_wf > 0)
-            {{ __('Diambil :days kali sehari', ['days' => round(1 / $stock_wf, 2)]) }}
-         @else
+            {{ __('Diambil :days kali sehari', ['days' => round(1 / $stock_wf, 1)]) }}
+         @elseif ($stock_wf > 0)
             {{ __('Diambil :days hari sekali', ['days' => round($stock_wf, 0)]) }}
          @endif         
       </div>

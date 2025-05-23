@@ -323,6 +323,10 @@ class extends Component
             case 'amt_high':
                 $inv_stocks_query->orderByDesc('amount_main');
                 break;
+            case 'wf_low':
+                $inv_stocks_query->orderBy('wf')->where('wf', '>', 0);
+            case 'wf_high':
+                $inv_stocks_query->orderByDesc('wf')->where('wf', '>', 0);
             case 'alpha':
                 $inv_stocks_query->orderByRaw('
                 (SELECT name FROM inv_items 
@@ -555,6 +559,8 @@ class extends Component
                     <option value="qty_high">{{ __('Qty tertinggi') }}</option>
                     <option value="amt_low">{{ __('Amount terendah') }}</option>
                     <option value="amt_high">{{ __('Amount tertinggi') }}</option>
+                    <option value="wf_low">{{ __('Sering diambil') }}</option>
+                    <option value="wf_high">{{ __('Jarang diambil') }}</option>
                     <option value="alpha">{{ __('Alfabet') }}</option>
                 </x-select>
                 <div class="btn-group">
