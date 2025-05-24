@@ -334,7 +334,7 @@ new class extends Component
                         <x-toggle id="item_is_active" x-model="is_active" ::checked="is_active"><span x-show="is_active">{{ __('Aktif') }}</span><span x-show="!is_active">{{ __('Nonaktif') }}</span></x-toggle>
                      </div>
                      @if($items[0]['id'])
-                     <div class="px-1 py-3">
+                     <div class="py-3">
                         <x-text-button class="text-red-500" type="button" x-on:click="$dispatch('open-modal', 'deleteItem')"><i class="icon-delete mr-4"></i>{{ __('Hapus barang') }}</x-text-button>
                      </div>
                      @endif
@@ -342,7 +342,7 @@ new class extends Component
                      <div class="py-2"><i class="text-neutral-500 icon-house mr-2"></i>{{ $items[0]['area_name']}}</div>
                      <div class="py-2 {{ $items[0]['is_active'] ? '' :'text-red-500' }}"><i class="{{ $items[0]['is_active'] ? 'icon-circle-check text-neutral-500' :'icon-ban' }} mr-2"></i>{{ $items[0]['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
                      @if($can_store)
-                        <div class="py-2"><x-link href="{{ route('inventory.items.edit', ['id' => $items[0]['id']] ) }}" wire:navigate><i class="text-neutral-500 icon-pencil mr-2"></i>{{ __('Edit barang') }}</x-text-link></div>
+                        <div class="py-2"><x-link href="{{ route('inventory.items.edit', ['id' => $items[0]['id']] ) }}" wire:navigate><i class="text-neutral-500 icon-pen mr-2"></i>{{ __('Edit barang') }}</x-text-link></div>
                      @endif
                      <div class="py-2"><span class="text-neutral-500">{{ __('ID barang') . ': ' }}</span>{{  $items[0]['id'] }}</div>
                      <div class="py-2"><span class="text-neutral-500">{{ __('Terakhir diperbarui') . ': ' }}</span>{{  $items[0]['updated_at'] }}</div>

@@ -67,12 +67,12 @@ new class extends Component {
         <div class="flex h-16">
             <div class="flex grow">
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center">
+                <div class="px-3 shrink-0 flex items-center">
                     <a href="{{ route('home') }}" wire:navigate>
                         <x-application-logo
                             class="block h-6 w-auto fill-current text-neutral-800 dark:text-neutral-200" />
                     </a>
-                    <span class="inline ml-6 uppercase text-xs text-neutral-800 dark:text-neutral-200 tracking-widest md:hidden">Caldera</span>
+                    <span class="inline ml-7 uppercase text-xs text-neutral-800 dark:text-neutral-200 tracking-widest md:hidden">Caldera</span>
                 </div>
 
                 <!-- Navigation Links -->
@@ -81,7 +81,7 @@ new class extends Component {
                         {{ __('Pemantauan open mill') }}
                     </span>
                 </div>
-                <div id="cal-nav-main-links" class="hidden space-x-8 md:-my-px md:ms-10 md:flex text-xs uppercase">
+                <div id="cal-nav-main-links" class="hidden space-x-8 md:-my-px md:ms-4 md:flex text-xs uppercase">
                     <x-nav-link :href="route('insights')" :active="request()->is('insights*')" wire:navigate>
                         {{ __('Wawasan') }}
                     </x-nav-link>

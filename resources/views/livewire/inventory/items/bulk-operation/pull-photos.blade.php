@@ -219,7 +219,7 @@ class extends Component
                </div>
                <div class="py-3 text-5xl text-center">
                      <i class="icon-image relative text-neutral-300 dark:text-neutral-600">
-                        <i class="icon-download absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
+                        <i class="icon-download absolute bottom-0 right-2 text-lg text-neutral-900 dark:text-neutral-100"></i>
                      </i>
                </div>
                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
@@ -253,7 +253,7 @@ class extends Component
                </div>
                <div class="py-3 text-5xl text-center">
                   <i class="icon-box relative text-neutral-300 dark:text-neutral-600">
-                     <i class="icon-image absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
+                     <i class="icon-image absolute bottom-0 right-2 text-lg text-neutral-900 dark:text-neutral-100"></i>
                   </i>
                </div>
                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
@@ -275,7 +275,7 @@ class extends Component
                <i class="icon-images mr-2"></i>
                {{ __('Tarik foto') }}</h1>
             <x-link-secondary-button class="flex items-center h-full" href="{{ route('inventory.items.bulk-operation.pull-photos') }}">
-               <i class="icon-undo mr-2"></i>{{ __('Ulangi dari awal') }}
+               <i class="icon-rotate-cw mr-2"></i>{{ __('Ulangi dari awal') }}
             </x-link-secondary-button>
          </div>
          <div class="flex gap-x-6 w-full mt-6">

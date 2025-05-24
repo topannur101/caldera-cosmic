@@ -1,3 +1,5 @@
+@props(['is_grow' => false])
+
 <div 
     x-data="{ 
         areas: @entangle('areas'),
@@ -23,7 +25,7 @@
             }
             return null;
         }
-    }" class="flex items-center px-4">
+    }" class="{{ $is_grow ? 'grow' : '' }} flex items-center px-4">
     <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'area-selector')" ::class="areas_facade ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="icon-house me-3"></i><span x-text="areas_facade ? areas_facade : '{{ __('Area') }}'"></span></x-text-button>
     <x-modal name="area-selector" maxWidth="sm">
         <div class="p-6">

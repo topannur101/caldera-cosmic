@@ -26,7 +26,7 @@ class extends Component
          <a href="{{ route('inventory.items.bulk-operation.create-new') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa-star-of-life"></i>
+                  <i class="icon-asterisk"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Buat barang baru') }}</div>
@@ -83,7 +83,7 @@ class extends Component
          <a href="{{ route('inventory.items.bulk-operation.update-stock') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa-money-check-dollar"></i>
+                  <i class="icon-banknote"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Perbarui unit stok') }}</div>
@@ -101,7 +101,7 @@ class extends Component
          <a href="{{ route('inventory.items.bulk-operation.update-limit') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa-arrows-up-to-line"></i>
+                  <i class="icon-chevrons-down-up"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Perbarui batas qty') }}</div>
@@ -119,7 +119,7 @@ class extends Component
          <a href="{{ route('inventory.items.bulk-operation.update-status') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa-toggle-on"></i>
+                  <i class="icon-toggle-right"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Perbarui status') }}</div>

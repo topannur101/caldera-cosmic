@@ -125,7 +125,7 @@ class extends Component {
                 <div class="btn-group h-10 w-full mb-4">
                     <x-radio-button wire:model.live="view" grow value="dist" name="view" id="view-dist">
                         <div class="text-center my-auto">
-                            <i class="icon-tablet text-center m-auto"></i>
+                            <i class="icon-rectangle-horizontal text-center m-auto"></i>
                         </div>
                     </x-radio-button>
                     <x-radio-button wire:model.live="view" grow value="hides" name="view" id="view-hides">

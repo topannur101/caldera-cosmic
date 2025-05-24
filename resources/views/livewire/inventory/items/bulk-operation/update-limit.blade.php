@@ -484,19 +484,19 @@ class extends Component
       x-data="editorData()"
       x-init="editorInit()">
          <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa-arrows-up-to-line mr-3"></i>{{ __('Perbarui batas qty') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="icon-chevrons-down-up mr-3"></i>{{ __('Perbarui batas qty') }}</h1>
             <div class="flex gap-x-2">
                <div class="px-2 my-auto">
                   <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
                </div>
                <div class="btn-group">
                   <x-secondary-button type="button" x-on:click="editorDownload"><i class="icon-download"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="icon-undo"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="icon-rotate-cw"></i></x-secondary-button>
                   <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')"><i class="far icon-circle-help"></i></x-secondary-button>
                </div>
                <x-secondary-button type="button" x-on:click="editorApply">
                   <div class="relative">
-                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="icon-check mr-2"></i>{{ __('Terapkan') }}</span>
+                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="icon-circle-check mr-2"></i>{{ __('Terapkan') }}</span>
                      <x-spinner wire:loading.class.remove="hidden" wire:target="apply" class="hidden sm mono"></x-spinner>                
                   </div>                
                </x-secondary-button>

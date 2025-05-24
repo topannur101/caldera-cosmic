@@ -273,34 +273,36 @@ class extends Component
 
         switch ($this->sort) {
             case 'updated':
-                $inv_stocks_query->orderByRaw('
-                (SELECT updated_at FROM inv_items 
-                WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                $inv_stocks_query->orderByDesc('updated_at');
                 break;
             case 'created':
-                $inv_stocks_query->orderByRaw('
-                (SELECT created_at FROM inv_items 
-                WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                $inv_stocks_query->orderByDesc('created_at');
                 break;
             case 'loc':
                 $inv_stocks_query->whereHas('inv_item.inv_loc');
                 $inv_stocks_query->orderByRaw('
-                (SELECT bin FROM inv_locs WHERE 
-                inv_locs.id = (SELECT inv_loc_id FROM inv_items 
-                WHERE inv_items.id = inv_stocks.inv_item_id)) ASC,
-
                 (SELECT parent FROM inv_locs WHERE 
                 inv_locs.id = (SELECT inv_loc_id FROM inv_items 
-                WHERE inv_items.id = inv_stocks.inv_item_id)) ASC');
+                WHERE inv_items.id = inv_stocks.inv_item_id)) ASC
+                ,
+                (SELECT bin FROM inv_locs WHERE 
+                inv_locs.id = (SELECT inv_loc_id FROM inv_items 
+                WHERE inv_items.id = inv_stocks.inv_item_id)) ASC
+
+                ');
             case 'last_deposit':
                 $inv_stocks_query->orderByRaw('
-                (SELECT last_deposit FROM inv_items 
-                WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                (SELECT last_deposit FROM inv_items
+                WHERE inv_items.id = inv_stocks.inv_item_id) DESC,
+                inv_stocks.uom ASC,
+                inv_stocks.inv_item_id ASC');
                 break;
             case 'last_withdrawal':
                 $inv_stocks_query->orderByRaw('
-                (SELECT last_withdrawal FROM inv_items 
-                WHERE inv_items.id = inv_stocks.inv_item_id) DESC');
+                (SELECT last_withdrawal FROM inv_items
+                WHERE inv_items.id = inv_stocks.inv_item_id) DESC,
+                inv_stocks.uom ASC,
+                inv_stocks.inv_item_id ASC');
                 break;
             case 'qty_low':
                 $inv_stocks_query->orderBy('qty');
@@ -326,10 +328,9 @@ class extends Component
 
         }
 
-        $inv_stocks = $inv_stocks_query->paginate($this->perPage);
-
         return [
-            'inv_stocks' => $inv_stocks,
+            'inv_stocks' => $inv_stocks_query->paginate($this->perPage),
+            'inv_items_count' => $inv_stocks_query->distinct('inv_item_id')->count('inv_item_id')
         ];
     }
 
@@ -440,7 +441,7 @@ class extends Component
                     </h2>
                     <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
                 </div>
-                <div class="text-sm">{{ __('Menggunakan penyortiran "Jarang diambil", "Sering diambil" dan "Lokasi" akan menyebabkan barang yang tidak memiliki frekuensi pengambilan atau lokasi menjadi tersaring.') }}</div>
+                <div class="text-sm">{{ __('Menggunakan penyortiran "Jarang diambil", "Sering diambil" dan "Lokasi" akan menyebabkan barang tanpa frekuensi pengambilan atau tanpa lokasi menjadi tersaring.') }}</div>
                 <div class="flex justify-end">
                     <x-primary-button type="button" x-on:click="$dispatch('close')">
                         {{ __('Paham') }}
@@ -452,8 +453,8 @@ class extends Component
     <div class="static lg:sticky top-0 z-10 py-6">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
             <div x-data="{ is_linked: @entangle('is_linked').live }" class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
-                <i wire:loading.remove class="icon-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
-                <i wire:loading class="relative">
+                <i wire:loading.remove class="icon-search w-4 {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
+                <i wire:loading class="w-4 relative">
                     <x-spinner class="sm mono"></x-spinner>
                 </i>
                 <div x-show="is_linked" class="w-full md:w-32">
@@ -522,7 +523,7 @@ class extends Component
                                 <i class="me-2"></i>{{ __('Perbarui massal')}}
                             </x-dropdown-link> -->
                             <x-dropdown-link href="{{ route('inventory.items.bulk-operation.index') }}" wire:navigate>
-                                <i class="me-2"></i>{{ __('Operasi massal barang')}}
+                                <i class="icon-blank me-2"></i>{{ __('Operasi massal barang')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <!-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
@@ -533,7 +534,7 @@ class extends Component
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" /> -->
                             <x-dropdown-link href="#" wire:click.prevent="resetQuery">
-                                <i class="icon-undo me-2"></i>{{ __('Reset')}}
+                                <i class="w-4 icon-rotate-cw me-2"></i>{{ __('Reset')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <!-- <x-dropdown-link href="#" wire:click.prevent="download('inv_stocks')">
@@ -554,14 +555,14 @@ class extends Component
 
     <div class="h-auto sm:h-12">
         <div class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full h-full px-8">
-            <div class="text-center sm:text-left">{{ $inv_stocks->total() . ' ' . __('barang') }}</div>
-            <div class="grow flex items-center justify-center sm:justify-end">
+            <div class="text-center sm:text-left">{{ $inv_items_count . ' ' . __('barang') . ', ' . $inv_stocks->total() . ' ' . __('unit stok') }}</div>
+            <div class="grow flex flex-col sm:flex-row gap-3 items-center justify-center sm:justify-end">
                 @if($sort == 'wf_low' || $sort == 'wf_high' || $sort == 'loc')
                 <x-text-button type="button" x-on:click="$dispatch('open-modal', 'hidden-warning')" class="mr-3">
                     <i class="icon-triangle-alert text-yellow-500"></i>
                 </x-text-button>
                 @endif
-                <x-select wire:model.live="sort" class="mr-3">
+                <x-select wire:model.live="sort">
                     <option value="updated">{{ __('Diperbarui') }}</option>
                     <option value="created">{{ __('Dibuat') }}</option>
                     <option value="loc">{{ __('Lokasi') }}</option>

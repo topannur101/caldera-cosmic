@@ -355,7 +355,7 @@ class extends Component {
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
             <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
                 <i wire:loading.remove class="icon-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
-                <i wire:loading class="relative">
+                <i wire:loading class="w-4 relative">
                     <x-spinner class="sm mono"></x-spinner>
                 </i>
                 <div class="w-full md:w-32">
@@ -415,11 +415,11 @@ class extends Component {
                                 <i class="icon-chart-line me-2"></i>{{ __('Ringkasan sirkulasi')}}
                             </x-dropdown-link>
                             <x-dropdown-link href="{{ route('inventory.circs.bulk-operation.index') }}" wire:navigate>
-                                <i class="me-2"></i>{{ __('Operasi massal sirkulasi')}}
+                                <i class="icon-blank me-2"></i>{{ __('Operasi massal sirkulasi')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="resetQuery">
-                                <i class="icon-undo me-2"></i>{{ __('Reset')}}
+                                <i class="icon-rotate-cw me-2"></i>{{ __('Reset')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="download">

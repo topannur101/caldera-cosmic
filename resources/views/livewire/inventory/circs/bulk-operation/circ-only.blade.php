@@ -455,12 +455,12 @@ class extends Component
                </div>
                <div class="btn-group">
                   <x-secondary-button type="button" x-on:click="editorDownload"><i class="icon-download"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="editorReset"><i class="icon-undo"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorReset"><i class="icon-rotate-cw"></i></x-secondary-button>
                </div>
                <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')">{{ __('Panduan') }}</x-secondary-button>
                <x-secondary-button type="button" x-on:click="editorApply">
                   <div class="relative">
-                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="icon-check mr-2"></i>{{ __('Terapkan') }}</span>
+                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="icon-circle-check mr-2"></i>{{ __('Terapkan') }}</span>
                      <x-spinner wire:loading.class.remove="hidden" wire:target="apply" class="hidden sm mono"></x-spinner>                
                   </div>                
                </x-secondary-button>

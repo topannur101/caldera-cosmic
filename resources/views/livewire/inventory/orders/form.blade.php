@@ -32,7 +32,7 @@ new class extends Component {
 <div>
    <div class="flex justify-between items-start p-6">
       <h2 class="text-lg font-medium ">
-         {{ __('Butir pesanan baru') }}
+         {{ __('Pesanan baru') }}
       </h2>
       <x-text-button type="button" @click="slideOverOpen = false">
          <i class="icon-x"></i>

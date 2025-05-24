@@ -240,7 +240,7 @@ class extends Component {
       @endforeach
       @if(count($messages) > 1)
         <div class="px-1 my-4">
-          <i class="{{ $is_thinking ? 'fa-pulse' : '' }} icon-sparkles text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-2xl"></i>
+          <i class="{{ $is_thinking ? 'icon-pulse' : '' }} icon-sparkles text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-2xl"></i>
         </div>
       @endif
     </div>    

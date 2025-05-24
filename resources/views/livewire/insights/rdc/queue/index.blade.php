@@ -115,7 +115,7 @@ class extends Component {
         <div class="px-8">
             <form wire:submit="batchQuery" class="btn-group">
                 <x-text-input class="w-20" wire:model="code" id="rdc-code" placeholder="{{ __('Kode') }}"></x-text-input->
-                <x-secondary-button type="submit"><i class="icon-chevron-right" wire:loading.class="hidden"></i><i class="icon-loader-circle fa-spin-pulse hidden" wire:loading.class.remove="hidden"></i></x-secondary-button>
+                <x-secondary-button type="submit"><i class="icon-chevron-right" wire:loading.class="hidden"></i><i class="icon-loader-circle icon-spin-pulse hidden" wire:loading.class.remove="hidden"></i></x-secondary-button>
             </form>
         </div>
     </div>

@@ -641,4 +641,59 @@ input[type="checkbox"]:checked + label.custom-checkbox {
 
   [class^="icon-"], [class*=" icon-"] {
     font-weight: 500;
+    vertical-align: bottom;
+    
   }
+
+  .icon-blank:before { 
+    content: ""; 
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+  }
+  
+
+  .icon-spin {
+    animation-name: icon-spin;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+  .icon-shake, .icon-spin {
+    animation-delay: 0s;
+    animation-direction: normal;
+  }
+
+  .icon-pulse, .icon-spin-pulse {
+    animation-name: icon-spin;
+    animation-direction: normal;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: steps(8);
+}
+
+  .icon-beat-fade, .icon-fade {
+    animation-delay: 0s;
+    animation-direction: normal;
+    animation-duration: 1s;
+  }
+  .icon-fade {
+    animation-name: icon-fade;
+    animation-iteration-count: infinite;
+    animation-timing-function: cubic-bezier(.4,0,.6,1);
+  }
+
+@keyframes icon-spin {
+  0% {
+    transform:rotate(0);
+  }
+  to {
+    transform:rotate(1turn);
+  }
+}
+
+@keyframes icon-fade {
+  50% {
+    opacity:.4;
+  }
+}

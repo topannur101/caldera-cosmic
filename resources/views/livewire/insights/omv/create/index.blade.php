@@ -128,8 +128,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 </x-secondary-button>
                                 
                                 <x-primary-button class="m-4" type="button" size="lg"
-                                    @click="wizardOpen()" x-show="!timerIsRunning && !recipe"><i
-                                        class="icon-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
+                                    @click="wizardOpen()" x-show="!timerIsRunning && !recipe">{{ __('Mulai') }}</x-primary-button>
 
                                 <x-primary-button class="m-4" type="button" size="lg" x-cloak
                                     @click="reset(['timer', 'recipe', 'batch', 'poll', 'recipesFiltered', 'slider'])"
@@ -139,7 +138,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     @click="$dispatch('open-spotlight', 'manual-stop')" x-cloak
                                     x-show="timerIsRunning">
                                     <div>
-                                    <div><i class="icon-ban mr-2"></i>{{ __('Stop') }}</div>
+                                    <div>{{ __('Stop') }}</div>
                                         <div
                                             class="relative bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700 mt-1">
                                             <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
@@ -152,9 +151,9 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
 
                         <x-spotlight name="sending" maxWidth="sm">
-                            <div class="w-full flex flex-col gap-y-6 pb-10 text-center ">
-                                <div>
-                                    <i class="text-4xl icon-loader-circle fa-spin-pulse"></i>
+                            <div class="w-full flex items-center flex-col gap-y-6 pb-10 text-center">
+                                <div class="relative w-16 h-16">
+                                    <x-spinner></x-spinner>
                                 </div>
                                 <header>
                                     <h2 class="text-xl font-medium">
@@ -554,16 +553,12 @@ new #[Layout('layouts.app')] class extends Component {
                                             <span class="text-2xl font-bold" x-text="index + 1"></span>
                                         </div>
                                         <div class="grow">
-                                            <div class="flex justify-between items-center mb-2">
-                                                <div class="flex gap-x-3"
-                                                    :class="timerStepIndex == index && timerIsRunning ? 'fa-fade' : ''">
-                                                    <i x-show="timerStepIndex == index && timerIsRunning"
-                                                        class="icon-loader-circle fa-spin-pulse"></i>
-                                                    <span class="text-xs uppercase"
-                                                        x-text="(timerStepIndex > index && timerIsRunning) ? '{{ __('Selesai') }}' : ((timerStepIndex == index && timerIsRunning) ? '{{ __('Berjalan') }}' : '{{ __('Menunggu') }}')"></span>
-                                                </div>
-                                                <span class="text-xs font-mono"
-                                                    x-text="formatTime(timerStepRemainingTimes[index])"></span>
+                                            <div class="flex gap-x-3 items-center h-6 mb-2">
+                                                <i x-show="timerStepIndex == index && timerIsRunning" class="icon-loader-circle icon-spin leading-none"></i>
+                                                <div class="grow text-xs uppercase" :class="timerStepIndex == index && timerIsRunning ? 'icon-fade' : ''"
+                                                    x-text="(timerStepIndex > index && timerIsRunning) ? '{{ __('Selesai') }}' : ((timerStepIndex == index && timerIsRunning) ? '{{ __('Berjalan') }}' : '{{ __('Menunggu') }}')"></div>
+                                                <div class="text-xs font-mono"
+                                                    x-text="formatTime(timerStepRemainingTimes[index])"></div>
                                             </div>
                                             <div
                                                 class="relative w-full bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700">
@@ -883,7 +878,7 @@ new #[Layout('layouts.app')] class extends Component {
                         this.startPollingB();
 
                         // Activate focus mode interface
-                        this.modifyClass('cal-nav-main-links', 'remove', 'sm:flex');
+                        this.modifyClass('cal-nav-main-links', 'remove', 'md:flex');
                         this.modifyClass('cal-nav-omv', 'add', 'hidden');
                         this.modifyClass('cal-nav-main-links-alt', 'remove', 'hidden');
 

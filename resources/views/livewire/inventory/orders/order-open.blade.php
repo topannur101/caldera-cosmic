@@ -90,7 +90,7 @@ new class extends Component {
       <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
          <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
                <i wire:loading.remove class="icon-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
-               <i wire:loading class="relative">
+               <i wire:loading class="w-4 relative">
                   <x-spinner class="sm mono"></x-spinner>
                </i>
                <div class="w-full md:w-32">
@@ -115,24 +115,24 @@ new class extends Component {
          </div>
 
          <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
-               <x-inv-area-selector class="text-xs font-semibold uppercase" :$areas />
-               <div>
-                  <x-slide-over>
-                     <livewire:inventory.orders.form />
-                  </x-slide-over>
-               </div>
-               <div>
-                  <x-dropdown align="right" width="60">
-                     <x-slot name="trigger">
-                        <x-text-button><i class="icon-ellipsis"></i></x-text-button>
-                     </x-slot>
-                     <x-slot name="content">
-                        <x-dropdown-link href="#" wire:click.prevent="resetQuery">
-                           <i class="icon-undo me-2"></i>{{ __('Reset')}}
-                        </x-dropdown-link>
-                     </x-slot>
-                  </x-dropdown>
-               </div>
+            <x-inv-area-selector is_grow="true" class="text-xs font-semibold uppercase" :$areas />
+            <div>
+               <x-slide-over>
+                  <livewire:inventory.orders.form />
+               </x-slide-over>
+            </div>
+            <div>
+               <x-dropdown align="right" width="60">
+                  <x-slot name="trigger">
+                     <x-text-button><i class="icon-ellipsis"></i></x-text-button>
+                  </x-slot>
+                  <x-slot name="content">
+                     <x-dropdown-link href="#" wire:click.prevent="resetQuery">
+                        <i class="icon-rotate-cw me-2"></i>{{ __('Reset')}}
+                     </x-dropdown-link>
+                  </x-slot>
+               </x-dropdown>
+            </div>
          </div>
       </div>
    </div>
