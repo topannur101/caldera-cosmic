@@ -62,7 +62,7 @@ new #[Layout('layouts.limited')] class extends Component
    @if($is_success)
       <header>
          <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            <i class="fa fa-check-circle mr-2 text-green-500"></i>{{ __('Berhasil diperbarui') }}
+            <i class="icon-circle-check mr-2 text-green-500"></i>{{ __('Berhasil diperbarui') }}
          </h2>
 
          <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
@@ -71,7 +71,7 @@ new #[Layout('layouts.limited')] class extends Component
       </header>
       <div class="mt-6 space-y-6 flex justify-end">
          <x-link-secondary-button :href="route('login')" wire:navigate>
-            <i class="fa fa-right-to-bracket mr-2"></i>{{ __('Masuk') }}
+            <i class="icon-login mr-2"></i>{{ __('Masuk') }}
          </x-link-secondary-button>
       </div>
 

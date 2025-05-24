@@ -31,7 +31,7 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="flex gap-x-2">
                 @can('superuser')
                     <x-secondary-button type="button" x-data=""
-                        x-on:click.prevent="$dispatch('open-modal', 'area-create')"><i class="fa fa-plus fa-fw"></i></x-secondary-button>
+                        x-on:click.prevent="$dispatch('open-modal', 'area-create')"><i class="icon-plus"></i></x-secondary-button>
                 @endcan
             </div>
         </div>

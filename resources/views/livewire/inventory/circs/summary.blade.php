@@ -344,7 +344,7 @@ class extends Component
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Persentase amount penambahan per kategori') }}</label>
             <div class="flex gap-x-3">
-                <i class="fa fa-fw fa-plus text-green-500 text-3xl my-auto"></i>
+                <i class="icon-plus text-green-500 text-3xl my-auto"></i>
                 <div 
                     wire:ignore
                     id="amount-deposit-percentage-container" 
@@ -356,7 +356,7 @@ class extends Component
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <label class="mb-2 uppercase text-xs text-neutral-500">{{ __('Persentase amount pengambilan per kategori') }}</label>
             <div class="flex gap-x-3">
-                <i class="fa fa-fw fa-minus text-red-500 text-3xl my-auto"></i>
+                <i class="icon-minus text-red-500 text-3xl my-auto"></i>
                 <div 
                     wire:ignore
                     id="amount-withdrawal-percentage-container" 

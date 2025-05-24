@@ -233,7 +233,7 @@ new class extends Component {
                     <div class="flex">
                         <x-dropdown align="left" width="48">
                             <x-slot name="trigger">
-                                <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="fa fa-fw fa-chevron-down ms-1"></i></x-text-button>
+                                <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="icon-chevron-down ms-1"></i></x-text-button>
                             </x-slot>
                             <x-slot name="content">
                                 <x-dropdown-link href="#" wire:click.prevent="setToday">
@@ -304,19 +304,19 @@ new class extends Component {
                 </div>
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                        <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>
                     </x-slot>
                     <x-slot name="content">
                         <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                            <i class="fa fa-fw me-2"></i>{{ __('Statistik ') }}
+                            <i class="me-2"></i>{{ __('Statistik ') }}
                         </x-dropdown-link>
                         <hr
                             class="border-neutral-300 dark:border-neutral-600" />
                         <x-dropdown-link href="#" wire:click.prevent="download('dsums')">
-                            <i class="fa fa-fw fa-download me-2"></i>{{ __('CSV Ringkasan') }}
+                            <i class="icon-download me-2"></i>{{ __('CSV Ringkasan') }}
                         </x-dropdown-link>
                         <x-dropdown-link href="#" wire:click.prevent="download('dlogs')">
-                            <i class="fa fa-fw fa-download me-2"></i>{{ __('CSV Rinci') }}
+                            <i class="icon-download me-2"></i>{{ __('CSV Rinci') }}
                         </x-dropdown-link>
                     </x-slot>
                 </x-dropdown>
@@ -347,8 +347,8 @@ new class extends Component {
         @if (!$start_at || !$end_at)
             <div wire:key="no-range" class="py-20">
                 <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                    <i class="fa fa-calendar relative"><i
-                            class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                    <i class="icon-calendar relative"><i
+                            class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                 </div>
                 <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih rentang tanggal') }}
                 </div>
@@ -356,7 +356,7 @@ new class extends Component {
         @else
             <div wire:key="no-match" class="py-20">
                 <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                    <i class="fa fa-ghost"></i>
+                    <i class="icon-ghost"></i>
                 </div>
                 <div class="text-center text-neutral-500 dark:text-neutral-600">{{ __('Tidak ada yang cocok') }}
                 </div>

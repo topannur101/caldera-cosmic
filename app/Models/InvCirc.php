@@ -81,13 +81,13 @@ class InvCirc extends Model
         $icon = '';
         switch ($this->type) {
             case 'deposit':
-                $icon = 'fa-plus';
+                $icon = 'icon-plus';
                 break;
             case 'capture':
-                $icon = 'fa-code-commit';
+                $icon = 'icon-git-commit-horizontal';
                 break;
             case 'withdrawal':
-                $icon = 'fa-minus';
+                $icon = 'icon-minus';
                 break;
         }
         return $icon;
@@ -113,13 +113,13 @@ class InvCirc extends Model
         $icon = '';
         switch ($this->eval_status) {
             case 'pending':
-                $icon = 'fa-hourglass text-neutral-500 opacity-50';
+                $icon = 'icon-hourglass text-neutral-500 opacity-50';
                 break;
             case 'approved':
-                $icon = 'fa-thumbs-up text-green-500 opacity-50';
+                $icon = 'icon-thumbs-up text-green-500 opacity-50';
                 break;
             case 'rejected':
-                $icon = 'fa-thumbs-down text-red-500 opacity-50';
+                $icon = 'icon-thumbs-down text-red-500 opacity-50';
                 break;
         }
         return $icon;

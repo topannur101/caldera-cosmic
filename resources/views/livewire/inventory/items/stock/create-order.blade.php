@@ -27,9 +27,6 @@ new class extends Component {
    #[Reactive]
    public bool $can_eval = false;
 
-   public array $types = [];
-   
-   public string $type = '';
    
    public int $qty_relative = 0;
 
@@ -51,31 +48,7 @@ new class extends Component {
    {
       $this->user_id = Auth::user()->id;
 
-      $this->types = [
-         'deposit' => [
-            'icon'   => 'icon-plus',
-            'color'  => 'text-green-500',
-            'text'   => __('Tambah')
-         ],
-         'capture' => [
-            'icon'   => 'icon-git-commit-horizontal',
-            'color'  => 'text-yellow-600',
-            'text'   => __('Catat')
-         ],
-         'withdrawal' => [
-            'icon'   => 'icon-minus',
-            'color'  => 'text-red-500',
-            'text'   => __('Ambil')
-         ]
-      ];
    }
-
-   // #[On('stock-switched')]
-   // public function switchStock(array $stock)
-   // {
-   //    $this->stock_id   = $stock['id'];
-   //    $this->uom        = $stock['uom'];
-   // }
 
    public function save()
    {
@@ -149,53 +122,9 @@ new class extends Component {
 
 ?>
 
-<x-popover-button focus="{{ 'circ-' . $type . (($type == 'deposit' || $type == 'withdrawal') ? '-qty' : '-remarks') }}" icon="{{ $types[$type]['icon'] . ' ' . $types[$type]['color'] }}">
+<x-popover-button focus="" icon="icon-shopping-cart">
    <form  wire:submit="save" class="grid grid-cols-1 gap-y-4">
-      @if($type == 'deposit' || $type == 'withdrawal')
-         <div>
-            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-{{ $type }}-qty"><span>{{ __('Jumlah') }}</span></label>
-            <x-text-input-suffix wire:model="qty_relative" suffix="{{ $stock_uom }}" id="circ-{{ $type }}-qty" class="text-center" name="circ-{{ $type }}-qty"
-            type="number" value="" min="1" placeholder="Qty" />
-         </div>
-      @endif
-      <div>
-         <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-{{ $type }}-remarks">{{ __('Keterangan') }}</label>
-         <x-text-input wire:model="remarks" id="circ-{{ $type }}-remarks" autocomplete="circ-remarks" />
-      </div>
-      @if($can_eval)
-      <div
-         x-data="{ 'open': false, 'userq': @entangle('userq').live }" 
-         x-on:click.away="open = false"
-         x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
-         <label for="circ-{{ $type }}-user"
-            class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengguna') }}</label>
-         <x-text-input-icon
-            x-ref="userq" 
-            x-model="userq"             
-            x-on:focus="open = true"
-            x-on:change="open = true"
-            icon="icon-user"
-            id="circ-{{ $type }}-user" 
-            type="text"
-            autocomplete="off"
-            placeholder="{{ __('Pengguna') }}" />
-            <div class="relative" x-show="open" x-cloak>
-               <div class="absolute top-1 left-0 w-full z-10">
-                  <livewire:layout.user-select />
-               </div>
-            </div>
-      </div>
-      @endif
-      @if ($errors->any())
-         <div>
-               <x-input-error :messages="$errors->first()" />
-         </div>
-      @endif
-      <div class="text-right">
-         <x-secondary-button type="submit">
-            <span class="{{ $types[$type]['color'] }}"><i class="{{ $types[$type]['icon'] }} mr-2"></i>{{ $types[$type]['text'] }}</span>
-         </x-secondary-button>
-      </div>
+
    </form>
    <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
    <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>

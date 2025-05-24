@@ -85,7 +85,7 @@ new class extends Component {
                 <div class="w-full">
                     <div class="flex text-xs text-neutral-400 dark:text-neutral-600 mb-1 justify-between">
                         <div>{{ $comment->user->name . ' • ' . $comment->created_at->diffForHumans() }}</div>
-                        {{-- <div><i class="fa fa-ellipsis"></i></div> --}}
+                        {{-- <div><i class="icon-ellipsis"></i></div> --}}
                     </div>
                     @if($comment->content || $comment->files->count())
                         <div class="break-all">{!! nl2br($comment->parseContent()) !!}</div>
@@ -158,7 +158,7 @@ new class extends Component {
                                         class="flex text-xs text-neutral-400 dark:text-neutral-600 mb-1 justify-between">
                                         <div>{{ $child->user->name . ' • ' . $child->updated_at->diffForHumans() }}
                                         </div>
-                                        {{-- <div><i class="fa fa-ellipsis"></i></div> --}}
+                                        {{-- <div><i class="icon-ellipsis"></i></div> --}}
                                     </div>
                                     @if($child->content || $child->files->count())
                                         <div class="break-all">{!! nl2br($child->parseContent()) !!}</div>

@@ -5,7 +5,7 @@
        <div>
            <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
                <x-link href="{{ route('invlegacy.manage.index', ['view' => $view ]) }}" class="inline-block py-6"
-                   wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span>{{ __('Kelola') }}</span></span>
+                   wire:navigate><i class="icon-arrow-left"></i></x-link><span class="ml-4"><span>{{ __('Kelola') }}</span></span>
            </h2>
        </div>
    </div>

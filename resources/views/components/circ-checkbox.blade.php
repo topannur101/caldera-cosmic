@@ -14,7 +14,7 @@
             </div>
             @endif
             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 px-2 py-1 rounded">
-                <i class="fa fa-fw {{ $dir_icon }} mr-2"></i>{{($qty < 0 ? abs($qty) : $qty).' '.$uom}}
+                <i class="{{ $dir_icon }} mr-2"></i>{{($qty < 0 ? abs($qty) : $qty).' '.$uom}}
             </div>
         </div>
     </div>
@@ -31,7 +31,7 @@
                     </div>
                 </div>
                 <div class="flex truncate">
-                    <div><i class="fa fa-fw fa-map-marker-alt mr-1"></i>{{ $loc }}</div>
+                    <div><i class="icon-map-pin mr-1"></i>{{ $loc }}</div>
                     <div class="mx-2">•</div>
                     <div>{{ $code }}</div>
                     @if($amount)
@@ -43,13 +43,13 @@
             <div>
                 @switch($status)
                     @case(0)
-                        <i class="fa fa-hourglass"></i>
+                        <i class="icon-hourglass"></i>
                         @break
                     @case(1)
-                        <i class="fa fa-thumbs-up"></i>
+                        <i class="icon-thumbs-up"></i>
                         @break
                     @case(2)
-                        <i class="fa fa-thumbs-down"></i>
+                        <i class="icon-thumbs-down"></i>
                         @break
                 @endswitch
             </div>
@@ -67,7 +67,7 @@
             </div>
             <div class="truncate">
                 <div class="truncate">
-                    <div class="text-xs truncate text-neutral-400 dark:text-neutral-600">{{ $user_name }} @if($assigner) <span title="{{ $assigner }}">• <i class="fa fa-handshake-angle"></i></span> @endif {{ ' • '. $date_human}}</div>
+                    <div class="text-xs truncate text-neutral-400 dark:text-neutral-600">{{ $user_name }} @if($assigner) <span title="{{ $assigner }}">• <i class="icon-handshake"></i></span> @endif {{ ' • '. $date_human}}</div>
                     <div class="truncate">@switch($qtype) @case(2) <x-badge>{{ __('Bekas') }}</x-badge> @break @case(3) <x-badge>{{ __('Diperbaiki') }}</x-badge> @break @endswitch{{ $remarks }}</div>
                 </div>
             </div>

@@ -27,7 +27,7 @@ new #[Layout('layouts.app')] class extends Component {
     @if (!Auth::user())
         <div class="flex flex-col items-center gap-y-6 px-6 py-20">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl">
-                <i class="fa fa-exclamation-circle"></i>
+                <i class="icon-circle-alert"></i>
             </div>
             <div class="text-center text-neutral-500 dark:text-neutral-600">
                 {{ __('Masuk terlebih dahulu untuk menggunakan timer OMV') }}
@@ -124,12 +124,12 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-secondary-button class="my-4" type="button" size="lg"
                                     x-show="recipe" x-cloak 
                                     x-on:click="$dispatch('open-modal', 'details')">
-                                    <span :class="(!batchTeam || !userq || !batchCode) ? 'text-red-500' : ''">{{ __('Rincian') }}<i x-show="!batchTeam || !userq || !batchCode" class="fa fa-exclamation-circle ml-3"></i></span>
+                                    <span :class="(!batchTeam || !userq || !batchCode) ? 'text-red-500' : ''">{{ __('Rincian') }}<i x-show="!batchTeam || !userq || !batchCode" class="icon-circle-alert ml-3"></i></span>
                                 </x-secondary-button>
                                 
                                 <x-primary-button class="m-4" type="button" size="lg"
                                     @click="wizardOpen()" x-show="!timerIsRunning && !recipe"><i
-                                        class="fa fa-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
+                                        class="icon-play mr-2"></i>{{ __('Mulai') }}</x-primary-button>
 
                                 <x-primary-button class="m-4" type="button" size="lg" x-cloak
                                     @click="reset(['timer', 'recipe', 'batch', 'poll', 'recipesFiltered', 'slider'])"
@@ -139,7 +139,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     @click="$dispatch('open-spotlight', 'manual-stop')" x-cloak
                                     x-show="timerIsRunning">
                                     <div>
-                                    <div><i class="fa fa-stop mr-2"></i>{{ __('Stop') }}</div>
+                                    <div><i class="icon-ban mr-2"></i>{{ __('Stop') }}</div>
                                         <div
                                             class="relative bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700 mt-1">
                                             <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500 transition-all duration-200"
@@ -154,7 +154,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <x-spotlight name="sending" maxWidth="sm">
                             <div class="w-full flex flex-col gap-y-6 pb-10 text-center ">
                                 <div>
-                                    <i class="text-4xl fa-solid fa-spinner fa-spin-pulse"></i>
+                                    <i class="text-4xl icon-loader-circle fa-spin-pulse"></i>
                                 </div>
                                 <header>
                                     <h2 class="text-xl font-medium">
@@ -167,7 +167,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <x-spotlight name="manual-stop" maxWidth="sm">
                             <div class="w-full flex flex-col gap-y-6 pb-10 text-center ">
                                 <div>
-                                    <i class="text-4xl fa fa-exclamation-triangle"></i>
+                                    <i class="text-4xl icon-triangle-alert"></i>
                                 </div>
                                 <header>
                                     <h2 class="text-xl font-medium uppercase">
@@ -188,7 +188,7 @@ new #[Layout('layouts.app')] class extends Component {
                                             @touchstart="sliderStartDrag"
                                             :style="`transform: translateX(${sliderCurrentX}px)`"
                                             class="absolute left-[.3rem] top-1 w-12 h-12 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-white rounded-full shadow cursor-pointer transition-transform duration-100 ease-out flex items-center justify-center">
-                                            <i class="fa fa-arrow-right"></i>
+                                            <i class="icon-arrow-right"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -201,7 +201,7 @@ new #[Layout('layouts.app')] class extends Component {
 
                         <x-modal name="omv-worker-unavailable" maxWidth="sm">
                             <div class="text-center pt-6">
-                                <i class="fa fa-exclamation-triangle text-4xl "></i>
+                                <i class="icon-triangle-alert text-4xl "></i>
                                 <h2 class="mt-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
                                     {{ __('omv-worker tidak merespon') }}
                                 </h2>
@@ -226,7 +226,7 @@ new #[Layout('layouts.app')] class extends Component {
 
                         <x-modal name="input-incomplete" maxWidth="sm">
                             <div class="text-center pt-6">
-                                <i class="fa fa-exclamation-triangle text-4xl "></i>
+                                <i class="icon-triangle-alert text-4xl "></i>
                                 <h2 class="mt-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
                                     {{ __('Rincian belum lengkap') }}
                                 </h2>
@@ -252,7 +252,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                                         {{ __('Rincian') }}
                                     </h2>
-                                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+                                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
                                 </div>
                                 <div class="grid grid-cols-6">
                                     <div class="col-span-2 p-6 bg-caldy-500 bg-opacity-10 rounded-r-xl">
@@ -297,7 +297,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                     <div x-on:click.away="open = false">
                                                         <label for="omv-user"
                                                             class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mitra kerja') }}</label>
-                                                        <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user"
+                                                        <x-text-input-icon x-model="userq" icon="icon-user"
                                                             x-on:change="open = true" x-ref="userq" x-on:focus="open = true"
                                                             id="omv-user" type="text" autocomplete="off"
                                                             placeholder="{{ __('Pengguna') }}" />
@@ -530,8 +530,8 @@ new #[Layout('layouts.app')] class extends Component {
                                 </svg>
                                 <div class="grow py-20">
                                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                                        <i class="fa fa-flask relative"><i
-                                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                                        <i class="icon-flask-conical relative"><i
+                                                class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                                     </div>
                                     <div class="text-center text-neutral-400 dark:text-neutral-600">
                                         {{ __('Belum ada resep yang dipilih') }}
@@ -558,7 +558,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                 <div class="flex gap-x-3"
                                                     :class="timerStepIndex == index && timerIsRunning ? 'fa-fade' : ''">
                                                     <i x-show="timerStepIndex == index && timerIsRunning"
-                                                        class="fa-solid fa-spinner fa-spin-pulse"></i>
+                                                        class="icon-loader-circle fa-spin-pulse"></i>
                                                     <span class="text-xs uppercase"
                                                         x-text="(timerStepIndex > index && timerIsRunning) ? '{{ __('Selesai') }}' : ((timerStepIndex == index && timerIsRunning) ? '{{ __('Berjalan') }}' : '{{ __('Menunggu') }}')"></span>
                                                 </div>

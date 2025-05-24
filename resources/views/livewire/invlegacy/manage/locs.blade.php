@@ -61,7 +61,7 @@ class extends Component {
       <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div>  
               <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
-                  <x-link href="{{ route('invlegacy.manage.index') }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Lokasi') }}</span></span>
+                  <x-link href="{{ route('invlegacy.manage.index') }}" class="inline-block py-6" wire:navigate><i class="icon-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Lokasi') }}</span></span>
               </h2>
           </div>
       </div>
@@ -83,7 +83,7 @@ class extends Component {
               @if($area_id)
               @cannot('manage', $locs[0])
               <x-text-button type="button" class="uppercase text-xs ml-2" x-data=""
-                  x-on:click.prevent="$dispatch('open-modal', 'view-only')"><i class="fa fa-lock"></i><span class="ms-2 hidden sm:inline">{{ __('Lihat saja') }}</span></x-text-button>
+                  x-on:click.prevent="$dispatch('open-modal', 'view-only')"><i class="icon-lock"></i><span class="ms-2 hidden sm:inline">{{ __('Lihat saja') }}</span></x-text-button>
               <x-modal name="view-only">
                   <div class="p-6">
                       <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">

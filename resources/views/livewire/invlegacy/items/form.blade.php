@@ -327,7 +327,7 @@ class extends Component {
                             <span>{{ __('Denominasi') }}</span>
                             <x-text-button type="button" class="ms-1" x-data=""
                                 x-on:click.prevent="$dispatch('open-modal', 'inv-denom')"><i
-                                    class="far fa-question-circle"></i></x-text-button>
+                                    class="far icon-circle-help"></i></x-text-button>
                         </label>
                         <x-text-input wire:model.live="denom" type="number" placeholder="1" id="denom"
                             min="1"></x-text-input>
@@ -384,7 +384,7 @@ class extends Component {
                 <div class="mx-3 mt-3">
                     <x-text-button type="button" class="flex items-center" x-data=""
                         x-on:click.prevent="$dispatch('open-modal', 'inv-item-tags')">
-                        <i class="fa fa-fw fa-tag mr-2 text-neutral-400 dark:text-neutral-600"></i>
+                        <i class="icon-tag mr-2 text-neutral-400 dark:text-neutral-600"></i>
                         @if (count($tags))
                             <div>{{ implode(', ', $tags) }}</div>
                         @else

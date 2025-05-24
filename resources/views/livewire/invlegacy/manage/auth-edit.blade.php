@@ -104,7 +104,7 @@ new #[Layout('layouts.app')] class extends Component {
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                 {{ __('Wewenang') }}
             </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-3">
             <div wire:key="user-info" class="grid gap-3 grid-cols-1">

@@ -633,7 +633,7 @@ class extends Component
     </div>
     <div :class="area_id ? 'hidden' : ''" class="py-12">
         <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-            <i class="fa fa-tent relative"><i class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+            <i class="icon-warehouse relative"><i class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
         </div>
         <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}</div>
     </div>

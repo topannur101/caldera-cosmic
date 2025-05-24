@@ -476,7 +476,7 @@ new class extends Component {
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                 {{ __('Sisipkan hasil uji') }}
             </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         @switch($view)
             @case('upload')
@@ -488,7 +488,7 @@ new class extends Component {
                             class="flex justify-around items-center w-full h-full border-dashed border-2 border-neutral-500  text-neutral-500 dark:text-neutral-400 rounded-lg">
                             <div class="text-center">
                                 <div class="text-4xl mb-3">
-                                    <i class="fa fa-upload"></i>
+                                    <i class="icon-upload"></i>
                                 </div>
                             </div>
                         </div>
@@ -792,7 +792,7 @@ new class extends Component {
         <div class="mt-6 flex justify-between items-center">
             <x-dropdown align="left" width="48">
                 <x-slot name="trigger">
-                    <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                    <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>
                 </x-slot>
                 <x-slot name="content">
                     <x-dropdown-link href="#" wire:click.prevent="customReset">
@@ -816,7 +816,7 @@ new class extends Component {
                 @endif
                 @if($view == 'upload')
                 <x-primary-button type="button" x-on:click="$refs.file.click()" x-show="machine_id" ><i
-                    class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-primary-button>
+                    class="icon-upload mr-2"></i>{{ __('Unggah') }}</x-primary-button>
                 @endif
             </div>
         </div>

@@ -27,7 +27,7 @@ new #[Layout('layouts.app')] class extends Component {};
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-fw fa-chart-area"></i></div>
+                            <div class="m-auto"><i class="fa-chart-area"></i></div>
                         </div>
                     </div>
                     <div class="grow truncate py-4">
@@ -44,7 +44,7 @@ new #[Layout('layouts.app')] class extends Component {};
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-fw fa-calendar-day"></i></div>
+                            <div class="m-auto"><i class="icon-calendar-day"></i></div>
                         </div>
                     </div>
                     <div class="grow truncate py-4">
@@ -61,7 +61,7 @@ new #[Layout('layouts.app')] class extends Component {};
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-fw fa-toilet-paper"></i></div>
+                            <div class="m-auto"><i class="fa-toilet-paper"></i></div>
                         </div>
                     </div>
                     <div class="grow truncate py-4">
@@ -78,7 +78,7 @@ new #[Layout('layouts.app')] class extends Component {};
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-fw fa-table"></i></div>
+                            <div class="m-auto"><i class="icon-table"></i></div>
                         </div>
                     </div>
                     <div class="grow truncate py-4">
@@ -95,7 +95,7 @@ new #[Layout('layouts.app')] class extends Component {};
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-fw fa-image"></i></div>
+                            <div class="m-auto"><i class="fa-image"></i></div>
                         </div>
                     </div>
                     <div class="grow truncate py-4">

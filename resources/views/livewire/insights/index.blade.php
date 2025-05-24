@@ -210,7 +210,7 @@ class extends Component {
                                 </div>
                             </div>
                             <div class="px-6 py-3 text-lg">
-                                <i class="fa fa-chevron-right"></i>
+                                <i class="icon-chevron-right"></i>
                             </div>
                         </div>
                     </a>
@@ -229,7 +229,7 @@ class extends Component {
                                 </div>
                             </div>
                             <div class="px-6 py-3 text-lg">
-                                <i class="fa fa-chevron-right"></i>
+                                <i class="icon-chevron-right"></i>
                             </div>
                         </div>
                     </a>
@@ -248,7 +248,7 @@ class extends Component {
                                 </div>
                             </div>
                             <div class="px-6 py-3 text-lg">
-                                <i class="fa fa-chevron-right"></i>
+                                <i class="icon-chevron-right"></i>
                             </div>
                         </div>
                     </a>
@@ -276,7 +276,7 @@ class extends Component {
                                     </div>
                                 </div>
                                 <div class="px-6 py-3 text-lg">
-                                    <i class="fa fa-chevron-right"></i>
+                                    <i class="icon-chevron-right"></i>
                                 </div>
                             </div>
                         </a>
@@ -301,7 +301,7 @@ class extends Component {
                                     </div>
                                 </div>
                                 <div class="px-6 py-3 text-lg">
-                                    <i class="fa fa-chevron-right"></i>
+                                    <i class="icon-chevron-right"></i>
                                 </div>
                             </div>
                         </a>
@@ -320,7 +320,7 @@ class extends Component {
                                     </div>
                                 </div>
                                 <div class="px-6 py-3 text-lg">
-                                    <i class="fa fa-chevron-right"></i>
+                                    <i class="icon-chevron-right"></i>
                                 </div>
                             </div>
                         </a>

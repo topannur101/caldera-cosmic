@@ -94,8 +94,8 @@ new class extends Component
             {{ $circs->onEachSide(1)->links(data: ['scrollTo' => false]) }}
          </div>
          <div class="btn-group flex justify-center p-1">
-            <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'circs-chart')"><i class="fa fa-fw fa-line-chart"></i></x-secondary-button>
-            <x-secondary-button type="button" wire:click="circsDownload"><i class="fa fa-fw fa-download"></i></x-secondary-button>
+            <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'circs-chart')"><i class="icon-chart-line"></i></x-secondary-button>
+            <x-secondary-button type="button" wire:click="circsDownload"><i class="icon-download"></i></x-secondary-button>
          </div>
       @else
          <div class="py-4 text-neutral-500 text-center">

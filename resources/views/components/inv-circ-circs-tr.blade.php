@@ -40,13 +40,13 @@
             value="{{ $id }}"
             x-model="ids"
             x-on:click="handleCheck($event, '{{ $id }}')">
-         <i class="fa fa-fw {{ $eval_icon }}"></i>
+         <i class="{{ $eval_icon }}"></i>
       </label>
    </td>
    @endif
    <td class="w-[1%]">
       <x-text-button class="truncate text-base" type="button" x-on:click="$dispatch('open-modal', 'circ-show'); $dispatch('circ-show', { id: '{{ $id }}'})">
-         <span class="{{ $color }}"><i class="fa fa-fw {{ $icon }} mr-1"></i>{{ $qty_relative . ' ' . $uom }}</span>
+         <span class="{{ $color }}"><i class="{{ $icon }} mr-1"></i>{{ $qty_relative . ' ' . $uom }}</span>
       </x-text-button>
    </td>
    <td class="w-[1%]">
@@ -91,7 +91,7 @@
          <div class="flex justify-between truncate w-full gap-x-2">
             <div class="truncate">{{ $user_name }}</div> 
             @if($is_delegated)
-               <div title="{{ __('Didelegasikan') }}"><i class="fa fa-handshake-angle text-neutral-500 text-sm"></i></div>
+               <div title="{{ __('Didelegasikan') }}"><i class="icon-handshake text-neutral-500 text-sm"></i></div>
             @endif
          </div>
       </div>

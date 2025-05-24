@@ -104,7 +104,7 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="flex gap-x-2 items-center">
                 <div class="text-sm"><span class="text-neutral-500">{{  __('Hari:') . ' ' }}</span><span>{{ $days }}</span></div>
                 <div class="text-sm"><span class="text-neutral-500">{{  __('Integritas:') . ' ' }}</span><span>{{ $integrity . '% ' }}</span></div>
-                <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa fa-fw fa-question"></i></x-secondary-button>
+                <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa-question"></i></x-secondary-button>
             </div>
         </div>
         <x-modal name="raw-stats-info">
@@ -131,8 +131,8 @@ new #[Layout('layouts.app')] class extends Component {
             @if (!$start_at || !$end_at)
                 <div wire:key="no-range" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-calendar relative"><i
-                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                        <i class="icon-calendar relative"><i
+                                class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih rentang tanggal') }}
                     </div>
@@ -140,7 +140,7 @@ new #[Layout('layouts.app')] class extends Component {
             @else
                 <div wire:key="no-match" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-ghost"></i>
+                        <i class="icon-ghost"></i>
                     </div>
                     <div class="text-center text-neutral-500 dark:text-neutral-600">{{ __('Tidak ada yang cocok') }}
                     </div>
@@ -174,11 +174,11 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td title="{{ $metric->push_left }}">
                                     @switch($metric->action_left)
                                         @case('thin')
-                                            <i class="fa fa-caret-down"></i>
+                                            <i class="fa-caret-down"></i>
                                         @break
         
                                         @case('thick')
-                                            <i class="fa fa-caret-up"></i>
+                                            <i class="fa-caret-up"></i>
                                         @break
                                     @endswitch
                                 </td>
@@ -187,11 +187,11 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td title="{{ $metric->push_right }}">
                                     @switch($metric->action_right)
                                         @case('thin')
-                                            <i class="fa fa-caret-down"></i>
+                                            <i class="fa-caret-down"></i>
                                         @break
         
                                         @case('thick')
-                                            <i class="fa fa-caret-up"></i>
+                                            <i class="fa-caret-up"></i>
                                         @break
                                     @endswitch
                                 </td>

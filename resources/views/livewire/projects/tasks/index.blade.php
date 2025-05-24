@@ -25,14 +25,14 @@ class extends Component
    <div class="flex justify-between px-8">
       <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Tugas') }}</h1>
       <div class="flex items-center gap-x-3">
-         <x-primary-button type="button"><i class="fa fa-plus mr-2"></i>{{ __('Tugas') }}</x-primary-button>
+         <x-primary-button type="button"><i class="icon-plus mr-2"></i>{{ __('Tugas') }}</x-primary-button>
          <x-dropdown align="right" width="48">
             <x-slot name="trigger">
-               <x-text-button type="button"><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+               <x-text-button type="button"><i class="icon-ellipsis-vertical"></i></x-text-button>
             </x-slot>
             <x-slot name="content">
                <x-dropdown-link href="#" wire:click.prevent="setToday">
-                  <i class="fa fa-fw fa-plus mr-2"></i>{{ __('Buat proyek') }}
+                  <i class="icon-plus mr-2"></i>{{ __('Buat proyek') }}
                </x-dropdown-link>
                <!-- <hr class="border-neutral-300 dark:border-neutral-600" /> -->
             </x-slot>

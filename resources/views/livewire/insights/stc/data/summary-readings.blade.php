@@ -133,7 +133,7 @@ new class extends Component {
                         {{ __('Pembagian zona') }}
                     </h2>
                     <x-text-button type="button" x-on:click="$dispatch('close')"><i
-                            class="fa fa-times"></i></x-text-button>
+                            class="icon-x"></i></x-text-button>
                 </div>
                 <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
                     <div>
@@ -160,7 +160,7 @@ new class extends Component {
                         {{ __('Mesin otomatis') }}
                     </h2>
                     <x-text-button type="button" x-on:click="$dispatch('close')"><i
-                            class="fa fa-times"></i></x-text-button>
+                            class="icon-x"></i></x-text-button>
                 </div>
                 <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
                     <div>
@@ -187,7 +187,7 @@ new class extends Component {
             @endswitch
             <x-text-button type="button"
             class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'different-zoning-help')"><i
-                class="far fa-question-circle"></i></x-text-button>
+                class="far icon-circle-help"></i></x-text-button>
         </div>
         <div class="btn-group h-10">
             <x-radio-button wire:model.live="present_mode" grow value="adaptive" name="present_mode" id="present_mode_adaptive">
@@ -203,24 +203,24 @@ new class extends Component {
     </div>
     <div class="px-8 flex flex-col sm:flex-row gap-x-6 gap-y-3 text-sm mb-8">
         <div class="flex items-center gap-x-2">
-            <i class="fa-regular fa-square text-lg text-neutral-500"></i>
+            <i class="icon-square text-lg text-neutral-500"></i>
             <div>{{ __('Mesin baru') }}</div>
         </div>
         <div class="flex items-center gap-x-2">
-            <i class="fa-solid fa-square text-lg text-caldy-500 opacity-50"></i>
+            <i class="icon-square text-lg text-caldy-500 opacity-50"></i>
             <div>{{ __('Mesin lama') }}</div>
         </div>
         <div class="flex items-center gap-x-2">
-            <div class="fa-fw flex items-center justify-center">
-                <i class="fa fa-certificate text-lg text-caldy-500"></i>
-                <i class="absolute fa fa-check text-xs text-white"></i>
+            <div class="flex items-center justify-center">
+                <i class="fa-certificate text-lg text-caldy-500"></i>
+                <i class="absolute fa-check text-xs text-white"></i>
             </div>
             <div>{{ __('Kontrol otomatis') }}</div>
         </div>
         <div class="flex items-center gap-x-2">
-            <div class="fa-fw flex items-center justify-center">
-                <i class="fa fa-square text-lg text-red-500 opacity-10"></i>
-                <span class="absolute fa text-xs text-red-500">0</span>
+            <div class="flex items-center justify-center">
+                <i class="icon-square text-lg text-red-500 opacity-10"></i>
+                <span class="absolute text-xs text-red-500">0</span>
             </div>
             <div>{{ __('Suhu di luar standar') }}</div>
         </div>
@@ -238,9 +238,9 @@ new class extends Component {
                                 {{ sprintf('%02d', $machine['line']) }}
                             </div>
                             @if(strpos($machine['ip_address'], '127.') !== 0)
-                                <div class="fa-fw flex items-center justify-center">
-                                    <i class="fa fa-certificate text-lg text-caldy-500"></i>
-                                    <i class="absolute fa fa-check text-xs text-white"></i>
+                                <div class="flex items-center justify-center">
+                                    <i class="fa-certificate text-lg text-caldy-500"></i>
+                                    <i class="absolute fa-check text-xs text-white"></i>
                                 </div>
                             @endif
                         </div>    
@@ -277,10 +277,10 @@ new class extends Component {
                             <div class="flex px-2 flex-col">
                                 @if (isset($machine['upper']['d_sum']['ended_at']))
                                 <x-text-button type="button" x-data="" class="px-3 py-2" type="button"
-                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['upper']['d_sum']['id'] ?? 0 }}'})"><i class="fa-regular fa-eye"></i></x-text-button>
+                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['upper']['d_sum']['id'] ?? 0 }}'})"><i class="fa-eye"></i></x-text-button>
                                 @endif
                                 <x-link href="{{ route('insights.stc.data.index', [ 'view' => 'history', 'mode' => 'recents', 'line' => $machine['line'], 'position' => 'upper' ])}}" class="px-3 py-2" wire:navigate>
-                                    <i class="fa-regular fa-clock"></i>
+                                    <i class="fa-clock"></i>
                                 </x-link>
                             </div>
                         </div>
@@ -315,10 +315,10 @@ new class extends Component {
                             <div class="flex px-2 flex-col">
                                 @if (isset($machine['lower']['d_sum']['ended_at']))
                                 <x-text-button type="button" x-data="" class="px-3 py-2" type="button"
-                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['lower']['d_sum']['id'] ?? 0 }}'})"><i class="fa-regular fa-eye"></i></x-text-button>
+                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['lower']['d_sum']['id'] ?? 0 }}'})"><i class="fa-eye"></i></x-text-button>
                                 @endif
                                 <x-link href="{{ route('insights.stc.data.index', [ 'view' => 'history', 'mode' => 'recents', 'line' => $machine['line'], 'position' => 'lower' ])}}" class="px-3 py-2" wire:navigate>
-                                    <i class="fa-regular fa-clock"></i>
+                                    <i class="fa-clock"></i>
                                 </x-link>
                             </div>
                         </div>

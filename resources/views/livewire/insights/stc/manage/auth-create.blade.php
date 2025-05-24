@@ -74,13 +74,13 @@ new class extends Component {
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                 {{ __('Wewenang baru') }}
             </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-3">
             <div wire:key="user-select" x-data="{ open: false, userq: @entangle('userq').live }"
                 x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
                 <div x-on:click.away="open = false">
-                    <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
+                    <x-text-input-icon x-model="userq" icon="icon-user" x-on:change="open = true"
                         x-ref="userq" x-on:focus="open = true" id="inv-user" class="mt-3" type="text"
                         autocomplete="off" placeholder="{{ __('Pengguna') }}" />
                     <div class="relative" x-show="open" x-cloak>

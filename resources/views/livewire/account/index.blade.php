@@ -27,7 +27,7 @@ new #[Layout('layouts.app')] class extends Component
                    <div class="flex px-8">
                        <div>
                            <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                               <div class="m-auto"><i class="fa fa-fw fa-circle-user"></i></div>
+                               <div class="m-auto"><i class="icon-circle-user"></i></div>
                            </div>
                        </div>
                        <div class="grow truncate py-4">
@@ -45,7 +45,7 @@ new #[Layout('layouts.app')] class extends Component
                    <div class="flex px-8">
                        <div>
                            <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                               <div class="m-auto"><i class="fa fa-fw fa-key"></i></div>
+                               <div class="m-auto"><i class="icon-key"></i></div>
                            </div>
                        </div>
                        <div class="grow text-left truncate py-4">
@@ -68,7 +68,7 @@ new #[Layout('layouts.app')] class extends Component
                    <div class="flex px-8">
                        <div>
                            <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                               <div class="m-auto"><i class="fa fa-fw fa-language"></i></div>
+                               <div class="m-auto"><i class="icon-languages"></i></div>
                            </div>
                        </div>
                        <div class="grow text-left truncate py-4">
@@ -90,7 +90,7 @@ new #[Layout('layouts.app')] class extends Component
                    <div class="flex px-8">
                        <div>
                            <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                               <div class="m-auto"><i class="fa fa-fw fa-brush"></i></div>
+                               <div class="m-auto"><i class="icon-swatchbook"></i></div>
                            </div>
                        </div>
                        <div class="grow truncate py-4">

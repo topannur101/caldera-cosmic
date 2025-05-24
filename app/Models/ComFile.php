@@ -24,24 +24,21 @@ class ComFile extends Model
             case 'ods':
             case 'xls':
             case 'xlsx':
-                return 'far fa-file-excel';
+                return 'icon-file-spreadsheet';
             case 'odt':
             case 'doc':
             case 'docx':
-                return 'far fa-file-word';
             case 'pdf':
-                return 'far fa-file-pdf';
-            case 'rar':
-            case '7zip':
-            case 'zip':
-                return 'far fa-file-zipper';
             case 'rtf':
             case 'txt':
             case 'csv':
-                return 'far fa-file-lines';
             case 'ppt':
             case 'pptx':
-                return 'far fa-file-powerpoint';
+                return 'icon-file-text';
+            case 'rar':
+            case '7zip':
+            case 'zip':
+                return 'icon-file-archive';
             case 'mp4':
             case 'avi':
             case 'mkv':
@@ -49,9 +46,9 @@ class ComFile extends Model
             case 'wmv':
             case 'flv':
             case 'webm':
-                return 'far fa-file-video';
+                return 'icon-file-video';
             default:
-                return 'far fa-file';
+                return 'icon-file';
         }
     }
 

@@ -3,7 +3,7 @@
        <div>
            <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
                <x-link href="{{ route('insights.omv.manage.index') }}" class="inline-block py-6" wire:navigate><i
-                       class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Pemantauan open mill') }}</span><span class="sm:hidden inline">{{ __('OMV') }}</span></span>
+                       class="icon-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Pemantauan open mill') }}</span><span class="sm:hidden inline">{{ __('OMV') }}</span></span>
            </h2>
        </div>
    </div>

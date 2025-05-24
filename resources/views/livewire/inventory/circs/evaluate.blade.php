@@ -80,10 +80,10 @@ new #[Layout('layouts.app')] class extends Component {
 <div class="p-6 flex flex-col gap-y-6">
    <div class="flex justify-between items-start">
       <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-         <i class="fa fa-gavel mr-2"></i>
+         <i class="fa-gavel mr-2"></i>
          {{ __('Evaluasi') }}
       </h2>
-      <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+      <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
    </div>
    @switch($view)
       @case('initial')
@@ -94,11 +94,11 @@ new #[Layout('layouts.app')] class extends Component {
             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="evalRemarks">{{ __('Keterangan evaluasi') }}</label>
             <x-text-input wire:model="eval_remarks" id="eval-remarks" autocomplete="eval-remarks" />
          </div>
-         <div class="px-3 text-neutral-500 text-sm text-wrap"><i class="fa fa-exclamation-triangle mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diedit') }}</div>
+         <div class="px-3 text-neutral-500 text-sm text-wrap"><i class="icon-triangle-alert mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diedit') }}</div>
          <div class="flex justify-end">
             <div class="btn-group">
-               <x-secondary-button type="button" wire:click="evaluate('approve')"><i class="fa fa-thumbs-up mr-2"></i>{{ __('Setujui') }}</x-secondary-button>
-               <x-secondary-button type="button" wire:click="evaluate('reject')" class="h-full"><i class="fa fa-thumbs-down"></i></x-secondary-button>
+               <x-secondary-button type="button" wire:click="evaluate('approve')"><i class="icon-thumbs-up mr-2"></i>{{ __('Setujui') }}</x-secondary-button>
+               <x-secondary-button type="button" wire:click="evaluate('reject')" class="h-full"><i class="icon-thumbs-down"></i></x-secondary-button>
             </div>
          </div>
          @break

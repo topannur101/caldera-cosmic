@@ -35,7 +35,7 @@
                 {{ $code ?? __('Tak ada kode') }}
             </div>
             <div class="px-2 sm:px-4 truncate mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                <span class="mr-3"><i class="fa fa-map-marker-alt mr-2"></i>{{ $loc ? $loc : __('Tak ada lokasi') }}</span>                          
+                <span class="mr-3"><i class="icon-map-pin mr-2"></i>{{ $loc ? $loc : __('Tak ada lokasi') }}</span>                          
             </div>
         </div>
     </div>

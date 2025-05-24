@@ -26,7 +26,7 @@ class extends Component
          <a href="{{ route('inventory.circs.bulk-operation.circ-only') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa fa-fw fa-arrow-right-arrow-left"></i>
+                  <i class="icon-arrow-right-left"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Sirkulasi saja') }}</div>
@@ -37,14 +37,14 @@ class extends Component
                   </div>
                </div>
                <div class="px-6 py-3 text-lg">
-                  <i class="fa fa-chevron-right"></i>
+                  <i class="icon-chevron-right"></i>
                </div>
             </div>
          </a>
          <a href="{{ route('inventory.circs.bulk-operation.with-item') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa fa-fw fa-cube"></i>
+                  <i class="icon-box"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Dengan barang baru') }}</div>
@@ -55,7 +55,7 @@ class extends Component
                   </div>
                </div>
                <div class="px-6 py-3 text-lg">
-                  <i class="fa fa-chevron-right"></i>
+                  <i class="icon-chevron-right"></i>
                </div>
             </div>
          </a>

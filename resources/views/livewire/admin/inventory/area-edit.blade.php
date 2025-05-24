@@ -73,7 +73,7 @@ new class extends Component {
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                 {{ __('Area ') }}
             </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         <div class="mt-6">
             <label for="area-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>

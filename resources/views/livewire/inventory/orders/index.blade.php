@@ -41,7 +41,7 @@ class extends Component {
     <div wire:key="stc-data-index-nav" class="flex px-8 mb-6">
         <x-dropdown align="left">
             <x-slot name="trigger">
-                <x-text-button type="button" class="flex gap-2 items-center ml-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="fa fa-fw fa-chevron-down"></i></x-text-button>
+                <x-text-button type="button" class="flex gap-2 items-center ml-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="icon-chevron-down"></i></x-text-button>
             </x-slot>
             <x-slot name="content">
                 @foreach ($view_titles as $view_key => $view_title)

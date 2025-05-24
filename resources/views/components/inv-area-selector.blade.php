@@ -24,15 +24,15 @@
             return null;
         }
     }" class="flex items-center px-4">
-    <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'area-selector')" ::class="areas_facade ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="fa fa-fw fa-tent me-3"></i><span x-text="areas_facade ? areas_facade : '{{ __('Area') }}'"></span></x-text-button>
+    <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'area-selector')" ::class="areas_facade ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="icon-warehouse me-3"></i><span x-text="areas_facade ? areas_facade : '{{ __('Area') }}'"></span></x-text-button>
     <x-modal name="area-selector" maxWidth="sm">
         <div class="p-6">
             <div class="flex justify-between items-start">
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                    <i class="fa fa-fw fa-tent me-3"></i>{{ __('Area') }}
+                    <i class="icon-warehouse me-3"></i>{{ __('Area') }}
                 </h2>
                 <x-text-button type="button" x-on:click="$dispatch('close')">
-                    <i class="fa fa-times"></i>
+                    <i class="icon-x"></i>
                 </x-text-button>
             </div>
             <div class="grid grid-cols-1 gap-y-3 mt-6">

@@ -112,9 +112,18 @@ class User extends Authenticatable
     //     return $this->inv_auths->where('inv_area_id', $id)->count() ? true : false;
     // }
 
-    public function inv_areas() : BelongsToMany
+    public function inv_areas(): BelongsToMany
     {
         return $this->belongsToMany(InvArea::class, 'inv_auths', 'user_id', 'inv_area_id');
+    }
+
+    public function auth_inv_areas(): array
+    {
+        $areas = $this->id === 1
+        ? InvArea::all()->toArray()
+        : $this->inv_areas->toArray();
+
+        return $areas;
     }
 
     // public function invAreaIdsItemCreate(): array

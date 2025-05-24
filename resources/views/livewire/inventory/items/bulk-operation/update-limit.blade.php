@@ -353,10 +353,10 @@ class extends Component
             <div class="p-6 space-y-4 text-sm">
                <div class="flex justify-between items-start">
                   <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                     <i class="fa fa-exclamation-triangle mr-2 text-yellow-600"></i>{{ __('Teralu banyak') }}
+                     <i class="icon-triangle-alert mr-2 text-yellow-600"></i>{{ __('Teralu banyak') }}
                   </h2>
                   <x-text-button type="button" x-on:click="$dispatch('close')">
-                     <i class="fa fa-times"></i>
+                     <i class="icon-x"></i>
                   </x-text-button>
                </div>
                <div>
@@ -373,7 +373,7 @@ class extends Component
                   <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Ringkasan') }}
                   </h2>
                   <x-text-button type="button" x-on:click="$dispatch('close')">
-                     <i class="fa fa-times"></i>
+                     <i class="icon-x"></i>
                   </x-text-button>
                </div>
                @if(count($result['items']))
@@ -396,7 +396,7 @@ class extends Component
                   @endif
                   @if($result['failure'])
                   <div class="p-4 text-xs text-neutral-800 dark:text-neutral-400 rounded-lg bg-neutral-200 dark:bg-neutral-900">
-                     <i class="fa fa-info-circle me-2"></i>{{ __('Alasan mengapa gagal dapat dilihat pada 3 kolom terakhir (Tindakan, Status, dan Pesan) pada CSV yang terunduh.') }}
+                     <i class="fa-info-circle me-2"></i>{{ __('Alasan mengapa gagal dapat dilihat pada 3 kolom terakhir (Tindakan, Status, dan Pesan) pada CSV yang terunduh.') }}
                   </div>
                   @endif
                   <div class="flex items-center justify-end">
@@ -422,7 +422,7 @@ class extends Component
                      <x-input-error :messages="$errors->get('area_id')" class="mt-2" />
                   </div>
                   <div class="flex items-center justify-end">
-                     <x-secondary-button type="button" wire:click="apply(true)">{{ __('Lanjut') }}<i class="fa fa-chevron-right ml-2"></i></x-secondary-button>
+                     <x-secondary-button type="button" wire:click="apply(true)">{{ __('Lanjut') }}<i class="icon-chevron-right ml-2"></i></x-secondary-button>
                   </div>
                @endif
 
@@ -437,13 +437,13 @@ class extends Component
                      {{ __('Panduan') }}
                   </h2>
                   <x-text-button type="button" x-on:click="$dispatch('close')">
-                     <i class="fa fa-times"></i>
+                     <i class="icon-x"></i>
                   </x-text-button>
                </div>
 
                <div x-show="!backup" class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
-                     <i class="fa fa-clipboard text-neutral-500"></i>
+                     <i class="fa-clipboard text-neutral-500"></i>
                      <h2 class="font-bold text-xl">{{ __('Salin dan tempel') }}</h2>
                   </div>
                   <p class="leading-relaxed">
@@ -453,7 +453,7 @@ class extends Component
 
                <div x-show="backup" class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
-                     <i class="fas fa-download text-neutral-500"></i>
+                     <i class="fas icon-download text-neutral-500"></i>
                      <h2 class="font-bold text-xl">{{ __('Unduh backup') }}</h2>
                   </div>
                   <p class="leading-relaxed">
@@ -465,13 +465,13 @@ class extends Component
                <div x-show="backup" class="grid grid-cols-1 gap-y-2 p-6">
                   @foreach ($areas as $area)
                      <div>
-                        <x-text-button type="button" wire:click="downloadItems({{ $area['id'] }})"><i class="fa fa-download mr-3"></i>{{ $area['name'] }}</x-text-button>
+                        <x-text-button type="button" wire:click="downloadItems({{ $area['id'] }})"><i class="icon-download mr-3"></i>{{ $area['name'] }}</x-text-button>
                      </div>
                   @endforeach
                </div>
 
                <div class="flex items-center justify-between">
-                  <x-secondary-button x-show="backup" x-on:click="backup = false" type="button"><i class="fa fa-chevron-left mr-2"></i>{{ __('Kembali') }}</x-secondary-button>
+                  <x-secondary-button x-show="backup" x-on:click="backup = false" type="button"><i class="icon-chevron-left mr-2"></i>{{ __('Kembali') }}</x-secondary-button>
                   <x-text-button x-show="!backup" x-on:click="backup = true" type="button" class="uppercase tracking-wide font-bold text-xs">{{ __('Unduh backup') }}</x-text-button>
                   <x-primary-button x-show="!backup" type="button" x-on:click="$dispatch('close')">{{ __('Paham') }}</x-primary-button>
                </div>
@@ -484,19 +484,19 @@ class extends Component
       x-data="editorData()"
       x-init="editorInit()">
          <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa fa-fw fa-arrows-up-to-line mr-3"></i>{{ __('Perbarui batas qty') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa-arrows-up-to-line mr-3"></i>{{ __('Perbarui batas qty') }}</h1>
             <div class="flex gap-x-2">
                <div class="px-2 my-auto">
                   <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
                </div>
                <div class="btn-group">
-                  <x-secondary-button type="button" x-on:click="editorDownload"><i class="fa fa-fw fa-download"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="fa fa-fw fa-undo"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')"><i class="far fa-fw fa-question-circle"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorDownload"><i class="icon-download"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="fa-undo"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')"><i class="far icon-circle-help"></i></x-secondary-button>
                </div>
                <x-secondary-button type="button" x-on:click="editorApply">
                   <div class="relative">
-                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="fa fa-check mr-2"></i>{{ __('Terapkan') }}</span>
+                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="fa-check mr-2"></i>{{ __('Terapkan') }}</span>
                      <x-spinner wire:loading.class.remove="hidden" wire:target="apply" class="hidden sm mono"></x-spinner>                
                   </div>                
                </x-secondary-button>
@@ -507,7 +507,7 @@ class extends Component
 
    @else
       <div class="text-center w-72 py-20 mx-auto">
-         <i class="fa fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
+         <i class="fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
          <div class="text-neutral-500">{{ __('Kamu tidak memiliki wewenang untuk mengelola barang di area manapun.') }}</div>
       </div>
 

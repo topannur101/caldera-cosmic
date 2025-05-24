@@ -180,7 +180,7 @@ class extends Component {
                         <x-dropdown align="left" width="48">
                             <x-slot name="trigger">
                                 <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i
-                                        class="fa fa-fw fa-chevron-down ms-1"></i></x-text-button>
+                                        class="icon-chevron-down ms-1"></i></x-text-button>
                             </x-slot>
                             <x-slot name="content">
                                 <x-dropdown-link href="#" wire:click.prevent="setToday">
@@ -377,8 +377,8 @@ class extends Component {
             @else
                 <div class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-list relative"><i
-                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                        <i class="icon-layout-list relative"><i
+                                class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tak ada data') }}
                     </div>
@@ -500,8 +500,8 @@ class extends Component {
             @else
                 <div class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-list relative"><i
-                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                        <i class="icon-layout-list relative"><i
+                                class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tak ada data') }}
                     </div>

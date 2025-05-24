@@ -215,11 +215,11 @@ class extends Component
                   <h2>
                      {{ __('Username groupware') }}
                   </h2>
-                  <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+                  <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
                </div>
                <div class="py-3 text-5xl text-center">
-                     <i class="fa fa-image relative text-neutral-300 dark:text-neutral-600">
-                        <i class="fa fa-download absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
+                     <i class="fa-image relative text-neutral-300 dark:text-neutral-600">
+                        <i class="icon-download absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
                      </i>
                </div>
                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
@@ -249,11 +249,11 @@ class extends Component
                   <h2>
                      {{ __('Konfirmasi') }}
                   </h2>
-                  <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+                  <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
                </div>
                <div class="py-3 text-5xl text-center">
-                  <i class="fa fa-cube relative text-neutral-300 dark:text-neutral-600">
-                     <i class="fa fa-image absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
+                  <i class="icon-box relative text-neutral-300 dark:text-neutral-600">
+                     <i class="fa-image absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
                   </i>
                </div>
                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
@@ -272,10 +272,10 @@ class extends Component
       <div x-data="{ ...app(), code:'', areas:@entangle('areas'), area_id:@entangle('area_id'), items: @entangle('items'), step: @entangle('step'), progress: @entangle('progress'), indexes: @entangle('indexes') }" x-init="observeProgress()" class="px-4 sm:px-0">
          <div class="flex flex-col items-center gap-y-8 sm:flex-row">
             <h1 class="grow text-2xl text-neutral-900 dark:text-neutral-100 px-8">
-               <i class="fa fa-images mr-2"></i>
+               <i class="icon-images mr-2"></i>
                {{ __('Tarik foto') }}</h1>
             <x-link-secondary-button class="flex items-center h-full" href="{{ route('inventory.items.bulk-operation.pull-photos') }}">
-               <i class="fa fa-undo mr-2"></i>{{ __('Ulangi dari awal') }}
+               <i class="fa-undo mr-2"></i>{{ __('Ulangi dari awal') }}
             </x-link-secondary-button>
          </div>
          <div class="flex gap-x-6 w-full mt-6">
@@ -283,7 +283,7 @@ class extends Component
                <ol class="sticky w-72 mt-6 top-6 text-neutral-500 border-s border-neutral-200 dark:border-neutral-700 dark:text-neutral-400">                  
                   <li class="mb-10 ms-6">            
                      <span class="absolute flex items-center justify-center w-8 h-8 bg-green-200 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 dark:bg-green-900">
-                        <i class="fa fa-fw fa-tent text-sm"></i>
+                        <i class="icon-warehouse text-sm"></i>
                      </span>
                      <h3 class="font-medium leading-tight">{{ __('Pilih area')}}</h3>
                      <div class="mt-2">
@@ -299,14 +299,14 @@ class extends Component
                   </li>
                   <li class="mb-10 ms-6">
                      <span :class="step > 0 ? 'bg-green-200 dark:bg-green-900' : 'bg-neutral-100 dark:bg-neutral-700'" class="absolute flex items-center justify-center w-8 h-8 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 ">
-                        <i class="fa fa-fw fa-cube text-sm"></i>
+                        <i class="icon-box text-sm"></i>
                      </span>
                      <h3 class="font-medium leading-tight">{{ __('Masukkan kode')}}</h3>
                      <div x-cloak :class="step == 1 ? '' : 'hidden'" class="mt-2">
                         <form class="btn-group" x-on:submit.prevent="addItems()">
                            <x-text-input x-model="code" id="item-code" placeholder="{{ __('Kode barang') }}"></x-text-input->
                            <x-secondary-button type="submit">
-                              <i class="fa fa-fw fa-chevron-right"></i>
+                              <i class="icon-chevron-right"></i>
                            </x-secondary-button>
                         </form>
                         <x-primary-button type="button" class="mt-2" x-on:click="$dispatch('open-modal', 'ask-gw-username')">
@@ -321,7 +321,7 @@ class extends Component
                   </li>
                   <li class="mb-10 ms-6">
                      <span :class="step > 1 ? 'bg-green-200 dark:bg-green-900' : 'bg-neutral-100 dark:bg-neutral-700'" class="absolute flex items-center justify-center w-8 h-8 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 ">
-                        <i class="fa fa-fw fa-image text-sm"></i>
+                        <i class="fa-image text-sm"></i>
                      </span>
                      <h3 class="font-medium leading-tight">{{ __('Tarik foto')}}</h3>
                      <div x-cloak :class="step == 2 ? '' : 'hidden'" class="mt-2">
@@ -347,7 +347,7 @@ class extends Component
                   </li>
                   <li class="mb-10 ms-6">
                      <span :class="step > 2 ? 'bg-green-200 dark:bg-green-900' : 'bg-neutral-100 dark:bg-neutral-700'" class="absolute flex items-center justify-center w-8 h-8 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 ">
-                        <i class="fa fa-fw fa-list-check text-sm"></i>
+                        <i class="icon-list-check text-sm"></i>
                      </span>
                      <h3 class="font-medium leading-tight">{{ __('Tinjau foto')}}</h3>
                      <div x-cloak :class="step == 3 ? '' : 'hidden'" class="mt-2">
@@ -363,7 +363,7 @@ class extends Component
                   </li>
                   <li class="ms-6">
                      <span :class="step > 3 ? 'bg-green-200 dark:bg-green-900' : 'bg-neutral-100 dark:bg-neutral-700'" class="absolute flex items-center justify-center w-8 h-8 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 ">
-                        <i class="fa fa-fw fa-check-circle text-sm"></i>
+                        <i class="icon-circle-check text-sm"></i>
                      </span>
                      <h3 class="font-medium leading-tight">{{ __('Selesai')}}</h3>
                   </li>
@@ -372,7 +372,7 @@ class extends Component
             <div wire:key="list" class="grow flex items-center justify-center bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto">
                <div :class="items.length > 0 ? 'hidden' : ''">
                   <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                     <i class="fa fa-cube relative"><i class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                     <i class="icon-box relative"><i class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                   </div>
                   <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada barang') }}</div>
                </div>
@@ -413,7 +413,7 @@ class extends Component
                         <td class="w-[1%]">
                            <div class="rounded-sm overflow-hidden relative flex w-32 h-24 bg-neutral-200 dark:bg-neutral-700">
                               <div class="m-auto">
-                                 <i class="fa far fa-question-circle text-neutral-800 dark:text-neutral-200 opacity-25 text-3xl"></i>
+                                 <i class="far icon-circle-help text-neutral-800 dark:text-neutral-200 opacity-25 text-3xl"></i>
                               </div>
                               <template x-if="item.photo_new">
                                  <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" :src="'/storage/inv-items/' + item.photo_new" />
@@ -464,7 +464,7 @@ class extends Component
 
    @else
       <div class="text-center w-72 py-20 mx-auto">
-         <i class="fa fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
+         <i class="fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
          <div class="text-neutral-500">{{ __('Kamu tidak memiliki wewenang untuk mengelola barang di area manapun.') }}</div>
       </div>
 

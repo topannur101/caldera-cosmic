@@ -27,7 +27,7 @@ class extends Component {
       <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div>  
               <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
-                  <x-link href="{{ route('invlegacy.manage.index', ['view' => 'administration']) }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('UOM') }}</span></span>
+                  <x-link href="{{ route('invlegacy.manage.index', ['view' => 'administration']) }}" class="inline-block py-6" wire:navigate><i class="icon-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('UOM') }}</span></span>
               </h2>
           </div>
       </div>
@@ -41,7 +41,7 @@ class extends Component {
               {{ $uoms->count() . ' ' . __('UOM terdaftar') }}
           </div>
           <x-text-button type="button" class="my-auto" x-data=""
-          x-on:click.prevent="$dispatch('open-modal', 'create-uom')"><i class="far fa-question-circle"></i></x-text-button>    
+          x-on:click.prevent="$dispatch('open-modal', 'create-uom')"><i class="far icon-circle-help"></i></x-text-button>    
       </div>
       <x-modal name="create-uom">
           <div class="p-6">

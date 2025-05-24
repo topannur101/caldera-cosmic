@@ -34,3 +34,22 @@ Buat butir pesanan
 Pesanan terbuka [v]
 
 Cari ... | Pengguna | Keperluan                   TT MM | Tambah | ...
+
+# Tables
+
+inv_oitems
+. name
+. desc
+. code
+. photo
+. unit_price
+. inv_curr_id
+. purpose
+
+inv_oevals
+. type // qty_decrease, qty_increase, 
+. inv_oitem_id
+. user_id
+. message
+
+inv_olists

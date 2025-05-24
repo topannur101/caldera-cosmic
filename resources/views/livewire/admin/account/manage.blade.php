@@ -131,7 +131,7 @@ class extends Component {
                 <div x-show="!user_id" x-on:click.away="open = false" class="px-3 sm:px-0">
                     {{-- <label for="cal-user"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengguna') }}</label> --}}
-                    <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user" x-on:change="open = true"
+                    <x-text-input-icon x-model="userq" icon="icon-user" x-on:change="open = true"
                         x-ref="userq" x-on:focus="open = true" id="cal-user" type="text"
                         autocomplete="off" placeholder="{{ __('Pengguna') }}" />
                     <div class="relative" x-show="open" x-cloak>
@@ -142,8 +142,8 @@ class extends Component {
                 </div>
                 <div x-show="!user_id" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-user relative"><i
-                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                        <i class="icon-user relative"><i
+                                class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih pengguna') }}
                     </div>
@@ -169,7 +169,7 @@ class extends Component {
                             <div class="flex px-8">
                                 <div>
                                     <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                                        <div class="m-auto"><i class="fa fa-fw fa-key"></i></div>
+                                        <div class="m-auto"><i class="icon-key"></i></div>
                                     </div>
                                 </div>
                                 <div class="grow text-left py-4">
@@ -183,7 +183,7 @@ class extends Component {
                             <div class="flex px-8">
                                 <div>
                                     <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                                        <div class="m-auto"><i class="fa fa-fw fa-user-edit"></i></div>
+                                        <div class="m-auto"><i class="icon-user-pen"></i></div>
                                     </div>
                                 </div>
                                 <div class="grow text-left py-4">
@@ -197,7 +197,7 @@ class extends Component {
                             <div class="flex px-8">
                                 <div>
                                     <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                                        <div class="m-auto"><i class="fa fa-fw fa-user-times"></i></div>
+                                        <div class="m-auto"><i class="icon-user-x"></i></div>
                                     </div>
                                 </div>
                                 <div class="grow text-left py-4">
@@ -219,7 +219,7 @@ class extends Component {
                                 {{ __('Atur ulang kata sandi') }}
                             </h2>
                             <x-text-button type="button" x-on:click="mode = ''"><i
-                                    class="fa fa-times"></i></x-text-button>
+                                    class="icon-x"></i></x-text-button>
                         </div>
                         <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
                             <div>
@@ -246,7 +246,7 @@ class extends Component {
                                 {{ __('Edit akun') }}
                             </h2>
                             <x-text-button type="button" x-on:click="mode = ''"><i
-                                    class="fa fa-times"></i></x-text-button>
+                                    class="icon-x"></i></x-text-button>
                         </div>
                         <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
                             <div>
@@ -276,7 +276,7 @@ class extends Component {
                         <div class="flex items-center justify-center z-20 h-full">
                             <div class="grid gap-3">
                                 <div class="text-4xl text-center">
-                                    <i class="fa fa-radiation"></i>
+                                    <i class="icon-construction"></i>
                                 </div>
                                 <div>{{ __('Sedang dalam tahap pengembangan') }}</div>
                             </div>
@@ -292,7 +292,7 @@ class extends Component {
                                 {{ __('Nonaktifkan akun') }}
                             </h2>
                             <x-text-button type="button" x-on:click="mode = ''"><i
-                                    class="fa fa-times"></i></x-text-button>
+                                    class="icon-x"></i></x-text-button>
                         </div>
                         <div class="grid gap-y-6 mt-6 text-sm text-neutral-600 dark:text-neutral-400">
                             <div>
@@ -312,7 +312,7 @@ class extends Component {
                         <div class="flex items-center justify-center z-20 h-full">
                             <div class="grid gap-3">
                                 <div class="text-4xl text-center">
-                                    <i class="fa fa-radiation"></i>
+                                    <i class="icon-construction"></i>
                                 </div>
                                 <div>{{ __('Sedang dalam tahap pengembangan') }}</div>
                             </div>

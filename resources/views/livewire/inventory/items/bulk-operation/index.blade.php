@@ -26,7 +26,7 @@ class extends Component
          <a href="{{ route('inventory.items.bulk-operation.create-new') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa fa-fw fa-star-of-life"></i>
+                  <i class="fa-star-of-life"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Buat barang baru') }}</div>
@@ -37,7 +37,7 @@ class extends Component
                   </div>
                </div>
                <div class="px-6 py-3 text-lg">
-                  <i class="fa fa-chevron-right"></i>
+                  <i class="icon-chevron-right"></i>
                </div>
             </div>
          </a>
@@ -47,7 +47,7 @@ class extends Component
          <a href="{{ route('inventory.items.bulk-operation.update-basic') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa fa-fw fa-cube"></i>
+                  <i class="icon-box"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Perbarui info dasar') }}</div>
@@ -58,14 +58,14 @@ class extends Component
                   </div>
                </div>
                <div class="px-6 py-3 text-lg">
-                  <i class="fa fa-chevron-right"></i>
+                  <i class="icon-chevron-right"></i>
                </div>
             </div>
          </a>
          <a href="{{ route('inventory.items.bulk-operation.update-location') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa fa-fw fa-map-marker-alt"></i>
+                  <i class="icon-map-pin"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Perbarui lokasi') }}</div>
@@ -76,14 +76,14 @@ class extends Component
                   </div>
                </div>
                <div class="px-6 py-3 text-lg">
-                  <i class="fa fa-chevron-right"></i>
+                  <i class="icon-chevron-right"></i>
                </div>
             </div>
          </a>
          <a href="{{ route('inventory.items.bulk-operation.update-stock') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa fa-fw fa-money-check-dollar"></i>
+                  <i class="fa-money-check-dollar"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Perbarui unit stok') }}</div>
@@ -94,14 +94,14 @@ class extends Component
                   </div>
                </div>
                <div class="px-6 py-3 text-lg">
-                  <i class="fa fa-chevron-right"></i>
+                  <i class="icon-chevron-right"></i>
                </div>
             </div>
          </a>
          <a href="{{ route('inventory.items.bulk-operation.update-limit') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa fa-fw fa-arrows-up-to-line"></i>
+                  <i class="fa-arrows-up-to-line"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Perbarui batas qty') }}</div>
@@ -112,14 +112,14 @@ class extends Component
                   </div>
                </div>
                <div class="px-6 py-3 text-lg">
-                  <i class="fa fa-chevron-right"></i>
+                  <i class="icon-chevron-right"></i>
                </div>
             </div>
          </a>
          <a href="{{ route('inventory.items.bulk-operation.update-status') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa fa-fw fa-toggle-on"></i>
+                  <i class="fa-toggle-on"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Perbarui status') }}</div>
@@ -130,7 +130,7 @@ class extends Component
                   </div>
                </div>
                <div class="px-6 py-3 text-lg">
-                  <i class="fa fa-chevron-right"></i>
+                  <i class="icon-chevron-right"></i>
                </div>
             </div>
          </a>
@@ -140,7 +140,7 @@ class extends Component
          <a href="{{ route('inventory.items.bulk-operation.pull-photos') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10">
             <div class="flex items-center">
                <div class="px-6 py-3">
-                  <i class="fa fa-fw fa-images"></i>
+                  <i class="icon-images"></i>
                </div>
                <div class="py-3 grow">
                   <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Tarik foto') }}</div>
@@ -151,7 +151,7 @@ class extends Component
                   </div>
                </div>
                <div class="px-6 py-3 text-lg">
-                  <i class="fa fa-chevron-right"></i>
+                  <i class="icon-chevron-right"></i>
                </div>
             </div>
          </a>

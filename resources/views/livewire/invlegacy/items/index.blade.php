@@ -199,7 +199,7 @@ class extends Component {
     <div class="flex flex-col gap-x-4 md:gap-x-8 sm:flex-row">
         <div>
             <div class="w-full sm:w-44 md:w-56 px-3 sm:px-0">
-                <x-text-input-icon wire:model.live="q" icon="fa fa-fw fa-search" id="inv-q" name="inv-q"
+                <x-text-input-icon wire:model.live="q" icon="icon-search" id="inv-q" name="inv-q"
                     type="search" list="qwords" placeholder="{{ __('Cari...') }}" autofocus autocomplete="inv-q" />
                 <datalist id="qwords">
                     @if (count($qwords))
@@ -225,21 +225,21 @@ class extends Component {
                         <div class="flex items-center">
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
-                                    <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                                    <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>
                                 </x-slot>
                                 <x-slot name="content">
                                     <div class="text-sm text-neutral-400 dark:text-neutral-500 p-6 text-center">
                                         {{ __('Tak ada lokasi dan tag favorit') }}</div>
                                     {{-- <x-dropdown-link href="#" class="flex items-center">
-                                    <i class="fa fa-tag fa-fw mr-2"></i>
+                                    <i class="icon-tag mr-2"></i>
                                     <div>general-electrical-something</div>
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" class="flex items-center">
-                                    <i class="fa fa-tag fa-fw mr-2"></i>
+                                    <i class="icon-tag mr-2"></i>
                                     <div>okc</div>
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" class="flex items-center">
-                                    <i class="fa fa-map-marker-alt fa-fw mr-2"></i>
+                                    <i class="icon-map-pin mr-2"></i>
                                     <div>G1-2-3</div>
                                 </x-dropdown-link> --}}
                                     <hr class="border-neutral-300 dark:border-neutral-600" />
@@ -255,7 +255,7 @@ class extends Component {
                         </div>
                     </div>
                     <div x-show="filter === true ? true : false" x-cloak x-init="console.log(filter)">
-                        <x-text-input-icon wire:model.live="loc" icon="fa fa-fw fa-map-marker-alt" id="inv-loc"
+                        <x-text-input-icon wire:model.live="loc" icon="icon-map-pin" id="inv-loc"
                             class="mt-4" type="search" placeholder="{{ __('Lokasi') }}" list="qlocs" />
                         <datalist id="qlocs">
                             @if (count($qlocs))
@@ -264,7 +264,7 @@ class extends Component {
                                 @endforeach
                             @endif
                         </datalist>
-                        <x-text-input-icon wire:model.live="tag" icon="fa fa-fw fa-tag" class="mt-4" id="inv-tag"
+                        <x-text-input-icon wire:model.live="tag" icon="icon-tag" class="mt-4" id="inv-tag"
                             type="search" placeholder="{{ __('Tag') }}" list="qtags" />
                         <datalist id="qtags">
                             @if (count($qtags))
@@ -300,17 +300,17 @@ class extends Component {
                         @if ($q || $status != 'active' || $qty != 'total' || $filter || $loc || $tag || $without)
                             <div class="m-3">
                                 <x-text-button wire:click="resetSearch" type="button" class="text-sm"><i
-                                        class="fa fa-fw mr-2 fa-undo"></i>{{ __('Atur ulang') }}</x-text-button>
+                                        class="mr-2 fa-undo"></i>{{ __('Atur ulang') }}</x-text-button>
                             </div>
                         @endif
                     </div>
                     <div class="m-3">
                         <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV barang') }}</x-text-button>
+                                class="mr-2 icon-download"></i>{{ __('Unduh CSV barang') }}</x-text-button>
                     </div>
                 </div>
                 <x-link-secondary-button href="#content"><i
-                        class="fa fa-fw mr-2 fa-arrows-up-to-line"></i>{{ __('Ke atas') }}</x-link-secondary-button>
+                        class="mr-2 fa-arrows-up-to-line"></i>{{ __('Ke atas') }}</x-link-secondary-button>
             </div>
         </div>
         <div class="w-full">
@@ -329,11 +329,11 @@ class extends Component {
                     </x-select>
                     <div class="btn-group">
                         <x-radio-button wire:model.live="view" value="list" name="view" id="view-list"><i
-                                class="fa fa-fw fa-grip-lines text-center m-auto"></i></x-radio-button>
+                                class="icon-align-justify text-center m-auto"></i></x-radio-button>
                         <x-radio-button wire:model.live="view" value="content" name="view" id="view-content"><i
-                                class="fa fa-fw fa-list text-center m-auto"></i></x-radio-button>
+                                class="icon-layout-list text-center m-auto"></i></x-radio-button>
                         <x-radio-button wire:model.live="view" value="grid" name="view" id="view-grid"><i
-                                class="fa fa-fw fa-border-all text-center m-auto"></i></x-radio-button>
+                                class="icon-layout-grid text-center m-auto"></i></x-radio-button>
                     </div>
                 </div>
             </div>
@@ -341,7 +341,7 @@ class extends Component {
                 @if (count($area_ids))
                     <div wire:key="no-match" class="py-20">
                         <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                            <i class="fa fa-ghost"></i>
+                            <i class="icon-ghost"></i>
                         </div>
                         <div class="text-center text-neutral-400 dark:text-neutral-600">
                             {{ __('Tidak ada yang cocok') }}
@@ -350,8 +350,8 @@ class extends Component {
                 @else
                     <div wire:key="no-area" class="py-20">
                         <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                            <i class="fa fa-building relative"><i
-                                    class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                            <i class="fa-building relative"><i
+                                    class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                         </div>
                         <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}
                         </div>

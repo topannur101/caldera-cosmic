@@ -99,7 +99,7 @@ new class extends Component {
          {{ __('Buat unit stok bekas') }}
       </h2>
       <x-text-button type="button" x-on:click="$dispatch('close')"><i
-            class="fa fa-times"></i></x-text-button>
+            class="icon-x"></i></x-text-button>
    </div>
    <div class="my-4 text-sm">
       @switch($condition)

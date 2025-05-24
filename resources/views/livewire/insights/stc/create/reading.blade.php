@@ -699,7 +699,7 @@ new class extends Component
         </x-modal>
         <x-modal name="retrieve-sv-error" maxWidth="sm">
             <div class="text-center pt-6">
-                <i class="fa fa-exclamation-triangle text-4xl "></i>
+                <i class="icon-triangle-alert text-4xl "></i>
                 <h2 class="mt-3 text-lg font-medium text-neutral-900 dark:text-neutral-100">
                     {{ __('SV tidak dapat diambil') }}
                 </h2>
@@ -735,7 +735,7 @@ new class extends Component
     <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-x md:divide-y-0 divide-neutral-200 dark:text-white dark:divide-neutral-700">
             <div class="p-6">
-                <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-window-maximize mr-3 text-neutral-500"></i>{{ __('Mesin') }}</h1>
+                <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa-window-maximize mr-3 text-neutral-500"></i>{{ __('Mesin') }}</h1>
                 <div class="grid grid-cols-2 gap-x-3 mb-6">
                     <div>
                         <label for="d-log-sequence"
@@ -777,7 +777,7 @@ new class extends Component
                 <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">
                     <span>{{ __('SV') }}</span>
                     @if($d_sum['sv_used'] == 'm_log')
-                        <i class="fa fa-lock ms-2"></i>
+                        <i class="icon-lock ms-2"></i>
                     @endif
                 </label>
                 @if($d_sum['sv_used'] == 'm_log')
@@ -806,7 +806,7 @@ new class extends Component
             </div>
             <div class="p-6">
                 <div class="flex justify-between">
-                    <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-pager mr-3 text-neutral-500"></i>{{ __('Alat ukur') }}</h1>
+                    <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa-pager mr-3 text-neutral-500"></i>{{ __('Alat ukur') }}</h1>
                     <div>
                         <input wire:model="file" type="file" class="hidden" x-ref="file" />
                         <x-secondary-button type="button" x-on:click="$refs.file.click()">{{ __('Unggah') }}</x-secondary-button>
@@ -834,7 +834,7 @@ new class extends Component
                         <x-text-button
                             x-on:click.prevent="$dispatch('open-modal', 'reading-review'); $dispatch('reading-review', { logs: '{{ json_encode($logs) }}', sv_temps: '{{ json_encode($d_sum['sv_values']) }}' })"
                             class="uppercase text-xs text-neutral-500" 
-                            type="button"><i class="fa fa-eye mr-1"></i>{{ __('Tinjau') }}</x-text-button>
+                            type="button"><i class="fa-eye mr-1"></i>{{ __('Tinjau') }}</x-text-button>
                     @endif
                 </label>
                 <div class="grid grid-cols-8">
@@ -850,7 +850,7 @@ new class extends Component
             </div>
             <div class="p-6">
                 <div class="flex justify-between">
-                    <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa fa-square-root-variable mr-3 text-neutral-500"></i>{{ __('Prediksi') }}</h1>
+                    <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="icon-square-root-variable mr-3 text-neutral-500"></i>{{ __('Prediksi') }}</h1>
                     <div>
                         <x-secondary-button type="button" wire:click="calculatePrediction">{{ __('Hitung') }}</x-secondary-button>
                     </div>
@@ -898,7 +898,7 @@ new class extends Component
     <div class="flex justify-between px-6">
         <div class="flex gap-x-3">
         @if ($errors->any())
-            <i class="fa fa-exclamation-circle text-red-500"></i>
+            <i class="icon-circle-alert text-red-500"></i>
             <x-input-error :messages="$errors->first()" />
         @endif
         </div>      

@@ -24,6 +24,6 @@
    <td>{{ $price ? ( $curr  . ' ' . $price . ' / ' . $uom) : null }}</td>
    <td>{{ $loc ?? null}}</td>
    <td>{{ $tags ?? __('Tak ada tag')}}</td>
-   <td><x-link href="{{ $href }}" class="text-neutral-800 dark:text-neutral-200"><i class="fa fa-external-link"></i></x-link>
+   <td><x-link href="{{ $href }}" class="text-neutral-800 dark:text-neutral-200"><i class="icon-square-arrow-out-up-right"></i></x-link>
    </td>
 </tr>

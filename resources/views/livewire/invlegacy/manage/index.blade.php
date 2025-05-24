@@ -32,7 +32,7 @@ class extends Component {
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                      <div class="m-auto"><i class="fa fa-plus"></i></div>
+                      <div class="m-auto"><i class="icon-plus"></i></div>
                   </div>
               </div>
               <div class="grow text-left truncate py-4">
@@ -64,7 +64,7 @@ class extends Component {
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                      <div class="m-auto"><i class="fa fa-pen"></i></div>
+                      <div class="m-auto"><i class="icon-pencil"></i></div>
                   </div>
               </div>
               <div class="grow truncate py-4">
@@ -81,7 +81,7 @@ class extends Component {
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                      <div class="m-auto"><i class="fa fa-arrow-right-arrow-left"></i></div>
+                      <div class="m-auto"><i class="icon-arrow-right-left"></i></div>
                   </div>
               </div>
               <div class="grow truncate py-4">
@@ -98,7 +98,7 @@ class extends Component {
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                      <div class="m-auto"><i class="fa fa-map-marker-alt"></i></div>
+                      <div class="m-auto"><i class="icon-map-pin"></i></div>
                   </div>
               </div>
               <div class="grow truncate py-4">
@@ -115,7 +115,7 @@ class extends Component {
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                      <div class="m-auto"><i class="fa fa-tag"></i></div>
+                      <div class="m-auto"><i class="icon-tag"></i></div>
                   </div>
               </div>
               <div class="grow truncate py-4">
@@ -132,7 +132,7 @@ class extends Component {
   @else
   @cannot('superuser')
   <div class="my-6 text-sm text-center">{{ __('Pengaturan berikut hanya bisa dilihat') }}<x-text-button type="button" class="ml-2" x-data=""
-      x-on:click.prevent="$dispatch('open-modal', 'view-only')"><i class="far fa-question-circle"></i></x-text-button></div>
+      x-on:click.prevent="$dispatch('open-modal', 'view-only')"><i class="far icon-circle-help"></i></x-text-button></div>
   <x-modal name="view-only">
       <div class="p-6">
           <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
@@ -154,7 +154,7 @@ class extends Component {
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                      <div class="m-auto"><i class="fa fa-user-lock"></i></div>
+                      <div class="m-auto"><i class="icon-user-lock"></i></div>
                   </div>
               </div>
               <div class="grow truncate py-4">
@@ -171,7 +171,7 @@ class extends Component {
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                      <div class="m-auto"><i class="fa fa-building"></i></div>
+                      <div class="m-auto"><i class="fa-building"></i></div>
                   </div>
               </div>
               <div class="grow truncate py-4">
@@ -188,7 +188,7 @@ class extends Component {
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                      <div class="m-auto"><i class="fa fa-coins"></i></div>
+                      <div class="m-auto"><i class="fa-coins"></i></div>
                   </div>
               </div>
               <div class="grow truncate py-4">
@@ -205,7 +205,7 @@ class extends Component {
           <div class="flex">
               <div>
                   <div class="flex w-16 h-full text-neutral-600 dark:text-neutral-400">
-                      <div class="m-auto"><i class="fa fa-weight-scale"></i></div>
+                      <div class="m-auto"><i class="fa-weight-scale"></i></div>
                   </div>
               </div>
               <div class="grow truncate py-4">

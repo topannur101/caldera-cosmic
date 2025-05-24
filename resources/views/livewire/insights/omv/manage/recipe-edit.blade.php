@@ -201,7 +201,7 @@ new class extends Component {
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                 {{ __('Resep ') }}
             </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         <div class="flex gap-x-3">
             <div class="mt-6">
@@ -243,13 +243,13 @@ new class extends Component {
                      :class="{ 'opacity-50': draggingIndex === {{ $index }}, 'opacity-30': dragoverIndex === {{ $index }} }">
                     <div class="grid grid-cols-4 gap-y-2 gap-x-2">
                         <div class="flex gap-x-3 col-span-3 items-center">
-                            <i class="fa fa-grip-lines cursor-move" draggable="true"></i>
+                            <i class="icon-grip-horizontal cursor-move" draggable="true"></i>
                              <x-text-input type="text" wire:model="steps.{{ $index }}.description" :disabled="Gate::denies('manage', InsOmvRecipe::class)" />
                         </div>    
                         <div class="flex gap-x-3">
                             <x-text-input type="number" wire:model="steps.{{ $index }}.duration" :disabled="Gate::denies('manage', InsOmvRecipe::class)" />
                             @can('manage', InsOmvRecipe::class)
-                                <x-text-button type="button" wire:click="removeStep({{ $index }})"><i class="fa fa-times"></i></x-text-button>
+                                <x-text-button type="button" wire:click="removeStep({{ $index }})"><i class="icon-x"></i></x-text-button>
                             @endcan
                         </div>
                     </div>
@@ -284,7 +284,7 @@ new class extends Component {
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                 {{ __('Resep') }}
             </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         <div class="mb-6">
             <div class="grid grid-cols-3 gap-x-3">

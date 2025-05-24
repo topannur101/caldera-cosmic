@@ -316,10 +316,10 @@ class extends Component {
             <div class="p-6 flex flex-col gap-y-6">
                 <div class="flex justify-between items-start">
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        <i class="fa fa-print mr-2"></i>
+                        <i class="fa-print mr-2"></i>
                         {{ __('Cetak semua sebagai...') }}
                     </h2>
-                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
                 </div>
                 <div x-data="{ print_as: @entangle('print_as') }">
                     <x-radio x-model="print_as" id="as-approval-form" name="as-approval-form" value="approval-form">{{ __('Formulir persetujuan') }}</x-radio>
@@ -329,7 +329,7 @@ class extends Component {
                 <div class="flex justify-end">
                     <x-secondary-button type="button" wire:click="printAs" x-on:click="$dispatch('close')">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="printAs"><i class="fa fa-print"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
+                            <span wire:loading.class="opacity-0" wire:target="printAs"><i class="fa-print"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="printAs" class="hidden sm mono"></x-spinner>                
                         </div>  
                     </x-secondary-button>
@@ -354,8 +354,8 @@ class extends Component {
     <div class="static lg:sticky top-0 z-10 py-6 ">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
             <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
-                <i wire:loading.remove class="fa fa-fw fa-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
-                <i wire:loading class="fa fa-fw relative">
+                <i wire:loading.remove class="icon-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
+                <i wire:loading class="relative">
                     <x-spinner class="sm mono"></x-spinner>
                 </i>
                 <div class="w-full md:w-32">
@@ -373,24 +373,24 @@ class extends Component {
             <div class="flex justify-between px-8 lg:px-3 py-3 lg:py-0 divide-x divide-neutral-200 dark:divide-neutral-700">
                 <div class="btn-group h-9 pr-3">
                     <x-checkbox-button-t title="{{ __('Tertunda') }}" x-model="status" grow value="pending" name="circ_eval_status" id="circ_eval_status-pending">
-                        <div class="text-center my-auto"><i class="fa fa-fw fa-hourglass"></i></div>
+                        <div class="text-center my-auto"><i class="icon-hourglass"></i></div>
                     </x-checkbox-button-t>
                     <x-checkbox-button-t title="{{ __('Disetujui') }}" x-model="status" grow value="approved" name="circ_eval_status" id="circ_eval_status-approved">
-                        <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-up"></i></div>
+                        <div class="text-center my-auto"><i class="icon-thumbs-up"></i></div>
                     </x-checkbox-button-t>
                     <x-checkbox-button-t title="{{ __('Ditolak') }}" x-model="status" grow value="rejected" name="circ_eval_status" id="circ_eval_status-rejected">
-                        <div class="text-center my-auto"><i class="fa fa-fw fa-thumbs-down"></i></div>
+                        <div class="text-center my-auto"><i class="icon-thumbs-down"></i></div>
                     </x-checkbox-button-t>
                 </div>
                 <div class="btn-group h-9 pl-3">
                     <x-checkbox-button-t title="{{ __('Tambah') }}" x-model="types" grow value="deposit" name="circ_types" id="circ_types-deposit">
-                        <div class="text-center my-auto"><i class="fa fa-fw fa-plus text-green-500"></i></div>
+                        <div class="text-center my-auto"><i class="icon-plus text-green-500"></i></div>
                     </x-checkbox-button-t>
                     <x-checkbox-button-t title="{{ __('Catat') }}" x-model="types" grow value="capture" name="circ_types" id="circ_types-capture">
-                        <div class="text-center my-auto"><i class="fa fa-fw fa-code-commit text-yellow-600"></i></div>
+                        <div class="text-center my-auto"><i class="icon-git-commit-horizontal text-yellow-600"></i></div>
                     </x-checkbox-button-t>
                     <x-checkbox-button-t title="{{ __('Ambil') }}" x-model="types" grow value="withdrawal" name="circ_types" id="circ_types-withdrawal">
-                        <div class="text-center my-auto"><i class="fa fa-fw fa-minus text-red-500"></i></div>
+                        <div class="text-center my-auto"><i class="icon-minus text-red-500"></i></div>
                     </x-checkbox-button-t>
                 </div>
             </div>
@@ -408,25 +408,25 @@ class extends Component {
                 <div>
                     <x-dropdown align="right" width="60">
                         <x-slot name="trigger">
-                            <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
+                            <x-text-button><i class="icon-ellipsis"></i></x-text-button>
                         </x-slot>
                         <x-slot name="content">
                             <x-dropdown-link href="{{ route('inventory.circs.summary') }}" wire:navigate>
-                                <i class="fa fa-fw fa-line-chart me-2"></i>{{ __('Ringkasan sirkulasi')}}
+                                <i class="icon-chart-line me-2"></i>{{ __('Ringkasan sirkulasi')}}
                             </x-dropdown-link>
                             <x-dropdown-link href="{{ route('inventory.circs.bulk-operation.index') }}" wire:navigate>
-                                <i class="fa fa-fw me-2"></i>{{ __('Operasi massal sirkulasi')}}
+                                <i class="me-2"></i>{{ __('Operasi massal sirkulasi')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="resetQuery">
-                                <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset')}}
+                                <i class="fa-undo me-2"></i>{{ __('Reset')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="download">
-                                <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
+                                <i class="icon-download me-2"></i>{{ __('Unduh sebagai CSV') }}
                             </x-dropdown-link>
                             <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'print-all')">
-                                <i class="fa fa-fw fa-print me-2"></i>{{ __('Cetak semua...') }}
+                                <i class="fa-print me-2"></i>{{ __('Cetak semua...') }}
                             </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
@@ -447,11 +447,11 @@ class extends Component {
                 </x-select>
                 <div class="btn-group">
                     <x-radio-button wire:model.live="view" value="list" name="view" id="view-list"><i
-                            class="fa fa-fw fa-grip-lines text-center m-auto"></i></x-radio-button>
+                            class="icon-align-justify text-center m-auto"></i></x-radio-button>
                     <!-- <x-radio-button wire:model.live="view" value="content" name="view" id="view-content"><i
-                            class="fa fa-fw fa-list text-center m-auto"></i></x-radio-button>
+                            class="icon-layout-list text-center m-auto"></i></x-radio-button>
                     <x-radio-button wire:model.live="view" value="grid" name="view" id="view-grid"><i
-                            class="fa fa-fw fa-border-all text-center m-auto"></i></x-radio-button> -->
+                            class="icon-layout-grid text-center m-auto"></i></x-radio-button> -->
                 </div>
             </div>
         </div>
@@ -462,13 +462,13 @@ class extends Component {
                 <div class="btn-group">
                     <x-secondary-button type="button" wire:click="printCircIds">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="printCircIds"><i class="fa fa-print"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
+                            <span wire:loading.class="opacity-0" wire:target="printCircIds"><i class="fa-print"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="printCircIds" class="hidden sm mono"></x-spinner>                
                         </div>                
                     </x-secondary-button>
                     <x-secondary-button type="button" wire:click="evalCircIds">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="evalCircIds"><i class="fa fa-gavel"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Evaluasi') }}</span></span>
+                            <span wire:loading.class="opacity-0" wire:target="evalCircIds"><i class="fa-gavel"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Evaluasi') }}</span></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="evalCircIds" class="hidden sm mono"></x-spinner>
                         </div>
                     </x-secondary-button>
@@ -481,7 +481,7 @@ class extends Component {
             @if (count($area_ids))
                 <div wire:key="no-match" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-ghost"></i>
+                        <i class="icon-ghost"></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">
                         {{ __('Tidak ada yang cocok') }}
@@ -490,8 +490,8 @@ class extends Component {
             @else
                 <div wire:key="no-area" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-tent relative"><i
-                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                        <i class="icon-warehouse relative"><i
+                                class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}
                     </div>
@@ -507,8 +507,8 @@ class extends Component {
                                 <th>{{ __('Qty') }}</th>
                                 <th colspan="2">{{ __('Nama') . ' & ' . __('Deskripsi') }}</th>
                                 <th>{{ __('Kode') }}</th>
-                                <th><i class="fa fa-map-marker-alt"></i></th>
-                                <th><i class="fa fa-user"></i></th>
+                                <th><i class="icon-map-pin"></i></th>
+                                <th><i class="icon-user"></i></th>
                                 <th>{{ __('Keterangan') }}</th>
                                 <th class="flex justify-end">{{ 'Σ ' . InvCurr::find(1)->name }}</th>
                                 <th>{{ __('Diperbarui') }}</th>

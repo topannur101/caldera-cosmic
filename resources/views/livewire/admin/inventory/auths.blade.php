@@ -67,9 +67,9 @@ class extends Component {
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
                 @can('superuser')
                     <x-secondary-button type="button" 
-                        x-on:click.prevent="$dispatch('open-modal', 'auth-create')"><i class="fa fa-plus fa-fw"></i></x-secondary-button>
+                        x-on:click.prevent="$dispatch('open-modal', 'auth-create')"><i class="icon-plus"></i></x-secondary-button>
                 @endcan
-                <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open"><i class="fa fa-search fa-fw"></i></x-secondary-button>
+                <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open"><i class="icon-search"></i></x-secondary-button>
                 <div class="w-40" x-show="open" x-cloak>
                     <x-text-input-search wire:model.live="q" id="inv-q" x-ref="search"
                         placeholder="{{ __('CARI') }}"></x-text-input-search>

@@ -9,7 +9,7 @@
    <div class="flex">
       <div>
          <div class="mt-1 flex justify-center items-center @if($presentation === 'page') w-6 h-6 @else w-4 h-4 @endif bg-caldy-600 rounded-full overflow-hidden">
-            <i class="fa {{ $icon }} text-white" @if($presentation !== 'page') style="font-size:0.5rem" @endif></i>
+            <i class="{{ $icon }} text-white" @if($presentation !== 'page') style="font-size:0.5rem" @endif></i>
          </div>
       </div>
       <div class="grow ml-2">

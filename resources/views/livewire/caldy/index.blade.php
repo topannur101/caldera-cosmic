@@ -214,7 +214,7 @@ class extends Component {
     @if(count($messages) == 1)
     <div id="caldy-start" class="h-[calc(100vh-8rem)] flex items-center justify-center">
       <div class="text-center">
-        <i class="fa fa-fw text-5xl fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>
+        <i class="text-5xl icon-sparkles text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>
         <div class="text-xl mt-3">{{ __('Hai, aku Caldy!') }}</div>
         <div class="text-neutral-500">{{ __('Mau tanya apa hari ini?')  }}</div>
       </div>
@@ -240,7 +240,7 @@ class extends Component {
       @endforeach
       @if(count($messages) > 1)
         <div class="px-1 my-4">
-          <i class="{{ $is_thinking ? 'fa-pulse' : '' }} fa fa-fw fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-2xl"></i>
+          <i class="{{ $is_thinking ? 'fa-pulse' : '' }} icon-sparkles text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-2xl"></i>
         </div>
       @endif
     </div>    
@@ -264,7 +264,7 @@ class extends Component {
         w-8 h-8 flex items-center justify-center rounded-full 
         bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 
         hover:opacity-90 focus:outline-none disabled:opacity-25"
-      ><i class="fa fa-fw fa-arrow-right text-white"></i>
+      ><i class="icon-arrow-right text-white"></i>
       </button>
     </form>
   </div>

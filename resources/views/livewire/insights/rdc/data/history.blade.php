@@ -193,7 +193,7 @@ new class extends Component {
                             <div class="flex">
                                 <x-dropdown align="left" width="48">
                                     <x-slot name="trigger">
-                                        <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="fa fa-fw fa-chevron-down ms-1"></i></x-text-button>
+                                        <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="icon-chevron-down ms-1"></i></x-text-button>
                                     </x-slot>
                                     <x-slot name="content">
                                         <x-dropdown-link href="#" wire:click.prevent="setToday">

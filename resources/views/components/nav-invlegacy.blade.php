@@ -9,24 +9,24 @@
        </div>
        <div class="sm:space-x-6 -my-px ml-10 flex">
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('invlegacy.items.index') }}" :active="request()->is('invlegacy/items*')" wire:navigate>
-                <i class="fa fa-cube text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Barang') }}</span>
+                <i class="icon-box text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Barang') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('invlegacy.circs.index') }}" :active="request()->is('invlegacy/circs*')" wire:navigate>
-                <i class="fa fa-arrow-right-arrow-left text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Sirkulasi') }}</span>
+                <i class="icon-arrow-right-left text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Sirkulasi') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-6 uppercase" href="{{ route('invlegacy.manage.index') }}" :active="request()->is('invlegacy/manage*')" wire:navigate>
-                <i class="fa fa-ellipsis-h text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Kelola') }}</span>
+                <i class="icon-ellipsis text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Kelola') }}</span>
             </x-nav-link>
         </div>
        {{-- <div class="space-x-8 -my-px ml-10 flex">
            <x-nav-link href="{{ route('invlegacy.items.index') }}" :active="request()->is('invlegacy/items*')" wire:navigate>
-               <i class="fa mx-2 fa-fw fa-search text-sm"></i>
+               <i class="mx-2 icon-search text-sm"></i>
            </x-nav-link>
            <x-nav-link href="{{ route('invlegacy.circs.index') }}" :active="request()->is('invlegacy/circs*')" wire:navigate>
-               <i class="fa mx-2 fa-fw fa-arrow-right-arrow-left text-sm"></i>
+               <i class="mx-2 icon-arrow-right-left text-sm"></i>
            </x-nav-link>
            <x-nav-link href="{{ route('invlegacy.manage.index') }}" :active="request()->is('invlegacy/admin*')" wire:navigate>
-               <i class="fa mx-2 fa-fw fa-ellipsis-h text-sm"></i>
+               <i class="mx-2 icon-ellipsis text-sm"></i>
            </x-nav-link>
        </div> --}}
    </div>

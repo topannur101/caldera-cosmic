@@ -68,7 +68,7 @@ new class extends Component {
             <div class="truncate">
                 <div>
                     <div class="text-6xl text-neutral-400 uppercase m-1"><x-link class="inline-block"
-                            href="{{ route('insights.rtc.slideshows') }}"><i class="fa fa-fw fa-chevron-left"></i></x-link>
+                            href="{{ route('insights.rtc.slideshows') }}"><i class="icon-chevron-left"></i></x-link>
                         {{ __('Ringkasan Gilingan') }}</div>
                 </div>
             </div>
@@ -89,7 +89,7 @@ new class extends Component {
         @if (!$clumps->count())
             <div wire:key="no-match" class="py-20 text-neutral-400 dark:text-neutral-700">
                 <div class="text-center text-5xl mb-8">
-                    <i class="fa fa-ghost"></i>
+                    <i class="icon-ghost"></i>
                 </div>
                 <div class="text-center">{{ __('Tidak ada yang cocok') }}
                 </div>

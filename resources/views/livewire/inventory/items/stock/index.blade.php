@@ -81,7 +81,7 @@ new class extends Component {
       <div>
          <x-dropdown align="right">
             <x-slot name="trigger">
-               <x-text-button><i class="fa fa-fw fa-ellipsis-v hidden sm:inline"></i><i class="fa fa-fw fa-ellipsis-h sm:hidden inline"></i></x-text-button>
+               <x-text-button><i class="icon-ellipsis-vertical hidden sm:inline"></i><i class="icon-ellipsis sm:hidden inline"></i></x-text-button>
             </x-slot>
             <x-slot name="content">
                <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'edit-qty-limit'); $wire.$dispatch('edit-qty-limit');">

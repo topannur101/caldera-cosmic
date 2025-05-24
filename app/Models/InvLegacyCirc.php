@@ -122,11 +122,11 @@ class InvLegacyCirc extends Model
     public function getDirIcon()
     {
         if ($this->qty < 0) {
-            return 'fa-minus';
+            return 'icon-minus';
         } elseif ($this->qty > 0) {
-            return 'fa-plus';
+            return 'icon-plus';
         } else {
-            return 'fa-code-commit';
+            return 'icon-git-commit-horizontal';
         }
     }
 
@@ -134,13 +134,13 @@ class InvLegacyCirc extends Model
     {
         switch ($this->status) {
             case 0:
-                return 'fa-hourglass';
+                return 'icon-hourglass';
                 break;
             case 1:
-                return 'fa-thumbs-up';
+                return 'icon-thumbs-up';
                 break;
             case 2:
-                return 'fa-thumbs-down';
+                return 'icon-thumbs-down';
                 break;
         }
     }

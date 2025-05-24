@@ -21,7 +21,7 @@ new #[Layout('layouts.app')] class extends Component {};
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-fw fa-user-lock"></i></div>
+                            <div class="m-auto"><i class="icon-user-lock"></i></div>
                         </div>
                     </div>
                     <div class="grow truncate py-4">
@@ -38,7 +38,7 @@ new #[Layout('layouts.app')] class extends Component {};
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
-                            <div class="m-auto"><i class="fa fa-fw fa-tablet"></i></div>
+                            <div class="m-auto"><i class="icon-tablet"></i></div>
                         </div>
                     </div>
                     <div class="grow truncate py-4">

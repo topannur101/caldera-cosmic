@@ -18,7 +18,7 @@ class Notification extends Component
     public function __construct($notification, public string $presentation = 'dropdown')
     {
         $this->notification   = $notification;
-        $this->icon           = $notification['data']['icon'] ?? 'fa-solid fa-bell';
+        $this->icon           = $notification['data']['icon'] ?? 'icon-bell';
         $this->user           = User::find($notification['data']['user_id'] ?? null);
         $this->content        = $notification['data']['content'];
         $this->url            = $notification['data']['url'] . (parse_url($notification['data']['url'], PHP_URL_QUERY) ? '&' : '?') . 'notif_id=' . $notification->id;

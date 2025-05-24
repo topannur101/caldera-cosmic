@@ -57,9 +57,9 @@ class InsStcDSum extends Model
     {
         switch ($this->integrity) {
             case 'stable':
-                return '<i class="fa fa-check-circle me-2 text-green-500"></i>' . __('SV cocok');
+                return '<i class="icon-circle-check me-2 text-green-500"></i>' . __('SV cocok');
             case 'modified':
-                return '<i class="fa fa-exclamation-circle me-2 text-yellow-500"></i>' . __('SV berubah');
+                return '<i class="icon-circle-alert me-2 text-yellow-500"></i>' . __('SV berubah');
             case 'none':
                 return __('Tak ada pembanding');
             default:
@@ -84,9 +84,9 @@ class InsStcDSum extends Model
     {
         switch ($this->adjustment()) {
             case 'full-auto':
-                return '<i class="fa fa-check-circle me-2 text-green-500"></i>' . __('Auto (SV auto)');
+                return '<i class="icon-circle-check me-2 text-green-500"></i>' . __('Auto (SV auto)');
             case 'semi-auto':
-                return '<i class="fa fa-check-circle me-2 text-yellow-500"></i>' . __('Auto (SV manual)');
+                return '<i class="icon-circle-check me-2 text-yellow-500"></i>' . __('Auto (SV manual)');
             case 'manual':
                 return __('Manual');
             default:

@@ -201,11 +201,11 @@ new class extends Component {
                     @foreach($files as $file)
                     <div class="mb-1">{{ $file->getClientOriginalName() }}</div>
                     @endforeach
-                    <x-text-button type="button" wire:click="resetFiles" class="mt-3"><i class="fa fa-times mr-2"></i>{{ __('Buang lampiran') }}</x-text-button>
+                    <x-text-button type="button" wire:click="resetFiles" class="mt-3"><i class="icon-x mr-2"></i>{{ __('Buang lampiran') }}</x-text-button>
                 </div>
                 @else
                 <div class="text-sm">
-                    <x-text-button type="button" x-on:click="$refs.upload.click()"><i class="fa fa-paperclip mr-2"></i>{{ __('Lampirkan') }}</x-text-button>
+                    <x-text-button type="button" x-on:click="$refs.upload.click()"><i class="icon-paperclip mr-2"></i>{{ __('Lampirkan') }}</x-text-button>
                     <input x-ref="upload" type="file" wire:model="files" hidden multiple />
                 </div>
                 @endif

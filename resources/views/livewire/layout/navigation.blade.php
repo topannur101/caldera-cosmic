@@ -96,7 +96,7 @@ new class extends Component {
                     </x-nav-link>
                     @auth
                     <x-nav-link :href="route('caldy')" :active="request()->routeIs('caldy*')" wire:navigate>
-                        <i class="fa fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>
+                        <i class="icon-sparkles text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>
                     </x-nav-link>
                     @endauth
                 </div>
@@ -108,7 +108,7 @@ new class extends Component {
                     <x-slot name="trigger">
                         <button wire:click="ackNotif" x-on:click="document.getElementById('cal-notif-counter')?.remove()"
                             class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-neutral-500 dark:text-neutral-400 bg-white dark:bg-neutral-800 hover:text-neutral-700 dark:hover:text-neutral-300 focus:outline-none transition ease-in-out duration-150">
-                            <i class="fa fa-bell"></i>
+                            <i class="icon-bell"></i>
                             @if($unreadCount && ($ackCount !== $unreadCount))
                                 <x-pill id="cal-notif-counter" color="red" class="ml-2">{{ $unreadCount }}</x-pill>
                             @endif
@@ -186,7 +186,7 @@ new class extends Component {
                             <!-- Authentication -->
                             <button wire:click="logout" class="w-full text-start">
                                 <x-dropdown-link>
-                                    <i class="fa fa-power-off me-2"></i>{{ __('Keluar') }}
+                                    <i class="icon-power me-2"></i>{{ __('Keluar') }}
                                 </x-dropdown-link>
                             </button>
                         </x-slot>
@@ -237,7 +237,7 @@ new class extends Component {
             </x-responsive-nav-link>
             @auth
             <x-responsive-nav-link :href="route('caldy')" :active="request()->routeIs('caldy*')" wire:navigate>
-                <i class="fa fa-fw me-2 fa-splotch text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>{{ __('Caldy AI') }}
+                <i class="me-2 icon-sparkles text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>{{ __('Caldy AI') }}
             </x-responsive-nav-link>
             @endauth
         </div>
@@ -266,26 +266,26 @@ new class extends Component {
                 </div>
                 <div class="mt-3 space-y-1">
                     <x-responsive-nav-link :href="route('account')" :active="request()->routeIs('account*')" wire:navigate>
-                        <i class="fa fa-fw fa-user-pen me-2"></i>{{ __('Akun') }}
+                        <i class="fa-user-pen me-2"></i>{{ __('Akun') }}
                     </x-responsive-nav-link>
                     
                     @if($user['id'] == 1)
                         <x-responsive-nav-link :href="route('admin')" :active="request()->routeIs('admin*')" wire:navigate>
-                            <i class="fa fa-fw fa-cog me-2"></i>{{ __('Administrasi') }}
+                            <i class="fa-cog me-2"></i>{{ __('Administrasi') }}
                         </x-responsive-nav-link>
                     @endif
 
                     <!-- Authentication -->
                     <button wire:click="logout" class="w-full text-start">
                         <x-responsive-nav-link>
-                            <i class="fa fa-fw fa-power-off me-2"></i>{{ __('Keluar') }}
+                            <i class="icon-power me-2"></i>{{ __('Keluar') }}
                         </x-responsive-nav-link>
                     </button>
                 </div>
             @else
                 <div class="mb-2 px-4"><livewire:layout.navigation-lang-set :route="url()->current()" /></div>
                 <x-responsive-nav-link :href="route('login')" wire:navigate>
-                    <i class="fa fa-right-to-bracket mr-2"></i>{{ __('Masuk') }}
+                    <i class="icon-login mr-2"></i>{{ __('Masuk') }}
                 </x-responsive-nav-link>
             @endif
         </div>

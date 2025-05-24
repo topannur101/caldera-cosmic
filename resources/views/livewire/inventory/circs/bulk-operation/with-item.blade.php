@@ -328,10 +328,10 @@ class extends Component
             <div class="p-6 space-y-4 text-sm">
                <div class="flex justify-between items-start">
                   <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                     <i class="fa fa-exclamation-triangle mr-2 text-yellow-600"></i>{{ __('Teralu banyak') }}
+                     <i class="icon-triangle-alert mr-2 text-yellow-600"></i>{{ __('Teralu banyak') }}
                   </h2>
                   <x-text-button type="button" x-on:click="$dispatch('close')">
-                     <i class="fa fa-times"></i>
+                     <i class="icon-x"></i>
                   </x-text-button>
                </div>
                <div>
@@ -348,7 +348,7 @@ class extends Component
                   <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Ringkasan') }}
                   </h2>
                   <x-text-button type="button" x-on:click="$dispatch('close')">
-                     <i class="fa fa-times"></i>
+                     <i class="icon-x"></i>
                   </x-text-button>
                </div>
                @if(count($result['circs']))
@@ -371,7 +371,7 @@ class extends Component
                   @endif
                   @if($result['failure'])
                   <div class="p-4 text-xs text-neutral-800 dark:text-neutral-400 rounded-lg bg-neutral-200 dark:bg-neutral-900">
-                     <i class="fa fa-info-circle me-2"></i>{{ __('Alasan mengapa gagal dapat dilihat pada 3 kolom terakhir (Tindakan, Status, dan Pesan) pada CSV yang terunduh.') }}
+                     <i class="fa-info-circle me-2"></i>{{ __('Alasan mengapa gagal dapat dilihat pada 3 kolom terakhir (Tindakan, Status, dan Pesan) pada CSV yang terunduh.') }}
                   </div>
                   @endif
                   <div class="flex items-center justify-end">
@@ -386,17 +386,17 @@ class extends Component
                      <div class="btn-group w-full">
                         <x-radio-button wire:model="type" grow value="deposit" name="type" id="type-deposit">
                               <div class="text-center my-auto">
-                                 <i class="fa fa-fw fa-plus text-green-500 text-lg"></i>
+                                 <i class="icon-plus text-green-500 text-lg"></i>
                               </div>
                         </x-radio-button>
                         <x-radio-button wire:model="type" grow value="capture" name="type" id="type-capture">
                               <div class="text-center my-auto">
-                                 <i class="fa fa-fw fa-code-commit text-yellow-600 text-lg"></i>
+                                 <i class="icon-git-commit-horizontal text-yellow-600 text-lg"></i>
                               </div>
                         </x-radio-button>
                         <x-radio-button wire:model="type" grow value="withdrawal" name="type" id="type-withdrawal">
                               <div class="text-center my-auto">
-                                 <i class="fa fa-fw fa-minus text-red-500 text-lg"></i>
+                                 <i class="icon-minus text-red-500 text-lg"></i>
                               </div>
                         </x-radio-button>
                      </div>
@@ -414,7 +414,7 @@ class extends Component
                      <x-input-error :messages="$errors->get('area_id')" class="mt-2" />
                   </div>
                   <div class="flex items-center justify-end">
-                     <x-secondary-button type="button" wire:click="apply(true)">{{ __('Lanjut') }}<i class="fa fa-chevron-right ml-2"></i></x-secondary-button>
+                     <x-secondary-button type="button" wire:click="apply(true)">{{ __('Lanjut') }}<i class="icon-chevron-right ml-2"></i></x-secondary-button>
                   </div>
                @endif
 
@@ -429,13 +429,13 @@ class extends Component
                      {{ __('Panduan') }}
                   </h2>
                   <x-text-button type="button" x-on:click="$dispatch('close')">
-                     <i class="fa fa-times"></i>
+                     <i class="icon-x"></i>
                   </x-text-button>
                </div>
 
                <div class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
-                     <i class="fa fa-clipboard text-neutral-500"></i>
+                     <i class="fa-clipboard text-neutral-500"></i>
                      <h2 class="font-bold text-xl">{{ __('Salin dan tempel') }}</h2>
                   </div>
                   <p class="leading-relaxed">
@@ -455,7 +455,7 @@ class extends Component
 
                <div class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
-                     <i class="fas fa-arrow-right-arrow-left text-neutral-500"></i>
+                     <i class="fas icon-arrow-right-left text-neutral-500"></i>
                      <h2 class="font-bold text-xl">{{ __('Pilih tipe sirkulasi dan area') }}</h2>
                   </div>
                   <p class="leading-relaxed">
@@ -475,19 +475,19 @@ class extends Component
       x-data="editorData()"
       x-init="editorInit()">
          <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa fa-fw fa-cube mr-3"></i>{{ __('Dengan barang baru') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="icon-box mr-3"></i>{{ __('Dengan barang baru') }}</h1>
             <div class="flex gap-x-2">
                <div class="px-2 my-auto">
                   <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
                </div>
                <div class="btn-group">
-                  <x-secondary-button type="button" x-on:click="editorDownload"><i class="fa fa-fw fa-download"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="editorReset"><i class="fa fa-fw fa-undo"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorDownload"><i class="icon-download"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorReset"><i class="fa-undo"></i></x-secondary-button>
                </div>
                <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')">{{ __('Panduan') }}</x-secondary-button>
                <x-secondary-button type="button" x-on:click="editorApply">
                   <div class="relative">
-                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="fa fa-check mr-2"></i>{{ __('Terapkan') }}</span>
+                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="fa-check mr-2"></i>{{ __('Terapkan') }}</span>
                      <x-spinner wire:loading.class.remove="hidden" wire:target="apply" class="hidden sm mono"></x-spinner>                
                   </div>                
                </x-secondary-button>
@@ -499,7 +499,7 @@ class extends Component
    @else
 
       <div class="text-center w-72 py-20 mx-auto">
-         <i class="fa fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
+         <i class="fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
          <div class="text-neutral-500">{{ __('Kamu tidak memiliki wewenang untuk membuat sirkulasi di area manapun.') }}</div>
       </div>
    @endif

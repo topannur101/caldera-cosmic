@@ -144,8 +144,8 @@ new #[Layout('layouts.app')] class extends Component {
             @if (!$start_at || !$end_at)
                 <div wire:key="no-range" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-calendar relative"><i
-                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                        <i class="icon-calendar relative"><i
+                                class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih rentang tanggal') }}
                     </div>
@@ -153,7 +153,7 @@ new #[Layout('layouts.app')] class extends Component {
             @else
                 <div wire:key="no-match" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-ghost"></i>
+                        <i class="icon-ghost"></i>
                     </div>
                     <div class="text-center text-neutral-500 dark:text-neutral-600">{{ __('Tidak ada yang cocok') }}
                     </div>

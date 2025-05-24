@@ -18,7 +18,7 @@
                     {{ __('Keterangan') }}
                 </h2>
                 <x-text-button type="button" x-on:click="$dispatch('close')">
-                    <i class="fa fa-times"></i>
+                    <i class="icon-x"></i>
                 </x-text-button>
             </div>
             <div class="grid grid-cols-1 gap-y-6 gap-x-3 mt-6">        

@@ -74,7 +74,7 @@ new class extends Component {
                {{ __('Edit batas qty') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i
-                  class="fa fa-times"></i></x-text-button>
+                  class="icon-x"></i></x-text-button>
       </div>
       <div class="mb-6">
          <div class="grid grid-cols1 sm:grid-cols-2 mt-6 gap-y-6 gap-x-3">

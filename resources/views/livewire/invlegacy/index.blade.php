@@ -18,17 +18,17 @@
 
                 <ul class="space-y-4 text-left text-neutral-500 dark:text-neutral-400">
                     <li class="flex items-center space-x-3 rtl:space-x-reverse">
-                        <i class="fa fa-search fa-fw me-2"></i>
+                        <i class="icon-search me-2"></i>
                         <span><span
                                 class="font-semibold text-neutral-900 dark:text-white">{{ __('Cari') }}</span>{{ ' ' . __('untuk menjelajah barang dan melakukan sirkulasi barang.') }}</span>
                     </li>
                     <li class="flex items-center space-x-3 rtl:space-x-reverse">
-                        <i class="fa fa-arrow-right-arrow-left fa-fw me-2"></i>
+                        <i class="icon-arrow-right-left me-2"></i>
                         <span><span
                                 class="font-semibold text-neutral-900 dark:text-white">{{ __('Sirkulasi') }}</span>{{ ' ' . __('untuk melihat sirkulasi barang yang telah dibuat beserta statusnya.') }}</span>
                     </li>
                     <li class="flex items-center space-x-3 rtl:space-x-reverse">
-                        <i class="fa fa-ellipsis-h fa-fw me-2"></i>
+                        <i class="icon-ellipsis me-2"></i>
                         <span><span class="font-semibold text-neutral-900 dark:text-white">{{ __('Kelola') }}</span>
                             {{ ' ' . __('untuk mengelola barang beserta propertinya dan lainnya.') }}</span>
                     </li>

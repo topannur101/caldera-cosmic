@@ -492,7 +492,7 @@ new class extends Component
       <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
          {{ $batch['code'] }}
       </h2>
-      <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+      <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
    </div>
    <div class="grid grid-cols-6">
       <div class="col-span-2 px-6 bg-caldy-500 bg-opacity-10 rounded-r-xl">
@@ -541,9 +541,9 @@ new class extends Component
             <div>
                <input wire:model="file" type="file" class="hidden" x-cloak x-ref="file" />
                <x-secondary-button x-show="!machine_id" disabled type="button" id="test-file" class="w-full h-full justify-center"><i
-               class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
+               class="icon-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
                <x-secondary-button x-show="machine_id" type="button" id="test-file" class="w-full h-full justify-center" x-on:click="$refs.file.click()" ><i
-               class="fa fa-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
+               class="icon-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
             </div>
          </div>
          <div class="my-6">
@@ -675,7 +675,7 @@ new class extends Component
    <div class="p-6 flex justify-between items-center gap-3">
       <x-dropdown align="left" width="48">
          <x-slot name="trigger">
-            <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+            <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>
          </x-slot>
          <x-slot name="content">
             <x-dropdown-link href="#" wire:click.prevent="customResetBatch">

@@ -77,19 +77,19 @@ class extends Component
       </div>
       <div>
          <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="fa fa-fw fa-images mr-3"></i>{{ __('Tarik foto') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="icon-images mr-3"></i>{{ __('Tarik foto') }}</h1>
             <div class="flex gap-x-2">
                <div class="px-2 my-auto">
                   <span>99</span><span>{{ ' ' . __('foto ditemukan') }}</span>
                </div>
                <div class="btn-group">
-                  <x-secondary-button type="button" x-on:click="editorDownload"><i class="fa fa-fw fa-download"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="fa fa-fw fa-undo"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')"><i class="far fa-fw fa-question-circle"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorDownload"><i class="icon-download"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="fa-undo"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')"><i class="far icon-circle-help"></i></x-secondary-button>
                </div>
                <x-secondary-button type="button" wire:click="begin">
                   <div class="relative">
-                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="fa fa-check mr-2"></i>{{ __('Terapkan') }}</span>
+                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="fa-check mr-2"></i>{{ __('Terapkan') }}</span>
                      <x-spinner wire:loading.class.remove="hidden" wire:target="apply" class="hidden sm mono"></x-spinner>                
                   </div>                
                </x-secondary-button>
@@ -109,7 +109,7 @@ class extends Component
 
    @else
       <div class="text-center w-72 py-20 mx-auto">
-         <i class="fa fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
+         <i class="fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
          <div class="text-neutral-500">{{ __('Kamu tidak memiliki wewenang untuk mengelola barang di area manapun.') }}</div>
       </div>
 

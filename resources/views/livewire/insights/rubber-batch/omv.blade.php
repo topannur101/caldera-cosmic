@@ -197,8 +197,8 @@ new class extends Component {
         </div>
         <div wire:key="amps-none" class="{{ $amps_exists ? 'hidden' : '' }} py-6 rounded-lg my-6">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                <i class="fa fa-bolt-lightning relative"><i
-                        class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                <i class="icon-zap relative"><i
+                        class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
             </div>
             <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tidak ada data arus listrik') }}</div>
         </div>
@@ -221,7 +221,7 @@ new class extends Component {
                             wire:click="capturesNavigate('prev')"
                             class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex justify-center items-center bg-black/50 rounded-full text-white 
                                 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
-                            <i class="fa fa-fw fa-chevron-left"></i>
+                            <i class="icon-chevron-left"></i>
                         </button>
                     @endif
 
@@ -231,7 +231,7 @@ new class extends Component {
                             wire:click="capturesNavigate('next')"
                             class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex justify-center items-center bg-black/50 rounded-full text-white 
                                 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
-                            <i class="fa fa-fw fa-chevron-right"></i>
+                            <i class="icon-chevron-right"></i>
                         </button>
                     @endif
 
@@ -250,9 +250,9 @@ new class extends Component {
             <div>
                 <x-secondary-button type="button" wire:click="capturesNavigate('toggle')">
                     @if($capture_n)
-                        <i class="fa fa-fw fa-line-chart"></i>
+                        <i class="icon-chart-line"></i>
                     @else
-                        <i class="fa fa-fw fa-images"></i>
+                        <i class="icon-images"></i>
                     @endif
                 </x-secondary-button>
             </div>                

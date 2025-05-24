@@ -148,9 +148,9 @@ new class extends Component
          </div>
          <div class="btn-group">
             <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'inv-item-circs-chart')"><i
-               class="fa fa-chart-line"></i></x-secondary-button>
+               class="fa-chart-line"></i></x-secondary-button>
             <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'inv-item-circs-download')"><i
-               class="fa fa-download"></i></x-secondary-button>
+               class="icon-download"></i></x-secondary-button>
          </div>
       </div> -->
    </div>  

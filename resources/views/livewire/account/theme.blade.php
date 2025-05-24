@@ -274,7 +274,7 @@ new #[Layout('layouts.app')] class extends Component {
             <div>
                 <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
                     <x-link wire:navigate href="{{ route('account') }}" class="inline-block py-6"><i
-                            class="fa fa-arrow-left"></i></x-link><span class="ml-4">{{ __('Tema') }}</span>
+                            class="icon-arrow-left"></i></x-link><span class="ml-4">{{ __('Tema') }}</span>
                 </h2>
             </div>
         </div>
@@ -305,7 +305,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="bg-auto"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <p><i class="text-neutral-500 fa fa-circle-half-stroke"></i></p>
+                                    <p><i class="text-neutral-500 icon-sun-moon"></i></p>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd"
@@ -322,7 +322,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="bg-light"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <p><i class="text-neutral-500 fa fa-sun"></i></p>
+                                    <p><i class="text-neutral-500 icon-sun"></i></p>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd"
@@ -339,7 +339,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="bg-dark"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <p><i class="text-neutral-500 fa fa-moon"></i></p>
+                                    <p><i class="text-neutral-500 icon-moon"></i></p>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd"
@@ -363,7 +363,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="accent-purple"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <div style="color: rgb(127, 99, 204);" class="flex gap-1"><i class="fa fa-square"></i>
+                                    <div style="color: rgb(127, 99, 204);" class="flex gap-1"><i class="icon-square"></i>
                                     </div>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -381,7 +381,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="accent-green"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <div style="color: rgb(90, 160, 85);" class="flex gap-1"><i class="fa fa-square"></i>
+                                    <div style="color: rgb(90, 160, 85);" class="flex gap-1"><i class="icon-square"></i>
                                     </div>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -399,7 +399,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="accent-pink"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <div style="color: rgb(255, 105, 134);" class="flex gap-1"><i class="fa fa-square"></i>
+                                    <div style="color: rgb(255, 105, 134);" class="flex gap-1"><i class="icon-square"></i>
                                     </div>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -417,7 +417,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="accent-blue"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <div style="color: rgb(59, 138, 208);" class="flex gap-1"><i class="fa fa-square"></i>
+                                    <div style="color: rgb(59, 138, 208);" class="flex gap-1"><i class="icon-square"></i>
                                     </div>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -435,7 +435,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="accent-teal"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <div style="color: rgb(22, 146, 146);" class="flex gap-1"><i class="fa fa-square"></i>
+                                    <div style="color: rgb(22, 146, 146);" class="flex gap-1"><i class="icon-square"></i>
                                     </div>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -453,7 +453,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="accent-orange"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <div style="color: rgb(255, 121, 16);" class="flex gap-1"><i class="fa fa-square"></i>
+                                    <div style="color: rgb(255, 121, 16);" class="flex gap-1"><i class="icon-square"></i>
                                     </div>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -471,7 +471,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="accent-grey"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <div style="color: rgb(122, 122, 122);" class="flex gap-1"><i class="fa fa-square"></i>
+                                    <div style="color: rgb(122, 122, 122);" class="flex gap-1"><i class="icon-square"></i>
                                     </div>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -489,7 +489,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="accent-brown"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <div style="color: rgb(181, 99, 0);" class="flex gap-1"><i class="fa fa-square"></i>
+                                    <div style="color: rgb(181, 99, 0);" class="flex gap-1"><i class="icon-square"></i>
                                     </div>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -507,7 +507,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <label for="accent-yellow"
                                 class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                                 <div class="flex items-center justify-between text-2xl">
-                                    <div style="color: rgb(255, 193, 36);" class="flex gap-1"><i class="fa fa-square"></i>
+                                    <div style="color: rgb(255, 193, 36);" class="flex gap-1"><i class="icon-square"></i>
                                     </div>
                                     <svg class="hidden h-6 w-6 text-caldy-600" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -526,7 +526,7 @@ new #[Layout('layouts.app')] class extends Component {
             @case('patterned')
             <div class="p-6">
                 <h2 class="text-lg font-medium mb-3">
-                    <i class="text-neutral-500 fa fa-sun mr-2"></i>{{ __('Corak cerah') }}
+                    <i class="text-neutral-500 icon-sun mr-2"></i>{{ __('Corak cerah') }}
                 </h2>
                 <fieldset class="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4">
                     <div>
@@ -535,7 +535,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-anggun" style="background-image:url('/preset/anggun-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div class="flex gap-1 text-pink-600"><i class="fa fa-square"></i>
+                                <div class="flex gap-1 text-pink-600"><i class="icon-square"></i>
                                 </div>
                                 <svg class="hidden h-6 w-6 text-pink-600" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -553,7 +553,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-manis" style="background-image:url('/preset/manis-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div class="flex gap-1 text-orange-600"><i class="fa fa-square"></i>
+                                <div class="flex gap-1 text-orange-600"><i class="icon-square"></i>
                                 </div>
                                 <svg class="hidden h-6 w-6 text-orange-600" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -571,7 +571,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-syahdu" style="background-image:url('/preset/syahdu-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div class="flex gap-1 text-green-600"><i class="fa fa-square"></i>
+                                <div class="flex gap-1 text-green-600"><i class="icon-square"></i>
                                 </div>
                                 <svg class="hidden h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -589,7 +589,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-lembut" style="background-image:url('/preset/lembut-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div style="color: rgb(181, 99, 0);" class="flex gap-1"><i class="fa fa-square"></i>
+                                <div style="color: rgb(181, 99, 0);" class="flex gap-1"><i class="icon-square"></i>
                                 </div>
                                 <svg style="color: rgb(181, 99, 0);" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -607,7 +607,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-bising" style="background-image:url('/preset/bising-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div style="color: rgb(122, 122, 122);" class="flex gap-1"><i class="fa fa-square"></i>
+                                <div style="color: rgb(122, 122, 122);" class="flex gap-1"><i class="icon-square"></i>
                                 </div>
                                 <svg style="color: rgb(122, 122, 122);" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -625,7 +625,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-langit" style="background-image:url('/preset/langit-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div class="flex gap-1 text-blue-600"><i class="fa fa-square"></i>
+                                <div class="flex gap-1 text-blue-600"><i class="icon-square"></i>
                                 </div>
                                 <svg class="hidden h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -641,7 +641,7 @@ new #[Layout('layouts.app')] class extends Component {
             </div>     
             <div class="p-6 mb-6">
                 <h2 class="text-lg font-medium mb-3">
-                    <i class="text-neutral-500 fa fa-moon mr-2"></i>{{ __('Corak gelap') }}
+                    <i class="text-neutral-500 icon-moon mr-2"></i>{{ __('Corak gelap') }}
                 </h2>
                 <fieldset class="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4">
                     <div>
@@ -650,7 +650,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-garang" style="background-image:url('/preset/garang-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div class="flex gap-1 text-yellow-600"><i class="fa fa-square"></i>
+                                <div class="flex gap-1 text-yellow-600"><i class="icon-square"></i>
                                 </div>
                                 <svg class="hidden h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -668,7 +668,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-bobotoh" style="background-image:url('/preset/bobotoh-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div class="flex gap-1 text-blue-600"><i class="fa fa-square"></i>
+                                <div class="flex gap-1 text-blue-600"><i class="icon-square"></i>
                                 </div>
                                 <svg class="hidden h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -686,7 +686,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-melankolis" style="background-image:url('/preset/melankolis-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div class="flex gap-1 text-teal-600"><i class="fa fa-square"></i>
+                                <div class="flex gap-1 text-teal-600"><i class="icon-square"></i>
                                 </div>
                                 <svg class="hidden h-6 w-6 text-teal-600" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -704,7 +704,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-kusut" style="background-image:url('/preset/kusut-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div style="color: rgb(90, 160, 85);" class="flex gap-1"><i class="fa fa-square"></i>
+                                <div style="color: rgb(90, 160, 85);" class="flex gap-1"><i class="icon-square"></i>
                                 </div>
                                 <svg style="color: rgb(90, 160, 85);" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -722,7 +722,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-asimilasi" style="background-image:url('/preset/asimilasi-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div style="color: rgb(255, 105, 134);" class="flex gap-1"><i class="fa fa-square"></i>
+                                <div style="color: rgb(255, 105, 134);" class="flex gap-1"><i class="icon-square"></i>
                                 </div>
                                 <svg style="color: rgb(255, 105, 134);" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -740,7 +740,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <label for="preset-spektrum" style="background-image:url('/preset/spektrum-thumbnail.jpg');background-size:cover"
                             class="block h-full cursor-pointer rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 peer-checked:border-caldy-500 peer-checked:ring-1 peer-checked:ring-caldy-500">
                             <div class="flex items-center justify-between text-2xl">
-                                <div style="color: rgb(127, 99, 204);" class="flex gap-1"><i class="fa fa-square"></i>
+                                <div style="color: rgb(127, 99, 204);" class="flex gap-1"><i class="icon-square"></i>
                                 </div>
                                 <svg style="color: rgb(127, 99, 204);" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
@@ -764,7 +764,7 @@ new #[Layout('layouts.app')] class extends Component {
             <fieldset>
                 <x-toggle wire:model.live="pref_mblur" :checked="$pref_mblur ? true : false" >{{ __('Efek blur pada latar dialog') }}<x-text-button type="button"
                         class="ml-2" x-data="" x-on:click="$dispatch('open-modal', 'mblur-help')"><i
-                            class="far fa-question-circle"></i></x-text-button>
+                            class="far icon-circle-help"></i></x-text-button>
                 </x-toggle>
                 <x-modal name="mblur-help">
                     <div class="p-6">

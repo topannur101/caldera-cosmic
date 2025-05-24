@@ -65,7 +65,7 @@ new class extends Component
             {{ __('Yakin?') }}
          </h2>
          <x-text-button type="button" x-on:click="$dispatch('close')">
-            <i class="fa fa-times"></i>
+            <i class="icon-x"></i>
          </x-text-button>
       </div>
       <div class="my-6">
@@ -83,7 +83,7 @@ new class extends Component
             {{ __('Tidak dapat dihapus') }}
          </h2>
          <x-text-button type="button" x-on:click="$dispatch('close')">
-            <i class="fa fa-times"></i>
+            <i class="icon-x"></i>
          </x-text-button>
       </div>
       <div class="my-6">

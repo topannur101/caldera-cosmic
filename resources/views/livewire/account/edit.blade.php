@@ -53,7 +53,7 @@ class extends Component
             <div>
                 <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
                     <x-link wire:navigate href="{{ route('account') }}" class="inline-block py-6"><i
-                            class="fa fa-arrow-left"></i></x-link><span class="ml-4">{{ __('Info akun') }}</span>
+                            class="icon-arrow-left"></i></x-link><span class="ml-4">{{ __('Info akun') }}</span>
                 </h2>
             </div>
         </div>

@@ -107,7 +107,7 @@ new class extends Component {
 <div wire:key="index-groups-container" class="flex items-stretch whitespace-nowrap text-nowrap text-sm min-h-20">
     <div class="p-1">
         <x-text-button type="button" x-data="" class="p-3 h-full text-lg"
-            x-on:click.prevent="$dispatch('open-modal', 'group-set')"><i class="fa fa-plus"></i></x-text-button>
+            x-on:click.prevent="$dispatch('open-modal', 'group-set')"><i class="icon-plus"></i></x-text-button>
     </div>
     <x-modal name="group-set">
         <form wire:submit="applyGroup" class="p-6">
@@ -116,7 +116,7 @@ new class extends Component {
                     {{ __('Grup baru') }}
                 </h2>
                 <x-text-button type="button" x-on:click="$dispatch('close')"><i
-                        class="fa fa-times"></i></x-text-button>
+                        class="icon-x"></i></x-text-button>
             </div>
             <div class="mb-6">
                 <div class="grid grid-cols1 sm:grid-cols-2 mt-6 gap-y-6 gap-x-3">

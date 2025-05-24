@@ -27,7 +27,7 @@ class extends Component {
       <div class="flex justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div>  
               <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
-                  <x-link href="{{ route('invlegacy.manage.index', ['view' => 'administration']) }}" class="inline-block py-6" wire:navigate><i class="fa fa-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Mata uang') }}</span></span>
+                  <x-link href="{{ route('invlegacy.manage.index', ['view' => 'administration']) }}" class="inline-block py-6" wire:navigate><i class="icon-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Mata uang') }}</span></span>
               </h2>
           </div>
       </div>
@@ -60,7 +60,7 @@ class extends Component {
                           <td>
                               {{ $curr->name }}
                               @if ($curr->id == 1)
-                                  <span><i class="fa fa-star text-sm ml-2"></i></span>
+                                  <span><i class="fa-star text-sm ml-2"></i></span>
                               @endif
                           </td>
                           <td>

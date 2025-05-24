@@ -1,6 +1,6 @@
 import './bootstrap';
 import axios from 'axios';
-import {TabulatorFull as Tabulator} from 'tabulator-tables';
+import { TabulatorFull as Tabulator } from 'tabulator-tables';
 
 function calderaSetTheme()
 {

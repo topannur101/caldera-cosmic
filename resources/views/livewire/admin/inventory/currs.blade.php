@@ -55,9 +55,9 @@ new #[Layout('layouts.app')] class extends Component {
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
                 @can('superuser')
                     <x-secondary-button type="button" 
-                        x-on:click.prevent="$dispatch('open-modal', 'curr-create')"><i class="fa fa-plus fa-fw"></i></x-secondary-button>
+                        x-on:click.prevent="$dispatch('open-modal', 'curr-create')"><i class="icon-plus"></i></x-secondary-button>
                 @endcan
-                <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open"><i class="fa fa-search fa-fw"></i></x-secondary-button>
+                <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open"><i class="icon-search"></i></x-secondary-button>
                 <div class="w-40" x-show="open" x-cloak>
                     <x-text-input-search wire:model.live="q" id="inv-q" x-ref="search"
                         placeholder="{{ __('CARI') }}"></x-text-input-search>
@@ -77,7 +77,7 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="mt-6 relative text-neutral h-32 sm:rounded-lg overflow-hidden mb-8 border border-dashed border-neutral-300 dark:border-neutral-500">
                 <div class="absolute top-0 left-0 flex h-full items-center px-4 lg:px-8 text-neutral-500">
                     <div>
-                        <div class="uppercase font-bold mb-2"><i class="fa fa-exclamation-triangle me-2"></i>{{ __('Peringatan') }}</div>
+                        <div class="uppercase font-bold mb-2"><i class="icon-triangle-alert me-2"></i>{{ __('Peringatan') }}</div>
                         <div>{{ __('Nama mata uang yang telah dibuat tidak dapat diganti.') }}</div>
                     </div>
                 </div>

@@ -37,7 +37,7 @@
       class="static sm:relative z-10">
 
    <button x-ref="popoverButton" @click="popoverOpen=!popoverOpen" :class="popoverOpen ? 'outline-none ring-2 ring-caldy-500 ring-offset-2 dark:ring-offset-neutral-800' : ''" class="relative rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition ease-in-out duration-150">
-      <i class="fa fa-fw fa-map-marker-alt me-2"></i><span x-text="loc_name ? loc_name : '{{ __('Tak ada lokasi') }}'"></span>
+      <i class="icon-map-pin me-2"></i><span x-text="loc_name ? loc_name : '{{ __('Tak ada lokasi') }}'"></span>
    </button>
 
    <div x-ref="popover"

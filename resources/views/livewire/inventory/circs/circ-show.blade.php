@@ -214,7 +214,7 @@ new class extends Component
    <div class="p-6 flex justify-between">
       <x-text-button type="button" x-show="is_editing" x-on:click="is_editing = !is_editing">
          <div class="flex gap-x-3 items-center">
-            <i class="fa fa-arrow-left"></i>
+            <i class="icon-arrow-left"></i>
             <h2 class="text-lg font-medium">
                {{ __('Edit') }}
             </h2>
@@ -222,11 +222,11 @@ new class extends Component
       </x-text-button>
       <div x-show="!is_editing" class="flex items-center text-xl">
          <span class="{{ $circ['color'] }}">
-            <i class="fa fa-fw {{ $circ['icon'] }} mr-1"></i>{{ $circ['qty_relative'] . ' ' . $circ['inv_stock']['uom'] }}
+            <i class="{{ $circ['icon'] }} mr-1"></i>{{ $circ['qty_relative'] . ' ' . $circ['inv_stock']['uom'] }}
          </span>
       </div>
       <div>
-         <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-button>
+         <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-button>
       </div>
    </div>
 
@@ -269,7 +269,7 @@ new class extends Component
          <div class="text-xs text-neutral-500">
             <span>{{ $circ['user']['name'] . ' - ' . $circ['user']['emp_id'] }}</span>
             @if($circ['is_delegated'])
-               <span title="Didelegasikan"><i class="fa fa-handshake-angle"></i></span>
+               <span title="Didelegasikan"><i class="icon-handshake"></i></span>
             @endif
          </div>
          <div class="text-wrap">
@@ -283,7 +283,7 @@ new class extends Component
          x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
          <div x-on:click.away="open = false">
             <label for="circ-user" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengguna') }}</label>
-            <x-text-input-icon x-model="userq" icon="fa fa-fw fa-user"
+            <x-text-input-icon x-model="userq" icon="icon-user"
                x-on:change="open = true" x-ref="userq" x-on:focus="open = true"
                id="circ-user" type="text" autocomplete="off"
                placeholder="{{ __('Pengguna') }}" />
@@ -314,7 +314,7 @@ new class extends Component
    
    <div x-show="is_editing" class="px-6 pb-6 flex items-center justify-between">
       <div class="{{ $circ['color'] }} text-sm font-bold uppercase">
-         <i class="fa fa {{ $circ['icon'] }} me-2"></i>{{ $circ['type_friendly'] }}
+         <i class="{{ $circ['icon'] }} me-2"></i>{{ $circ['type_friendly'] }}
       </div>
       <x-primary-button type="button" wire:click="update">{{ __('Perbarui') }}</x-secondary-button>
    </div>
@@ -332,7 +332,7 @@ new class extends Component
                <span class="font-medium">{{ $circ['eval_friendly'] ?? 'Disetujui' }}</span>
             </div>
             <div>
-               <i class="fa fa-fw {{ $circ['eval_icon'] }}"></i>
+               <i class="{{ $circ['eval_icon'] }}"></i>
             </div>
          </div>
       </div>
@@ -369,7 +369,7 @@ new class extends Component
       <div>
          <x-text-button type="button" x-on:click="is_evaluating = !is_evaluating">
             <div class="flex gap-x-3 items-center">
-               <i class="fa fa-arrow-left"></i>
+               <i class="icon-arrow-left"></i>
                <h2 class="text-lg font-medium">
                   {{ __('Evaluasi') }}
                </h2>
@@ -380,11 +380,11 @@ new class extends Component
          <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="evalRemarks">{{ __('Keterangan evaluasi') }}</label>
          <x-text-input wire:model="eval_remarks" id="eval-remarks" autocomplete="eval-remarks" x-ref="evalRemarks" />
       </div>
-      <div class="px-3 text-neutral-500 text-sm text-wrap"><i class="fa fa-exclamation-triangle mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diedit') }}</div>
+      <div class="px-3 text-neutral-500 text-sm text-wrap"><i class="icon-triangle-alert mr-2"></i>{{ __('Sirkulasi yang telah dievaluasi tidak dapat diedit') }}</div>
       <div class="flex justify-end">
          <div class="btn-group">
-            <x-secondary-button type="button" wire:click="evaluate('approve')"><i class="fa fa-thumbs-up mr-2"></i>{{ __('Setujui') }}</x-secondary-button>
-            <x-secondary-button type="button" wire:click="evaluate('reject')" class="h-full"><i class="fa fa-thumbs-down"></i></x-secondary-button>
+            <x-secondary-button type="button" wire:click="evaluate('approve')"><i class="icon-thumbs-up mr-2"></i>{{ __('Setujui') }}</x-secondary-button>
+            <x-secondary-button type="button" wire:click="evaluate('reject')" class="h-full"><i class="icon-thumbs-down"></i></x-secondary-button>
          </div>
       </div>
    </div>
@@ -401,9 +401,9 @@ new class extends Component
       </div>
       <div>
          @if($can_eval)
-            <x-secondary-button type="button" x-on:click="is_evaluating = !is_evaluating; setTimeout(function(){ $refs.evalRemarks.focus()}, 100)"><i class="fa fa-gavel mr-2"></i>{{ __('Evaluasi') }}</x-secondary-button>
+            <x-secondary-button type="button" x-on:click="is_evaluating = !is_evaluating; setTimeout(function(){ $refs.evalRemarks.focus()}, 100)"><i class="fa-gavel mr-2"></i>{{ __('Evaluasi') }}</x-secondary-button>
          @else
-            <x-secondary-button type="button" disabled><i class="fa fa-gavel mr-2"></i>{{ __('Evaluasi') }}</x-secondary-button>
+            <x-secondary-button type="button" disabled><i class="fa-gavel mr-2"></i>{{ __('Evaluasi') }}</x-secondary-button>
          @endif
       </div>
    </div>

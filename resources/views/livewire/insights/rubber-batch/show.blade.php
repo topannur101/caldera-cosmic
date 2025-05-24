@@ -131,7 +131,7 @@ new class extends Component
             @if($view && $batch_id)
             <x-text-button type="button" wire:click="showBatch({{ $batch_id }})">
             <div class="flex gap-x-3 items-center">
-                    <i class="fa fa-arrow-left"></i>
+                    <i class="icon-arrow-left"></i>
                 <h2 class="text-lg uppercase font-medium">
                     {{ $batch['code'] ?: __('Tanpa kode') }}
                 </h2>
@@ -141,7 +141,7 @@ new class extends Component
             <h2 class="text-lg uppercase font-medium">{{ $batch['code'] ?: __('Tanpa kode') }}</h2>
             @endif
 
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         <div>
             @switch($view)

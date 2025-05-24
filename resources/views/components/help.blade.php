@@ -14,5 +14,5 @@
             </div>
       </div>
    </div>                    
-   <div x-ref="content"><i class="far fa-question-circle"></i></div>
+   <div x-ref="content"><i class="far icon-circle-help"></i></div>
 </div>

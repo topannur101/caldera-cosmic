@@ -23,7 +23,7 @@ new class extends Component {
         <div class="flex w-full justify-between">
             <div class="truncate">
                 <div>
-                    <div class="text-4xl text-neutral-400 uppercase m-1"><x-link class="inline-block" href="{{ route('insights.rtc.slideshows')}}"><i class="fa fa-fw fa-chevron-left"></i></x-link>
+                    <div class="text-4xl text-neutral-400 uppercase m-1"><x-link class="inline-block" href="{{ route('insights.rtc.slideshows')}}"><i class="icon-chevron-left"></i></x-link>
                         {{ __('Model') }}</div>
                     <div class="text-6xl truncate font-bold py-3" id="recipe-name">???</div>
                 </div>

@@ -56,7 +56,7 @@
         type="button" 
         x-on:click.prevent="$dispatch('open-modal', 'date-selector')"
         ::class="date_fr && date_to ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'">
-        <i class="fa fa-fw fa-calendar me-3"></i>
+        <i class="icon-calendar me-3"></i>
         <div x-show="!date_fr || !date_to">{{ $isQuery ? __('Tanggal') : __('Tanggal manapun') }}</div>
         <div x-show="date_fr && date_to">
             <div x-text="date_fr"></div>
@@ -67,10 +67,10 @@
         <div class="grid grid-cols-1 gap-y-6 p-6">
             <div class="flex justify-between items-start">
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                    <i class="fa fa-fw fa-calendar me-3"></i>{{ __('Tanggal') }}
+                    <i class="icon-calendar me-3"></i>{{ __('Tanggal') }}
                 </h2>
                 <x-text-button type="button" x-on:click="$dispatch('close')">
-                    <i class="fa fa-times"></i>
+                    <i class="icon-x"></i>
                 </x-text-button>
             </div>
             <div class="grid grid-cols-2 gap-y-6 gap-x-3">        

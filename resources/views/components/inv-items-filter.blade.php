@@ -34,15 +34,15 @@
             }
         }
     }" class="flex items-center px-4">
-    <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'search-filter')" ::class="(filter || aging) ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="fa fa-fw fa-filter me-3"></i><span x-text="(filter || aging) ? filter_name + ' ' + aging_name : '{{ __('Filter') }}'"></span></x-text-button>
+    <x-text-button {{ $attributes->merge(['class' => '']) }} type="button" x-on:click.prevent="$dispatch('open-modal', 'search-filter')" ::class="(filter || aging) ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600'"><i class="icon-funnel me-3"></i><span x-text="(filter || aging) ? filter_name + ' ' + aging_name : '{{ __('Filter') }}'"></span></x-text-button>
     <x-modal name="search-filter" maxWidth="sm">
         <div class="p-6 flex flex-col gap-y-6">
             <div class="flex justify-between items-start">
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                    <i class="fa fa-fw fa-filter me-3"></i>{{ __('Filter tambahan') }}
+                    <i class="icon-funnel me-3"></i>{{ __('Filter tambahan') }}
                 </h2>
                 <x-text-button type="button" x-on:click="$dispatch('close')">
-                    <i class="fa fa-times"></i>
+                    <i class="icon-x"></i>
                 </x-text-button>
             </div>
             <div>

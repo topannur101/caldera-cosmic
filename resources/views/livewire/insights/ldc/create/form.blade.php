@@ -267,7 +267,7 @@ new class extends Component {
             <div class="flex justify-between text-xs uppercase">
                 <div class="text-neutral-500 px-3">{{ Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMMM YYYY, HH:mm') }}</div>
                 <div class="bg-neutral-200 dark:bg-neutral-900 rounded-full px-3 py-1 font-bold" :class="connectionStatusClass">
-                    <i class="fa fa-circle mr-2"></i><span x-text="connectionMessage">{{ __('ldc-worker terputus') }}</span>
+                    <i class="icon-circlemr-2"></i><span x-text="connectionMessage">{{ __('ldc-worker terputus') }}</span>
                 </div>
             </div>
             <div class="grid grid-cols-3 gap-3">
@@ -315,7 +315,7 @@ new class extends Component {
                             <x-secondary-button type="button" class="grow py-3">{{ __('Tetapkan...')}}</x-secondary-button>
                             <div class="flex items-center text-xs -ml-px px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-500 rounded-md">
                                 <div class="text-neutral-500">
-                                    <i class="fa fa-fw fa-regular fa-circle-question"></i>
+                                    <i class="icon-circle-help"></i>
                                 </div>
                             </div>
                         </div>
@@ -383,14 +383,14 @@ new class extends Component {
     <div class="w-60 flex flex-col justify-around grid-rows-2 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
         <div>
             <div class="text-sm uppercase">{{ __('Selisih') }}</div>
-            <div x-cloak x-show="diff < 6 && area_vn > 0 && area_ab > 0" class="text-green-500"><i class="fa fa-check-circle me-2"></i><span class="text-xl">{{ __('Di bawah 6%') }}</span></div>
-            <div x-cloak x-show="diff > 6 && area_vn > 0 && area_ab > 0" class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Di atas 6%') }}</span></div>
+            <div x-cloak x-show="diff < 6 && area_vn > 0 && area_ab > 0" class="text-green-500"><i class="icon-circle-check me-2"></i><span class="text-xl">{{ __('Di bawah 6%') }}</span></div>
+            <div x-cloak x-show="diff > 6 && area_vn > 0 && area_ab > 0" class="text-red-500"><i class="icon-circle-alert me-2"></i><span class="text-xl">{{ __('Di atas 6%') }}</span></div>
             <div x-show="!area_vn || !area_ab"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
         </div>
         <div>
             <div class="text-sm uppercase">{{ __('Defect')}}</div>
             <div x-cloak x-show="defect >= 0 && area_vn > 0 && area_qt > 0"><span class="text-xl">{{ __('OK') }}</span></div>
-            <div x-cloak x-show="defect < 0 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="fa fa-exclamation-circle me-2"></i><span class="text-xl">{{ __('Abnormal') }}</span></div>
+            <div x-cloak x-show="defect < 0 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="icon-circle-alert me-2"></i><span class="text-xl">{{ __('Abnormal') }}</span></div>
             <div x-show="!area_vn || !area_qt"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
         </div>
     </div>

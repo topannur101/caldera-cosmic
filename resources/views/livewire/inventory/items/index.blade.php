@@ -77,16 +77,7 @@ class extends Component
 
     public function mount()
     {        
-        $user_id = Auth::user()->id;
-
-        if ($user_id === 1) {
-            $areas = InvArea::all();
-        } else {
-            $user = User::find($user_id);
-            $areas = $user->inv_areas;
-        }
-
-        $this->areas = $areas->toArray();
+        $this->areas = Auth::user()->auth_inv_areas();
 
         if (!$this->ignore_params) {
             $itemsParams = session('inv_items_params', []);
@@ -111,7 +102,7 @@ class extends Component
     
             $areasParam 
             ? $this->area_ids = $areasParam ?? [] 
-            : $this->area_ids = $areas->pluck('id')->toArray();
+            : $this->area_ids = array_column($this->areas, 'id');
         }
 
         if($this->is_deleted) {
@@ -422,10 +413,10 @@ class extends Component
             <div class="p-6 flex flex-col gap-y-6">
                 <div class="flex justify-between items-start">
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        <i class="fa fa-download mr-2"></i>
+                        <i class="icon-download mr-2"></i>
                         {{ __('Unduh sebagai...') }}
                     </h2>
-                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
                 </div>
                 <div x-data="{ download_as: @entangle('download_as') }">
                     <x-radio x-model="download_as" id="as-inv_stocks" name="as-inv_stocks" value="inv_stocks">{{ __('Daftar unit stok') }}</x-radio>
@@ -434,7 +425,7 @@ class extends Component
                 <div class="flex justify-end">
                     <x-secondary-button type="button" wire:click="download" x-on:click="$dispatch('close')">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="download"><i class="fa fa-download"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Unduh') }}</span></span>
+                            <span wire:loading.class="opacity-0" wire:target="download"><i class="icon-download"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Unduh') }}</span></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="download" class="hidden sm mono"></x-spinner>                
                         </div>  
                     </x-secondary-button>
@@ -447,7 +438,7 @@ class extends Component
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                         {{ __('Potensi barang tersembunyi') }}
                     </h2>
-                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+                    <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
                 </div>
                 <div class="text-sm">{{ __('Menggunakan penyortiran "Jarang diambil", "Sering diambil" dan "Lokasi" akan menyebabkan barang yang tidak memiliki frekuensi pengambilan atau lokasi menjadi tersaring.') }}</div>
                 <div class="flex justify-end">
@@ -461,8 +452,8 @@ class extends Component
     <div class="static lg:sticky top-0 z-10 py-6">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
             <div x-data="{ is_linked: @entangle('is_linked').live }" class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
-                <i wire:loading.remove class="fa fa-fw fa-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
-                <i wire:loading class="fa fa-fw relative">
+                <i wire:loading.remove class="icon-search {{ $q ? 'text-neutral-800 dark:text-white' : 'text-neutral-400 dark:text-neutral-600' }}"></i>
+                <i wire:loading class="relative">
                     <x-spinner class="sm mono"></x-spinner>
                 </i>
                 <div x-show="is_linked" class="w-full md:w-32">
@@ -489,8 +480,8 @@ class extends Component
                         type="search" placeholder="{{ __('Kode') }}" autocomplete="inv-code" />
                 </div>
                 <x-text-button type="button" x-on:click="is_linked = !is_linked">
-                    <i x-show="is_linked" class="fa fa-fw fa-link"></i>
-                    <i x-cloak x-show="!is_linked" class="fa fa-fw fa-link-slash"></i>
+                    <i x-show="is_linked" class="fa-link"></i>
+                    <i x-cloak x-show="!is_linked" class="fa-link-slash"></i>
                 </x-text-button>
             </div>            
 
@@ -511,48 +502,48 @@ class extends Component
                 <div>
                     <x-dropdown align="right" width="60">
                         <x-slot name="trigger">
-                            <x-text-button><i class="fa fa-fw fa-ellipsis-h"></i></x-text-button>
+                            <x-text-button><i class="icon-ellipsis"></i></x-text-button>
                         </x-slot>
                         <x-slot name="content">
                             @can('create', InvItem::class)
                                 <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'create-from-code')">
-                                    <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
+                                    <i class="icon-plus me-2"></i>{{ __('Barang baru')}}
                                 </x-dropdown-link>
                             @else
                             <x-dropdown-link href="#" disabled="true">
-                                <i class="fa fa-fw fa-plus me-2"></i>{{ __('Barang baru')}}
+                                <i class="icon-plus me-2"></i>{{ __('Barang baru')}}
                             </x-dropdown-link>
                             @endcan
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="{{ route('inventory.items.summary') }}" wire:navigate>
-                                <i class="fa fa-fw fa-line-chart me-2"></i>{{ __('Ringkasan barang')}}
+                                <i class="icon-chart-line me-2"></i>{{ __('Ringkasan barang')}}
                             </x-dropdown-link>
                             <!-- <x-dropdown-link href="#" disabled="true">
-                                <i class="fa fa-fw me-2"></i>{{ __('Perbarui massal')}}
+                                <i class="me-2"></i>{{ __('Perbarui massal')}}
                             </x-dropdown-link> -->
                             <x-dropdown-link href="{{ route('inventory.items.bulk-operation.index') }}" wire:navigate>
-                                <i class="fa fa-fw me-2"></i>{{ __('Operasi massal barang')}}
+                                <i class="me-2"></i>{{ __('Operasi massal barang')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <!-- <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                                <i class="fa fa-fw fa-map-marker-alt me-2"></i>{{ __('Kelola lokasi ')}}
+                                <i class="icon-map-pin me-2"></i>{{ __('Kelola lokasi ')}}
                             </x-dropdown-link>
                             <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')">
-                                <i class="fa fa-fw fa-tag me-2"></i>{{ __('Kelola tag ')}}
+                                <i class="icon-tag me-2"></i>{{ __('Kelola tag ')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" /> -->
                             <x-dropdown-link href="#" wire:click.prevent="resetQuery">
-                                <i class="fa fa-fw fa-undo me-2"></i>{{ __('Reset')}}
+                                <i class="fa-undo me-2"></i>{{ __('Reset')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <!-- <x-dropdown-link href="#" wire:click.prevent="download('inv_stocks')">
-                                <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV')}}
+                                <i class="icon-download me-2"></i>{{ __('Unduh sebagai CSV')}}
                             </x-dropdown-link> -->
                             <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'download')">
-                                <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai...') }}
+                                <i class="icon-download me-2"></i>{{ __('Unduh sebagai...') }}
                             </x-dropdown-link>
                             <!-- <x-dropdown-link href="#">
-                                <i class="fa fa-fw fa-download me-2"></i>{{ __('Unduh sebagai CSV') }}
+                                <i class="icon-download me-2"></i>{{ __('Unduh sebagai CSV') }}
                             </x-dropdown-link> -->
                         </x-slot>
                     </x-dropdown>
@@ -567,7 +558,7 @@ class extends Component
             <div class="grow flex items-center justify-center sm:justify-end">
                 @if($sort == 'wf_low' || $sort == 'wf_high' || $sort == 'loc')
                 <x-text-button type="button" x-on:click="$dispatch('open-modal', 'hidden-warning')" class="mr-3">
-                    <i class="fa fa-fw fa-exclamation-triangle text-yellow-500"></i>
+                    <i class="icon-triangle-alert text-yellow-500"></i>
                 </x-text-button>
                 @endif
                 <x-select wire:model.live="sort" class="mr-3">
@@ -586,11 +577,11 @@ class extends Component
                 </x-select>
                 <div class="btn-group">
                     <x-radio-button wire:model.live="view" value="list" name="view" id="view-list"><i
-                            class="fa fa-fw fa-grip-lines text-center m-auto"></i></x-radio-button>
+                            class="icon-align-justify text-center m-auto"></i></x-radio-button>
                     <x-radio-button wire:model.live="view" value="content" name="view" id="view-content"><i
-                            class="fa fa-fw fa-list text-center m-auto"></i></x-radio-button>
+                            class="icon-layout-list text-center m-auto"></i></x-radio-button>
                     <x-radio-button wire:model.live="view" value="grid" name="view" id="view-grid"><i
-                            class="fa fa-fw fa-border-all text-center m-auto"></i></x-radio-button>
+                            class="icon-layout-grid text-center m-auto"></i></x-radio-button>
                 </div>
             </div>
         </div>
@@ -600,7 +591,7 @@ class extends Component
             @if (count($area_ids))
                 <div wire:key="no-match" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-ghost"></i>
+                        <i class="icon-ghost"></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">
                         {{ __('Tidak ada yang cocok') }}
@@ -609,8 +600,8 @@ class extends Component
             @else
                 <div wire:key="no-area" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-tent relative"><i
-                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                        <i class="icon-warehouse relative"><i
+                                class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}
                     </div>
@@ -645,12 +636,12 @@ class extends Component
                                 <th>{{ __('Nama') }}</th>
                                 <th>{{ __('Deskripsi') }}</th>
                                 <th>{{ __('Kode') }}</th>
-                                <th><i class="fa fa-map-marker-alt"></i></th>
-                                <th><i class="fa fa-tag"></i></th>
+                                <th><i class="icon-map-pin"></i></th>
+                                <th><i class="icon-tag"></i></th>
                                 <th>{{ __('Qty') }}</th>
                                 <th>{{ __('Harga') }}</th>
                                 <th>{{ 'Σ (' . InvCurr::find(1)->name . ')' }}</th>
-                                <th><i class="fa fa-tent"></i></th>
+                                <th><i class="icon-warehouse"></i></th>
                             </tr>
                             @foreach($inv_stocks as $inv_stock)
                                 <tr class="text-nowrap">

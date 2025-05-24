@@ -42,7 +42,7 @@ new class extends Component {
             @if($line)
                 <div>{{ __('Line') . ' ' . $line }}</div>
             @else
-                <div x-on:click="$dispatch('open-modal', 'omv-worker-unavailable');" class="text-red-500 cursor-pointer text-sm uppercase">{{ __('Line') }}<i class="fa fa-exclamation-circle ms-2"></i></div>
+                <div x-on:click="$dispatch('open-modal', 'omv-worker-unavailable');" class="text-red-500 cursor-pointer text-sm uppercase">{{ __('Line') }}<i class="icon-circle-alert ms-2"></i></div>
             @endif
         </div>
         <hr class="border-neutral-200 dark:border-neutral-700 opacity-85" />
@@ -51,8 +51,8 @@ new class extends Component {
                 <div class="flex items-center justify-center h-full">
                     <div>
                         <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                            <i class="fa fa-history relative"><i
-                                    class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                            <i class="icon-history relative"><i
+                                    class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                         </div>
                         <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Tak ada riwayat') }}
                         </div>

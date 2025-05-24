@@ -21,7 +21,7 @@ new class extends Component
          {{ __('Grafik sirkulasi') . $stock_id }}
       </h2>
       <div>
-         <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+         <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
       </div>
    </div>
    <div class="p-6">{{ __('Fitur ini sedang dalam tahap pengembangan') }}</div>

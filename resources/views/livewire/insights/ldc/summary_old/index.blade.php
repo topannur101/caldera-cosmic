@@ -125,23 +125,23 @@ class extends Component {
                 <div class="btn-group h-10 w-full mb-4">
                     <x-radio-button wire:model.live="view" grow value="dist" name="view" id="view-dist">
                         <div class="text-center my-auto">
-                            <i class="fa fa-fw fa-tablet text-center m-auto"></i>
+                            <i class="icon-tablet text-center m-auto"></i>
                         </div>
                     </x-radio-button>
                     <x-radio-button wire:model.live="view" grow value="hides" name="view" id="view-hides">
                         <div class="text-center my-auto">
-                            <i class="fa fa-fw fa-table text-center m-auto"></i>
+                            <i class="icon-layout-grid  text-center m-auto"></i>
                         </div>
                     </x-radio-button>
                 </div>
                 <div
                     class="bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_date ? '' : 'hidden' }}">
                     <div class="flex items-start justify-between">
-                        <div><i class="fa fa-calendar mr-3"></i>{{ $is_range ? __('Rentang') : __('Tanggal') }}</div>
+                        <div><i class="icon-calendar mr-3"></i>{{ $is_range ? __('Rentang') : __('Tanggal') }}</div>
                         <div class="flex items-center">
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
-                                    <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                                    <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>
                                 </x-slot>
                                 <x-slot name="content">
                                     <x-dropdown-link href="#" wire:click.prevent="setToday">
@@ -179,11 +179,11 @@ class extends Component {
                 <div
                     class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_filter ? '' : 'hidden' }}">
                     <div class="flex items-start justify-between">
-                        <div><i class="fa fa-filter mr-3"></i>{{ __('Filter') }}</div>
+                        <div><i class="icon-funnel mr-3"></i>{{ __('Filter') }}</div>
                         <div class="flex items-center">
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
-                                    <x-text-button><i class="fa fa-fw fa-ellipsis-v"></i></x-text-button>
+                                    <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>
                                 </x-slot>
                                 <x-slot name="content">
                                     @if(Auth::user())
@@ -220,7 +220,7 @@ class extends Component {
                         <div class="m-3">
                             <div class="py-4">
                                 <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                    class="fa fa-fw mr-2 fa-download"></i>{{ __('Unduh CSV') }}</x-text-button>
+                                    class="mr-2 icon-download"></i>{{ __('Unduh CSV') }}</x-text-button>
                             </div>
                         </div>
                     </div>
@@ -235,8 +235,8 @@ class extends Component {
             @default
                 <div wire:key="no-view" class="w-full py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="fa fa-tv relative"><i
-                                class="fa fa-question-circle absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                        <i class="icon-tv-minimal relative"><i
+                                class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih tampilan') }}
                     </div>

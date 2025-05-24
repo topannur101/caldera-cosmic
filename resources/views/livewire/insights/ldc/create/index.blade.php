@@ -22,7 +22,7 @@ class extends Component {
     @if (!Auth::user())
         <div class="flex flex-col items-center gap-y-6 px-6 py-20">
             <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl">
-                <i class="fa fa-exclamation-circle"></i>
+                <i class="icon-circle-alert"></i>
             </div>
             <div class="text-center text-neutral-500 dark:text-neutral-600">
                 {{ __('Masuk terlebih dahulu untuk memasukkan data kulit') }}

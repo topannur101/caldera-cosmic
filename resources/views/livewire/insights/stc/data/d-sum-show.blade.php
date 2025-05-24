@@ -154,7 +154,7 @@ new class extends Component {
         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
             {{ __('Rincian') }}
         </h2>
-        <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+        <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div class="col-span-2">
@@ -293,8 +293,8 @@ new class extends Component {
         </div>
     </div>
     <div class="flex gap-x-3 justify-end items-end mt-6">
-        <x-secondary-button type="button" wire:click="download"><i class="fa fa-download me-2"></i>{{ __('Unduh CSV') }}</x-primary-button>
-        <x-primary-button type="button" wire:click="printPrepare"><i class="fa fa-print me-2"></i>{{ __('Cetak') }}</x-primary-button>
+        <x-secondary-button type="button" wire:click="download"><i class="icon-download me-2"></i>{{ __('Unduh CSV') }}</x-primary-button>
+        <x-primary-button type="button" wire:click="printPrepare"><i class="fa-print me-2"></i>{{ __('Cetak') }}</x-primary-button>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>

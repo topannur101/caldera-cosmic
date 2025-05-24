@@ -96,7 +96,7 @@ new #[Layout('layouts.app')] class extends Component {
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                 {{ __('Mata uang') }}
             </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         <div class="grid grid-cols-1 gap-y-6 mt-6">
             <div>
@@ -127,7 +127,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     </div>
                                 </div>
                             </div>                   
-                            <div x-ref="content" class="text-sm cursor-pointer text-neutral-500"><i class="fa far fa-question-circle"></i>     </div>
+                            <div x-ref="content" class="text-sm cursor-pointer text-neutral-500"><i class="far icon-circle-help"></i>     </div>
                         </div>
                     @endif
                 </div>

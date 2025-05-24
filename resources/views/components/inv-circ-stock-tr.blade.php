@@ -19,7 +19,7 @@
 <tr class="text-sm hover:bg-caldy-500 hover:bg-opacity-10 {{ $eval_status == 'rejected' ? 'opacity-50 grayscale' : '' }}">
    <td class="px-3 sm:px-6">
       <x-text-button class="truncate text-base" type="button" x-on:click="$dispatch('open-modal', 'circ-show'); $dispatch('circ-show', { id: '{{ $id }}'})">
-         <span class="{{ $color }}"><i class="fa fa-fw {{ $icon }} mr-1"></i>{{ $qty_relative . ' ' . $uom }}</span>
+         <span class="{{ $color }}"><i class="{{ $icon }} mr-1"></i>{{ $qty_relative . ' ' . $uom }}</span>
       </x-text-button>
    </td>
    <td class="max-w-60">
@@ -43,7 +43,7 @@
            <div class="flex gap-x-1 text-xs text-neutral-400 dark:text-neutral-600">
                <div>{{ $user_name }}</div> 
                @if($is_delegated)
-                  <div title="{{ __('Didelegasikan') }}"><i class="fa fa-handshake-angle"></i></div>
+                  <div title="{{ __('Didelegasikan') }}"><i class="icon-handshake"></i></div>
                @endif
                <div>•</div>
                <div class="grow truncate">{{ $updated_at_friendly }}</div>
@@ -56,6 +56,6 @@
       </div>
    </td>
    <td class="px-3 sm:px-6">
-      <i class="fa fa-fw {{ $eval_icon }}"></i>
+      <i class="{{ $eval_icon }}"></i>
    </t>
 </tr>

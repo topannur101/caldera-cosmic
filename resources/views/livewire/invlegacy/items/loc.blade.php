@@ -83,7 +83,7 @@ new class extends Component {
         {{ __('Edit lokasi') }}
     </h2>
     @endif
-    <x-text-input-icon x-ref="input" wire:model.live="loc" icon="fa fa-fw fa-map-marker-alt" id="loc" list="qlocs"
+    <x-text-input-icon x-ref="input" wire:model.live="loc" icon="icon-map-pin" id="loc" list="qlocs"
     type="text" placeholder="{{ __('Lokasi') }}" />
     <datalist id="qlocs">
         @if(count($qlocs))

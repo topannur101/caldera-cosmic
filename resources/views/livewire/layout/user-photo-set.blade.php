@@ -70,7 +70,7 @@ new class extends Component
             <div class="flex justify-around items-center w-full h-full border-dashed border-2 border-neutral-500  text-neutral-500 dark:text-neutral-400 rounded-full">
                 <div class="text-center">
                     <div class="text-4xl mb-3">
-                        <i class="fa fa-upload"></i>
+                        <i class="icon-upload"></i>
                     </div>
                 </div>
             </div>
@@ -89,12 +89,12 @@ new class extends Component
             <div wire:key="discard">
                 @if($url)
                 <div class="mb-3">
-                    <x-text-button type="button" wire:click="removeTemp"><i class="fa fa-minus-circle mr-2"></i>{{ __('Buang foto') }}</x-text-button>
+                    <x-text-button type="button" wire:click="removeTemp"><i class="icon-minus-circle mr-2"></i>{{ __('Buang foto') }}</x-text-button>
                 </div>
                 @endif
             </div>
             <div class="mb-4">
-                <x-text-button type="button" x-on:click="$refs.temp.click()"><i class="fa fa-upload mr-2"></i>{{ __('Unggah foto') }}</x-text-button>
+                <x-text-button type="button" x-on:click="$refs.temp.click()"><i class="icon-upload mr-2"></i>{{ __('Unggah foto') }}</x-text-button>
             </div>
         </div>
     </div>

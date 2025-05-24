@@ -115,7 +115,7 @@ new class extends Component {
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                 {{ __('Mesin baru') }}
             </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="fa fa-times"></i></x-text-button>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         <div class="mt-6">
             <label for="machine-number" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nomor') }}</label>
@@ -142,12 +142,12 @@ new class extends Component {
                      :class="{ 'opacity-50': draggingIndex === {{ $index }}, 'opacity-30': dragoverIndex === {{ $index }} }">
                     <div class="grid grid-cols-2 gap-y-2 gap-x-2">
                         <div class="flex gap-x-3 items-center">
-                            <i class="fa fa-grip-lines cursor-move" draggable="true"></i>
+                            <i class="icon-grip-horizontal cursor-move" draggable="true"></i>
                             <x-text-input type="text" wire:model="cells.{{ $index }}.field" placeholder="{{ __('Kolom')}}" />
                         </div>    
                         <div class="flex gap-x-3">
                             <x-text-input type="text" wire:model="cells.{{ $index }}.address" placeholder="{{ __('Alamat') }}" />
-                            <x-text-button type="button" wire:click="removeCell({{ $index }})"><i class="fa fa-times"></i></x-text-button>
+                            <x-text-button type="button" wire:click="removeCell({{ $index }})"><i class="icon-x"></i></x-text-button>
                         </div>
                     </div>
                     <div class="px-3">

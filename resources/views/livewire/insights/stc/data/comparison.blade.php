@@ -106,12 +106,12 @@ new class extends Component {
             @foreach ($d_sums as $d_sum)
             <div class="bg-white dark:bg-neutral-800 rounded-full px-4 py-2">
                 {{ $d_sum['line'] . ' ' . $d_sum['positionHuman'] }}
-                <x-text-button type="button" wire:click="removeDSum({{ $d_sum['id'] }})" class="ml-2"><i class="fa fa-times"></i></x-text-button>
+                <x-text-button type="button" wire:click="removeDSum({{ $d_sum['id'] }})" class="ml-2"><i class="icon-x"></i></x-text-button>
             </div>
             @endforeach
         </div>
         @else
-            <div><i class="fa fa-info-circle me-2"></i>{{ __('Belum ada hasil ukur yang dipilih') }}</div>
+            <div><i class="fa-info-circle me-2"></i>{{ __('Belum ada hasil ukur yang dipilih') }}</div>
         @endif
         <x-secondary-button type="button" x-data="" 
             x-on:click.prevent="$dispatch('open-modal', 'group-set')">{{ __('Sisipkan') }}</x-secondary-button>
@@ -124,7 +124,7 @@ new class extends Component {
                         {{ __('Sisipkan hasil ukur') }}
                     </h2>
                     <x-text-button type="button" x-on:click="$dispatch('close')"><i
-                            class="fa fa-times"></i></x-text-button>
+                            class="icon-x"></i></x-text-button>
                 </div>
                 <div class="mb-6">
                     <div class="grid grid-cols-2 gap-x-3">

@@ -32,13 +32,13 @@ class FeatureAnnounce extends Command
     {
         $features = [
             'theme_patterned' => [
-                'icon'      => 'fa-solid fa-brush',
+                'icon'      => 'icon-paintbrush-vertical',
                 'content'   => 'Tema bercorak kini telah hadir. Jadikan Calderamu lebih personal, klik disini untuk mengubah temamu.',
                 'url'       => 'http://172.70.66.131/account/theme?mode=patterned',
             ],
 
             'comment_mentions' => [
-                'icon'      => 'fa-solid fa-comment',
+                'icon'      => 'icon-message-circle',
                 'content'   => 'Kini kamu dapat membalas atau menyebut seseorang dengan @ di kolom komentar. Pelajari lebih lanjut.',
                 'post'      =>
                 [
@@ -59,7 +59,7 @@ class FeatureAnnounce extends Command
             ],
 
             'inv_video_guide' => [
-                'icon'      => 'fa-solid fa-cube',
+                'icon'      => 'icon-box',
                 'content'   => 'Panduan video Inventaris kini tersedia. Pelajari lebih lanjut.',
                 'post'      =>
                 [
@@ -76,7 +76,7 @@ class FeatureAnnounce extends Command
             ],
 
             'inv_circ_user_edit' => [
-                'icon'      => 'fa-solid fa-cube',
+                'icon'      => 'icon-box',
                 'content'   => 'Kini kamu dapat mengubah pengguna pada sirkulasi yang telah dibuat. Pelajari lebih lanjut.',
                 'post'      =>
                 [
@@ -90,7 +90,7 @@ class FeatureAnnounce extends Command
                 ] 
             ],
             'inv_circ_bulk_with_item' => [
-                'icon'      => 'fa-solid fa-cube',
+                'icon'      => 'icon-box',
                 'content'   => 'Kini operasi massal sirkulasi memiliki mode dengan tambah barang secara langsung dan menyesuaikan dengan tabel CR. Pelajari lebih lanjut.',
                 'post'      =>
                 [
@@ -106,7 +106,7 @@ class FeatureAnnounce extends Command
             ],
 
             'inv_label_print' => [
-                'icon'      => 'fa-solid fa-cube',
+                'icon'      => 'icon-box',
                 'content'   => 'Kini kamu dapat mencetak label untuk visual barang. Pelajari lebih lanjut.',
                 'post'      =>
                 [
@@ -129,7 +129,7 @@ class FeatureAnnounce extends Command
             ],
 
             'inv_specific_search' => [
-                'icon'      => 'fa-solid fa-cube',
+                'icon'      => 'icon-box',
                 'content'   => 'Kini kamu dapat mencari barang dengan nama, deskripsi, dan kode item secara spesifik.',
                 'post'      =>
                 [
