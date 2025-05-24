@@ -84,12 +84,12 @@ class extends Component
                </div>
                <div class="btn-group">
                   <x-secondary-button type="button" x-on:click="editorDownload"><i class="icon-download"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="fa-undo"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="icon-undo"></i></x-secondary-button>
                   <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')"><i class="far icon-circle-help"></i></x-secondary-button>
                </div>
                <x-secondary-button type="button" wire:click="begin">
                   <div class="relative">
-                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="fa-check mr-2"></i>{{ __('Terapkan') }}</span>
+                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="icon-check mr-2"></i>{{ __('Terapkan') }}</span>
                      <x-spinner wire:loading.class.remove="hidden" wire:target="apply" class="hidden sm mono"></x-spinner>                
                   </div>                
                </x-secondary-button>
@@ -109,7 +109,7 @@ class extends Component
 
    @else
       <div class="text-center w-72 py-20 mx-auto">
-         <i class="fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
+         <i class="icon-octagon-minus text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
          <div class="text-neutral-500">{{ __('Kamu tidak memiliki wewenang untuk mengelola barang di area manapun.') }}</div>
       </div>
 

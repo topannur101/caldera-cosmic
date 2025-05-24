@@ -19,8 +19,8 @@
            <p class="mb-4">MM — Digital Team</p>
            <hr class="border-neutral-300 dark:border-neutral-600 mb-8 sm:mb-4" />
            <div class="grid gap-2">
-               <div><i class="fa-phone me-3"></i>0821-2133-3614</div>
-               <div><i class="fa-envelope me-3"></i>imam.pratama@taekwang.com</div>
+               <div><i class="icon-phone me-3"></i>0821-2133-3614</div>
+               <div><i class="icon-mail me-3"></i>imam.pratama@taekwang.com</div>
            </div>
        </div>
 

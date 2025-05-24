@@ -111,7 +111,7 @@ new class extends Component {
             @endforeach
         </div>
         @else
-            <div><i class="fa-info-circle me-2"></i>{{ __('Belum ada hasil ukur yang dipilih') }}</div>
+            <div><i class="icon-info me-2"></i>{{ __('Belum ada hasil ukur yang dipilih') }}</div>
         @endif
         <x-secondary-button type="button" x-data="" 
             x-on:click.prevent="$dispatch('open-modal', 'group-set')">{{ __('Sisipkan') }}</x-secondary-button>

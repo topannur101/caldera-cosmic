@@ -80,7 +80,7 @@ new #[Layout('layouts.app')] class extends Component {
 <div class="p-6 flex flex-col gap-y-6">
    <div class="flex justify-between items-start">
       <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-         <i class="fa-gavel mr-2"></i>
+         <i class="icon-gavel mr-2"></i>
          {{ __('Evaluasi') }}
       </h2>
       <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>

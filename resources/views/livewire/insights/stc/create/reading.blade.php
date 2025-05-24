@@ -735,7 +735,7 @@ new class extends Component
     <div class="relative bg-white dark:bg-neutral-800 shadow sm:rounded-lg mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-x md:divide-y-0 divide-neutral-200 dark:text-white dark:divide-neutral-700">
             <div class="p-6">
-                <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa-window-maximize mr-3 text-neutral-500"></i>{{ __('Mesin') }}</h1>
+                <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="icon-rectangle-horizontal mr-3 text-neutral-500"></i>{{ __('Mesin') }}</h1>
                 <div class="grid grid-cols-2 gap-x-3 mb-6">
                     <div>
                         <label for="d-log-sequence"
@@ -806,7 +806,7 @@ new class extends Component
             </div>
             <div class="p-6">
                 <div class="flex justify-between">
-                    <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="fa-pager mr-3 text-neutral-500"></i>{{ __('Alat ukur') }}</h1>
+                    <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="icon-credit-card mr-3 text-neutral-500"></i>{{ __('Alat ukur') }}</h1>
                     <div>
                         <input wire:model="file" type="file" class="hidden" x-ref="file" />
                         <x-secondary-button type="button" x-on:click="$refs.file.click()">{{ __('Unggah') }}</x-secondary-button>
@@ -834,7 +834,7 @@ new class extends Component
                         <x-text-button
                             x-on:click.prevent="$dispatch('open-modal', 'reading-review'); $dispatch('reading-review', { logs: '{{ json_encode($logs) }}', sv_temps: '{{ json_encode($d_sum['sv_values']) }}' })"
                             class="uppercase text-xs text-neutral-500" 
-                            type="button"><i class="fa-eye mr-1"></i>{{ __('Tinjau') }}</x-text-button>
+                            type="button"><i class="icon-eye mr-1"></i>{{ __('Tinjau') }}</x-text-button>
                     @endif
                 </label>
                 <div class="grid grid-cols-8">

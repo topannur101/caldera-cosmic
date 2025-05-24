@@ -104,7 +104,7 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="flex gap-x-2 items-center">
                 <div class="text-sm"><span class="text-neutral-500">{{  __('Hari:') . ' ' }}</span><span>{{ $days }}</span></div>
                 <div class="text-sm"><span class="text-neutral-500">{{  __('Integritas:') . ' ' }}</span><span>{{ $integrity . '% ' }}</span></div>
-                <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="fa-question"></i></x-secondary-button>
+                <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'raw-stats-info')"><i class="icon-circle-help"></i></x-secondary-button>
             </div>
         </div>
         <x-modal name="raw-stats-info">
@@ -174,11 +174,11 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td title="{{ $metric->push_left }}">
                                     @switch($metric->action_left)
                                         @case('thin')
-                                            <i class="fa-caret-down"></i>
+                                            <i class="icon-chevron-down"></i>
                                         @break
         
                                         @case('thick')
-                                            <i class="fa-caret-up"></i>
+                                            <i class="icon-chevron-up"></i>
                                         @break
                                     @endswitch
                                 </td>
@@ -187,11 +187,11 @@ new #[Layout('layouts.app')] class extends Component {
                                 <td title="{{ $metric->push_right }}">
                                     @switch($metric->action_right)
                                         @case('thin')
-                                            <i class="fa-caret-down"></i>
+                                            <i class="icon-chevron-down"></i>
                                         @break
         
                                         @case('thick')
-                                            <i class="fa-caret-up"></i>
+                                            <i class="icon-chevron-up"></i>
                                         @break
                                     @endswitch
                                 </td>

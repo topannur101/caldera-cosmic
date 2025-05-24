@@ -480,8 +480,8 @@ class extends Component
                         type="search" placeholder="{{ __('Kode') }}" autocomplete="inv-code" />
                 </div>
                 <x-text-button type="button" x-on:click="is_linked = !is_linked">
-                    <i x-show="is_linked" class="fa-link"></i>
-                    <i x-cloak x-show="!is_linked" class="fa-link-slash"></i>
+                    <i x-show="is_linked" class="icon-link-2"></i>
+                    <i x-cloak x-show="!is_linked" class="icon-link-2-off"></i>
                 </x-text-button>
             </div>            
 
@@ -533,7 +533,7 @@ class extends Component
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" /> -->
                             <x-dropdown-link href="#" wire:click.prevent="resetQuery">
-                                <i class="fa-undo me-2"></i>{{ __('Reset')}}
+                                <i class="icon-undo me-2"></i>{{ __('Reset')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <!-- <x-dropdown-link href="#" wire:click.prevent="download('inv_stocks')">
@@ -600,7 +600,7 @@ class extends Component
             @else
                 <div wire:key="no-area" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="icon-warehouse relative"><i
+                        <i class="icon-house relative"><i
                                 class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}
@@ -641,7 +641,7 @@ class extends Component
                                 <th>{{ __('Qty') }}</th>
                                 <th>{{ __('Harga') }}</th>
                                 <th>{{ 'Σ (' . InvCurr::find(1)->name . ')' }}</th>
-                                <th><i class="icon-warehouse"></i></th>
+                                <th><i class="icon-house"></i></th>
                             </tr>
                             @foreach($inv_stocks as $inv_stock)
                                 <tr class="text-nowrap">

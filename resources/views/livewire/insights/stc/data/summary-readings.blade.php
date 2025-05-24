@@ -211,10 +211,7 @@ new class extends Component {
             <div>{{ __('Mesin lama') }}</div>
         </div>
         <div class="flex items-center gap-x-2">
-            <div class="flex items-center justify-center">
-                <i class="fa-certificate text-lg text-caldy-500"></i>
-                <i class="absolute fa-check text-xs text-white"></i>
-            </div>
+            <i class="icon-badge-check text-caldy-500"></i>
             <div>{{ __('Kontrol otomatis') }}</div>
         </div>
         <div class="flex items-center gap-x-2">
@@ -238,10 +235,8 @@ new class extends Component {
                                 {{ sprintf('%02d', $machine['line']) }}
                             </div>
                             @if(strpos($machine['ip_address'], '127.') !== 0)
-                                <div class="flex items-center justify-center">
-                                    <i class="fa-certificate text-lg text-caldy-500"></i>
-                                    <i class="absolute fa-check text-xs text-white"></i>
-                                </div>
+                                <i class="icon-badge-check text-caldy-500"
+                                    title="{{ __('Kontrol otomatis') }}"></i>
                             @endif
                         </div>    
                     </div>
@@ -277,10 +272,10 @@ new class extends Component {
                             <div class="flex px-2 flex-col">
                                 @if (isset($machine['upper']['d_sum']['ended_at']))
                                 <x-text-button type="button" x-data="" class="px-3 py-2" type="button"
-                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['upper']['d_sum']['id'] ?? 0 }}'})"><i class="fa-eye"></i></x-text-button>
+                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['upper']['d_sum']['id'] ?? 0 }}'})"><i class="icon-eye"></i></x-text-button>
                                 @endif
                                 <x-link href="{{ route('insights.stc.data.index', [ 'view' => 'history', 'mode' => 'recents', 'line' => $machine['line'], 'position' => 'upper' ])}}" class="px-3 py-2" wire:navigate>
-                                    <i class="fa-clock"></i>
+                                    <i class="icon-history"></i>
                                 </x-link>
                             </div>
                         </div>
@@ -315,10 +310,10 @@ new class extends Component {
                             <div class="flex px-2 flex-col">
                                 @if (isset($machine['lower']['d_sum']['ended_at']))
                                 <x-text-button type="button" x-data="" class="px-3 py-2" type="button"
-                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['lower']['d_sum']['id'] ?? 0 }}'})"><i class="fa-eye"></i></x-text-button>
+                                x-on:click="$dispatch('open-modal', 'd_sum-show'); $dispatch('d_sum-show', { id: '{{ $machine['lower']['d_sum']['id'] ?? 0 }}'})"><i class="icon-eye"></i></x-text-button>
                                 @endif
                                 <x-link href="{{ route('insights.stc.data.index', [ 'view' => 'history', 'mode' => 'recents', 'line' => $machine['line'], 'position' => 'lower' ])}}" class="px-3 py-2" wire:navigate>
-                                    <i class="fa-clock"></i>
+                                    <i class="icon-history"></i>
                                 </x-link>
                             </div>
                         </div>

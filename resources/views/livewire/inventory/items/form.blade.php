@@ -284,10 +284,10 @@ new class extends Component
             </div>
             <div>
                <div wire:loading>
-                  <x-primary-button type="button" disabled><i class="fa-save mr-2"></i>{{ __('Simpan') }}</x-primary-button>
+                  <x-primary-button type="button" disabled><i class="icon-save mr-2"></i>{{ __('Simpan') }}</x-primary-button>
                </div>
                <div wire:loading.remove>
-                  <x-primary-button type="button" wire:click="save"><i class="fa-save mr-2"></i>{{ __('Simpan') }}</x-primary-button>
+                  <x-primary-button type="button" wire:click="save"><i class="icon-save mr-2"></i>{{ __('Simpan') }}</x-primary-button>
                </div>
             </div>
          </div>
@@ -320,7 +320,7 @@ new class extends Component
                 <div class="grid grid-cols-1 divide-y divide-neutral-200 dark:divide-neutral-800 px-4 my-6 text-sm">
                   @if($is_editing)
                      <div class="flex items-center gap-x-1 py-3">
-                        <i class="text-neutral-500 icon-warehouse mr-2"></i>
+                        <i class="text-neutral-500 icon-house mr-2"></i>
                         <x-select wire:model="items.0.area_id" class="w-full">
                            <option value=""></option>
                            @foreach($areas as $area)
@@ -330,17 +330,17 @@ new class extends Component
                      </div>
                      <div x-data="{ is_active: @entangle('items.0.is_active') }" class="flex items-center gap-x-1 py-3">
                         <i x-show="is_active" class="text-neutral-500 icon-circle-check mr-2"></i>
-                        <i x-show="!is_active" class="text-neutral-500 fa-ban mr-2"></i>
+                        <i x-show="!is_active" class="text-neutral-500 icon-ban mr-2"></i>
                         <x-toggle id="item_is_active" x-model="is_active" ::checked="is_active"><span x-show="is_active">{{ __('Aktif') }}</span><span x-show="!is_active">{{ __('Nonaktif') }}</span></x-toggle>
                      </div>
                      @if($items[0]['id'])
                      <div class="px-1 py-3">
-                        <x-text-button class="text-red-500" type="button" x-on:click="$dispatch('open-modal', 'deleteItem')"><i class="fa-trash mr-4"></i>{{ __('Hapus barang') }}</x-text-button>
+                        <x-text-button class="text-red-500" type="button" x-on:click="$dispatch('open-modal', 'deleteItem')"><i class="icon-delete mr-4"></i>{{ __('Hapus barang') }}</x-text-button>
                      </div>
                      @endif
                   @else
-                     <div class="py-2"><i class="text-neutral-500 icon-warehouse mr-2"></i>{{ $items[0]['area_name']}}</div>
-                     <div class="py-2 {{ $items[0]['is_active'] ? '' :'text-red-500' }}"><i class="{{ $items[0]['is_active'] ? 'icon-circle-check text-neutral-500' :'fa-ban' }} mr-2"></i>{{ $items[0]['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
+                     <div class="py-2"><i class="text-neutral-500 icon-house mr-2"></i>{{ $items[0]['area_name']}}</div>
+                     <div class="py-2 {{ $items[0]['is_active'] ? '' :'text-red-500' }}"><i class="{{ $items[0]['is_active'] ? 'icon-circle-check text-neutral-500' :'icon-ban' }} mr-2"></i>{{ $items[0]['is_active'] ? __('Aktif') : __('Nonaktif')}}</div>
                      @if($can_store)
                         <div class="py-2"><x-link href="{{ route('inventory.items.edit', ['id' => $items[0]['id']] ) }}" wire:navigate><i class="text-neutral-500 icon-pencil mr-2"></i>{{ __('Edit barang') }}</x-text-link></div>
                      @endif
@@ -369,7 +369,7 @@ new class extends Component
                   <div class="grid gap-y-2 py-6">
                      @if($items[0]['comments_count'])
                      <div x-on:click="document.getElementById('comments').scrollIntoView({ behavior: 'smooth' });" class="cursor-pointer absolute font-bold text-xs px-2 py-1 text-white bg-red-500 border-2 border-white rounded-full -top-3 right-8 dark:border-neutral-900">
-                        <i class="fa-comment mr-1"></i>{{ $items[0]['comments_count'] }}</div>
+                        <i class="icon-message-circle mr-1"></i>{{ $items[0]['comments_count'] }}</div>
                      @endif
                      <h1 class="px-6 text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $items[0]['name'] }}</h1>
                      <p class="px-6">{{ $items[0]['desc'] }}</p>
@@ -581,7 +581,7 @@ new class extends Component
                </div>
                @if(!$currencies)
                <div class="mt-6 text-sm">
-                  <i class="fa-circle-exclamation mr-2"></i>{{ __('Mata uang perlu diregistrasi sebelum menambahkan unit') }}
+                  <i class="icon-circle-alert mr-2"></i>{{ __('Mata uang perlu diregistrasi sebelum menambahkan unit') }}
                </div> 
                @endif
             </div>

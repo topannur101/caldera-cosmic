@@ -305,7 +305,7 @@ class extends Component
                   @endif
                   @if($result['failure'])
                   <div class="p-4 text-xs text-neutral-800 dark:text-neutral-400 rounded-lg bg-neutral-200 dark:bg-neutral-900">
-                     <i class="fa-info-circle me-2"></i>{{ __('Alasan mengapa gagal dapat dilihat pada 3 kolom terakhir (Tindakan, Status, dan Pesan) pada CSV yang terunduh.') }}
+                     <i class="icon-info me-2"></i>{{ __('Alasan mengapa gagal dapat dilihat pada 3 kolom terakhir (Tindakan, Status, dan Pesan) pada CSV yang terunduh.') }}
                   </div>
                   @endif
                   <div class="flex items-center justify-end">
@@ -352,7 +352,7 @@ class extends Component
 
                <div x-show="!backup" class="p-6 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                   <div class="flex items-center space-x-2 mb-2">
-                     <i class="fa-clipboard text-neutral-500"></i>
+                     <i class="icon-clipboard text-neutral-500"></i>
                      <h2 class="font-bold text-xl">{{ __('Salin dan tempel') }}</h2>
                   </div>
                   <p class="leading-relaxed">
@@ -400,12 +400,12 @@ class extends Component
                </div>
                <div class="btn-group">
                   <x-secondary-button type="button" x-on:click="editorDownload"><i class="icon-download"></i></x-secondary-button>
-                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="fa-undo"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorReset" class="rounded-none"><i class="icon-undo"></i></x-secondary-button>
                   <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')"><i class="far icon-circle-help"></i></x-secondary-button>
                </div>
                <x-secondary-button type="button" x-on:click="editorApply">
                   <div class="relative">
-                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="fa-check mr-2"></i>{{ __('Terapkan') }}</span>
+                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="icon-check mr-2"></i>{{ __('Terapkan') }}</span>
                      <x-spinner wire:loading.class.remove="hidden" wire:target="apply" class="hidden sm mono"></x-spinner>                
                   </div>                
                </x-secondary-button>
@@ -416,7 +416,7 @@ class extends Component
 
    @else
       <div class="text-center w-72 py-20 mx-auto">
-         <i class="fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
+         <i class="icon-octagon-minus text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
          <div class="text-neutral-500">{{ __('Kamu tidak memiliki wewenang untuk mengelola barang di area manapun.') }}</div>
       </div>
 

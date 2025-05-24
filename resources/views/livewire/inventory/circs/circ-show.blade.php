@@ -401,9 +401,9 @@ new class extends Component
       </div>
       <div>
          @if($can_eval)
-            <x-secondary-button type="button" x-on:click="is_evaluating = !is_evaluating; setTimeout(function(){ $refs.evalRemarks.focus()}, 100)"><i class="fa-gavel mr-2"></i>{{ __('Evaluasi') }}</x-secondary-button>
+            <x-secondary-button type="button" x-on:click="is_evaluating = !is_evaluating; setTimeout(function(){ $refs.evalRemarks.focus()}, 100)"><i class="icon-gavel mr-2"></i>{{ __('Evaluasi') }}</x-secondary-button>
          @else
-            <x-secondary-button type="button" disabled><i class="fa-gavel mr-2"></i>{{ __('Evaluasi') }}</x-secondary-button>
+            <x-secondary-button type="button" disabled><i class="icon-gavel mr-2"></i>{{ __('Evaluasi') }}</x-secondary-button>
          @endif
       </div>
    </div>

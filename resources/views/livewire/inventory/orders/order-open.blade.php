@@ -128,7 +128,7 @@ new class extends Component {
                      </x-slot>
                      <x-slot name="content">
                         <x-dropdown-link href="#" wire:click.prevent="resetQuery">
-                           <i class="fa-undo me-2"></i>{{ __('Reset')}}
+                           <i class="icon-undo me-2"></i>{{ __('Reset')}}
                         </x-dropdown-link>
                      </x-slot>
                   </x-dropdown>

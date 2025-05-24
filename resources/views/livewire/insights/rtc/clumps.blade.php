@@ -99,11 +99,11 @@ new #[Layout('layouts.app')] class extends Component {
             {{ __('Ringkasan Gilingan') }}</h1>
         <div class="flex gap-x-1">
             <x-secondary-button type="button" wire:click="$refresh"><i class="icon-rotate-cw"
-                    wire:loading.remove></i><i class="fa-circle-notch fa-spin"
+                    wire:loading.remove></i><i class="icon-loader-circle fa-spin"
                     wire:loading></i></x-secondary-button>
             <x-secondary-button type="button" x-data=""
                 x-on:click.prevent="$dispatch('open-modal', 'clumps-info')"><i
-                    class="fa-question"></i></x-secondary-button>
+                    class="icon-circle-help"></i></x-secondary-button>
         </div>
     </div>
     <x-modal name="clumps-info">

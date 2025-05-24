@@ -294,7 +294,7 @@ new class extends Component {
     </div>
     <div class="flex gap-x-3 justify-end items-end mt-6">
         <x-secondary-button type="button" wire:click="download"><i class="icon-download me-2"></i>{{ __('Unduh CSV') }}</x-primary-button>
-        <x-primary-button type="button" wire:click="printPrepare"><i class="fa-print me-2"></i>{{ __('Cetak') }}</x-primary-button>
+        <x-primary-button type="button" wire:click="printPrepare"><i class="icon-printer me-2"></i>{{ __('Cetak') }}</x-primary-button>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>

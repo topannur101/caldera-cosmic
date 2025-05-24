@@ -92,11 +92,11 @@ new class extends Component {
                                 <td>
                                     @switch($metric->action_left)
                                         @case('thin')
-                                            <i class="fa-caret-down"></i>
+                                            <i class="icon-chevron-down"></i>
                                         @break
 
                                         @case('thick')
-                                            <i class="fa-caret-up"></i>
+                                            <i class="icon-chevron-up"></i>
                                         @break
                                     @endswitch
                                 </td>
@@ -105,11 +105,11 @@ new class extends Component {
                                 <td>
                                     @switch($metric->action_right)
                                         @case('thin')
-                                            <i class="fa-caret-down"></i>
+                                            <i class="icon-chevron-down"></i>
                                         @break
 
                                         @case('thick')
-                                            <i class="fa-caret-up"></i>
+                                            <i class="icon-chevron-up"></i>
                                         @break
                                     @endswitch
                                 </td>

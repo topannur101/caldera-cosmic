@@ -316,7 +316,7 @@ class extends Component {
             <div class="p-6 flex flex-col gap-y-6">
                 <div class="flex justify-between items-start">
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        <i class="fa-print mr-2"></i>
+                        <i class="icon-printer mr-2"></i>
                         {{ __('Cetak semua sebagai...') }}
                     </h2>
                     <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
@@ -329,7 +329,7 @@ class extends Component {
                 <div class="flex justify-end">
                     <x-secondary-button type="button" wire:click="printAs" x-on:click="$dispatch('close')">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="printAs"><i class="fa-print"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
+                            <span wire:loading.class="opacity-0" wire:target="printAs"><i class="icon-printer"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="printAs" class="hidden sm mono"></x-spinner>                
                         </div>  
                     </x-secondary-button>
@@ -419,14 +419,14 @@ class extends Component {
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="resetQuery">
-                                <i class="fa-undo me-2"></i>{{ __('Reset')}}
+                                <i class="icon-undo me-2"></i>{{ __('Reset')}}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="download">
                                 <i class="icon-download me-2"></i>{{ __('Unduh sebagai CSV') }}
                             </x-dropdown-link>
                             <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'print-all')">
-                                <i class="fa-print me-2"></i>{{ __('Cetak semua...') }}
+                                <i class="icon-printer me-2"></i>{{ __('Cetak semua...') }}
                             </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
@@ -462,13 +462,13 @@ class extends Component {
                 <div class="btn-group">
                     <x-secondary-button type="button" wire:click="printCircIds">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="printCircIds"><i class="fa-print"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
+                            <span wire:loading.class="opacity-0" wire:target="printCircIds"><i class="icon-printer"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Cetak') }}</span></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="printCircIds" class="hidden sm mono"></x-spinner>                
                         </div>                
                     </x-secondary-button>
                     <x-secondary-button type="button" wire:click="evalCircIds">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="evalCircIds"><i class="fa-gavel"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Evaluasi') }}</span></span>
+                            <span wire:loading.class="opacity-0" wire:target="evalCircIds"><i class="icon-gavel"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Evaluasi') }}</span></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="evalCircIds" class="hidden sm mono"></x-spinner>
                         </div>
                     </x-secondary-button>
@@ -490,7 +490,7 @@ class extends Component {
             @else
                 <div wire:key="no-area" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="icon-warehouse relative"><i
+                        <i class="icon-house relative"><i
                                 class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih area') }}

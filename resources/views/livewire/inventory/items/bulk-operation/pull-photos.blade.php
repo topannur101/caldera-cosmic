@@ -218,7 +218,7 @@ class extends Component
                   <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
                </div>
                <div class="py-3 text-5xl text-center">
-                     <i class="fa-image relative text-neutral-300 dark:text-neutral-600">
+                     <i class="icon-image relative text-neutral-300 dark:text-neutral-600">
                         <i class="icon-download absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
                      </i>
                </div>
@@ -253,7 +253,7 @@ class extends Component
                </div>
                <div class="py-3 text-5xl text-center">
                   <i class="icon-box relative text-neutral-300 dark:text-neutral-600">
-                     <i class="fa-image absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
+                     <i class="icon-image absolute bottom-0 -right-1 text-lg text-neutral-900 dark:text-neutral-100"></i>
                   </i>
                </div>
                <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
@@ -275,7 +275,7 @@ class extends Component
                <i class="icon-images mr-2"></i>
                {{ __('Tarik foto') }}</h1>
             <x-link-secondary-button class="flex items-center h-full" href="{{ route('inventory.items.bulk-operation.pull-photos') }}">
-               <i class="fa-undo mr-2"></i>{{ __('Ulangi dari awal') }}
+               <i class="icon-undo mr-2"></i>{{ __('Ulangi dari awal') }}
             </x-link-secondary-button>
          </div>
          <div class="flex gap-x-6 w-full mt-6">
@@ -283,7 +283,7 @@ class extends Component
                <ol class="sticky w-72 mt-6 top-6 text-neutral-500 border-s border-neutral-200 dark:border-neutral-700 dark:text-neutral-400">                  
                   <li class="mb-10 ms-6">            
                      <span class="absolute flex items-center justify-center w-8 h-8 bg-green-200 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 dark:bg-green-900">
-                        <i class="icon-warehouse text-sm"></i>
+                        <i class="icon-house text-sm"></i>
                      </span>
                      <h3 class="font-medium leading-tight">{{ __('Pilih area')}}</h3>
                      <div class="mt-2">
@@ -321,7 +321,7 @@ class extends Component
                   </li>
                   <li class="mb-10 ms-6">
                      <span :class="step > 1 ? 'bg-green-200 dark:bg-green-900' : 'bg-neutral-100 dark:bg-neutral-700'" class="absolute flex items-center justify-center w-8 h-8 rounded-full -start-4 ring-4 ring-white dark:ring-neutral-900 ">
-                        <i class="fa-image text-sm"></i>
+                        <i class="icon-image text-sm"></i>
                      </span>
                      <h3 class="font-medium leading-tight">{{ __('Tarik foto')}}</h3>
                      <div x-cloak :class="step == 2 ? '' : 'hidden'" class="mt-2">
@@ -464,7 +464,7 @@ class extends Component
 
    @else
       <div class="text-center w-72 py-20 mx-auto">
-         <i class="fa-hand text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
+         <i class="icon-octagon-minus text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
          <div class="text-neutral-500">{{ __('Kamu tidak memiliki wewenang untuk mengelola barang di area manapun.') }}</div>
       </div>
 

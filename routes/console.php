@@ -10,3 +10,4 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('app:ins-omv-cleanup')->daily();
 Schedule::command('app:inv-empty-resolved')->daily();
+Schedule::command('app:sync-user-prefs')->everyFiveMinutes();

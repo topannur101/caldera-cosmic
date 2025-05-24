@@ -126,60 +126,26 @@ class User extends Authenticatable
         return $areas;
     }
 
-    // public function invAreaIdsItemCreate(): array
-    // {
-    //     $ids = [];
+    /**
+     * Load user preferences into session when user logs in
+     */
+    public function loadPreferencesToSession()
+    {
+        $prefs = $this->prefs()->pluck('data', 'name');
+        
+        foreach ($prefs as $name => $data) {
+            session([$name => json_decode($data, true)]);
+        }
+    }
 
-    //     if($this->id === 1) {
-    //         $ids = $this->invAreaIds();          
-    //     } else {
-    //         foreach ($this->inv_auths as $auth) {
-    //             // Decode the "actions" string into an array
-    //             $actions = json_decode($auth['actions'], true);
-    
-    //             // Check if "item-create" is present in the actions array
-    //             if (in_array('item-create', $actions)) {
-    //                 $ids[] = $auth['inv_area_id'];
-    //             }
-    //         }
-    //     }
-    //     return $ids;
-    // }
-    
-    // public function invAreaIdsCircCreate(): array
-    // {
-    //     $ids = [];
-
-    //     if($this->id === 1) {
-    //         $ids = $this->invAreaIds();          
-    //     } else {
-    //         foreach ($this->inv_auths as $auth) {
-    //             // Decode the "actions" string into an array
-    //             $actions = json_decode($auth['actions'], true);
-    
-    //             // Check if "item-create" is present in the actions array
-    //             if (in_array('circ-create', $actions)) {
-    //                 $ids[] = $auth['inv_area_id'];
-    //             }
-    //         }
-    //     }
-    //     return $ids;
-    // }
-    
-    // public function invAreaIds(): array
-    // {
-    //     return $this->id === 1 ? InvArea::all()->pluck('id')->toArray() : $this->inv_areas->pluck('id')->toArray();
-    // }
-
-    // public function kpi_areas() : BelongsToMany
-    // {
-    //     return $this->belongsToMany(KpiArea::class, 'kpi_auths', 'user_id', 'kpi_area_id');
-    // }
-
-    // public function kpiAreaIds(): array
-    // {
-    //     return $this->id === 1 ? InvArea::all()->pluck('id')->toArray() : $this->kpi_areas->pluck('id')->toArray();
-    // }
+    /**
+     * Get a specific preference value
+     */
+    public function getPreference($name, $default = null)
+    {
+        $pref = $this->prefs()->where('name', $name)->first();
+        return $pref ? json_decode($pref->data, true) : $default;
+    }
 
     public function ins_omv_metrics(): HasMany
     {

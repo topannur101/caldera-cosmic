@@ -75,7 +75,7 @@ class extends Component {
             </x-radio-button>
         </div>
         <div>
-            <x-text-button type="button" class="uppercase tracking-wide font-bold text-xs" wire:click="markAllAsRead"><i class="fa-check mr-2"></i>{{ __('Tandai semua sudah dibaca') }}</x-secondary-button>
+            <x-text-button type="button" class="uppercase tracking-wide font-bold text-xs" wire:click="markAllAsRead"><i class="icon-check-check mr-2"></i>{{ __('Tandai semua sudah dibaca') }}</x-secondary-button>
         </div>
     </div>
     <div wire:loading.class="cal-shimmer" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">

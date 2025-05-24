@@ -246,11 +246,11 @@ class extends Component {
                 <div class="py-4">
                     <div class="m-3">
                         <x-text-button wire:click="resetCircs" type="button" class="text-sm"><i
-                                class="mr-2 fa-undo"></i>{{ __('Atur ulang') }}</x-text-button>
+                                class="mr-2 icon-undo"></i>{{ __('Atur ulang') }}</x-text-button>
                     </div>
                     <div class="m-3">
                         <x-text-button x-on:click="$dispatch('open-modal', 'inv-circs-print')" type="button"
-                            class="text-sm"><i class="mr-2 fa-print"></i>{{ __('Cetak semua') }}</x-text-button>
+                            class="text-sm"><i class="mr-2 icon-printer"></i>{{ __('Cetak semua') }}</x-text-button>
                     </div>
                     <div class="m-3">
                         <x-text-button type="button" wire:click="download" class="text-sm">
@@ -301,9 +301,9 @@ class extends Component {
                 <div class="flex gap-x-2 items-center">
                     <x-secondary-button type="button" x-show="ids.length === 1" class="flex items-center h-full"
                         x-data="" x-on:click.prevent="$dispatch('open-modal', 'circ-show-'+ids[0])"><i
-                            class="fa-eye"></i></x-secondary-button>
+                            class="icon-eye"></i></x-secondary-button>
                     <x-secondary-button type="button" wire:click="print" x-on:click="$dispatch('open-modal', 'inv-circs-print');"
-                        class="flex items-center h-full"><i class="fa-print"></i><span class="ml-2 hidden lg:inline">{{ __('Cetak') }}</span></x-secondary-button>
+                        class="flex items-center h-full"><i class="icon-printer"></i><span class="ml-2 hidden lg:inline">{{ __('Cetak') }}</span></x-secondary-button>
                     <div class="btn-group">
                         <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'inv-circs-approve')"
                             class="flex items-center"><i class="icon-thumbs-up"></i><span

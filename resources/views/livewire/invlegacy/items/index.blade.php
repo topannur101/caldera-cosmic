@@ -300,7 +300,7 @@ class extends Component {
                         @if ($q || $status != 'active' || $qty != 'total' || $filter || $loc || $tag || $without)
                             <div class="m-3">
                                 <x-text-button wire:click="resetSearch" type="button" class="text-sm"><i
-                                        class="mr-2 fa-undo"></i>{{ __('Atur ulang') }}</x-text-button>
+                                        class="mr-2 icon-undo"></i>{{ __('Atur ulang') }}</x-text-button>
                             </div>
                         @endif
                     </div>

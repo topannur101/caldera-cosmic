@@ -130,7 +130,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </x-radio-button>
                     <x-radio-button wire:model.live="view" grow value="clumps" name="view" id="view-clumps">
                         <div class="text-center my-auto">
-                            <i class="fa-toilet-paper text-center m-auto"></i>
+                            <i class="icon-shell text-center m-auto"></i>
                         </div>
                     </x-radio-button>
                     <x-radio-button wire:model.live="view" grow value="raw" name="view" id="view-raw">
@@ -142,7 +142,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <div
                     class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_line ? '' : 'hidden' }}">
                     <div class="flex items-start justify-between">
-                        <div><i class="fa-ruler-horizontal mr-3"></i>{{ __('Line') }}</div>
+                        <div><i class="icon-ruler mr-3"></i>{{ __('Line') }}</div>
                     </div>
                     <div class="mt-5">
                         <x-select wire:model.live="sline">

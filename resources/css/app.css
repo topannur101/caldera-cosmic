@@ -6,7 +6,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
   :root {
     --color-50: 243 240 249;
@@ -638,4 +637,8 @@ input[type="checkbox"]:checked + label.custom-checkbox {
       position: absolute;
       left: -9999px;
       top: -9999px;
+  }
+
+  [class^="icon-"], [class*=" icon-"] {
+    font-weight: 500;
   }
