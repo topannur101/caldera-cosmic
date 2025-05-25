@@ -10,7 +10,6 @@ use App\Models\InvStock;
 use App\Models\InvItemTag;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 
 use Carbon\Carbon;
 
@@ -368,7 +367,7 @@ new class extends Component
                @else
                   <div class="grid gap-y-2 py-6">
                      @if($items[0]['comments_count'])
-                     <div x-on:click="document.getElementById('comments').scrollIntoView({ behavior: 'smooth' });" class="cursor-pointer absolute font-bold text-xs px-2 py-1 text-white bg-red-500 border-2 border-white rounded-full -top-3 right-8 dark:border-neutral-900">
+                     <div x-on:click="document.getElementById('comments').scrollIntoView({ behavior: 'smooth' });" class="cursor-pointer absolute text-xs px-2 py-1 text-white bg-red-500 border-2 border-white rounded-full -top-3 right-8 dark:border-neutral-900">
                         <i class="icon-message-circle mr-1"></i>{{ $items[0]['comments_count'] }}</div>
                      @endif
                      <h1 class="px-6 text-2xl font-medium text-neutral-900 dark:text-neutral-100">{{ $items[0]['name'] }}</h1>

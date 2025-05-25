@@ -1,5 +1,6 @@
 <?php
 
+use App\InvQuery;
 use App\Models\InvItem;
 use App\Models\InvStock;
 use App\Models\InvArea;
@@ -140,197 +141,25 @@ class extends Component
         session(['inv_items_params' => $inv_items_params]);
         session(['inv_areas_param' => $this->area_ids]);
 
-        $inv_stocks_query = InvStock::with([
-            'inv_item', 
-            'inv_curr',
-            'inv_item.inv_loc', 
-            'inv_item.inv_area', 
-            'inv_item.inv_tags'
-        ])
-            ->whereHas('inv_item', function ($query) use ($q, $name, $desc, $code, $loc_parent, $loc_bin, $tags) {
-
-        
-            // items (if linked)
-            if($this->is_linked) {
-                $query->where(function ($subQuery) use ($q) {
-                    $subQuery->where('name', 'like', "%$q%")
-                             ->orWhere('code', 'like', "%$q%")
-                             ->orWhere('desc', 'like', "%$q%");
-                });
-
-            } else {
-
-                if($name) {
-                    $query->where('name', 'like', "%$name%");
-                }
-
-                if($desc) {
-                    $query->where('desc', 'like', "%$desc%");
-                }
-
-                if($code) {
-                    $query->where('code', 'like', "%$code%");
-                }
-
-            }
-
-            $query->whereIn('inv_area_id', $this->area_ids);
-
-            // location
-            $query->where(function ($subQuery) use ($loc_parent, $loc_bin) {
-                if ($loc_parent || $loc_bin) {
-                    $subQuery->whereHas('inv_loc', function ($subSubQuery) use ($loc_parent, $loc_bin) {
-                        if ($loc_parent) {
-                            $subSubQuery->where('parent', 'like', "%$loc_parent%");
-                        }
-                        if ($loc_bin) {
-                            $subSubQuery->where('bin', 'like', "%$loc_bin%");
-                        }
-                    });
-                }
-            });
-
-            // tags
-            $query->where(function ($subQuery) use ($tags) {
-                if (count($tags)) {
-                    $subQuery->whereHas('inv_tags', function ($subSubQuery) {
-                        $subSubQuery->whereIn('name', $this->tags);
-                    });
-                }
-            });
-            
-            // filter
-            switch ($this->filter) {
-                case 'no-code':
-                    $query->whereNull('code');
-                    break;
-
-                case 'no-photo':
-                    $query->whereNull('photo');
-                    break;
-
-                case 'no-location':
-                    $query->whereNull('inv_loc_id');
-                    break;
-
-                case 'no-tags':
-                    $query->whereDoesntHave('inv_tags');
-                    break;
-
-                case 'inactive':
-                    $query->where('is_active', false);
-                    break;
-
-                default:
-                    $query->where('is_active', true);
-                    break;
-            }
-
-            switch ($this->aging) {
-                case 'gt-100-days':               
-                case 'gt-90-days':
-                case 'gt-60-days':
-                case 'gt-30-days':
-                case 'lt-30-days':
-                    $now            = Carbon::now();
-                    $sub_100_days   = $now->copy()->subDays(100);
-                    $sub_90_days    = $now->copy()->subDays(90);
-                    $sub_60_days    = $now->copy()->subDays(60);
-                    $sub_30_days    = $now->copy()->subDays(30);
-                    break;
-            }
-
-            
-            // aging
-            switch ($this->aging) {
-                case 'gt-100-days':
-                    $query->where(function ($q) use ($sub_100_days) {
-                        $q->where('last_withdrawal', '<', $sub_100_days)
-                        ->orWhereNull('last_withdrawal');
-                    });
-                    break;                        
-
-                case 'gt-90-days':
-                    $query->whereBetween('last_withdrawal', [$sub_100_days, $sub_90_days]);
-                    break;
-
-                case 'gt-60-days':
-                    $query->whereBetween('last_withdrawal', [$sub_90_days, $sub_60_days]);
-                    break;
-
-                case 'gt-30-days':
-                    $query->whereBetween('last_withdrawal', [$sub_60_days, $sub_30_days]);
-                    break;
-
-                case 'lt-30-days':
-                    $query->where('last_withdrawal', '>', $sub_30_days);
-                    break;
-            }
-        });  
-        
-        // active inv_stocks only
-        $inv_stocks_query->where('is_active', true);        
-
-        switch ($this->sort) {
-            case 'updated':
-                $inv_stocks_query->orderByDesc('updated_at');
-                break;
-            case 'created':
-                $inv_stocks_query->orderByDesc('created_at');
-                break;
-            case 'loc':
-                $inv_stocks_query->whereHas('inv_item.inv_loc');
-                $inv_stocks_query->orderByRaw('
-                (SELECT parent FROM inv_locs WHERE 
-                inv_locs.id = (SELECT inv_loc_id FROM inv_items 
-                WHERE inv_items.id = inv_stocks.inv_item_id)) ASC
-                ,
-                (SELECT bin FROM inv_locs WHERE 
-                inv_locs.id = (SELECT inv_loc_id FROM inv_items 
-                WHERE inv_items.id = inv_stocks.inv_item_id)) ASC
-
-                ');
-            case 'last_deposit':
-                $inv_stocks_query->orderByRaw('
-                (SELECT last_deposit FROM inv_items
-                WHERE inv_items.id = inv_stocks.inv_item_id) DESC,
-                inv_stocks.uom ASC,
-                inv_stocks.inv_item_id ASC');
-                break;
-            case 'last_withdrawal':
-                $inv_stocks_query->orderByRaw('
-                (SELECT last_withdrawal FROM inv_items
-                WHERE inv_items.id = inv_stocks.inv_item_id) DESC,
-                inv_stocks.uom ASC,
-                inv_stocks.inv_item_id ASC');
-                break;
-            case 'qty_low':
-                $inv_stocks_query->orderBy('qty');
-                break;
-            case 'qty_high':
-                $inv_stocks_query->orderByDesc('qty');
-                break;
-            case 'amt_low':
-                $inv_stocks_query->orderBy('amount_main');
-                break;
-            case 'amt_high':
-                $inv_stocks_query->orderByDesc('amount_main');
-                break;
-            case 'wf_low':
-                $inv_stocks_query->orderBy('wf')->where('wf', '>', 0);
-            case 'wf_high':
-                $inv_stocks_query->orderByDesc('wf')->where('wf', '>', 0);
-            case 'alpha':
-                $inv_stocks_query->orderByRaw('
-                (SELECT name FROM inv_items 
-                WHERE inv_items.id = inv_stocks.inv_item_id) ASC');
-                break;
-
-        }
+        $inv_stocks_query = new InvQuery([
+            'type' => 'stocks',
+            'search' => $q,
+            'name' => $name,
+            'desc' => $desc,
+            'code' => $code,
+            'loc_parent' => $loc_parent,
+            'loc_bin' => $loc_bin,
+            'tags' => $tags,
+            'is_linked' => $this->is_linked,
+            'area_ids' => $this->area_ids,
+            'filter' => $this->filter,
+            'aging' => $this->aging,
+            'sort' => $this->sort
+        ]);
 
         return [
-            'inv_stocks' => $inv_stocks_query->paginate($this->perPage),
-            'inv_items_count' => $inv_stocks_query->distinct('inv_item_id')->count('inv_item_id')
+            'inv_stocks' => $inv_stocks_query->build()->paginate($this->perPage),
+            'inv_items_count' => $inv_stocks_query->build()->distinct('inv_item_id')->count('inv_item_id')
         ];
     }
 
