@@ -10,7 +10,7 @@ new #[Layout('layouts.app')]
 class extends Component {
 
     public function with(): array {
-        $greetings = [__('Udah makan belum?'), __('Gimana kabarnya?'), __('Apa kabar?'), __('Selamat datang!'), __('Eh ketemu lagi!'), __('Ada yang bisa dibantu?'), __('Hai,') . ' ' . (Auth::user()->name ?? __('Tamu')) . '!', __('Gimana gimana?')];
+        $greetings = [__('Gimana kabarnya?'), __('Apa kabar?'), __('Selamat datang!'), __('Eh ketemu lagi!'), __('Ada yang bisa dibantu?'), __('Hai,') . ' ' . (Auth::user()->name ?? __('Tamu')) . '!', __('Gimana gimana?')];
         $qago = Carbon::now()->subMinutes(30)->getTimestamp();
         $sessions = Session::where('last_activity', '>', $qago)->get();
         $user_ids = $sessions->pluck('user_id');

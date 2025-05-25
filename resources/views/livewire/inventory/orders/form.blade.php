@@ -7,6 +7,8 @@ use App\Models\InvArea;
 
 new class extends Component {
 
+   public string $view = 'item_search';
+
    public string $q = '';
 
    public array $areas = [];
@@ -29,8 +31,8 @@ new class extends Component {
 
 
 
-<div>
-   <div class="flex justify-between items-start p-6">
+<div class="h-full flex flex-col gap-y-6 pt-6">
+   <div class="flex justify-between items-start px-6">
       <h2 class="text-lg font-medium ">
          {{ __('Pesanan baru') }}
       </h2>
@@ -39,30 +41,42 @@ new class extends Component {
       </x-text-button>
    </div>
 
-   <div class="flex flex-col gap-y-3 p-6">
-      <x-select wire:model="area_id" class="w-full mt-4">
-         <option value=""></option>
-         @foreach ($areas as $area)
-            <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
-         @endforeach
-      </x-select>
-      <x-text-input-icon icon="icon-search" id="item-search" placeholder="{{ __('Cari barang...') }}"></x-text-input-icon>
-   </div>
+   @switch($view)
+      @case('item_search')
+         <div class="flex flex-col gap-y-3 px-6">
+            <x-select wire:model="area_id" class="w-full">
+               <option value=""></option>
+               @foreach ($areas as $area)
+                  <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
+               @endforeach
+            </x-select>
+            <x-text-input-icon icon="icon-search" id="item-search" placeholder="{{ __('Cari barang...') }}"></x-text-input-icon>
+         </div>
+         <div class="grow overflow-y-auto">
+            <div class="h-full border rounded p-6">
 
-   <div class="flex flex-col h-full overflow-y-auto p-6">
-      <div class="grid gap-y-4">
-         <div>
-            <label for="item-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
-            <x-text-input id="item-name" type="text" />
+            </div>
          </div>
-         <div>
-            <label for="item-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
-            <x-text-input id="item-desc" type="text" />                        
-         </div>
-         <div>
-            <label for="item-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
-            <x-text-input id="item-desc" type="text" />                        
-         </div>
-      </div>
-   </div>
+         @break
+
+      @case('item_form')    
+         <!-- <div class="flex flex-col h-full overflow-y-auto p-6"></div>     
+            <div class="grid gap-y-4">
+               <div>
+                  <label for="item-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+                  <x-text-input id="item-name" type="text" />
+               </div>
+               <div>
+                  <label for="item-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
+                  <x-text-input id="item-desc" type="text" />                        
+               </div>
+               <div>
+                  <label for="item-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
+                  <x-text-input id="item-code" type="text" />                        
+               </div>
+            </div>  
+         </div>   -->
+         @break    
+
+   @endswitch
 </div>

@@ -43,6 +43,7 @@ inv_oitems
 . code
 . photo
 . unit_price
+. inv_item_id
 . inv_curr_id
 . purpose
 

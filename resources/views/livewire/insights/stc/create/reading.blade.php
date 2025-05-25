@@ -850,7 +850,7 @@ new class extends Component
             </div>
             <div class="p-6">
                 <div class="flex justify-between">
-                    <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="icon-square-root-variable mr-3 text-neutral-500"></i>{{ __('Prediksi') }}</h1>
+                    <h1 class="grow text-xl text-neutral-900 dark:text-neutral-100 mb-6"><i class="icon-radical mr-3 text-neutral-500"></i>{{ __('Prediksi') }}</h1>
                     <div>
                         <x-secondary-button type="button" wire:click="calculatePrediction">{{ __('Hitung') }}</x-secondary-button>
                     </div>
