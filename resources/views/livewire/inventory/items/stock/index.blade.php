@@ -78,6 +78,7 @@ new class extends Component {
          <livewire:inventory.items.stock.create-circ type="capture"    :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
          <livewire:inventory.items.stock.create-circ type="withdrawal" :$stock_id :$stock_uom :$curr_id :$curr_rate :$unit_price :$can_eval />
       @endif
+      <livewire:inventory.items.stock.create-order />
       <div>
          <x-dropdown align="right">
             <x-slot name="trigger">

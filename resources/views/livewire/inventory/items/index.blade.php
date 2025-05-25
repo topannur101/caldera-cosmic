@@ -114,52 +114,44 @@ class extends Component
 
     public function with(): array
     {
-        $q          = trim($this->q);
-        $name       = trim($this->name);
-        $desc       = trim($this->desc);
-        $code       = trim($this->code);
-        $loc_parent = trim($this->loc_parent);
-        $loc_bin    = trim($this->loc_bin);
-        $tags       = $this->tags;
-
         $inv_items_params = [
-            'q'             => $q,
-            'name'          => $name,
-            'desc'          => $desc,
-            'code'          => $code,
+            'q'             => trim($this->q),
+            'name'          => trim($this->name),
+            'desc'          => trim($this->desc),
+            'code'          => trim($this->code),
+            'loc_parent'    => trim($this->loc_parent),
+            'loc_bin'       => trim($this->loc_bin),
+            'tags'          => $this->tags,
             'is_linked'     => $this->is_linked,
-            'loc_parent'    => $loc_parent,
-            'loc_bin'       => $loc_bin,
-            'tags'          => $tags,
             'area_ids'      => $this->area_ids,
             'filter'        => $this->filter,
             'aging'         => $this->aging,
+            'sort'          => $this->sort,
             'view'          => $this->view,
-            'sort'          => $this->sort
         ];
 
         session(['inv_items_params' => $inv_items_params]);
-        session(['inv_areas_param' => $this->area_ids]);
+        session(['inv_areas_param'  => $inv_items_params['area_ids']]);
 
         $inv_stocks_query = new InvQuery([
-            'type' => 'stocks',
-            'search' => $q,
-            'name' => $name,
-            'desc' => $desc,
-            'code' => $code,
-            'loc_parent' => $loc_parent,
-            'loc_bin' => $loc_bin,
-            'tags' => $tags,
-            'is_linked' => $this->is_linked,
-            'area_ids' => $this->area_ids,
-            'filter' => $this->filter,
-            'aging' => $this->aging,
-            'sort' => $this->sort
+            'type'          => 'stocks',
+            'search'        => $inv_items_params['q'],
+            'name'          => $inv_items_params['name'],
+            'desc'          => $inv_items_params['desc'],
+            'code'          => $inv_items_params['code'],
+            'loc_parent'    => $inv_items_params['loc_parent'],
+            'loc_bin'       => $inv_items_params['loc_bin'],
+            'tags'          => $inv_items_params['tags'],
+            'is_linked'     => $inv_items_params['is_linked'],
+            'area_ids'      => $inv_items_params['area_ids'],
+            'filter'        => $inv_items_params['filter'],
+            'aging'         => $inv_items_params['aging'],
+            'sort'          => $inv_items_params['sort']
         ]);
 
         return [
-            'inv_stocks' => $inv_stocks_query->build()->paginate($this->perPage),
-            'inv_items_count' => $inv_stocks_query->build()->distinct('inv_item_id')->count('inv_item_id')
+            'inv_stocks'        => $inv_stocks_query->build()->paginate($this->perPage),
+            'inv_items_count'   => $inv_stocks_query->build()->distinct('inv_item_id')->count('inv_item_id')
         ];
     }
 
@@ -515,6 +507,8 @@ class extends Component
                             :loc="$inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' . $inv_stock->inv_item->inv_loc->bin ) : null" 
                             :tags="$inv_stock->inv_item->tags_facade() ?? null" 
                             :qty="$inv_stock->qty" 
+                            :qty_min="$inv_stock->qty_min"
+                            :qty_max="$inv_stock->qty_max"
                             :photo="$inv_stock->inv_item->photo">
                             </x-inv-card-content>
                         @endforeach
