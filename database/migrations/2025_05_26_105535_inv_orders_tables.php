@@ -42,7 +42,7 @@ return new class extends Migration
             $table->foreignId('inv_item_id')->nullable()->constrained('inv_items')->nullOnDelete();
             $table->foreignId('inv_area_id')->constrained('inv_areas');
             $table->foreignId('inv_curr_id')->constrained('inv_currs');
-            $table->foreignId('inv_order_budget_id')->constrained('inv_order_budget');
+            $table->foreignId('inv_order_budget_id')->nullable()->constrained('inv_order_budget');
             $table->string('name');
             $table->string('desc');
             $table->string('code');
