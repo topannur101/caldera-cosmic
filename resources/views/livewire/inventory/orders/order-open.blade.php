@@ -118,7 +118,12 @@ new class extends Component {
             <x-inv-area-selector is_grow="true" class="text-xs font-semibold uppercase" :$areas />
             <div>
                <x-slide-over>
-                  <livewire:inventory.orders.form />
+                  <x-slot name="trigger">
+                     <x-primary-button type="button" @click="slideOverOpen=true"><i class="icon-pencil"></i></x-secondary-button>
+                  </x-slot>
+                  <x-slot name="content">
+                     <livewire:inventory.orders.form />
+                  </x-slot>
                </x-slide-over>
             </div>
             <div>

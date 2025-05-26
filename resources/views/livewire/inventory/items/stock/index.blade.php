@@ -80,16 +80,16 @@ new class extends Component {
       @endif
       <livewire:inventory.items.stock.create-order />
       <div>
-         <x-dropdown align="right">
+         <x-dropdown align="right" width="60">
             <x-slot name="trigger">
                <x-text-button><i class="icon-ellipsis-vertical hidden sm:inline"></i><i class="icon-ellipsis sm:hidden inline"></i></x-text-button>
             </x-slot>
             <x-slot name="content">
                <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'edit-qty-limit'); $wire.$dispatch('edit-qty-limit');">
-                  {{ __('Edit batas qty') }}
+                  <i class="icon-chevrons-down-up mr-2"></i>{{ __('Edit batas qty') }}
                </x-dropdown-link>
                <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'create-used-unit'); $wire.$dispatch('create-used-unit');">
-                  {{ __('Buat unit stok bekas') }}
+                  <i class="icon-blank mr-2"></i>{{ __('Buat unit stok bekas') }}
                </x-dropdown-link>
             </x-slot>
          </x-dropdown>

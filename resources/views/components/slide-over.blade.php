@@ -1,7 +1,7 @@
 
    <div x-data="{ slideOverOpen: false }"
       class="relative w-auto h-auto">
-      <x-primary-button type="button" @click="slideOverOpen=true">{{ __('Buat') }}</x-secondary-button>
+      {{ $trigger }}
       <template x-teleport="body">
          <div 
             x-show="slideOverOpen"
@@ -32,7 +32,7 @@
                         x-transition:leave-end="translate-x-full" 
                         class="w-screen max-w-md">
                         <div class="bg-white dark:bg-neutral-800 flex flex-col h-full text-neutral-900 dark:text-neutral-100">
-                           {{ $slot }}
+                           {{ $content }}
                         </div>
                      </div>
                   </div>

@@ -214,7 +214,7 @@ class extends Component {
     @if(count($messages) == 1)
     <div id="caldy-start" class="h-[calc(100vh-8rem)] flex items-center justify-center">
       <div class="text-center">
-        <i class="text-5xl icon-sparkles text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>
+        <x-icon-splotch class="w-14" />
         <div class="text-xl mt-3">{{ __('Hai, aku Caldy!') }}</div>
         <div class="text-neutral-500">{{ __('Mau tanya apa hari ini?')  }}</div>
       </div>

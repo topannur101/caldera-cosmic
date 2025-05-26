@@ -32,10 +32,10 @@
                     <div class="p-1 truncate font-semibold" title="{{ $name }}">
                         <x-link :href="$url" wire:navigate>{{ $name }}</x-link>
                     </div>
-                    <div class="p-1 truncate text-neutral-500 text-sm" title="{{ $desc }}">
+                    <div class="px-1 truncate text-neutral-500 text-sm" title="{{ $desc }}">
                         {{ $desc }}
                     </div>
-                    <div class="px-1 text-sm text-neutral-500">
+                    <div class="px-1 pt-1 text-sm text-neutral-500">
                         <div class="uppercase">
                             {{ $code ? $code : __('Tak ada kode')}}
                         </div>
@@ -46,8 +46,8 @@
                 </div>
                 <div class="text-right">
                     <div class="p-1 font-semibold">{{ $qty }}</div>
-                    <div class="p-1 text-sm text-nowrap text-neutral-500">{{ $uom }}</div>
-                    <div class="px-1 text-sm text-neutral-500">
+                    <div class="px-1 text-sm text-nowrap text-neutral-500">{{ $uom }}</div>
+                    <div class="px-1 pt-1 text-sm text-neutral-500">
                         <i class="icon-chevrons-down-up mr-1"></i>{{ $qty_min . '-' . $qty_max }}
                     </div>
                 </div>

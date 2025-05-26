@@ -158,9 +158,6 @@ class extends Component {
             <div>
                 <x-text-button type="button" x-on:click="$refs.invItemPhoto.click()"><i class="icon-upload mr-3"></i>{{ __('Unggah foto') }}</x-text-button>
             </div>
-            <!-- <div>
-                <x-text-button type="button"><i class="fa-file-import mr-3"></i>{{ __('Tarik dari ttconsumable') }}</x-text-button>
-            </div> -->
         </div>
         @endif
     </div>

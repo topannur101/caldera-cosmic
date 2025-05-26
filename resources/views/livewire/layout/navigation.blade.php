@@ -96,7 +96,7 @@ new class extends Component {
                     </x-nav-link>
                     @auth
                     <x-nav-link :href="route('caldy')" :active="request()->routeIs('caldy*')" wire:navigate>
-                        <i class="icon-sparkles text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>
+                        <x-icon-splotch class="w-3" />
                     </x-nav-link>
                     @endauth
                 </div>
@@ -237,7 +237,7 @@ new class extends Component {
             </x-responsive-nav-link>
             @auth
             <x-responsive-nav-link :href="route('caldy')" :active="request()->routeIs('caldy*')" wire:navigate>
-                <i class="me-2 icon-sparkles text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></i>{{ __('Caldy AI') }}
+                <x-icon-splotch class="w-3 me-2" />{{ __('Caldy AI') }}
             </x-responsive-nav-link>
             @endauth
         </div>
@@ -246,7 +246,7 @@ new class extends Component {
         <div class="py-6 border-t border-neutral-200 dark:border-neutral-600">
             @if ($user['id'])
                 <div class="flex gap-x-2 items-center mx-3">
-                    <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                    <div class="mx-2 w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                         @if ($user['photo'])
                             <img class="w-full h-full object-cover dark:brightness-75"
                                 src="/storage/users/{{ $user['photo'] }}" />
@@ -259,26 +259,26 @@ new class extends Component {
                             </svg>
                         @endif
                     </div>
-                    <div class="px-4">
+                    <div>
                         <div class="font-medium text-base text-neutral-800 dark:text-neutral-200">{{ $user['name'] }}</div>
                         <div class="font-medium text-sm text-neutral-500">{{ $user['emp_id'] }}</div>
                     </div>
                 </div>
                 <div class="mt-3 space-y-1">
                     <x-responsive-nav-link :href="route('account')" :active="request()->routeIs('account*')" wire:navigate>
-                        <i class="fa-user-pen me-2"></i>{{ __('Akun') }}
+                        <i class="icon-user-pen px-3"></i><span class="px-3">{{ __('Akun') }}</span>
                     </x-responsive-nav-link>
                     
                     @if($user['id'] == 1)
                         <x-responsive-nav-link :href="route('admin')" :active="request()->routeIs('admin*')" wire:navigate>
-                            <i class="fa-cog me-2"></i>{{ __('Administrasi') }}
+                            <i class="icon-cog px-3"></i><span class="px-3">{{ __('Administrasi') }}</span>
                         </x-responsive-nav-link>
                     @endif
 
                     <!-- Authentication -->
                     <button wire:click="logout" class="w-full text-start">
                         <x-responsive-nav-link>
-                            <i class="icon-power me-2"></i>{{ __('Keluar') }}
+                            <i class="icon-power px-3"></i><span class="px-3">{{ __('Keluar') }}</span>
                         </x-responsive-nav-link>
                     </button>
                 </div>

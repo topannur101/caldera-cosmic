@@ -142,17 +142,6 @@ new class extends Component
       <div class="truncate">
          <livewire:inventory.items.stock.circs :$stock_id />
       </div>
-         <!-- <div class="flex justify-between items-center mb-4">
-         <div class="uppercase text-neutral-500 text-sm">
-               {{ __('Sirkulasi') }}
-         </div>
-         <div class="btn-group">
-            <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'inv-item-circs-chart')"><i
-               class="fa-chart-line"></i></x-secondary-button>
-            <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'inv-item-circs-download')"><i
-               class="icon-download"></i></x-secondary-button>
-         </div>
-      </div> -->
    </div>  
    <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
    <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>

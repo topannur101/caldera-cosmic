@@ -71,7 +71,7 @@ new class extends Component {
    <form wire:submit="save" class="p-6">
       <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-               {{ __('Edit batas qty') }}
+               <i class="icon-chevrons-down-up mr-2"></i>{{ __('Edit batas qty') }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i
                   class="icon-x"></i></x-text-button>

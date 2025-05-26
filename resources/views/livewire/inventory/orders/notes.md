@@ -36,7 +36,6 @@ Pesanan terbuka [v]
 Cari ... | Pengguna | Keperluan                   TT MM | Tambah | ...
 
 # Tables
-
 inv_oitems
 . name
 . desc
@@ -46,11 +45,13 @@ inv_oitems
 . inv_item_id
 . inv_curr_id
 . purpose
+. is_published
 
 inv_oevals
-. type // qty_decrease, qty_increase, 
+. type // enum: qty_decrease, qty_increase, 
 . inv_oitem_id
 . user_id
 . message
 
 inv_olists
+. a collected /grouped of oitems

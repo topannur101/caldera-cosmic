@@ -54,7 +54,7 @@ class extends Component {
     <div wire:loading.class.remove="hidden" class="hidden h-96">
         <x-spinner></x-spinner>
     </div>
-    <div wire:key="stc-data-index-container" wire:loading.class="hidden">
+    <div wire:key="order-index-container" wire:loading.class="hidden">
         @switch($view)
 
             @case('order-open')
