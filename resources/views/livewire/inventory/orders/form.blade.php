@@ -105,8 +105,8 @@ new class extends Component {
                   </div> 
                </div>
                <div class="grow truncate">
-                  <div class="p-1 truncate" title="{{ $stock->inv_item->name }}">
-                     <x-link :href="route('inventory.items.show', $stock->inv_item->id)" target="_blank" class="z-10">{{ $stock->inv_item->name }}</x-link>
+                  <div class="p-1 truncate font-semibold" title="{{ $stock->inv_item->name }}">
+                     {{ $stock->inv_item->name }}
                   </div>
                   <div class="p-1 truncate text-neutral-500" title="{{ $stock->inv_item->desc }}">
                      {{ $stock->inv_item->desc }}
@@ -124,15 +124,15 @@ new class extends Component {
                      <div title="{{ $stock->inv_item->inv_loc_id ? ($stock->inv_item->inv_loc->parent . '-' . $stock->inv_item->inv_loc->bin ) : __('Tak ada lokasi') }}">
                            <i class="icon-map-pin mr-1"></i>{{ $stock->inv_item->inv_loc_id ? ($stock->inv_item->inv_loc->parent . '-' . $stock->inv_item->inv_loc->bin ) : __('Tak ada lokasi') }}
                      </div>
-                     <div>
+                     <div class="truncate" title="{{ $stock->inv_item->tags_facade() ?: __('Tak ada tag') }}">
                            <i class="icon-tag mr-1"></i>{{ $stock->inv_item->tags_facade() ?: __('Tak ada tag') }}
                      </div>
                   </div>
                </div>
                <div class="text-right">
                   <div class="p-1">{{ $stock->qty }}</div>
-                  <div class="px-1 text-nowrap text-neutral-500">{{ $stock->uom }}</div>
-                  <div class="px-1 text-xs text-neutral-500 mt-1">
+                  <div class="p-1 text-nowrap text-neutral-500">{{ $stock->uom }}</div>
+                  <div class="p-1 text-xs text-neutral-500">
                      <i class="icon-chevrons-down-up mr-1"></i>{{ $stock->qty_min . '-' . $stock->qty_max }}
                   </div>
                </div>

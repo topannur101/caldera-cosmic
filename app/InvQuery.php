@@ -242,11 +242,10 @@ class InvQuery
     {
         switch ($sort) {
             case 'updated':
-                $query->orderByDesc('updated_at');
+                $query->orderByDesc('updated_at')->orderBy('inv_item_id');
                 break;
-
             case 'created':
-                $query->orderByDesc('created_at');
+                $query->orderByDesc('created_at')->orderBy('inv_item_id');
                 break;
 
             case 'loc':

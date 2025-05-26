@@ -15,7 +15,7 @@
     ])
 
 <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden rounded-none sm:rounded-md">
-    <div class="flex gap-x-3">
+    <div class="flex">
         <div>
             <div class="relative flex w-32 h-full bg-neutral-200 dark:bg-neutral-700">
                 <div class="m-auto">
@@ -26,37 +26,38 @@
                 @endif
             </div>            
         </div>
-        <div class="flex grow truncate py-3 pr-4">
-            <div class="grow truncate">
-                <div class="p-1 truncate" title="{{ $name }}">
-                    <x-link :href="$url" wire:navigate>{{ $name }}</x-link>
-                </div>
-                <div class="p-1 truncate text-neutral-500" title="{{ $desc }}">
-                    {{ $desc }}
-                </div>
-                <div class="p-1 flex gap-x-1 items-center text-xs text-neutral-500">
-                    <div class="uppercase">
-                        {{ $code ? $code : __('Tak ada kode')}}
+        <div class="grow truncate p-2">
+            <div class="flex w-full">
+                <div class="grow truncate">
+                    <div class="p-1 truncate font-semibold" title="{{ $name }}">
+                        <x-link :href="$url" wire:navigate>{{ $name }}</x-link>
                     </div>
-                    <div>•</div>
-                    <div title="{{ $price ? ($curr  . ' ' . number_format($price, 0) . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}"">
-                        {{ $price ? ($curr  . ' ' . number_format($price, 0)) : __('Tak ada harga') }}
+                    <div class="p-1 truncate text-neutral-500 text-sm" title="{{ $desc }}">
+                        {{ $desc }}
+                    </div>
+                    <div class="px-1 text-sm text-neutral-500">
+                        <div class="uppercase">
+                            {{ $code ? $code : __('Tak ada kode')}}
+                        </div>
+                        <div title="{{ $price ? ($curr  . ' ' . number_format($price, 0) . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}"">
+                            {{ $price ? ($curr  . ' ' . number_format($price, 0) . ' / ' . $uom) : __('Tak ada harga') }}
+                        </div>
                     </div>
                 </div>
-                <div class="p-1 flex gap-x-2 items-center text-xs text-neutral-500">
-                    <div title="{{ $loc }}">
-                        <i class="icon-map-pin mr-1"></i>{{ $loc ? $loc : __('Tak ada lokasi') }}
-                    </div>
-                    <div title="{{ $tags }}">
-                        <i class="icon-tag mr-1"></i>{{ $tags ? $tags : __('Tak ada tag') }}
+                <div class="text-right">
+                    <div class="p-1 font-semibold">{{ $qty }}</div>
+                    <div class="p-1 text-sm text-nowrap text-neutral-500">{{ $uom }}</div>
+                    <div class="px-1 text-sm text-neutral-500">
+                        <i class="icon-chevrons-down-up mr-1"></i>{{ $qty_min . '-' . $qty_max }}
                     </div>
                 </div>
             </div>
-            <div class="text-right">
-                <div class="p-1">{{ $qty }}</div>
-                <div class="px-1 text-nowrap text-neutral-500">{{ $uom }}</div>
-                <div class="px-1 text-xs text-neutral-500 mt-1">
-                    <i class="icon-chevrons-down-up mr-1"></i>{{ $qty_min . '-' . $qty_max }}
+            <div class="p-1 flex gap-x-2 items-center text-sm text-neutral-500">
+                <div title="{{ $loc }}">
+                    <i class="icon-map-pin mr-1"></i>{{ $loc ? $loc : __('Tak ada lokasi') }}
+                </div>
+                <div class="truncate" title="{{ $tags }}">
+                    <i class="icon-tag mr-1"></i>{{ $tags ? $tags : __('Tak ada tag') }}
                 </div>
             </div>
         </div>
