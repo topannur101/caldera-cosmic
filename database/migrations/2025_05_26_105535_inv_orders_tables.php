@@ -70,6 +70,7 @@ return new class extends Migration
             $table->unsignedInteger('qty_before');
             $table->unsignedInteger('qty_after');
             $table->text('message')->nullable();
+            $table->json('data')->nullable(); // should contain an array [ 'qty_increase', 'qty_decrease', 'budget_change', 'purpose_change' , 'item_info_change' ]
             
             $table->index('inv_order_item_id');
             $table->index('user_id');

@@ -32,6 +32,8 @@ class extends Component
     #[Url]
     public array $area_ids = [];
 
+    public bool $area_multiple = false;
+
     #[Url]
     public array $tags = [];
     
@@ -99,11 +101,23 @@ class extends Component
                 $this->sort         = $itemsParams['sort'] ?? '';
             }
             
-            $areasParam  = session('inv_areas_param', []);
-    
-            $areasParam 
-            ? $this->area_ids = $areasParam ?? [] 
-            : $this->area_ids = array_column($this->areas, 'id');
+            $areasParams = session('inv_areas_params', []);
+
+            if (!empty($areasParams)) {
+                $this->area_ids = $areasParams['ids'] ?? [];
+                
+                // If more than one area ID, force multiple mode
+                if (count($this->area_ids) > 1) {
+                    $this->area_multiple = true;
+                } else {
+                    // Honor the stored preference for single/zero selections
+                    $this->area_multiple = $areasParams['multiple'] ?? false;
+                }
+            } else {
+                // Default behavior: single selection mode with first available area
+                $this->area_multiple = false;
+                $this->area_ids = !empty($this->areas) ? [$this->areas[0]['id']] : [];
+            }
         }
 
         if($this->is_deleted) {
@@ -130,8 +144,13 @@ class extends Component
             'view'          => $this->view,
         ];
 
+        $inv_areas_params = [
+            'multiple'      => $this->area_multiple,
+            'ids'           => $inv_items_params['area_ids'],
+        ];
+
         session(['inv_items_params' => $inv_items_params]);
-        session(['inv_areas_param'  => $inv_items_params['area_ids']]);
+        session(['inv_areas_params' => $inv_areas_params]);
 
         $inv_stocks_query = new InvQuery([
             'type'          => 'stocks',
@@ -174,6 +193,7 @@ class extends Component
     public function resetQuery()
     {
         session()->forget('inv_items_params');
+        session()->forget('inv_areas_params');
         $this->redirect(route('inventory.items.index'), navigate: true);
     }
 

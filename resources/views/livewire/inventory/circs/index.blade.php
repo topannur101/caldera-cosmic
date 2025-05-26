@@ -26,6 +26,8 @@ class extends Component {
 
     public array $area_ids = [];
 
+    public bool $area_multiple = false;
+
     public array $circ_eval_status = ['pending', 'approved'];
 
     public array $circ_types = ['deposit', 'withdrawal'];
@@ -82,11 +84,23 @@ class extends Component {
             $this->remarks          = $circsParams['remarks']           ?? ['', ''];
         }
 
-        $areasParam = session('inv_areas_param', []);
+        $areasParams = session('inv_areas_params', []);
 
-        $areasParam 
-        ? $this->area_ids = $areasParam ?? [] 
-        : $this->area_ids = $areas->pluck('id')->toArray();
+        if (!empty($areasParams)) {
+            $this->area_ids = $areasParams['ids'] ?? [];
+            
+            // If more than one area ID, force multiple mode
+            if (count($this->area_ids) > 1) {
+                $this->area_multiple = true;
+            } else {
+                // Honor the stored preference for single/zero selections
+                $this->area_multiple = $areasParams['multiple'] ?? false;
+            }
+        } else {
+            // Default behavior: single selection mode with first available area
+            $this->area_multiple = false;
+            $this->area_ids = !empty($this->areas) ? [$this->areas[0]['id']] : [];
+        }
     }
 
     private function InvCircQuery()
@@ -107,8 +121,13 @@ class extends Component {
             'remarks'           => [ $circ_remarks, $eval_remarks ],
         ];
 
+        $inv_areas_params = [
+            'multiple'      => $this->area_multiple,
+            'ids'           => $inv_circs_params['area_ids'],
+        ];
+
         session(['inv_circs_params' => $inv_circs_params]);
-        session(['inv_areas_param'  => $this->area_ids]);
+        session(['inv_areas_params'  => $inv_areas_params]);
 
         $inv_circs_query = InvCirc::with([
             'inv_stock',
@@ -187,6 +206,7 @@ class extends Component {
     public function resetQuery()
     {
         session()->forget('inv_circs_params');
+        session()->forget('inv_areas_params');
         $this->redirect(route('inventory.circs.index'), navigate: true);
     }
 

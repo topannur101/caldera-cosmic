@@ -132,7 +132,7 @@ new class extends Component {
 
       $this->validate([
          'area_id' => ['required', 'exists:inv_areas,id'],
-         'budget_id' => ['nullable', 'exists:inv_order_budget,id'], // Made nullable
+         'budget_id' => ['required', 'exists:inv_order_budget,id'], // Made nullable
          'currency_id' => ['required', 'exists:inv_currs,id'],
          'name' => ['required', 'max:128'],
          'desc' => ['required', 'max:256'],

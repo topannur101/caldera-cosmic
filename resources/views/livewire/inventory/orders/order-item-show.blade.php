@@ -46,10 +46,13 @@ new class extends Component
     public string $eval_message = '';
 
     public bool $can_edit_item_details = false;
+    public string $active_tab = 'edit'; // 'edit' or 'evals'
 
     #[On('order-item-show')]
-    public function loadOrderItem(int $id)
+    public function loadOrderItem(int $id, string $tab = 'edit')
     {
+        $this->active_tab = $tab;
+        
         $orderItem = InvOrderItem::with([
             'inv_area',
             'inv_curr', 
@@ -81,17 +84,157 @@ new class extends Component
             // Load currencies
             $this->currencies = InvCurr::where('is_active', true)->get()->toArray();
 
-            // Load evaluations
+            // Load evaluations with parsed data
             $this->evaluations = $orderItem->inv_order_evals()
                 ->with('user')
                 ->orderByDesc('created_at')
                 ->get()
+                ->map(function ($eval) {
+                    $changes = [];
+                    if ($eval->data) {
+                        $parsedData = json_decode($eval->data, true);
+                        if ($parsedData) {
+                            $changes = collect($parsedData)->map(function($change) {
+                                return $this->formatChangeDescription($change);
+                            })->toArray();
+                        }
+                    }
+                    
+                    return [
+                        'id' => $eval->id,
+                        'user_name' => $eval->user->name,
+                        'user_emp_id' => $eval->user->emp_id,
+                        'user_photo' => $eval->user->photo,
+                        'qty_before' => $eval->qty_before,
+                        'qty_after' => $eval->qty_after,
+                        'quantity_change' => $eval->qty_after - $eval->qty_before,
+                        'message' => $eval->message,
+                        'changes' => $changes,
+                        'created_at' => $eval->created_at->format('d/m/Y H:i'),
+                        'created_at_diff' => $eval->created_at->diffForHumans(),
+                    ];
+                })
                 ->toArray();
 
             $this->resetValidation();
         } else {
             $this->handleNotFound();
         }
+    }
+
+
+    #[On('order-item-edit')]
+    public function loadOrderItemForEdit(int $id)
+    {
+        $this->loadOrderItem($id, 'edit');
+    }
+
+    #[On('order-item-evals')]
+    public function loadOrderItemForEvals(int $id)
+    {
+        $this->loadOrderItem($id, 'evals');
+    }
+
+    private function detectChanges($orderItem, $beforeBudget = null)
+    {
+        $changes = [];
+        
+        // 1. Quantity changes
+        if ($orderItem->qty != $this->qty) {
+            if ($this->qty > $orderItem->qty) {
+                $changes[] = [
+                    'type' => 'qty_increase',
+                    'from' => $orderItem->qty,
+                    'to' => $this->qty
+                ];
+            } else {
+                $changes[] = [
+                    'type' => 'qty_decrease', 
+                    'from' => $orderItem->qty,
+                    'to' => $this->qty
+                ];
+            }
+        }
+        
+        // 2. Budget changes
+        if ($orderItem->inv_order_budget_id != $this->budget_id) {
+            $newBudget = collect($this->budgets)->firstWhere('id', $this->budget_id);
+            
+            $changes[] = [
+                'type' => 'budget_change',
+                'from_budget_name' => $beforeBudget ? $beforeBudget->name : 'Unknown',
+                'to_budget_name' => $newBudget ? $newBudget['name'] : 'Unknown',
+                'from_amount_budget' => $orderItem->amount_budget,
+                'to_amount_budget' => $this->order_item['amount_budget'] ?? 0,
+                'from_currency' => $beforeBudget ? $beforeBudget->inv_curr->name : 'Unknown',
+                'to_currency' => $newBudget ? $newBudget['inv_curr']['name'] : 'Unknown'
+            ];
+        }
+        
+        // 3. Purpose changes
+        if ($orderItem->purpose != $this->purpose) {
+            $changes[] = [
+                'type' => 'purpose_change',
+                'from' => $orderItem->purpose,
+                'to' => $this->purpose
+            ];
+        }
+        
+        // 4. Item info changes (only for manual entries)
+        if ($this->can_edit_item_details) {
+            if ($orderItem->name != $this->name) {
+                $changes[] = [
+                    'type' => 'name_change',
+                    'from' => $orderItem->name,
+                    'to' => $this->name
+                ];
+            }
+            
+            if ($orderItem->desc != $this->desc) {
+                $changes[] = [
+                    'type' => 'desc_change',
+                    'from' => $orderItem->desc,
+                    'to' => $this->desc
+                ];
+            }
+            
+            if ($orderItem->code != $this->code) {
+                $changes[] = [
+                    'type' => 'code_change',
+                    'from' => $orderItem->code,
+                    'to' => $this->code
+                ];
+            }
+            
+            if ($orderItem->uom != $this->uom) {
+                $changes[] = [
+                    'type' => 'uom_change',
+                    'from' => $orderItem->uom,
+                    'to' => $this->uom
+                ];
+            }
+            
+            if ($orderItem->unit_price != $this->unit_price) {
+                $changes[] = [
+                    'type' => 'unit_price_change',
+                    'from' => $orderItem->unit_price,
+                    'to' => $this->unit_price
+                ];
+            }
+            
+            if ($orderItem->inv_curr_id != $this->currency_id) {
+                $oldCurrency = collect($this->currencies)->firstWhere('id', $orderItem->inv_curr_id);
+                $newCurrency = collect($this->currencies)->firstWhere('id', $this->currency_id);
+                
+                $changes[] = [
+                    'type' => 'currency_change',
+                    'from' => $oldCurrency ? $oldCurrency['name'] : 'Unknown',
+                    'to' => $newCurrency ? $newCurrency['name'] : 'Unknown'
+                ];
+            }
+        }
+        
+        return $changes;
     }
 
     private function loadBudgets(int $areaId)
@@ -177,12 +320,16 @@ new class extends Component
         $this->validate($rules);
 
         try {
-            $orderItem = InvOrderItem::find($this->order_item['id']);
+            // Get current state from database (Option A)
+            $orderItem = InvOrderItem::with(['inv_order_budget.inv_curr'])->find($this->order_item['id']);
             
             if (!$orderItem || !is_null($orderItem->inv_order_id)) {
                 $this->js('toast("' . __('Butir pesanan tidak dapat diedit') . '", { type: "danger" })');
                 return;
             }
+
+            // Detect changes before updating
+            $changes = $this->detectChanges($orderItem, $orderItem->inv_order_budget);
 
             // Store original quantity for evaluation tracking
             $qtyBefore = $orderItem->qty;
@@ -210,21 +357,94 @@ new class extends Component
 
             $orderItem->save();
 
-            // Create evaluation record
+            // Create evaluation record with change detection
             InvOrderEval::create([
                 'inv_order_item_id' => $orderItem->id,
                 'user_id' => Auth::id(),
                 'qty_before' => $qtyBefore,
                 'qty_after' => $this->qty,
                 'message' => $this->eval_message,
+                'data' => json_encode($changes)
             ]);
 
             $this->dispatch('order-item-updated');
-            $this->js('$dispatch("close")');
+            $this->js('slideOverOpen = false');
             $this->js('toast("' . __('Butir pesanan berhasil diperbarui') . '", { type: "success" })');
 
         } catch (\Exception $e) {
             $this->js('toast("' . __('Terjadi kesalahan saat menyimpan') . '", { type: "danger" })');
+        }
+    }
+
+    private function formatChangeDescription($change)
+    {
+        switch ($change['type']) {
+            case 'qty_increase':
+                return __('Quantity increased from :from to :to', [
+                    'from' => $change['from'],
+                    'to' => $change['to']
+                ]);
+                
+            case 'qty_decrease':
+                return __('Quantity decreased from :from to :to', [
+                    'from' => $change['from'], 
+                    'to' => $change['to']
+                ]);
+                
+            case 'budget_change':
+                return __('Budget changed from :from_budget (:from_currency :from_amount) to :to_budget (:to_currency :to_amount)', [
+                    'from_budget' => $change['from_budget_name'],
+                    'to_budget' => $change['to_budget_name'],
+                    'from_currency' => $change['from_currency'],
+                    'from_amount' => number_format($change['from_amount_budget'], 2),
+                    'to_currency' => $change['to_currency'],
+                    'to_amount' => number_format($change['to_amount_budget'], 2)
+                ]);
+                
+            case 'purpose_change':
+                return __('Purpose changed from ":from" to ":to"', [
+                    'from' => $change['from'],
+                    'to' => $change['to']
+                ]);
+                
+            case 'name_change':
+                return __('Name changed from ":from" to ":to"', [
+                    'from' => $change['from'],
+                    'to' => $change['to']
+                ]);
+                
+            case 'desc_change':
+                return __('Description changed from ":from" to ":to"', [
+                    'from' => $change['from'],
+                    'to' => $change['to']
+                ]);
+                
+            case 'code_change':
+                return __('Code changed from ":from" to ":to"', [
+                    'from' => $change['from'],
+                    'to' => $change['to']
+                ]);
+                
+            case 'uom_change':
+                return __('Unit changed from ":from" to ":to"', [
+                    'from' => $change['from'],
+                    'to' => $change['to']
+                ]);
+                
+            case 'unit_price_change':
+                return __('Unit price changed from :from to :to', [
+                    'from' => number_format($change['from'], 2),
+                    'to' => number_format($change['to'], 2)
+                ]);
+                
+            case 'currency_change':
+                return __('Currency changed from :from to :to', [
+                    'from' => $change['from'],
+                    'to' => $change['to']
+                ]);
+                
+            default:
+                return __('Unknown change type: :type', ['type' => $change['type']]);
         }
     }
 
@@ -237,7 +457,7 @@ new class extends Component
                 $orderItem->delete();
                 
                 $this->dispatch('order-item-updated');
-                $this->js('$dispatch("close")');
+                $this->js('slideOverOpen = false');
                 $this->js('toast("' . __('Butir pesanan berhasil dihapus') . '", { type: "success" })');
             } else {
                 $this->js('toast("' . __('Butir pesanan tidak dapat dihapus') . '", { type: "danger" })');
@@ -249,7 +469,7 @@ new class extends Component
 
     public function handleNotFound()
     {
-        $this->js('$dispatch("close")');
+        $this->js('slideOverOpen = false');
         $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
     }
 
@@ -275,13 +495,65 @@ new class extends Component
 ?>
 
 <div class="h-full flex flex-col">
-    <div class="p-6 flex justify-between items-start border-b border-neutral-200 dark:border-neutral-700">
-        <h2 class="text-lg font-medium">
-            {{ __('Edit butir pesanan') }}
-        </h2>
-        <x-text-button type="button" x-on:click="$dispatch('close')">
-            <i class="icon-x"></i>
-        </x-text-button>
+    <div class="p-6 border-b border-neutral-200 dark:border-neutral-700">
+        <div class="flex justify-between items-start mb-4">
+            <h2 class="text-lg font-medium">
+                {{ __('Butir pesanan') }}
+            </h2>
+            <x-text-button type="button" @click="slideOverOpen = false">
+                <i class="icon-x"></i>
+            </x-text-button>
+        </div>
+
+        {{-- Order Item Info --}}
+        <div class="flex gap-x-3 mb-4">
+            <div class="rounded-sm overflow-hidden relative flex w-12 h-12 bg-neutral-200 dark:bg-neutral-700">
+                <div class="m-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="block w-6 h-6 fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 38.777 39.793">
+                        <path d="M19.396.011a1.058 1.058 0 0 0-.297.087L6.506 5.885a1.058 1.058 0 0 0 .885 1.924l12.14-5.581 15.25 7.328-15.242 6.895L1.49 8.42A1.058 1.058 0 0 0 0 9.386v20.717a1.058 1.058 0 0 0 .609.957l18.381 8.633a1.058 1.058 0 0 0 .897 0l18.279-8.529a1.058 1.058 0 0 0 .611-.959V9.793a1.058 1.058 0 0 0-.599-.953L20 .105a1.058 1.058 0 0 0-.604-.095zM2.117 11.016l16.994 7.562a1.058 1.058 0 0 0 .867-.002l16.682-7.547v18.502L20.6 37.026V22.893a1.059 1.059 0 1 0-2.117 0v14.224L2.117 29.432z" />
+                    </svg>
+                </div>
+                @if($order_item['photo'])
+                    <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ '/storage/inv-order-items/' . $order_item['photo'] }}" />
+                @endif
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="font-medium truncate">{{ $order_item['name'] }}</div>
+                <div class="text-sm text-neutral-500 truncate">{{ $order_item['desc'] }}</div>
+                <div class="text-xs text-neutral-400">{{ $order_item['code'] ?: __('Tidak ada kode') }}</div>
+            </div>
+        </div>
+
+        {{-- Tab Navigation --}}
+        <div x-data="{
+                tabSelected: @entangle('active_tab'),
+                tabId: $id('tabs'),
+                tabButtonClicked(tabButton){
+                    this.tabSelected = tabButton.dataset.tab;
+                    this.tabRepositionMarker(tabButton);
+                },
+                tabRepositionMarker(tabButton){
+                    this.$refs.tabMarker.style.width=tabButton.offsetWidth + 'px';
+                    this.$refs.tabMarker.style.height=tabButton.offsetHeight + 'px';
+                    this.$refs.tabMarker.style.left=tabButton.offsetLeft + 'px';
+                },
+                tabContentActive(tabContent){
+                    return this.tabSelected == tabContent;
+                }
+            }" x-init="tabRepositionMarker($refs.tabButtons.firstElementChild);" class="relative w-full">
+            
+            <div x-ref="tabButtons" class="relative inline-grid items-center justify-center w-full h-10 grid-cols-2 p-1 text-neutral-500 bg-neutral-100 dark:bg-neutral-800 rounded-lg select-none">
+                <button data-tab="edit" @click="tabButtonClicked($el);" type="button" class="relative z-20 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">
+                    <i class="icon-edit mr-2"></i>{{ __('Edit') }}
+                </button>
+                <button data-tab="evals" @click="tabButtonClicked($el);" type="button" class="relative z-20 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">
+                    <i class="icon-message mr-2"></i>{{ __('Evaluasi') }} ({{ count($evaluations) }})
+                </button>
+                <div x-ref="tabMarker" class="absolute left-0 z-10 w-1/2 h-full duration-300 ease-out" x-cloak>
+                    <div class="w-full h-full bg-white dark:bg-neutral-700 rounded-md shadow-sm"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if ($errors->any())
@@ -292,32 +564,20 @@ new class extends Component
         </div>
     @endif
 
-    <div class="flex-1 overflow-y-auto">
-        <div class="p-6 space-y-6">
+    <div class="flex-1 overflow-y-auto" x-data="{
+            tabSelected: @entangle('active_tab')
+        }">
+        
+        {{-- Edit Tab Content --}}
+        <div x-show="tabSelected === 'edit'" class="p-6 space-y-6">
             
-            {{-- Item Photo and Basic Info --}}
-            <div class="flex gap-x-3">
-                <div class="rounded-sm overflow-hidden relative flex w-16 h-16 bg-neutral-200 dark:bg-neutral-700">
-                    <div class="m-auto">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="block w-8 h-8 fill-current text-neutral-800 dark:text-neutral-200 opacity-25" viewBox="0 0 38.777 39.793">
-                            <path d="M19.396.011a1.058 1.058 0 0 0-.297.087L6.506 5.885a1.058 1.058 0 0 0 .885 1.924l12.14-5.581 15.25 7.328-15.242 6.895L1.49 8.42A1.058 1.058 0 0 0 0 9.386v20.717a1.058 1.058 0 0 0 .609.957l18.381 8.633a1.058 1.058 0 0 0 .897 0l18.279-8.529a1.058 1.058 0 0 0 .611-.959V9.793a1.058 1.058 0 0 0-.599-.953L20 .105a1.058 1.058 0 0 0-.604-.095zM2.117 11.016l16.994 7.562a1.058 1.058 0 0 0 .867-.002l16.682-7.547v18.502L20.6 37.026V22.893a1.059 1.059 0 1 0-2.117 0v14.224L2.117 29.432z" />
-                        </svg>
-                    </div>
-                    @if($order_item['photo'])
-                        <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ '/storage/inv-order-items/' . $order_item['photo'] }}" />
-                    @endif
-                </div>
-                <div class="flex-1">
-                    <div class="text-sm text-neutral-500 mb-1">
-                        @if($can_edit_item_details)
-                            <i class="icon-edit text-green-500 mr-1"></i>{{ __('Manual entry - dapat diedit') }}
-                        @else
-                            <i class="icon-database text-blue-500 mr-1"></i>{{ __('Dari inventaris - tidak dapat diedit') }}
-                        @endif
-                    </div>
-                    <div class="font-medium">{{ $order_item['name'] }}</div>
-                    <div class="text-sm text-neutral-500">{{ $order_item['desc'] }}</div>
-                </div>
+            {{-- Item Type Info --}}
+            <div class="text-sm text-neutral-500">
+                @if($can_edit_item_details)
+                    <i class="icon-edit text-green-500 mr-1"></i>{{ __('Manual entry - dapat diedit') }}
+                @else
+                    <i class="icon-database text-blue-500 mr-1"></i>{{ __('Dari inventaris - tidak dapat diedit') }}
+                @endif
             </div>
 
             {{-- Item Details (editable for manual entries only) --}}
@@ -430,35 +690,99 @@ new class extends Component
                 <label for="eval_message" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Alasan perubahan') }}</label>
                 <x-text-input id="eval_message" wire:model="eval_message" type="text" class="w-full" placeholder="{{ __('Jelaskan alasan perubahan...') }}" />
             </div>
+        </div>
 
-            {{-- Evaluation History --}}
+        {{-- Evaluations Tab Content --}}
+        <div x-show="tabSelected === 'evals'" class="flex-1 flex flex-col" x-cloak>
             @if(count($evaluations) > 0)
-                <div>
-                    <h3 class="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3">{{ __('Riwayat evaluasi') }}</h3>
-                    <div class="space-y-3 max-h-40 overflow-y-auto">
-                        @foreach($evaluations as $eval)
-                            <div class="border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 text-sm">
-                                <div class="flex justify-between items-start mb-2">
-                                    <div class="font-medium">{{ $eval['user']['name'] }}</div>
-                                    <div class="text-xs text-neutral-500">{{ \Carbon\Carbon::parse($eval['created_at'])->format('d/m/Y H:i') }}</div>
+                <div class="p-6 space-y-4 flex-1 overflow-y-auto">
+                    @foreach($evaluations as $eval)
+                        <div class="border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+                            {{-- User Info and Timestamp --}}
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-x-2">
+                                    <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                        @if ($eval['user_photo'])
+                                            <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/' . $eval['user_photo'] }}" />
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
+                                                viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
+                                                <path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
+                                            </svg>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">{{ $eval['user_name'] }}</div>
+                                        <div class="text-xs text-neutral-500">{{ $eval['user_emp_id'] }}</div>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-neutral-600 dark:text-neutral-400">{{ __('Qty') }}:</span>
-                                    <span>{{ $eval['qty_before'] }} → {{ $eval['qty_after'] }}</span>
+                                <div class="text-right">
+                                    <div class="text-xs text-neutral-500">{{ $eval['created_at'] }}</div>
+                                    <div class="text-xs text-neutral-400">{{ $eval['created_at_diff'] }}</div>
                                 </div>
-                                @if($eval['message'])
-                                    <div class="text-neutral-600 dark:text-neutral-400">{{ $eval['message'] }}</div>
-                                @endif
                             </div>
-                        @endforeach
+
+                            {{-- Quantity Change --}}
+                            <div class="mb-3">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-neutral-600 dark:text-neutral-400">{{ __('Perubahan quantity') }}:</span>
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="font-mono">{{ $eval['qty_before'] }}</span>
+                                        <i class="icon-arrow-right text-neutral-400"></i>
+                                        <span class="font-mono">{{ $eval['qty_after'] }}</span>
+                                        @if($eval['quantity_change'] != 0)
+                                            <span class="ml-2 px-2 py-1 rounded text-xs {{ $eval['quantity_change'] > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                                                {{ $eval['quantity_change'] > 0 ? '+' : '' }}{{ $eval['quantity_change'] }}
+                                            </span>
+                                        @else
+                                            <span class="ml-2 px-2 py-1 rounded text-xs bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
+                                                {{ __('Tidak ada perubahan') }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Detailed Changes --}}
+                            @if(count($eval['changes']) > 0)
+                                <div class="mb-3">
+                                    <div class="text-xs text-neutral-500 mb-2">{{ __('Detail perubahan') }}:</div>
+                                    <div class="space-y-1">
+                                        @foreach($eval['changes'] as $change)
+                                            <div class="text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-800 rounded px-2 py-1">
+                                                {{ $change }}
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Message --}}
+                            @if($eval['message'])
+                                <div class="text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-800 rounded p-3">
+                                    <div class="text-xs text-neutral-500 mb-1">{{ __('Alasan') }}:</div>
+                                    <div>{{ $eval['message'] }}</div>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="flex-1 flex items-center justify-center">
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">
+                        <i class="icon-message-circle text-4xl mb-2"></i>
+                        <div>{{ __('Belum ada evaluasi') }}</div>
                     </div>
                 </div>
             @endif
         </div>
     </div>
 
-    {{-- Actions --}}
-    <div class="border-t border-neutral-200 dark:border-neutral-700 px-6 py-4">
+    {{-- Actions - only show on edit tab --}}
+    <div class="border-t border-neutral-200 dark:border-neutral-700 px-6 py-4" x-data="{
+            tabSelected: @entangle('active_tab')
+        }" x-show="tabSelected === 'edit'">
         <div class="flex justify-between">
             <x-secondary-button type="button" wire:click="deleteOrderItem" 
                 wire:confirm="{{ __('Yakin ingin menghapus butir pesanan ini?') }}"
@@ -467,7 +791,7 @@ new class extends Component
             </x-secondary-button>
             
             <div class="flex space-x-3">
-                <x-secondary-button type="button" x-on:click="$dispatch('close')">
+                <x-secondary-button type="button" @click="slideOverOpen = false">
                     {{ __('Batal') }}
                 </x-secondary-button>
                 

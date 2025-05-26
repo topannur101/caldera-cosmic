@@ -77,6 +77,45 @@ new class extends Component
         }
     }
 
+    private function detectBulkChanges($orderItem, $beforeBudget = null)
+    {
+        $changes = [];
+        
+        // Quantity changes
+        if ($this->update_qty && $orderItem->qty != $this->qty) {
+            if ($this->qty > $orderItem->qty) {
+                $changes[] = [
+                    'type' => 'qty_increase',
+                    'from' => $orderItem->qty,
+                    'to' => $this->qty
+                ];
+            } else {
+                $changes[] = [
+                    'type' => 'qty_decrease',
+                    'from' => $orderItem->qty,
+                    'to' => $this->qty
+                ];
+            }
+        }
+        
+        // Budget changes
+        if ($this->update_budget && $orderItem->inv_order_budget_id != $this->budget_id) {
+            $newBudget = collect($this->budgets)->firstWhere('id', $this->budget_id);
+            
+            $changes[] = [
+                'type' => 'budget_change',
+                'from_budget_name' => $beforeBudget ? $beforeBudget->name : 'Unknown',
+                'to_budget_name' => $newBudget ? $newBudget['name'] : 'Unknown',
+                'from_amount_budget' => $orderItem->amount_budget,
+                'to_amount_budget' => 0, // Will be calculated after update
+                'from_currency' => $beforeBudget ? $beforeBudget->inv_curr->name : 'Unknown',
+                'to_currency' => $newBudget ? $newBudget['inv_curr']['name'] : 'Unknown'
+            ];
+        }
+        
+        return $changes;
+    }
+
     private function loadBudgets(int $areaId)
     {
         $this->budgets = InvOrderBudget::where('inv_area_id', $areaId)
@@ -96,13 +135,15 @@ new class extends Component
 
     private function setDefaultValues()
     {
-        // Set most common quantity as default
+        // Set most common quantity as default - FIX: mode() returns array, not Collection
         $quantities = collect($this->order_items)->pluck('qty');
-        $this->qty = $quantities->mode()->first() ?? 1;
+        $modeResult = $quantities->mode();
+        $this->qty = !empty($modeResult) ? $modeResult[0] : 1;
         
-        // Set most common budget as default
+        // Set most common budget as default - FIX: mode() returns array, not Collection
         $budgetIds = collect($this->order_items)->pluck('budget_id');
-        $this->budget_id = $budgetIds->mode()->first() ?? 0;
+        $budgetModeResult = $budgetIds->mode();
+        $this->budget_id = !empty($budgetModeResult) ? $budgetModeResult[0] : 0;
     }
 
     public function bulkUpdate()
@@ -138,11 +179,15 @@ new class extends Component
             $updatedCount = 0;
 
             foreach ($this->order_item_ids as $orderItemId) {
-                $orderItem = InvOrderItem::find($orderItemId);
+                // Get current state from database (Option A)
+                $orderItem = InvOrderItem::with(['inv_order_budget.inv_curr'])->find($orderItemId);
                 
                 if (!$orderItem || !is_null($orderItem->inv_order_id)) {
                     continue; // Skip items that are already finalized
                 }
+
+                // Detect changes before updating
+                $changes = $this->detectBulkChanges($orderItem, $orderItem->inv_order_budget);
 
                 $qtyBefore = $orderItem->qty;
                 $hasChanges = false;
@@ -163,13 +208,23 @@ new class extends Component
                     // Recalculate amounts
                     $orderItem->updateBudgetAllocation();
                     
-                    // Create evaluation record
+                    // Update budget change amount if needed
+                    if ($this->update_budget) {
+                        foreach ($changes as &$change) {
+                            if ($change['type'] === 'budget_change') {
+                                $change['to_amount_budget'] = $orderItem->amount_budget;
+                            }
+                        }
+                    }
+                    
+                    // Create evaluation record with change detection
                     InvOrderEval::create([
                         'inv_order_item_id' => $orderItem->id,
                         'user_id' => Auth::id(),
                         'qty_before' => $qtyBefore,
                         'qty_after' => $orderItem->qty,
                         'message' => $this->eval_message,
+                        'data' => json_encode($changes)
                     ]);
 
                     $updatedCount++;

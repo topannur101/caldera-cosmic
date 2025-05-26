@@ -22,6 +22,8 @@ new class extends Component {
 
     public array $area_ids = [];
 
+    public bool $area_multiple = false;
+
     public string $date_fr = '';
 
     public string $date_to = '';
@@ -64,11 +66,23 @@ new class extends Component {
             $this->purpose   = $orderItemsParams['purpose']   ?? '';
         }
 
-        $areasParam = session('inv_areas_param', []);
+        $areasParams = session('inv_areas_params', []);
 
-        $areasParam 
-        ? $this->area_ids = $areasParam ?? [] 
-        : $this->area_ids = $areas->pluck('id')->toArray();
+        if (!empty($areasParams)) {
+            $this->area_ids = $areasParams['ids'] ?? [];
+            
+            // If more than one area ID, force multiple mode
+            if (count($this->area_ids) > 1) {
+                $this->area_multiple = true;
+            } else {
+                // Honor the stored preference for single/zero selections
+                $this->area_multiple = $areasParams['multiple'] ?? false;
+            }
+        } else {
+            // Default behavior: single selection mode with first available area
+            $this->area_multiple = false;
+            $this->area_ids = !empty($this->areas) ? [$this->areas[0]['id']] : [];
+        }
     }
 
     private function InvOrderItemQuery()
@@ -86,8 +100,13 @@ new class extends Component {
             'purpose'   => $purpose,
         ];
 
+        $inv_areas_params = [
+            'multiple'      => $this->area_multiple,
+            'ids'           => $inv_order_items_params['area_ids'],
+        ];
+
         session(['inv_order_items_params' => $inv_order_items_params]);
-        session(['inv_areas_param' => $this->area_ids]);
+        session(['inv_areas_params' => $inv_areas_params]);
 
         $inv_order_items_query = InvOrderItem::with([
             'inv_area',
@@ -174,6 +193,7 @@ new class extends Component {
     public function resetQuery()
     {
         session()->forget('inv_order_items_params');
+        session()->forget('inv_areas_params');
         $this->redirect(route('inventory.orders.index'), navigate: true);
     }
 
@@ -267,21 +287,18 @@ new class extends Component {
     }">
     
     <div wire:key="order-items-modals">
-        <x-modal name="order-item-show">
-            <livewire:inventory.orders.order-item-show />
-        </x-modal>
         <x-modal name="order-finalize" focusable>
             <livewire:inventory.orders.order-finalize />
         </x-modal>
         <x-modal name="order-bulk-edit" focusable>
             <livewire:inventory.orders.order-bulk-edit />
         </x-modal>
-        <x-slide-over name="order-item-evals">
-            <livewire:inventory.orders.order-item-evals />
+        <x-slide-over name="order-item-show">
+            <livewire:inventory.orders.order-item-show />
         </x-slide-over>
         <x-slide-over name="create-order-item">
             <livewire:inventory.orders.form />
-         </x-slide-over>
+        </x-slide-over>
     </div>
 
     <div class="static lg:sticky top-0 z-10 pb-6">
@@ -320,7 +337,7 @@ new class extends Component {
                <x-inv-area-selector is_grow="true" class="text-xs font-semibold uppercase" :$areas />
                <x-primary-button type="button" @click="$dispatch('open-slide-over', 'create-order-item')"
                     class="flex items-center gap-x-2">
-                  <i class="icon-pencil"></i>
+                  <i class="icon-pen"></i>
                </x-primary-button>
                 <div>
                     <x-dropdown align="right" width="60">
@@ -368,7 +385,7 @@ new class extends Component {
                             <x-spinner wire:loading.class.remove="hidden" wire:target="deleteOrderItems" class="hidden sm mono"></x-spinner>                
                         </div>
                     </x-secondary-button>
-                    <x-secondary-button type="button" wire:click="bulkEditOrderItems">
+                    <x-secondary-button type="button" wire:click="bulkEditOrderItems" class="rounded-none">
                         <div class="relative">
                             <span wire:loading.class="opacity-0" wire:target="bulkEditOrderItems"><i class="icon-edit"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Edit') }}</span></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="bulkEditOrderItems" class="hidden sm mono"></x-spinner>

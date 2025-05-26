@@ -80,10 +80,9 @@
     
     <td class="max-w-40 text-center">
         @if($eval_count > 0)
-            <x-text-button type="button" 
-                x-on:click="$dispatch('open-slide-over', 'order-item-evals'); $dispatch('order-item-evals-show', { id: '{{ $id }}'})">
-                <i class="icon-message mr-1"></i>{{ $eval_count }}
-            </x-text-button>
+            <span class="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-xs">
+                {{ $eval_count }}
+            </span>
         @else
             <span class="text-neutral-400">{{ $eval_count }}</span>
         @endif
@@ -96,13 +95,15 @@
     <td class="max-w-40">
         <div class="flex gap-x-1">
             <x-text-button type="button" 
-                x-on:click="$dispatch('open-modal', 'order-item-show'); $dispatch('order-item-show', { id: '{{ $id }}'})">
+                x-on:click="$dispatch('open-slide-over', 'order-item-show'); $dispatch('order-item-edit', { id: {{ $id }} })"
+                title="{{ __('Edit') }}">
                 <i class="icon-pen"></i>
             </x-text-button>
             @if($eval_count > 0)
                 <x-text-button type="button" 
-                    x-on:click="$dispatch('open-slide-over', 'order-item-evals'); $dispatch('order-item-evals-show', { id: '{{ $id }}'})">
-                    <i class="icon-message"></i>
+                    x-on:click="$dispatch('open-slide-over', 'order-item-show'); $dispatch('order-item-evals', { id: {{ $id }} })"
+                    title="{{ __('Lihat evaluasi') }}">
+                    <i class="icon-message-circle"></i>
                 </x-text-button>
             @endif
         </div>
