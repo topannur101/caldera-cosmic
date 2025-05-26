@@ -241,6 +241,7 @@ Route::middleware('auth')->group(function () {
             Volt::route('/inventory-auths', 'admin.inventory.auths')    ->name('inventory-auths');
             Volt::route('/inventory-areas', 'admin.inventory.areas')    ->name('inventory-areas');
             Volt::route('/inventory-currs', 'admin.inventory.currs')    ->name('inventory-currs');
+            Volt::route('/inventory-budgets', 'admin.inventory.budgets')->name('inventory-budgets');
 
         });
 

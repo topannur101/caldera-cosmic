@@ -1,40 +1,180 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\WithPagination;
-
-use App\InvQuery;
+use App\Models\InvCurr;
+use App\Models\InvOrderBudget;
+use App\Models\InvOrderItem;
+use Illuminate\Support\Facades\Auth;
 
 new class extends Component {
 
-   use WithPagination;
-
-   public int $perPage = 24;
-   
    public array $areas = [];
+   public array $budgets = [];
+   public array $currencies = [];
    
    public int $area_id = 0;
-
-   public string $q = '';
-
+   public int $budget_id = 0;
+   public int $currency_id = 0;
+   
+   public string $name = '';
+   public string $desc = '';
+   public string $code = '';
+   public string $purpose = '';
+   public int $qty = 1;
+   public string $uom = '';
+   public float $unit_price = 0;
+   
+   public float $total_amount = 0;
+   public float $amount_budget = 0;
+   public float $exchange_rate_used = 1.00;
 
    public function mount()
    {
       $this->areas = Auth::user()->auth_inv_areas();
+      $this->currencies = InvCurr::all()->toArray();
 
-      if (count($this->areas) === 1)
-      {
+      if (count($this->areas) === 1) {
          $this->area_id = $this->areas[0]['id'];
+         $this->loadBudgets();
       }
    }
-   
+
+   public function updatedAreaId()
+   {
+      $this->budget_id = 0;
+      $this->loadBudgets();
+      $this->calculateAmounts();
+   }
+
+   public function updatedBudgetId()
+   {
+      $this->calculateAmounts();
+   }
+
+   public function updatedCurrencyId()
+   {
+      $this->calculateAmounts();
+   }
+
+   public function updatedQty()
+   {
+      $this->calculateAmounts();
+   }
+
+   public function updatedUnitPrice()
+   {
+      $this->calculateAmounts();
+   }
+
+   private function loadBudgets()
+   {
+      if ($this->area_id) {
+         $this->budgets = InvOrderBudget::where('inv_area_id', $this->area_id)
+            ->where('is_active', true)
+            ->with('currency')
+            ->get()
+            ->toArray();
+      } else {
+         $this->budgets = [];
+      }
+   }
+
+   private function calculateAmounts()
+   {
+      $this->total_amount = $this->qty * $this->unit_price;
+      
+      if ($this->budget_id && $this->currency_id) {
+         $budget = collect($this->budgets)->firstWhere('id', $this->budget_id);
+         $itemCurrency = collect($this->currencies)->firstWhere('id', $this->currency_id);
+         
+         if ($budget && $itemCurrency) {
+            $budgetCurrencyRate = $budget['currency']['rate'];
+            $itemCurrencyRate = $itemCurrency['rate'];
+            
+            $this->exchange_rate_used = $budgetCurrencyRate / $itemCurrencyRate;
+            $this->amount_budget = $this->total_amount * $this->exchange_rate_used;
+         }
+      }
+   }
+
+   public function save()
+   {
+      // Clean up inputs
+      $this->name = trim($this->name);
+      $this->desc = trim($this->desc);
+      $this->code = strtoupper(trim($this->code));
+      $this->purpose = trim($this->purpose);
+      $this->uom = strtoupper(trim($this->uom));
+
+      $this->validate([
+         'area_id' => ['required', 'exists:inv_areas,id'],
+         'budget_id' => ['required', 'exists:inv_order_budget,id'],
+         'currency_id' => ['required', 'exists:inv_currs,id'],
+         'name' => ['required', 'max:128'],
+         'desc' => ['required', 'max:256'],
+         'code' => ['required', 'alpha_dash', 'size:11'],
+         'purpose' => ['required', 'max:500'],
+         'qty' => ['required', 'integer', 'min:1', 'max:1000000'],
+         'uom' => ['required', 'alpha_dash', 'max:5'],
+         'unit_price' => ['required', 'numeric', 'min:0', 'max:1000000000'],
+      ]);
+
+      try {
+         // Recalculate amounts to ensure accuracy
+         $this->calculateAmounts();
+
+         $orderItem = InvOrderItem::create([
+            'inv_order_id' => null, // Open order
+            'inv_item_id' => null, // Manual entry
+            'inv_area_id' => $this->area_id,
+            'inv_curr_id' => $this->currency_id,
+            'inv_order_budget_id' => $this->budget_id,
+            'name' => $this->name,
+            'desc' => $this->desc,
+            'code' => $this->code,
+            'photo' => null,
+            'purpose' => $this->purpose,
+            'qty' => $this->qty,
+            'uom' => $this->uom,
+            'unit_price' => $this->unit_price,
+            'total_amount' => $this->total_amount,
+            'amount_budget' => $this->amount_budget,
+            'exchange_rate_used' => $this->exchange_rate_used,
+         ]);
+
+         $this->js('toast("' . __('Butir pesanan berhasil dibuat') . '", { type: "success" })');
+         $this->dispatch('orderItemCreated');
+         $this->js('slideOverOpen = false');
+
+      } catch (\Exception $e) {
+         $this->js('toast("' . __('Terjadi kesalahan saat menyimpan') . '", { type: "danger" })');
+      }
+   }
+
+   public function getBudgetBalance()
+   {
+      if ($this->budget_id) {
+         $budget = collect($this->budgets)->firstWhere('id', $this->budget_id);
+         return $budget ? $budget['balance'] : 0;
+      }
+      return 0;
+   }
+
+   public function getBudgetCurrency()
+   {
+      if ($this->budget_id) {
+         $budget = collect($this->budgets)->firstWhere('id', $this->budget_id);
+         return $budget ? $budget['currency']['name'] : '';
+      }
+      return '';
+   }
 };
 
 ?>
 
 <div class="h-full flex flex-col gap-y-6 pt-6">
    <div class="flex justify-between items-start px-6">
-      <h2 class="text-lg font-medium ">
+      <h2 class="text-lg font-medium">
          {{ __('Pesanan baru') }}
       </h2>
       <x-text-button type="button" @click="slideOverOpen = false">
@@ -42,5 +182,148 @@ new class extends Component {
       </x-text-button>
    </div>
 
+   @if ($errors->any())
+      <div class="px-6">
+         <div class="text-center">
+            <x-input-error :messages="$errors->first()" />
+         </div>
+      </div>
+   @endif
 
+   <div class="flex-1 overflow-y-auto px-6 space-y-6">
+      
+      {{-- Area and Budget Selection --}}
+      <div class="grid grid-cols-1 gap-y-4">
+         <div>
+            <label for="area" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Area') }}</label>
+            <x-select wire:model.live="area_id" class="w-full">
+               <option value="">{{ __('Pilih area...') }}</option>
+               @foreach($areas as $area)
+                  <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
+               @endforeach
+            </x-select>
+         </div>
+
+         @if($area_id && count($budgets) > 0)
+         <div>
+            <label for="budget" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Budget') }}</label>
+            <x-select wire:model.live="budget_id" class="w-full">
+               <option value="">{{ __('Pilih budget...') }}</option>
+               @foreach($budgets as $budget)
+                  <option value="{{ $budget['id'] }}">
+                     {{ $budget['name'] }} ({{ $budget['currency']['name'] }} {{ number_format($budget['balance'], 2) }})
+                  </option>
+               @endforeach
+            </x-select>
+         </div>
+         @elseif($area_id)
+         <div class="text-sm text-neutral-500 px-3">
+            {{ __('Tidak ada budget aktif untuk area ini') }}
+         </div>
+         @endif
+      </div>
+
+      {{-- Item Details --}}
+      <div class="grid grid-cols-1 gap-y-4">
+         <div>
+            <label for="name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+            <x-text-input id="name" wire:model="name" type="text" class="w-full" />
+         </div>
+
+         <div>
+            <label for="desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
+            <x-text-input id="desc" wire:model="desc" type="text" class="w-full" />
+         </div>
+
+         <div>
+            <label for="code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
+            <x-text-input id="code" wire:model="code" type="text" class="w-full" maxlength="11" />
+         </div>
+
+         <div>
+            <label for="purpose" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keperluan') }}</label>
+            <textarea id="purpose" wire:model="purpose" 
+                     class="w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                     rows="3" maxlength="500"></textarea>
+         </div>
+      </div>
+
+      {{-- Quantity and Pricing --}}
+      <div class="grid grid-cols-2 gap-x-4 gap-y-4">
+         <div>
+            <label for="qty" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Qty') }}</label>
+            <x-text-input id="qty" wire:model.live="qty" type="number" min="1" class="w-full" />
+         </div>
+
+         <div>
+            <label for="uom" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Satuan') }}</label>
+            <x-text-input id="uom" wire:model="uom" type="text" class="w-full" maxlength="5" />
+         </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-y-4">
+         <div>
+            <label for="currency" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mata uang') }}</label>
+            <x-select wire:model.live="currency_id" class="w-full">
+               <option value="">{{ __('Pilih mata uang...') }}</option>
+               @foreach($currencies as $currency)
+                  <option value="{{ $currency['id'] }}">{{ $currency['name'] }}</option>
+               @endforeach
+            </x-select>
+         </div>
+
+         <div>
+            <label for="unit_price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
+            <x-text-input id="unit_price" wire:model.live="unit_price" type="number" step="0.01" min="0" class="w-full" />
+         </div>
+      </div>
+
+      {{-- Amount Summary --}}
+      @if($qty > 0 && $unit_price > 0 && $currency_id)
+      <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-4 space-y-2 text-sm">
+         <div class="flex justify-between">
+            <span>{{ __('Total amount') }}:</span>
+            <span>{{ collect($currencies)->firstWhere('id', $currency_id)['name'] ?? '' }} {{ number_format($total_amount, 2) }}</span>
+         </div>
+         
+         @if($budget_id && $exchange_rate_used != 1)
+         <div class="flex justify-between text-neutral-600 dark:text-neutral-400">
+            <span>{{ __('Kurs') }}:</span>
+            <span>{{ number_format($exchange_rate_used, 4) }}</span>
+         </div>
+         <div class="flex justify-between">
+            <span>{{ __('Amount budget') }}:</span>
+            <span>{{ $this->getBudgetCurrency() }} {{ number_format($amount_budget, 2) }}</span>
+         </div>
+         @endif
+
+         @if($budget_id)
+         <div class="flex justify-between text-neutral-600 dark:text-neutral-400">
+            <span>{{ __('Sisa budget') }}:</span>
+            <span>{{ $this->getBudgetCurrency() }} {{ number_format($this->getBudgetBalance(), 2) }}</span>
+         </div>
+         @endif
+      </div>
+      @endif
+   </div>
+
+   {{-- Actions --}}
+   <div class="border-t border-neutral-200 dark:border-neutral-700 px-6 py-4">
+      <div class="flex justify-end space-x-3">
+         <x-secondary-button type="button" @click="slideOverOpen = false">
+            {{ __('Batal') }}
+         </x-secondary-button>
+         
+         <div wire:loading>
+            <x-primary-button type="button" disabled>
+               <i class="icon-save mr-2"></i>{{ __('Simpan') }}
+            </x-primary-button>
+         </div>
+         <div wire:loading.remove>
+            <x-primary-button type="button" wire:click="save">
+               <i class="icon-save mr-2"></i>{{ __('Simpan') }}
+            </x-primary-button>
+         </div>
+      </div>
+   </div>
 </div>
