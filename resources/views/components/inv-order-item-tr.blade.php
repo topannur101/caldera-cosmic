@@ -19,7 +19,7 @@
 
 <tr class="text-nowrap hover:bg-caldy-500 hover:bg-opacity-10">
     <td class="w-[1%]">
-        <label for="{{ 'order-item-' . $id }}" class="flex p-2 gap-x-2">
+        <label for="{{ 'order-item-' . $id }}" class="flex items-center p-2 gap-x-2">
             <input 
                 {{ $checked ? 'checked' : '' }} 
                 {{ $attributes->merge([
@@ -30,18 +30,15 @@
                 value="{{ $id }}"
                 x-model="ids"
                 x-on:click="handleCheck($event, '{{ $id }}')">
-            @if($is_inventory_based)
-                <i class="icon-database text-blue-500" title="{{ __('Dari inventaris') }}"></i>
-            @else
-                <i class="icon-edit text-green-500" title="{{ __('Manual entry') }}"></i>
-            @endif
+                @if($is_inventory_based)
+                    <i class="icon-link-2 text-caldy-500" title="{{ __('Dari inventaris') }}"></i>
+                @else
+                    <i class="icon-unlink-2 text-neutral-500" title="{{ __('Manual entry') }}"></i>
+                @endif
+                <div class="text-base font-medium">
+                    {{ $qty . ' ' . $uom }}
+                </div>
         </label>
-    </td>
-    
-    <td class="w-[1%]">
-        <div class="text-base font-medium">
-            {{ $qty . ' ' . $uom }}
-        </div>
     </td>
     
     <td class="w-[1%]">
@@ -52,7 +49,7 @@
                 </svg>
             </div>
             @if($item_photo)
-                <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ '/storage/inv-order-items/' . $item_photo }}" />
+                <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ '/storage/inv-items/' . $item_photo }}" />
             @endif
         </div>   
     </td>
@@ -78,16 +75,6 @@
         {{ number_format($amount_budget, 2) }} {{ $budget_currency }}
     </td>
     
-    <td class="max-w-40 text-center">
-        @if($eval_count > 0)
-            <span class="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-xs">
-                {{ $eval_count }}
-            </span>
-        @else
-            <span class="text-neutral-400">{{ $eval_count }}</span>
-        @endif
-    </td>
-    
     <td class="max-w-40">
         {{ $updated_at }}
     </td>
@@ -101,9 +88,9 @@
             </x-text-button>
             @if($eval_count > 0)
                 <x-text-button type="button" 
-                    x-on:click="$dispatch('open-slide-over', 'order-item-show'); $dispatch('order-item-evals', { id: {{ $id }} })"
-                    title="{{ __('Lihat evaluasi') }}">
-                    <i class="icon-message-circle"></i>
+                class="ml-2 rounded-full text-xs px-2 bg-caldy-600 bg-opacity-40 text-white" 
+                x-on:click="$dispatch('open-slide-over', 'order-item-show'); $dispatch('order-item-evals', { id: {{ $id }} })">
+                    <i class="icon-message-square mr-1"></i>{{ $eval_count }}
                 </x-text-button>
             @endif
         </div>

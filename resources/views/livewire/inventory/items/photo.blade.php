@@ -9,10 +9,11 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\Storage;
 
-new #[Layout('layouts.app')] 
-class extends Component {
+new class extends Component {
 
     use WithFileUploads;
+
+    public string $size = 'md';
     
     public bool $is_editing = false;
 
@@ -110,7 +111,7 @@ class extends Component {
 ?>
 
 <div x-data="{ dropping: false }" >
-    <div class="relative rounded-none sm:w-48 h-48 md:w-72 md:h-72 lg:w-80 lg:h-80 bg-neutral-200 dark:bg-neutral-700 sm:rounded-md overflow-hidden"
+    <div class="relative rounded-none h-48 mx-0 sm:mx-auto {{ $size === 'md' ? 'sm:w-48 md:w-72 md:h-72 lg:w-80 lg:h-80' : '' }} bg-neutral-200 dark:bg-neutral-700 sm:rounded-md overflow-hidden"
         x-on:dragover.prevent="dropping = true">
         <div wire:key="ph" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
             <svg xmlns="http://www.w3.org/2000/svg"

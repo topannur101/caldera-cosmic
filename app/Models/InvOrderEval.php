@@ -18,6 +18,7 @@ class InvOrderEval extends Model
         'qty_before',
         'qty_after',
         'message',
+        'data'
     ];
 
     protected $casts = [

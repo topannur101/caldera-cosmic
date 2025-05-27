@@ -24,10 +24,6 @@ new class extends Component {
 
     public bool $area_multiple = false;
 
-    public string $date_fr = '';
-
-    public string $date_to = '';
-
     public array $users = [];
 
     public int $user_id = 0;
@@ -60,8 +56,6 @@ new class extends Component {
             $this->q         = $orderItemsParams['q']         ?? '';
             $this->sort      = $orderItemsParams['sort']      ?? 'updated';
             $this->area_ids  = $orderItemsParams['area_ids']  ?? [];
-            $this->date_fr   = $orderItemsParams['date_fr']   ?? '';
-            $this->date_to   = $orderItemsParams['date_to']   ?? '';
             $this->user_id   = $orderItemsParams['user_id']   ?? 0;
             $this->purpose   = $orderItemsParams['purpose']   ?? '';
         }
@@ -94,8 +88,6 @@ new class extends Component {
             'q'         => $q,
             'sort'      => $this->sort,
             'area_ids'  => $this->area_ids,
-            'date_fr'   => $this->date_fr,
-            'date_to'   => $this->date_to,
             'user_id'   => $this->user_id,
             'purpose'   => $purpose,
         ];
@@ -126,12 +118,6 @@ new class extends Component {
                       ->orWhere('code', 'like', "%$q%")
                       ->orWhere('purpose', 'like', "%$q%");
             });
-        }
-
-        if($this->date_fr && $this->date_to) {
-            $fr = Carbon::parse($this->date_fr)->startOfDay();
-            $to = Carbon::parse($this->date_to)->endOfDay();
-            $inv_order_items_query->whereBetween('updated_at', [$fr, $to]);
         }
 
         if($this->user_id) {
@@ -205,13 +191,13 @@ new class extends Component {
     public function finalizeOrderItems()
     {
         $this->dispatch('finalize-order-items', $this->order_item_ids);
-        $this->js('$dispatch("open-modal", "order-finalize")');
+        $this->js('$dispatch("open-slide-over", "order-finalize")');
     }
 
     public function bulkEditOrderItems()
     {
         $this->dispatch('bulk-edit-order-items', $this->order_item_ids);
-        $this->js('$dispatch("open-modal", "order-bulk-edit")');
+        $this->js('$dispatch("open-slide-over", "order-bulk-edit")');
     }
 
     public function deleteOrderItems()
@@ -237,15 +223,10 @@ new class extends Component {
 
     public function updated($property)
     {
-        $props = ['sort', 'area_ids', 'date_fr', 'date_to', 'user_id', 'purpose'];
+        $props = ['sort', 'area_ids', 'user_id', 'purpose'];
         if(in_array($property, $props)) {
             $this->reset(['perPage', 'order_item_ids']);
         }
-    }
-
-    public function resetDates()
-    {
-        $this->reset(['date_fr', 'date_to']);
     }
 
     public function download()
@@ -287,12 +268,12 @@ new class extends Component {
     }">
     
     <div wire:key="order-items-modals">
-        <x-modal name="order-finalize" focusable>
+        <x-slide-over name="order-finalize" focusable>
             <livewire:inventory.orders.order-finalize />
-        </x-modal>
-        <x-modal name="order-bulk-edit" focusable>
+        </x-slide-over>
+        <x-slide-over name="order-bulk-edit" focusable>
             <livewire:inventory.orders.order-bulk-edit />
-        </x-modal>
+        </x-slide-over>
         <x-slide-over name="order-item-show">
             <livewire:inventory.orders.order-item-show />
         </x-slide-over>
@@ -329,15 +310,11 @@ new class extends Component {
                 <x-inv-purpose-filter class="text-xs font-semibold uppercase" />
             </div>
 
-            <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
-                <x-date-selector isQuery="true" class="text-xs font-semibold uppercase" />
-            </div>
-
             <div class="flex items-center justify-between gap-x-4 p-4 lg:py-0">
                <x-inv-area-selector is_grow="true" class="text-xs font-semibold uppercase" :$areas />
                <x-primary-button type="button" @click="$dispatch('open-slide-over', 'create-order-item')"
                     class="flex items-center gap-x-2">
-                  <i class="icon-pen"></i>
+                  <i class="icon-plus"></i>{{ __('Buat') }}
                </x-primary-button>
                 <div>
                     <x-dropdown align="right" width="60">
@@ -381,23 +358,23 @@ new class extends Component {
                     <x-secondary-button type="button" wire:click="deleteOrderItems" 
                         wire:confirm="{{ __('Yakin ingin menghapus butir pesanan yang dipilih?') }}">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="deleteOrderItems"><i class="icon-trash"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Hapus') }}</span></span>
+                            <span wire:loading.class="opacity-0" wire:target="deleteOrderItems"><i class="icon-trash text-red-500"></i></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="deleteOrderItems" class="hidden sm mono"></x-spinner>                
                         </div>
                     </x-secondary-button>
-                    <x-secondary-button type="button" wire:click="bulkEditOrderItems" class="rounded-none">
+                    <x-secondary-button type="button" wire:click="bulkEditOrderItems">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="bulkEditOrderItems"><i class="icon-edit"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Edit') }}</span></span>
+                            <span wire:loading.class="opacity-0" wire:target="bulkEditOrderItems"><i class="icon-pen"></i></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="bulkEditOrderItems" class="hidden sm mono"></x-spinner>
                         </div>
                     </x-secondary-button>
-                    <x-secondary-button type="button" wire:click="finalizeOrderItems">
-                        <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="finalizeOrderItems"><i class="icon-check"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Finalkan') }}</span></span>
-                            <x-spinner wire:loading.class.remove="hidden" wire:target="finalizeOrderItems" class="hidden sm mono"></x-spinner>
-                        </div>
-                    </x-secondary-button>
-                </div>
+                </div>                
+                <x-secondary-button type="button" wire:click="finalizeOrderItems">
+                    <div class="relative">
+                        <span wire:loading.class="opacity-0" wire:target="finalizeOrderItems"><i class="icon-circle-check"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Finalkan') }}</span></span>
+                        <x-spinner wire:loading.class.remove="hidden" wire:target="finalizeOrderItems" class="hidden sm mono"></x-spinner>
+                    </div>
+                </x-secondary-button>
             </div>
         </div>
     </div>
@@ -428,15 +405,13 @@ new class extends Component {
                 <table class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg w-full table text-sm [&_th]:px-1 [&_th]:py-3 [&_td]:p-1">
                     <tr class="uppercase text-xs">
                         <th></th>
-                        <th>{{ __('Qty') }}</th>
-                        <th colspan="2">{{ __('Nama') . ' & ' . __('Deskripsi') }}</th>
+                        <th colspan="2">{{ __('Barang') }}</th>
                         <th>{{ __('Kode') }}</th>
                         <th>{{ __('Keperluan') }}</th>
-                        <th>{{ __('Budget') }}</th>
+                        <th>{{ __('Anggaran') }}</th>
                         <th class="flex justify-end">{{ __('Amount') }}</th>
-                        <th>{{ __('Evals') }}</th>
                         <th>{{ __('Diperbarui') }}</th>
-                        <th>{{ __('Aksi') }}</th>
+                        <th></th>
                     </tr>
                     @foreach ($inv_order_items as $order_item)
                         <x-inv-order-item-tr                                    

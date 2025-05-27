@@ -334,7 +334,7 @@ new class extends Component
                      </div>
                      @if($items[0]['id'])
                      <div class="py-3">
-                        <x-text-button class="text-red-500" type="button" x-on:click="$dispatch('open-modal', 'deleteItem')"><i class="icon-delete mr-4"></i>{{ __('Hapus barang') }}</x-text-button>
+                        <x-text-button class="text-red-500" type="button" x-on:click="$dispatch('open-modal', 'deleteItem')"><i class="icon-trash mr-4"></i>{{ __('Hapus barang') }}</x-text-button>
                      </div>
                      @endif
                   @else

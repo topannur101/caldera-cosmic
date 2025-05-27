@@ -110,7 +110,7 @@ new class extends Component
                         'quantity_change' => $eval->qty_after - $eval->qty_before,
                         'message' => $eval->message,
                         'changes' => $changes,
-                        'created_at' => $eval->created_at->format('d/m/Y H:i'),
+                        'created_at' => $eval->created_at->format('Y-m-d H:i'),
                         'created_at_diff' => $eval->created_at->diffForHumans(),
                     ];
                 })
@@ -368,7 +368,7 @@ new class extends Component
             ]);
 
             $this->dispatch('order-item-updated');
-            $this->js('slideOverOpen = false');
+            $this->js('window.dispatchEvent(escKey)');
             $this->js('toast("' . __('Butir pesanan berhasil diperbarui') . '", { type: "success" })');
 
         } catch (\Exception $e) {
@@ -380,19 +380,19 @@ new class extends Component
     {
         switch ($change['type']) {
             case 'qty_increase':
-                return __('Quantity increased from :from to :to', [
+                return __('Qty bertambah dari :from menjadi :to', [
                     'from' => $change['from'],
                     'to' => $change['to']
                 ]);
-                
+               
             case 'qty_decrease':
-                return __('Quantity decreased from :from to :to', [
-                    'from' => $change['from'], 
+                return __('Qty berkurang dari :from menjadi :to', [
+                    'from' => $change['from'],
                     'to' => $change['to']
                 ]);
-                
+               
             case 'budget_change':
-                return __('Budget changed from :from_budget (:from_currency :from_amount) to :to_budget (:to_currency :to_amount)', [
+                return __('Anggaran berubah dari :from_budget (:from_currency :from_amount) menjadi :to_budget (:to_currency :to_amount)', [
                     'from_budget' => $change['from_budget_name'],
                     'to_budget' => $change['to_budget_name'],
                     'from_currency' => $change['from_currency'],
@@ -400,51 +400,51 @@ new class extends Component
                     'to_currency' => $change['to_currency'],
                     'to_amount' => number_format($change['to_amount_budget'], 2)
                 ]);
-                
+               
             case 'purpose_change':
-                return __('Purpose changed from ":from" to ":to"', [
+                return __('Keperluan berubah dari ":from" menjadi ":to"', [
                     'from' => $change['from'],
                     'to' => $change['to']
                 ]);
-                
+               
             case 'name_change':
-                return __('Name changed from ":from" to ":to"', [
+                return __('Nama berubah dari ":from" menjadi ":to"', [
                     'from' => $change['from'],
                     'to' => $change['to']
                 ]);
-                
+               
             case 'desc_change':
-                return __('Description changed from ":from" to ":to"', [
+                return __('Deskripsi berubah dari ":from" menjadi ":to"', [
                     'from' => $change['from'],
                     'to' => $change['to']
                 ]);
-                
+               
             case 'code_change':
-                return __('Code changed from ":from" to ":to"', [
+                return __('Kode berubah dari ":from" menjadi ":to"', [
                     'from' => $change['from'],
                     'to' => $change['to']
                 ]);
-                
+               
             case 'uom_change':
-                return __('Unit changed from ":from" to ":to"', [
+                return __('Satuan berubah dari ":from" menjadi ":to"', [
                     'from' => $change['from'],
                     'to' => $change['to']
                 ]);
-                
+               
             case 'unit_price_change':
-                return __('Unit price changed from :from to :to', [
+                return __('Harga satuan berubah dari :from menjadi :to', [
                     'from' => number_format($change['from'], 2),
                     'to' => number_format($change['to'], 2)
                 ]);
-                
+               
             case 'currency_change':
-                return __('Currency changed from :from to :to', [
+                return __('Mata uang berubah dari :from menjadi :to', [
                     'from' => $change['from'],
                     'to' => $change['to']
                 ]);
-                
+               
             default:
-                return __('Unknown change type: :type', ['type' => $change['type']]);
+                return __('Jenis perubahan tidak dikenal: :type', ['type' => $change['type']]);
         }
     }
 
@@ -494,13 +494,13 @@ new class extends Component
 
 ?>
 
-<div class="h-full flex flex-col">
+<div class="relative h-full flex flex-col">
     <div class="p-6 border-b border-neutral-200 dark:border-neutral-700">
         <div class="flex justify-between items-start mb-4">
             <h2 class="text-lg font-medium">
-                {{ __('Butir pesanan') }}
+                {{ __('Pesanan') }}
             </h2>
-            <x-text-button type="button" @click="slideOverOpen = false">
+            <x-text-button type="button" x-on:click="window.dispatchEvent(escKey)">
                 <i class="icon-x"></i>
             </x-text-button>
         </div>
@@ -514,7 +514,7 @@ new class extends Component
                     </svg>
                 </div>
                 @if($order_item['photo'])
-                    <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ '/storage/inv-order-items/' . $order_item['photo'] }}" />
+                    <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ '/storage/inv-items/' . $order_item['photo'] }}" />
                 @endif
             </div>
             <div class="flex-1 min-w-0">
@@ -527,29 +527,27 @@ new class extends Component
         {{-- Tab Navigation --}}
         <div x-data="{
                 tabSelected: @entangle('active_tab'),
-                tabId: $id('tabs'),
                 tabButtonClicked(tabButton){
                     this.tabSelected = tabButton.dataset.tab;
-                    this.tabRepositionMarker(tabButton);
-                },
-                tabRepositionMarker(tabButton){
-                    this.$refs.tabMarker.style.width=tabButton.offsetWidth + 'px';
-                    this.$refs.tabMarker.style.height=tabButton.offsetHeight + 'px';
-                    this.$refs.tabMarker.style.left=tabButton.offsetLeft + 'px';
-                },
-                tabContentActive(tabContent){
-                    return this.tabSelected == tabContent;
                 }
-            }" x-init="tabRepositionMarker($refs.tabButtons.firstElementChild);" class="relative w-full">
+            }" class="relative w-full">
             
-            <div x-ref="tabButtons" class="relative inline-grid items-center justify-center w-full h-10 grid-cols-2 p-1 text-neutral-500 bg-neutral-100 dark:bg-neutral-800 rounded-lg select-none">
-                <button data-tab="edit" @click="tabButtonClicked($el);" type="button" class="relative z-20 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">
+            <div class="relative inline-grid items-center justify-center w-full h-10 grid-cols-2 p-1 text-neutral-500 bg-neutral-100 dark:bg-neutral-800 rounded-lg select-none">
+                <button data-tab="edit" @click="tabButtonClicked($el);" type="button" 
+                        :class="tabSelected === 'edit' ? 'text-neutral-900 dark:text-neutral-100' : ''"
+                        class="relative z-10 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">
                     <i class="icon-edit mr-2"></i>{{ __('Edit') }}
                 </button>
-                <button data-tab="evals" @click="tabButtonClicked($el);" type="button" class="relative z-20 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">
+                <button data-tab="evals" @click="tabButtonClicked($el);" type="button" 
+                        :class="tabSelected === 'evals' ? 'text-neutral-900 dark:text-neutral-100' : ''"
+                        class="relative z-10 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">
                     <i class="icon-message mr-2"></i>{{ __('Evaluasi') }} ({{ count($evaluations) }})
                 </button>
-                <div x-ref="tabMarker" class="absolute left-0 z-10 w-1/2 h-full duration-300 ease-out" x-cloak>
+                
+                {{-- Marker positioned with CSS based on active tab --}}
+                <div class="absolute left-0 h-full duration-300 ease-out transition-transform" 
+                    :class="tabSelected === 'evals' ? 'translate-x-full' : 'translate-x-0'"
+                    style="width: calc(50% - 4px); margin: 2px;">
                     <div class="w-full h-full bg-white dark:bg-neutral-700 rounded-md shadow-sm"></div>
                 </div>
             </div>
@@ -574,9 +572,9 @@ new class extends Component
             {{-- Item Type Info --}}
             <div class="text-sm text-neutral-500">
                 @if($can_edit_item_details)
-                    <i class="icon-edit text-green-500 mr-1"></i>{{ __('Manual entry - dapat diedit') }}
+                    <i class="icon-unlink-2 text-neutral-500 mr-2"></i>{{ __('Tidak bertaut - info barang dapat diedit') }}
                 @else
-                    <i class="icon-database text-blue-500 mr-1"></i>{{ __('Dari inventaris - tidak dapat diedit') }}
+                    <i class="icon-link-2 text-caldy-500 mr-2"></i>{{ __('Bertaut - info barang tak dapat diedit') }}
                 @endif
             </div>
 
@@ -600,16 +598,28 @@ new class extends Component
                 </div>
             @endif
 
-            {{-- Purpose --}}
-            <div>
-                <label for="purpose" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keperluan') }}</label>
-                <textarea id="purpose" wire:model="purpose" 
-                         class="w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                         rows="3" maxlength="500"></textarea>
-            </div>
+            {{-- Pricing (editable for manual entries only) --}}
+            @if($can_edit_item_details)
+                <div class="grid grid-cols-2 gap-x-3">
+                    <div>
+                        <label for="currency" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mata uang') }}</label>
+                        <x-select wire:model.live="currency_id" class="w-full">
+                            <option value="">{{ __('Pilih mata uang...') }}</option>
+                            @foreach($currencies as $currency)
+                                <option value="{{ $currency['id'] }}">{{ $currency['name'] }}</option>
+                            @endforeach
+                        </x-select>
+                    </div>
+
+                    <div>
+                        <label for="unit_price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
+                        <x-text-input id="unit_price" wire:model.live="unit_price" type="number" step="0.01" min="0" class="w-full" />
+                    </div>
+                </div>
+            @endif
 
             {{-- Quantity and UOM --}}
-            <div class="grid grid-cols-2 gap-x-4">
+            <div class="grid grid-cols-2 gap-x-3">
                 <div>
                     <label for="qty" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Qty') }}</label>
                     <x-text-input id="qty" wire:model.live="qty" type="number" min="1" class="w-full" />
@@ -628,37 +638,28 @@ new class extends Component
                 @endif
             </div>
 
-            {{-- Pricing (editable for manual entries only) --}}
-            @if($can_edit_item_details)
-                <div class="grid grid-cols-1 gap-y-4">
-                    <div>
-                        <label for="currency" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mata uang') }}</label>
-                        <x-select wire:model.live="currency_id" class="w-full">
-                            <option value="">{{ __('Pilih mata uang...') }}</option>
-                            @foreach($currencies as $currency)
-                                <option value="{{ $currency['id'] }}">{{ $currency['name'] }}</option>
-                            @endforeach
-                        </x-select>
-                    </div>
-
-                    <div>
-                        <label for="unit_price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
-                        <x-text-input id="unit_price" wire:model.live="unit_price" type="number" step="0.01" min="0" class="w-full" />
-                    </div>
-                </div>
-            @endif
+            {{-- Purpose --}}
+            <div>
+               <label for="purpose" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keperluan') }}</label>
+               <x-text-input id="purpose" wire:model="purpose" type="text" class="w-full" />
+            </div>
 
             {{-- Budget Selection --}}
             <div>
-                <label for="budget" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Budget') }}</label>
-                <x-select wire:model.live="budget_id" class="w-full">
-                    <option value="">{{ __('Pilih budget...') }}</option>
+               <label for="budget" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                  {{ __('Anggaran') }}
+               </label>
+               <div class="mx-3">
                     @foreach($budgets as $budget)
-                        <option value="{{ $budget['id'] }}">
-                            {{ $budget['name'] }} ({{ $budget['inv_curr']['name'] }} {{ number_format($budget['balance'], 2) }})
-                        </option>
+                    <x-radio 
+                        wire:model.change="budget_id" 
+                        id="budget-{{ $budget['id'] }}" 
+                        name="budget-selection" 
+                        value="{{ $budget['id'] }}">
+                        {{ $budget['name'] }}
+                    </x-radio>
                     @endforeach
-                </x-select>
+               </div>
             </div>
 
             {{-- Amount Summary --}}
@@ -667,14 +668,7 @@ new class extends Component
                     <div class="flex justify-between">
                         <span>{{ __('Total amount') }}:</span>
                         <span>{{ $this->getItemCurrency() }} {{ number_format($order_item['total_amount'], 2) }}</span>
-                    </div>
-                    
-                    @if($budget_id && isset($order_item['exchange_rate_used']) && $order_item['exchange_rate_used'] != 1)
-                        <div class="flex justify-between text-neutral-600 dark:text-neutral-400">
-                            <span>{{ __('Kurs') }}:</span>
-                            <span>{{ number_format($order_item['exchange_rate_used'], 4) }}</span>
-                        </div>
-                    @endif
+                    </div>                
                     
                     @if($budget_id && isset($order_item['amount_budget']))
                         <div class="flex justify-between font-medium">
@@ -688,124 +682,120 @@ new class extends Component
             {{-- Evaluation Message --}}
             <div>
                 <label for="eval_message" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Alasan perubahan') }}</label>
-                <x-text-input id="eval_message" wire:model="eval_message" type="text" class="w-full" placeholder="{{ __('Jelaskan alasan perubahan...') }}" />
+                <x-text-input id="eval_message" wire:model="eval_message" type="text" class="w-full" />
+            </div>
+
+            {{-- Actions --}}
+            <div class="flex justify-between">
+                <x-text-button type="button" wire:click="deleteOrderItem" 
+                    wire:confirm="{{ __('Yakin ingin menghapus butir pesanan ini?') }}">
+                    <i class="icon-trash text-red-500"></i>
+                </x-text-button>
+                
+                <x-primary-button type="button" wire:click="update">
+                    {{ __('Simpan') }}
+                </x-primary-button>
             </div>
         </div>
 
         {{-- Evaluations Tab Content --}}
-        <div x-show="tabSelected === 'evals'" class="flex-1 flex flex-col" x-cloak>
+        <div x-show="tabSelected === 'evals'" class="flex-1 flex flex-col h-full" x-cloak>
             @if(count($evaluations) > 0)
-                <div class="p-6 space-y-4 flex-1 overflow-y-auto">
-                    @foreach($evaluations as $eval)
-                        <div class="border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
-                            {{-- User Info and Timestamp --}}
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center gap-x-2">
-                                    <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                                        @if ($eval['user_photo'])
-                                            <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/' . $eval['user_photo'] }}" />
-                                        @else
-                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
-                                                viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
-                                                <path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
-                                            </svg>
-                                        @endif
-                                    </div>
-                                    <div>
-                                        <div class="font-medium text-sm">{{ $eval['user_name'] }}</div>
-                                        <div class="text-xs text-neutral-500">{{ $eval['user_emp_id'] }}</div>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-xs text-neutral-500">{{ $eval['created_at'] }}</div>
-                                    <div class="text-xs text-neutral-400">{{ $eval['created_at_diff'] }}</div>
-                                </div>
-                            </div>
-
-                            {{-- Quantity Change --}}
-                            <div class="mb-3">
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-neutral-600 dark:text-neutral-400">{{ __('Perubahan quantity') }}:</span>
-                                    <div class="flex items-center gap-x-2">
-                                        <span class="font-mono">{{ $eval['qty_before'] }}</span>
-                                        <i class="icon-arrow-right text-neutral-400"></i>
-                                        <span class="font-mono">{{ $eval['qty_after'] }}</span>
-                                        @if($eval['quantity_change'] != 0)
-                                            <span class="ml-2 px-2 py-1 rounded text-xs {{ $eval['quantity_change'] > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
-                                                {{ $eval['quantity_change'] > 0 ? '+' : '' }}{{ $eval['quantity_change'] }}
-                                            </span>
-                                        @else
-                                            <span class="ml-2 px-2 py-1 rounded text-xs bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
-                                                {{ __('Tidak ada perubahan') }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Detailed Changes --}}
-                            @if(count($eval['changes']) > 0)
-                                <div class="mb-3">
-                                    <div class="text-xs text-neutral-500 mb-2">{{ __('Detail perubahan') }}:</div>
-                                    <div class="space-y-1">
-                                        @foreach($eval['changes'] as $change)
-                                            <div class="text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-800 rounded px-2 py-1">
-                                                {{ $change }}
+                <div class="p-6 flex-1 overflow-y-auto">
+                    <!-- Timeline Container -->
+                    <div class="relative">
+                        <!-- Timeline Line -->
+                        <div class="absolute left-1.5 top-4 bottom-0 w-0.5 bg-neutral-200 dark:bg-neutral-700"></div>
+                        
+                        <!-- Timeline Items -->
+                        <div class="space-y-8">
+                            @foreach($evaluations as $eval)
+                                <div class="relative">
+                                    <!-- Timeline Dot -->
+                                    <div class="absolute top-3 -left-px w-4 h-4 bg-white dark:bg-neutral-900 border-2 border-neutral-300 dark:border-neutral-600 rounded-full z-10"></div>
+                                    
+                                    <!-- Content Card -->
+                                    <div class="ml-8">
+                                        {{-- User Info and Timestamp --}}
+                                        <div class="flex items-center justify-between mb-4">
+                                            <div class="flex items-center gap-x-3">
+                                                <div class="w-8 h-8 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden flex-shrink-0">
+                                                    @if ($eval['user_photo'])
+                                                        <img class="w-full h-full object-cover dark:brightness-75" src="{{ '/storage/users/' . $eval['user_photo'] }}" />
+                                                    @else
+                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                            class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
+                                                            viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
+                                                            <path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
+                                                        </svg>
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-neutral-900 dark:text-neutral-100">{{ $eval['user_name'] }}</div>
+                                                    <div class="text-sm text-neutral-500 dark:text-neutral-400">{{ $eval['user_emp_id'] }}</div>
+                                                </div>
                                             </div>
-                                        @endforeach
+                                            <div class="text-right">
+                                                <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ $eval['created_at'] }}</div>
+                                                <div class="text-xs text-neutral-400 dark:text-neutral-500">{{ $eval['created_at_diff'] }}</div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Quantity Change --}}
+                                        <div class="mb-4">
+                                            <div class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2 uppercase tracking-wide">{{ __('Perubahan quantity') }}</div>
+                                            <div class="flex items-center gap-x-3">
+                                                <span class="font-mono text-lg font-medium text-neutral-800 dark:text-neutral-200">{{ $eval['qty_before'] }}</span>
+                                                <div class="grow h-px bg-neutral-200 dark:bg-neutral-700"></div>
+                                                <i class="icon-arrow-right text-neutral-400"></i>
+                                                <div class="grow h-px bg-neutral-200 dark:bg-neutral-700"></div>
+                                                <span class="font-mono text-lg font-medium text-neutral-800 dark:text-neutral-200">{{ $eval['qty_after'] }}</span>
+                                                @if($eval['quantity_change'] != 0)
+                                                    <span class="px-3 py-1 rounded-full text-sm font-medium {{ $eval['quantity_change'] > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                                                        {{ $eval['quantity_change'] > 0 ? '+' : '' }}{{ $eval['quantity_change'] }}
+                                                    </span>
+                                                @else
+                                                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300">
+                                                        0
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- Detailed Changes --}}
+                                        @if(count($eval['changes']) > 0)
+                                            <div class="mb-4">
+                                                <div class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-3 uppercase tracking-wide">{{ __('Detail perubahan') }}</div>
+                                                <ul class="space-y-2">
+                                                    @foreach($eval['changes'] as $change)
+                                                        <li class="flex items-start gap-x-2">
+                                                            <div class="w-1.5 h-1.5 bg-neutral-400 dark:bg-neutral-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                                                            <span class="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed">{{ $change }}</span>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endif
+
+                                        {{-- Message --}}
+                                        @if($eval['message'])
+                                            <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-4">
+                                                <div class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 uppercase tracking-wide">{{ __('Alasan') }}</div>
+                                                <div class="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">{{ $eval['message'] }}</div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
-                            @endif
-
-                            {{-- Message --}}
-                            @if($eval['message'])
-                                <div class="text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-800 rounded p-3">
-                                    <div class="text-xs text-neutral-500 mb-1">{{ __('Alasan') }}:</div>
-                                    <div>{{ $eval['message'] }}</div>
-                                </div>
-                            @endif
+                            @endforeach
                         </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="flex-1 flex items-center justify-center">
-                    <div class="text-center text-neutral-400 dark:text-neutral-600">
-                        <i class="icon-message-circle text-4xl mb-2"></i>
-                        <div>{{ __('Belum ada evaluasi') }}</div>
                     </div>
                 </div>
+            @else
+                <div class="flex flex-col gap-y-3 items-center justify-center my-auto text-neutral-400 dark:text-neutral-600">
+                    <i class="icon-message-square text-4xl opacity-50"></i>
+                    <div class="text-lg font-medium">{{ __('Belum ada evaluasi') }}</div>
+                </div>
             @endif
-        </div>
-    </div>
-
-    {{-- Actions - only show on edit tab --}}
-    <div class="border-t border-neutral-200 dark:border-neutral-700 px-6 py-4" x-data="{
-            tabSelected: @entangle('active_tab')
-        }" x-show="tabSelected === 'edit'">
-        <div class="flex justify-between">
-            <x-secondary-button type="button" wire:click="deleteOrderItem" 
-                wire:confirm="{{ __('Yakin ingin menghapus butir pesanan ini?') }}"
-                class="text-red-600 hover:text-red-700">
-                <i class="icon-trash mr-2"></i>{{ __('Hapus') }}
-            </x-secondary-button>
-            
-            <div class="flex space-x-3">
-                <x-secondary-button type="button" @click="slideOverOpen = false">
-                    {{ __('Batal') }}
-                </x-secondary-button>
-                
-                <div wire:loading>
-                    <x-primary-button type="button" disabled>
-                        <i class="icon-save mr-2"></i>{{ __('Simpan') }}
-                    </x-primary-button>
-                </div>
-                <div wire:loading.remove>
-                    <x-primary-button type="button" wire:click="update">
-                        <i class="icon-save mr-2"></i>{{ __('Simpan') }}
-                    </x-primary-button>
-                </div>
-            </div>
         </div>
     </div>
 
