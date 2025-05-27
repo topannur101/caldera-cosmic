@@ -220,6 +220,11 @@ new class extends Component {
         $props = ['sort', 'area_ids', 'user_id', 'purpose'];
         if(in_array($property, $props)) {
             $this->reset(['perPage', 'order_item_ids']);
+            
+            // Dispatch area_ids update to budget status component
+            if ($property === 'area_ids') {
+                $this->dispatch('area-ids-updated', $this->area_ids);
+            }
         }
     }
 
@@ -229,6 +234,7 @@ new class extends Component {
         session()->put('inv_order_items_token', $token);
         return redirect()->route('download.inv-order-items', ['token' => $token]);
     }
+
 }
 
 ?>
@@ -263,7 +269,7 @@ new class extends Component {
     
     <div wire:key="order-items-modals">
         <x-slide-over name="order-finalize">
-            <livewire:inventory.orders.order-finalize :$areas />
+            <livewire:inventory.orders.order-finalize :$areas :$area_ids />
         </x-slide-over>
         <x-slide-over name="order-bulk-edit" focusable>
             <livewire:inventory.orders.order-bulk-edit />
@@ -276,7 +282,7 @@ new class extends Component {
         </x-slide-over>
     </div>
 
-    <div>Here</div>
+    <livewire:inventory.orders.budget-status :area_ids="$area_ids" />
 
     <div class="static lg:sticky top-0 z-10 pb-6">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">

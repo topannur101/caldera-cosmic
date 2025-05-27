@@ -193,7 +193,7 @@ new class extends Component {
                 </i>
                 <div class="w-full md:w-32">
                     <x-text-input-t wire:model.live="q" id="order-q" name="order-q" class="h-9 py-1 placeholder-neutral-400 dark:placeholder-neutral-600"
-                        type="search" placeholder="{{ __('Cari pesanan...') }}" autocomplete="order-q" />
+                        type="search" placeholder="{{ __('Cari...') }}" autocomplete="order-q" />
                 </div>
             </div> 
             
