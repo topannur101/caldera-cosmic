@@ -23,7 +23,7 @@ new class extends Component {
    public string $code = '';
    public string $photo = '';
    public string $purpose = '';
-   public int $qty = 1;
+   public int $qty = 0;
    public string $uom = '';
    public float $unit_price = 0;
    
@@ -138,7 +138,7 @@ new class extends Component {
          'desc' => ['required', 'max:256'],
          'code' => ['required', 'alpha_dash', 'size:11'],
          'purpose' => ['required', 'max:500'],
-         'qty' => ['required', 'integer', 'min:1', 'max:1000000'],
+         'qty' => ['required', 'integer', 'min:0', 'max:1000000'],
          'uom' => ['required', 'alpha_dash', 'max:5'],
          'unit_price' => ['required', 'numeric', 'min:0', 'max:1000000000'],
       ]);
@@ -245,8 +245,8 @@ new class extends Component {
             <div class="text-sm text-center pb-6">{{ __('Akunmu memiliki wewenang ke lebih dari satu area inventaris. Pilih satu area untuk melanjutkan.') }}</div>
             {{-- Area Selection --}}
             <div>
-               <label for="area" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Area') }}</label>
-               <x-select wire:model.change="area_id" class="w-full">
+               <label for="form-area" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Area') }}</label>
+               <x-select id="form-area" wire:model.change="area_id" class="w-full">
                   <option value="0"></option>
                   @foreach($areas as $area)
                      <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
@@ -264,54 +264,48 @@ new class extends Component {
             {{-- Item Details --}}
             <div class="grid grid-cols-1 gap-y-4">
                <div>
-                  <label for="name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
-                  <x-text-input id="name" wire:model="name" type="text" class="w-full" />
+                  <label for="form-code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
+                  <x-text-input id="form-code" wire:model="code" type="text" class="w-full" maxlength="11" />
                </div>
                <div>
-                  <label for="desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
-                  <x-text-input id="desc" wire:model="desc" type="text" class="w-full" />
+                  <label for="form-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+                  <x-text-input id="form-name" wire:model="name" type="text" class="w-full" />
                </div>
                <div>
-                  <label for="code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
-                  <x-text-input id="code" wire:model="code" type="text" class="w-full" maxlength="11" />
+                  <label for="form-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
+                  <x-text-input id="form-desc" wire:model="desc" type="text" class="w-full" />
                </div>
             </div>
             {{-- Currency and Unit Price --}}
-            <div class="grid grid-cols-2 gap-x-3 gap-y-4">
-               <div>
-                  <label for="currency" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mata uang') }}</label>
-                  <x-select wire:model.change="currency_id" class="w-full">
+            <div>
+               <label for="form-unit_price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga dan satuan') }}</label>
+               <div class="btn-group">
+                  <x-select id="form-unit-price" wire:model.change="currency_id">
                      <option value=""></option>
                      @foreach($currencies as $currency)
                         <option value="{{ $currency['id'] }}">{{ $currency['name'] }}</option>
                      @endforeach
                   </x-select>
+                  <x-text-input id="form-unit_price" wire:model.change="unit_price" type="number" step="0.01" min="0" class="w-full rounded-none border-x-0" />
+                  <div class="block p-2 border-y border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 shadow-sm">/</div>
+                  <x-text-input id="form-uom" wire:model="uom" type="text" class="border-l-0 w-24" :fullWidth="false" placeholder="{{ __('Satuan') }}" maxlength="5" />
                </div>
+            </div>
+            {{-- Quantity and Purpose --}}
+            <div class="grid grid-cols-3 gap-x-3 gap-y-4">
+               <div>
+                  <label for="form-qty" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Qty') }}</label>
+                  <x-text-input id="form-qty" wire:model.change="qty" type="number" min="0" class="w-full" />
+               </div>
+               <div class="col-span-2">
+                  <label for="form-purpose" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keperluan') }}</label>
+                  <x-text-input id="form-purpose" wire:model="purpose" type="text" class="w-full" />
+               </div>
+            </div>
 
-               <div>
-                  <label for="unit_price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
-                  <x-text-input id="unit_price" wire:model.change="unit_price" type="number" step="0.01" min="0" class="w-full" />
-               </div>
-            </div>
-            {{-- Quantity and Pricing --}}
-            <div class="grid grid-cols-2 gap-x-3 gap-y-4">
-               <div>
-                  <label for="qty" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Qty') }}</label>
-                  <x-text-input id="qty" wire:model.change="qty" type="number" min="0" class="w-full" />
-               </div>
-               <div>
-                  <label for="uom" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Satuan') }}</label>
-                  <x-text-input id="uom" wire:model="uom" type="text" class="w-full" maxlength="5" />
-               </div>
-            </div>
-            {{-- Purpose --}}
-            <div>
-               <label for="purpose" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keperluan') }}</label>
-               <x-text-input id="purpose" wire:model="purpose" type="text" class="w-full" />
-            </div>
             {{-- Budget Selection (Optional) --}}         
             <div>
-               <label for="budget" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+               <label for="form-budget" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
                   {{ __('Anggaran') }}
                </label>
                <div class="mx-3">
@@ -319,7 +313,7 @@ new class extends Component {
                      @foreach($budgets as $budget)
                         <x-radio 
                               wire:model.change="budget_id" 
-                              id="budget-{{ $budget['id'] }}" 
+                              id="form-budget-{{ $budget['id'] }}" 
                               name="budget-selection" 
                               value="{{ $budget['id'] }}">
                               {{ $budget['name'] }}

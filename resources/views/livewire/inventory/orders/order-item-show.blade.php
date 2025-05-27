@@ -63,6 +63,9 @@ new class extends Component
 
         if ($orderItem) {
             $this->order_item = $orderItem->toArray();
+
+            // Reset eval message
+            $this->reset(['eval_message']);
             
             // Set form fields
             $this->name = $orderItem->name;
@@ -300,7 +303,7 @@ new class extends Component
 
         $rules = [
             'purpose' => ['required', 'max:500'],
-            'qty' => ['required', 'integer', 'min:1', 'max:1000000'],
+            'qty' => ['required', 'integer', 'min:0', 'max:1000000'],
             'budget_id' => ['required', 'exists:inv_order_budget,id'],
             'eval_message' => ['required', 'max:256'],
         ];
@@ -457,7 +460,7 @@ new class extends Component
                 $orderItem->delete();
                 
                 $this->dispatch('order-item-updated');
-                $this->js('slideOverOpen = false');
+                $this->js('window.dispatchEvent(escKey)');
                 $this->js('toast("' . __('Butir pesanan berhasil dihapus') . '", { type: "success" })');
             } else {
                 $this->js('toast("' . __('Butir pesanan tidak dapat dihapus') . '", { type: "danger" })');
@@ -469,7 +472,7 @@ new class extends Component
 
     public function handleNotFound()
     {
-        $this->js('slideOverOpen = false');
+        $this->js('window.dispatchEvent(escKey)');
         $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
     }
 
@@ -554,14 +557,6 @@ new class extends Component
         </div>
     </div>
 
-    @if ($errors->any())
-        <div class="px-6 pt-4">
-            <div class="text-center">
-                <x-input-error :messages="$errors->first()" />
-            </div>
-        </div>
-    @endif
-
     <div class="flex-1 overflow-y-auto" x-data="{
             tabSelected: @entangle('active_tab')
         }">
@@ -580,68 +575,47 @@ new class extends Component
 
             {{-- Item Details (editable for manual entries only) --}}
             @if($can_edit_item_details)
+                {{-- Item Details --}}
                 <div class="grid grid-cols-1 gap-y-4">
-                    <div>
-                        <label for="name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
-                        <x-text-input id="name" wire:model="name" type="text" class="w-full" />
-                    </div>
-
-                    <div>
-                        <label for="desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
-                        <x-text-input id="desc" wire:model="desc" type="text" class="w-full" />
-                    </div>
-
                     <div>
                         <label for="code" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kode') }}</label>
                         <x-text-input id="code" wire:model="code" type="text" class="w-full" maxlength="11" />
                     </div>
-                </div>
-            @endif
-
-            {{-- Pricing (editable for manual entries only) --}}
-            @if($can_edit_item_details)
-                <div class="grid grid-cols-2 gap-x-3">
                     <div>
-                        <label for="currency" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mata uang') }}</label>
-                        <x-select wire:model.live="currency_id" class="w-full">
-                            <option value="">{{ __('Pilih mata uang...') }}</option>
+                        <label for="name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+                        <x-text-input id="name" wire:model="name" type="text" class="w-full" />
+                    </div>
+                    <div>
+                        <label for="desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Deskripsi') }}</label>
+                        <x-text-input id="desc" wire:model="desc" type="text" class="w-full" />
+                    </div>
+                </div>
+                {{-- Currency and Unit Price --}}
+                <div>
+                    <label for="unit_price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga dan satuan') }}</label>
+                    <div class="btn-group">
+                        <x-select wire:model.change="currency_id">
+                            <option value=""></option>
                             @foreach($currencies as $currency)
                                 <option value="{{ $currency['id'] }}">{{ $currency['name'] }}</option>
                             @endforeach
                         </x-select>
-                    </div>
-
-                    <div>
-                        <label for="unit_price" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Harga satuan') }}</label>
-                        <x-text-input id="unit_price" wire:model.live="unit_price" type="number" step="0.01" min="0" class="w-full" />
+                        <x-text-input id="unit_price" wire:model.change="unit_price" type="number" step="0.01" min="0" class="w-full rounded-none border-x-0" />
+                        <div class="block p-2 border-y border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 shadow-sm">/</div>
+                        <x-text-input id="uom" wire:model="uom" type="text" class="border-l-0 w-24" :fullWidth="false" placeholder="{{ __('Satuan') }}" maxlength="5" />
                     </div>
                 </div>
             @endif
-
-            {{-- Quantity and UOM --}}
-            <div class="grid grid-cols-2 gap-x-3">
+            {{-- Quantity and Purpose --}}
+            <div class="grid grid-cols-3 gap-x-3 gap-y-4">
                 <div>
                     <label for="qty" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Qty') }}</label>
-                    <x-text-input id="qty" wire:model.live="qty" type="number" min="1" class="w-full" />
+                    <x-text-input id="qty" wire:model.change="qty" type="number" min="0" class="w-full" />
                 </div>
-
-                @if($can_edit_item_details)
-                    <div>
-                        <label for="uom" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Satuan') }}</label>
-                        <x-text-input id="uom" wire:model="uom" type="text" class="w-full" maxlength="5" />
-                    </div>
-                @else
-                    <div>
-                        <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Satuan') }}</label>
-                        <x-text-input value="{{ $order_item['uom'] }}" type="text" class="w-full" disabled />
-                    </div>
-                @endif
-            </div>
-
-            {{-- Purpose --}}
-            <div>
-               <label for="purpose" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keperluan') }}</label>
-               <x-text-input id="purpose" wire:model="purpose" type="text" class="w-full" />
+                <div class="col-span-2">
+                    <label for="purpose" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Keperluan') }}</label>
+                    <x-text-input id="purpose" wire:model="purpose" type="text" class="w-full" />
+                </div>
             </div>
 
             {{-- Budget Selection --}}
@@ -681,9 +655,17 @@ new class extends Component
 
             {{-- Evaluation Message --}}
             <div>
-                <label for="eval_message" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Alasan perubahan') }}</label>
-                <x-text-input id="eval_message" wire:model="eval_message" type="text" class="w-full" />
+                <label for="eval_message" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pesan evaluasi') }}</label>
+                <x-text-input id="eval_message" wire:model="eval_message" type="text" class="w-full" placeholder="{{ __('Alasan mengapa diubah') }}" />
             </div>
+
+            @if ($errors->any())
+                <div class="px-6">
+                    <div class="text-center">
+                        <x-input-error :messages="$errors->first()" />
+                    </div>
+                </div>
+            @endif
 
             {{-- Actions --}}
             <div class="flex justify-between">
@@ -693,7 +675,7 @@ new class extends Component
                 </x-text-button>
                 
                 <x-primary-button type="button" wire:click="update">
-                    {{ __('Simpan') }}
+                    {{ __('Perbarui') }}
                 </x-primary-button>
             </div>
         </div>
