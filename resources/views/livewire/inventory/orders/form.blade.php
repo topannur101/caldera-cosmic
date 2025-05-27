@@ -221,6 +221,15 @@ new class extends Component {
       }
       return '';
    }
+
+   public function getSelectedAreaName(): string
+   {
+      if ($this->area_id) {
+         $area = collect($this->areas)->firstWhere('id', $this->area_id);
+         return $area ? $area['name'] : '';
+      }
+      return '';
+   }
 };
 
 ?>
@@ -236,26 +245,43 @@ new class extends Component {
    </div>
    <div class="grow overflow-y-auto">      
       @if(!$area_id)
-         <div class="flex flex-col h-full justify-center gap-y-4 px-6 mx-auto">
-            <div class="py-3 text-center">
-               <i class="text-7xl icon-house relative text-neutral-300 dark:text-neutral-600">
-                  <i class="icon-circle-help absolute bottom-0 right-2 text-lg text-neutral-900 dark:text-neutral-100"></i>
-               </i>
+         {{-- Area Selection Step --}}
+         <div class="flex-1 overflow-y-auto space-y-6 p-6">
+            <div class="text-center py-8">
+               <i class="icon-house text-4xl text-neutral-300 dark:text-neutral-700 mb-4"></i>
+               <h3 class="text-lg font-medium mb-2">{{ __('Pilih area pesanan') }}</h3>
+               <p class="text-neutral-500 text-sm">{{ __('Pesanan baru akan dibuat di area yang dipilih.') }}</p>
             </div>
-            <div class="text-sm text-center pb-6">{{ __('Akunmu memiliki wewenang ke lebih dari satu area inventaris. Pilih satu area untuk melanjutkan.') }}</div>
-            {{-- Area Selection --}}
-            <div>
-               <label for="form-area" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Area') }}</label>
-               <x-select id="form-area" wire:model.change="area_id" class="w-full">
-                  <option value="0"></option>
-                  @foreach($areas as $area)
-                     <option value="{{ $area['id'] }}">{{ $area['name'] }}</option>
-                  @endforeach
-               </x-select>
+
+            <div class="space-y-3">
+               @foreach($areas as $area)
+                  <x-radio 
+                     wire:model.change="area_id" 
+                     id="area-{{ $area['id'] }}" 
+                     name="area-selection" 
+                     value="{{ $area['id'] }}">
+                     {{ $area['name'] }}
+                  </x-radio>
+               @endforeach
             </div>
          </div>
-         @else
+      @else
+         {{-- Form Step --}}
          <div class="flex flex-col gap-y-6 py-4 px-6">
+            {{-- Back to area selection (if multiple areas) --}}
+            @if(count($areas) > 1)
+               <div class="flex items-center text-sm text-neutral-500">
+                  <x-text-button type="button" wire:click="$set('area_id', 0)" class="mr-2">
+                     <i class="icon-arrow-left"></i>
+                  </x-text-button>
+                  <span>{{ __('Area: ') }}<strong>{{ $this->getSelectedAreaName() }}</strong></span>
+               </div>
+            @else
+               <div class="text-sm text-neutral-500">
+                  {{ __('Area: ') }}<strong>{{ $this->getSelectedAreaName() }}</strong>
+               </div>
+            @endif
+
             {{-- Photo upload --}}
             <div>
                <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Foto') }}</label>
@@ -366,13 +392,7 @@ new class extends Component {
                </div>
             @endif
             {{-- Save button --}}
-            <div class="flex justify-between items-center">
-               @if(count($areas) > 1)
-               <x-text-button type="button" class="rounded-full text-xs px-1 bg-caldy-600 bg-opacity-40 text-white" x-on:click="$wire.set('area_id', 0);">{{ collect($areas)->firstWhere('id', $area_id)['name'] ?? __('Area belum dipilih') }} <i class="icon-x ml-1"></i></x-text-button>
-               @else
-               <div class="text-neutral-500 text-xs">{{ collect($areas)->firstWhere('id', $area_id)['name'] ?? __('Area belum dipilih') }}</div>
-
-               @endif
+            <div class="flex justify-end">
                <x-primary-button type="button" wire:click="save">
                   {{ __('Simpan') }}
                </x-primary-button>

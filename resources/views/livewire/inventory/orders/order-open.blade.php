@@ -276,6 +276,8 @@ new class extends Component {
         </x-slide-over>
     </div>
 
+    <div>Here</div>
+
     <div class="static lg:sticky top-0 z-10 pb-6">
         <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2">
             <div class="flex gap-x-2 items-center px-8 py-2 lg:px-4 lg:py-0">
