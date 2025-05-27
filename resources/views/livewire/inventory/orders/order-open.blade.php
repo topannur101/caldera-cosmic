@@ -188,12 +188,6 @@ new class extends Component {
         $this->perPage += 24;
     }
 
-    public function finalizeOrderItems()
-    {
-        $this->dispatch('finalize-order-items', $this->order_item_ids);
-        $this->js('$dispatch("open-slide-over", "order-finalize")');
-    }
-
     public function bulkEditOrderItems()
     {
         $this->dispatch('bulk-edit-order-items', $this->order_item_ids);
@@ -268,8 +262,8 @@ new class extends Component {
     }">
     
     <div wire:key="order-items-modals">
-        <x-slide-over name="order-finalize" focusable>
-            <livewire:inventory.orders.order-finalize />
+        <x-slide-over name="order-finalize">
+            <livewire:inventory.orders.order-finalize :$areas />
         </x-slide-over>
         <x-slide-over name="order-bulk-edit" focusable>
             <livewire:inventory.orders.order-bulk-edit />
@@ -322,10 +316,13 @@ new class extends Component {
                             <x-text-button><i class="icon-ellipsis"></i></x-text-button>
                         </x-slot>
                         <x-slot name="content">
+                            <x-dropdown-link href="#" x-on:click="$dispatch('open-slide-over', 'order-finalize')">
+                                <i class="icon-circle-check me-2"></i>{{ __('Finalisasi pesanan')}}
+                            </x-dropdown-link>
+                            <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="resetQuery">
                                 <i class="icon-rotate-cw me-2"></i>{{ __('Reset')}}
                             </x-dropdown-link>
-                            <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="download">
                                 <i class="icon-download me-2"></i>{{ __('Unduh sebagai CSV') }}
                             </x-dropdown-link>
@@ -364,17 +361,11 @@ new class extends Component {
                     </x-secondary-button>
                     <x-secondary-button type="button" wire:click="bulkEditOrderItems">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="bulkEditOrderItems"><i class="icon-pen"></i></span>
+                            <span wire:loading.class="opacity-0" wire:target="bulkEditOrderItems"><i class="icon-pen mr-2"></i>{{ __('Edit') }}</span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="bulkEditOrderItems" class="hidden sm mono"></x-spinner>
                         </div>
                     </x-secondary-button>
                 </div>                
-                <x-secondary-button type="button" wire:click="finalizeOrderItems">
-                    <div class="relative">
-                        <span wire:loading.class="opacity-0" wire:target="finalizeOrderItems"><i class="icon-circle-check"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Finalkan') }}</span></span>
-                        <x-spinner wire:loading.class.remove="hidden" wire:target="finalizeOrderItems" class="hidden sm mono"></x-spinner>
-                    </div>
-                </x-secondary-button>
             </div>
         </div>
     </div>

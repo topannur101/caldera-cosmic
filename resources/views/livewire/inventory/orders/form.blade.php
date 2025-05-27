@@ -238,9 +238,9 @@ new class extends Component {
       @if(!$area_id)
          <div class="flex flex-col h-full justify-center gap-y-4 px-6 mx-auto">
             <div class="py-3 text-center">
-                  <i class="text-5xl icon-box relative text-neutral-300 dark:text-neutral-600">
-                     <i class="icon-circle-help absolute bottom-0 right-2 text-lg text-neutral-900 dark:text-neutral-100"></i>
-                  </i>
+               <i class="text-7xl icon-house relative text-neutral-300 dark:text-neutral-600">
+                  <i class="icon-circle-help absolute bottom-0 right-2 text-lg text-neutral-900 dark:text-neutral-100"></i>
+               </i>
             </div>
             <div class="text-sm text-center pb-6">{{ __('Akunmu memiliki wewenang ke lebih dari satu area inventaris. Pilih satu area untuk melanjutkan.') }}</div>
             {{-- Area Selection --}}
