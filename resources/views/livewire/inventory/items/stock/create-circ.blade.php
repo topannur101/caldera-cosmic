@@ -70,13 +70,6 @@ new class extends Component {
       ];
    }
 
-   // #[On('stock-switched')]
-   // public function switchStock(array $stock)
-   // {
-   //    $this->stock_id   = $stock['id'];
-   //    $this->uom        = $stock['uom'];
-   // }
-
    public function save()
    {
       $this->remarks = trim($this->remarks);
@@ -150,14 +143,94 @@ new class extends Component {
 ?>
 
 <x-popover-button focus="{{ 'circ-' . $type . (($type == 'deposit' || $type == 'withdrawal') ? '-qty' : '-remarks') }}" icon="{{ $types[$type]['icon'] . ' ' . $types[$type]['color'] }}">
-   <form  wire:submit="save" class="grid grid-cols-1 gap-y-4">
-      @if($type == 'deposit' || $type == 'withdrawal')
+   @if($type == 'deposit' || $type == 'withdrawal')
+   <div x-data="{
+         qty_relative: @entangle('qty_relative'),
+         unit_price: @entangle('unit_price'),
+         curr_rate: @entangle('curr_rate'),
+         
+         // Calculated properties
+         amount_primary: 0,
+         primary_currency: 'USD',
+         
+         // Calculate amount in primary currency
+         calculate() {
+            this.amount_primary = (this.qty_relative * this.unit_price) / this.curr_rate;
+         },
+         
+         // Format number for display
+         formatNumber(num) {
+            return new Intl.NumberFormat('en-US', {
+               minimumFractionDigits: 2,
+               maximumFractionDigits: 2
+            }).format(num);
+         }
+      }" 
+      x-init="calculate(); 
+              $watch('qty_relative', () => calculate());
+              $watch('unit_price', () => calculate());
+              $watch('curr_rate', () => calculate());">
+      
+      <form  wire:submit="save" class="grid grid-cols-1 gap-y-4">
          <div>
             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-{{ $type }}-qty"><span>{{ __('Jumlah') }}</span></label>
-            <x-text-input-suffix wire:model="qty_relative" suffix="{{ $stock_uom }}" id="circ-{{ $type }}-qty" class="text-center" name="circ-{{ $type }}-qty"
+            <x-text-input-suffix x-model="qty_relative" suffix="{{ $stock_uom }}" id="circ-{{ $type }}-qty" class="text-center" name="circ-{{ $type }}-qty"
             type="number" value="" min="1" placeholder="Qty" />
          </div>
-      @endif
+         
+         <div>
+            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-{{ $type }}-remarks">{{ __('Keterangan') }}</label>
+            <x-text-input wire:model="remarks" id="circ-{{ $type }}-remarks" autocomplete="circ-remarks" />
+         </div>
+         
+         @if($can_eval)
+         <div
+            x-data="{ 'open': false, 'userq': @entangle('userq').live }" 
+            x-on:click.away="open = false"
+            x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
+            <label for="circ-{{ $type }}-user"
+               class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Pengguna') }}</label>
+            <x-text-input-icon
+               x-ref="userq" 
+               x-model="userq"             
+               x-on:focus="open = true"
+               x-on:change="open = true"
+               icon="icon-user"
+               id="circ-{{ $type }}-user" 
+               type="text"
+               autocomplete="off"
+               placeholder="{{ __('Pengguna') }}" />
+               <div class="relative" x-show="open" x-cloak>
+                  <div class="absolute top-1 left-0 w-full z-10">
+                     <livewire:layout.user-select />
+                  </div>
+               </div>
+         </div>
+         @endif
+         
+         {{-- Amount Preview --}}
+         <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-3 space-y-1 text-sm">
+            <div class="flex justify-between">
+               <span x-text="primary_currency"></span>
+               <span class="font-mono" x-text="formatNumber(amount_primary)"></span>
+            </div>
+         </div>
+         
+         @if ($errors->any())
+            <div>
+                  <x-input-error :messages="$errors->first()" />
+            </div>
+         @endif
+         
+         <div class="text-right">
+            <x-secondary-button type="submit">
+               <span class="{{ $types[$type]['color'] }}"><i class="{{ $types[$type]['icon'] }} mr-2"></i>{{ $types[$type]['text'] }}</span>
+            </x-secondary-button>
+         </div>
+      </form>
+   </div>
+   @else
+   <form  wire:submit="save" class="grid grid-cols-1 gap-y-4">
       <div>
          <label class="block px-3 mb-2 uppercase text-xs text-neutral-500" for="circ-{{ $type }}-remarks">{{ __('Keterangan') }}</label>
          <x-text-input wire:model="remarks" id="circ-{{ $type }}-remarks" autocomplete="circ-remarks" />
@@ -197,6 +270,7 @@ new class extends Component {
          </x-secondary-button>
       </div>
    </form>
+   @endif
    <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
    <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
 </x-popover-button>
