@@ -66,6 +66,22 @@ new class extends Component
          <livewire:inventory.items.stock.circs-chart />
       </x-modal>
    </div>
+   
+   <div wire:key="stock-spotlights">
+      <x-spotlight name="downloading" maxWidth="sm">
+         <div class="w-full flex flex-col gap-y-6 pb-10 text-center">
+            <div class="h-16 relative">
+               <x-spinner class="mono" />
+            </div>
+            <header>
+               <h2 class="text-xl font-medium">
+                  {{ __('Memproses unduhan...') }}
+               </h2>
+            </header>
+         </div>
+      </x-spotlight>
+   </div>
+   
    @vite(['resources/js/apexcharts.js'])
    <div wire:loading.class="cal-shimmer">
       @if ($circs->count())
@@ -96,7 +112,11 @@ new class extends Component
          </div>
          <div class="btn-group flex justify-center p-1">
             <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'circs-chart'); $dispatch('circs-chart', { stock_id: {{ $stock_id }} })"><i class="icon-chart-line"></i></x-secondary-button>
-            <x-secondary-button type="button" wire:click="circsDownload"><i class="icon-download"></i></x-secondary-button>
+            <x-secondary-button type="button" 
+               wire:click="circsDownload" 
+               x-on:click="$dispatch('open-spotlight', 'downloading'); setTimeout(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })) }, 2000)">
+               <i class="icon-download"></i>
+            </x-secondary-button>
          </div>
       @else
          <div class="py-4 text-neutral-500 text-center">
