@@ -146,6 +146,24 @@ class FeatureAnnounce extends Command
                 ] 
             ],
 
+            'inv_circ_chart' => [
+                'icon'      => 'icon-box',
+                'content'   => 'Grafik sirkulasi kini tersedia untuk analisis data historis.',
+                'post'      =>
+                [
+                    'title'     => 'Grafik sirkulasi',
+                    'content'   => '
+                    Grafik sirkulasi kini tersedia untuk analisis data historis. Tab Qty menampilkan bagan berdasarkan akumulasi qty per bulan dan tab Amount menampilkan bagan berdasarkan akumulasi amount per bulan (dalam mata uang utama USD).
+                    <br><br>
+                    <img src="/announcements/inv_circ_chart_1.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    <img src="/announcements/inv_circ_chart_2.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    <br>
+                    <img src="/announcements/inv_circ_chart_3.jpg" class="mx-auto border shadow rounded-md" style="max-width: 380px;">
+                    ',
+                ] 
+            ],
+
             
 
             
