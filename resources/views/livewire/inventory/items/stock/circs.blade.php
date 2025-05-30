@@ -63,9 +63,10 @@ new class extends Component
          <livewire:inventory.circs.circ-show />
       </x-modal>
       <x-modal name="circs-chart">
-         <livewire:inventory.items.stock.circs-chart :$stock_id lazy />
+         <livewire:inventory.items.stock.circs-chart />
       </x-modal>
    </div>
+   @vite(['resources/js/apexcharts.js'])
    <div wire:loading.class="cal-shimmer">
       @if ($circs->count())
          <table wire:key="circs" class="w-full [&_td]:py-2 [&_tr_td:first-child]:w-[1%] [&_tr_td:last-child]:w-[1%]">
@@ -94,7 +95,7 @@ new class extends Component
             {{ $circs->onEachSide(1)->links(data: ['scrollTo' => false]) }}
          </div>
          <div class="btn-group flex justify-center p-1">
-            <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'circs-chart')"><i class="icon-chart-line"></i></x-secondary-button>
+            <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'circs-chart'); $dispatch('circs-chart', { stock_id: {{ $stock_id }} })"><i class="icon-chart-line"></i></x-secondary-button>
             <x-secondary-button type="button" wire:click="circsDownload"><i class="icon-download"></i></x-secondary-button>
          </div>
       @else
