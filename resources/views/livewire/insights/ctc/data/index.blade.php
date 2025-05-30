@@ -17,6 +17,7 @@ class extends Component {
         $this->view_titles = [   
             'realtime'  => __('Waktu nyata'),
             'batch'     => __('Riwayat gilingan'),
+            'quality'   => __('Analisis kualitas'),
         ];
     }
 
@@ -63,6 +64,10 @@ class extends Component {
 
             @case('batch')
                 <livewire:insights.ctc.data.batch />
+            @break
+
+            @case('quality')
+                <livewire:insights.ctc.data.quality />
             @break
 
             @default

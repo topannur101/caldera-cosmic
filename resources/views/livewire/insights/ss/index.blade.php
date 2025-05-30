@@ -27,5 +27,8 @@ new #[Layout('layouts.ss')] class extends Component {
         @case(6)
             <livewire:insights.ss.6 />
             @break
+        @case(7)
+            <livewire:insights.ss.7 />
+            @break
     @endswitch
 </div>
