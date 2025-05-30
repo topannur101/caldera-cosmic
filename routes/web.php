@@ -50,6 +50,53 @@ Route::prefix('insights')->group(function () {
 
     });
 
+    Route::name('insights.ctc.')->group(function () {
+
+        Volt::route('/ctc/manage/authorizations',   'insights.ctc.manage.auths')     ->name('manage.auths');
+        Volt::route('/ctc/manage/devices',          'insights.ctc.manage.devices')   ->name('manage.devices');
+        Volt::route('/ctc/manage/recipes',          'insights.ctc.manage.recipes')   ->name('manage.recipes');
+        Volt::route('/ctc/manage',                  'insights.ctc.manage.index')     ->name('manage.index');
+        Volt::route('/ctc/data/realtime',           'insights.ctc.data.realtime')    ->name('data.realtime');
+        Volt::route('/ctc/data/batch',              'insights.ctc.data.batch')       ->name('data.batch');
+        Volt::route('/ctc/data',                    'insights.ctc.data.index')       ->name('data.index');
+        Volt::route('/ctc/slideshows',              'insights.ctc.slideshows')       ->name('slideshows');
+        Volt::route('/ctc',                         'insights.ctc.data.index')       ->name('index');
+
+        // API routes for CTC (similar to RTC pattern)
+        Route::get('/ctc/metric/{device_id}', function (string $device_id) {
+            // TODO: Replace with actual CTC model when backend is ready
+            // $metric = InsCtcMetric::join('ins_ctc_batches', 'ins_ctc_batches.id', '=', 'ins_ctc_metrics.ins_ctc_batch_id')
+            //     ->where('ins_ctc_batches.ins_ctc_device_id', $device_id)
+            //     ->latest('dt_client')
+            //     ->first();
+            // return $metric ? new InsCtcMetricResource($metric) : abort(404);
+            
+            // Mock response for development
+            return response()->json([
+                'device_id' => $device_id,
+                'sensor_left' => 3.05,
+                'sensor_right' => 3.02,
+                'is_correcting' => true,
+                'dt_client' => now()->toISOString()
+            ]);
+        })->name('metric');
+
+        Route::get('/ctc/recipe/{recipe_id}', function (string $recipe_id) {
+            // TODO: Replace with actual CTC recipe model when backend is ready
+            // return new InsCtcRecipeResource(InsCtcRecipe::findOrFail($recipe_id));
+            
+            // Mock response for development
+            return response()->json([
+                'id' => $recipe_id,
+                'name' => 'AF1 GS (ONE COLOR)',
+                'std_min' => 3.0,
+                'std_max' => 3.1,
+                'std_mid' => 3.05
+            ]);
+        })->name('recipe');
+
+    });
+
     Route::name('insights.ldc.')->group(function () {
 
         Volt::route('/ldc/manage/authorizations',   'insights.ldc.manage.auths') ->name('manage.auths');

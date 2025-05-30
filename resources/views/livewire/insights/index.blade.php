@@ -21,6 +21,7 @@ class extends Component {
     public int $stc_d_sums_recent = 0;
     public int $omv_lines_recent = 0;
     public int $rtc_lines_recent = 0;
+    public int $ctc_lines_recent = 0;  // New CTC counter
     public int $rdc_machines_recent = 0;
     public int $ldc_codes_recent = 0;
     public bool $is_aurelia_up = false;
@@ -119,6 +120,21 @@ class extends Component {
         });
     }
 
+    private function getCachedCtcLines(): int 
+    {
+        return Cache::remember('ctc_lines_recent', now()->addMinutes(30), function () {
+            // Mock data for now - will be replaced with actual CTC model
+            $timeWindow = Carbon::now()->subMinutes(60);
+            // TODO: Replace with actual InsCtcBatch model when backend is ready
+            // return InsCtcBatch::where('updated_at', '>=', $timeWindow)
+            //     ->distinct('ins_ctc_device_id')
+            //     ->count('ins_ctc_device_id');
+            
+            // Mock: return 2 lines active for development
+            return 2;
+        });
+    }
+
     private function getCachedRdcMachines(): int 
     {
         return Cache::remember('rdc_machines_recent', now()->addMinutes(30), function () {
@@ -156,6 +172,7 @@ class extends Component {
         $this->stc_d_sums_recent    = $this->getCachedStcDSums();
         $this->omv_lines_recent     = $this->getCachedOmvLines();
         $this->rtc_lines_recent     = $this->getCachedRtcLines();
+        $this->ctc_lines_recent     = $this->getCachedCtcLines();  // New CTC metric
         $this->rdc_machines_recent  = $this->getCachedRdcMachines();
         $this->ldc_codes_recent     = $this->getCachedLdcCodes();
         $this->is_aurelia_up        = Cache::remember('is_aurelia_up', now()->addMinutes(30), function () {
@@ -170,6 +187,7 @@ class extends Component {
         Cache::forget('stc_d_sums_recent');
         Cache::forget('omv_lines_recent');
         Cache::forget('rtc_lines_recent');
+        Cache::forget('ctc_lines_recent');  // New CTC cache clear
         Cache::forget('rdc_machines_recent');
         Cache::forget('ldc_codes_recent');
         Cache::forget('is_aurelia_up');
@@ -225,6 +243,25 @@ class extends Component {
                                     <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                         <div class="w-2 h-2 {{ $rtc_lines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
                                         <div class="">{{ $rtc_lines_recent > 0 ? $rtc_lines_recent . ' ' . __('line ') : __('luring') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-3 text-lg">
+                                <i class="icon-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="{{ route('insights.ctc.index') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                        <div class="flex items-center">
+                            <div class="px-6 py-3">
+                                <img src="/ink-rtc.svg" class="w-16 h-16 dark:invert">
+                            </div>
+                            <div class="grow">
+                                <div class=" text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kendali tebal calendar') . ' 2.0' }}</div>
+                                <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
+                                    <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
+                                        <div class="w-2 h-2 {{ $ctc_lines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
+                                        <div class="">{{ $ctc_lines_recent > 0 ? $ctc_lines_recent . ' ' . __('line ') : __('luring') }}</div>
                                     </div>
                                 </div>
                             </div>
