@@ -331,23 +331,23 @@ new class extends Component
                     }
                 }" class="relative w-full">
                 
-                <div class="relative inline-grid items-center justify-center w-full h-10 grid-cols-2 p-1 text-neutral-500 bg-neutral-100 dark:bg-neutral-800 rounded-lg select-none">
+                <div class="relative inline-grid items-center justify-center w-full h-10 grid-cols-2 p-1 text-neutral-500 bg-neutral-200 dark:bg-neutral-900 rounded-full select-none">
                     <button data-tab="quantity" @click="tabButtonClicked($el);" type="button" 
                             :class="tabSelected === 'quantity' ? 'text-neutral-900 dark:text-neutral-100' : ''"
-                            class="relative z-10 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">
+                            class="relative z-10 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-full cursor-pointer whitespace-nowrap">
                         {{ __('Qty') }}
                     </button>
                     <button data-tab="amount" @click="tabButtonClicked($el);" type="button" 
                             :class="tabSelected === 'amount' ? 'text-neutral-900 dark:text-neutral-100' : ''"
-                            class="relative z-10 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">
+                            class="relative z-10 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-full cursor-pointer whitespace-nowrap">
                         {{ __('Amount') }}
                     </button>
                     
                     {{-- Marker positioned with CSS based on active tab --}}
-                    <div class="absolute left-0 h-full duration-300 ease-out transition-transform" 
+                    <div class="absolute left-0 h-full p-1 duration-300 ease-out transition-transform" 
                         :class="tabSelected === 'amount' ? 'translate-x-full' : 'translate-x-0'"
-                        style="width: calc(50% - 4px); margin: 2px;">
-                        <div class="w-full h-full bg-white dark:bg-neutral-700 rounded-md shadow-sm"></div>
+                        style="width: calc(50%);">
+                        <div class="w-full h-full bg-white dark:bg-neutral-700 rounded-full shadow-sm"></div>
                     </div>
                 </div>
             </div>
