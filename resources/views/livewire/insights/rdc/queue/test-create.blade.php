@@ -3,6 +3,8 @@
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\InsRubberBatch;
 use App\Models\InsRdcMachine;
@@ -30,21 +32,17 @@ new class extends Component
    public bool $update_batch = true;  
 
    public array $test = [
-
       'ins_rdc_machine_id' => 0,
-
       's_max_low' => '',
       's_max_high' => '',
       's_min_low' => '',
       's_min_high' => '',
-
       'tc10_low' => '',
       'tc10_high' => '',
       'tc50_low' => '',
       'tc50_high' => '',
       'tc90_low' => '',
       'tc90_high' => '',
-
       'type' => '',
       's_max' => '',
       's_min' => '',
@@ -76,11 +74,9 @@ new class extends Component
          $this->batch['model'] = $batch->model;
          $this->batch['color'] = $batch->color;
          $this->batch['mcs'] = $batch->mcs;
-
       } else {
          $this->handleNotFound();
       }
-
    }
 
    private function customReset()
@@ -138,262 +134,190 @@ new class extends Component
 
    public function updatedFile()
    {
+      // Validate file first
       $this->validate([
-      'file' => 'file|mimes:txt,xls,xlsx|max:1024'
+         'file' => 'file|max:1024'
       ]);
 
-      $mimeType = $this->file->getMimeType();
-
-      $type = match ($mimeType) {
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'excel',
-      'text/plain' => 'text'
-      };
-
-      switch ($type) {
-      case 'excel':
-         $this->extractDataExcel();
-         $this->view = 'review';
-         break;
-
-      case 'text':
-         $this->extractDataText();
-         $this->view = 'review';
-         break;
-
-      default:
-         $this->js('toast("' . __('Mime tidak didukung') . '", { type: "danger" })');
-         break;
+      // Get the selected machine
+      $machine = InsRdcMachine::find($this->test['ins_rdc_machine_id']);
+      if (!$machine instanceof InsRdcMachine) {
+         $this->js('toast("' . __('Pilih mesin terlebih dahulu') . '", { type: "danger" })');
+         $this->reset(['file']);
+         return;
       }
+
+      // Validate file type against machine type
+      $mimeType = $this->file->getMimeType();
+      $isValidFile = $this->validateFileForMachine($mimeType, $machine->type);
+
+      if (!$isValidFile) {
+         $expectedTypes = $machine->type === 'excel' ? 'Excel (.xls, .xlsx)' : 'Text (.txt)';
+         $this->js('toast("' . __('File tidak sesuai dengan tipe mesin. Diharapkan: ') . $expectedTypes . '", { type: "danger" })');
+         $this->reset(['file']);
+         return;
+      }
+
+      // Process the file based on machine type
+      try {
+         if ($machine->type === 'excel') {
+            $this->extractDataExcel($machine);
+         } else {
+            $this->extractDataText($machine);
+         }
+      } catch (\Exception $e) {
+         $this->js('toast("' . __('Gagal memproses file: ') . $e->getMessage() . '", { type: "danger" })');
+      }
+
       $this->reset(['file']);
    }
 
-   private function find3Digit($string) {
-      preg_match_all('/\/?(\d{3})/', $string, $matches);
-      return !empty($matches[1]) ? end($matches[1]) : null;
+   private function validateFileForMachine(string $mimeType, string $machineType): bool
+   {
+      return match ($machineType) {
+         'excel' => in_array($mimeType, [
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+         ]),
+         'txt' => $mimeType === 'text/plain',
+         default => false
+      };
    }
 
-   private function extractDataText()
+   private function extractDataExcel(InsRdcMachine $machine)
    {
-      try {
-         // Fetch the machine data based on the selected machine_id
-         $machine = InsRdcMachine::find($this->test['ins_rdc_machine_id']);
+      $config = json_decode($machine->cells, true) ?? [];
+      if (empty($config)) {
+         throw new \Exception("Mesin tidak memiliki konfigurasi");
+      }
 
-         if (!$machine) {
-            throw new \Exception("Mesin tidak ditemukan");
+      $path = $this->file->getRealPath();
+      $spreadsheet = IOFactory::load($path);
+      $worksheet = $spreadsheet->getActiveSheet();
+
+      $extractedData = [];
+
+      foreach ($config as $fieldConfig) {
+         if (!isset($fieldConfig['field']) || !isset($fieldConfig['address'])) {
+            continue;
          }
 
-         // Read the text file content
-         $content = file_get_contents($this->file->getRealPath());
-              
-         // Split content into lines
-         $lines = explode("\n", $content);
+         $field = $fieldConfig['field'];
+         $address = $fieldConfig['address'];
          
-         // Initialize variables
-         $values = [
-            'code_alt' => '',
-            'color' => '',
-            'mcs' => '',
-            's_max' => 0,
-            's_min' => 0,
-            'tc10' => 0,
-            'tc50' => 0,
-            'tc90' => 0,
-            's_max_low' => 0,
-            's_max_high' => 0,
-            's_min_low' => 0,
-            's_min_high' => 0,
-            'tc10_low' => 0,
-            'tc10_high' => 0,
-            'tc50_low' => 0,
-            'tc50_high' => 0,
-            'tc90_low' => 0,
-            'tc90_high' => 0,
-         ];
+         try {
+            $value = $worksheet->getCell($address)->getValue();
+            $extractedData[$field] = $this->processFieldValue($field, $value);
+         } catch (\Exception $e) {
+            // Skip if cell doesn't exist or can't be read
+            continue;
+         }
+      }
 
-         foreach ($lines as $line) {
-            $line = trim($line);
-            
-            // Extract Orderno (code_alt)
-            if (preg_match('/Orderno\.\s*:\s*(\d+)/i', $line, $matches)) {
-               $values['code_alt'] = $matches[1];
-            }
-            
-            // Extract Description (color) and MCS from Compound line
-            elseif (strpos($line, 'Compound') !== false) {
-               // Extract MCS (001)
-               if (preg_match('/OG\/RS\s+(\d{3})/i', $line, $matches)) {
-                  $values['mcs'] = $matches[1];
-               }
-               // Extract Description
-               if (preg_match('/Description:\s*([^$]+)/i', $line, $matches)) {
-                  $values['color'] = trim($matches[1]);
-               }
-            }
-            
-            // Extract ML (s_min) and its bounds
-            elseif (strpos($line, 'ML') === 0) {
-               if (preg_match('/ML\s+(\d+\.\d+).*?(\d+\.\d+)\s+(\d+\.\d+)/i', $line, $matches)) {
-                  $values['s_min'] = floatval($matches[1]);
-                  $values['s_min_low'] = floatval($matches[2]);
-                  $values['s_min_high'] = floatval($matches[3]);
-               }
-            }
-            
-            // Extract MH (s_max) and its bounds
-            elseif (strpos($line, 'MH') === 0) {
-               if (preg_match('/MH\s+(\d+\.\d+).*?(\d+\.\d+)\s+(\d+\.\d+)/i', $line, $matches)) {
-                  $values['s_max'] = floatval($matches[1]);
-                  $values['s_max_low'] = floatval($matches[2]);
-                  $values['s_max_high'] = floatval($matches[3]);
-               }
-            }
-            
-            // Extract t10 (tc10) and its bounds
-            elseif (strpos($line, 't10') === 0) {
-               if (preg_match('/t10\s+(\d+\.\d+).*?(\d+\.\d+)\s+(\d+\.\d+)/i', $line, $matches)) {
-                  $values['tc10'] = floatval($matches[1]);
-                  $values['tc10_low'] = floatval($matches[2]);
-                  $values['tc10_high'] = floatval($matches[3]);
-               }
-            }
-            
-            // Extract t50 (tc50) and its bounds
-            elseif (strpos($line, 't50') === 0) {
-               if (preg_match('/t50\s+(\d+\.\d+).*?(\d+\.\d+)\s+(\d+\.\d+)/i', $line, $matches)) {
-                  // If value and bounds exist in file, use them
-                  $values['tc50'] = floatval($matches[1]);
-                  $values['tc50_low'] = floatval($matches[2]);
-                  $values['tc50_high'] = floatval($matches[3]);
-               } elseif (preg_match('/t50\s+(\d+\.\d+)/i', $line, $matches)) {
-                  // If only value exists, use it and set bounds to 0
-                  $values['tc50'] = floatval($matches[1]);
-                  $values['tc50_low'] = 0;
-                  $values['tc50_high'] = 0;
-               }
-            }
-            
-            // Extract t90 (tc90) and its bounds
-            elseif (strpos($line, 't90') === 0) {
-               if (preg_match('/t90\s+(\d+\.\d+).*?(\d+\.\d+)\s+(\d+\.\d+)/i', $line, $matches)) {
-                  $values['tc90'] = floatval($matches[1]);
-                  $values['tc90_low'] = floatval($matches[2]);
-                  $values['tc90_high'] = floatval($matches[3]);
-               }
-            }
+      $this->applyExtractedData($extractedData);
+   }
 
-            // Extract Status for evaluation
-            elseif (preg_match('/Status:\s*(\w+)/i', $line, $matches)) {
-               $status = strtolower($matches[1]); // Convert to lowercase
-               $values['eval'] = ($status === 'pass') ? 'pass' : 'fail'; // Anything not 'pass' will be 'fail'
-            }
+   private function extractDataText(InsRdcMachine $machine)
+   {
+      $config = json_decode($machine->cells, true) ?? [];
+      if (empty($config)) {
+         throw new \Exception("Mesin tidak memiliki konfigurasi");
+      }
+
+      $content = file_get_contents($this->file->getRealPath());
+      $lines = explode("\n", $content);
+
+      $extractedData = [];
+
+      foreach ($config as $fieldConfig) {
+         if (!isset($fieldConfig['field']) || !isset($fieldConfig['pattern'])) {
+            continue;
          }
 
-         // Assign extracted values
-         $this->batch['code_alt'] = $values['code_alt'];
-         $this->batch['color'] = $values['color'];
-         $this->batch['mcs'] = $values['mcs'];
+         $field = $fieldConfig['field'];
+         $pattern = $fieldConfig['pattern'];
 
-         // Assign test values
-         $this->test['s_max'] = $values['s_max'];
-         $this->test['s_min'] = $values['s_min'];
-         $this->test['tc10'] = $values['tc10'];
-         $this->test['tc50'] = $values['tc50'];
-         $this->test['tc90'] = $values['tc90'];
+         $value = $this->extractValueFromText($lines, $pattern);
+         if ($value !== null) {
+            $extractedData[$field] = $this->processFieldValue($field, $value);
+         }
+      }
 
-         // Assign bounds
-         $this->test['s_max_low'] = $values['s_max_low'];
-         $this->test['s_max_high'] = $values['s_max_high'];
-         $this->test['s_min_low'] = $values['s_min_low'];
-         $this->test['s_min_high'] = $values['s_min_high'];
-         $this->test['tc10_low'] = $values['tc10_low'];
-         $this->test['tc10_high'] = $values['tc10_high'];
-         $this->test['tc50_low'] = $values['tc50_low'];
-         $this->test['tc50_high'] = $values['tc50_high'];
-         $this->test['tc90_low'] = $values['tc90_low'];
-         $this->test['tc90_high'] = $values['tc90_high'];
+      $this->applyExtractedData($extractedData);
+   }
 
-         // Set evaluation from status
-         $this->test['eval'] = $values['eval'] ?? 'fail'; // Default to fail if status not found
+   private function extractValueFromText(array $lines, string $pattern): ?string
+   {
+      foreach ($lines as $line) {
+         $line = trim($line);
+         if (preg_match('/' . $pattern . '/i', $line, $matches)) {
+            // Return the first capture group if it exists, otherwise the full match
+            return isset($matches[1]) ? $matches[1] : $matches[0];
+         }
+      }
+      return null;
+   }
 
-         // Debug output
-         $this->js('console.log("TC50 Value:", ' . $values['tc50'] . ')');
-         $this->js('console.log("TC50 Bounds:", ' . $values['tc50_low'] . ' - ' . $values['tc50_high'] . ')');
-         $this->js('console.log("Status found:", "' . $this->test['eval'] . '")');
+   private function processFieldValue(string $field, $value): mixed
+   {
+      $value = trim((string)$value);
 
-      } catch (\Exception $e) {
-         $this->js('toast("' . __('Tidak dapat membaca file') . '", { description: "'. $e->getMessage() .'", type: "danger" })'); 
+      return match($field) {
+         'mcs' => $this->find3Digit($value),
+         'color', 'code_alt', 'model' => $this->safeString($value),
+         's_max', 's_min', 'tc10', 'tc50', 'tc90' => $this->safeFloat($value),
+         's_max_low', 's_max_high', 's_min_low', 's_min_high',
+         'tc10_low', 'tc10_high', 'tc50_low', 'tc50_high',
+         'tc90_low', 'tc90_high' => $this->safeFloat($value),
+         'eval' => $this->processEvalValue($value),
+         default => $value
+      };
+   }
 
+   private function processEvalValue(string $value): string
+   {
+      $value = strtolower(trim($value));
+      return match($value) {
+         'ok', 'pass' => 'pass',
+         'sl', 'fail' => 'fail',
+         default => ''
+      };
+   }
+
+   private function applyExtractedData(array $extractedData)
+   {
+      // Apply batch data
+      $batchFields = ['code_alt', 'model', 'color', 'mcs'];
+      foreach ($batchFields as $field) {
+         if (isset($extractedData[$field]) && !empty($extractedData[$field])) {
+            $this->batch[$field] = $extractedData[$field];
+         }
+      }
+
+      // Apply test data
+      $testFields = [
+         's_max', 's_min', 'tc10', 'tc50', 'tc90', 'eval',
+         's_max_low', 's_max_high', 's_min_low', 's_min_high',
+         'tc10_low', 'tc10_high', 'tc50_low', 'tc50_high',
+         'tc90_low', 'tc90_high'
+      ];
+      
+      foreach ($testFields as $field) {
+         if (isset($extractedData[$field])) {
+            $this->test[$field] = $extractedData[$field];
+         }
       }
    }
 
-   private function extractDataExcel()
+   private function find3Digit($string): ?string
    {
-      try {
-         // Fetch the machine data based on the selected machine_id
-         $machine = InsRdcMachine::find($this->test['ins_rdc_machine_id']);
-
-         if (!$machine) {
-            throw new \Exception("Mesin tidak ditemukan");
-         }
-
-         $cellsConfig = json_decode($machine->cells, true);
-
-         $path = $this->file->getRealPath();
-         $spreadsheet = IOFactory::load($path);
-         $worksheet = $spreadsheet->getActiveSheet();
-
-         foreach ($cellsConfig as $config) {
-            $field = $config['field'];
-            $address = $config['address'];
-            $value = $worksheet->getCell($address)->getValue();
-
-            switch ($field) {
-               case 'model':
-               case 'color':
-               case 'code_alt':
-                  $this->batch[$field] = $this->safeString($value);
-                  break;
-               case 'mcs':
-                  $this->batch['mcs'] = $this->find3Digit($this->safeString($value));
-                  break;
-               case 's_max':
-               case 's_min':
-               case 'tc10':
-               case 'tc50':
-               case 'tc90':
-                  $this->test[$field] = $this->safeFloat($value);
-                  break;
-               case 's_max_low':
-               case 's_min_low':
-               case 'tc10_low':
-               case 'tc50_low':
-               case 'tc90_low':
-                  $this->test[$field] = $this->getBoundFromString($value, 'low');
-                  break;
-               case 's_max_high':
-               case 's_min_high':
-               case 'tc10_high':
-               case 'tc50_high':
-               case 'tc90_high':
-                  $this->test[$field] = $this->getBoundFromString($value, 'high');
-                  break;
-               case 'eval':
-                  $eval = $this->safeString($value);
-                  $this->test['eval'] = ($eval == 'OK' ? 'pass' : ($eval == 'SL' ? 'fail' : ''));
-                  break;
-            }
-         }
-
-      } catch (\Exception $e) {
-         $this->js('toast("' . __('Tidak dapat membaca file') . '", { description: "'. $e->getMessage() .'", type: "danger" })'); 
-
-      }
+      preg_match_all('/\/?(\d{3})/', (string)$string, $matches);
+      return !empty($matches[1]) ? end($matches[1]) : null;
    }
 
    private function safeString($value): string
    {
-      return trim(preg_replace('/[^a-zA-Z0-9\s]/', '', $value));
+      return trim(preg_replace('/[^a-zA-Z0-9\s]/', '', (string)$value));
    }
 
    private function safeFloat($value): ?float
@@ -403,23 +327,18 @@ new class extends Component
 
    public function getBoundFromString(string $range, string $type = 'low'): ?float
    {
-       // Validate the input
        if (empty($range) || !str_contains($range, '-')) {
            return 0; 
        }
 
-       // Split the string into parts
        [$part1, $part2] = explode('-', $range, 2);
 
-       // Convert to floats using safeFloat
        $value1 = $this->safeFloat($part1);
        $value2 = $this->safeFloat($part2);
 
-       // Determine which is lower and which is higher
        $lower = min($value1, $value2);
        $higher = max($value1, $value2);
 
-       // Return based on requested type
        return $type === 'high' ? $higher : $lower;
    }
 
@@ -432,7 +351,6 @@ new class extends Component
          $this->js('toast("' . __('Dihapus dari antrian') . '", { type: "success" })'); 
          $this->js('$dispatch("close")');
          $this->dispatch('updated');
-
       } else {
          $this->handleNotFound();
       }
@@ -455,7 +373,6 @@ new class extends Component
       }
 
       foreach ($this->batch as $key => $value) {
-
          if (in_array($key, ['id','code'])) {
             continue;
          }
@@ -482,6 +399,11 @@ new class extends Component
       $this->js('toast("' . __('Hasil uji disimpan') . '", { type: "success" })');
       $this->dispatch('updated');
       $this->customReset();
+   }
+
+   public function getSelectedMachine()
+   {
+      return collect($this->machines)->firstWhere('id', $this->test['ins_rdc_machine_id']);
    }
 }
 
@@ -524,28 +446,39 @@ new class extends Component
                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
             <x-text-input id="test-mcs" wire:model="batch.mcs" type="text" />
          </div>
-         <!-- <div class="px-3 my-6">
-            <x-toggle name="update_batch" wire:model.live="update_batch" :checked="$update_batch ? true : false" >{{ __('Perbarui') }}</x-toggle>
-         </div> -->
       </div>
       <div class="col-span-4 px-6">
-         <div class="flex gap-3" x-data="{ machine_id: @entangle('test.ins_rdc_machine_id') }">
+         <div class="flex gap-3" x-data="{ 
+            machine_id: @entangle('test.ins_rdc_machine_id'),
+            selectedMachine: null,
+            machines: @entangle('machines'),
+            updateSelectedMachine() {
+               this.selectedMachine = this.machines.find(m => m.id == this.machine_id);
+            }
+         }" x-init="updateSelectedMachine()" @change="updateSelectedMachine()">
             <div class="grow">
                <x-select class="w-full" id="test-machine_id" x-model="machine_id">
-                  <option value=""></option>
+                  <option value="">{{ __('Pilih mesin') }}</option>
                   @foreach($machines as $machine)
-                     <option value="{{ $machine['id'] }}">{{ $machine['number'] . ' - ' . $machine['name'] }}</option>
+                     <option value="{{ $machine['id'] }}">
+                        {{ $machine['number'] . ' - ' . $machine['name'] }}
+                     </option>
                   @endforeach
                </x-select>
             </div>
-            <div>
-               <input wire:model="file" type="file" class="hidden" x-cloak x-ref="file" />
-               <x-secondary-button x-show="!machine_id" disabled type="button" id="test-file" class="w-full h-full justify-center"><i
-               class="icon-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
-               <x-secondary-button x-show="machine_id" type="button" id="test-file" class="w-full h-full justify-center" x-on:click="$refs.file.click()" ><i
-               class="icon-upload mr-2"></i>{{ __('Unggah') }}</x-secondary-button>
+            <div x-cloak x-show="machine_id">
+               <input wire:model="file" type="file" class="hidden" x-cloak x-ref="file" 
+                      x-bind:accept="selectedMachine?.type === 'excel' ? '.xls,.xlsx' : selectedMachine?.type === 'txt' ? '.txt' : ''" />
+               <x-secondary-button  type="button" class="w-full h-full justify-center" 
+                                   x-on:click="$refs.file.click()">
+                  <i class="icon-upload mr-2"></i>
+                  <span x-show="!selectedMachine?.type">?</span>
+                  <span x-show="selectedMachine?.type === 'excel'">XLS</span>
+                  <span x-show="selectedMachine?.type === 'txt'">TXT</span>
+               </x-secondary-button>
             </div>
          </div>
+         
          <div class="my-6">
             <x-pill class="uppercase">{{ __('Standar') }}</x-pill>     
          </div>    
@@ -636,7 +569,6 @@ new class extends Component
                <label for="test-s_min"
                   class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('S Min') }}</label>
                <x-text-input id="test-s_min" wire:model="test.s_min" type="number" step=".01" />
-               
             </div>
             <div>
                <label for="test-eval"
@@ -667,11 +599,11 @@ new class extends Component
          </div>
       </div>
    </div>
-         @if ($errors->any())
-            <div class="px-6 mt-6">
-                <x-input-error :messages="$errors->first()" />
-            </div>
-        @endif
+   @if ($errors->any())
+      <div class="px-6 mt-6">
+          <x-input-error :messages="$errors->first()" />
+      </div>
+   @endif
    <div class="p-6 flex justify-between items-center gap-3">
       <x-dropdown align="left" width="48">
          <x-slot name="trigger">
@@ -681,9 +613,8 @@ new class extends Component
             <x-dropdown-link href="#" wire:click.prevent="customResetBatch">
                {{ __('Reset') }}
             </x-dropdown-link>
-            <hr class="border-neutral-300 dark:border-neutral-600 {{ true ? '' : 'hidden' }}" />
-            <x-dropdown-link href="#" wire:click.prevent="removeFromQueue"
-               class="{{ true ? '' : 'hidden' }}">
+            <hr class="border-neutral-300 dark:border-neutral-600" />
+            <x-dropdown-link href="#" wire:click.prevent="removeFromQueue">
                {{ __('Hapus dari antrian') }}
             </x-dropdown-link>
          </x-slot>

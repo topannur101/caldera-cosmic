@@ -24,7 +24,8 @@ new #[Layout('layouts.app')] class extends Component {
         $machines = InsRdcMachine::where(function (Builder $query) use ($q) {
             $query
                 ->orWhere('number', 'LIKE', '%' . $q . '%')
-                ->orWhere('name', 'LIKE', '%' . $q . '%');
+                ->orWhere('name', 'LIKE', '%' . $q . '%')
+                ->orWhere('type', 'LIKE', '%' . $q . '%');
             })
             ->orderBy('id')
             ->paginate($this->perPage);
@@ -51,7 +52,7 @@ new #[Layout('layouts.app')] class extends Component {
 <x-slot name="header">
     <x-nav-insights-rdc-sub />
 </x-slot>
-<div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="py-12 max-w-4xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Mesin') }}</h1>
@@ -68,12 +69,12 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div wire:key="machine-create">
-            <x-modal name="machine-create">
+            <x-modal name="machine-create" maxWidth="4xl">
                 <livewire:insights.rdc.manage.machine-create />
             </x-modal>
         </div>
         <div wire:key="machine-edit">   
-            <x-modal name="machine-edit">
+            <x-modal name="machine-edit" maxWidth="4xl">
                 <livewire:insights.rdc.manage.machine-edit />
             </x-modal>
         </div>
@@ -85,7 +86,8 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('ID') }}</th>
                             <th>{{ __('Nomor') }}</th>
                             <th>{{ __('Nama') }}</th>
-                            <th>{{ __('Sel') }}</th>
+                            <th>{{ __('Tipe') }}</th>
+                            <th>{{ __('Konfigurasi') }}</th>
                         </tr>
                         @foreach ($machines as $machine)
                             <tr wire:key="machine-tr-{{ $machine->id . $loop->index }}" tabindex="0"
@@ -100,7 +102,16 @@ new #[Layout('layouts.app')] class extends Component {
                                     {{ $machine->name }}
                                 </td>
                                 <td>
-                                    {{ $machine->cellsCount() }}                                    
+                                    <x-pill class="uppercase" color="{{ $machine->type === 'excel' ? 'green' : 'blue' }}">
+                                        {{ $machine->type === 'excel' ? 'Excel' : 'TXT' }}
+                                    </x-pill>
+                                </td>
+                                <td>
+                                    @php
+                                        $config = json_decode($machine->cells ?? '[]', true);
+                                        $configCount = count($config);
+                                    @endphp
+                                    {{ $configCount }} {{ __('field') }}{{ $configCount !== 1 ? 's' : '' }}
                                 </td>
                             </tr>
                         @endforeach
