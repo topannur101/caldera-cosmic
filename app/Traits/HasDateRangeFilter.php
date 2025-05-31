@@ -48,4 +48,19 @@ trait HasDateRangeFilter
         $this->end_at = Carbon::now()->subMonthNoOverflow()->endOfMonth()->format('Y-m-d');
         $this->dispatch('update');
     }
+
+    public function setThisQuarter()
+    {
+        $this->start_at = Carbon::now()->startOfQuarter()->format('Y-m-d');
+        $this->end_at = Carbon::now()->endOfQuarter()->format('Y-m-d');
+        $this->dispatch('update');
+    }
+
+    public function setLastQuarter()
+    {
+        $this->start_at = Carbon::now()->subQuarter()->startOfQuarter()->format('Y-m-d');
+        $this->end_at = Carbon::now()->subQuarter()->endOfQuarter()->format('Y-m-d');
+        $this->dispatch('update');
+    }
 }
+

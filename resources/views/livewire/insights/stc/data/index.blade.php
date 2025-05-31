@@ -22,6 +22,12 @@ class extends Component {
             'readings'              => __('Pembacaan'),   
             'history'               => __('Riwayat'), 
             'comparison'            => __('Perbandingan'),
+            'deviation-tracking'    => __('Pelacakan deviasi'),
+            'machine-performance'   => __('Performa mesin'),
+            'target-variance'       => __('Varians target'),
+            'zone-analysis'         => __('Analisis zona'),
+            'trend-analysis'        => __('Analisis tren'),
+            'operator-performance'  => __('Performa operator'),
         ];
     }
 
@@ -83,6 +89,30 @@ class extends Component {
 
             @case('comparison')
             <livewire:insights.stc.data.comparison />
+                @break
+
+            @case('deviation-tracking')
+            <livewire:insights.stc.data.deviation-tracking />
+                @break
+
+            @case('machine-performance')
+            <livewire:insights.stc.data.machine-performance />
+                @break
+
+            @case('target-variance')
+            <livewire:insights.stc.data.target-variance />
+                @break
+
+            @case('zone-analysis')
+            <livewire:insights.stc.data.zone-analysis />
+                @break
+
+            @case('trend-analysis')
+            <livewire:insights.stc.data.trend-analysis />
+                @break
+
+            @case('operator-performance')
+            <livewire:insights.stc.data.operator-performance />
                 @break
 
             @default
