@@ -53,7 +53,7 @@ new class extends Component {
     }
 
     #[On('update')]
-    public function update()
+    public function updated()
     {
         $this->calculateAnalytics();
         $this->renderCharts();
@@ -280,11 +280,6 @@ new class extends Component {
         ");
     }
 
-    public function updated()
-    {
-        $this->update();
-    }
-
     public function showLineDetails($line)
     {
         $this->dispatch('line-details', line: $line);
@@ -398,7 +393,7 @@ new class extends Component {
             <div class="text-xl font-bold">{{ number_format($summaryKpis['total_area_qt'] ?? 0, 1) }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-1">{{ __('Utilisasi (%)') }}</div>
+            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-1">{{ __('Kelayakan (%)') }}</div>
             <div class="text-xl font-bold {{ ($summaryKpis['overall_utilization'] ?? 0) >= 85 ? 'text-green-500' : (($summaryKpis['overall_utilization'] ?? 0) >= 75 ? 'text-yellow-500' : 'text-red-500') }}">
                 {{ ($summaryKpis['overall_utilization'] ?? 0) }}%
             </div>
@@ -443,7 +438,7 @@ new class extends Component {
                             <tr class="text-xs uppercase text-neutral-500 border-b">
                                 <th class="px-4 py-3">{{ __('Line') }}</th>
                                 <th class="px-4 py-3">{{ __('Kulit') }}</th>
-                                <th class="px-4 py-3">{{ __('Utilisasi (%)') }}</th>
+                                <th class="px-4 py-3">{{ __('Kelayakan (%)') }}</th>
                                 <th class="px-4 py-3">{{ __('Defect (%)') }}</th>
                                 <th class="px-4 py-3">{{ __('Selisih (%)') }}</th>
                             </tr>
@@ -487,7 +482,7 @@ new class extends Component {
             @if(count($styleStats) > 0)
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
                 <div class="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
-                    <h3 class="text-lg font-medium">{{ __('Top Style Performance') }}</h3>
+                    <h3 class="text-lg font-medium">{{ __('Performa Style Tertinggi') }}</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="table table-sm text-sm w-full">
@@ -495,7 +490,7 @@ new class extends Component {
                             <tr class="text-xs uppercase text-neutral-500 border-b">
                                 <th class="px-4 py-3">{{ __('Style') }}</th>
                                 <th class="px-4 py-3">{{ __('Volume') }}</th>
-                                <th class="px-4 py-3">{{ __('Utilisasi (%)') }}</th>
+                                <th class="px-4 py-3">{{ __('Kelayakan (%)') }}</th>
                                 <th class="px-4 py-3">{{ __('Defect (%)') }}</th>
                             </tr>
                         </thead>
@@ -552,7 +547,7 @@ new class extends Component {
         <x-modal name="line-details" maxWidth="4xl">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">
-                    {{ __('Detail Line Performance') }}
+                    {{ __('Detail Performa Line') }}
                 </h2>
                 <!-- Line detail content will be implemented separately -->
                 <div class="text-center py-8 text-neutral-500">

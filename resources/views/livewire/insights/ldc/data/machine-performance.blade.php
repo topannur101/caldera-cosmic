@@ -171,7 +171,7 @@ new class extends Component {
     }
 
     #[On('update')]
-    public function update()
+    public function updated()
     {
         $this->calculateMachineStats();
         $this->calculateAccuracyTrend();
@@ -210,11 +210,6 @@ new class extends Component {
                 window.trendChart = new Chart(trendCtx, " . json_encode($trendOptions) . ");
             })();
         ");
-    }
-
-    public function updated()
-    {
-        $this->update();
     }
 
     public function with(): array

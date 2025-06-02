@@ -100,7 +100,7 @@ new class extends Component {
     }
 
     #[On('update')]
-    public function update()
+    public function updated()
     {
         $hides = $this->getHidesQuery()->get()->toArray();
         $this->calculateQualityMetrics($hides);
@@ -147,7 +147,7 @@ new class extends Component {
             ];
         }
 
-        // Sort materials by defect rate
+        // Sort materials by Tingkat defect
         uasort($materialStats, fn($a, $b) => $a['defect_rate'] <=> $b['defect_rate']);
 
         $this->qualityMetrics = [
@@ -249,10 +249,6 @@ new class extends Component {
         $this->js('$dispatch("open-modal", "material-details")');
     }
 
-    public function updated()
-    {
-        $this->update();
-    }
 };
 
 ?>

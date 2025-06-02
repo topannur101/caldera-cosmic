@@ -11,7 +11,7 @@ class InsLdc
      */
     public static function getDefectAnalysisChartOptions(array $hides): array
     {
-        // Group hides by material and calculate defect percentages
+        // Group hides berdasarkan Material and calculate defect percentages
         $materialData = [];
         
         foreach ($hides as $hide) {
@@ -63,7 +63,7 @@ class InsLdc
                 'labels' => $labels,
                 'datasets' => [
                     [
-                        'label' => __('Defect Rate (%)'),
+                        'label' => __('Tingkat defect (%)'),
                         'data' => $data,
                         'backgroundColor' => $backgroundColors,
                         'borderColor' => array_map(fn($color) => str_replace('0.8', '1', $color), $backgroundColors),
@@ -77,7 +77,7 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Defect Rate by Material'),
+                        'text' => __('Tingkat defect berdasarkan Material'),
                         'color' => session('bg') === 'dark' ? '#FFF' : '#000'
                     ],
                     'legend' => [
@@ -89,7 +89,7 @@ class InsLdc
                         'beginAtZero' => true,
                         'title' => [
                             'display' => true,
-                            'text' => __('Defect Rate (%)'),
+                            'text' => __('Tingkat defect (%)'),
                             'color' => session('bg') === 'dark' ? '#FFF' : '#000'
                         ],
                         'ticks' => [
@@ -118,7 +118,7 @@ class InsLdc
      */
     public static function getGradeQtCorrelationChartOptions(array $hides): array
     {
-        // Group by grade and calculate average QT percentage
+        // Group by grade and calculate average Persentase QT
         $gradeData = [1 => [], 2 => [], 3 => [], 4 => [], 5 => []];
         
         foreach ($hides as $hide) {
@@ -145,7 +145,7 @@ class InsLdc
                 'labels' => $labels,
                 'datasets' => [
                     [
-                        'label' => __('Average QT Percentage'),
+                        'label' => __('Persentase rata-rata QT'),
                         'data' => $data,
                         'borderColor' => 'rgba(214, 69, 80, 1)',
                         'backgroundColor' => 'rgba(214, 69, 80, 0.1)',
@@ -161,7 +161,7 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Grade vs QT Percentage Correlation'),
+                        'text' => __('Korelasi antara Grade vs QT'),
                         'color' => session('bg') === 'dark' ? '#FFF' : '#000'
                     ]
                 ],
@@ -171,7 +171,7 @@ class InsLdc
                         'max' => 100,
                         'title' => [
                             'display' => true,
-                            'text' => __('QT Percentage (%)'),
+                            'text' => __('Persentase QT (%)'),
                             'color' => session('bg') === 'dark' ? '#FFF' : '#000'
                         ],
                         'ticks' => [
@@ -235,21 +235,21 @@ class InsLdc
                 'labels' => $labels,
                 'datasets' => [
                     [
-                        'label' => __('Average Difference (%)'),
+                        'label' => __('Selisih rata-rata (%)'),
                         'data' => $avgData,
                         'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
                         'borderColor' => 'rgba(54, 162, 235, 1)',
                         'borderWidth' => 1
                     ],
                     [
-                        'label' => __('Min Difference (%)'),
+                        'label' => __('Selisih min (%)'),
                         'data' => $minData,
                         'backgroundColor' => 'rgba(75, 192, 192, 0.8)',
                         'borderColor' => 'rgba(75, 192, 192, 1)',
                         'borderWidth' => 1
                     ],
                     [
-                        'label' => __('Max Difference (%)'),
+                        'label' => __('Selish maks (%)'),
                         'data' => $maxData,
                         'backgroundColor' => 'rgba(255, 99, 132, 0.8)',
                         'borderColor' => 'rgba(255, 99, 132, 1)',
@@ -263,7 +263,7 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('VN vs AB Measurement Difference by Machine'),
+                        'text' => __('Perbedaan VN vs AB (Selisih) per mesin'),
                         'color' => session('bg') === 'dark' ? '#FFF' : '#000'
                     ]
                 ],
@@ -271,7 +271,7 @@ class InsLdc
                     'y' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Difference (%)'),
+                            'text' => __('Selisih (%)'),
                             'color' => session('bg') === 'dark' ? '#FFF' : '#000'
                         ],
                         'ticks' => [
@@ -347,7 +347,7 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Quality Grade Distribution'),
+                        'text' => __('Distribusi Grade'),
                         'color' => session('bg') === 'dark' ? '#FFF' : '#000'
                     ],
                     'legend' => [
@@ -375,25 +375,25 @@ class InsLdc
                 'labels' => array_map(fn($line) => "Line $line", $lines),
                 'datasets' => [
                     [
-                        'label' => __('Throughput (Hides)'),
+                        'label' => __('Output (Hides)'),
                         'data' => $throughput,
                         'backgroundColor' => 'rgba(54, 162, 235, 0.7)',
                         'yAxisID' => 'y'
                     ],
                     [
-                        'label' => __('Avg Defect Rate (%)'),
+                        'label' => __('Rerata tingkat defect (%)'),
                         'data' => $avgDefect,
                         'backgroundColor' => 'rgba(255, 99, 132, 0.7)',
                         'yAxisID' => 'y1'
                     ],
                     [
-                        'label' => __('Avg Difference Rate (%)'),
+                        'label' => __('Rerata tingkat selisih (%)'),
                         'data' => $avgDifference,
                         'backgroundColor' => 'rgba(255, 206, 86, 0.7)',
                         'yAxisID' => 'y1'
                     ],
                     [
-                        'label' => __('Avg Utilization (%)'),
+                        'label' => __('Rerata kelayakan (%)'),
                         'data' => $avgUtilization,
                         'backgroundColor' => 'rgba(75, 192, 192, 0.7)',
                         'yAxisID' => 'y1'
@@ -422,7 +422,7 @@ class InsLdc
                         'position' => 'left',
                         'title' => [
                             'display' => true,
-                            'text' => __('Throughput'),
+                            'text' => __('Output'),
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
@@ -438,7 +438,7 @@ class InsLdc
                         'position' => 'right',
                         'title' => [
                             'display' => true,
-                            'text' => __('Percentage (%)'),
+                            'text' => __('Persentase (%)'),
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
@@ -452,7 +452,7 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Line Performance Overview'),
+                        'text' => __('Ringkasan Performa Line'),
                         'color' => session('bg') === 'dark' ? '#f5f5f5' : '#171717',
                     ],
                     'legend' => [
@@ -479,19 +479,19 @@ class InsLdc
                 'labels' => array_map(fn($shift) => __('Shift') . " $shift", $shifts),
                 'datasets' => [
                     [
-                        'label' => __('Throughput (Normalized)'),
+                        'label' => __('Output (Dinormalisasi)'),
                         'data' => self::normalizeArray($throughput),
                         'borderColor' => 'rgba(54, 162, 235, 1)',
                         'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
                     ],
                     [
-                        'label' => __('Quality Score (100 - Defect Rate)'),
+                        'label' => __('Skor kualitas (100 - Tingkat defect)'),
                         'data' => array_map(fn($rate) => 100 - $rate, $avgDefect),
                         'borderColor' => 'rgba(75, 192, 192, 1)',
                         'backgroundColor' => 'rgba(75, 192, 192, 0.2)',
                     ],
                     [
-                        'label' => __('Accuracy Score (100 - Difference Rate)'),
+                        'label' => __('Skor selisih (100 - Tingkat selisih)'),
                         'data' => array_map(fn($rate) => 100 - $rate, $avgDifference),
                         'borderColor' => 'rgba(255, 206, 86, 1)',
                         'backgroundColor' => 'rgba(255, 206, 86, 0.2)',
@@ -519,7 +519,7 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Shift Performance Comparison'),
+                        'text' => __('Perbandingan performa per shift'),
                         'color' => session('bg') === 'dark' ? '#f5f5f5' : '#171717',
                     ],
                     'legend' => [
@@ -545,7 +545,7 @@ class InsLdc
                 'labels' => array_map(fn($date) => Carbon::parse($date)->format('M d'), $dates),
                 'datasets' => [
                     [
-                        'label' => __('Daily Throughput'),
+                        'label' => __('Output harian'),
                         'data' => $throughput,
                         'borderColor' => 'rgba(54, 162, 235, 1)',
                         'backgroundColor' => 'rgba(54, 162, 235, 0.1)',
@@ -554,7 +554,7 @@ class InsLdc
                         'yAxisID' => 'y'
                     ],
                     [
-                        'label' => __('Daily Avg Defect Rate (%)'),
+                        'label' => __('Rerata tingkat defect harian (%)'),
                         'data' => $avgDefect,
                         'borderColor' => 'rgba(255, 99, 132, 1)',
                         'backgroundColor' => 'rgba(255, 99, 132, 0.1)',
@@ -586,7 +586,7 @@ class InsLdc
                         'position' => 'left',
                         'title' => [
                             'display' => true,
-                            'text' => __('Throughput'),
+                            'text' => __('Output'),
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
@@ -602,7 +602,7 @@ class InsLdc
                         'position' => 'right',
                         'title' => [
                             'display' => true,
-                            'text' => __('Defect Rate (%)'),
+                            'text' => __('Tingkat defect (%)'),
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
@@ -616,7 +616,7 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Daily Production Trends'),
+                        'text' => __('Tren Produksi Harian'),
                         'color' => session('bg') === 'dark' ? '#f5f5f5' : '#171717',
                     ],
                     'legend' => [
@@ -642,7 +642,7 @@ class InsLdc
             'data' => [
                 'datasets' => [
                     [
-                        'label' => __('Style Performance'),
+                        'label' => __('Performa Style'),
                         'data' => array_map(function($i) use ($efficiency, $defectRates, $volume, $styles) {
                             return [
                                 'x' => $efficiency[$i],
@@ -676,7 +676,7 @@ class InsLdc
                     'x' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Utilization Rate (%)'),
+                            'text' => __('Tingkat kelayakan (%)'),
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
@@ -689,7 +689,7 @@ class InsLdc
                     'y' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Defect Rate (%)'),
+                            'text' => __('Tingkat defect (%)'),
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
@@ -703,7 +703,7 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Style Efficiency vs Quality (Bubble size = Volume)'),
+                        'text' => __('Efisiensi Style vs Kualitas (Besar gelembung = Volume)'),
                         'color' => session('bg') === 'dark' ? '#f5f5f5' : '#171717',
                     ],
                     'legend' => [
@@ -743,12 +743,12 @@ class InsLdc
                         'backgroundColor' => 'rgba(75, 192, 192, 0.7)',
                     ],
                     [
-                        'label' => __('Defect Rate (%)'),
+                        'label' => __('Tingkat defect (%)'),
                         'data' => $defectRates,
                         'backgroundColor' => 'rgba(255, 99, 132, 0.7)',
                     ],
                     [
-                        'label' => __('Selisih VN-AB (%)'),
+                        'label' => __('Selisih (%)'),
                         'data' => $wasteRates,
                         'backgroundColor' => 'rgba(255, 206, 86, 0.7)',
                     ]
@@ -763,7 +763,7 @@ class InsLdc
                         'beginAtZero' => true,
                         'title' => [
                             'display' => true,
-                            'text' => __('Percentage (%)'),
+                            'text' => __('Persentase (%)'),
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
