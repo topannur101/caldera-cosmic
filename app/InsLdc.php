@@ -375,7 +375,7 @@ class InsLdc
                 'labels' => array_map(fn($line) => "Line $line", $lines),
                 'datasets' => [
                     [
-                        'label' => __('Output (Hides)'),
+                        'label' => __('Output (Lembar)'),
                         'data' => $throughput,
                         'backgroundColor' => 'rgba(54, 162, 235, 0.7)',
                         'yAxisID' => 'y'

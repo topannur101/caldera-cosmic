@@ -32,6 +32,8 @@ new class extends Component {
     #[Url]
     public ?int $grade = null;
 
+    public int $progress = 0;
+
     public array $materials = [];
     public array $lines = [];
     public array $qualityMetrics = [];
@@ -98,13 +100,60 @@ new class extends Component {
 
         return $query;
     }
-
+    
     #[On('update')]
     public function updated()
     {
+        $this->progress = 0;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 1: Mengambil data (0-49%)
+        $this->progress = 10;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+        
         $hides = $this->getHidesQuery()->get()->toArray();
+        
+        $this->progress = 49;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 2: Menghitung metrik (49-98%)
+        $this->progress = 60;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+        
         $this->calculateQualityMetrics($hides);
+        
+        $this->progress = 98;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 3: Merender grafik (98-100%)
         $this->renderCharts($hides);
+        
+        $this->progress = 100;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
     }
 
     private function calculateQualityMetrics(array $hides)
@@ -321,12 +370,15 @@ new class extends Component {
             <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
 
             <!-- Loading indicator -->
-            <div class="grow flex justify-center gap-x-2 items-center">
-                <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-                    <div class="relative w-3">
-                        <x-spinner class="sm mono"></x-spinner>
-                    </div>
-                    <div>{{ __('Memuat...') }}</div>
+            <div class="grow flex justify-center gap-x-2 items-center"> 
+                <div wire:loading.class.remove="hidden" class="hidden">
+                    <x-progress-bar>                        
+                        <span x-text="
+                        progress < 49 ? '{{ __('Mengambil data...') }}' : 
+                        progress < 98 ? '{{ __('Menghitung metrik...') }}' : 
+                        '{{ __('Merender grafik...') }}'
+                        "></span>
+                    </x-progress-bar>
                 </div>
             </div>
         </div>
@@ -404,7 +456,7 @@ new class extends Component {
                 <thead>
                     <tr class="text-xs uppercase text-neutral-500 border-b">
                         <th class="px-4 py-3">{{ __('Material') }}</th>
-                        <th class="px-4 py-3">{{ __('Jumlah Kulit') }}</th>
+                        <th class="px-4 py-3">{{ __('Lembar') }}</th>
                         <th class="px-4 py-3">{{ __('Tingkat Defect (%)') }}</th>
                         <th class="px-4 py-3">{{ __('Status') }}</th>
                         <th class="px-4 py-3">{{ __('Aksi') }}</th>
