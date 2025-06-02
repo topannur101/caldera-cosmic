@@ -108,7 +108,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 </td>
                                 <td>
                                     @php
-                                        $config = json_decode($machine->cells ?? '[]', true);
+                                        $config = $machine->cells ?? [];
                                         $configCount = count($config);
                                     @endphp
                                     {{ $configCount }} {{ __('field') }}{{ $configCount !== 1 ? 's' : '' }}

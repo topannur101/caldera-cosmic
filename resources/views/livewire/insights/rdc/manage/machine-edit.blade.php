@@ -111,7 +111,7 @@ new class extends Component {
             $this->initializeArrays();
             
             // Parse existing configuration
-            $cells = json_decode($machine->cells, true) ?? [];
+            $cells = $machine->cells ?? [];
             
             if ($this->type === 'excel') {
                 // Load Excel configuration
