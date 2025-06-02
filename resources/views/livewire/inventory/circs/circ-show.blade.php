@@ -1,4 +1,4 @@
-e<?php
+<?php
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('ins_rdc_machines', function (Blueprint $table) {
             $table->enum('type', ['excel', 'txt'])->default('excel')->after('name');
+            $table->boolean('is_active')->default(0);
         });
     }
 
@@ -22,7 +23,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('ins_rdc_machines', function (Blueprint $table) {
-            $table->dropColumn('type');
+            if (Schema::hasColumn('ins_rdc_machines', 'type')) {
+                $table->dropColumn('type');
+            }
+            
+            if (Schema::hasColumn('ins_rdc_machines', 'is_active')) {
+                $table->dropColumn('is_active');
+            }
         });
     }
 };
