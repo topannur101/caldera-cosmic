@@ -260,77 +260,81 @@ new class extends Component {
 <div>
     <!-- Filters -->
     <div class="p-0 sm:p-1 mb-6">
-      <div class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-         <!-- Date Range -->
-         <div>
-               <div class="flex mb-2 text-xs text-neutral-500">
-                  <div class="flex">
-                     <x-dropdown align="left" width="48">
-                           <x-slot name="trigger">
-                              <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="icon-chevron-down ms-1"></i></x-text-button>
-                           </x-slot>
-                           <x-slot name="content">
-                              <x-dropdown-link href="#" wire:click.prevent="setToday">{{ __('Hari ini') }}</x-dropdown-link>
-                              <x-dropdown-link href="#" wire:click.prevent="setYesterday">{{ __('Kemarin') }}</x-dropdown-link>
-                              <hr class="border-neutral-300 dark:border-neutral-600" />
-                              <x-dropdown-link href="#" wire:click.prevent="setThisWeek">{{ __('Minggu ini') }}</x-dropdown-link>
-                              <x-dropdown-link href="#" wire:click.prevent="setLastWeek">{{ __('Minggu lalu') }}</x-dropdown-link>
-                              <hr class="border-neutral-300 dark:border-neutral-600" />
-                              <x-dropdown-link href="#" wire:click.prevent="setThisMonth">{{ __('Bulan ini') }}</x-dropdown-link>
-                              <x-dropdown-link href="#" wire:click.prevent="setLastMonth">{{ __('Bulan lalu') }}</x-dropdown-link>
-                           </x-slot>
-                     </x-dropdown>
-                  </div>
-               </div>
-               <div class="grid gap-3">
-                  <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
-                  <x-text-input wire:model.live="end_at" id="cal-date-end" type="date"></x-text-input>
-                  <div class="px-3">
-                     <x-checkbox id="quality_analytics_is_workdate" wire:model.live="is_workdate"
-                           value="is_workdate"><span class="uppercase text-xs">{{ __('Workdate') }}</span></x-checkbox>
-                  </div>
-               </div>
-         </div>
+        <div class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <!-- Date Range -->
+            <div>
+                <div class="flex mb-2 text-xs text-neutral-500">
+                    <div class="flex">
+                        <x-dropdown align="left" width="48">
+                            <x-slot name="trigger">
+                                <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="icon-chevron-down ms-1"></i></x-text-button>
+                            </x-slot>
+                            <x-slot name="content">
+                                <x-dropdown-link href="#" wire:click.prevent="setToday">{{ __('Hari ini') }}</x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setYesterday">{{ __('Kemarin') }}</x-dropdown-link>
+                                <hr class="border-neutral-300 dark:border-neutral-600" />
+                                <x-dropdown-link href="#" wire:click.prevent="setThisWeek">{{ __('Minggu ini') }}</x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setLastWeek">{{ __('Minggu lalu') }}</x-dropdown-link>
+                                <hr class="border-neutral-300 dark:border-neutral-600" />
+                                <x-dropdown-link href="#" wire:click.prevent="setThisMonth">{{ __('Bulan ini') }}</x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setLastMonth">{{ __('Bulan lalu') }}</x-dropdown-link>
+                            </x-slot>
+                        </x-dropdown>
+                    </div>
+                </div>
+                <div class="grid gap-3">
+                    <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
+                    <x-text-input wire:model.live="end_at" id="cal-date-end" type="date"></x-text-input>
+                    <div class="px-3">
+                        <x-checkbox id="quality_analytics_is_workdate" wire:model.live="is_workdate"
+                            value="is_workdate"><span class="uppercase text-xs">{{ __('Workdate') }}</span></x-checkbox>
+                    </div>
+                </div>
+            </div>
 
-         <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
+            <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
 
-         <!-- Filters -->
-         <div class="flex flex-col gap-3">
-               <div>
-                  <label for="line-filter" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                  <x-select class="w-full" id="line-filter" wire:model.live="line">
-                     <option value=""></option>
-                     @foreach($lines as $l)
-                     <option value="{{ $l }}">{{ $l }}</option>
-                     @endforeach
-                  </x-select>
-               </div>
-               <div>
-                  <label for="grade-filter" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Grade') }}</label>
-                  <x-select class="w-full" id="grade-filter" wire:model.live="grade">
-                     <option value="0"></option>
-                     <option value="1">1</option>
-                     <option value="2">2</option>
-                     <option value="3">3</option>
-                     <option value="4">4</option>
-                     <option value="5">5</option>
-                  </x-select>
-               </div>
-         </div>
+            <!-- Filters -->
+            <div class="grid grid-cols-2 gap-3 w-full lg:w-64">
+                <div class="w-full">
+                    <label for="line-filter" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                    <x-select class="w-full" id="line-filter" wire:model.live="line">
+                        <option value=""></option>
+                        @foreach($lines as $l)
+                        <option value="{{ $l }}">{{ $l }}</option>
+                        @endforeach
+                    </x-select>
+                </div>
+                <div class="w-full">
+                    <label for="grade-filter" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Grade') }}</label>
+                    <x-select class="w-full" id="grade-filter" wire:model.live="grade">
+                        <option value="0"></option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </x-select>
+                </div>
+                <div class="w-full col-span-2">
+                    <label for="material-filter" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Material') }}</label>
+                    <x-text-input id="material-filter" wire:model.live="material" type="text" />
+                </div>
+            </div>
 
-         <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
+            <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
 
-         <!-- Loading indicator -->
-         <div class="grow flex justify-center gap-x-2 items-center">
-               <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-                  <div class="relative w-3">
-                     <x-spinner class="sm mono"></x-spinner>
-                  </div>
-                  <div>{{ __('Memuat...') }}</div>
-               </div>
-         </div>
-      </div>
-   </div>
+            <!-- Loading indicator -->
+            <div class="grow flex justify-center gap-x-2 items-center">
+                <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
+                    <div class="relative w-3">
+                        <x-spinner class="sm mono"></x-spinner>
+                    </div>
+                    <div>{{ __('Memuat...') }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
