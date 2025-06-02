@@ -12,6 +12,7 @@ new class extends Component {
     public int $number;
     public string $name = '';
     public string $type = 'excel';
+    public bool $is_active = true;
     public array $excel_cells = [];
     public array $txt_patterns = [];
 
@@ -81,6 +82,7 @@ new class extends Component {
             'number' => ['required', 'integer', 'min:1', 'max:99', Rule::unique('ins_rdc_machines', 'number')->ignore($this->id ?? null)],
             'name' => ['required', 'string', 'min:1', 'max:20'],
             'type' => ['required', 'in:excel,txt'],
+            'is_active' => ['required', 'boolean'],
         ];
 
         if ($this->type === 'excel') {
@@ -107,11 +109,12 @@ new class extends Component {
             $this->number = $machine->number;
             $this->name = $machine->name;
             $this->type = $machine->type ?? 'excel'; // Default to excel for backward compatibility
+            $this->is_active = $machine->is_active ?? true; // Default to true for backward compatibility
             
             $this->initializeArrays();
             
             // Parse existing configuration
-            $cells = $machine->cells ?? [];
+            $cells = json_decode($machine->cells, true) ?? [];
             
             if ($this->type === 'excel') {
                 // Load Excel configuration
@@ -194,6 +197,7 @@ new class extends Component {
                 'number' => $validated['number'],
                 'name' => $validated['name'],
                 'type' => $validated['type'],
+                'is_active' => $validated['is_active'],
                 'cells' => json_encode($config),
             ]);
 
@@ -208,7 +212,8 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['number', 'name', 'type', 'excel_cells', 'txt_patterns']);
+        $this->reset(['number', 'name', 'type', 'is_active', 'excel_cells', 'txt_patterns']);
+        $this->is_active = true; // Reset to default active state
         $this->initializeArrays();
     }
 
@@ -261,6 +266,19 @@ new class extends Component {
                             <option value="txt">Text (.txt)</option>
                         </x-select>
                         @error('type')
+                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Status') }}</label>
+                        <div class="px-3">
+                            <x-toggle wire:model="is_active" id="machine-is-active" :disabled="Gate::denies('manage', InsRdcMachine::class)">
+                                <span x-show="$wire.is_active">{{ __('Aktif') }}</span>
+                                <span x-show="!$wire.is_active">{{ __('Nonaktif') }}</span>
+                            </x-toggle>
+                        </div>
+                        @error('is_active')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                         @enderror
                     </div>

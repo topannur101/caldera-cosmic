@@ -57,7 +57,7 @@ new class extends Component
    public function mount()
    {
       $this->batch['code'] = __('Kode batch');
-      $this->machines = InsRdcMachine::all()->toArray();
+      $this->machines = InsRdcMachine::all()->where('is_active', true)->toArray();
    }
 
    #[On('test-create')]

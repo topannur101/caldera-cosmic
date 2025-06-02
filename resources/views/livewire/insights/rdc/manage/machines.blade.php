@@ -87,11 +87,13 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Nomor') }}</th>
                             <th>{{ __('Nama') }}</th>
                             <th>{{ __('Tipe') }}</th>
+                            <th>{{ __('Status') }}</th>
                             <th>{{ __('Konfigurasi') }}</th>
                         </tr>
                         @foreach ($machines as $machine)
                             <tr wire:key="machine-tr-{{ $machine->id . $loop->index }}" tabindex="0"
-                                x-on:click="$dispatch('open-modal', 'machine-edit'); $dispatch('machine-edit', { id: {{ $machine->id }} })">
+                                x-on:click="$dispatch('open-modal', 'machine-edit'); $dispatch('machine-edit', { id: {{ $machine->id }} })"
+                                class="{{ !($machine->is_active ?? true) ? 'opacity-60' : '' }}">
                                 <td>
                                     {{ $machine->id }}
                                 </td>
@@ -107,8 +109,13 @@ new #[Layout('layouts.app')] class extends Component {
                                     </x-pill>
                                 </td>
                                 <td>
+                                    <x-pill color="{{ ($machine->is_active ?? true) ? 'green' : 'red' }}">
+                                        {{ ($machine->is_active ?? true) ? __('Aktif') : __('Nonaktif') }}
+                                    </x-pill>
+                                </td>
+                                <td>
                                     @php
-                                        $config = $machine->cells ?? [];
+                                        $config = json_decode($machine->cells, true) ?? [];
                                         $configCount = count($config);
                                     @endphp
                                     {{ $configCount }} {{ __('field') }}{{ $configCount !== 1 ? 's' : '' }}

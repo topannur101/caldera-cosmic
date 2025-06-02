@@ -10,6 +10,7 @@ new class extends Component {
     public int $number;
     public string $name = '';
     public string $type = 'excel'; // Default to excel
+    public bool $is_active = true; // Default to active
     public array $excel_cells = [];
     public array $txt_patterns = [];
 
@@ -75,6 +76,7 @@ new class extends Component {
             'number' => ['required', 'integer', 'min:1', 'max:99', 'unique:ins_rdc_machines'],
             'name' => ['required', 'string', 'min:1', 'max:20'],
             'type' => ['required', 'in:excel,txt'],
+            'is_active' => ['required', 'boolean'],
         ];
 
         if ($this->type === 'excel') {
@@ -141,6 +143,7 @@ new class extends Component {
             'number' => $validated['number'],
             'name' => $validated['name'],
             'type' => $validated['type'],
+            'is_active' => $validated['is_active'],
             'cells' => json_encode($config),
         ]);
 
@@ -155,7 +158,8 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['number', 'name', 'type', 'excel_cells', 'txt_patterns']);
+        $this->reset(['number', 'name', 'type', 'is_active', 'excel_cells', 'txt_patterns']);
+        $this->is_active = true; // Reset to default active state
         $this->mount(); // Reinitialize arrays
     }
 };
@@ -201,6 +205,19 @@ new class extends Component {
                             <option value="txt">Text (.txt)</option>
                         </x-select>
                         @error('type')
+                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Status') }}</label>
+                        <div class="px-3">
+                            <x-toggle wire:model="is_active" id="machine-is-active">
+                                <span x-show="$wire.is_active">{{ __('Aktif') }}</span>
+                                <span x-show="!$wire.is_active">{{ __('Nonaktif') }}</span>
+                            </x-toggle>
+                        </div>
+                        @error('is_active')
                             <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                         @enderror
                     </div>

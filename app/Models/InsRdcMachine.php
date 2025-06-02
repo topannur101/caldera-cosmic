@@ -14,10 +14,7 @@ class InsRdcMachine extends Model
         'name', 
         'type',
         'cells',
-    ];
-
-    protected $casts = [
-        'cells' => 'array',
+        'is_active'
     ];
 
     /**
