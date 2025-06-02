@@ -11,14 +11,16 @@ new #[Layout('layouts.app')]
 class extends Component {
     
     #[Url]
-    public $view = 'hides';
+    public $view = 'raw-data';
     public array $view_titles = [];
 
     public function mount()
     {
         $this->view_titles = [       
-            // 'quotas'    => __('Jatah'), 
-            'hides'     => __('Kulit'),
+            'raw-data'              => __('Data mentah'),
+            'quality-analytics'     => __('Analitik Kualitas'),
+            'production-analytics'  => __('Analitik Produksi'),
+            'machine-performance'   => __('Kinerja Mesin'),
         ];
     }
 
@@ -37,8 +39,8 @@ class extends Component {
 </x-slot>
 
 <div id="content" class="relative py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
-    {{-- @vite(['resources/js/apexcharts.js']) --}}
-    <div wire:key="ldc-summary-index-nav" class="flex px-8 mb-6">
+    @vite(['resources/js/apexcharts.js'])
+    <div wire:key="ldc-data-index-nav" class="flex px-8 mb-6">
         <x-dropdown align="left">
             <x-slot name="trigger">
                 <x-text-button type="button" class="flex gap-2 items-center ml-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="icon-chevron-down"></i></x-text-button>
@@ -47,20 +49,25 @@ class extends Component {
                 @foreach ($view_titles as $view_key => $view_title)
                 <x-dropdown-link href="#" wire:click.prevent="$set('view', '{{ $view_key }}')">{{ $view_title }}</x-dropdown-link>
                 @endforeach
-                {{-- <hr class="border-neutral-300 dark:border-neutral-600" /> --}}
             </x-slot>
         </x-dropdown>
     </div>
     <div wire:loading.class.remove="hidden" class="hidden h-96">
         <x-spinner></x-spinner>
     </div>
-    <div wire:key="ldc-summary-index-container" wire:loading.class="hidden">
+    <div wire:key="ldc-data-index-container" wire:loading.class="hidden">
         @switch($view)
-            @case('quotas')
-            <livewire:insights.ldc.data.quotas />                       
+            @case('raw-data')
+            <livewire:insights.ldc.data.raw-data />                       
                 @break
-            @case('hides')
-            <livewire:insights.ldc.data.hides />                       
+            @case('quality-analytics')
+            <livewire:insights.ldc.data.quality-analytics />                       
+                @break
+            @case('production-analytics')
+            <livewire:insights.ldc.data.production-analytics />                       
+                @break
+            @case('machine-performance')
+            <livewire:insights.ldc.data.machine-performance />                       
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">
