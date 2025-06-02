@@ -21,6 +21,7 @@ class extends Component {
             'quality-analytics'     => __('Analitik Kualitas'),
             'production-analytics'  => __('Analitik Produksi'),
             'machine-performance'   => __('Kinerja Mesin'),
+            'worker-performance'    => __('Kinerja Pekerja'),
         ];
     }
 
@@ -68,6 +69,9 @@ class extends Component {
                 @break
             @case('machine-performance')
             <livewire:insights.ldc.data.machine-performance />                       
+                @break
+            @case('worker-performance')
+            <livewire:insights.ldc.data.worker-performance />                       
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">

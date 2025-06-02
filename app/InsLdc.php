@@ -1075,4 +1075,279 @@ class InsLdc
             ]
         ];
     }
+
+    public static function getWorkerProductivityChartOptions(array $workerStats): array
+    {
+        $workers = array_values($workerStats);
+        $labels = array_map(fn($w) => $w['name'] . ' (' . $w['emp_id'] . ')', $workers);
+        $productivity = array_map(fn($w) => $w['avg_hides_per_day'], $workers);
+
+        return [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'label' => __('Kulit per Hari'),
+                        'data' => $productivity,
+                        'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
+                        'borderColor' => 'rgba(54, 162, 235, 1)',
+                        'borderWidth' => 1
+                    ]
+                ]
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'indexAxis' => 'y',
+                'plugins' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => __('Produktivitas Pekerja (Kulit per Hari)')
+                    ],
+                    'legend' => [
+                        'display' => false
+                    ]
+                ],
+                'scales' => [
+                    'x' => [
+                        'beginAtZero' => true,
+                        'title' => [
+                            'display' => true,
+                            'text' => __('Kulit per Hari')
+                        ]
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public static function getWorkerConsistencyChartOptions(array $workerStats): array
+    {
+        $workers = array_values($workerStats);
+        $labels = array_map(fn($w) => $w['name'], $workers);
+        $consistency = array_map(fn($w) => $w['qt_consistency'], $workers);
+
+        return [
+            'type' => 'scatter',
+            'data' => [
+                'datasets' => [
+                    [
+                        'label' => __('Konsistensi QT'),
+                        'data' => array_map(function($worker, $index) {
+                            return [
+                                'x' => $worker['avg_hides_per_day'],
+                                'y' => $worker['qt_consistency']
+                            ];
+                        }, $workers, array_keys($workers)),
+                        'backgroundColor' => 'rgba(255, 99, 132, 0.8)',
+                        'borderColor' => 'rgba(255, 99, 132, 1)',
+                        'pointRadius' => 6
+                    ]
+                ]
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => __('Produktivitas vs Konsistensi Pengukuran')
+                    ],
+                    'tooltip' => [
+                        'callbacks' => [
+                            'label' => 'function(context) {
+                                const workerIndex = context.dataIndex;
+                                const workers = ' . json_encode($workers) . ';
+                                const worker = workers[workerIndex];
+                                return worker.name + " (" + worker.emp_id + "): " + context.parsed.x + " kulit/hari, " + context.parsed.y + " konsistensi";
+                            }'
+                        ]
+                    ]
+                ],
+                'scales' => [
+                    'x' => [
+                        'title' => [
+                            'display' => true,
+                            'text' => __('Produktivitas (Kulit per Hari)')
+                        ]
+                    ],
+                    'y' => [
+                        'title' => [
+                            'display' => true,
+                            'text' => __('Konsistensi QT (Lower = Better)')
+                        ]
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public static function getExperienceCorrelationChartOptions(array $experienceData): array
+    {
+        return [
+            'type' => 'scatter',
+            'data' => [
+                'datasets' => [
+                    [
+                        'label' => __('Pengalaman dari Tanggal Hire'),
+                        'data' => array_map(function($worker) {
+                            return [
+                                'x' => $worker['experience_hire'],
+                                'y' => $worker['productivity']
+                            ];
+                        }, $experienceData),
+                        'backgroundColor' => 'rgba(75, 192, 192, 0.8)',
+                        'borderColor' => 'rgba(75, 192, 192, 1)',
+                        'pointRadius' => 6
+                    ],
+                    [
+                        'label' => __('Pengalaman dari Hide Pertama'),
+                        'data' => array_map(function($worker) {
+                            return [
+                                'x' => $worker['experience_system'] ?? 0,
+                                'y' => $worker['productivity']
+                            ];
+                        }, $experienceData),
+                        'backgroundColor' => 'rgba(153, 102, 255, 0.8)',
+                        'borderColor' => 'rgba(153, 102, 255, 1)',
+                        'pointRadius' => 6
+                    ]
+                ]
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => __('Korelasi Pengalaman vs Produktivitas')
+                    ]
+                ],
+                'scales' => [
+                    'x' => [
+                        'title' => [
+                            'display' => true,
+                            'text' => __('Pengalaman (Bulan)')
+                        ]
+                    ],
+                    'y' => [
+                        'title' => [
+                            'display' => true,
+                            'text' => __('Produktivitas (Kulit per Hari)')
+                        ]
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public static function getImprovementTrendChartOptions(array $improvementData): array
+    {
+        $improving = array_filter($improvementData, fn($w) => $w['trend'] === 'improving');
+        $declining = array_filter($improvementData, fn($w) => $w['trend'] === 'declining');
+        $stable = array_filter($improvementData, fn($w) => $w['trend'] === 'stable');
+
+        return [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => [__('Membaik'), __('Menurun'), __('Stabil')],
+                'datasets' => [
+                    [
+                        'data' => [count($improving), count($declining), count($stable)],
+                        'backgroundColor' => [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 205, 86, 0.8)'
+                        ],
+                        'borderColor' => [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 205, 86, 1)'
+                        ],
+                        'borderWidth' => 1
+                    ]
+                ]
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => __('Tren Peningkatan Kualitas Pekerja')
+                    ],
+                    'legend' => [
+                        'position' => 'bottom'
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public static function getShiftTeamChartOptions(array $shiftStats): array
+    {
+        $shifts = array_keys($shiftStats);
+        $productivity = array_map(fn($s) => $shiftStats[$s]['avg_hides_per_worker'], $shifts);
+        $consistency = array_map(fn($s) => $shiftStats[$s]['team_consistency'], $shifts);
+
+        return [
+            'type' => 'bar',
+            'data' => [
+                'labels' => array_map(fn($s) => __('Shift') . ' ' . $s, $shifts),
+                'datasets' => [
+                    [
+                        'label' => __('Rata-rata Kulit per Pekerja'),
+                        'data' => $productivity,
+                        'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
+                        'borderColor' => 'rgba(54, 162, 235, 1)',
+                        'borderWidth' => 1,
+                        'yAxisID' => 'y'
+                    ],
+                    [
+                        'label' => __('Konsistensi Tim'),
+                        'data' => $consistency,
+                        'type' => 'line',
+                        'backgroundColor' => 'rgba(255, 99, 132, 0.8)',
+                        'borderColor' => 'rgba(255, 99, 132, 1)',
+                        'borderWidth' => 2,
+                        'yAxisID' => 'y1'
+                    ]
+                ]
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => __('Performa Tim per Shift')
+                    ]
+                ],
+                'scales' => [
+                    'y' => [
+                        'type' => 'linear',
+                        'display' => true,
+                        'position' => 'left',
+                        'title' => [
+                            'display' => true,
+                            'text' => __('Kulit per Pekerja')
+                        ]
+                    ],
+                    'y1' => [
+                        'type' => 'linear',
+                        'display' => true,
+                        'position' => 'right',
+                        'title' => [
+                            'display' => true,
+                            'text' => __('Konsistensi Tim')
+                        ],
+                        'grid' => [
+                            'drawOnChartArea' => false
+                        ]
+                    ]
+                ]
+            ]
+        ];
+    }
 }
