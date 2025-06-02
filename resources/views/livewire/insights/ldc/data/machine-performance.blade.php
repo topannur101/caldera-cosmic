@@ -33,6 +33,8 @@ new class extends Component {
     #[Url]
     public string $material = '';
 
+    public int $progress = 0;
+
     public array $machineStats = [];
     public array $machineAccuracyTrend = [];
 
@@ -173,10 +175,77 @@ new class extends Component {
     #[On('update')]
     public function updated()
     {
+        $this->progress = 0;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 1: Data Retrieval (0-25%)
+        $this->progress = 10;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Initialize query and get basic data
+        $start = Carbon::parse($this->start_at);
+        $end = Carbon::parse($this->end_at)->endOfDay();
+
+        $this->progress = 25;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 2: Machine Stats (25-70%)
+        $this->progress = 40;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateMachineStats();
+
+        $this->progress = 70;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 3: Accuracy Trend (70-98%)
+        $this->progress = 85;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateAccuracyTrend();
+
+        $this->progress = 98;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 4: Chart Rendering (98-100%)
         $this->renderCharts();
+
+        $this->progress = 100;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
     }
+
 
     private function renderCharts()
     {
@@ -287,11 +356,15 @@ new class extends Component {
             </div>
             <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
             <div class="grow flex justify-center gap-x-2 items-center">
-                <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-                    <div class="relative w-3">
-                        <x-spinner class="sm mono"></x-spinner>
-                    </div>
-                    <div>{{ __('Memuat...') }}</div>
+                <div wire:loading.class.remove="hidden" class="hidden">
+                    <x-progress-bar :$progress>                        
+                        <span x-text="
+                        progress < 25 ? '{{ __('Mengambil data...') }}' : 
+                        progress < 70 ? '{{ __('Menghitung statistik mesin...') }}' : 
+                        progress < 98 ? '{{ __('Menganalisis tren akurasi...') }}' : 
+                        '{{ __('Merender grafik...') }}'
+                        "></span>
+                    </x-progress-bar>
                 </div>
             </div>
         </div>

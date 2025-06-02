@@ -31,6 +31,8 @@ new class extends Component {
     #[Url]
     public string $shift = '';
 
+    public int $progress = 0;
+
     public array $workerStats = [];
     public array $shiftTeamStats = [];
     public array $experienceCorrelation = [];
@@ -295,15 +297,129 @@ new class extends Component {
         return sqrt(array_sum($squaredDiffs) / (count($values) - 1));
     }
 
-    #[On('update')]
+#[On('update')]
     public function updated()
     {
+        $this->progress = 0;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 1: Data Retrieval (0-15%)
+        $this->progress = 5;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Initialize and validate date range
+        $start = Carbon::parse($this->start_at);
+        $end = Carbon::parse($this->end_at)->endOfDay();
+
+        $this->progress = 15;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 2: Worker Stats (15-35%)
+        $this->progress = 20;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateWorkerStats();
+
+        $this->progress = 35;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 3: Shift Team Stats (35-50%)
+        $this->progress = 40;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateShiftTeamStats();
+
+        $this->progress = 50;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 4: Experience Correlation (50-65%)
+        $this->progress = 55;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateExperienceCorrelation();
+
+        $this->progress = 65;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 5: Improvement Trends (65-80%)
+        $this->progress = 70;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateImprovementTrends();
+
+        $this->progress = 80;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 6: Summary KPIs (80-98%)
+        $this->progress = 90;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateSummaryKpis();
+
+        $this->progress = 98;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 7: Chart Rendering (98-100%)
         $this->renderCharts();
+
+        $this->progress = 100;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
     }
 
     private function renderCharts()
@@ -442,12 +558,19 @@ new class extends Component {
                 </div>
             </div>
             <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
-            <div class="grow flex justify-center gap-x-2 items-center">
-                <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-                    <div class="relative w-3">
-                        <x-spinner class="sm mono"></x-spinner>
-                    </div>
-                    <div>{{ __('Memuat...') }}</div>
+            <div class="grow flex justify-center gap-x-2 items-center"> 
+                <div wire:loading.class.remove="hidden" class="hidden">
+                    <x-progress-bar :$progress>                        
+                        <span x-text="
+                        progress < 15 ? '{{ __('Mengambil data...') }}' : 
+                        progress < 35 ? '{{ __('Menghitung statistik pekerja...') }}' : 
+                        progress < 50 ? '{{ __('Menganalisis tim shift...') }}' : 
+                        progress < 65 ? '{{ __('Menganalisis korelasi pengalaman...') }}' : 
+                        progress < 80 ? '{{ __('Menghitung tren peningkatan...') }}' : 
+                        progress < 98 ? '{{ __('Menghitung ringkasan KPI...') }}' : 
+                        '{{ __('Merender grafik...') }}'
+                        "></span>
+                    </x-progress-bar>
                 </div>
             </div>
         </div>

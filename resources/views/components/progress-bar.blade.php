@@ -1,3 +1,5 @@
+@props(['progress'])
+
 <div class="w-72" x-data="{ ...progressApp(), progress: @entangle('progress') }" x-init="observeProgress()">
    <div class="flex justify-between text-sm">
          <div>

@@ -44,6 +44,8 @@ new class extends Component {
     public array $materialStats = [];
     public array $summaryKpis = [];
 
+    public int $progress = 0;
+
     public function mount()
     {
         if(!$this->start_at || !$this->end_at)
@@ -55,12 +57,21 @@ new class extends Component {
     #[On('update')]
     public function updated()
     {
-        $this->calculateAnalytics();
-        $this->renderCharts();
-    }
+        $this->progress = 0;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
 
-    private function calculateAnalytics()
-    {
+        // Phase 1: Data Retrieval (0-15%)
+        $this->progress = 5;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
@@ -76,12 +87,124 @@ new class extends Component {
             $baseQuery->whereBetween('ins_ldc_groups.workdate', [$start, $end]);
         }
 
+        $this->progress = 15;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 2: Line Stats (15-30%)
+        $this->progress = 20;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateLineStats($baseQuery);
+
+        $this->progress = 30;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 3: Shift Stats (30-45%)
+        $this->progress = 35;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateShiftStats($baseQuery);
+
+        $this->progress = 45;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 4: Daily Stats (45-60%)
+        $this->progress = 50;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateDailyStats($baseQuery);
+
+        $this->progress = 60;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 5: Style Stats (60-75%)
+        $this->progress = 65;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateStyleStats($baseQuery);
+
+        $this->progress = 75;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 6: Material Stats (75-90%)
+        $this->progress = 80;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateMaterialStats($baseQuery);
+
+        $this->progress = 90;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 7: Summary KPIs (90-98%)
+        $this->progress = 95;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $this->calculateSummaryKpis($baseQuery);
+
+        $this->progress = 98;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 8: Chart Rendering (98-100%)
+        $this->renderCharts();
+
+        $this->progress = 100;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
     }
 
     private function calculateLineStats($baseQuery)
@@ -367,12 +490,20 @@ new class extends Component {
                 </div>
             </div>
             <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
-            <div class="grow flex justify-center gap-x-2 items-center">
-                <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-                    <div class="relative w-3">
-                        <x-spinner class="sm mono"></x-spinner>
-                    </div>
-                    <div>{{ __('Memuat...') }}</div>
+            <div class="grow flex justify-center gap-x-2 items-center"> 
+                <div wire:loading.class.remove="hidden" class="hidden">
+                    <x-progress-bar :$progress>                        
+                        <span x-text="
+                        progress < 15 ? '{{ __('Mengambil data...') }}' : 
+                        progress < 30 ? '{{ __('Menghitung statistik line...') }}' : 
+                        progress < 45 ? '{{ __('Menghitung statistik shift...') }}' : 
+                        progress < 60 ? '{{ __('Menghitung tren harian...') }}' : 
+                        progress < 75 ? '{{ __('Menganalisis performa style...') }}' : 
+                        progress < 90 ? '{{ __('Menganalisis material...') }}' : 
+                        progress < 98 ? '{{ __('Menghitung ringkasan KPI...') }}' : 
+                        '{{ __('Merender grafik...') }}'
+                        "></span>
+                    </x-progress-bar>
                 </div>
             </div>
         </div>

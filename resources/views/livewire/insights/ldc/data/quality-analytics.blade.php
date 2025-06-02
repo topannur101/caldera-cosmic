@@ -372,7 +372,7 @@ new class extends Component {
             <!-- Loading indicator -->
             <div class="grow flex justify-center gap-x-2 items-center"> 
                 <div wire:loading.class.remove="hidden" class="hidden">
-                    <x-progress-bar>                        
+                    <x-progress-bar :$progress>                       
                         <span x-text="
                         progress < 49 ? '{{ __('Mengambil data...') }}' : 
                         progress < 98 ? '{{ __('Menghitung metrik...') }}' : 
