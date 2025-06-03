@@ -589,12 +589,12 @@ new class extends Component {
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Rata-rata Produktivitas') }}</div>
             <div class="text-2xl font-bold">{{ ($summaryKpis['avg_productivity'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500">{{ __('kulit/hari') }}</div>
+            <div class="text-xs text-neutral-500">{{ __('lembar/hari') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Pekerja Terproduktif') }}</div>
             <div class="text-lg font-bold truncate">{{ $summaryKpis['top_performer']['name'] ?? __('Tidak ada') }}</div>
-            <div class="text-xs text-neutral-500">{{ ($summaryKpis['top_performer']['avg_hides_per_day'] ?? 0) }} {{ __('kulit/hari') }}</div>
+            <div class="text-xs text-neutral-500">{{ ($summaryKpis['top_performer']['avg_hides_per_day'] ?? 0) }} {{ __('lembar/hari') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Paling Konsisten') }}</div>
@@ -708,10 +708,10 @@ new class extends Component {
                         <th class="px-4 py-3">{{ __('NIK') }}</th>
                         <th class="px-4 py-3">{{ __('Total Kulit') }}</th>
                         <th class="px-4 py-3">{{ __('Hari Kerja') }}</th>
-                        <th class="px-4 py-3">{{ __('Kulit/Hari') }}</th>
+                        <th class="px-4 py-3">{{ __('Lembar/Hari') }}</th>
                         <th class="px-4 py-3">{{ __('Konsistensi QT') }}</th>
-                        <th class="px-4 py-3">{{ __('Pengalaman (Hire)') }}</th>
-                        <th class="px-4 py-3">{{ __('Pengalaman (System)') }}</th>
+                        <th class="px-4 py-3">{{ __('Pengalaman (Kerja)') }}</th>
+                        <th class="px-4 py-3">{{ __('Pengalaman (Caldera)') }}</th>
                         <th class="px-4 py-3">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
@@ -797,13 +797,13 @@ new class extends Component {
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <div class="text-sm text-neutral-500">{{ __('Pengalaman (Hire Date)') }}</div>
+                        <div class="text-sm text-neutral-500">{{ __('Pengalaman (Kerja)') }}</div>
                         <div class="text-lg">
                             {{ $workerDetails['experience']['experience_from_hire'] ? $workerDetails['experience']['experience_from_hire'] . ' bulan' : __('N/A') }}
                         </div>
                     </div>
                     <div>
-                        <div class="text-sm text-neutral-500">{{ __('Pengalaman (System)') }}</div>
+                        <div class="text-sm text-neutral-500">{{ __('Pengalaman (Caldera)') }}</div>
                         <div class="text-lg">
                             {{ $workerDetails['experience']['experience_from_first_hide'] ? $workerDetails['experience']['experience_from_first_hide'] . ' bulan' : __('N/A') }}
                         </div>

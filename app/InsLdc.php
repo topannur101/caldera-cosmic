@@ -395,6 +395,7 @@ class InsLdc
                     [
                         'label' => __('Rerata kelayakan (%)'),
                         'data' => $avgUtilization,
+                        'hidden' => true,
                         'backgroundColor' => 'rgba(75, 192, 192, 0.7)',
                         'yAxisID' => 'y1'
                     ]
@@ -738,8 +739,9 @@ class InsLdc
                 }, $materials),
                 'datasets' => [
                     [
-                        'label' => __('Utilization Rate (%)'),
+                        'label' => __('Tingkat kelayakan (%)'),
                         'data' => $utilization,
+                        'hidden' => true,
                         'backgroundColor' => 'rgba(75, 192, 192, 0.7)',
                     ],
                     [
@@ -1160,7 +1162,7 @@ class InsLdc
                                 const workerIndex = context.dataIndex;
                                 const workers = ' . json_encode($workers) . ';
                                 const worker = workers[workerIndex];
-                                return worker.name + " (" + worker.emp_id + "): " + context.parsed.x + " kulit/hari, " + context.parsed.y + " konsistensi";
+                                return worker.name + " (" + worker.emp_id + "): " + context.parsed.x + " lembar/hari, " + context.parsed.y + " konsistensi";
                             }'
                         ]
                     ]
@@ -1190,7 +1192,7 @@ class InsLdc
             'data' => [
                 'datasets' => [
                     [
-                        'label' => __('Pengalaman dari Tanggal Hire'),
+                        'label' => __('Pengalaman Kerja'),
                         'data' => array_map(function($worker) {
                             return [
                                 'x' => $worker['experience_hire'],
@@ -1202,7 +1204,7 @@ class InsLdc
                         'pointRadius' => 6
                     ],
                     [
-                        'label' => __('Pengalaman dari Hide Pertama'),
+                        'label' => __('Pengalaman Caldera'),
                         'data' => array_map(function($worker) {
                             return [
                                 'x' => $worker['experience_system'] ?? 0,
