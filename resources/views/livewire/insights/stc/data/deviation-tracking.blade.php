@@ -175,10 +175,9 @@ new class extends Component {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                              title: {
-                                 display: true,
-                                 text: '" . __('Deviation Severity Breakdown') . "'
-                              }
+                            legend: {
+                            position: 'left'
+                            }
                         }
                      }
                   });
@@ -192,12 +191,6 @@ new class extends Component {
                         responsive: true,
                         maintainAspectRatio: false,
                         indexAxis: 'y',
-                        plugins: {
-                              title: {
-                                 display: true,
-                                 text: '" . __('Deviation Rate by Line') . "'
-                              }
-                        },
                         scales: {
                               x: {
                                  beginAtZero: true,
