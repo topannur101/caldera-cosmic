@@ -71,9 +71,9 @@ new class extends Component {
             );
         }
 
-        // Sort by stability (highest first)
+        // Sort by ranking score (accuracy + consistency)
         uasort($stats, function($a, $b) {
-            return $b['overall']['stability'] <=> $a['overall']['stability'];
+            return $b['overall']['ranking_score'] <=> $a['overall']['ranking_score'];
         });
 
         $this->machineStats = $stats;
@@ -86,10 +86,9 @@ new class extends Component {
             return [
                 'count' => 0,
                 'avg_temp' => 0,
-                'stability' => 0,
                 'accuracy' => 0,
                 'consistency' => 0,
-                'adjustment_rate' => 0
+                'automation_rate' => 0
             ];
         }
 
@@ -116,24 +115,22 @@ new class extends Component {
         $avgTemp = count($allTemps) > 0 ? array_sum($allTemps) / count($allTemps) : 0;
         $avgDeviation = count($deviations) > 0 ? array_sum($deviations) / count($deviations) : 0;
         
-        // Calculate stability (lower standard deviation = more stable)
-        $stability = count($allTemps) > 1 ? $this->calculateStandardDeviation($allTemps) : 0;
-        $stabilityScore = max(0, 100 - ($stability * 10)); // Convert to score
+        // Calculate standard deviation for consistency
+        $stdDev = count($allTemps) > 1 ? $this->calculateStandardDeviation($allTemps) : 0;
 
         // Calculate accuracy (closer to target = better)
         $accuracyScore = max(0, 100 - ($avgDeviation * 10));
 
         // Calculate consistency (coefficient of variation)
-        $consistency = $avgTemp > 0 ? (($stability / $avgTemp) * 100) : 0;
+        $consistency = $avgTemp > 0 ? (($stdDev / $avgTemp) * 100) : 0;
         $consistencyScore = max(0, 100 - $consistency);
 
         return [
             'count' => $count,
             'avg_temp' => round($avgTemp, 1),
-            'stability' => round($stabilityScore, 1),
             'accuracy' => round($accuracyScore, 1),
             'consistency' => round($consistencyScore, 1),
-            'adjustment_rate' => $count > 0 ? round(($adjustments / $count) * 100, 1) : 0
+            'automation_rate' => $count > 0 ? round(($adjustments / $count) * 100, 1) : 0
         ];
     }
 
@@ -145,23 +142,30 @@ new class extends Component {
             return [
                 'count' => 0,
                 'avg_temp' => 0,
-                'stability' => 0,
                 'accuracy' => 0,
                 'consistency' => 0,
-                'adjustment_rate' => 0
+                'automation_rate' => 0,
+                'ranking_score' => 0
             ];
         }
 
         $upperWeight = $upper['count'] / $totalCount;
         $lowerWeight = $lower['count'] / $totalCount;
 
+        $accuracy = round(($upper['accuracy'] * $upperWeight) + ($lower['accuracy'] * $lowerWeight), 1);
+        $consistency = round(($upper['consistency'] * $upperWeight) + ($lower['consistency'] * $lowerWeight), 1);
+        $automationRate = round(($upper['automation_rate'] * $upperWeight) + ($lower['automation_rate'] * $lowerWeight), 1);
+
+        // Ranking score: 50% accuracy + 50% consistency
+        $rankingScore = round(($accuracy * 0.5) + ($consistency * 0.5), 1);
+
         return [
             'count' => $totalCount,
             'avg_temp' => round(($upper['avg_temp'] * $upperWeight) + ($lower['avg_temp'] * $lowerWeight), 1),
-            'stability' => round(($upper['stability'] * $upperWeight) + ($lower['stability'] * $lowerWeight), 1),
-            'accuracy' => round(($upper['accuracy'] * $upperWeight) + ($lower['accuracy'] * $lowerWeight), 1),
-            'consistency' => round(($upper['consistency'] * $upperWeight) + ($lower['consistency'] * $lowerWeight), 1),
-            'adjustment_rate' => round(($upper['adjustment_rate'] * $upperWeight) + ($lower['adjustment_rate'] * $lowerWeight), 1)
+            'accuracy' => $accuracy,
+            'consistency' => $consistency,
+            'automation_rate' => $automationRate,
+            'ranking_score' => $rankingScore
         ];
     }
 
@@ -183,19 +187,13 @@ new class extends Component {
         $lines = array_map(fn($stat) => "Line " . sprintf('%02d', $stat['line']), $this->performanceRanking);
         $metricData = array_column($this->performanceRanking, 'overall');
         
-        $stabilityValues = array_column($metricData, 'stability');
         $accuracyValues = array_column($metricData, 'accuracy');
         $consistencyValues = array_column($metricData, 'consistency');
-        $adjustmentValues = array_column($metricData, 'adjustment_rate');
+        $automationValues = array_column($metricData, 'automation_rate');
 
         $chartData = [
             'labels' => $lines,
             'datasets' => [
-                [
-                    'label' => __('Stabilitas'),
-                    'data' => $stabilityValues,
-                    'backgroundColor' => 'rgba(34, 197, 94, 0.8)'
-                ],
                 [
                     'label' => __('Akurasi'),
                     'data' => $accuracyValues,
@@ -207,9 +205,9 @@ new class extends Component {
                     'backgroundColor' => 'rgba(234, 179, 8, 0.8)'
                 ],
                 [
-                    'label' => __('Penyetelan'),
-                    'data' => $adjustmentValues,
-                    'backgroundColor' => 'rgba(139, 69, 19, 0.8)'
+                    'label' => __('Otomasi'),
+                    'data' => $automationValues,
+                    'backgroundColor' => 'rgba(34, 197, 94, 0.8)'
                 ]
             ]
         ];
@@ -316,16 +314,6 @@ new class extends Component {
                 
                 <div class="space-y-6 text-sm text-neutral-600 dark:text-neutral-400">
                     <div>
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Stabilitas') }}</h3>
-                        <p class="mb-2">{{ __('Mengukur seberapa konsisten suhu yang dihasilkan mesin.') }}</p>
-                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
-                            {{ __('Rumus: 100 - (StdDev × 10)') }}<br>
-                            {{ __('StdDev rendah = skor tinggi = lebih stabil') }}<br>
-                            {{ __('Contoh: StdDev 2°C = Skor 80%') }}
-                        </div>
-                    </div>
-
-                    <div>
                         <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Akurasi') }}</h3>
                         <p class="mb-2">{{ __('Mengukur seberapa dekat suhu aktual dengan target yang ditetapkan.') }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
@@ -346,12 +334,21 @@ new class extends Component {
                     </div>
 
                     <div>
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Tingkat Penyetelan') }}</h3>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Otomasi') }}</h3>
                         <p class="mb-2">{{ __('Persentase pengukuran yang menggunakan penyetelan otomatis.') }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
-                            {{ __('Rumus: (Jumlah penyetelan / Total pengukuran) × 100') }}<br>
-                            {{ __('Tinggi = sering butuh penyetelan') }}<br>
-                            {{ __('Rendah = mesin sudah stabil') }}
+                            {{ __('Rumus: (Jumlah penyetelan otomatis / Total pengukuran) × 100') }}<br>
+                            {{ __('Tinggi = lebih banyak otomasi = lebih baik') }}<br>
+                            {{ __('Rendah = masih manual') }}
+                        </div>
+                    </div>
+
+                    <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Peringkat') }}</h3>
+                        <p class="mb-2">{{ __('Peringkat mesin berdasarkan kombinasi Akurasi dan Konsistensi (50%/50%).') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Skor Peringkat = (Akurasi × 50%) + (Konsistensi × 50%)') }}<br>
+                            {{ __('Otomasi ditampilkan untuk informasi, tidak mempengaruhi peringkat') }}
                         </div>
                     </div>
 
@@ -393,16 +390,16 @@ new class extends Component {
             </div>
             <div>
                 <table class="table table-sm text-sm w-full">
-                    <thead class="sticky top-0 bg-neutral-50 dark:bg-neutral-700">
+                    <thead>
                         <tr class="text-xs uppercase text-neutral-500 border-b">
                             <th class="px-4 py-3">{{ __('Rank') }}</th>
                             <th class="px-4 py-3">{{ __('Line') }}</th>
-                            <th class="px-4 py-3">{{ __('Type') }}</th>
-                            <th class="px-4 py-3">{{ __('Pengukuran') }}</th>
-                            <th class="px-4 py-3">{{ __('Stabilitas') }}</th>
+                            <th class="px-4 py-3">{{ __('Tipe') }}</th>
+                            <th class="px-4 py-3">{{ __('Ukur') }}</th>
+                            <th class="px-4 py-3">{{ __('Skor') }}</th>
                             <th class="px-4 py-3">{{ __('Akurasi') }}</th>
                             <th class="px-4 py-3">{{ __('Konsistensi') }}</th>
-                            <th class="px-4 py-3">{{ __('Penyetelan') }}</th>
+                            <th class="px-4 py-3">{{ __('Otomasi') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -441,40 +438,36 @@ new class extends Component {
                             <td class="px-4 py-3">{{ number_format($machine['overall']['count']) }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center">
-                                    <span class="text-sm {{ $machine['overall']['stability'] >= 80 ? 'text-green-600' : ($machine['overall']['stability'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
-                                        {{ number_format($machine['overall']['stability'], 1) }}%
+                                    <span class="text-sm font-bold {{ $machine['overall']['ranking_score'] >= 80 ? 'text-green-600' : ($machine['overall']['ranking_score'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
+                                        {{ number_format($machine['overall']['ranking_score'], 1) }}
                                     </span>
-                                    <div class="ml-2 w-16 bg-neutral-200 rounded-full h-2">
-                                        <div class="h-2 rounded-full {{ $machine['overall']['stability'] >= 80 ? 'bg-green-500' : ($machine['overall']['stability'] >= 60 ? 'bg-yellow-500' : 'bg-red-500') }}" 
-                                             style="width: {{ $machine['overall']['stability'] }}%"></div>
-                                    </div>
                                 </div>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center">
-                                    <span class="text-sm {{ $machine['overall']['accuracy'] >= 80 ? 'text-green-600' : ($machine['overall']['accuracy'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
-                                        {{ number_format($machine['overall']['accuracy'], 1) }}%
-                                    </span>
-                                    <div class="ml-2 w-16 bg-neutral-200 rounded-full h-2">
+                                    <div class="mr-2 w-16 bg-neutral-200 rounded-full h-2">
                                         <div class="h-2 rounded-full {{ $machine['overall']['accuracy'] >= 80 ? 'bg-green-500' : ($machine['overall']['accuracy'] >= 60 ? 'bg-yellow-500' : 'bg-red-500') }}" 
                                              style="width: {{ $machine['overall']['accuracy'] }}%"></div>
                                     </div>
+                                    <span class="text-sm {{ $machine['overall']['accuracy'] >= 80 ? 'text-green-600' : ($machine['overall']['accuracy'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
+                                        {{ number_format($machine['overall']['accuracy'], 1) }}%
+                                    </span>
                                 </div>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center">
-                                    <span class="text-sm {{ $machine['overall']['consistency'] >= 80 ? 'text-green-600' : ($machine['overall']['consistency'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
-                                        {{ number_format($machine['overall']['consistency'], 1) }}%
-                                    </span>
-                                    <div class="ml-2 w-16 bg-neutral-200 rounded-full h-2">
+                                    <div class="mr-2 w-16 bg-neutral-200 rounded-full h-2">
                                         <div class="h-2 rounded-full {{ $machine['overall']['consistency'] >= 80 ? 'bg-green-500' : ($machine['overall']['consistency'] >= 60 ? 'bg-yellow-500' : 'bg-red-500') }}" 
                                              style="width: {{ $machine['overall']['consistency'] }}%"></div>
                                     </div>
+                                    <span class="text-sm {{ $machine['overall']['consistency'] >= 80 ? 'text-green-600' : ($machine['overall']['consistency'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
+                                        {{ number_format($machine['overall']['consistency'], 1) }}%
+                                    </span>
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <span class="text-sm {{ $machine['overall']['adjustment_rate'] >= 80 ? 'text-green-600' : ($machine['overall']['adjustment_rate'] >= 50 ? 'text-yellow-600' : 'text-red-600') }}">
-                                    {{ number_format($machine['overall']['adjustment_rate'], 1) }}%
+                                <span class="text-sm {{ $machine['overall']['automation_rate'] >= 60 ? 'text-green-600' : ($machine['overall']['automation_rate'] >= 30 ? 'text-yellow-600' : 'text-red-600') }}">
+                                    {{ number_format($machine['overall']['automation_rate'], 1) }}%
                                 </span>
                             </td>
                         </tr>
