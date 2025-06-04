@@ -316,7 +316,7 @@ new class extends Component {
             @endcan
         </div>
         <div class="flex justify-between gap-x-3">
-            <x-secondary-button type="button" wire:click="download"><i class="icon-download me-2"></i>{{ __('Unduh CSV') }}</x-primary-button>
+            <x-secondary-button type="button" wire:click="download"><i class="icon-download me-2"></i>{{ __('CSV') }}</x-primary-button>
             <x-primary-button type="button" wire:click="printPrepare"><i class="icon-printer me-2"></i>{{ __('Cetak') }}</x-primary-button>
         </div>
     </div>
