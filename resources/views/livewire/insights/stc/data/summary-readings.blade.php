@@ -113,6 +113,7 @@ new class extends Component {
             return $ids;
     }
 
+    #[On('updated')]
     public function updated()
     {
         $this->update();

@@ -44,7 +44,7 @@ new class extends Component {
     }
 
     #[On('update')]
-    public function update()
+    public function updated()
     {
         $this->calculateDeviations();
         $this->renderCharts();
@@ -71,6 +71,7 @@ new class extends Component {
 
         $totalMeasurements = 0;
         $totalDeviations = 0;
+        $majorPlusDeviations = 0; // New: count only major (≥5°C) and critical (≥10°C)
         $severityCount = ['minor' => 0, 'major' => 0, 'critical' => 0];
         $lineStats = [];
 
@@ -104,12 +105,15 @@ new class extends Component {
                         if ($deviation >= 10) {
                             $severityCount['critical']++;
                             $lineStats[$line]['critical']++;
+                            $majorPlusDeviations++; // Count for major+ percentage
                         } elseif ($deviation >= 5) {
                             $severityCount['major']++;
                             $lineStats[$line]['major']++;
+                            $majorPlusDeviations++; // Count for major+ percentage
                         } else {
                             $severityCount['minor']++;
                             $lineStats[$line]['minor']++;
+                            // Don't count minor for major+ percentage
                         }
                     }
                 }
@@ -119,7 +123,9 @@ new class extends Component {
         $this->deviationSummary = [
             'total_measurements' => $totalMeasurements,
             'total_deviations' => $totalDeviations,
-            'deviation_rate' => $totalMeasurements > 0 ? round(($totalDeviations / ($totalMeasurements * 8)) * 100, 2) : 0
+            'major_plus_deviations' => $majorPlusDeviations, // New field
+            'deviation_rate' => $totalMeasurements > 0 ? round(($totalDeviations / ($totalMeasurements * 8)) * 100, 2) : 0,
+            'major_plus_rate' => $totalMeasurements > 0 ? round(($majorPlusDeviations / ($totalMeasurements * 8)) * 100, 2) : 0 // New: major+ rate
         ];
 
         $this->severityBreakdown = $severityCount;
@@ -128,7 +134,7 @@ new class extends Component {
 
     private function renderCharts()
     {
-        // Severity breakdown pie chart
+        // Severity breakdown pie chart (keep as is)
         $severityChartData = [
             'labels' => [__('Minor (1-5°C)'), __('Major (5-10°C)'), __('Critical (>10°C)')],
             'datasets' => [[
@@ -137,11 +143,17 @@ new class extends Component {
             ]]
         ];
 
-        // Line deviation rate chart
-        $lineLabels = array_map(fn($line) => "Line $line", array_keys($this->lineDeviations));
-        $lineRates = array_map(function($stats) {
-            return $stats['total'] > 0 ? round(($stats['deviations'] / ($stats['total'] * 8)) * 100, 2) : 0;
-        }, $this->lineDeviations);
+        // Line deviation rate chart - ensure consistent data structure
+        $lineData = [];
+        foreach ($this->lineDeviations as $line => $stats) {
+            $lineData[] = [
+                'label' => "Line " . sprintf('%02d', $line),
+                'rate' => $stats['total'] > 0 ? round(($stats['deviations'] / ($stats['total'] * 8)) * 100, 2) : 0
+            ];
+        }
+        
+        $lineLabels = array_column($lineData, 'label');
+        $lineRates = array_column($lineData, 'rate');
 
         $lineChartData = [
             'labels' => $lineLabels,
@@ -202,11 +214,6 @@ new class extends Component {
             })()
          ");
     }
-
-    public function updated()
-    {
-        $this->update();
-    }
 };
 
 ?>
@@ -248,13 +255,14 @@ new class extends Component {
                 </div>
                 <div class="flex gap-3">
                     <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
-                    <x-text-input wire:model.live="end_at" id="cal-date-end" type="date"></x-text-input>
+                    <x-text-input wire:model.live="end_at"  id="cal-date-end" type="date"></x-text-input>
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="flex gap-3">
                 <div>
-                    <label for="device-line" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                    <label for="device-line"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
                     <x-select id="device-line" wire:model.live="line">
                         <option value=""></option>
                         @foreach($lines as $line)
@@ -263,7 +271,8 @@ new class extends Component {
                     </x-select>
                 </div>
                 <div>
-                    <label for="device-position" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
+                    <label for="device-position"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Posisi') }}</label>
                     <x-select id="device-position" wire:model.live="position">
                         <option value=""></option>
                         <option value="upper">{{ __('Atas') }}</option>
@@ -284,7 +293,7 @@ new class extends Component {
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Pengukuran') }}</div>
             <div class="text-2xl font-bold">{{ number_format($deviationSummary['total_measurements'] ?? 0) }}</div>
@@ -292,23 +301,32 @@ new class extends Component {
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Deviasi') }}</div>
             <div class="text-2xl font-bold text-red-500">{{ number_format($deviationSummary['total_deviations'] ?? 0) }}</div>
+            <div class="text-xs text-neutral-500 mt-1">{{ __('Semua level (>1°C)') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Tingkat Deviasi') }}</div>
-            <div class="text-2xl font-bold {{ ($deviationSummary['deviation_rate'] ?? 0) > 10 ? 'text-red-500' : (($deviationSummary['deviation_rate'] ?? 0) > 5 ? 'text-yellow-500' : 'text-green-500') }}">
-                {{ ($deviationSummary['deviation_rate'] ?? 0) }}%
+            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Deviasi Major+') }}</div>
+            <div class="text-2xl font-bold text-orange-600">{{ number_format($deviationSummary['major_plus_deviations'] ?? 0) }}</div>
+            <div class="text-xs text-neutral-500 mt-1">{{ __('≥5°C dari target') }}</div>
+        </div>
+        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Tingkat Deviasi Major+') }}</div>
+            <div class="text-2xl font-bold {{ ($deviationSummary['major_plus_rate'] ?? 0) > 5 ? 'text-red-500' : (($deviationSummary['major_plus_rate'] ?? 0) > 2 ? 'text-yellow-500' : 'text-green-500') }}">
+                {{ ($deviationSummary['major_plus_rate'] ?? 0) }}%
             </div>
+            <div class="text-xs text-neutral-500 mt-1">{{ __('Target: <2%') }}</div>
         </div>
     </div>
 
     <!-- Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+            <h3 class="text-lg font-medium mb-4">{{ __('Klasifikasi deviasi') }}</h3>
             <div class="h-80">
                 <canvas id="severity-chart"></canvas>
             </div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+            <h3 class="text-lg font-medium mb-4">{{ __('Tingkat deviasi per line (>5%)') }}</h3>
             <div class="h-80">
                 <canvas id="line-chart"></canvas>
             </div>

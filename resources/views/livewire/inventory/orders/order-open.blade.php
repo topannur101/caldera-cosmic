@@ -369,7 +369,7 @@ new class extends Component {
                     </x-secondary-button>
                     <x-secondary-button type="button" wire:click="bulkEditOrderItems">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="bulkEditOrderItems"><i class="icon-pen mr-2"></i>{{ __('Edit') }}</span>
+                            <span wire:loading.class="opacity-0" wire:target="bulkEditOrderItems"><i class="icon-pencil mr-2"></i>{{ __('Edit') }}</span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="bulkEditOrderItems" class="hidden sm mono"></x-spinner>
                         </div>
                     </x-secondary-button>

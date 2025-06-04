@@ -146,6 +146,23 @@ new class extends Component {
         return redirect()->route('download.ins-stc-d-logs', ['token' => $token]);
     }
 
+    public function delete()
+    {
+
+        $dSum = InsStcDSum::find($this->id);
+        Gate::authorize('manage', $dSum);
+
+        if ($dSum) {
+            $dSum->delete();
+            $this->js('$dispatch("close")');
+            $this->js('toast("' . __('Pengukuran berhasil dihapus') . '", { type: "success" })');
+            $this->dispatch('updated');
+        } else {
+            $this->handleNotFound();
+        }
+
+    }
+
 };
 
 ?>
@@ -292,9 +309,16 @@ new class extends Component {
             </div>         
         </div>
     </div>
-    <div class="flex gap-x-3 justify-end items-end mt-6">
-        <x-secondary-button type="button" wire:click="download"><i class="icon-download me-2"></i>{{ __('Unduh CSV') }}</x-primary-button>
-        <x-primary-button type="button" wire:click="printPrepare"><i class="icon-printer me-2"></i>{{ __('Cetak') }}</x-primary-button>
+    <div class="flex gap-x-3 justify-between items-end mt-6">
+        <div>
+            @can('manage', InsStcDSum::class)
+                <x-text-button type="button" wire:click="delete" wire:confirm="{{ __('Yakin ingin menghapus pengukuran ini?') }}"><i class="icon-trash text-red-500"></i></x-text-button>
+            @endcan
+        </div>
+        <div class="flex justify-between gap-x-3">
+            <x-secondary-button type="button" wire:click="download"><i class="icon-download me-2"></i>{{ __('Unduh CSV') }}</x-primary-button>
+            <x-primary-button type="button" wire:click="printPrepare"><i class="icon-printer me-2"></i>{{ __('Cetak') }}</x-primary-button>
+        </div>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>

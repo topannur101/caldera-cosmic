@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\On;
 use Livewire\WithPagination;
 
 use Carbon\Carbon;
@@ -108,6 +109,7 @@ new class extends Component {
 
     }
 
+    #[On('updated')]
     public function with(): array
     {
         $dSums = $this->getDSumsQuery()->paginate($this->perPage);
@@ -174,7 +176,6 @@ new class extends Component {
                 };
 
                 return new StreamedResponse($callback, 200, $headers);
-                break;
 
             case 'dlogs':
                 $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
@@ -217,7 +218,6 @@ new class extends Component {
                 };
 
                 return new StreamedResponse($callback, 200, $headers);
-                break;
         }
 
     }

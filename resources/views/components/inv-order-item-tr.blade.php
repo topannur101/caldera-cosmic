@@ -84,7 +84,7 @@
             <x-text-button type="button" 
                 x-on:click="$dispatch('open-slide-over', 'order-item-show'); $dispatch('order-item-edit', { id: {{ $id }} })"
                 title="{{ __('Edit') }}">
-                <i class="icon-pen"></i>
+                <i class="icon-pencil"></i>
             </x-text-button>
             @if($eval_count > 0)
                 <x-text-button type="button" 
