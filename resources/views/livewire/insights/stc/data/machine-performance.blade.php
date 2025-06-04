@@ -302,7 +302,7 @@ new class extends Component {
 
     <div wire:key="modals">
         <x-slide-over name="metrics-info">
-            <div class="p-6">
+            <div class="p-6 overflow-auto">
                 <div class="flex justify-between items-start mb-6">
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                         {{ __('Penjelasan Metrik Performa Mesin') }}

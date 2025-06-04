@@ -25,9 +25,9 @@ class extends Component {
             'deviation-tracking'    => __('Pelacakan deviasi'),
             'machine-performance'   => __('Performa mesin'),
             'target-variance'       => __('Varians target'),
-            'zone-analysis'         => __('Analisis zona'),
-            'trend-analysis'        => __('Analisis tren'),
-            'operator-performance'  => __('Performa operator'),
+            // 'zone-analysis'         => __('Analisis zona'),
+            // 'trend-analysis'        => __('Analisis tren'),
+            // 'operator-performance'  => __('Performa operator'),
         ];
     }
 
