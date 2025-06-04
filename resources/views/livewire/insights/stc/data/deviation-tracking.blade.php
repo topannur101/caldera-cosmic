@@ -70,8 +70,13 @@ new class extends Component {
         $dSums = $query->get();
 
         $totalMeasurements = 0;
+        $totalSections = 0;
         $totalDeviations = 0;
-        $majorPlusDeviations = 0; // New: count only major (≥5°C) and critical (≥10°C)
+        $deviationSections = 0;
+        $majorPlusDeviations = 0; // Major (6-9°C) + Critical (>9°C)
+        $majorPlusSections = 0;
+        $criticalDeviations = 0; // Only Critical (>9°C)
+        $criticalSections = 0;
         $severityCount = ['minor' => 0, 'major' => 0, 'critical' => 0];
         $lineStats = [];
 
@@ -92,28 +97,35 @@ new class extends Component {
             $lineStats[$line]['total']++;
             $totalMeasurements++;
 
-            // Check each zone for deviations
+            // Check each zone for deviations (8 sections per measurement)
             for ($i = 0; $i < 8; $i++) {
+                $totalSections++;
+                
                 if (isset($hbValues[$i]) && isset($targets[$i])) {
                     $deviation = abs($hbValues[$i] - $targets[$i]);
                     
-                    if ($deviation > 1) { // Any deviation > 1°C
+                    if ($deviation >= 3) { // New threshold: only count deviations ≥3°C
                         $totalDeviations++;
+                        $deviationSections++;
                         $lineStats[$line]['deviations']++;
 
-                        // Classify severity
-                        if ($deviation >= 10) {
+                        // Classify severity with new ranges
+                        if ($deviation > 9) { // Critical: >9°C
                             $severityCount['critical']++;
                             $lineStats[$line]['critical']++;
-                            $majorPlusDeviations++; // Count for major+ percentage
-                        } elseif ($deviation >= 5) {
+                            $majorPlusDeviations++; // Count for major+ 
+                            $majorPlusSections++;
+                            $criticalDeviations++; // Count for critical only
+                            $criticalSections++;
+                        } elseif ($deviation >= 6) { // Major: 6-9°C
                             $severityCount['major']++;
                             $lineStats[$line]['major']++;
-                            $majorPlusDeviations++; // Count for major+ percentage
-                        } else {
+                            $majorPlusDeviations++; // Count for major+
+                            $majorPlusSections++;
+                        } else { // Minor: 3-6°C
                             $severityCount['minor']++;
                             $lineStats[$line]['minor']++;
-                            // Don't count minor for major+ percentage
+                            // Don't count minor for major+ or critical
                         }
                     }
                 }
@@ -122,10 +134,16 @@ new class extends Component {
 
         $this->deviationSummary = [
             'total_measurements' => $totalMeasurements,
+            'total_sections' => $totalSections,
             'total_deviations' => $totalDeviations,
-            'major_plus_deviations' => $majorPlusDeviations, // New field
-            'deviation_rate' => $totalMeasurements > 0 ? round(($totalDeviations / ($totalMeasurements * 8)) * 100, 2) : 0,
-            'major_plus_rate' => $totalMeasurements > 0 ? round(($majorPlusDeviations / ($totalMeasurements * 8)) * 100, 2) : 0 // New: major+ rate
+            'deviation_sections' => $deviationSections,
+            'major_plus_deviations' => $majorPlusDeviations,
+            'major_plus_sections' => $majorPlusSections,
+            'critical_deviations' => $criticalDeviations, // New: only critical
+            'critical_sections' => $criticalSections, // New: only critical sections
+            'deviation_rate' => $totalSections > 0 ? round(($deviationSections / $totalSections) * 100, 2) : 0,
+            'major_plus_rate' => $totalSections > 0 ? round(($majorPlusSections / $totalSections) * 100, 2) : 0,
+            'critical_rate' => $totalSections > 0 ? round(($criticalSections / $totalSections) * 100, 2) : 0 // New: critical only rate
         ];
 
         $this->severityBreakdown = $severityCount;
@@ -134,16 +152,16 @@ new class extends Component {
 
     private function renderCharts()
     {
-        // Severity breakdown pie chart (keep as is)
+        // Severity breakdown pie chart with updated labels
         $severityChartData = [
-            'labels' => [__('Minor (1-5°C)'), __('Major (5-10°C)'), __('Critical (>10°C)')],
+            'labels' => [__('Minor (3-6°C)'), __('Major (6-9°C)'), __('Critical (>9°C)')],
             'datasets' => [[
                 'data' => array_values($this->severityBreakdown),
                 'backgroundColor' => ['rgba(255, 205, 86, 0.8)', 'rgba(255, 159, 64, 0.8)', 'rgba(255, 99, 132, 0.8)']
             ]]
         ];
 
-        // Line deviation rate chart - ensure consistent data structure
+        // Line deviation rate chart with updated calculation
         $lineData = [];
         foreach ($this->lineDeviations as $line => $stats) {
             $lineData[] = [
@@ -290,23 +308,24 @@ new class extends Component {
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Pengukuran') }}</div>
             <div class="text-2xl font-bold">{{ number_format($deviationSummary['total_measurements'] ?? 0) }}</div>
+            <div class="text-xs text-neutral-500 mt-1">{{ number_format($deviationSummary['total_sections'] ?? 0) . ' ' . __('sections') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Deviasi') }}</div>
             <div class="text-2xl font-bold text-red-500">{{ number_format($deviationSummary['total_deviations'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500 mt-1">{{ __('Semua level (>1°C)') }}</div>
+            <div class="text-xs text-neutral-500 mt-1">{{ number_format($deviationSummary['deviation_sections'] ?? 0) . ' ' . __('sections (≥3°C)') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Deviasi Major+') }}</div>
             <div class="text-2xl font-bold text-orange-600">{{ number_format($deviationSummary['major_plus_deviations'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500 mt-1">{{ __('≥5°C dari target') }}</div>
+            <div class="text-xs text-neutral-500 mt-1">{{ number_format($deviationSummary['major_plus_sections'] ?? 0) . ' ' . __('sections (≥6°C)') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Tingkat Deviasi Major+') }}</div>
-            <div class="text-2xl font-bold {{ ($deviationSummary['major_plus_rate'] ?? 0) > 5 ? 'text-red-500' : (($deviationSummary['major_plus_rate'] ?? 0) > 2 ? 'text-yellow-500' : 'text-green-500') }}">
-                {{ ($deviationSummary['major_plus_rate'] ?? 0) }}%
+            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Tingkat Deviasi Kritikal') }}</div>
+            <div class="text-2xl font-bold {{ ($deviationSummary['critical_rate'] ?? 0) > 10 ? 'text-red-500' : (($deviationSummary['critical_rate'] ?? 0) > 8 ? 'text-yellow-500' : 'text-green-500') }}">
+                {{ ($deviationSummary['critical_rate'] ?? 0) }}%
             </div>
-            <div class="text-xs text-neutral-500 mt-1">{{ __('Target: <2%') }}</div>
+            <div class="text-xs text-neutral-500 mt-1">{{ __('Target: <10%') }}</div>
         </div>
     </div>
 
@@ -319,7 +338,7 @@ new class extends Component {
             </div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <h3 class="text-lg font-medium mb-4">{{ __('Tingkat deviasi per line (>5%)') }}</h3>
+            <h3 class="text-lg font-medium mb-4">{{ __('Tingkat deviasi per line (≥3°C)') }}</h3>
             <div class="h-80">
                 <canvas id="line-chart"></canvas>
             </div>

@@ -21,9 +21,6 @@ new class extends Component {
     #[Url]
     public string $end_at = '';
 
-    #[Url]
-    public string $metric = 'stability';
-
     public array $machineStats = [];
     public array $performanceRanking = [];
 
@@ -36,7 +33,7 @@ new class extends Component {
     }
 
     #[On('update')]
-    public function update()
+    public function updated()
     {
         $this->calculateMachinePerformance();
         $this->renderCharts();
@@ -74,9 +71,9 @@ new class extends Component {
             );
         }
 
-        // Sort by selected metric
+        // Sort by stability (highest first)
         uasort($stats, function($a, $b) {
-            return $b['overall'][$this->metric] <=> $a['overall'][$this->metric];
+            return $b['overall']['stability'] <=> $a['overall']['stability'];
         });
 
         $this->machineStats = $stats;
@@ -185,19 +182,36 @@ new class extends Component {
     {
         $lines = array_map(fn($stat) => "Line " . sprintf('%02d', $stat['line']), $this->performanceRanking);
         $metricData = array_column($this->performanceRanking, 'overall');
-        $selectedMetricValues = array_column($metricData, $this->metric);
+        
+        $stabilityValues = array_column($metricData, 'stability');
+        $accuracyValues = array_column($metricData, 'accuracy');
+        $consistencyValues = array_column($metricData, 'consistency');
+        $adjustmentValues = array_column($metricData, 'adjustment_rate');
 
         $chartData = [
             'labels' => $lines,
-            'datasets' => [[
-                'label' => $this->getMetricLabel($this->metric),
-                'data' => $selectedMetricValues,
-                'backgroundColor' => array_map(function($value) {
-                    if ($value >= 80) return 'rgba(34, 197, 94, 0.8)';
-                    if ($value >= 60) return 'rgba(234, 179, 8, 0.8)';
-                    return 'rgba(239, 68, 68, 0.8)';
-                }, $selectedMetricValues)
-            ]]
+            'datasets' => [
+                [
+                    'label' => __('Stabilitas'),
+                    'data' => $stabilityValues,
+                    'backgroundColor' => 'rgba(34, 197, 94, 0.8)'
+                ],
+                [
+                    'label' => __('Akurasi'),
+                    'data' => $accuracyValues,
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.8)'
+                ],
+                [
+                    'label' => __('Konsistensi'),
+                    'data' => $consistencyValues,
+                    'backgroundColor' => 'rgba(234, 179, 8, 0.8)'
+                ],
+                [
+                    'label' => __('Penyetelan'),
+                    'data' => $adjustmentValues,
+                    'backgroundColor' => 'rgba(139, 69, 19, 0.8)'
+                ]
+            ]
         ];
 
         $this->js("
@@ -211,12 +225,9 @@ new class extends Component {
                     maintainAspectRatio: false,
                     indexAxis: 'y',
                     plugins: {
-                        title: {
-                            display: true,
-                            text: '" . $this->getMetricLabel($this->metric) . " " . __('by Machine') . "'
-                        },
                         legend: {
-                            display: false
+                            display: true,
+                            position: 'top'
                         }
                     },
                     scales: {
@@ -225,7 +236,7 @@ new class extends Component {
                             max: 100,
                             ticks: {
                                 callback: function(value) {
-                                    return value + ('" . $this->metric . "' === 'avg_temp' ? '°C' : '%');
+                                    return value + '%';
                                 }
                             }
                         }
@@ -233,23 +244,6 @@ new class extends Component {
                 }
             });
         ");
-    }
-
-    private function getMetricLabel($metric)
-    {
-        return match($metric) {
-            'stability' => __('Stabilitas'),
-            'accuracy' => __('Akurasi'),
-            'consistency' => __('Konsistensi'),
-            'adjustment_rate' => __('Tingkat Penyetelan'),
-            'avg_temp' => __('Rata-rata Suhu'),
-            default => __('Metrik')
-        };
-    }
-
-    public function updated()
-    {
-        $this->update();
     }
 };
 
@@ -284,140 +278,209 @@ new class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div>
-                <label for="metric-select" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Metrik') }}</label>
-                <x-select id="metric-select" wire:model.live="metric">
-                    <option value="stability">{{ __('Stabilitas') }}</option>
-                    <option value="accuracy">{{ __('Akurasi') }}</option>
-                    <option value="consistency">{{ __('Konsistensi') }}</option>
-                    <option value="adjustment_rate">{{ __('Tingkat Penyetelan') }}</option>
-                </x-select>
+            <div class="grow flex justify-between gap-x-2 items-center">
+                <div>
+                    <div class="px-3">
+                        <div wire:loading.class="hidden">{{ count($machineStats) . ' ' . __('mesin') }}</div>
+                        <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
+                            <div class="relative w-3"><x-spinner class="sm mono"></x-spinner></div>
+                            <div>{{ __('Memuat...') }}</div>
+                        </div>
+                    </div>
+                </div>
+                <x-dropdown align="right" width="48">
+                    <x-slot name="trigger">
+                        <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>
+                    </x-slot>
+                    <x-slot name="content">
+                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-slide-over', 'metrics-info')">
+                            <i class="icon-info me-2"></i>{{ __('Penjelasan Metrik') }}
+                        </x-dropdown-link>
+                    </x-slot>
+                </x-dropdown>
             </div>
-            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="grow flex justify-center gap-x-2 items-center">
-                <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-                    <div class="relative w-3"><x-spinner class="sm mono"></x-spinner></div>
-                    <div>{{ __('Memuat...') }}</div>
+        </div>
+    </div>
+
+    <div wire:key="modals">
+        <x-slide-over name="metrics-info">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-6">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Penjelasan Metrik Performa Mesin') }}
+                    </h2>
+                    <x-text-button type="button" x-on:click="window.dispatchEvent(escKey)">
+                        <i class="icon-x"></i>
+                    </x-text-button>
+                </div>
+                
+                <div class="space-y-6 text-sm text-neutral-600 dark:text-neutral-400">
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Stabilitas') }}</h3>
+                        <p class="mb-2">{{ __('Mengukur seberapa konsisten suhu yang dihasilkan mesin.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Rumus: 100 - (StdDev × 10)') }}<br>
+                            {{ __('StdDev rendah = skor tinggi = lebih stabil') }}<br>
+                            {{ __('Contoh: StdDev 2°C = Skor 80%') }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Akurasi') }}</h3>
+                        <p class="mb-2">{{ __('Mengukur seberapa dekat suhu aktual dengan target yang ditetapkan.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Rumus: 100 - (AvgDeviation × 10)') }}<br>
+                            {{ __('Deviasi rendah = skor tinggi = lebih akurat') }}<br>
+                            {{ __('Contoh: Deviasi 1.5°C = Skor 85%') }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Konsistensi') }}</h3>
+                        <p class="mb-2">{{ __('Mengukur koefisien variasi suhu relatif terhadap rata-rata.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Rumus: 100 - ((StdDev / Mean) × 100)') }}<br>
+                            {{ __('CV rendah = skor tinggi = lebih konsisten') }}<br>
+                            {{ __('Contoh: StdDev 2°C, Mean 60°C = CV 3.3% = Skor 96.7%') }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Tingkat Penyetelan') }}</h3>
+                        <p class="mb-2">{{ __('Persentase pengukuran yang menggunakan penyetelan otomatis.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Rumus: (Jumlah penyetelan / Total pengukuran) × 100') }}<br>
+                            {{ __('Tinggi = sering butuh penyetelan') }}<br>
+                            {{ __('Rendah = mesin sudah stabil') }}
+                        </div>
+                    </div>
+
+                    <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Indikator Warna') }}</h3>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-green-500 rounded mr-2"></div>
+                                <span>{{ __('Hijau: ≥80% (Sangat Baik)') }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-yellow-500 rounded mr-2"></div>
+                                <span>{{ __('Kuning: 60-79% (Baik)') }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-red-500 rounded mr-2"></div>
+                                <span>{{ __('Merah: <60% (Perlu Perhatian)') }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </x-slide-over>
+    </div>
+
+    <!-- Charts and Table Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Performance Chart -->
+        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+            <div class="h-full">
+                <canvas id="performance-chart" wire:ignore></canvas>
+            </div>
         </div>
-    </div>
 
-    <!-- Performance Chart -->
-    <div class="mb-8 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-        <div class="h-96">
-            <canvas id="performance-chart"></canvas>
-        </div>
-    </div>
-
-    <!-- Performance Table -->
-    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
-        <table class="table table-sm text-sm w-full">
-            <thead>
-                <tr class="text-xs uppercase text-neutral-500 border-b">
-                    <th class="px-4 py-3">{{ __('Rank') }}</th>
-                    <th class="px-4 py-3">{{ __('Line') }}</th>
-                    <th class="px-4 py-3">{{ __('Type') }}</th>
-                    <th class="px-4 py-3">{{ __('Pengukuran') }}</th>
-                    <th class="px-4 py-3">{{ __('Stabilitas') }}</th>
-                    <th class="px-4 py-3">{{ __('Akurasi') }}</th>
-                    <th class="px-4 py-3">{{ __('Konsistensi') }}</th>
-                    <th class="px-4 py-3">{{ __('Penyetelan') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($performanceRanking as $index => $machine)
-                <tr class="border-b border-neutral-100 dark:border-neutral-700">
-                    <td class="px-4 py-3">
-                        @if($index === 0)
-                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                                🥇 #{{ $index + 1 }}
-                            </span>
-                        @elseif($index === 1)
-                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                                🥈 #{{ $index + 1 }}
-                            </span>
-                        @elseif($index === 2)
-                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
-                                🥉 #{{ $index + 1 }}
-                            </span>
-                        @else
-                            <span class="text-neutral-500">#{{ $index + 1 }}</span>
-                        @endif
-                    </td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center">
-                            <span class="font-mono font-bold">{{ sprintf('%02d', $machine['line']) }}</span>
-                            @if($machine['is_auto'])
-                                <i class="icon-badge-check text-caldy-500 ml-2" title="{{ __('Kontrol otomatis') }}"></i>
-                            @endif
-                        </div>
-                    </td>
-                    <td class="px-4 py-3">
-                        <span class="text-xs {{ (substr($machine['code'], 0, 3) == 'OLD' ) ? 'text-caldy-500' : 'text-neutral-500' }}">
-                            {{ substr($machine['code'], 0, 3) == 'OLD' ? __('Lama') : __('Baru') }}
-                        </span>
-                    </td>
-                    <td class="px-4 py-3">{{ number_format($machine['overall']['count']) }}</td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center">
-                            <span class="text-sm {{ $machine['overall']['stability'] >= 80 ? 'text-green-600' : ($machine['overall']['stability'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
-                                {{ number_format($machine['overall']['stability'], 1) }}%
-                            </span>
-                            <div class="ml-2 w-16 bg-neutral-200 rounded-full h-2">
-                                <div class="h-2 rounded-full {{ $machine['overall']['stability'] >= 80 ? 'bg-green-500' : ($machine['overall']['stability'] >= 60 ? 'bg-yellow-500' : 'bg-red-500') }}" 
-                                     style="width: {{ $machine['overall']['stability'] }}%"></div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center">
-                            <span class="text-sm {{ $machine['overall']['accuracy'] >= 80 ? 'text-green-600' : ($machine['overall']['accuracy'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
-                                {{ number_format($machine['overall']['accuracy'], 1) }}%
-                            </span>
-                            <div class="ml-2 w-16 bg-neutral-200 rounded-full h-2">
-                                <div class="h-2 rounded-full {{ $machine['overall']['accuracy'] >= 80 ? 'bg-green-500' : ($machine['overall']['accuracy'] >= 60 ? 'bg-yellow-500' : 'bg-red-500') }}" 
-                                     style="width: {{ $machine['overall']['accuracy'] }}%"></div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center">
-                            <span class="text-sm {{ $machine['overall']['consistency'] >= 80 ? 'text-green-600' : ($machine['overall']['consistency'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
-                                {{ number_format($machine['overall']['consistency'], 1) }}%
-                            </span>
-                            <div class="ml-2 w-16 bg-neutral-200 rounded-full h-2">
-                                <div class="h-2 rounded-full {{ $machine['overall']['consistency'] >= 80 ? 'bg-green-500' : ($machine['overall']['consistency'] >= 60 ? 'bg-yellow-500' : 'bg-red-500') }}" 
-                                     style="width: {{ $machine['overall']['consistency'] }}%"></div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-4 py-3">
-                        <span class="text-sm {{ $machine['overall']['adjustment_rate'] >= 80 ? 'text-green-600' : ($machine['overall']['adjustment_rate'] >= 50 ? 'text-yellow-600' : 'text-red-600') }}">
-                            {{ number_format($machine['overall']['adjustment_rate'], 1) }}%
-                        </span>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Legend -->
-    <div class="mt-6 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
-        <h3 class="text-sm font-medium mb-3">{{ __('Penjelasan Metrik:') }}</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-                <strong>{{ __('Stabilitas:') }}</strong> {{ __('Seberapa konsisten suhu (semakin rendah deviasi standar, semakin baik)') }}
+        <!-- Performance Table -->
+        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden col-span-2">
+            <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+                <h3 class="text-lg font-medium">{{ __('Peringkat Performa') }}</h3>
             </div>
             <div>
-                <strong>{{ __('Akurasi:') }}</strong> {{ __('Seberapa dekat suhu dengan target (semakin kecil deviasi, semakin baik)') }}
-            </div>
-            <div>
-                <strong>{{ __('Konsistensi:') }}</strong> {{ __('Koefisien variasi suhu (semakin rendah, semakin konsisten)') }}
-            </div>
-            <div>
-                <strong>{{ __('Tingkat Penyetelan:') }}</strong> {{ __('Persentase pengukuran yang menggunakan penyetelan otomatis') }}
+                <table class="table table-sm text-sm w-full">
+                    <thead class="sticky top-0 bg-neutral-50 dark:bg-neutral-700">
+                        <tr class="text-xs uppercase text-neutral-500 border-b">
+                            <th class="px-4 py-3">{{ __('Rank') }}</th>
+                            <th class="px-4 py-3">{{ __('Line') }}</th>
+                            <th class="px-4 py-3">{{ __('Type') }}</th>
+                            <th class="px-4 py-3">{{ __('Pengukuran') }}</th>
+                            <th class="px-4 py-3">{{ __('Stabilitas') }}</th>
+                            <th class="px-4 py-3">{{ __('Akurasi') }}</th>
+                            <th class="px-4 py-3">{{ __('Konsistensi') }}</th>
+                            <th class="px-4 py-3">{{ __('Penyetelan') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($performanceRanking as $index => $machine)
+                        <tr class="border-b border-neutral-100 dark:border-neutral-700">
+                            <td class="px-4 py-3">
+                                @if($index === 0)
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                                        🥇 #{{ $index + 1 }}
+                                    </span>
+                                @elseif($index === 1)
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                        🥈 #{{ $index + 1 }}
+                                    </span>
+                                @elseif($index === 2)
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
+                                        🥉 #{{ $index + 1 }}
+                                    </span>
+                                @else
+                                    <span class="text-neutral-500">#{{ $index + 1 }}</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <span class="font-mono font-bold">{{ sprintf('%02d', $machine['line']) }}</span>
+                                    @if($machine['is_auto'])
+                                        <i class="icon-badge-check text-caldy-500 ml-2" title="{{ __('Kontrol otomatis') }}"></i>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-xs {{ (substr($machine['code'], 0, 3) == 'OLD' ) ? 'text-caldy-500' : 'text-neutral-500' }}">
+                                    {{ substr($machine['code'], 0, 3) == 'OLD' ? __('Lama') : __('Baru') }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">{{ number_format($machine['overall']['count']) }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <span class="text-sm {{ $machine['overall']['stability'] >= 80 ? 'text-green-600' : ($machine['overall']['stability'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
+                                        {{ number_format($machine['overall']['stability'], 1) }}%
+                                    </span>
+                                    <div class="ml-2 w-16 bg-neutral-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full {{ $machine['overall']['stability'] >= 80 ? 'bg-green-500' : ($machine['overall']['stability'] >= 60 ? 'bg-yellow-500' : 'bg-red-500') }}" 
+                                             style="width: {{ $machine['overall']['stability'] }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <span class="text-sm {{ $machine['overall']['accuracy'] >= 80 ? 'text-green-600' : ($machine['overall']['accuracy'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
+                                        {{ number_format($machine['overall']['accuracy'], 1) }}%
+                                    </span>
+                                    <div class="ml-2 w-16 bg-neutral-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full {{ $machine['overall']['accuracy'] >= 80 ? 'bg-green-500' : ($machine['overall']['accuracy'] >= 60 ? 'bg-yellow-500' : 'bg-red-500') }}" 
+                                             style="width: {{ $machine['overall']['accuracy'] }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <span class="text-sm {{ $machine['overall']['consistency'] >= 80 ? 'text-green-600' : ($machine['overall']['consistency'] >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
+                                        {{ number_format($machine['overall']['consistency'], 1) }}%
+                                    </span>
+                                    <div class="ml-2 w-16 bg-neutral-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full {{ $machine['overall']['consistency'] >= 80 ? 'bg-green-500' : ($machine['overall']['consistency'] >= 60 ? 'bg-yellow-500' : 'bg-red-500') }}" 
+                                             style="width: {{ $machine['overall']['consistency'] }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-sm {{ $machine['overall']['adjustment_rate'] >= 80 ? 'text-green-600' : ($machine['overall']['adjustment_rate'] >= 50 ? 'text-yellow-600' : 'text-red-600') }}">
+                                    {{ number_format($machine['overall']['adjustment_rate'], 1) }}%
+                                </span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
