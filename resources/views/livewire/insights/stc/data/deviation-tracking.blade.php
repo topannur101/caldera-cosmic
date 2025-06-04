@@ -147,6 +147,14 @@ new class extends Component {
         ];
 
         $this->severityBreakdown = $severityCount;
+        
+        // Sort lineDeviations by deviation rate (highest first)
+        uasort($lineStats, function($a, $b) {
+            $rateA = $a['total'] > 0 ? ($a['deviations'] / ($a['total'] * 8)) * 100 : 0;
+            $rateB = $b['total'] > 0 ? ($b['deviations'] / ($b['total'] * 8)) * 100 : 0;
+            return $rateB <=> $rateA;
+        });
+        
         $this->lineDeviations = $lineStats;
     }
 
@@ -165,21 +173,44 @@ new class extends Component {
         $lineData = [];
         foreach ($this->lineDeviations as $line => $stats) {
             $lineData[] = [
+                'line' => $line,
                 'label' => "Line " . sprintf('%02d', $line),
-                'rate' => $stats['total'] > 0 ? round(($stats['deviations'] / ($stats['total'] * 8)) * 100, 2) : 0
+                'rate' => $stats['total'] > 0 ? round(($stats['deviations'] / ($stats['total'] * 8)) * 100, 2) : 0,
+                'minor' => $stats['minor'],
+                'major' => $stats['major'], 
+                'critical' => $stats['critical']
             ];
         }
         
+        // Sort by deviation rate (highest first)
+        usort($lineData, function($a, $b) {
+            return $b['rate'] <=> $a['rate'];
+        });
+        
         $lineLabels = array_column($lineData, 'label');
-        $lineRates = array_column($lineData, 'rate');
+        $minorData = array_column($lineData, 'minor');
+        $majorData = array_column($lineData, 'major');
+        $criticalData = array_column($lineData, 'critical');
 
         $lineChartData = [
             'labels' => $lineLabels,
-            'datasets' => [[
-                'label' => __('Deviation Rate (%)'),
-                'data' => $lineRates,
-                'backgroundColor' => 'rgba(214, 69, 80, 0.8)'
-            ]]
+            'datasets' => [
+                [
+                    'label' => __('Minor (3-6°C)'),
+                    'data' => $minorData,
+                    'backgroundColor' => 'rgba(255, 205, 86, 0.8)'
+                ],
+                [
+                    'label' => __('Major (6-9°C)'),
+                    'data' => $majorData,
+                    'backgroundColor' => 'rgba(255, 159, 64, 0.8)'
+                ],
+                [
+                    'label' => __('Critical (>9°C)'),
+                    'data' => $criticalData,
+                    'backgroundColor' => 'rgba(255, 99, 132, 0.8)'
+                ]
+            ]
         ];
 
         $this->js("
@@ -193,8 +224,16 @@ new class extends Component {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
+                            title: {
+                                display: true,
+                                text: '" . __('Klasifikasi Deviasi') . "',
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
+                            },
                             legend: {
-                            position: 'left'
+                                position: 'left'
                             }
                         }
                      }
@@ -209,16 +248,28 @@ new class extends Component {
                         responsive: true,
                         maintainAspectRatio: false,
                         indexAxis: 'y',
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '" . __('Distribusi Deviasi per Line') . "',
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
+                            },
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
                         scales: {
-                              x: {
-                                 beginAtZero: true,
-                                 max: 100,
-                                 ticks: {
-                                    callback: function(value) {
-                                          return value + '%';
-                                    }
-                                 }
-                              }
+                            x: {
+                                stacked: true,
+                                beginAtZero: true
+                            },
+                            y: {
+                                stacked: true
+                            }
                         }
                      }
                   });
@@ -303,80 +354,108 @@ new class extends Component {
         </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
+    <!-- Main Content Grid: Chart + KPI Cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Pie Chart -->
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Pengukuran') }}</div>
-            <div class="text-2xl font-bold">{{ number_format($deviationSummary['total_measurements'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500 mt-1">{{ number_format($deviationSummary['total_sections'] ?? 0) . ' ' . __('sections') }}</div>
-        </div>
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Deviasi') }}</div>
-            <div class="text-2xl font-bold text-red-500">{{ number_format($deviationSummary['total_deviations'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500 mt-1">{{ number_format($deviationSummary['deviation_sections'] ?? 0) . ' ' . __('sections (≥3°C)') }}</div>
-        </div>
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Deviasi Major+') }}</div>
-            <div class="text-2xl font-bold text-orange-600">{{ number_format($deviationSummary['major_plus_deviations'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500 mt-1">{{ number_format($deviationSummary['major_plus_sections'] ?? 0) . ' ' . __('sections (≥6°C)') }}</div>
-        </div>
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Tingkat Deviasi Kritikal') }}</div>
-            <div class="text-2xl font-bold {{ ($deviationSummary['critical_rate'] ?? 0) > 10 ? 'text-red-500' : (($deviationSummary['critical_rate'] ?? 0) > 8 ? 'text-yellow-500' : 'text-green-500') }}">
-                {{ ($deviationSummary['critical_rate'] ?? 0) }}%
-            </div>
-            <div class="text-xs text-neutral-500 mt-1">{{ __('Target: <10%') }}</div>
-        </div>
-    </div>
-
-    <!-- Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <h3 class="text-lg font-medium mb-4">{{ __('Klasifikasi deviasi') }}</h3>
-            <div class="h-80">
+            <div class="h-full">
                 <canvas id="severity-chart"></canvas>
             </div>
         </div>
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <h3 class="text-lg font-medium mb-4">{{ __('Tingkat deviasi per line (≥3°C)') }}</h3>
-            <div class="h-80">
-                <canvas id="line-chart"></canvas>
+        
+        <!-- KPI Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Pengukuran') }}</div>
+                <div class="text-2xl font-bold">{{ number_format($deviationSummary['total_measurements'] ?? 0) }}</div>
+                <div class="text-xs text-neutral-500 mt-1">{{ number_format($deviationSummary['total_sections'] ?? 0) . ' ' . __('sections') }}</div>
+            </div>
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Deviasi') }}</div>
+                <div class="text-2xl font-bold text-red-500">{{ number_format($deviationSummary['total_deviations'] ?? 0) }}</div>
+                <div class="text-xs text-neutral-500 mt-1">{{ number_format($deviationSummary['deviation_sections'] ?? 0) . ' ' . __('sections (≥3°C)') }}</div>
+            </div>
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Deviasi Major+') }}</div>
+                <div class="text-2xl font-bold text-orange-600">{{ number_format($deviationSummary['major_plus_deviations'] ?? 0) }}</div>
+                <div class="text-xs text-neutral-500 mt-1">{{ number_format($deviationSummary['major_plus_sections'] ?? 0) . ' ' . __('sections (≥6°C)') }}</div>
+            </div>
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Tingkat Deviasi Kritikal') }}</div>
+                <div class="text-2xl font-bold {{ ($deviationSummary['critical_rate'] ?? 0) > 10 ? 'text-red-500' : (($deviationSummary['critical_rate'] ?? 0) > 8 ? 'text-yellow-500' : 'text-green-500') }}">
+                    {{ ($deviationSummary['critical_rate'] ?? 0) }}%
+                </div>
+                <div class="text-xs text-neutral-500 mt-1">{{ __('Target: <10%') }}</div>
             </div>
         </div>
     </div>
 
-    <!-- Detailed Table -->
-    <div class="mt-8 bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
-        <table class="table table-sm text-sm w-full">
-            <thead>
-                <tr class="text-xs uppercase text-neutral-500 border-b">
-                    <th class="px-4 py-3">{{ __('Line') }}</th>
-                    <th class="px-4 py-3">{{ __('Total Pengukuran') }}</th>
-                    <th class="px-4 py-3">{{ __('Deviasi') }}</th>
-                    <th class="px-4 py-3">{{ __('Tingkat (%)') }}</th>
-                    <th class="px-4 py-3">{{ __('Minor') }}</th>
-                    <th class="px-4 py-3">{{ __('Major') }}</th>
-                    <th class="px-4 py-3">{{ __('Critical') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($lineDeviations as $line => $stats)
-                <tr class="border-b border-neutral-100 dark:border-neutral-700">
-                    <td class="px-4 py-3 font-mono">{{ sprintf('%02d', $line) }}</td>
-                    <td class="px-4 py-3">{{ number_format($stats['total']) }}</td>
-                    <td class="px-4 py-3">{{ number_format($stats['deviations']) }}</td>
-                    <td class="px-4 py-3">
-                    <span class="{{ $stats['total'] > 0 && (($stats['deviations'] / ($stats['total'] * 8)) * 100) > 10 ? 'text-red-500' : ((($stats['deviations'] / ($stats['total'] * 8)) * 100) > 5 ? 'text-yellow-500' : 'text-green-500') }}">
-                        {{ $stats['total'] > 0 ? number_format(($stats['deviations'] / ($stats['total'] * 8)) * 100, 2) : 0 }}%
-                     </span>
-                    </td>
-                    <td class="px-4 py-3">{{ number_format($stats['minor']) }}</td>
-                    <td class="px-4 py-3">{{ number_format($stats['major']) }}</td>
-                    <td class="px-4 py-3">{{ number_format($stats['critical']) }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <!-- Bottom Section: Line Chart + Table -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Line Chart -->
+        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+            <div class="h-full">
+                <canvas id="line-chart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Detailed Table -->
+        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="table table-sm text-sm w-full">
+                    <thead>
+                        <tr class="text-xs uppercase text-neutral-500 border-b">
+                            <th class="px-4 py-3">{{ __('Line') }}</th>
+                            <th class="px-4 py-3">{{ __('Ukur') }}</th>
+                            <th class="px-4 py-3">{{ __('Deviasi') }}</th>
+                            <th class="px-4 py-3">{{ __('Tingkat (%)') }}</th>
+                            <th class="px-4 py-3">{{ __('Minor') }}</th>
+                            <th class="px-4 py-3">{{ __('Major') }}</th>
+                            <th class="px-4 py-3">{{ __('Critical') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($lineDeviations as $line => $stats)
+                        @php
+                            $machine = \App\Models\InsStcMachine::where('line', $line)->first();
+                            $deviationRate = $stats['total'] > 0 ? round(($stats['deviations'] / ($stats['total'] * 8)) * 100, 2) : 0;
+                        @endphp
+                        <tr class="border-b border-neutral-100 dark:border-neutral-700">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <span class="font-mono font-bold">{{ sprintf('%02d', $line) }}</span>
+                                    @if($machine && strpos($machine->ip_address, '127.') !== 0)
+                                        <i class="icon-badge-check text-caldy-500 ml-2" title="{{ __('Kontrol otomatis') }}"></i>
+                                    @endif
+                                    @if($machine)
+                                        <span class="text-xs ml-2 {{ (substr($machine->code, 0, 3) == 'OLD' ) ? 'text-caldy-500' : 'text-neutral-500' }}">
+                                            {{ substr($machine->code, 0, 3) == 'OLD' ? __('Lama') : __('Baru') }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">{{ number_format($stats['total']) }}</td>
+                            <td class="px-4 py-3">{{ number_format($stats['deviations']) }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <div class="mr-2 w-16 bg-neutral-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full {{ $deviationRate > 10 ? 'bg-red-500' : ($deviationRate > 5 ? 'bg-yellow-500' : 'bg-green-500') }}" 
+                                             style="width: {{ min($deviationRate, 100) }}%"></div>
+                                    </div>
+                                    <span class="text-sm {{ $deviationRate > 10 ? 'text-red-600' : ($deviationRate > 5 ? 'text-yellow-600' : 'text-green-600') }}">
+                                        {{ $deviationRate }}%
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">{{ number_format($stats['minor']) }}</td>
+                            <td class="px-4 py-3">{{ number_format($stats['major']) }}</td>
+                            <td class="px-4 py-3">{{ number_format($stats['critical']) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
