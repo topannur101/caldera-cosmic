@@ -28,10 +28,11 @@ new class extends Component {
     public string $position = '';
 
     #[Url]
-    public string $view_mode = 'zones';
+    public string $view_mode = 'sections';
 
+    public int $progress = 0;
     public array $lines = [];
-    public array $zoneSeverity = [];
+    public array $sectionSeverity = [];
     public array $lineSeverity = [];
     public array $overallStats = [];
 
@@ -48,15 +49,62 @@ new class extends Component {
     #[On('update')]
     public function updated()
     {
-        $this->calculateSeverityAnalysis();
+        $this->progress = 0;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 1: Mengambil data (0-49%)
+        $this->progress = 10;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+        
+        $dSums = $this->getDSumsData();
+        
+        $this->progress = 49;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 2: Menghitung metrik (49-98%)
+        $this->progress = 60;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+        
+        $this->calculateSeverityAnalysis($dSums);
+        
+        $this->progress = 98;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 3: Merender grafik (98-100%)
         $this->renderCharts();
+        
+        $this->progress = 100;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
     }
 
-    private function calculateSeverityAnalysis()
+    private function getDSumsData()
     {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
-        $targets = InsStc::$target_values; // [75, 73, 68, 63, 58, 53, 43, 43]
 
         $query = InsStcDSum::with(['ins_stc_machine'])
             ->when($this->line, function (Builder $query) {
@@ -69,15 +117,20 @@ new class extends Component {
             })
             ->whereBetween('created_at', [$start, $end]);
 
-        $dSums = $query->get();
+        return $query->get();
+    }
 
-        // Initialize zone data
-        $zoneData = [];
+    private function calculateSeverityAnalysis($dSums)
+    {
+        $targets = InsStc::$target_values; // [75, 73, 68, 63, 58, 53, 43, 43]
+
+        // Initialize section data
+        $sectionData = [];
         $lineData = [];
         
-        for ($zone = 1; $zone <= 8; $zone++) {
-            $zoneData[$zone] = [
-                'target' => $targets[$zone - 1],
+        for ($section = 1; $section <= 8; $section++) {
+            $sectionData[$section] = [
+                'target' => $targets[$section - 1],
                 'measurements' => [],
                 'deviations' => [],
                 'severity_counts' => ['minor' => 0, 'major' => 0, 'critical' => 0]
@@ -94,67 +147,67 @@ new class extends Component {
                     'measurements' => [],
                     'deviations' => [],
                     'severity_counts' => ['minor' => 0, 'major' => 0, 'critical' => 0],
-                    'zone_stats' => []
+                    'section_stats' => []
                 ];
             }
 
-            for ($zone = 1; $zone <= 8; $zone++) {
-                if (isset($hbValues[$zone - 1])) {
-                    $measurement = $hbValues[$zone - 1];
-                    $target = $targets[$zone - 1];
+            for ($section = 1; $section <= 8; $section++) {
+                if (isset($hbValues[$section - 1])) {
+                    $measurement = $hbValues[$section - 1];
+                    $target = $targets[$section - 1];
                     $deviation = $measurement - $target;
                     $absDeviation = abs($deviation);
 
-                    $zoneData[$zone]['measurements'][] = $measurement;
-                    $zoneData[$zone]['deviations'][] = $deviation;
+                    $sectionData[$section]['measurements'][] = $measurement;
+                    $sectionData[$section]['deviations'][] = $deviation;
 
                     $lineData[$line]['measurements'][] = $measurement;
                     $lineData[$line]['deviations'][] = $deviation;
 
                     // Classify severity based on new ranges
                     if ($absDeviation > 9) {
-                        $zoneData[$zone]['severity_counts']['critical']++;
+                        $sectionData[$section]['severity_counts']['critical']++;
                         $lineData[$line]['severity_counts']['critical']++;
                     } elseif ($absDeviation >= 6) {
-                        $zoneData[$zone]['severity_counts']['major']++;
+                        $sectionData[$section]['severity_counts']['major']++;
                         $lineData[$line]['severity_counts']['major']++;
                     } elseif ($absDeviation >= 3) {
-                        $zoneData[$zone]['severity_counts']['minor']++;
+                        $sectionData[$section]['severity_counts']['minor']++;
                         $lineData[$line]['severity_counts']['minor']++;
                     }
                     // 0-3°C range is ignored (not counted as deviation)
 
-                    if (!isset($lineData[$line]['zone_stats'][$zone])) {
-                        $lineData[$line]['zone_stats'][$zone] = [
+                    if (!isset($lineData[$line]['section_stats'][$section])) {
+                        $lineData[$line]['section_stats'][$section] = [
                             'measurements' => [],
                             'deviations' => [],
                             'severity_counts' => ['minor' => 0, 'major' => 0, 'critical' => 0]
                         ];
                     }
-                    $lineData[$line]['zone_stats'][$zone]['measurements'][] = $measurement;
-                    $lineData[$line]['zone_stats'][$zone]['deviations'][] = $deviation;
+                    $lineData[$line]['section_stats'][$section]['measurements'][] = $measurement;
+                    $lineData[$line]['section_stats'][$section]['deviations'][] = $deviation;
                     
                     if ($absDeviation > 9) {
-                        $lineData[$line]['zone_stats'][$zone]['severity_counts']['critical']++;
+                        $lineData[$line]['section_stats'][$section]['severity_counts']['critical']++;
                     } elseif ($absDeviation >= 6) {
-                        $lineData[$line]['zone_stats'][$zone]['severity_counts']['major']++;
+                        $lineData[$line]['section_stats'][$section]['severity_counts']['major']++;
                     } elseif ($absDeviation >= 3) {
-                        $lineData[$line]['zone_stats'][$zone]['severity_counts']['minor']++;
+                        $lineData[$line]['section_stats'][$section]['severity_counts']['minor']++;
                     }
                 }
             }
         }
 
-        // Calculate zone statistics
-        $this->zoneSeverity = [];
-        foreach ($zoneData as $zone => $data) {
+        // Calculate section statistics
+        $this->sectionSeverity = [];
+        foreach ($sectionData as $section => $data) {
             if (count($data['measurements']) > 0) {
                 $totalMeasurements = count($data['measurements']);
                 $totalDeviations = $data['severity_counts']['minor'] + $data['severity_counts']['major'] + $data['severity_counts']['critical'];
                 $majorPlusDeviations = $data['severity_counts']['major'] + $data['severity_counts']['critical'];
                 
-                $this->zoneSeverity[$zone] = [
-                    'zone' => $zone,
+                $this->sectionSeverity[$section] = [
+                    'section' => $section,
                     'target' => $data['target'],
                     'count' => $totalMeasurements,
                     'avg_actual' => round(array_sum($data['measurements']) / count($data['measurements']), 2),
@@ -177,7 +230,7 @@ new class extends Component {
                 ];
 
                 // Add severity classification
-                $this->zoneSeverity[$zone]['severity_class'] = $this->classifySeverity(abs($this->zoneSeverity[$zone]['avg_deviation']));
+                $this->sectionSeverity[$section]['severity_class'] = $this->classifySeverity(abs($this->sectionSeverity[$section]['avg_deviation']));
             }
         }
 
@@ -276,23 +329,23 @@ new class extends Component {
 
     private function renderCharts()
     {
-        if ($this->view_mode === 'zones') {
-            $this->renderZoneCharts();
+        if ($this->view_mode === 'sections') {
+            $this->renderSectionCharts();
         } else {
             $this->renderLineCharts();
         }
     }
 
-    private function renderZoneCharts()
+    private function renderSectionCharts()
     {
-        // Zone severity stacked chart
-        $zoneLabels = array_map(fn($zone) => "Zone $zone", array_keys($this->zoneSeverity));
-        $minorCounts = array_column($this->zoneSeverity, 'minor_count');
-        $majorCounts = array_column($this->zoneSeverity, 'major_count');
-        $criticalCounts = array_column($this->zoneSeverity, 'critical_count');
+        // Section severity stacked chart
+        $sectionLabels = array_map(fn($section) => "Section $section", array_keys($this->sectionSeverity));
+        $minorCounts = array_column($this->sectionSeverity, 'minor_count');
+        $majorCounts = array_column($this->sectionSeverity, 'major_count');
+        $criticalCounts = array_column($this->sectionSeverity, 'critical_count');
 
         $severityData = [
-            'labels' => $zoneLabels,
+            'labels' => $sectionLabels,
             'datasets' => [
                 [
                     'label' => 'Minor (3-6°C)',
@@ -312,12 +365,12 @@ new class extends Component {
             ]
         ];
 
-        // Zone deviation chart
-        $avgDeviations = array_column($this->zoneSeverity, 'avg_deviation');
-        $stdDeviations = array_column($this->zoneSeverity, 'std_deviation');
+        // Section deviation chart
+        $avgDeviations = array_column($this->sectionSeverity, 'avg_deviation');
+        $stdDeviations = array_column($this->sectionSeverity, 'std_deviation');
 
         $deviationData = [
-            'labels' => $zoneLabels,
+            'labels' => $sectionLabels,
             'datasets' => [
                 [
                     'label' => __('Rata-rata Deviasi'),
@@ -348,7 +401,7 @@ new class extends Component {
                         plugins: {
                            title: {
                                  display: true,
-                                 text: '" . __('Klasifikasi Deviasi per Zona') . "'
+                                 text: '" . __('Klasifikasi Deviasi per Section') . "'
                            }
                         },
                         scales: {
@@ -375,7 +428,7 @@ new class extends Component {
                         plugins: {
                            title: {
                                  display: true,
-                                 text: '" . __('Deviasi per Zona') . "'
+                                 text: '" . __('Deviasi per Section') . "'
                            }
                         },
                         scales: {
@@ -550,28 +603,30 @@ new class extends Component {
                 <div>
                     <label for="view-mode" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tampilan') }}</label>
                     <x-select id="view-mode" wire:model.live="view_mode">
-                        <option value="zones">{{ __('Per Zona') }}</option>
+                        <option value="sections">{{ __('Per Section') }}</option>
                         <option value="lines">{{ __('Per Line') }}</option>
                     </x-select>
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="grow flex justify-between gap-x-2 items-center">
-                <div>
-                    <div class="px-3">
-                        <div wire:loading.class="hidden">{{ count($zoneSeverity) + count($lineSeverity) . ' ' . __('titik data') }}</div>
-                        <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-                            <div class="relative w-3"><x-spinner class="sm mono"></x-spinner></div>
-                            <div>{{ __('Memuat...') }}</div>
-                        </div>
-                    </div>
+            <div class="grow flex justify-center gap-x-2 items-center">
+                <div wire:loading.class.remove="hidden" class="hidden">
+                    <x-progress-bar :$progress>                       
+                        <span x-text="
+                        progress < 49 ? '{{ __('Mengambil data...') }}' : 
+                        progress < 98 ? '{{ __('Menghitung metrik...') }}' : 
+                        '{{ __('Merender grafik...') }}'
+                        "></span>
+                    </x-progress-bar>
                 </div>
+            </div>
+            <div class="my-auto">                
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>
                     </x-slot>
                     <x-slot name="content">
-                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-slide-over', 'severity-metrics-info')">
+                        <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-slide-over', 'metrics-info')">
                             <i class="icon-info me-2"></i>{{ __('Penjelasan Metrik') }}
                         </x-dropdown-link>
                     </x-slot>
@@ -581,7 +636,7 @@ new class extends Component {
     </div>
 
     <div wire:key="modals">
-        <x-slide-over name="severity-metrics-info">
+        <x-slide-over name="metrics-info">
             <div class="p-6 overflow-auto">
                 <div class="flex justify-between items-start mb-6">
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
@@ -738,54 +793,54 @@ new class extends Component {
     </div>
 
     <!-- Detailed Table -->
-    @if($view_mode === 'zones')
+    @if($view_mode === 'sections')
     <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-            <h3 class="text-lg font-medium">{{ __('Analisis per Zona') }}</h3>
+            <h3 class="text-lg font-medium">{{ __('Analisis per Section') }}</h3>
         </div>
         <table class="table table-sm text-sm w-full">
             <thead>
                 <tr class="text-xs uppercase text-neutral-500 border-b">
-                    <th class="px-4 py-3">{{ __('Zone') }}</th>
+                    <th class="px-4 py-3">{{ __('Section') }}</th>
                     <th class="px-4 py-3">{{ __('Target') }}</th>
                     <th class="px-4 py-3">{{ __('Rata-rata') }}</th>
                     <th colspan="2" class="px-4 py-3">{{ __('Deviasi') }}</th>
                     <th class="px-4 py-3">{{ __('Std Dev') }}</th>
-                    <th class="px-4 py-3">{{ __('Range') }}</th>
+                    <th class="px-4 py-3">{{ __('Rentang') }}</th>
                     <th class="px-4 py-3">{{ __('Minor') }}</th>
                     <th class="px-4 py-3">{{ __('Major') }}</th>
-                    <th class="px-4 py-3">{{ __('Critical') }}</th>
+                    <th class="px-4 py-3">{{ __('Kritikal') }}</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($zoneSeverity as $zone)
+                @foreach($sectionSeverity as $section)
                 <tr class="border-b border-neutral-100 dark:border-neutral-700">
-                    <td class="px-4 py-3 font-mono font-bold">{{ $zone['zone'] }}</td>
-                    <td class="px-4 py-3">{{ $zone['target'] }}°C</td>
-                    <td class="px-4 py-3">{{ $zone['avg_actual'] }}°C</td>
+                    <td class="px-4 py-3 font-mono font-bold">{{ $section['section'] }}</td>
+                    <td class="px-4 py-3">{{ $section['target'] }}°C</td>
+                    <td class="px-4 py-3">{{ $section['avg_actual'] }}°C</td>
                     <td class="px-4 py-3">
-                        <span class="{{ $zone['severity_class']['class'] }}">
-                            {{ $zone['avg_deviation'] > 0 ? '+' : '' }}{{ $zone['avg_deviation'] }}°C
+                        <span class="{{ $section['severity_class']['class'] }}">
+                            {{ $section['avg_deviation'] > 0 ? '+' : '' }}{{ $section['avg_deviation'] }}°C
                         </span>
                     </td>
                     <td>
-                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {{ $zone['severity_class']['bg'] }}">
-                            {{ ucfirst($zone['severity_class']['level']) }}
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {{ $section['severity_class']['bg'] }}">
+                            {{ ucfirst($section['severity_class']['level']) }}
                         </span>
                     </td>
-                    <td class="px-4 py-3">{{ $zone['std_deviation'] }}°C</td>
-                    <td class="px-4 py-3">{{ $zone['range'] }}°C</td>
+                    <td class="px-4 py-3">{{ $section['std_deviation'] }}°C</td>
+                    <td class="px-4 py-3">{{ $section['range'] }}°C</td>
                     <td class="px-4 py-3">
-                        <div class="text-sm">{{ $zone['minor_count'] }}</div>
-                        <div class="text-xs text-neutral-500">({{ $zone['minor_pct'] }}%)</div>
+                        <div class="text-sm">{{ $section['minor_count'] }}</div>
+                        <div class="text-xs text-neutral-500">({{ $section['minor_pct'] }}%)</div>
                     </td>
                     <td class="px-4 py-3">
-                        <div class="text-sm">{{ $zone['major_count'] }}</div>
-                        <div class="text-xs text-neutral-500">({{ $zone['major_pct'] }}%)</div>
+                        <div class="text-sm">{{ $section['major_count'] }}</div>
+                        <div class="text-xs text-neutral-500">({{ $section['major_pct'] }}%)</div>
                     </td>
                     <td class="px-4 py-3">
-                        <div class="text-sm">{{ $zone['critical_count'] }}</div>
-                        <div class="text-xs text-neutral-500">({{ $zone['critical_pct'] }}%)</div>
+                        <div class="text-sm">{{ $section['critical_count'] }}</div>
+                        <div class="text-xs text-neutral-500">({{ $section['critical_pct'] }}%)</div>
                     </td>
                 </tr>
                 @endforeach

@@ -21,6 +21,7 @@ new class extends Component {
     #[Url]
     public string $end_at = '';
 
+    public int $progress = 0;
     public array $machineStats = [];
     public array $performanceRanking = [];
 
@@ -35,12 +36,21 @@ new class extends Component {
     #[On('update')]
     public function updated()
     {
-        $this->calculateMachinePerformance();
-        $this->renderCharts();
-    }
+        $this->progress = 0;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
 
-    private function calculateMachinePerformance()
-    {
+        // Phase 1: Mengambil data (0-49%)
+        $this->progress = 10;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
         $targets = InsStc::$target_values;
@@ -49,6 +59,43 @@ new class extends Component {
             $query->whereBetween('created_at', [$start, $end]);
         }])->get();
 
+        $this->progress = 49;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 2: Menghitung metrik (49-98%)
+        $this->progress = 60;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        $this->calculateMachinePerformance($machines, $targets);
+
+        $this->progress = 98;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+
+        // Phase 3: Merender grafik (98-100%)
+        $this->renderCharts();
+
+        $this->progress = 100;
+        $this->stream(
+            to: 'progress',
+            content: $this->progress,
+            replace: true
+        );
+    }
+
+    private function calculateMachinePerformance($machines, $targets)
+    {
         $stats = [];
 
         foreach ($machines as $machine) {
@@ -276,16 +323,18 @@ new class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="grow flex justify-between gap-x-2 items-center">
-                <div>
-                    <div class="px-3">
-                        <div wire:loading.class="hidden">{{ count($machineStats) . ' ' . __('mesin') }}</div>
-                        <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
-                            <div class="relative w-3"><x-spinner class="sm mono"></x-spinner></div>
-                            <div>{{ __('Memuat...') }}</div>
-                        </div>
-                    </div>
+            <div class="grow flex justify-center gap-x-2 items-center">
+                <div wire:loading.class.remove="hidden" class="hidden px-3">
+                    <x-progress-bar :$progress>                       
+                        <span x-text="
+                        progress < 49 ? '{{ __('Mengambil data...') }}' : 
+                        progress < 98 ? '{{ __('Menghitung metrik...') }}' : 
+                        '{{ __('Merender grafik...') }}'
+                        "></span>
+                    </x-progress-bar>
                 </div>
+            </div>
+            <div class="my-auto">                
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>

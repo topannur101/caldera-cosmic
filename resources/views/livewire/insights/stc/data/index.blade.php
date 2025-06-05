@@ -126,4 +126,38 @@ class extends Component {
                 </div>                
         @endswitch
     </div>
+    <script>
+    function progressApp() {
+        return {
+            observeProgress() {               
+            const streamElement = document.querySelector('[wire\\:stream="progress"]');
+            
+            if (streamElement) {
+                const observer = new MutationObserver((mutations) => {
+                        mutations.forEach(mutation => {
+                        if (mutation.type === 'characterData' || mutation.type === 'childList') {
+                            const currentValue = streamElement.textContent;
+                            console.log('Stream value updated:', currentValue);
+                            
+                            // Do something with the captured value
+                            this.handleProgress(currentValue);
+                        }
+                        });
+                });
+                
+                observer.observe(streamElement, { 
+                    characterData: true, 
+                    childList: true,
+                    subtree: true 
+                });
+            }
+
+            },
+
+            handleProgress(value) {
+            this.progress = value;
+            },
+        };
+    }
+</script>
 </div>

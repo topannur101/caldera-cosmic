@@ -68,7 +68,7 @@ new class extends Component {
             $this->item_name = $stock->inv_item->name;
             $this->item_desc = $stock->inv_item->desc;
             $this->item_code = $stock->inv_item->code ?? '';
-            $this->item_photo = $stock->inv_item->photo;
+            $this->item_photo = $stock->inv_item->photo ?? '';
             $this->item_area_id = $stock->inv_item->inv_area_id;
             
             // Load budgets for this area
