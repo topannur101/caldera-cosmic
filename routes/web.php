@@ -184,6 +184,8 @@ Route::name('download.')->group(function () {
     Route::get('/download/ins-rtc-metrics',         [DownloadController::class, 'insRtcMetrics'])   ->name('ins-rtc-metrics');
     Route::get('/download/ins-rtc-clumps',          [DownloadController::class, 'insRtcClumps'])    ->name('ins-rtc-clumps');
     Route::get('/download/ins-ldc-hides',           [DownloadController::class, 'insLdcHides'])     ->name('ins-ldc-hides');
+    Route::get('/download/pjt-items/{token}',       [DownloadController::class, 'pjtItems'])       ->name('pjt-items');
+    Route::get('/download/pjt-tasks/{token}',       [DownloadController::class, 'pjtTasks'])       ->name('pjt-tasks');
 
 });
 
@@ -252,22 +254,36 @@ Route::middleware('auth')->group(function () {
 
     });
 
-    // projects routes
     Route::prefix('projects')->group(function () {
 
-        Route::name('projects.schedule.')->group(function () {
-            Volt::route('/schedule/',  'projects.schedule.index')   ->name('index');
+        Route::name('projects.')->group(function () {
+                
+            Route::name('items.')->group(function () {
+                Volt::route('/items/{id}',          'projects.items.show')          ->name('show');
+                Volt::route('/items',               'projects.items.index')         ->name('index');
+                
+                // Only superuser can create/edit projects
+                Route::middleware('can:superuser')->group(function () {
+                    Volt::route('/items/create',    'projects.items.create')        ->name('create');
+                    Volt::route('/items/{id}/edit', 'projects.items.edit')          ->name('edit');
+                });
+            });
+    
+            Route::name('tasks.')->group(function () {
+                Volt::route('/tasks/create',        'projects.tasks.create')        ->name('create');
+                Volt::route('/tasks/{id}',          'projects.tasks.show')          ->name('show');
+                Volt::route('/tasks/{id}/edit',     'projects.tasks.edit')          ->name('edit');
+                Volt::route('/tasks',               'projects.tasks.index')         ->name('index');
+            });
+    
+            Route::name('dashboard.')->group(function () {
+                Volt::route('/dashboard',           'projects.dashboard.index')     ->name('index');
+            });
+    
         });
-
-        Route::name('projects.tasks.')->group(function () {
-            Volt::route('/tasks',       'projects.tasks.index')    ->name('index');
-        });
-
-        Route::name('projects.summary.')->group(function () {
-            Volt::route('/summary',     'projects.summary.index')   ->name('index');
-        });
-
+    
     });
+    
 
     // Caldy AI routes
     Route::prefix('caldy')->group(function () {

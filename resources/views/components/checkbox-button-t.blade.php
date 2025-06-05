@@ -1,4 +1,4 @@
-@props(['id', 'grow', 'title'])
+@props(['id', 'grow' => false, 'title'])
 
 <div class="cal-radio relative {{ $grow ? 'grow' : ''}}" title="{{ ($title ?? false) ?: '' }}">
    <input type="checkbox" id="{{ $id }}" {{ $attributes->merge(['class' => 'w-px h-px absolute top-0 left-0 opacity-0']) }} />
