@@ -309,19 +309,6 @@ new class extends Component {
                     </datalist>
                 </div>
                 <div>
-                    <label for="hide-quota_id"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Jatah') }}</label>
-                        <div class="btn-group w-full">
-                            <x-secondary-button type="button" class="grow py-3">{{ __('Tetapkan...')}}</x-secondary-button>
-                            <div class="flex items-center text-xs -ml-px px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-500 rounded-md">
-                                <div class="text-neutral-500">
-                                    <i class="icon-circle-help"></i>
-                                </div>
-                            </div>
-                        </div>
-                    {{-- <x-text-input id="hide-quota_id" wire:model="quota_id" type="number" list="hide-quota_ids" step="1" placeholder="{{ __('Lewati') }}" disabled /> --}}
-                </div>
-                <div>
                     <label for="hide-code"
                         class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Barcode') }}</label>
                     <x-text-input id="hide-code" x-model="code" x-ref="hidecode" type="text" autocomplete="off" :disabled="$is_editing ? 'disabled' : false" />
@@ -329,6 +316,23 @@ new class extends Component {
                         @foreach($ins_ldc_machines as $ins_ldc_machine)
                             <x-text-button x-on:click="code = '{{ $ins_ldc_machine->code }}'; $nextTick(() => setCursorToEnd())" type="button">{{ $ins_ldc_machine->code }}</x-text-button>
                         @endforeach
+                    </div>
+                </div>                
+                <div class="pl-3">
+                    <div class="grid grid-cols-2 gap-x-2 text-xs">
+                        <div>
+                            <label class="block mb-5 uppercase text-neutral-500">{{ __('Selisih') }}</label>
+                            <div x-cloak x-show="diff < 6 && area_vn > 0 && area_ab > 0" class="text-green-500"><i class="icon-circle-check me-1"></i><span>{{ __('Di bawah 6%') }}</span></div>
+                            <div x-cloak x-show="diff > 6 && area_vn > 0 && area_ab > 0" class="text-red-500"><i class="icon-circle-alert me-1"></i><span>{{ __('Di atas 6%') }}</span></div>
+                            <div x-show="!area_vn || !area_ab"><span>{{ __('Menunggu...') }}</span></div>
+                        </div>
+                        <div>
+                            <label class="block mb-5 uppercase text-neutral-500">{{ __('Defect') }}</label>
+                            <div x-cloak x-show="defect < 6 && defect >= 0 && area_vn > 0 && area_qt > 0" class="text-green-500"><i class="icon-circle-check me-1"></i><span>{{ __('Di bawah 6%') }}</span></div>
+                            <div x-cloak x-show="defect > 6 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="icon-circle-alert me-1"></i><span>{{ __('Di atas 6%') }}</span></div>
+                            <div x-cloak x-show="defect < 0 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="icon-circle-alert me-1"></i><span>{{ __('Abnormal') }}</span></div>
+                            <div x-show="!area_vn || !area_qt"><span>{{ __('Menunggu...') }}</span></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -380,20 +384,6 @@ new class extends Component {
             <x-text-input-line type="text" x-model="area_qt_string" x-on:keyup.enter="area_qt = area_qt_eval; window.dispatchEvent(escKey); $refs.hidecode.focus()"></x-text-input-line>
         </div>
     </x-spotlight>
-    <div class="w-60 flex flex-col justify-around grid-rows-2 text-center border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
-        <div>
-            <div class="text-sm uppercase">{{ __('Selisih') }}</div>
-            <div x-cloak x-show="diff < 6 && area_vn > 0 && area_ab > 0" class="text-green-500"><i class="icon-circle-check me-2"></i><span class="text-xl">{{ __('Di bawah 6%') }}</span></div>
-            <div x-cloak x-show="diff > 6 && area_vn > 0 && area_ab > 0" class="text-red-500"><i class="icon-circle-alert me-2"></i><span class="text-xl">{{ __('Di atas 6%') }}</span></div>
-            <div x-show="!area_vn || !area_ab"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
-        </div>
-        <div>
-            <div class="text-sm uppercase">{{ __('Defect')}}</div>
-            <div x-cloak x-show="defect >= 0 && area_vn > 0 && area_qt > 0"><span class="text-xl">{{ __('OK') }}</span></div>
-            <div x-cloak x-show="defect < 0 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="icon-circle-alert me-2"></i><span class="text-xl">{{ __('Abnormal') }}</span></div>
-            <div x-show="!area_vn || !area_qt"><span class="text-xl">{{ __('Menunggu...') }}</span></div>
-        </div>
-    </div>
     <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
 </div>
