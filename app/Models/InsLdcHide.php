@@ -19,7 +19,8 @@ class InsLdcHide extends Model
         'machine',
         'shift',
         'user_id',
-        'ins_ldc_group_id'
+        'ins_ldc_group_id',        
+        'ins_ldc_quota_id'
     ];
 
     public function ins_ldc_group(): BelongsTo

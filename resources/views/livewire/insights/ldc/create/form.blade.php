@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\On;
 
 use App\Models\InsLdcGroup;
+use App\Models\InsLdcQuota;
 use App\Models\InsLdcHide;
 use App\Models\InsLdcMachine;
 use Carbon\Carbon;
@@ -38,12 +39,12 @@ new class extends Component {
     {
         $codes = $this->ins_ldc_machines->pluck('code')->implode(',');
         return [
-            'group_id'  => ['required', 'exists:ins_ldc_groups,id'],
+            'group_id'  => ['required', 'integer'],
             'area_vn'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'area_ab'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'area_qt'   => ['required', 'numeric', 'gte:0', 'lt:90'],
             'grade'     => ['nullable', 'integer', 'min:1', 'max:5'],
-            'quota_id'  => ['nullable', 'exists:ins_ldc_quotas,id'],
+            'quota_id'  => ['required', 'integer'],
             'code'      => ['required', 'alpha_num', 'min:7', 'max:10', "starts_with:$codes"],
             'shift'     => ['required', 'integer', 'min:1', 'max:3']
         ];
@@ -85,6 +86,7 @@ new class extends Component {
             $this->code_last_received = $this->code;
 
             $group = InsLdcGroup::find($this->group_id);
+            $quota = InsLdcQuota::find($this->quota_id);
 
             $styles = Cache::get('styles', collect([
                         ['name' => $group->style, 'updated_at' => now() ]
@@ -112,7 +114,7 @@ new class extends Component {
                 ], 
                 [
                     'ins_ldc_group_id' => $group->id,
-                    'ins_ldc_quota_id' => $this->quota_id ? $this->quota_id : null,
+                    'ins_ldc_quota_id' => $quota->id ?? null,
                     'area_vn'       => $this->area_vn,
                     'area_ab'       => $this->area_ab,
                     'area_qt'       => $this->area_qt,
@@ -158,6 +160,7 @@ new class extends Component {
 <div class="px-6 py-8 flex gap-x-6" 
         x-data="{ 
             group_id: $wire.entangle('group_id'),
+            quota_id: $wire.entangle('quota_id'),
             material: $wire.entangle('material'),
             area_vn: $wire.entangle('area_vn'), 
             area_ab: $wire.entangle('area_ab'),
@@ -261,7 +264,8 @@ new class extends Component {
         x-init="initWebSocket()" 
         @wire:navigate.window="if (websocket) { websocket.close(); websocket = null; }"
         x-on:disconnect.window="if (websocket) { websocket.close(); websocket = null; }" 
-        x-on:set-form-group.window="group_id = $event.detail.group_id; material = $event.detail.material">
+        x-on:set-form-group.window="group_id = $event.detail.group_id; material = $event.detail.material"
+        x-on:set-form-quota.window="quota_id = $event.detail.quota_id">
     <form id="ldc-index-form-element" wire:submit="save">
         <div class="grid grid-cols-1 gap-6">
             <div class="flex justify-between text-xs uppercase">

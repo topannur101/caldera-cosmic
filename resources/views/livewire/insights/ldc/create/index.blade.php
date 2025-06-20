@@ -47,13 +47,13 @@ class extends Component {
             </div>
             <div class="flex w-full items-stretch">
                 <div class="border-r border-neutral-100 dark:border-neutral-700">
-                    <div class="w-48 overflow-y-auto">
+                    <div class="w-32 overflow-y-auto">
                         <livewire:insights.ldc.create.hides />
                     </div>
                 </div>
                 <livewire:insights.ldc.create.form />
                 <div class="border-l border-neutral-100 dark:border-neutral-700">
-                    <div class="w-48 overflow-y-auto">
+                    <div class="w-64 overflow-y-auto">
                         <livewire:insights.ldc.create.quotas />
                     </div>
 
