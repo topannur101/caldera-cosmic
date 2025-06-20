@@ -320,18 +320,39 @@ new class extends Component {
                 </div>                
                 <div class="pl-3">
                     <div class="grid grid-cols-2 gap-x-2 text-xs">
-                        <div>
-                            <label class="block mb-5 uppercase text-neutral-500">{{ __('Selisih') }}</label>
-                            <div x-cloak x-show="diff < 6 && area_vn > 0 && area_ab > 0" class="text-green-500"><i class="icon-circle-check me-1"></i><span>{{ __('Di bawah 6%') }}</span></div>
-                            <div x-cloak x-show="diff > 6 && area_vn > 0 && area_ab > 0" class="text-red-500"><i class="icon-circle-alert me-1"></i><span>{{ __('Di atas 6%') }}</span></div>
-                            <div x-show="!area_vn || !area_ab"><span>{{ __('Menunggu...') }}</span></div>
+                        <div class="text-sm text-center">
+                            <label class="block text-xs mb-3 uppercase text-neutral-500">{{ __('Selisih') }}</label>
+                            <div x-cloak x-show="diff < 6 && area_vn > 0 && area_ab > 0" class="text-green-500">
+                                <i class="icon-circle-check"></i>
+                                <div class="mt-1">{{ __('Di bawah 6%') }}</div>
+                            </div>
+                            <div x-cloak x-show="diff > 6 && area_vn > 0 && area_ab > 0" class="text-red-500">
+                                <i class="icon-circle-alert"></i>
+                                <div class="mt-1">{{ __('Di atas 6%') }}</div>
+                            </div>
+                            <div x-show="!area_vn || !area_ab">
+                                <i class="icon-hourglass"></i>
+                                <div class="mt-1">{{ __('Menunggu...') }}</div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block mb-5 uppercase text-neutral-500">{{ __('Defect') }}</label>
-                            <div x-cloak x-show="defect < 6 && defect >= 0 && area_vn > 0 && area_qt > 0" class="text-green-500"><i class="icon-circle-check me-1"></i><span>{{ __('Di bawah 6%') }}</span></div>
-                            <div x-cloak x-show="defect > 6 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="icon-circle-alert me-1"></i><span>{{ __('Di atas 6%') }}</span></div>
-                            <div x-cloak x-show="defect < 0 && area_vn > 0 && area_qt > 0" class="text-red-500"><i class="icon-circle-alert me-1"></i><span>{{ __('Abnormal') }}</span></div>
-                            <div x-show="!area_vn || !area_qt"><span>{{ __('Menunggu...') }}</span></div>
+                        <div class="text-sm text-center">
+                            <label class="block text-xs mb-3 uppercase text-neutral-500">{{ __('Defect') }}</label>
+                            <div x-cloak x-show="defect < 6 && defect >= 0 && area_vn > 0 && area_qt > 0" class="text-green-500">
+                                <i class="icon-circle-check"></i>
+                                <div class="mt-1">{{ __('Di bawah 6%') }}</div>
+                            </div>
+                            <div x-cloak x-show="defect > 6 && area_vn > 0 && area_qt > 0" class="text-red-500">
+                                <i class="icon-circle-alert"></i>
+                                <div class="mt-1">{{ __('Di atas 6%') }}</div>
+                            </div>
+                            <div x-cloak x-show="defect < 0 && area_vn > 0 && area_qt > 0" class="text-red-500">
+                                <i class="icon-circle-alert"></i>
+                                <div class="mt-1">{{ __('Abnormal') }}</div>
+                            </div>
+                            <div x-show="!area_vn || !area_qt">
+                                <i class="icon-hourglass"></i>
+                                <div class="mt-1">{{ __('Menunggu...') }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
