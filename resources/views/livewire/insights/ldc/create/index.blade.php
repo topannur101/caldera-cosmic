@@ -47,7 +47,7 @@ class extends Component {
             </div>
             <div class="flex w-full items-stretch">
                 <div class="border-r border-neutral-100 dark:border-neutral-700">
-                    <div class="w-32 overflow-y-auto">
+                    <div class="w-40 overflow-y-auto">
                         <livewire:insights.ldc.create.hides />
                     </div>
                 </div>

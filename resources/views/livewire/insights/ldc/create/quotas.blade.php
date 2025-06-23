@@ -292,12 +292,13 @@ new class extends Component {
                         @if($current_view === 'machine')
                             {{-- Machine View --}}
                             <div>
-                                {{-- Breadcrumb --}}
-                                <div class="flex items-center text-sm text-neutral-500 mb-4">
-                                    <x-text-button wire:click="backToMachines" class="hover:text-neutral-700 dark:hover:text-neutral-300 mx-2">
+                                {{-- Nav --}}
+                                <div class="flex items-center gap-x-2 mb-4 font-medium uppercase text-sm text-neutral-500">
+                                    <x-secondary-button type="button" wire:click="backToMachines" 
+                                        class="hover:text-neutral-700 dark:hover:text-neutral-300">
                                         <i class="icon-arrow-left"></i>
-                                    </x-text-button>         
-                                    <span class="mx-2">{{ 'MC ' . $selected_machine }}</span>                           
+                                    </x-secondary-button>     
+                                    <div class="ml-2">{{ 'MC ' . $selected_machine }}</div>  
                                 </div>
 
                                 {{-- Create Quota Form --}}
@@ -305,12 +306,12 @@ new class extends Component {
                                     <div class="flex gap-3">
                                         <div class="flex-1">
                                             <x-text-input-suffix wire:model="quota_value" suffix="SF" id="quota_value" type="number" step=".01" autocomplete="off" />
-                                            @error('quota_value')
-                                                <x-input-error messages="{{ $message }}" class="mt-1" />
-                                            @enderror
                                         </div>
                                         <x-primary-button type="submit">{{ __('Buat') }}</x-primary-button>
                                     </div>
+                                    @error('quota_value')
+                                        <x-input-error messages="{{ $message }}" class="mx-3 mt-1" />
+                                    @enderror
                                 </form>
 
                                 {{-- Quota Cards --}}
@@ -321,7 +322,7 @@ new class extends Component {
                                                  class="border border-neutral-200 dark:border-neutral-700 rounded p-4 cursor-pointer
                                                         bg-caldy-400 dark:bg-caldy-700 bg-opacity-0 dark:bg-opacity-0 hover:bg-opacity-10 dark:hover:bg-opacity-10">
                                                 <div>
-                                                    <div class="flex justify-between text-sm mb-1">
+                                                    <div class="flex justify-between text-sm mb-2">
                                                         <span>{{ Carbon::parse($quota['created_at'])->format('d M H:i') }}</span>
                                                         <span>{{ number_format($quota['total_ab'], 0) }}/{{ number_format($quota['value'], 0) }}</span>
                                                     </div>
@@ -343,70 +344,56 @@ new class extends Component {
                         @if($current_view === 'quota')
                             {{-- Quota Detail View --}}
                             <div>
-                                {{-- Breadcrumb --}}
-                                <div class="flex items-center text-sm text-neutral-500 mb-4">
-                                    <x-text-button wire:click="backToMachine" class="hover:text-neutral-700 dark:hover:text-neutral-300 mx-2">
+
+                                {{-- Nav --}}
+                                <div class="flex items-center gap-x-2 mb-4 font-medium uppercase text-sm text-neutral-500">
+                                    <x-secondary-button type="button" wire:click="backToMachine" 
+                                        class="hover:text-neutral-700 dark:hover:text-neutral-300">
                                         <i class="icon-arrow-left"></i>
-                                    </x-text-button> 
-                                    <span class="mx-2">{{ 'MC ' . $quota_details['machine'] ?? '' }}</span>
-                                    <i class="icon-chevron-right mx-1"></i>
-                                    <span class="mx-2">
-                                        {{ __('Kuota') .' '. $quota_details['id'] ?? '' }}
-                                    </span>
+                                    </x-secondary-button>     
+                                    <div class="ml-2">{{ 'MC ' . $selected_machine }}</div>  
+                                    <i class="icon-chevron-right"></i>   
+                                    <div>{{ __('Rincian kuota') }}</div>                       
                                 </div>
 
                                 {{-- Quota Details --}}
                                 <div class="space-y-4 mb-6">
                                     <div class="p-4 border border-neutral-200 dark:border-neutral-700 rounded">
-                                        <div class="grid grid-cols-2 gap-4 text-sm mb-4">
-                                            <div>
-                                                <div class="text-neutral-500">{{ __('Dibuat') }}</div>
-                                                <div>{{ Carbon::parse($quota_details['created_at'] ?? now())->format('d M Y H:i') }}</div>
-                                            </div>
-                                            <div>
-                                                <div class="text-neutral-500">{{ __('Diperbarui') }}</div>
-                                                <div>{{ Carbon::parse($quota_details['updated_at'] ?? now())->format('d M Y H:i') }}</div>
-                                            </div>
+                                        <div class="flex justify-between items-start w-full">
+                                            <div class="uppercase text-sm text-neutral-500 mb-4">{{ __('Edit kuota') }}</div>                                            
+                                            <x-text-button wire:click="deleteQuota" wire:confirm type="button" 
+                                                class="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                                <i class="icon-trash"></i>
+                                            </x-text-button>
                                         </div>
+                                        <div>
+                                            <div class="flex justify-between text-sm mb-2">
+                                                <span>{{ Carbon::parse($quota_details['created_at'])->format('d M H:i') }}</span>
+                                                <span>{{ number_format($quota_details['total_ab'], 0) }}/{{ number_format($quota_details['value'], 0) }}</span>
+                                            </div>
+                                            <div class="w-full bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700">
+                                                <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500" style="width: {{ $quota_details['progress'] }}%"></div>
+                                            </div>
+                                        </div>                                        
 
                                         {{-- Edit Value Form --}}
-                                        <form wire:submit="updateQuota" class="mb-4">
-                                            <div class="flex gap-3 items-end">
+                                        <form wire:submit="updateQuota" class="mt-6">
+                                            <div class="flex gap-3">
                                                 <div class="flex-1">
-                                                    <label class="block text-sm text-neutral-500 mb-1">{{ __('Nilai Kuota (SF)') }}</label>
-                                                    <x-text-input wire:model="edit_quota_value" type="number" step="0.01" />
-                                                    @error('edit_quota_value')
-                                                        <x-input-error messages="{{ $message }}" class="mt-1" />
-                                                    @enderror
+                                                    <x-text-input-suffix suffix="SF" wire:model="edit_quota_value" type="number" step="0.01" />
                                                 </div>
                                                 <x-primary-button type="submit">{{ __('Perbarui') }}</x-primary-button>
                                             </div>
+                                            @error('edit_quota_value')
+                                                <x-input-error messages="{{ $message }}" class="mx-3 mt-1" />
+                                            @enderror
                                         </form>
-
-                                        {{-- Progress --}}
-                                        <div class="mb-4">
-                                            <div class="flex justify-between text-sm mb-1">
-                                                <span>{{ __('Progress') }}</span>
-                                                <span>{{ number_format($quota_details['total_ab'] ?? 0, 2) }}/{{ number_format($quota_details['value'] ?? 0, 2) }} SF</span>
-                                            </div>
-                                            <div class="w-full bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700">
-                                                <div class="bg-caldy-600 h-1.5 rounded-full dark:bg-caldy-500" style="width: {{ $quota_details['progress'] ?? 0 }}%"></div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Delete Button --}}
-                                        <div class="flex justify-end">
-                                            <button wire:click="deleteQuota" wire:confirm type="button" 
-                                                    class="px-4 py-2 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
-                                                {{ __('Hapus Kuota') }}
-                                            </button>
-                                        </div>
                                     </div>
                                 </div>
 
                                 {{-- Associated Hides --}}
                                 <div class="p-4 border border-neutral-200 dark:border-neutral-700 rounded">
-                                    <h3 class="font-medium mb-3">{{ __('Hide Terkait') }}</h3>
+                                    <h3 class="font-medium text-sm uppercase text-neutral-500 mb-3">{{ __('Kulit terkait') }}</h3>
                                     @if(count($quota_hides) > 0)
                                         <div class="overflow-x-auto">
                                             <table class="w-full text-sm">
@@ -422,11 +409,11 @@ new class extends Component {
                                                         <tr class="border-b border-neutral-100 dark:border-neutral-800">
                                                             <td class="py-2">{{ $hide['code'] }}</td>
                                                             <td class="text-right py-2">{{ number_format($hide['area_ab'], 2) }}</td>
-                                                            <td class="py-2 text-right">
-                                                                <button wire:click="removeHideFromQuota({{ $hide['id'] }})" 
+                                                            <td class="p-1 text-right">
+                                                                <x-text-button type="button" wire:click="removeHideFromQuota({{ $hide['id'] }})" 
                                                                         class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
-                                                                    <i class="icon-x text-xs"></i>
-                                                                </button>
+                                                                    <i class="icon-x"></i>
+                                                                </x-text-button>
                                                             </td>
                                                         </tr>
                                                     @endforeach
@@ -435,7 +422,7 @@ new class extends Component {
                                         </div>
                                     @else
                                         <div class="text-center text-neutral-500 py-4">
-                                            {{ __('Tidak ada hide terkait') }}
+                                            {{ __('Tidak ada kulit terkait') }}
                                         </div>
                                     @endif
                                 </div>
@@ -444,7 +431,7 @@ new class extends Component {
                     </div>
 
                     {{-- Pin Tab --}}
-                    <div x-show="tabSelected === 'pin'" x-cloak>
+                    <div x-show="tabSelected === 'pin'" x-cloak class="p-1">
                         <div class="flex items-center text-sm text-neutral-500 mb-4">
                             {{ __('Sematkan mesin agar dapat muncul di formulir') }}
                         </div>
@@ -511,10 +498,6 @@ new class extends Component {
                             <span>{{ 'MC ' . $machine_data['machine'] }}</span>
                             <span>{{ __('Tidak ada kuota') }}</span>
                         </div>
-                        <!-- <div class="w-full bg-neutral-200 rounded-full h-1 dark:bg-neutral-700">
-                            <div class="bg-white h-1 rounded-full peer-checked:bg-white opacity-60 peer-checked:opacity-100" 
-                                    style="width: {{ $machine_data['progress'] }}%"></div>
-                        </div> -->
                     </div>
                 @endif
             </div>
