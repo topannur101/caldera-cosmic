@@ -150,15 +150,6 @@ new class extends Component {
                                         {{ $d_sum['duration'] . ' ' . __('dari') . ' ' . count($d_sum['ins_stc_d_logs']) . ' ' . __('baris data') }}                                      
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td class="text-xs">
-                                        {{ __('Latensi') }}
-                                    </td>
-                                    <td class="px-1">:</td>
-                                    <td class="truncate">
-                                        {{ $d_sum['latency'] }}                                      
-                                    </td>
-                                </tr>
                             </table>
                         </dd>
                     </div>
