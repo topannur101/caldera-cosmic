@@ -9,9 +9,9 @@ new class extends Component {
     public array $batch = [];
 
     #[On('batch-detail-load')]
-    public function loadBatch($data)
+    public function loadBatch($id)
     {
-        $this->batchId = $data['id'];
+        $this->batchId = $id;
         $this->loadMockBatchData();
     }
 

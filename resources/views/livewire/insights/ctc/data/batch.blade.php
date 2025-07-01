@@ -139,12 +139,6 @@ new #[Layout('layouts.app')] class extends Component {
         });
     }
 
-    public function showBatchDetail(int $batchId): void
-    {
-        $this->dispatch('open-modal', 'batch-detail');
-        $this->dispatch('batch-detail-load', ['id' => $batchId]);
-    }
-
     public function resetFilters(): void
     {
         $this->reset(['device_id', 'model', 'mcs', 'recipe_id', 'quality_status']);
@@ -316,7 +310,9 @@ new #[Layout('layouts.app')] class extends Component {
                     </tr>
                     @foreach ($filteredBatches as $batch)
                         <tr wire:key="batch-tr-{{ $batch['id'] }}" tabindex="0"
-                            wire:click="showBatchDetail({{ $batch['id'] }})"
+                            x-on:click="
+                                $dispatch('open-modal', 'batch-detail');
+                                $dispatch('batch-detail-load', { id: '{{ $batch['id'] }}'})"
                             class="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700">
                             <td>{{ $batch['rubber_batch_code'] }}</td>
                             <td>{{ $batch['device_line'] }}</td>
