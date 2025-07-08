@@ -43,6 +43,7 @@ return new class extends Migration
             $table->json('data'); // timestamp (date time), is_correcting (boolean), 
                                  // action_left (boolean), action_right (boolean), 
                                  // left (decimal), right (decimal)
+                                 // eg arrays of array of timestamp, is_correcting, action_left, action_right, left, right
         });
     }
 
