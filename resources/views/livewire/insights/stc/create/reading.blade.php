@@ -193,6 +193,9 @@ new class extends Component
                 
                 // Convert Excel timestamp to Unix timestamp
                 $excelTimestamp = (float)$row[1];
+
+                // fix chart issue with 3 decimal places rounding
+                $excelTimestamp = round($excelTimestamp, 3);
                 
                 // Skip duplicate timestamps
                 if (in_array($excelTimestamp, $uniqueTimestamps)) {
