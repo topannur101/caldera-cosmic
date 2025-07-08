@@ -34,7 +34,7 @@ new #[Layout('layouts.app')] class extends Component {
     public array $models = [];
     public array $mcsOptions = [];
     public array $recipes = [];
-    public array $batches = [];
+    public array $metrics = [];
 
     public function mount()
     {
@@ -61,7 +61,7 @@ new #[Layout('layouts.app')] class extends Component {
             ['id' => 8, 'name' => 'AM 270 (CENTER)'],
         ];
 
-        $this->batches = [
+        $this->metrics = [
             [
                 'id' => 1,
                 'rubber_batch_code' => 'RB240501A',
@@ -125,14 +125,14 @@ new #[Layout('layouts.app')] class extends Component {
         ];
     }
 
-    public function getFilteredBatches(): array
+    public function getFilteredMetrics(): array
     {
-        return array_filter($this->batches, function($batch) {
+        return array_filter($this->metrics, function($metric) {
             // Apply filters
-            if ($this->device_id && $batch['device_line'] != $this->device_id) return false;
-            if ($this->model && $batch['model'] !== $this->model) return false;
-            if ($this->mcs && $batch['mcs'] !== $this->mcs) return false;
-            if ($this->quality_status && $batch['quality_status'] !== $this->quality_status) return false;
+            if ($this->device_id && $metric['device_line'] != $this->device_id) return false;
+            if ($this->model && $metric['model'] !== $this->model) return false;
+            if ($this->mcs && $metric['mcs'] !== $this->mcs) return false;
+            if ($this->quality_status && $metric['quality_status'] !== $this->quality_status) return false;
             
             // Date filtering would be applied here
             return true;
@@ -151,11 +151,11 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function with(): array
     {
-        $filteredBatches = $this->getFilteredBatches();
+        $filteredMetrics = $this->getFilteredMetrics();
         
         return [
-            'filteredBatches' => $filteredBatches,
-            'totalBatches' => count($filteredBatches)
+            'filteredMetrics' => $filteredMetrics,
+            'totalMetrics' => count($filteredMetrics)
         ];
     }
 };
@@ -245,7 +245,7 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="grow flex justify-between gap-x-2 items-center">
                 <div>
                     <div class="px-3">
-                        <div wire:loading.class="hidden">{{ $totalBatches . ' ' . __('ditemukan') }}</div>
+                        <div wire:loading.class="hidden">{{ $totalMetrics . ' ' . __('ditemukan') }}</div>
                         <div wire:loading.class.remove="hidden" class="flex gap-3 hidden">
                             <div class="relative w-3">
                                 <x-spinner class="sm mono"></x-spinner>
@@ -273,8 +273,8 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     </div>
 
-    {{-- Batch Table --}}
-    @if (!count($filteredBatches))
+    {{-- Metric Table --}}
+    @if (!count($filteredMetrics))
         @if (!$start_at || !$end_at)
             <div class="py-20">
                 <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -308,36 +308,36 @@ new #[Layout('layouts.app')] class extends Component {
                         <th>{{ __('Durasi') }}</th>
                         <th>{{ __('Mulai') }}</th>
                     </tr>
-                    @foreach ($filteredBatches as $batch)
-                        <tr wire:key="batch-tr-{{ $batch['id'] }}" tabindex="0"
+                    @foreach ($filteredMetrics as $metric)
+                        <tr wire:key="metric-tr-{{ $metric['id'] }}" tabindex="0"
                             x-on:click="
-                                $dispatch('open-modal', 'batch-detail');
-                                $dispatch('batch-detail-load', { id: '{{ $batch['id'] }}'})"
+                                $dispatch('open-modal', 'metric-detail');
+                                $dispatch('metric-detail-load', { id: '{{ $metric['id'] }}'})"
                             class="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                            <td>{{ $batch['rubber_batch_code'] }}</td>
-                            <td>{{ $batch['device_line'] }}</td>
-                            <td>{{ $batch['model'] }}</td>
-                            <td>{{ $batch['mcs'] }}</td>
-                            <td class="max-w-32 truncate">{{ $batch['recipe_name'] }}</td>
-                            <td>{{ $batch['shift'] }}</td>
+                            <td>{{ $metric['rubber_batch_code'] }}</td>
+                            <td>{{ $metric['device_line'] }}</td>
+                            <td>{{ $metric['model'] }}</td>
+                            <td>{{ $metric['mcs'] }}</td>
+                            <td class="max-w-32 truncate">{{ $metric['recipe_name'] }}</td>
+                            <td>{{ $metric['shift'] }}</td>
                             <td>
-                                @if($batch['worker_override'])
+                                @if($metric['worker_override'])
                                     <i class="icon-alert-circle text-yellow-500" title="{{ __('Operator override') }}"></i>
                                 @else
                                     <i class="icon-check-circle text-green-500" title="{{ __('Mengikuti rekomendasi') }}"></i>
                                 @endif
                             </td>
                             <td>
-                                @if($batch['quality_status'] === 'pass')
+                                @if($metric['quality_status'] === 'pass')
                                     <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{{ __('Lulus') }}</span>
                                 @else
                                     <span class="inline-flex px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">{{ __('Gagal') }}</span>
                                 @endif
                             </td>
-                            <td class="font-mono">{{ number_format($batch['avg_left'], 2) }} | {{ number_format($batch['avg_right'], 2) }}</td>
-                            <td class="font-mono">{{ number_format($batch['sd_left'], 2) }} | {{ number_format($batch['sd_right'], 2) }}</td>
-                            <td class="font-mono">{{ $batch['duration'] }}</td>
-                            <td class="font-mono">{{ $batch['started_at'] }}</td>
+                            <td class="font-mono">{{ number_format($metric['avg_left'], 2) }} | {{ number_format($metric['avg_right'], 2) }}</td>
+                            <td class="font-mono">{{ number_format($metric['sd_left'], 2) }} | {{ number_format($metric['sd_right'], 2) }}</td>
+                            <td class="font-mono">{{ $metric['duration'] }}</td>
+                            <td class="font-mono">{{ $metric['started_at'] }}</td>
                         </tr>
                     @endforeach
                 </table>
@@ -345,8 +345,8 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     @endif
 
-    {{-- Batch Detail Modal --}}
-    <x-modal name="batch-detail" maxWidth="3xl">
-        <livewire:insights.ctc.data.batch-detail />
+    {{-- Metric Detail Modal --}}
+    <x-modal name="metric-detail" maxWidth="3xl">
+        <livewire:insights.ctc.data.metric-detail />
     </x-modal>
 </div>

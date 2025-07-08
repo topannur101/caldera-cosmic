@@ -11,29 +11,46 @@ new #[Layout('layouts.app')]
 class extends Component {
     
     #[Url]
-    public $view = 'summary-readings';
+    public $view = 'summary';
     public array $view_titles = [];
+    public array $view_icons = [];
 
     public function mount()
     {
         $this->view_titles = [   
-            'summary-readings'      => __('Ringkasan pembacaan'),
-            'summary-operational'   => __('Ringkasan operasional'),
+            'summary'               => __('Ringkasan'),
+            // 'summary-operational'   => __('Ringkasan operasional'),
             'readings'              => __('Pembacaan'),   
             'history'               => __('Riwayat'), 
             'comparison'            => __('Perbandingan'),
-            'deviation-tracking'    => __('Pelacakan deviasi'),
             'machine-performance'   => __('Performa mesin'),
+            'deviation-tracking'    => __('Pelacakan deviasi'),
             'target-variance'       => __('Varians target'),
             // 'zone-analysis'         => __('Analisis zona'),
             // 'trend-analysis'        => __('Analisis tren'),
             // 'operator-performance'  => __('Performa operator'),
+        ];
+
+        $this->view_icons = [
+            'summary'               => 'icon-layout-grid',
+            // 'summary-operational'   => 'icon-settings',
+            'readings'              => 'icon-credit-card',
+            'history'               => 'icon-clock',
+            'comparison'            => 'icon-git-compare',
+            'machine-performance'   => 'icon-zap',
+            'deviation-tracking'    => 'icon-scan-search',
+            'target-variance'       => 'icon-focus',
         ];
     }
 
     public function getViewTitle(): string
     {
         return $this->view_titles[$this->view] ?? '';
+    }
+
+    public function getViewIcon(): string
+    {
+        return $this->view_icons[$this->view] ?? '';
     }
 };
 
@@ -55,11 +72,21 @@ class extends Component {
     <div wire:key="stc-data-index-nav" class="flex px-8 mb-6">
         <x-dropdown align="left">
             <x-slot name="trigger">
-                <x-text-button type="button" class="flex gap-2 items-center ml-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="icon-chevron-down"></i></x-text-button>
+                <x-text-button type="button" class="flex gap-2 items-center ml-1">
+                    <i class="{{ $this->getViewIcon() }}"></i>
+                    <div class="text-2xl">{{ $this->getViewTitle() }}</div>
+                    <i class="icon-chevron-down"></i>
+                </x-text-button>
             </x-slot>
             <x-slot name="content">
                 @foreach ($view_titles as $view_key => $view_title)
-                <x-dropdown-link href="#" wire:click.prevent="$set('view', '{{ $view_key }}')">{{ $view_title }}</x-dropdown-link>
+                <x-dropdown-link href="#" wire:click.prevent="$set('view', '{{ $view_key }}')" class="flex items-center gap-2">
+                    <i class="{{ $view_icons[$view_key] }}"></i>
+                    <span>{{ $view_title }}</span>
+                    @if($view === $view_key)
+                        <div class="ml-auto w-2 h-2 bg-caldy-500 rounded-full"></div>
+                    @endif
+                </x-dropdown-link>
                 @endforeach
                 {{-- <hr class="border-neutral-300 dark:border-neutral-600" /> --}}
             </x-slot>
@@ -71,8 +98,8 @@ class extends Component {
     <div wire:key="stc-data-index-container" wire:loading.class="hidden">
         @switch($view)
 
-            @case('summary-readings')
-            <livewire:insights.stc.data.summary-readings />
+            @case('summary')
+            <livewire:insights.stc.data.summary />
                 @break
 
             @case('summary-operational')

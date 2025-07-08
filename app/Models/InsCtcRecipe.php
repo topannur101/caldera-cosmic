@@ -105,7 +105,7 @@ class InsCtcRecipe extends Model
      */
     public function isWithinPfcRange(float $thickness): bool
     {
-        return $thickness >= $this->pfc_min && $thickness <= $thickness <= $this->pfc_max;
+        return $thickness >= $this->pfc_min && $thickness <= $this->pfc_max;
     }
 
     /**

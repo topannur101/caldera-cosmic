@@ -28,8 +28,8 @@ class InsCtcPoll extends Command
     protected $description = 'Poll rubber thickness data from Modbus servers and save as aggregated batch metrics';
 
     // Configuration
-    protected $batch_timeout = 60;        // seconds - same as old clump timeout
-    protected $minimum_measurements = 10; // minimum measurements per batch (configurable)
+    protected $batch_timeout = 5;        // seconds - same as old clump timeout, def 60
+    protected $minimum_measurements = 2; // minimum measurements per batch (configurable), def 10
 
     // State management arrays (per machine)
     protected $batch_buffers = [];        // Raw measurement data per machine
@@ -105,7 +105,7 @@ class InsCtcPoll extends Command
                 // Use the model's computed target_thickness attribute
                 $this->recipe_cache[$recipe_id] = $recipe->target_thickness;
                 
-                if ($this->option('verbose')) {
+                if ($this->option('v')) {
                     $this->comment("→ Recipe {$recipe_id} ({$recipe->name}) target: {$recipe->target_thickness} (range: {$recipe->std_min}-{$recipe->std_max})");
                 }
             } else {
@@ -215,19 +215,30 @@ class InsCtcPoll extends Command
             return;
         }
 
-        // Get recipe target from first measurement in batch
-        $first_record = $batch_data[0];
-        $recipe_id = null;
-        
-        // Extract recipe_id from the batch context (you may need to store this separately)
-        // For now, using the last known recipe_id for this machine
-        if (isset($this->recipe_id_prev[$machine_id])) {
-            $recipe_id = $this->recipe_id_prev[$machine_id];
+        // FIND MOST FREQUENT RECIPE_ID IN BATCH
+        $recipe_counts = [];
+        foreach ($batch_data as $record) {
+            $recipe_id = $record[6]; // position 6: recipe_id
+            $recipe_counts[$recipe_id] = ($recipe_counts[$recipe_id] ?? 0) + 1;
         }
 
-        $target = $recipe_id ? $this->getRecipeTarget($recipe_id) : null;
+        // Get most frequent recipe_id
+        arsort($recipe_counts); // Sort by count, descending
+        $batch_recipe_id = array_keys($recipe_counts)[0];
+        $most_frequent_count = $recipe_counts[$batch_recipe_id];
+        $percentage = ($most_frequent_count / $batch_size) * 100;
 
-        // Calculate statistics
+        // Get recipe target
+        $target = $batch_recipe_id ? $this->getRecipeTarget($batch_recipe_id) : null;
+
+        if ($this->option('v')) {
+            $this->comment("→ Batch recipe: {$batch_recipe_id} ({$most_frequent_count}/{$batch_size} = {$percentage}%)");
+            if (count($recipe_counts) > 1) {
+                $this->comment("→ Recipe distribution: " . json_encode($recipe_counts));
+            }
+        }
+
+        // Calculate statistics using all measurements (no filtering)
         $stats = $this->calculateBatchStatistics($batch_data, $target);
         
         if (!$stats) {
@@ -235,24 +246,27 @@ class InsCtcPoll extends Command
             return;
         }
 
+        // Debug statistics if requested
         if ($this->option('d')) {
             $this->line("Statistics calculated:");
-            $this->line("  MAE: L={$stats['t_mae_left']}, R={$stats['t_mae_right']}, C={$stats['t_mae']}");
-            $this->line("  SSD: L={$stats['t_ssd_left']}, R={$stats['t_ssd_right']}, C={$stats['t_ssd']}");
-            $this->line("  AVG: L={$stats['t_avg_left']}, R={$stats['t_avg_right']}, C={$stats['t_avg']}");
-            $this->line("  Balance: {$stats['t_balance']}");
+            $this->table(['Metric', 'Left', 'Right', 'Combined'], [
+                ['MAE', round($stats['t_mae_left'], 2), round($stats['t_mae_right'], 2), round($stats['t_mae'], 2)],
+                ['SSD', round($stats['t_ssd_left'], 2), round($stats['t_ssd_right'], 2), round($stats['t_ssd'], 2)],
+                ['AVG', round($stats['t_avg_left'], 2), round($stats['t_avg_right'], 2), round($stats['t_avg'], 2)],
+                ['Balance', '', '', round($stats['t_balance'], 2)]
+            ]);
         }
 
+        // Save batch with most frequent recipe_id
         try {
-            // Create batch metric record
-            InsCtcMetric::create([
+            $metric = new InsCtcMetric([
                 'ins_ctc_machine_id' => $machine_id,
-                'ins_rubber_batch_id' => null, // TODO: Implement batch detection logic
-                'ins_ctc_recipe_id' => $recipe_id,
-                'is_auto' => true, // Assuming automatic mode for polling
-                't_mae_left' => round($stats['t_mae_left'], 2),
-                't_mae_right' => round($stats['t_mae_right'], 2),
-                't_mae' => round($stats['t_mae'], 2),
+                'ins_rubber_batch_id' => null,
+                'ins_ctc_recipe_id' => $batch_recipe_id,
+                'is_auto' => true,
+                't_mae_left' => $stats['t_mae_left'] !== null ? round($stats['t_mae_left'], 2) : null,
+                't_mae_right' => $stats['t_mae_right'] !== null ? round($stats['t_mae_right'], 2) : null,
+                't_mae' => $stats['t_mae'] !== null ? round($stats['t_mae'], 2) : null,
                 't_ssd_left' => round($stats['t_ssd_left'], 2),
                 't_ssd_right' => round($stats['t_ssd_right'], 2),
                 't_ssd' => round($stats['t_ssd'], 2),
@@ -260,13 +274,34 @@ class InsCtcPoll extends Command
                 't_avg_right' => round($stats['t_avg_right'], 2),
                 't_avg' => round($stats['t_avg'], 2),
                 't_balance' => round($stats['t_balance'], 2),
-                'data' => $batch_data // JSON array of arrays
+                'data' => $batch_data // Laravel will automatically json_encode this
             ]);
 
-            $this->info("✓ Batch saved: {$machine->name}, {$batch_size} measurements, Recipe {$recipe_id}");
+            $metric->save();
+
+            $this->info("✓ Batch saved: {$machine->name}, {$batch_size} measurements, Recipe {$batch_recipe_id}");
+
+            // Debug saved data format if requested
+            if ($this->option('d')) {
+                $this->line("Sample data saved (first 2 records):");
+                $sample_data = array_slice($batch_data, 0, 2);
+                foreach ($sample_data as $i => $record) {
+                    $this->line("  [{$i}] " . json_encode($record));
+                }
+            }
 
         } catch (\Exception $e) {
             $this->error("✗ Failed to save batch: {$e->getMessage()}");
+            
+            // Additional debugging for database errors
+            if ($this->option('d')) {
+                $this->line("Debug info:");
+                $this->line("  Machine ID: {$machine_id}");
+                $this->line("  Recipe ID: {$batch_recipe_id}");
+                $this->line("  Batch size: {$batch_size}");
+                $this->line("  Data type: " . gettype($batch_data));
+                $this->line("  Data sample: " . json_encode(array_slice($batch_data, 0, 1)));
+            }
         }
     }
 
@@ -279,6 +314,13 @@ class InsCtcPoll extends Command
         
         // Detect sensor value changes (same logic as old system)
         $sensor_signature = $metric['sensor_left'] . $metric['st_correct_left'] . $metric['sensor_right'] . $metric['st_correct_right'];
+
+        if ($this->option('d')) {
+            $this->line("DEBUG: Machine {$machine_id}");
+            $this->line("  Sensor signature: {$sensor_signature}");
+            $this->line("  Previous signature: " . ($this->sensor_prev[$machine_id] ?? 'null'));
+            $this->line("  Sensor values: L={$metric['sensor_left']}, R={$metric['sensor_right']}");
+        }
         
         // Only process if sensor values changed AND at least one sensor is not zero
         if ($sensor_signature !== $this->sensor_prev[$machine_id] && ($metric['sensor_left'] || $metric['sensor_right'])) {
@@ -305,14 +347,15 @@ class InsCtcPoll extends Command
                 $this->st_cr_prev[$machine_id] = $st_cr;
             }
             
-            // Add to batch buffer (array format: timestamp, is_correcting, action_left, action_right, left, right)
+            // Add to batch buffer (array format: timestamp, is_correcting, action_left, action_right, left, right, recipe_id)
             $this->batch_buffers[$machine_id][] = [
                 $dt_now,                           // 0: timestamp
                 (bool) $metric['is_correcting'],   // 1: is_correcting
                 $action_left,                      // 2: action_left (0,1,2)
                 $action_right,                     // 3: action_right (0,1,2)
                 $left_thickness,                   // 4: left thickness
-                $right_thickness                   // 5: right thickness
+                $right_thickness,                  // 5: right thickness
+                $metric['recipe_id']               // 6: recipe_id
             ];
             
             // Update last activity timestamp
@@ -349,18 +392,68 @@ class InsCtcPoll extends Command
     {
         $now = Carbon::now();
         
+        if ($this->option('d')) {
+            $this->line("\n=== TIMEOUT CHECK DEBUG ===");
+            $this->line("Current time: " . $now->format('H:i:s'));
+            $this->line("Batch timeout: {$this->batch_timeout} seconds");
+        }
+        
         foreach ($this->last_activity as $machine_id => $last_time) {
-            if ($last_time && $now->diffInSeconds($last_time) >= $this->batch_timeout) {
+            $buffer_count = count($this->batch_buffers[$machine_id] ?? []);
+            
+            if ($this->option('d')) {
+                $this->line("ID {$machine_id}: {$buffer_count} measurements, last activity: " . 
+                        ($last_time ? $last_time->format('H:i:s') : 'null'));
+            }
+            
+            // Check if we have a valid last_time and non-empty buffer
+            if ($last_time && !empty($this->batch_buffers[$machine_id])) {
                 
-                if (!empty($this->batch_buffers[$machine_id])) {
+                // Ensure last_time is a Carbon instance
+                if (!($last_time instanceof Carbon)) {
+                    $last_time = Carbon::parse($last_time);
+                }
+                
+                // Calculate time difference
+                $seconds_since_last = $last_time->diffInSeconds($now);
+                
+                if ($this->option('d')) {
+                    $this->line("  → Last time: " . $last_time->format('Y-m-d H:i:s'));
+                    $this->line("  → Seconds since last activity: {$seconds_since_last}");
+                    $this->line("  → Should trigger? " . ($seconds_since_last >= $this->batch_timeout ? 'YES' : 'NO'));
+                }
+                
+                // Check if timeout has been reached
+                if ($seconds_since_last >= $this->batch_timeout) {
+                    
+                    if ($this->option('d')) {
+                        $this->line("  → TIMEOUT TRIGGERED! Processing batch...");
+                    }
+                    
                     // Process the completed batch
                     $this->processBatch($machine_id, $this->batch_buffers[$machine_id]);
                     
-                    // Clear batch buffer
+                    // Clear batch buffer and reset activity
                     $this->batch_buffers[$machine_id] = [];
                     $this->last_activity[$machine_id] = null;
+                    
+                    if ($this->option('d')) {
+                        $this->line("  → Batch processed and buffer cleared");
+                    }
+                }
+            } else {
+                if ($this->option('d')) {
+                    if (!$last_time) {
+                        $this->line("  → No last_time set, skipping");
+                    } elseif (empty($this->batch_buffers[$machine_id])) {
+                        $this->line("  → Buffer is empty, skipping");
+                    }
                 }
             }
+        }
+        
+        if ($this->option('d')) {
+            $this->line("=== END TIMEOUT CHECK ===\n");
         }
     }
 

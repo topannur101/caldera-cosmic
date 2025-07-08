@@ -8,16 +8,17 @@ new #[Layout('layouts.app')]
 class extends Component {
     
     #[Url]
-    public $view = 'realtime';
+    public $view = 'recents';
     
     public array $view_titles = [];
 
     public function mount()
     {
         $this->view_titles = [   
-            'realtime'  => __('Waktu nyata'),
-            'batch'     => __('Riwayat gilingan'),
+            'recents'   => __('Batch terkini'),
+            // 'realtime'  => __('Waktu nyata'),
             'quality'   => __('Analisis kualitas'),
+            'metrics'   => __('Data mentah'),
         ];
     }
 
@@ -58,17 +59,20 @@ class extends Component {
     
     <div wire:key="ctc-data-container" wire:loading.class="hidden">
         @switch($view)
+            @case('recents')
+                @break
+
             @case('realtime')
                 <livewire:insights.ctc.data.realtime />
-            @break
-
-            @case('batch')
-                <livewire:insights.ctc.data.batch />
-            @break
+                @break
 
             @case('quality')
                 <livewire:insights.ctc.data.quality />
-            @break
+                @break
+
+            @case('metrics')
+                <livewire:insights.ctc.data.metrics />
+                @break
 
             @default
                 <div wire:key="no-view" class="w-full py-20">
