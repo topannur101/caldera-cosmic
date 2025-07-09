@@ -15,24 +15,14 @@ class extends Component {
 
     public function mount()
     {
-        $this->view_titles = [
-            'recents'               => __('Batch terkini'),
-            'metrics'               => __('Data mentah'),
-            'batch-analytics'       => __('Analitik Batch'),
-            'machine-performance'   => __('Kinerja Mesin'),
-            'recipe-analytics'      => __('Analitik Resep'),
-            'correction-efficiency' => __('Efisiensi Koreksi'),
-            'quality-production'    => __('Kualitas vs Produksi'),
+        $this->view_titles = [  
+            'recents'   => __('Batch terkini'),
+            'metrics'   => __('Data mentah'),
         ];
 
         $this->view_icons = [
-            'recents'               => 'icon-clock',
-            'metrics'               => 'icon-database',
-            'batch-analytics'       => 'icon-layers',
-            'machine-performance'   => 'icon-zap',
-            'recipe-analytics'      => 'icon-book',
-            'correction-efficiency' => 'icon-adjustments',
-            'quality-production'    => 'icon-chart-line',
+            'recents'   => 'icon-clock',
+            'metrics'   => 'icon-database',
         ];
     }
 
@@ -92,21 +82,6 @@ class extends Component {
             @case('metrics')
                 <livewire:insights.ctc.data.metrics />
                 @break
-            @case('batch-analytics')
-                <livewire:insights.ctc.data.batch-analytics />
-                @break
-            @case('machine-performance')
-                <livewire:insights.ctc.data.machine-performance />
-                @break
-            @case('recipe-analytics')
-                <livewire:insights.ctc.data.recipe-analytics />
-                @break
-            @case('correction-efficiency')
-                <livewire:insights.ctc.data.correction-efficiency />
-                @break
-            @case('quality-production')
-                <livewire:insights.ctc.data.quality-production />
-                @break
             @default
                 <div wire:key="no-view" class="w-full py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -116,4 +91,5 @@ class extends Component {
                 </div>                
         @endswitch
     </div>
+
 </div>

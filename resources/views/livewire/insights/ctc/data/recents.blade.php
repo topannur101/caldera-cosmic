@@ -67,4 +67,5 @@ new #[Layout('layouts.app')] class extends Component
 
     <x-modal name="metric-detail" maxWidth="3xl">
         <livewire:insights.ctc.data.metric-detail />
-    </x-modal></div>
+    </x-modal>
+</div>
