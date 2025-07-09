@@ -28,8 +28,8 @@ class InsCtcPoll extends Command
     protected $description = 'Poll rubber thickness data from Modbus servers and save as aggregated batch metrics';
 
     // Configuration
-    protected $batch_timeout = 5;        // seconds - same as old clump timeout, def 60
-    protected $minimum_measurements = 2; // minimum measurements per batch (configurable), def 10
+    protected $batch_timeout = 60;        // seconds - same as old clump timeout, def 60
+    protected $minimum_measurements = 10; // minimum measurements per batch (configurable), def 10
 
     // State management arrays (per machine)
     protected $batch_buffers = [];        // Raw measurement data per machine
@@ -127,23 +127,56 @@ class InsCtcPoll extends Command
             $errors_right[] = $record[11];  // error_right (can be null)
         }
 
-        // Calculate averages
-        $t_avg_left = array_sum($left_values) / count($left_values);
-        $t_avg_right = array_sum($right_values) / count($right_values);
+        // Filter out thickness values <= 0 (invalid sensor readings)
+        $valid_left_values = array_filter($left_values, fn($value) => $value > 0);
+        $valid_right_values = array_filter($right_values, fn($value) => $value > 0);
+
+        // Recalculate averages using only valid values
+        if (count($valid_left_values) > 0) {
+            $t_avg_left = array_sum($valid_left_values) / count($valid_left_values);
+        } else {
+            $t_avg_left = 0;
+        }
+
+        if (count($valid_right_values) > 0) {
+            $t_avg_right = array_sum($valid_right_values) / count($valid_right_values);
+        } else {
+            $t_avg_right = 0;
+        }
+
         $t_avg = ($t_avg_left + $t_avg_right) / 2;
 
-        // Calculate sum of squared differences (SSD)
+        // Calculate proper Sample Standard Deviation
+        $n_left = count($valid_left_values);
+        $n_right = count($valid_right_values);
+
+        // Calculate sum of squared differences using valid values only
         $ssd_left = 0;
         $ssd_right = 0;
-        foreach ($left_values as $value) {
+        foreach ($valid_left_values as $value) {
             $ssd_left += pow($value - $t_avg_left, 2);
         }
-        foreach ($right_values as $value) {
+        foreach ($valid_right_values as $value) {
             $ssd_right += pow($value - $t_avg_right, 2);
         }
-        $t_ssd_left = $ssd_left;
-        $t_ssd_right = $ssd_right;
-        $t_ssd = $t_ssd_left + $t_ssd_right;
+
+        // Apply proper sample standard deviation formula
+        $t_ssd_left = $n_left > 1 ? sqrt($ssd_left / ($n_left - 1)) : 0;
+        $t_ssd_right = $n_right > 1 ? sqrt($ssd_right / ($n_right - 1)) : 0;
+
+        // Combined SSD using all valid values
+        $all_valid_values = array_merge($valid_left_values, $valid_right_values);
+        $total_n = count($all_valid_values);
+        if ($total_n > 1) {
+            $combined_avg = array_sum($all_valid_values) / $total_n;
+            $combined_ssd = 0;
+            foreach ($all_valid_values as $value) {
+                $combined_ssd += pow($value - $combined_avg, 2);
+            }
+            $t_ssd = sqrt($combined_ssd / ($total_n - 1));
+        } else {
+            $t_ssd = 0;
+        }
 
         // Calculate MAE from pre-calculated errors
         $t_mae_left = null;

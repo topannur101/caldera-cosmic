@@ -369,8 +369,8 @@ new class extends Component {
                 'borderColor' => '#3B82F6',
                 'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
                 'tension' => 0.1,
-                'pointRadius' => 1,
-                'pointHoverRadius' => 3,
+                'pointRadius' => 3,
+                'pointHoverRadius' => 5,
             ],
             [
                 'label' => 'Sensor Kanan',
@@ -378,8 +378,8 @@ new class extends Component {
                 'borderColor' => '#EF4444',
                 'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
                 'tension' => 0.1,
-                'pointRadius' => 1,
-                'pointHoverRadius' => 3,
+                'pointRadius' => 3,
+                'pointHoverRadius' => 5,
             ]
         ];
 
@@ -447,8 +447,8 @@ new class extends Component {
                         'display' => true,
                         'text' => 'Ketebalan (mm)'
                     ],
-                    'min' => 1,
-                    'max' => 5
+                    'min' => 2.5,
+                    'max' => 4.5
                 ]
             ],
             'plugins' => [
@@ -484,7 +484,7 @@ new class extends Component {
         <!-- Left Side: Chart + Data Table (2 columns) -->
         <div class="col-span-2 space-y-6">
             <!-- Chart Container -->
-            <div class="h-80 overflow-hidden bg-white dark:bg-neutral-800 rounded-lg border"
+            <div class="h-80 overflow-hidden"
                 id="batch-chart-container" wire:key="batch-chart-container" wire:ignore>
             </div>
 
@@ -648,4 +648,6 @@ new class extends Component {
             </div>
         </div>
     </div>
+    <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
+    <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
 </div>
