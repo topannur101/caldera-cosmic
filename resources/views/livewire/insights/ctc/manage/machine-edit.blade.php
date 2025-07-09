@@ -29,8 +29,8 @@ new class extends Component {
     #[On('device-edit')]
     public function loadDevice(int $id)
     {
-        // TODO: Replace with actual InsCtcDevice model when backend is ready
-        // $device = InsCtcDevice::find($id);
+        // TODO: Replace with actual InsCtcMachine model when backend is ready
+        // $device = InsCtcMachine::find($id);
         
         // Mock data for development
         $mockDevices = [
@@ -73,8 +73,8 @@ new class extends Component {
 
     public function save()
     {
-        // TODO: Replace with actual InsCtcDevice model when backend is ready
-        // $device = InsCtcDevice::find($this->id);
+        // TODO: Replace with actual InsCtcMachine model when backend is ready
+        // $device = InsCtcMachine::find($this->id);
         // Gate::authorize('manage', $device);
         
         Gate::authorize('superuser');
@@ -93,8 +93,8 @@ new class extends Component {
 
     public function delete()
     {
-        // TODO: Replace with actual InsCtcDevice model when backend is ready
-        // $device = InsCtcDevice::find($this->id);
+        // TODO: Replace with actual InsCtcMachine model when backend is ready
+        // $device = InsCtcMachine::find($this->id);
         // Gate::authorize('manage', $device);
         
         Gate::authorize('superuser');
@@ -134,7 +134,7 @@ new class extends Component {
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
-        <div class="mb-6">
+        <div>
             <div class="mt-6">
                 <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('ID') }}</label>
                 <div class="px-3">{{ $id ?? '?' }}</div>
@@ -168,7 +168,7 @@ new class extends Component {
             </div>
         </div>
         @can('superuser')
-        <div class="flex justify-between items-end">
+        <div class="flex justify-between items-end mt-6">
             <div>
                 <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete" wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
                     {{ __('Hapus') }}

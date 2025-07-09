@@ -23,8 +23,8 @@ new class extends Component {
 
     public function save()
     {
-        // TODO: Replace with actual InsCtcDevice model when backend is ready
-        // $device = new InsCtcDevice;
+        // TODO: Replace with actual InsCtcMachine model when backend is ready
+        // $device = new InsCtcMachine;
         // Gate::authorize('manage', $device);
 
         Gate::authorize('superuser');

@@ -246,6 +246,30 @@ class InsCtcPoll extends Command
             return;
         }
 
+        // Calculate correction uptime percentage
+        $correcting_count = 0;
+        foreach ($batch_data as $record) {
+            if ($record[1]) { // position 1: is_correcting
+                $correcting_count++;
+            }
+        }
+        $correction_uptime = $batch_size > 0 ? (int) round(($correcting_count / $batch_size) * 100) : 0;
+
+        // Count actual corrections by side
+        $correction_left = 0;
+        $correction_right = 0;
+        foreach ($batch_data as $record) {
+            if ($record[2] > 0) $correction_left++;  // action_left > 0
+            if ($record[3] > 0) $correction_right++; // action_right > 0
+        }
+
+        // Calculate correction rate percentage
+        $total_corrections = $correction_left + $correction_right;
+        $correction_rate = $batch_size > 0 ? (int) round(($total_corrections / ($batch_size * 2)) * 100) : 0;
+
+        // Determine is_auto based on correction uptime
+        $is_auto = $correction_uptime > 50;
+
         // Debug statistics if requested
         if ($this->option('d')) {
             $this->line("Statistics calculated:");
@@ -253,7 +277,11 @@ class InsCtcPoll extends Command
                 ['MAE', round($stats['t_mae_left'], 2), round($stats['t_mae_right'], 2), round($stats['t_mae'], 2)],
                 ['SSD', round($stats['t_ssd_left'], 2), round($stats['t_ssd_right'], 2), round($stats['t_ssd'], 2)],
                 ['AVG', round($stats['t_avg_left'], 2), round($stats['t_avg_right'], 2), round($stats['t_avg'], 2)],
-                ['Balance', '', '', round($stats['t_balance'], 2)]
+                ['Balance', '', '', round($stats['t_balance'], 2)],
+                ['Correction Uptime', '', '', $correction_uptime . '%'],
+                ['Correction Count', $correction_left, $correction_right, $correction_left + $correction_right],
+                ['Correction Rate', '', '', $correction_rate . '%'],
+                ['Is Auto', '', '', $is_auto ? 'Yes' : 'No']
             ]);
         }
 
@@ -263,7 +291,7 @@ class InsCtcPoll extends Command
                 'ins_ctc_machine_id' => $machine_id,
                 'ins_rubber_batch_id' => null,
                 'ins_ctc_recipe_id' => $batch_recipe_id,
-                'is_auto' => true,
+                'is_auto' => $is_auto,
                 't_mae_left' => $stats['t_mae_left'] !== null ? round($stats['t_mae_left'], 2) : null,
                 't_mae_right' => $stats['t_mae_right'] !== null ? round($stats['t_mae_right'], 2) : null,
                 't_mae' => $stats['t_mae'] !== null ? round($stats['t_mae'], 2) : null,
@@ -274,7 +302,11 @@ class InsCtcPoll extends Command
                 't_avg_right' => round($stats['t_avg_right'], 2),
                 't_avg' => round($stats['t_avg'], 2),
                 't_balance' => round($stats['t_balance'], 2),
-                'data' => $batch_data // Laravel will automatically json_encode this
+                'data' => $batch_data, // Laravel will automatically json_encode this
+                'correction_uptime' => $correction_uptime,
+                'correction_rate' => $correction_rate,
+                'correction_left' => $correction_left,
+                'correction_right' => $correction_right,
             ]);
 
             $metric->save();

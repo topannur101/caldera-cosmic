@@ -53,7 +53,7 @@ Route::prefix('insights')->group(function () {
     Route::name('insights.ctc.')->group(function () {
 
         Volt::route('/ctc/manage/authorizations',   'insights.ctc.manage.auths')     ->name('manage.auths');
-        Volt::route('/ctc/manage/devices',          'insights.ctc.manage.devices')   ->name('manage.devices');
+        Volt::route('/ctc/manage/machines',         'insights.ctc.manage.machines')  ->name('manage.machines');
         Volt::route('/ctc/manage/recipes',          'insights.ctc.manage.recipes')   ->name('manage.recipes');
         Volt::route('/ctc/manage',                  'insights.ctc.manage.index')     ->name('manage.index');
         Volt::route('/ctc/data/realtime',           'insights.ctc.data.realtime')    ->name('data.realtime');

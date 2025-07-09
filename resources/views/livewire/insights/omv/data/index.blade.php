@@ -18,7 +18,7 @@ class extends Component {
     public function mount()
     {
         $this->view_titles = [        
-            'batch-count'   => __('Jumlah batch'),
+            'batch-count'   => __('Ringkasan batch'),
             'worker-perf'   => __('Performa pekerja'),
             'running-time'  => __('Waktu Jalan'),
             'metrics'       => __('Data mentah'),    

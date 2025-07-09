@@ -34,7 +34,7 @@ new #[Layout('layouts.app')] class extends Component {};
                     </div>
                 </div>
             </x-card-link>
-            <x-card-link href="{{ route('insights.ctc.manage.devices') }}" wire:navigate>
+            <x-card-link href="{{ route('insights.ctc.manage.machines') }}" wire:navigate>
                 <div class="flex px-8">
                     <div>
                         <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
@@ -43,10 +43,10 @@ new #[Layout('layouts.app')] class extends Component {};
                     </div>
                     <div class="grow truncate py-4">
                         <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Kelola perangkat') }}
+                            {{ __('Kelola mesin') }}
                         </div>
                         <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
-                            {{ __('Kelola perangkat yang tersedia di line produksi') }}
+                            {{ __('Kelola mesin yang ada di line produksi') }}
                         </div>
                     </div>
                 </div>

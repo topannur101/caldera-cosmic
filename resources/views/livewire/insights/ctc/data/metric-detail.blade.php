@@ -2,316 +2,554 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
+use App\Models\InsCtcMetric;
+use Carbon\Carbon;
 
 new class extends Component {
     
-    public int $batchId = 0;
+    public int $id = 0;
     public array $batch = [];
 
-    #[On('batch-detail-load')]
-    public function loadBatch($id)
+    #[On('metric-detail-load')]
+    public function loadMetric($id)
     {
-        $this->batchId = $id;
-        $this->loadMockBatchData();
-    }
+        $this->id = $id;
+        $metric = InsCtcMetric::with(['ins_ctc_machine', 'ins_ctc_recipe', 'ins_rubber_batch'])->find($id);
 
-    private function loadMockBatchData(): void
-    {
-        // Mock batch detail data
-        $this->batch = [
-            'id' => $this->batchId,
-            'rubber_batch_code' => 'RB240501A',
-            'device_line' => 3,
-            'recipe_name' => 'AF1 GS (ONE COLOR)',
-            'model' => 'AF1',
-            'color' => 'WHITE',
-            'mcs' => 'GS',
-            'started_at' => '2024-05-01 08:15:00',
-            'ended_at' => '2024-05-01 08:45:30',
-            'duration' => '00:30:30',
-            'shift' => 1,
-            'measurement_count' => 1830,
-            'avg_left' => 3.05,
-            'avg_right' => 3.02,
-            'sd_left' => 0.08,
-            'sd_right' => 0.09,
-            'mae_left' => 0.05,
-            'mae_right' => 0.02,
-            'correction_rate' => 0.15,
-            'quality_status' => 'pass',
-            'worker_override' => false,
-            'operator_name' => 'John Doe',
-            'operator_emp_id' => 'EMP001',
-            'recipe_details' => [
-                'std_min' => 3.0,
-                'std_max' => 3.1,
-                'std_mid' => 3.05,
-                'pfc_min' => 3.4,
-                'pfc_max' => 3.6
-            ],
-            'rubber_batch_details' => [
-                'composition' => [7.5, 12.3, 45.2, 15.1, 8.9, 6.7, 4.3],
-                'open_mill_data' => [
-                    'eval' => 'on_time',
-                    'kwh_usage' => 15.7,
-                    'duration' => '00:12:45'
-                ]
-            ]
-        ];
-
-        // Generate mock chart data
-        $this->generateChartData();
-    }
-
-    private function generateChartData(): void
-    {
-        $measurements = [];
-        $baseTime = strtotime($this->batch['started_at']);
-        
-        for ($i = 0; $i < 100; $i++) {
-            $measurements[] = [
-                'timestamp' => date('H:i:s', $baseTime + ($i * 18)), // Every 18 seconds
-                'sensor_left' => 3.05 + (rand(-15, 15) / 100),
-                'sensor_right' => 3.02 + (rand(-15, 15) / 100),
-                'is_correcting' => rand(0, 100) < 15, // 15% correction rate
+        if ($metric) {
+            $this->batch = [
+                'id' => $metric->id,
+                'rubber_batch_code' => $metric->ins_rubber_batch->code ?? 'N/A',
+                'machine_line' => $metric->ins_ctc_machine->line ?? 'N/A',
+                'mcs' => $metric->ins_rubber_batch->mcs ?? 'N/A',
+                
+                // Recipe information
+                'recipe_id' => $metric->ins_ctc_recipe->id ?? 'N/A',
+                'recipe_name' => $metric->ins_ctc_recipe->name ?? 'N/A',
+                'recipe_target' => $metric->ins_ctc_recipe->std_mid ?? 0,
+                'recipe_std_min' => $metric->ins_ctc_recipe->std_min ?? 0,
+                'recipe_std_max' => $metric->ins_ctc_recipe->std_max ?? 0,
+                'recipe_scale' => $metric->ins_ctc_recipe->scale ?? 0,
+                
+                // Performance metrics
+                't_avg_left' => $metric->t_avg_left,
+                't_avg_right' => $metric->t_avg_right,
+                't_avg' => $metric->t_avg,
+                't_mae_left' => $metric->t_mae_left,
+                't_mae_right' => $metric->t_mae_right,
+                't_mae' => $metric->t_mae,
+                't_ssd_left' => $metric->t_ssd_left,
+                't_ssd_right' => $metric->t_ssd_right,
+                't_ssd' => $metric->t_ssd,
+                't_balance' => $metric->t_balance,
+                
+                // Correction metrics
+                'correction_uptime' => $metric->correction_uptime,
+                'correction_rate' => $metric->correction_rate,
+                
+                // Quality
+                'quality_status' => $metric->t_mae <= 1.0 ? 'pass' : 'fail',
+                
+                // Timing and data
+                'data' => $metric->data,
+                'started_at' => $this->getStartedAt($metric->data),
+                'ended_at' => $this->getEndedAt($metric->data),
+                'duration' => $this->calculateDuration($metric->data),
+                'shift' => $this->determineShift($metric->data),
+                
+                // Correction counts
+                'corrections_left' => $this->countCorrections($metric->data, 'left'),
+                'corrections_right' => $this->countCorrections($metric->data, 'right'),
+                'corrections_total' => $this->countCorrections($metric->data, 'total'),
             ];
+
+            $this->generateChart();
+        } else {
+            $this->handleNotFound();
+        }
+    }
+
+    private function getStartedAt($data): string
+    {
+        if (!$data || !is_array($data) || count($data) === 0) {
+            return 'N/A';
         }
 
-        $chartData = [
-            'measurements' => $measurements,
-            'recipe' => $this->batch['recipe_details']
-        ];
+        $firstTimestamp = $data[0][0] ?? null;
+        
+        if (!$firstTimestamp) {
+            return 'N/A';
+        }
+
+        try {
+            return Carbon::parse($firstTimestamp)->format('H:i:s');
+        } catch (Exception $e) {
+            return 'N/A';
+        }
+    }
+
+    private function getEndedAt($data): string
+    {
+        if (!$data || !is_array($data) || count($data) === 0) {
+            return 'N/A';
+        }
+
+        $lastTimestamp = $data[count($data) - 1][0] ?? null;
+        
+        if (!$lastTimestamp) {
+            return 'N/A';
+        }
+
+        try {
+            return Carbon::parse($lastTimestamp)->format('H:i:s');
+        } catch (Exception $e) {
+            return 'N/A';
+        }
+    }
+
+    private function calculateDuration($data): string
+    {
+        if (!$data || !is_array($data) || count($data) < 2) {
+            return '00:00:00';
+        }
+
+        $firstTimestamp = $data[0][0] ?? null;
+        $lastTimestamp = $data[count($data) - 1][0] ?? null;
+
+        if (!$firstTimestamp || !$lastTimestamp) {
+            return '00:00:00';
+        }
+
+        try {
+            $start = Carbon::parse($firstTimestamp);
+            $end = Carbon::parse($lastTimestamp);
+            $interval = $start->diff($end);
+            
+            return sprintf('%02d:%02d:%02d', 
+                $interval->h, 
+                $interval->i, 
+                $interval->s
+            );
+        } catch (Exception $e) {
+            return '00:00:00';
+        }
+    }
+
+    private function determineShift($data): string
+    {
+        if (!$data || !is_array($data) || count($data) === 0) {
+            return 'N/A';
+        }
+
+        $firstTimestamp = $data[0][0] ?? null;
+        
+        if (!$firstTimestamp) {
+            return 'N/A';
+        }
+
+        try {
+            $hour = Carbon::parse($firstTimestamp)->format('H');
+            $hour = (int) $hour;
+            
+            if ($hour >= 6 && $hour < 14) {
+                return '1';
+            } elseif ($hour >= 14 && $hour < 22) {
+                return '2';
+            } else {
+                return '3';
+            }
+        } catch (Exception $e) {
+            return 'N/A';
+        }
+    }
+
+    private function countCorrections($data, $type = 'total'): int
+    {
+        if (!$data || !is_array($data)) {
+            return 0;
+        }
+
+        $leftCount = 0;
+        $rightCount = 0;
+
+        foreach ($data as $point) {
+            // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, recipe_id]
+            $actionLeft = $point[2] ?? 0;
+            $actionRight = $point[3] ?? 0;
+
+            if ($actionLeft == 1 || $actionLeft == 2) { // 1=thin, 2=thick
+                $leftCount++;
+            }
+            if ($actionRight == 1 || $actionRight == 2) { // 1=thin, 2=thick
+                $rightCount++;
+            }
+        }
+
+        switch ($type) {
+            case 'left':
+                return $leftCount;
+            case 'right':
+                return $rightCount;
+            case 'total':
+            default:
+                return $leftCount + $rightCount;
+        }
+    }
+
+    private function generateChart(): void
+    {
+        if (empty($this->batch['data'])) {
+            return;
+        }
+
+        // Prepare data for Chart.js
+        $chartData = $this->prepareChartData($this->batch['data']);
+        $chartOptions = $this->getChartOptions();
 
         $this->js("
-            updateBatchChart(" . json_encode($chartData) . ");
+            const chartData = " . json_encode($chartData) . ";
+            const chartOptions = " . json_encode($chartOptions) . ";
+            
+            // Add tooltip configuration
+            chartOptions.plugins.tooltip = {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' mm';
+                    },
+                    title: function(context) {
+                        if (!context[0]) return '';
+                        const date = new Date(context[0].parsed.x);
+                        return date.toLocaleTimeString('id-ID', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        });
+                    }
+                }
+            };
+
+            // Render chart
+            const chartContainer = \$wire.\$el.querySelector('#batch-chart-container');
+            chartContainer.innerHTML = '';
+            const canvas = document.createElement('canvas');
+            canvas.id = 'batch-chart';
+            chartContainer.appendChild(canvas);
+            
+            const chart = new Chart(canvas, {
+                type: 'line',
+                data: chartData,
+                options: chartOptions
+            });
         ");
     }
 
-    public function downloadBatchData(): void
+    private function prepareChartData($data): array
     {
-        $this->js('toast("' . __('Data batch diunduh') . '", { type: "success" })');
+        // Transform data for Chart.js
+        $chartData = [];
+        foreach ($data as $point) {
+            // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, recipe_id]
+            $timestamp = $point[0] ?? null;
+            $sensorLeft = $point[4] ?? 0;
+            $sensorRight = $point[5] ?? 0;
+
+            if ($timestamp && ($sensorLeft > 0 || $sensorRight > 0)) {
+                $chartData[] = [
+                    'x' => Carbon::parse($timestamp),
+                    'y' => $sensorLeft,
+                    'side' => 'left'
+                ];
+                $chartData[] = [
+                    'x' => Carbon::parse($timestamp),
+                    'y' => $sensorRight,
+                    'side' => 'right'
+                ];
+            }
+        }
+
+        // Separate left and right data
+        $leftData = array_filter($chartData, fn($item) => $item['side'] === 'left');
+        $rightData = array_filter($chartData, fn($item) => $item['side'] === 'right');
+
+        return [
+            'datasets' => [
+                [
+                    'label' => 'Sensor Kiri',
+                    'data' => array_values($leftData),
+                    'borderColor' => '#3B82F6',
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                    'tension' => 0.1,
+                    'pointRadius' => 1,
+                    'pointHoverRadius' => 3,
+                ],
+                [
+                    'label' => 'Sensor Kanan',
+                    'data' => array_values($rightData),
+                    'borderColor' => '#EF4444',
+                    'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
+                    'tension' => 0.1,
+                    'pointRadius' => 1,
+                    'pointHoverRadius' => 3,
+                ]
+            ]
+        ];
     }
 
-    public function printBatch(): void
+    private function getChartOptions(): array
     {
-        $this->dispatch('batch-print-prepare', $this->batch);
+        $stdMin = $this->batch['recipe_std_min'] ?? 0;
+        $stdMax = $this->batch['recipe_std_max'] ?? 0;
+
+        return [
+            'responsive' => true,
+            'maintainAspectRatio' => false,
+            'scales' => [
+                'x' => [
+                    'type' => 'time',
+                    'time' => [
+                        'displayFormats' => [
+                            'hour' => 'HH:mm',
+                            'minute' => 'HH:mm'
+                        ]
+                    ],
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Waktu'
+                    ]
+                ],
+                'y' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Ketebalan (mm)'
+                    ],
+                    'beginAtZero' => false
+                ]
+            ],
+            'plugins' => [
+                'datalabels' => [
+                    'display' => false
+                ],
+                'legend' => [
+                    'display' => true,
+                    'position' => 'top'
+                ],
+                'annotation' => [
+                    'annotations' => [
+                        'toleranceZone' => [
+                            'type' => 'box',
+                            'yMin' => $stdMin,
+                            'yMax' => $stdMax,
+                            'backgroundColor' => 'rgba(255, 193, 7, 0.2)',
+                            'borderColor' => 'rgba(255, 193, 7, 0.8)',
+                            'borderWidth' => 1,
+                            'label' => [
+                                'enabled' => true,
+                                'content' => 'Standar',
+                                'position' => 'start'
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
     }
+
+    public function customReset()
+    {
+        $this->reset(['id', 'batch']);
+    }
+
+    public function handleNotFound()
+    {
+        $this->js('$dispatch("close")');
+        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
+        $this->dispatch('updated');
+    }
+
+    // public function downloadBatchData()
+    // {
+    //     $this->js('toast("' . __('Data batch diunduh') . '", { type: "success" })');
+    // }
+
+    // public function printBatch()
+    // {
+    //     $this->js("window.print()");
+    // }
 };
 
 ?>
 
 <div class="p-6">
-    <div class="flex justify-between items-start">
-        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            {{ __('Detail Gilingan') }}
-        </h2>
-        <x-text-button type="button" x-on:click="$dispatch('close')">
-            <i class="icon-x"></i>
-        </x-text-button>
-    </div>
+    @if (!empty($batch))
+        <div class="flex justify-between items-start mb-6">
+            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                {{ __('Rincian Batch') }}
+            </h2>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
+        </div>
 
-    @if($batch)
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
-            {{-- Chart Area --}}
-            <div class="col-span-2">
-                <div class="h-80 overflow-hidden" id="batch-chart-container" wire:ignore></div>
-                
-                {{-- Quality Metrics Table --}}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Side: Chart + Data Table (2 columns) -->
+            <div class="col-span-2 space-y-6">
+                <!-- Chart Container -->
+                <div class="h-80 overflow-hidden bg-white dark:bg-neutral-800 rounded-lg border"
+                    id="batch-chart-container" wire:key="batch-chart-container" wire:ignore>
+                </div>
+
+                <!-- Performance Data Table -->
                 <table class="table table-xs text-sm text-center mt-6">
                     <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
-                        <td>{{ __('Metrik') }}</td>
+                        <td></td>
                         <td>{{ __('Kiri') }}</td>
                         <td>{{ __('Kanan') }}</td>
-                        <td>{{ __('Standar') }}</td>
+                        <td>{{ __('Gabungan') }}</td>
                     </tr>
                     <tr>
                         <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('AVG') }}</td>
-                        <td class="font-mono">{{ number_format($batch['avg_left'], 2) }}</td>
-                        <td class="font-mono">{{ number_format($batch['avg_right'], 2) }}</td>
-                        <td class="font-mono">{{ $batch['recipe_details']['std_mid'] }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SD') }}</td>
-                        <td class="font-mono">{{ number_format($batch['sd_left'], 2) }}</td>
-                        <td class="font-mono">{{ number_format($batch['sd_right'], 2) }}</td>
-                        <td class="font-mono">{{ $batch['recipe_details']['std_min'] }} - {{ $batch['recipe_details']['std_max'] }}</td>
+                        <td>{{ number_format($batch['t_avg_left'], 2) }}</td>
+                        <td>{{ number_format($batch['t_avg_right'], 2) }}</td>
+                        <td>{{ number_format($batch['t_avg'], 2) }}</td>
                     </tr>
                     <tr>
                         <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('MAE') }}</td>
-                        <td class="font-mono">{{ number_format($batch['mae_left'], 2) }}</td>
-                        <td class="font-mono">{{ number_format($batch['mae_right'], 2) }}</td>
-                        <td class="text-neutral-400">-</td>
+                        <td>{{ number_format($batch['t_mae_left'], 2) }}</td>
+                        <td>{{ number_format($batch['t_mae_right'], 2) }}</td>
+                        <td>{{ number_format($batch['t_mae'], 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SSD') }}</td>
+                        <td>{{ number_format($batch['t_ssd_left'], 2) }}</td>
+                        <td>{{ number_format($batch['t_ssd_right'], 2) }}</td>
+                        <td>{{ number_format($batch['t_ssd'], 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('Koreksi') }}</td>
+                        <td>{{ $batch['corrections_left'] }}</td>
+                        <td>{{ $batch['corrections_right'] }}</td>
+                        <td>{{ $batch['corrections_total'] }}</td>
                     </tr>
                 </table>
             </div>
 
-            {{-- Batch Information --}}
-            <div>
-                <div class="grid grid-cols-1 gap-6">
-                    {{-- Basic Info --}}
-                    <div>
-                        <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Informasi Batch') }}</div>
-                        <div class="space-y-2 text-sm">
-                            <div>
-                                <span class="text-neutral-500">{{ __('Kode:') }}</span>
-                                <span class="font-medium">{{ $batch['rubber_batch_code'] }}</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Line:') }}</span>
-                                <span class="font-medium">{{ $batch['device_line'] }}</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Model:') }}</span>
-                                <span class="font-medium">{{ $batch['model'] }}</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Warna:') }}</span>
-                                <span class="font-medium">{{ $batch['color'] }}</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('MCS:') }}</span>
-                                <span class="font-medium">{{ $batch['mcs'] }}</span>
-                            </div>
+            <!-- Right Side: Info Panels (1 column) -->
+            <div class="space-y-6">
+                <!-- Batch Information -->
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Informasi Batch') }}</div>
+                    <div class="space-y-2 text-sm">
+                        <div>
+                            <span class="text-neutral-500">{{ __('Batch:') }}</span>
+                            <span class="font-medium">{{ $batch['rubber_batch_code'] }}</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('Line:') }}</span>
+                            <span class="font-medium">{{ $batch['machine_line'] }}</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('MCS:') }}</span>
+                            <span class="font-medium">{{ $batch['mcs'] }}</span>
                         </div>
                     </div>
+                </div>
 
-                    {{-- Timing --}}
-                    <div>
-                        <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Waktu Proses') }}</div>
-                        <div class="space-y-2 text-sm">
-                            <div>
-                                <span class="text-neutral-500">{{ __('Mulai:') }}</span>
-                                <span class="font-mono">{{ $batch['started_at'] }}</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Selesai:') }}</span>
-                                <span class="font-mono">{{ $batch['ended_at'] }}</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Durasi:') }}</span>
-                                <span class="font-mono">{{ $batch['duration'] }}</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Shift:') }}</span>
-                                <span class="font-medium">{{ $batch['shift'] }}</span>
-                            </div>
+                <!-- Timing Information -->
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Waktu Proses') }}</div>
+                    <div class="space-y-2 text-sm">
+                        <div>
+                            <span class="text-neutral-500">{{ __('Mulai:') }}</span>
+                            <span class="font-mono">{{ $batch['started_at'] }}</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('Selesai:') }}</span>
+                            <span class="font-mono">{{ $batch['ended_at'] }}</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('Durasi:') }}</span>
+                            <span class="font-mono">{{ $batch['duration'] }}</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('Shift:') }}</span>
+                            <span class="font-medium">{{ $batch['shift'] }}</span>
                         </div>
                     </div>
+                </div>
 
-                    {{-- Recipe & Operator --}}
-                    <div>
-                        <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Resep & Operator') }}</div>
-                        <div class="space-y-2 text-sm">
-                            <div>
-                                <span class="text-neutral-500">{{ __('Resep:') }}</span>
-                                <span class="font-medium">{{ $batch['recipe_name'] }}</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Status:') }}</span>
-                                @if($batch['worker_override'])
-                                    <span class="text-yellow-600">{{ __('Override') }}</span>
-                                @else
-                                    <span class="text-green-600">{{ __('Rekomendasi') }}</span>
-                                @endif
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Operator:') }}</span>
-                                <span class="font-medium">{{ $batch['operator_name'] }}</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('ID:') }}</span>
-                                <span class="font-mono">{{ $batch['operator_emp_id'] }}</span>
-                            </div>
+                <!-- Correction & Quality -->
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Koreksi & Kualitas') }}</div>
+                    <div class="space-y-2 text-sm">
+                        <div>
+                            <span class="text-neutral-500">{{ __('BAL:') }}</span>
+                            <span class="font-mono">{{  number_format($batch['t_balance'], 2) }} mm</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('CU:') }}</span>
+                            <span class="font-mono">{{ $batch['correction_uptime'] }}%</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('CR:') }}</span>
+                            <span class="font-mono">{{ $batch['correction_rate'] }}%</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('Quality Status:') }}</span>
+                            @if($batch['quality_status'] === 'pass')
+                                <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{{ __('Lulus') }}</span>
+                            @else
+                                <span class="inline-flex px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">{{ __('Gagal') }}</span>
+                            @endif
+                        </div>
+                        <div>
+                            <span class="text-neutral-500"></span>
+                            @if($batch['quality_status'] === 'pass')
+                                <span class="text-xs text-green-600">{{ __('MAE ≤ 1 mm') }}</span>
+                            @else
+                                <span class="text-xs text-red-600">{{ __('MAE > 1 mm') }}</span>
+                            @endif
                         </div>
                     </div>
+                </div>
 
-                    {{-- Quality Status --}}
-                    <div>
-                        <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Status Kualitas') }}</div>
-                        <div class="space-y-2 text-sm">
-                            <div>
-                                @if($batch['quality_status'] === 'pass')
-                                    <span class="inline-flex px-3 py-1 text-sm bg-green-100 text-green-800 rounded-full">
-                                        <i class="icon-check-circle mr-1"></i>{{ __('Lulus') }}
-                                    </span>
-                                @else
-                                    <span class="inline-flex px-3 py-1 text-sm bg-red-100 text-red-800 rounded-full">
-                                        <i class="icon-x-circle mr-1"></i>{{ __('Gagal') }}
-                                    </span>
-                                @endif
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Koreksi:') }}</span>
-                                <span class="font-mono">{{ number_format($batch['correction_rate'] * 100, 1) }}%</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Pembacaan:') }}</span>
-                                <span class="font-mono">{{ number_format($batch['measurement_count']) }}</span>
-                            </div>
+                <!-- Recipe Information -->
+                <div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Informasi Resep') }}</div>
+                    <div class="space-y-2 text-sm">
+                        <div>
+                            <span class="text-neutral-500">{{ __('Recipe ID:') }}</span>
+                            <span class="font-medium">{{ $batch['recipe_id'] }}</span>
                         </div>
-                    </div>
-
-                    {{-- Integration Data --}}
-                    <div>
-                        <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Data Open Mill') }}</div>
-                        <div class="space-y-2 text-sm">
-                            <div>
-                                <span class="text-neutral-500">{{ __('Evaluasi:') }}</span>
-                                <span class="font-medium capitalize">{{ str_replace('_', ' ', $batch['rubber_batch_details']['open_mill_data']['eval']) }}</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Energi:') }}</span>
-                                <span class="font-mono">{{ $batch['rubber_batch_details']['open_mill_data']['kwh_usage'] }} kWh</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('Durasi OM:') }}</span>
-                                <span class="font-mono">{{ $batch['rubber_batch_details']['open_mill_data']['duration'] }}</span>
-                            </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('Name:') }}</span>
+                            <span class="font-medium">{{ $batch['recipe_name'] }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Action Buttons --}}
-        <div class="flex gap-x-3 justify-end items-end mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+        <!-- Modal Footer -->
+        <!-- <div class="flex justify-end items-end mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
             <x-secondary-button type="button" wire:click="downloadBatchData">
                 <i class="icon-download me-2"></i>{{ __('Unduh Data') }}
             </x-secondary-button>
             <x-primary-button type="button" wire:click="printBatch">
                 <i class="icon-printer me-2"></i>{{ __('Cetak') }}
             </x-primary-button>
+        </div> -->
+    @else
+        <div class="flex justify-between items-start mb-6">
+            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                {{ __('Rincian Batch') }}
+            </h2>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
+        </div>
+        
+        <div class="py-20 text-center">
+            <div class="text-neutral-500">{{ __('Memuat data...') }}</div>
         </div>
     @endif
 
     <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
 </div>
-
-<script>
-    function updateBatchChart(data) {
-        // Mock chart implementation - will be replaced with actual charting library
-        const container = document.getElementById('batch-chart-container');
-        if (container) {
-            const measurements = data.measurements;
-            const recipe = data.recipe;
-            
-            container.innerHTML = `
-                <div class="flex items-center justify-center h-full bg-neutral-50 dark:bg-neutral-700 rounded">
-                    <div class="text-center">
-                        <div class="text-lg font-medium mb-2">Batch Chart Placeholder</div>
-                        <div class="text-sm text-neutral-500 mb-2">
-                            ${measurements.length} measurements from ${measurements[0].timestamp} to ${measurements[measurements.length-1].timestamp}
-                        </div>
-                        <div class="text-xs text-neutral-400">
-                            Standard Range: ${recipe.std_min} - ${recipe.std_max} mm
-                        </div>
-                        <div class="text-xs text-neutral-400 mt-1">
-                            Final Values: L:${measurements[measurements.length-1].sensor_left.toFixed(2)} R:${measurements[measurements.length-1].sensor_right.toFixed(2)}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-    }
-</script>
