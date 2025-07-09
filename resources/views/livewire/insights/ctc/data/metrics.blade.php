@@ -32,9 +32,6 @@ new #[Layout('layouts.app')] class extends Component {
     #[Url]
     public string $mcs = '';
 
-    #[Url]
-    public string $quality_status = '';
-
     public array $machines = [];
     public int $perPage = 20;
 
@@ -78,14 +75,6 @@ new #[Layout('layouts.app')] class extends Component {
 
         if ($this->mcs) {
             $query->where('ins_rubber_batches.mcs', $this->mcs);
-        }
-
-        if ($this->quality_status) {
-            if ($this->quality_status === 'pass') {
-                $query->where('ins_ctc_metrics.t_mae', '<=', 1.0);
-            } else {
-                $query->where('ins_ctc_metrics.t_mae', '>', 1.0);
-            }
         }
 
         return $query->orderBy('ins_ctc_metrics.created_at', 'DESC');
@@ -272,15 +261,6 @@ new #[Layout('layouts.app')] class extends Component {
                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
                     <x-text-input wire:model.live="mcs" class="w-full lg:w-20" />
                 </div>
-                
-                <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Kualitas') }}</label>
-                    <x-select wire:model.live="quality_status" class="w-full lg:w-24">
-                        <option value=""></option>
-                        <option value="pass">{{ __('Lulus') }}</option>
-                        <option value="fail">{{ __('Gagal') }}</option>
-                    </x-select>
-                </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grow flex justify-between gap-x-2 items-center">
@@ -462,11 +442,37 @@ new #[Layout('layouts.app')] class extends Component {
                             <td>{{ $metric->machine_line ?? 'N/A' }}</td>
                             <td class="max-w-32 truncate" title="{{ $metric->recipe_name }}">{{ $metric->recipe_name ?? 'N/A' }}</td>
                             <td>{{ $metric->batch_mcs ?? 'N/A' }}</td>
-                            <td class="font-mono">{{ number_format($metric->t_avg_left, 2) }} | {{ number_format($metric->t_avg_right, 2) }}</td>
-                            <td class="font-mono">{{ number_format($metric->t_mae_left, 2) }} | {{ number_format($metric->t_mae_right, 2) }}</td>
-                            <td class="font-mono">{{ number_format($metric->t_ssd_left, 2) }} | {{ number_format($metric->t_ssd_right, 2) }}</td>
+                            @php
+                                $avgEval = $metric->avg_evaluation;
+                                $maeEval = $metric->mae_evaluation;
+                                $ssdEval = $metric->ssd_evaluation;
+                                $cuEval = $metric->correction_evaluation;
+                            @endphp
+                            <td class="font-mono whitespace-nowrap">
+                                <div class="flex items-center gap-1">
+                                    <i class="{{ ($avgEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
+                                    <span>{{ number_format($metric->t_avg_left, 2) }} | {{ number_format($metric->t_avg_right, 2) }}</span>
+                                </div>
+                            </td>
+                            <td class="font-mono whitespace-nowrap">
+                                <div class="flex items-center gap-1">
+                                    <i class="{{ ($maeEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
+                                    <span>{{ number_format($metric->t_mae_left, 2) }} | {{ number_format($metric->t_mae_right, 2) }}</span>
+                                </div>
+                            </td>
+                            <td class="font-mono whitespace-nowrap">
+                                <div class="flex items-center gap-1">
+                                    <i class="{{ ($ssdEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
+                                    <span>{{ number_format($metric->t_ssd_left, 2) }} | {{ number_format($metric->t_ssd_right, 2) }}</span>
+                                </div>
+                            </td>
                             <td class="font-mono">{{ number_format($metric->t_balance, 2) }}</td>
-                            <td class="font-mono">{{ $metric->correction_uptime }}%</td>
+                            <td class="font-mono whitespace-nowrap">
+                                <div class="flex items-center gap-1">
+                                    <i class="{{ ($cuEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
+                                    <span>{{ $metric->correction_uptime }}%</span>
+                                </div>
+                            </td>
                             <td class="font-mono">{{ $metric->correction_rate }}%</td>
                             <td class="font-mono">{{ $this->calculateDuration($metric->data) }}</td>
                             <td class="font-mono">{{ $metric->created_at }}</td>

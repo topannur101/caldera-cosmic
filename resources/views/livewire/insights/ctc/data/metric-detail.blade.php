@@ -287,6 +287,20 @@ new class extends Component {
                 }
             };
 
+            // Show ▲ or ▼ labels on action points
+            chartOptions.plugins.datalabels.display = function(ctx) {
+                return ctx.raw && (ctx.raw.action === 1 || ctx.raw.action === 2);
+            };
+            chartOptions.plugins.datalabels.formatter = function(value, ctx) {
+                if (!ctx.raw) return '';
+                if (ctx.raw.action === 2) return '\u25B2';
+                if (ctx.raw.action === 1) return '\u25BC';
+                return '';
+            };
+            chartOptions.plugins.datalabels.color = function(ctx) {
+                return ctx.dataset.borderColor;
+            };
+
             // Render chart
             const chartContainer = \$wire.\$el.querySelector('#batch-chart-container');
             chartContainer.innerHTML = '';
@@ -313,6 +327,8 @@ new class extends Component {
         foreach ($data as $point) {
             // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, recipe_id, std_min, std_max, std_mid]
             $timestamp = $point[0] ?? null;
+            $actionLeft = $point[2] ?? 0;
+            $actionRight = $point[3] ?? 0;
             $sensorLeft = $point[4] ?? 0;
             $sensorRight = $point[5] ?? 0;
             
@@ -327,12 +343,14 @@ new class extends Component {
                 $chartData[] = [
                     'x' => $parsedTime,
                     'y' => $sensorLeft,
-                    'side' => 'left'
+                    'side' => 'left',
+                    'action' => $actionLeft
                 ];
                 $chartData[] = [
                     'x' => $parsedTime,
                     'y' => $sensorRight,
-                    'side' => 'right'
+                    'side' => 'right',
+                    'action' => $actionRight
                 ];
 
                 // Add std data only if values exist
@@ -369,8 +387,9 @@ new class extends Component {
                 'borderColor' => '#3B82F6',
                 'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
                 'tension' => 0.1,
-                'pointRadius' => 3,
-                'pointHoverRadius' => 5,
+                'pointRadius' => 2,
+                'pointHoverRadius' => 3,
+                'borderWidth' => 1,
             ],
             [
                 'label' => 'Sensor Kanan',
@@ -378,8 +397,9 @@ new class extends Component {
                 'borderColor' => '#EF4444',
                 'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
                 'tension' => 0.1,
-                'pointRadius' => 3,
-                'pointHoverRadius' => 5,
+                'pointRadius' => 2,
+                'pointHoverRadius' => 3,
+                'borderWidth' => 1,
             ]
         ];
 
@@ -453,7 +473,9 @@ new class extends Component {
             ],
             'plugins' => [
                 'datalabels' => [
-                    'display' => false
+                    'display' => true,
+                    'anchor' => 'end',
+                    'align' => 'top'
                 ],
                 'legend' => [
                     'display' => true,

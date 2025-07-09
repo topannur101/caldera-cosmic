@@ -17,15 +17,11 @@ class extends Component {
     {
         $this->view_titles = [  
             'recents'   => __('Batch terkini'),
-            // 'realtime'  => __('Waktu nyata'),
-            'quality'   => __('Analisis kualitas'),
             'metrics'   => __('Data mentah'),
         ];
 
         $this->view_icons = [
             'recents'   => 'icon-clock',
-            // 'realtime'  => 'icon-radio',
-            'quality'   => 'icon-shield-check',
             'metrics'   => 'icon-database',
         ];
     }
@@ -81,12 +77,7 @@ class extends Component {
     <div wire:key="ctc-data-container" wire:loading.class="hidden">
         @switch($view)
             @case('recents')
-                @break
-            @case('realtime')
-                <livewire:insights.ctc.data.realtime />
-                @break
-            @case('quality')
-                <livewire:insights.ctc.data.quality />
+                <livewire:insights.ctc.data.recents />
                 @break
             @case('metrics')
                 <livewire:insights.ctc.data.metrics />
