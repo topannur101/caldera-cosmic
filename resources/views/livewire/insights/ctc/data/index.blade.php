@@ -17,22 +17,22 @@ class extends Component {
     {
         $this->view_titles = [
             'recents'               => __('Batch terkini'),
+            'evaluation'            => __('Evaluasi'), // quality compared with production
             'batch-analytics'       => __('Analitik Batch'),
-            'recipe-analytics'      => __('Analitik Resep'),
             'correction-analytics'  => __('Analitik Koreksi'), // correction efficiency
-            'quality-analytics'     => __('Analitik Kualitas'), // quality compared with production
             'machine-performance'   => __('Kinerja Mesin'),
             'metrics'               => __('Data mentah'),
+            // 'recipe-analytics'      => __('Analitik Resep'),
         ];
 
         $this->view_icons = [
             'recents'               => 'icon-clock',
-            'machine-performance'   => 'icon-zap',
-            'recipe-analytics'      => 'icon-book',
-            'correction-analytics' => 'icon-file-sliders',
-            'quality-analytics'    => 'icon-chart-line',
+            'evaluation'            => 'icon-shield-check',
             'batch-analytics'       => 'icon-layers',
+            'correction-analytics'  => 'icon-file-sliders',
+            'machine-performance'   => 'icon-zap',
             'metrics'               => 'icon-database',
+            'recipe-analytics'      => 'icon-book',
         ];
     }
 
@@ -104,8 +104,8 @@ class extends Component {
             @case('correction-analytics')
                 <livewire:insights.ctc.data.correction-analytics />
                 @break
-            @case('quality-analytics')
-                <livewire:insights.ctc.data.quality-analytics />
+            @case('evaluation')
+                <livewire:insights.ctc.data.evaluation />
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">
