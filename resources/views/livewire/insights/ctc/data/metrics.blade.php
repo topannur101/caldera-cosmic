@@ -451,7 +451,6 @@ new #[Layout('layouts.app')] class extends Component {
                         <th>{{ __('CR') }}</th>
                         <th>{{ __('Durasi') }}</th>
                         <th>{{ __('Dibuat') }}</th>
-                        <th>{{ __('Kualitas') }}</th>
                     </tr>
                     @foreach ($metrics as $metric)
                         <tr wire:key="metric-tr-{{ $metric->id }}" tabindex="0"
@@ -471,13 +470,6 @@ new #[Layout('layouts.app')] class extends Component {
                             <td class="font-mono">{{ $metric->correction_rate }}%</td>
                             <td class="font-mono">{{ $this->calculateDuration($metric->data) }}</td>
                             <td class="font-mono">{{ $metric->created_at }}</td>
-                            <td>
-                                @if($metric->t_mae <= 1.0)
-                                    <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{{ __('Lulus') }}</span>
-                                @else
-                                    <span class="inline-flex px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">{{ __('Gagal') }}</span>
-                                @endif
-                            </td>
                         </tr>
                     @endforeach
                 </table>

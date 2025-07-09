@@ -190,7 +190,7 @@ class InsCtcMetric extends Model
         
         if ($mae <= 1.0) {
             return [
-                'status' => 'di dalam standar',
+                'status' => 'sesuai standar',
                 'color' => 'text-green-600',
                 'icon_color' => 'text-green-500',
                 'is_good' => true

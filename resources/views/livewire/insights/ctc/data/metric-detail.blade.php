@@ -497,6 +497,7 @@ new class extends Component {
                     <td>{{ __('Gabungan') }}</td>
                     <td>{{ __('Evaluasi') }}</td>
                 </tr>
+                <!-- AVG Evaluation Row -->
                 <tr>
                     <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('AVG') }}</td>
                     <td>{{ number_format($batch['t_avg_left'], 2) }}</td>
@@ -507,11 +508,13 @@ new class extends Component {
                             $avgEval = $metric?->avg_evaluation;
                         @endphp
                         <div class="flex items-center gap-2">
-                            <i class="icon-check-circle {{ $avgEval['icon_color'] ?? '' }}"></i>
+                            <i class="{{ ($avgEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
                             <span class="{{ $avgEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($avgEval['status'] ?? '') }}</span>
                         </div>
                     </td>
                 </tr>
+
+                <!-- MAE Evaluation Row -->
                 <tr>
                     <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('MAE') }}</td>
                     <td>{{ number_format($batch['t_mae_left'], 2) }}</td>
@@ -522,11 +525,13 @@ new class extends Component {
                             $maeEval = $metric?->mae_evaluation;
                         @endphp
                         <div class="flex items-center gap-2">
-                            <i class="icon-check-circle {{ $maeEval['icon_color'] ?? '' }}"></i>
+                            <i class="{{ ($maeEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
                             <span class="{{ $maeEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($maeEval['status'] ?? '') }}</span>
                         </div>
                     </td>
                 </tr>
+
+                <!-- SSD Evaluation Row -->
                 <tr>
                     <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SSD') }}</td>
                     <td>{{ number_format($batch['t_ssd_left'], 2) }}</td>
@@ -537,11 +542,13 @@ new class extends Component {
                             $ssdEval = $metric?->ssd_evaluation;
                         @endphp
                         <div class="flex items-center gap-2">
-                            <i class="icon-check-circle {{ $ssdEval['icon_color'] ?? '' }}"></i>
+                            <i class="{{ ($ssdEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
                             <span class="{{ $ssdEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($ssdEval['status'] ?? '') }}</span>
                         </div>
                     </td>
                 </tr>
+
+                <!-- Correction Evaluation Row -->
                 <tr>
                     <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('Koreksi') }}</td>
                     <td>{{ $batch['corrections_left'] }}</td>
@@ -552,7 +559,7 @@ new class extends Component {
                             $correctionEval = $metric?->correction_evaluation;
                         @endphp
                         <div class="flex items-center gap-2">
-                            <i class="icon-check-circle {{ $correctionEval['icon_color'] ?? '' }}"></i>
+                            <i class="{{ ($correctionEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
                             <span class="{{ $correctionEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($correctionEval['status'] ?? '') }}</span>
                         </div>
                     </td>
