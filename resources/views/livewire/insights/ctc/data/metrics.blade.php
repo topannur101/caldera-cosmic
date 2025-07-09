@@ -296,6 +296,10 @@ new #[Layout('layouts.app')] class extends Component {
                             <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>
                         </x-slot>
                         <x-slot name="content">
+                            <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-slide-over', 'metrics-info')">
+                                <i class="icon-info me-2"></i>{{ __('Penjelasan Metrik') }}
+                            </x-dropdown-link>
+                            <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="download('metrics')">
                                 <i class="icon-download me-2"></i>{{ __('CSV Metrik') }}
                             </x-dropdown-link>
@@ -309,6 +313,106 @@ new #[Layout('layouts.app')] class extends Component {
         <x-modal name="metric-detail" maxWidth="3xl">
             <livewire:insights.ctc.data.metric-detail />
         </x-modal>
+        <x-slide-over name="metrics-info">
+            <div class="p-6 overflow-auto">
+                <div class="flex justify-between items-start mb-6">
+                    <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        {{ __('Penjelasan Metrik') }}
+                    </h2>
+                    <x-text-button type="button" x-on:click="window.dispatchEvent(escKey)">
+                        <i class="icon-x"></i>
+                    </x-text-button>
+                </div>
+                
+                <div class="space-y-6 text-sm text-neutral-600 dark:text-neutral-400">
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('MAE (Mean Average Error)') }}</h3>
+                        <p class="mb-2">{{ __('Rata-rata kesalahan dari target ketebalan. Mengukur seberapa dekat hasil produksi dengan target yang ditetapkan.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Rumus: Average of |actual_thickness - target_thickness|') }}<br>
+                            {{ __('Unit: mm') }}<br>
+                            {{ __('Kualitas: ≤ 1.0 mm = Lulus, > 1.0 mm = Gagal') }}<br>
+                            {{ __('Interpretasi: Nilai lebih rendah = akurasi lebih baik') }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('SSD (Sample Standard Deviation)') }}</h3>
+                        <p class="mb-2">{{ __('Standar deviasi sampel yang mengukur konsistensi ketebalan. Menunjukkan seberapa konsisten hasil produksi.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Unit: mm') }}<br>
+                            {{ __('Interpretasi: Nilai lebih rendah = konsistensi lebih baik') }}<br>
+                            {{ __('Fungsi: Mengidentifikasi variabilitas dalam proses produksi') }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('AVG (Average Thickness)') }}</h3>
+                        <p class="mb-2">{{ __('Ketebalan rata-rata aktual yang dihasilkan selama proses produksi.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Unit: mm') }}<br>
+                            {{ __('Format: Left side | Right side') }}<br>
+                            {{ __('Fungsi: Menunjukkan ketebalan rata-rata pada setiap sisi') }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('BAL (Balance)') }}</h3>
+                        <p class="mb-2">{{ __('Keseimbangan ketebalan antara sisi kiri dan kanan. Mengukur perbedaan ketebalan antar sisi.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Rumus: Left thickness - Right thickness') }}<br>
+                            {{ __('Unit: mm') }}<br>
+                            {{ __('Ideal: Mendekati 0 mm (balanced)') }}<br>
+                            {{ __('Positif: Sisi kiri lebih tebal, Negatif: Sisi kanan lebih tebal') }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('CU (Correction Uptime)') }}</h3>
+                        <p class="mb-2">{{ __('Persentase waktu sistem koreksi otomatis dinyalakan. Mengukur seberapa lama sistem auto correction aktif.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Unit: %') }}<br>
+                            {{ __('Interpretasi: Nilai tinggi = sistem auto correction lebih lama aktif') }}<br>
+                            {{ __('Fungsi: Monitoring utilisasi sistem koreksi otomatis') }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('CR (Correction Rate)') }}</h3>
+                        <p class="mb-2">{{ __('Tingkat frekuensi koreksi otomatis ditrigger. Seberapa sering koreksi auto dilakukan.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Unit: %') }}<br>
+                            {{ __('Fungsi: Mengukur frekuensi aktivasi koreksi otomatis') }}<br>
+                            {{ __('Analisis: Membantu evaluasi performa sistem koreksi') }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Quality Status (Status Kualitas)') }}</h3>
+                        <p class="mb-2">{{ __('Status kualitas batch berdasarkan nilai MAE. Menentukan apakah batch memenuhi standar kualitas.') }}</p>
+                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
+                            {{ __('Pass (Lulus): MAE ≤ 1.0 mm') }}<br>
+                            {{ __('Fail (Gagal): MAE > 1.0 mm') }}<br>
+                            {{ __('Basis: Threshold MAE untuk menentukan kualitas batch') }}
+                        </div>
+                    </div>
+
+                    <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Indikator Warna Kualitas') }}</h3>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-green-500 rounded mr-2"></div>
+                                <span>{{ __('Hijau: Pass - MAE ≤ 1.0 mm (Kualitas Baik)') }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-red-500 rounded mr-2"></div>
+                                <span>{{ __('Merah: Fail - MAE > 1.0 mm (Perlu Perhatian)') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </x-slide-over>
     </div>
 
     @if (!$metrics->count())
