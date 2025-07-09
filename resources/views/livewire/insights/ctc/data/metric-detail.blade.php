@@ -443,12 +443,12 @@ new class extends Component {
                             <span class="font-medium">{{ $batch['rubber_batch_code'] }}</span>
                         </div>
                         <div>
-                            <span class="text-neutral-500">{{ __('Line:') }}</span>
-                            <span class="font-medium">{{ $batch['machine_line'] }}</span>
-                        </div>
-                        <div>
                             <span class="text-neutral-500">{{ __('MCS:') }}</span>
                             <span class="font-medium">{{ $batch['mcs'] }}</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('Line:') }}</span>
+                            <span class="font-medium">{{ $batch['machine_line'] }}</span>
                         </div>
                     </div>
                 </div>
@@ -478,20 +478,8 @@ new class extends Component {
 
                 <!-- Correction & Quality -->
                 <div>
-                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Koreksi & Kualitas') }}</div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Kualitas & Koreksi') }}</div>
                     <div class="space-y-2 text-sm">
-                        <div>
-                            <span class="text-neutral-500">{{ __('BAL:') }}</span>
-                            <span class="font-mono">{{  number_format($batch['t_balance'], 2) }} mm</span>
-                        </div>
-                        <div>
-                            <span class="text-neutral-500">{{ __('CU:') }}</span>
-                            <span class="font-mono">{{ $batch['correction_uptime'] }}%</span>
-                        </div>
-                        <div>
-                            <span class="text-neutral-500">{{ __('CR:') }}</span>
-                            <span class="font-mono">{{ $batch['correction_rate'] }}%</span>
-                        </div>
                         <div>
                             @if($batch['quality_status'] === 'pass')
                                 <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{{ __('Lulus') }}</span>
@@ -503,6 +491,20 @@ new class extends Component {
                             @else
                                 <span class="text-xs text-red-600">{{ __('MAE > 1 mm') }}</span>
                             @endif
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('BAL:') }}</span>
+                            <span class="font-mono">{{  number_format($batch['t_balance'], 2) }} mm</span>
+                        </div>
+                        <div class="flex gap-x-3">
+                            <div>
+                                <span class="text-neutral-500">{{ __('CU:') }}</span>
+                                <span class="font-mono">{{ $batch['correction_uptime'] }}%</span>
+                            </div>
+                            <div>
+                                <span class="text-neutral-500">{{ __('CR:') }}</span>
+                                <span class="font-mono">{{ $batch['correction_rate'] }}%</span>
+                            </div>
                         </div>
                     </div>
                 </div>
