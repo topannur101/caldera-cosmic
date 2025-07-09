@@ -493,15 +493,11 @@ new class extends Component {
                             <span class="font-mono">{{ $batch['correction_rate'] }}%</span>
                         </div>
                         <div>
-                            <span class="text-neutral-500">{{ __('Quality Status:') }}</span>
                             @if($batch['quality_status'] === 'pass')
                                 <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{{ __('Lulus') }}</span>
                             @else
                                 <span class="inline-flex px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">{{ __('Gagal') }}</span>
                             @endif
-                        </div>
-                        <div>
-                            <span class="text-neutral-500"></span>
                             @if($batch['quality_status'] === 'pass')
                                 <span class="text-xs text-green-600">{{ __('MAE ≤ 1 mm') }}</span>
                             @else
