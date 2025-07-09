@@ -316,5 +316,4 @@ class PjtTask extends Model
             $q->where('assignee_id', $userId)
               ->orWhere('assigner_id', $userId);
         });
-    }
-}
+    }}
