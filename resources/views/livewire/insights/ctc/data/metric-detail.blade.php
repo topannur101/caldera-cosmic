@@ -8,59 +8,105 @@ use Carbon\Carbon;
 new class extends Component {
     
     public int $id = 0;
-    public array $batch = [];
+    public array $batch = [
+        'id' => 0,
+        'rubber_batch_code' => '',
+        'machine_line' => '',
+        'mcs' => '',
+    
+        // Recipe information
+        'recipe_id' => 0,
+        'recipe_name' => '',
+        'recipe_target' => 0,
+        'recipe_std_min' => 0,
+        'recipe_std_max' => 0,
+        'recipe_scale' => 0,
+    
+        // Performance metrics
+        't_avg_left' => 0,
+        't_avg_right' => 0,
+        't_avg' => 0,
+        't_mae_left' => 0,
+        't_mae_right' => 0,
+        't_mae' => 0,
+        't_ssd_left' => 0,
+        't_ssd_right' => 0,
+        't_ssd' => 0,
+        't_balance' => 0,
+    
+        // Correction metrics
+        'correction_uptime' => 0,
+        'correction_rate' => 0,
+    
+        // Quality
+        'quality_status' => 'fail',
+    
+        // Timing and data
+        'data' => '',
+        'started_at' => '',
+        'ended_at' => '',
+        'duration' => '',
+        'shift' => '',
+    
+        // Correction counts
+        'corrections_left' => 0,
+        'corrections_right' => 0,
+        'corrections_total' => 0,
+    ];
+
+    public $metric = null;
 
     #[On('metric-detail-load')]
     public function loadMetric($id)
     {
         $this->id = $id;
-        $metric = InsCtcMetric::with(['ins_ctc_machine', 'ins_ctc_recipe', 'ins_rubber_batch'])->find($id);
+        $this->metric = InsCtcMetric::with(['ins_ctc_machine', 'ins_ctc_recipe', 'ins_rubber_batch'])->find($id);
 
-        if ($metric) {
+        if ($this->metric) {
             $this->batch = [
-                'id' => $metric->id,
-                'rubber_batch_code' => $metric->ins_rubber_batch->code ?? 'N/A',
-                'machine_line' => $metric->ins_ctc_machine->line ?? 'N/A',
-                'mcs' => $metric->ins_rubber_batch->mcs ?? 'N/A',
+                'id' => $this->metric->id,
+                'rubber_batch_code' => $this->metric->ins_rubber_batch->code ?? 'N/A',
+                'machine_line' => $this->metric->ins_ctc_machine->line ?? 'N/A',
+                'mcs' => $this->metric->ins_rubber_batch->mcs ?? 'N/A',
                 
                 // Recipe information
-                'recipe_id' => $metric->ins_ctc_recipe->id ?? 'N/A',
-                'recipe_name' => $metric->ins_ctc_recipe->name ?? 'N/A',
-                'recipe_target' => $metric->ins_ctc_recipe->std_mid ?? 0,
-                'recipe_std_min' => $metric->ins_ctc_recipe->std_min ?? 0,
-                'recipe_std_max' => $metric->ins_ctc_recipe->std_max ?? 0,
-                'recipe_scale' => $metric->ins_ctc_recipe->scale ?? 0,
+                'recipe_id' => $this->metric->ins_ctc_recipe->id ?? 'N/A',
+                'recipe_name' => $this->metric->ins_ctc_recipe->name ?? 'N/A',
+                'recipe_target' => $this->metric->ins_ctc_recipe->std_mid ?? 0,
+                'recipe_std_min' => $this->metric->ins_ctc_recipe->std_min ?? 0,
+                'recipe_std_max' => $this->metric->ins_ctc_recipe->std_max ?? 0,
+                'recipe_scale' => $this->metric->ins_ctc_recipe->scale ?? 0,
                 
                 // Performance metrics
-                't_avg_left' => $metric->t_avg_left,
-                't_avg_right' => $metric->t_avg_right,
-                't_avg' => $metric->t_avg,
-                't_mae_left' => $metric->t_mae_left,
-                't_mae_right' => $metric->t_mae_right,
-                't_mae' => $metric->t_mae,
-                't_ssd_left' => $metric->t_ssd_left,
-                't_ssd_right' => $metric->t_ssd_right,
-                't_ssd' => $metric->t_ssd,
-                't_balance' => $metric->t_balance,
+                't_avg_left' => $this->metric->t_avg_left,
+                't_avg_right' => $this->metric->t_avg_right,
+                't_avg' => $this->metric->t_avg,
+                't_mae_left' => $this->metric->t_mae_left,
+                't_mae_right' => $this->metric->t_mae_right,
+                't_mae' => $this->metric->t_mae,
+                't_ssd_left' => $this->metric->t_ssd_left,
+                't_ssd_right' => $this->metric->t_ssd_right,
+                't_ssd' => $this->metric->t_ssd,
+                't_balance' => $this->metric->t_balance,
                 
                 // Correction metrics
-                'correction_uptime' => $metric->correction_uptime,
-                'correction_rate' => $metric->correction_rate,
+                'correction_uptime' => $this->metric->correction_uptime,
+                'correction_rate' => $this->metric->correction_rate,
                 
                 // Quality
-                'quality_status' => $metric->t_mae <= 1.0 ? 'pass' : 'fail',
+                'quality_status' => $this->metric->t_mae <= 1.0 ? 'pass' : 'fail',
                 
                 // Timing and data
-                'data' => $metric->data,
-                'started_at' => $this->getStartedAt($metric->data),
-                'ended_at' => $this->getEndedAt($metric->data),
-                'duration' => $this->calculateDuration($metric->data),
-                'shift' => $this->determineShift($metric->data),
+                'data' => $this->metric->data,
+                'started_at' => $this->getStartedAt($this->metric->data),
+                'ended_at' => $this->getEndedAt($this->metric->data),
+                'duration' => $this->calculateDuration($this->metric->data),
+                'shift' => $this->determineShift($this->metric->data),
                 
                 // Correction counts
-                'corrections_left' => $this->countCorrections($metric->data, 'left'),
-                'corrections_right' => $this->countCorrections($metric->data, 'right'),
-                'corrections_total' => $this->countCorrections($metric->data, 'total'),
+                'corrections_left' => $this->countCorrections($this->metric->data, 'left'),
+                'corrections_right' => $this->countCorrections($this->metric->data, 'right'),
+                'corrections_total' => $this->countCorrections($this->metric->data, 'total'),
             ];
 
             $this->generateChart();
@@ -422,157 +468,177 @@ new class extends Component {
         $this->js('toast("' . __('Data metrik tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
-
-    // public function downloadBatchData()
-    // {
-    //     $this->js('toast("' . __('Data batch diunduh') . '", { type: "success" })');
-    // }
-
-    // public function printBatch()
-    // {
-    //     $this->js("window.print()");
-    // }
 };
 
 ?>
 
-<div class="p-6">
-    @if (!empty($batch))
-        <div class="flex justify-between items-start mb-6">
-            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Rincian Batch') }}
-            </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
-        </div>
+<div class="p-6">    
+    <div class="flex justify-between items-start mb-6">
+        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+            {{ __('Rincian Batch') }}
+        </h2>
+        <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
+    </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Left Side: Chart + Data Table (2 columns) -->
-            <div class="col-span-2 space-y-6">
-                <!-- Chart Container -->
-                <div class="h-80 overflow-hidden bg-white dark:bg-neutral-800 rounded-lg border"
-                    id="batch-chart-container" wire:key="batch-chart-container" wire:ignore>
-                </div>
-
-                <!-- Performance Data Table -->
-                <table class="table table-xs text-sm text-center mt-6">
-                    <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
-                        <td></td>
-                        <td>{{ __('Kiri') }}</td>
-                        <td>{{ __('Kanan') }}</td>
-                        <td>{{ __('Gabungan') }}</td>
-                        <td>{{ __('Evaluasi') }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('AVG') }}</td>
-                        <td>{{ number_format($batch['t_avg_left'], 2) }}</td>
-                        <td>{{ number_format($batch['t_avg_right'], 2) }}</td>
-                        <td>{{ number_format($batch['t_avg'], 2) }}</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('MAE') }}</td>
-                        <td>{{ number_format($batch['t_mae_left'], 2) }}</td>
-                        <td>{{ number_format($batch['t_mae_right'], 2) }}</td>
-                        <td>{{ number_format($batch['t_mae'], 2) }}</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SSD') }}</td>
-                        <td>{{ number_format($batch['t_ssd_left'], 2) }}</td>
-                        <td>{{ number_format($batch['t_ssd_right'], 2) }}</td>
-                        <td>{{ number_format($batch['t_ssd'], 2) }}</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('Koreksi') }}</td>
-                        <td>{{ $batch['corrections_left'] }}</td>
-                        <td>{{ $batch['corrections_right'] }}</td>
-                        <td>{{ $batch['corrections_total'] }}</td>
-                        <td>-</td>
-                    </tr>
-                </table>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Side: Chart + Data Table (2 columns) -->
+        <div class="col-span-2 space-y-6">
+            <!-- Chart Container -->
+            <div class="h-80 overflow-hidden bg-white dark:bg-neutral-800 rounded-lg border"
+                id="batch-chart-container" wire:key="batch-chart-container" wire:ignore>
             </div>
 
-            <!-- Right Side: Info Panels (1 column) -->
-            <div class="space-y-6">
-                <!-- Batch Information -->
-                <div>
-                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Informasi Batch') }}</div>
-                    <div class="space-y-2 text-sm">
-                        <div>
-                            <span class="text-neutral-500">{{ __('Batch:') }}</span>
-                            <span class="font-medium">{{ $batch['rubber_batch_code'] }}</span>
+            <!-- Performance Data Table -->
+            <table class="table table-xs text-sm text-center mt-6">
+                <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
+                    <td></td>
+                    <td>{{ __('Kiri') }}</td>
+                    <td>{{ __('Kanan') }}</td>
+                    <td>{{ __('Gabungan') }}</td>
+                    <td>{{ __('Evaluasi') }}</td>
+                </tr>
+                <tr>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('AVG') }}</td>
+                    <td>{{ number_format($batch['t_avg_left'], 2) }}</td>
+                    <td>{{ number_format($batch['t_avg_right'], 2) }}</td>
+                    <td>{{ number_format($batch['t_avg'], 2) }}</td>
+                    <td>
+                        @php
+                            $avgEval = $metric?->avg_evaluation;
+                        @endphp
+                        <div class="flex items-center gap-2">
+                            <i class="icon-check-circle {{ $avgEval['icon_color'] ?? '' }}"></i>
+                            <span class="{{ $avgEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($avgEval['status'] ?? '') }}</span>
                         </div>
-                        <div>
-                            <span class="text-neutral-500">{{ __('MCS:') }}</span>
-                            <span class="font-medium">{{ $batch['mcs'] }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('MAE') }}</td>
+                    <td>{{ number_format($batch['t_mae_left'], 2) }}</td>
+                    <td>{{ number_format($batch['t_mae_right'], 2) }}</td>
+                    <td>{{ number_format($batch['t_mae'], 2) }}</td>
+                    <td>
+                        @php
+                            $maeEval = $metric?->mae_evaluation;
+                        @endphp
+                        <div class="flex items-center gap-2">
+                            <i class="icon-check-circle {{ $maeEval['icon_color'] ?? '' }}"></i>
+                            <span class="{{ $maeEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($maeEval['status'] ?? '') }}</span>
                         </div>
-                        <div>
-                            <span class="text-neutral-500">{{ __('Line:') }}</span>
-                            <span class="font-medium">{{ $batch['machine_line'] }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SSD') }}</td>
+                    <td>{{ number_format($batch['t_ssd_left'], 2) }}</td>
+                    <td>{{ number_format($batch['t_ssd_right'], 2) }}</td>
+                    <td>{{ number_format($batch['t_ssd'], 2) }}</td>
+                    <td>
+                        @php
+                            $ssdEval = $metric?->ssd_evaluation;
+                        @endphp
+                        <div class="flex items-center gap-2">
+                            <i class="icon-check-circle {{ $ssdEval['icon_color'] ?? '' }}"></i>
+                            <span class="{{ $ssdEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($ssdEval['status'] ?? '') }}</span>
                         </div>
-                    </div>
-                </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('Koreksi') }}</td>
+                    <td>{{ $batch['corrections_left'] }}</td>
+                    <td>{{ $batch['corrections_right'] }}</td>
+                    <td>{{ $batch['corrections_total'] }}</td>
+                    <td>
+                        @php
+                            $correctionEval = $metric?->correction_evaluation;
+                        @endphp
+                        <div class="flex items-center gap-2">
+                            <i class="icon-check-circle {{ $correctionEval['icon_color'] ?? '' }}"></i>
+                            <span class="{{ $correctionEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($correctionEval['status'] ?? '') }}</span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
 
-                <!-- Timing Information -->
-                <div>
-                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Waktu Proses') }}</div>
-                    <div class="space-y-2 text-sm">
-                        <div>
-                            <span class="text-neutral-500">{{ __('Mulai:') }}</span>
-                            <span class="font-mono">{{ $batch['started_at'] }}</span>
-                        </div>
-                        <div>
-                            <span class="text-neutral-500">{{ __('Selesai:') }}</span>
-                            <span class="font-mono">{{ $batch['ended_at'] }}</span>
-                        </div>
-                        <div>
-                            <span class="text-neutral-500">{{ __('Durasi:') }}</span>
-                            <span class="font-mono">{{ $batch['duration'] }}</span>
-                        </div>
-                        <div>
-                            <span class="text-neutral-500">{{ __('Shift:') }}</span>
-                            <span class="font-medium">{{ $batch['shift'] }}</span>
-                        </div>
+        <!-- Right Side: Info Panels (1 column) -->
+        <div class="space-y-6">
+            <!-- Batch Information -->
+            <div>
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Informasi Batch') }}</div>
+                <div class="space-y-2 text-sm">
+                    <div>
+                        <span class="text-neutral-500">{{ __('Batch:') }}</span>
+                        <span class="font-medium">{{ $batch['rubber_batch_code'] }}</span>
                     </div>
-                </div>
-
-                <!-- Correction & Quality -->
-                <div>
-                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Keseimbangan & Koreksi') }}</div>
-                    <div class="space-y-2 text-sm">
-                        <div>
-                            <span class="text-neutral-500">{{ __('BAL:') }}</span>
-                            <span class="font-mono">{{  number_format($batch['t_balance'], 2) }} mm</span>
-                        </div>
-                        <div class="flex gap-x-3">
-                            <div>
-                                <span class="text-neutral-500">{{ __('CU:') }}</span>
-                                <span class="font-mono">{{ $batch['correction_uptime'] }}%</span>
-                            </div>
-                            <div>
-                                <span class="text-neutral-500">{{ __('CR:') }}</span>
-                                <span class="font-mono">{{ $batch['correction_rate'] }}%</span>
-                            </div>
-                        </div>
+                    <div>
+                        <span class="text-neutral-500">{{ __('MCS:') }}</span>
+                        <span class="font-medium">{{ $batch['mcs'] }}</span>
                     </div>
-                </div>
-
-                <!-- Recipe Information -->
-                <div>
-                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Informasi Resep') }}</div>
-                    <div class="space-y-2 text-sm">
-                        <div>
-                            <span class="text-neutral-500">{{ __('Recipe ID:') }}</span>
-                            <span class="font-medium">{{ $batch['recipe_id'] }}</span>
-                        </div>
-                        <div>
-                            <span class="text-neutral-500">{{ __('Name:') }}</span>
-                            <span class="font-medium">{{ $batch['recipe_name'] }}</span>
-                        </div>
+                    <div>
+                        <span class="text-neutral-500">{{ __('Line:') }}</span>
+                        <span class="font-medium">{{ $batch['machine_line'] }}</span>
                     </div>
                 </div>
             </div>
+
+            <!-- Timing Information -->
+            <div>
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Waktu Proses') }}</div>
+                <div class="space-y-2 text-sm">
+                    <div>
+                        <span class="text-neutral-500">{{ __('Mulai:') }}</span>
+                        <span class="font-mono">{{ $batch['started_at'] }}</span>
+                    </div>
+                    <div>
+                        <span class="text-neutral-500">{{ __('Selesai:') }}</span>
+                        <span class="font-mono">{{ $batch['ended_at'] }}</span>
+                    </div>
+                    <div>
+                        <span class="text-neutral-500">{{ __('Durasi:') }}</span>
+                        <span class="font-mono">{{ $batch['duration'] }}</span>
+                    </div>
+                    <div>
+                        <span class="text-neutral-500">{{ __('Shift:') }}</span>
+                        <span class="font-medium">{{ $batch['shift'] }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Correction & Quality -->
+            <div>
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Keseimbangan & Koreksi') }}</div>
+                <div class="space-y-2 text-sm">
+                    <div>
+                        <span class="text-neutral-500">{{ __('BAL:') }}</span>
+                        <span class="font-mono">{{  number_format($batch['t_balance'], 2) }} mm</span>
+                    </div>
+                    <div class="flex gap-x-3">
+                        <div>
+                            <span class="text-neutral-500">{{ __('CU:') }}</span>
+                            <span class="font-mono">{{ $batch['correction_uptime'] }}%</span>
+                        </div>
+                        <div>
+                            <span class="text-neutral-500">{{ __('CR:') }}</span>
+                            <span class="font-mono">{{ $batch['correction_rate'] }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipe Information -->
+            <div>
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Informasi Resep') }}</div>
+                <div class="space-y-2 text-sm">
+                    <div>
+                        <span class="text-neutral-500">{{ __('Recipe ID:') }}</span>
+                        <span class="font-medium">{{ $batch['recipe_id'] }}</span>
+                    </div>
+                    <div>
+                        <span class="text-neutral-500">{{ __('Name:') }}</span>
+                        <span class="font-medium">{{ $batch['recipe_name'] }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    @endif
+    </div>
 </div>

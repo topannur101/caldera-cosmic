@@ -148,4 +148,158 @@ class InsCtcMetric extends Model
     {
         return $this->correction_rate . '%';
     }
+
+    /**
+     * Get AVG evaluation based on balance (BAL)
+     */
+    public function getAvgEvaluationAttribute(): array
+    {
+        $bal = $this->t_balance;
+        $absBAL = abs($bal);
+        
+        if ($absBAL <= 1) {
+            return [
+                'status' => 'seimbang',
+                'color' => 'text-green-600',
+                'icon_color' => 'text-green-500',
+                'is_good' => true
+            ];
+        } elseif ($bal > 1) {
+            return [
+                'status' => 'jomplang kiri',
+                'color' => 'text-red-600',
+                'icon_color' => 'text-red-500',
+                'is_good' => false
+            ];
+        } else {
+            return [
+                'status' => 'jomplang kanan',
+                'color' => 'text-red-600',
+                'icon_color' => 'text-red-500',
+                'is_good' => false
+            ];
+        }
+    }
+
+    /**
+     * Get MAE evaluation based on standard threshold
+     */
+    public function getMaeEvaluationAttribute(): array
+    {
+        $mae = $this->t_mae;
+        
+        if ($mae <= 1.0) {
+            return [
+                'status' => 'di dalam standar',
+                'color' => 'text-green-600',
+                'icon_color' => 'text-green-500',
+                'is_good' => true
+            ];
+        } else {
+            return [
+                'status' => 'di luar standar',
+                'color' => 'text-red-600',
+                'icon_color' => 'text-red-500',
+                'is_good' => false
+            ];
+        }
+    }
+
+    /**
+     * Get SSD evaluation based on consistency threshold
+     */
+    public function getSsdEvaluationAttribute(): array
+    {
+        $ssd = $this->t_ssd;
+        
+        if ($ssd <= 1.0) {
+            return [
+                'status' => 'tebal konsisten',
+                'color' => 'text-green-600',
+                'icon_color' => 'text-green-500',
+                'is_good' => true
+            ];
+        } else {
+            return [
+                'status' => 'tebal fluktuatif',
+                'color' => 'text-red-600',
+                'icon_color' => 'text-red-500',
+                'is_good' => false
+            ];
+        }
+    }
+
+    /**
+     * Get Correction evaluation based on correction uptime
+     */
+    public function getCorrectionEvaluationAttribute(): array
+    {
+        $cu = $this->correction_uptime;
+        
+        if ($cu > 50) {
+            return [
+                'status' => 'auto',
+                'color' => 'text-green-600',
+                'icon_color' => 'text-green-500',
+                'is_good' => true
+            ];
+        } else {
+            return [
+                'status' => 'manual',
+                'color' => 'text-red-600',
+                'icon_color' => 'text-red-500',
+                'is_good' => false
+            ];
+        }
+    }
+
+    /**
+     * Get all evaluations at once
+     */
+    public function getAllEvaluationsAttribute(): array
+    {
+        return [
+            'avg' => $this->avg_evaluation,
+            'mae' => $this->mae_evaluation,
+            'ssd' => $this->ssd_evaluation,
+            'correction' => $this->correction_evaluation
+        ];
+    }
+
+    /**
+     * Get overall batch score based on all evaluations
+     */
+    public function getBatchScoreAttribute(): array
+    {
+        $evaluations = $this->all_evaluations;
+        $goodCount = 0;
+        $totalCount = count($evaluations);
+        
+        foreach ($evaluations as $eval) {
+            if ($eval['is_good']) {
+                $goodCount++;
+            }
+        }
+        
+        $percentage = round(($goodCount / $totalCount) * 100);
+        
+        return [
+            'good_count' => $goodCount,
+            'total_count' => $totalCount,
+            'percentage' => $percentage,
+            'grade' => $this->getGradeFromPercentage($percentage)
+        ];
+    }
+
+    /**
+     * Get grade letter based on percentage
+     */
+    private function getGradeFromPercentage(int $percentage): string
+    {
+        if ($percentage >= 90) return 'A';
+        if ($percentage >= 80) return 'B';
+        if ($percentage >= 70) return 'C';
+        if ($percentage >= 60) return 'D';
+        return 'F';
+    }
 }
