@@ -508,5 +508,4 @@ new #[Layout('layouts.app')] class extends Component {
 @script
 <script>
     $wire.$dispatch('updated');
-</script>
-@endscript
+</script>@endscript
