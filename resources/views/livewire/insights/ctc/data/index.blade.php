@@ -17,22 +17,22 @@ class extends Component {
     {
         $this->view_titles = [
             'recents'               => __('Batch terkini'),
-            'metrics'               => __('Data mentah'),
             'batch-analytics'       => __('Analitik Batch'),
-            'machine-performance'   => __('Kinerja Mesin'),
             'recipe-analytics'      => __('Analitik Resep'),
-            'correction-efficiency' => __('Efisiensi Koreksi'),
-            'quality-production'    => __('Kualitas vs Produksi'),
+            'correction-analytics'  => __('Analitik Koreksi'), // correction efficiency
+            'quality-analytics'     => __('Analitik Kualitas'), // quality compared with production
+            'machine-performance'   => __('Kinerja Mesin'),
+            'metrics'               => __('Data mentah'),
         ];
 
         $this->view_icons = [
             'recents'               => 'icon-clock',
-            'metrics'               => 'icon-database',
-            'batch-analytics'       => 'icon-layers',
             'machine-performance'   => 'icon-zap',
             'recipe-analytics'      => 'icon-book',
-            'correction-efficiency' => 'icon-adjustments',
-            'quality-production'    => 'icon-chart-line',
+            'correction-analytics' => 'icon-file-sliders',
+            'quality-analytics'    => 'icon-chart-line',
+            'batch-analytics'       => 'icon-layers',
+            'metrics'               => 'icon-database',
         ];
     }
 
@@ -101,11 +101,11 @@ class extends Component {
             @case('recipe-analytics')
                 <livewire:insights.ctc.data.recipe-analytics />
                 @break
-            @case('correction-efficiency')
-                <livewire:insights.ctc.data.correction-efficiency />
+            @case('correction-analytics')
+                <livewire:insights.ctc.data.correction-analytics />
                 @break
-            @case('quality-production')
-                <livewire:insights.ctc.data.quality-production />
+            @case('quality-analytics')
+                <livewire:insights.ctc.data.quality-analytics />
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">
