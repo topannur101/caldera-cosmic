@@ -111,16 +111,20 @@ class InsCtcPoll extends Command
     /**
      * Calculate batch statistics
      */
-    function calculateBatchStatistics($batch_data, $target)
+    function calculateBatchStatistics($batch_data, $target = null)
     {
         if (empty($batch_data)) return null;
 
         $left_values = [];
         $right_values = [];
+        $errors_left = [];
+        $errors_right = [];
 
         foreach ($batch_data as $record) {
-            $left_values[] = $record[4];  // left thickness
-            $right_values[] = $record[5]; // right thickness
+            $left_values[] = $record[4];    // left thickness
+            $right_values[] = $record[5];   // right thickness
+            $errors_left[] = $record[10];   // error_left (can be null)
+            $errors_right[] = $record[11];  // error_right (can be null)
         }
 
         // Calculate averages
@@ -141,23 +145,30 @@ class InsCtcPoll extends Command
         $t_ssd_right = $ssd_right;
         $t_ssd = $t_ssd_left + $t_ssd_right;
 
-        // Calculate MAE (Mean Absolute Error) if target is available
+        // Calculate MAE from pre-calculated errors
         $t_mae_left = null;
         $t_mae_right = null;
         $t_mae = null;
         
-        if ($target !== null) {
-            $mae_left = 0;
-            $mae_right = 0;
-            foreach ($left_values as $value) {
-                $mae_left += abs($value - $target);
-            }
-            foreach ($right_values as $value) {
-                $mae_right += abs($value - $target);
-            }
-            $t_mae_left = $mae_left / count($left_values);
-            $t_mae_right = $mae_right / count($right_values);
+        // Filter out null values but keep 0 values for left side
+        $valid_errors_left = array_filter($errors_left, fn($error) => $error !== null);
+        if (count($valid_errors_left) > 0) {
+            $t_mae_left = array_sum($valid_errors_left) / count($valid_errors_left);
+        }
+        
+        // Filter out null values but keep 0 values for right side  
+        $valid_errors_right = array_filter($errors_right, fn($error) => $error !== null);
+        if (count($valid_errors_right) > 0) {
+            $t_mae_right = array_sum($valid_errors_right) / count($valid_errors_right);
+        }
+        
+        // Combined MAE only if both sides have valid data
+        if ($t_mae_left !== null && $t_mae_right !== null) {
             $t_mae = ($t_mae_left + $t_mae_right) / 2;
+        } elseif ($t_mae_left !== null) {
+            $t_mae = $t_mae_left;
+        } elseif ($t_mae_right !== null) {
+            $t_mae = $t_mae_right;
         }
 
         // Calculate balance (difference between left and right averages)
@@ -214,9 +225,6 @@ class InsCtcPoll extends Command
         $most_frequent_count = $recipe_counts[$batch_recipe_id];
         $percentage = ($most_frequent_count / $batch_size) * 100;
 
-        // Get recipe target
-        $target = $batch_recipe_id ? $this->getRecipeTarget($batch_recipe_id) : null;
-
         if ($this->option('v')) {
             $this->comment("→ Batch recipe: {$batch_recipe_id} ({$most_frequent_count}/{$batch_size} = {$percentage}%)");
             if (count($recipe_counts) > 1) {
@@ -224,8 +232,8 @@ class InsCtcPoll extends Command
             }
         }
 
-        // Calculate statistics using all measurements (no filtering)
-        $stats = $this->calculateBatchStatistics($batch_data, $target);
+        // Calculate statistics using pre-calculated errors (no need for target parameter)
+        $stats = $this->calculateBatchStatistics($batch_data);
         
         if (!$stats) {
             $this->error("✗ Failed to calculate statistics for batch (Machine: {$machine->name})");
@@ -260,7 +268,11 @@ class InsCtcPoll extends Command
         if ($this->option('d')) {
             $this->line("Statistics calculated:");
             $this->table(['Metric', 'Left', 'Right', 'Combined'], [
-                ['MAE', round($stats['t_mae_left'], 2), round($stats['t_mae_right'], 2), round($stats['t_mae'], 2)],
+                ['MAE', 
+                    $stats['t_mae_left'] !== null ? round($stats['t_mae_left'], 2) : 'null', 
+                    $stats['t_mae_right'] !== null ? round($stats['t_mae_right'], 2) : 'null', 
+                    $stats['t_mae'] !== null ? round($stats['t_mae'], 2) : 'null'
+                ],
                 ['SSD', round($stats['t_ssd_left'], 2), round($stats['t_ssd_right'], 2), round($stats['t_ssd'], 2)],
                 ['AVG', round($stats['t_avg_left'], 2), round($stats['t_avg_right'], 2), round($stats['t_avg'], 2)],
                 ['Balance', '', '', round($stats['t_balance'], 2)],
@@ -352,6 +364,18 @@ class InsCtcPoll extends Command
             $std_max = $this->convertToDecimal($metric['std_max']);
             $std_mid = $this->convertToDecimal($metric['std_mid']);
             
+            // Calculate individual errors against Modbus std_mid
+            $error_left = null;
+            $error_right = null;
+            
+            if ($std_mid > 0 && $left_thickness !== 0) {
+                $error_left = abs($left_thickness - $std_mid);
+            }
+            
+            if ($std_mid > 0 && $right_thickness !== 0) {
+                $error_right = abs($right_thickness - $std_mid);
+            }
+            
             // Determine actions (same logic as old system)
             $action_left = 0;
             $action_right = 0;
@@ -370,45 +394,40 @@ class InsCtcPoll extends Command
                 $this->st_cr_prev[$machine_id] = $st_cr;
             }
             
-            // Add to batch buffer (array format: timestamp, is_correcting, action_left, action_right, left, right, recipe_id, std_min, std_max, std_mid)
-            $this->batch_buffers[$machine_id][] = [
-                $dt_now,                           // 0: timestamp
-                (bool) $metric['is_correcting'],   // 1: is_correcting
-                $action_left,                      // 2: action_left (0,1,2)
-                $action_right,                     // 3: action_right (0,1,2)
-                $left_thickness,                   // 4: left thickness
-                $right_thickness,                  // 5: right thickness
-                $metric['recipe_id'],              // 6: recipe_id
-                $std_min,                          // 7: std_min (CONVERTED)
-                $std_max,                          // 8: std_max (CONVERTED)
-                $std_mid,                          // 9: std_mid (CONVERTED)
+            // Store measurement data with calculated errors
+            $measurement = [
+                $dt_now,                // 0: timestamp
+                $metric['is_correcting'], // 1: is_correcting
+                $action_left,           // 2: action_left
+                $action_right,          // 3: action_right
+                $left_thickness,        // 4: left_thickness
+                $right_thickness,       // 5: right_thickness
+                $metric['recipe_id'],   // 6: recipe_id
+                $std_min,               // 7: std_min
+                $std_max,               // 8: std_max
+                $std_mid,               // 9: std_mid
+                $error_left,            // 10: error_left
+                $error_right,           // 11: error_right
             ];
             
-            // Update last activity timestamp
-            $this->last_activity[$machine_id] = Carbon::now();
+            // Initialize batch buffer if needed
+            if (!isset($this->batch_buffers[$machine_id])) {
+                $this->batch_buffers[$machine_id] = [];
+            }
             
-            // Store recipe_id for batch processing
-            $this->recipe_id_prev[$machine_id] = $metric['recipe_id'];
-            
-            // Update sensor signature
-            $this->sensor_prev[$machine_id] = $sensor_signature;
+            // Add to batch buffer
+            $this->batch_buffers[$machine_id][] = $measurement;
+            $this->last_activity[$machine_id] = time();
             
             if ($this->option('d')) {
-                $this->line("Measurement added: Machine {$machine_id}, L={$left_thickness}, R={$right_thickness}, Actions=({$action_left},{$action_right}), Std=({$std_min},{$std_max},{$std_mid})");
-            }
-            
-        } else {
-            // Log filtered measurements
-            if (!$metric['sensor_left'] && !$metric['sensor_right']) {
-                if ($this->option('d')) {
-                    $this->line("Zero reading filtered: ID {$machine_id}");
-                }
-            } else {
-                if ($this->option('d')) {
-                    $this->line("Consecutive reading filtered: ID {$machine_id}");
-                }
+                $this->line("  Added measurement: L={$left_thickness}, R={$right_thickness}, std_mid={$std_mid}");
+                $this->line("  Errors: L={$error_left}, R={$error_right}");
+                $this->line("  Buffer size: " . count($this->batch_buffers[$machine_id]));
             }
         }
+        
+        // Update sensor signature for next iteration
+        $this->sensor_prev[$machine_id] = $sensor_signature;
     }
 
     /**
@@ -429,7 +448,7 @@ class InsCtcPoll extends Command
             
             if ($this->option('d')) {
                 $this->line("ID {$machine_id}: {$buffer_count} measurements, last activity: " . 
-                        ($last_time ? $last_time->format('H:i:s') : 'null'));
+                    ($last_time ? Carbon::parse($last_time)->format('H:i:s') : 'null'));
             }
             
             // Check if we have a valid last_time and non-empty buffer

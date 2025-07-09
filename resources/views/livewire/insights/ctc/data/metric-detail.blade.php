@@ -460,30 +460,35 @@ new class extends Component {
                         <td>{{ __('Kiri') }}</td>
                         <td>{{ __('Kanan') }}</td>
                         <td>{{ __('Gabungan') }}</td>
+                        <td>{{ __('Evaluasi') }}</td>
                     </tr>
                     <tr>
                         <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('AVG') }}</td>
                         <td>{{ number_format($batch['t_avg_left'], 2) }}</td>
                         <td>{{ number_format($batch['t_avg_right'], 2) }}</td>
                         <td>{{ number_format($batch['t_avg'], 2) }}</td>
+                        <td>-</td>
                     </tr>
                     <tr>
                         <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('MAE') }}</td>
                         <td>{{ number_format($batch['t_mae_left'], 2) }}</td>
                         <td>{{ number_format($batch['t_mae_right'], 2) }}</td>
                         <td>{{ number_format($batch['t_mae'], 2) }}</td>
+                        <td>-</td>
                     </tr>
                     <tr>
                         <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SSD') }}</td>
                         <td>{{ number_format($batch['t_ssd_left'], 2) }}</td>
                         <td>{{ number_format($batch['t_ssd_right'], 2) }}</td>
                         <td>{{ number_format($batch['t_ssd'], 2) }}</td>
+                        <td>-</td>
                     </tr>
                     <tr>
                         <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('Koreksi') }}</td>
                         <td>{{ $batch['corrections_left'] }}</td>
                         <td>{{ $batch['corrections_right'] }}</td>
                         <td>{{ $batch['corrections_total'] }}</td>
+                        <td>-</td>
                     </tr>
                 </table>
             </div>
@@ -534,20 +539,8 @@ new class extends Component {
 
                 <!-- Correction & Quality -->
                 <div>
-                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Kualitas & Koreksi') }}</div>
+                    <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Keseimbangan & Koreksi') }}</div>
                     <div class="space-y-2 text-sm">
-                        <div>
-                            @if($batch['quality_status'] === 'pass')
-                                <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{{ __('Lulus') }}</span>
-                            @else
-                                <span class="inline-flex px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">{{ __('Gagal') }}</span>
-                            @endif
-                            @if($batch['quality_status'] === 'pass')
-                                <span class="text-xs text-green-600">{{ __('MAE ≤ 1 mm') }}</span>
-                            @else
-                                <span class="text-xs text-red-600">{{ __('MAE > 1 mm') }}</span>
-                            @endif
-                        </div>
                         <div>
                             <span class="text-neutral-500">{{ __('BAL:') }}</span>
                             <span class="font-mono">{{  number_format($batch['t_balance'], 2) }} mm</span>
