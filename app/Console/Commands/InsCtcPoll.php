@@ -81,141 +81,127 @@ class InsCtcPoll extends Command
     }
 
     /**
-     * Determine correction action based on push values
-     * Returns: 0 = no action, 1 = thin, 2 = thick
+     * Get action code from push values
      */
-    function getActionCode($pushThin, $pushThick)
+    function getActionCode($push_thin, $push_thick)
     {
-        if ($pushThin > 0 && $pushThick == 0) {
-            return 1; // thin action
-        } elseif ($pushThin == 0 && $pushThick > 0) {
-            return 2; // thick action
+        if ($push_thin && !$push_thick) {
+            return 1; // Push thin
+        } elseif (!$push_thin && $push_thick) {
+            return 2; // Push thick
         }
-        return 0; // no action
+        return 0; // No action
     }
 
     /**
-     * Get recipe target thickness (middle of std_min and std_max)
+     * Get recipe target from cache or database
      */
     function getRecipeTarget($recipe_id)
     {
+        if (!$recipe_id) return null;
+        
         if (!isset($this->recipe_cache[$recipe_id])) {
             $recipe = InsCtcRecipe::find($recipe_id);
-            if ($recipe) {
-                // Use the model's computed target_thickness attribute
-                $this->recipe_cache[$recipe_id] = $recipe->target_thickness;
-                
-                if ($this->option('v')) {
-                    $this->comment("→ Recipe {$recipe_id} ({$recipe->name}) target: {$recipe->target_thickness} (range: {$recipe->std_min}-{$recipe->std_max})");
-                }
-            } else {
-                $this->recipe_cache[$recipe_id] = null;
-                $this->warn("⚠ Recipe {$recipe_id} not found");
-            }
+            $this->recipe_cache[$recipe_id] = $recipe ? $recipe->target : null;
         }
         
         return $this->recipe_cache[$recipe_id];
     }
 
     /**
-     * Calculate statistical metrics for a batch
+     * Calculate batch statistics
      */
     function calculateBatchStatistics($batch_data, $target)
     {
-        if (empty($batch_data)) {
-            return null;
-        }
+        if (empty($batch_data)) return null;
 
         $left_values = [];
         $right_values = [];
-        $left_errors = [];
-        $right_errors = [];
 
-        // Extract values and calculate errors
         foreach ($batch_data as $record) {
-            $left = $record[4];   // position 4: left thickness
-            $right = $record[5];  // position 5: right thickness
-            
-            $left_values[] = $left;
-            $right_values[] = $right;
-            
-            if ($target !== null) {
-                $left_errors[] = abs($left - $target);
-                $right_errors[] = abs($right - $target);
-            }
+            $left_values[] = $record[4];  // left thickness
+            $right_values[] = $record[5]; // right thickness
         }
 
         // Calculate averages
-        $avg_left = array_sum($left_values) / count($left_values);
-        $avg_right = array_sum($right_values) / count($right_values);
-        $avg_combined = ($avg_left + $avg_right) / 2;
+        $t_avg_left = array_sum($left_values) / count($left_values);
+        $t_avg_right = array_sum($right_values) / count($right_values);
+        $t_avg = ($t_avg_left + $t_avg_right) / 2;
 
-        // Calculate MAE (Mean Absolute Error)
-        $mae_left = $target !== null ? array_sum($left_errors) / count($left_errors) : null;
-        $mae_right = $target !== null ? array_sum($right_errors) / count($right_errors) : null;
-        $mae_combined = ($mae_left !== null && $mae_right !== null) ? ($mae_left + $mae_right) / 2 : null;
+        // Calculate sum of squared differences (SSD)
+        $ssd_left = 0;
+        $ssd_right = 0;
+        foreach ($left_values as $value) {
+            $ssd_left += pow($value - $t_avg_left, 2);
+        }
+        foreach ($right_values as $value) {
+            $ssd_right += pow($value - $t_avg_right, 2);
+        }
+        $t_ssd_left = $ssd_left;
+        $t_ssd_right = $ssd_right;
+        $t_ssd = $t_ssd_left + $t_ssd_right;
 
-        // Calculate Sample Standard Deviation (n-1)
-        $ssd_left = $this->calculateSampleStandardDeviation($left_values);
-        $ssd_right = $this->calculateSampleStandardDeviation($right_values);
-        $ssd_combined = ($ssd_left + $ssd_right) / 2;
+        // Calculate MAE (Mean Absolute Error) if target is available
+        $t_mae_left = null;
+        $t_mae_right = null;
+        $t_mae = null;
+        
+        if ($target !== null) {
+            $mae_left = 0;
+            $mae_right = 0;
+            foreach ($left_values as $value) {
+                $mae_left += abs($value - $target);
+            }
+            foreach ($right_values as $value) {
+                $mae_right += abs($value - $target);
+            }
+            $t_mae_left = $mae_left / count($left_values);
+            $t_mae_right = $mae_right / count($right_values);
+            $t_mae = ($t_mae_left + $t_mae_right) / 2;
+        }
 
-        // Calculate balance
-        $balance = $avg_left - $avg_right;
+        // Calculate balance (difference between left and right averages)
+        $t_balance = abs($t_avg_left - $t_avg_right);
 
         return [
-            't_mae_left' => $mae_left,
-            't_mae_right' => $mae_right,
-            't_mae' => $mae_combined,
-            't_ssd_left' => $ssd_left,
-            't_ssd_right' => $ssd_right,
-            't_ssd' => $ssd_combined,
-            't_avg_left' => $avg_left,
-            't_avg_right' => $avg_right,
-            't_avg' => $avg_combined,
-            't_balance' => $balance
+            't_mae_left' => $t_mae_left,
+            't_mae_right' => $t_mae_right,
+            't_mae' => $t_mae,
+            't_ssd_left' => $t_ssd_left,
+            't_ssd_right' => $t_ssd_right,
+            't_ssd' => $t_ssd,
+            't_avg_left' => $t_avg_left,
+            't_avg_right' => $t_avg_right,
+            't_avg' => $t_avg,
+            't_balance' => $t_balance,
         ];
     }
 
     /**
-     * Calculate sample standard deviation (n-1 denominator)
-     */
-    function calculateSampleStandardDeviation($values)
-    {
-        $count = count($values);
-        if ($count < 2) {
-            return 0;
-        }
-
-        $mean = array_sum($values) / $count;
-        $sum_squares = 0;
-
-        foreach ($values as $value) {
-            $sum_squares += pow($value - $mean, 2);
-        }
-
-        return sqrt($sum_squares / ($count - 1));
-    }
-
-    /**
-     * Process completed batch and save to database
+     * Process completed batch
      */
     function processBatch($machine_id, $batch_data)
     {
         $batch_size = count($batch_data);
-        $machine = InsCtcMachine::find($machine_id);
-
-        if ($this->option('v')) {
-            $this->comment("→ Processing batch for {$machine->name}: {$batch_size} measurements");
-        }
-
-        // Check minimum measurements requirement
+        
         if ($batch_size < $this->minimum_measurements) {
-            $this->warn("⚠ Batch discarded: {$batch_size} < {$this->minimum_measurements} minimum measurements (Machine: {$machine->name})");
+            if ($this->option('d')) {
+                $this->line("Batch too small ({$batch_size} < {$this->minimum_measurements}), discarding");
+            }
             return;
         }
 
-        // FIND MOST FREQUENT RECIPE_ID IN BATCH
+        $machine = InsCtcMachine::find($machine_id);
+        if (!$machine) {
+            $this->error("✗ Machine not found: {$machine_id}");
+            return;
+        }
+
+        if ($this->option('v')) {
+            $this->comment("→ Processing batch: {$machine->name}, {$batch_size} measurements");
+        }
+
+        // Count recipe occurrences to determine most frequent
         $recipe_counts = [];
         foreach ($batch_data as $record) {
             $recipe_id = $record[6]; // position 6: recipe_id
@@ -361,6 +347,11 @@ class InsCtcPoll extends Command
             $left_thickness = $this->convertToDecimal($metric['sensor_left']);
             $right_thickness = $this->convertToDecimal($metric['sensor_right']);
             
+            // Convert std values
+            $std_min = $this->convertToDecimal($metric['std_min']);
+            $std_max = $this->convertToDecimal($metric['std_max']);
+            $std_mid = $this->convertToDecimal($metric['std_mid']);
+            
             // Determine actions (same logic as old system)
             $action_left = 0;
             $action_right = 0;
@@ -379,7 +370,7 @@ class InsCtcPoll extends Command
                 $this->st_cr_prev[$machine_id] = $st_cr;
             }
             
-            // Add to batch buffer (array format: timestamp, is_correcting, action_left, action_right, left, right, recipe_id)
+            // Add to batch buffer (array format: timestamp, is_correcting, action_left, action_right, left, right, recipe_id, std_min, std_max, std_mid)
             $this->batch_buffers[$machine_id][] = [
                 $dt_now,                           // 0: timestamp
                 (bool) $metric['is_correcting'],   // 1: is_correcting
@@ -387,7 +378,10 @@ class InsCtcPoll extends Command
                 $action_right,                     // 3: action_right (0,1,2)
                 $left_thickness,                   // 4: left thickness
                 $right_thickness,                  // 5: right thickness
-                $metric['recipe_id']               // 6: recipe_id
+                $metric['recipe_id'],              // 6: recipe_id
+                $std_min,                          // 7: std_min (CONVERTED)
+                $std_max,                          // 8: std_max (CONVERTED)
+                $std_mid,                          // 9: std_mid (CONVERTED)
             ];
             
             // Update last activity timestamp
@@ -400,7 +394,7 @@ class InsCtcPoll extends Command
             $this->sensor_prev[$machine_id] = $sensor_signature;
             
             if ($this->option('d')) {
-                $this->line("Measurement added: Machine {$machine_id}, L={$left_thickness}, R={$right_thickness}, Actions=({$action_left},{$action_right})");
+                $this->line("Measurement added: Machine {$machine_id}, L={$left_thickness}, R={$right_thickness}, Actions=({$action_left},{$action_right}), Std=({$std_min},{$std_max},{$std_mid})");
             }
             
         } else {
@@ -559,6 +553,9 @@ class InsCtcPoll extends Command
                         ->int16(7, 'push_thick_right')
                         ->int16(8, 'st_correct_left')
                         ->int16(9, 'st_correct_right')
+                        ->int16(10, 'std_min')           // NEW
+                        ->int16(11, 'std_max')           // NEW
+                        ->int16(12, 'std_mid')           // NEW
                         ->build();
 
                     // Execute Modbus requests
@@ -580,6 +577,9 @@ class InsCtcPoll extends Command
                         'push_thick_right' => $fc3_data['push_thick_right'],
                         'st_correct_left' => $fc3_data['st_correct_left'],
                         'st_correct_right' => $fc3_data['st_correct_right'],
+                        'std_min' => $fc3_data['std_min'],     // NEW
+                        'std_max' => $fc3_data['std_max'],     // NEW
+                        'std_mid' => $fc3_data['std_mid'],     // NEW
                     ];
 
                     if ($this->option('d')) {
@@ -594,7 +594,10 @@ class InsCtcPoll extends Command
                             ['Push Thin L', $metric['push_thin_left']],
                             ['Push Thick L', $metric['push_thick_left']],
                             ['Push Thin R', $metric['push_thin_right']],
-                            ['Push Thick R', $metric['push_thick_right']]
+                            ['Push Thick R', $metric['push_thick_right']],
+                            ['Std Min', $metric['std_min']],        // NEW
+                            ['Std Max', $metric['std_max']],        // NEW
+                            ['Std Mid', $metric['std_mid']],        // NEW
                         ]);
                     }
 

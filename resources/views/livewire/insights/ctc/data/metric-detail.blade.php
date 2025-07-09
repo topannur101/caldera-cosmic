@@ -173,7 +173,7 @@ new class extends Component {
         $rightCount = 0;
 
         foreach ($data as $point) {
-            // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, recipe_id]
+            // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, recipe_id, std_min, std_max, std_mid]
             $actionLeft = $point[2] ?? 0;
             $actionRight = $point[3] ?? 0;
 
@@ -209,6 +209,18 @@ new class extends Component {
         $this->js("
             const chartData = " . json_encode($chartData) . ";
             const chartOptions = " . json_encode($chartOptions) . ";
+
+            // Configure time formatting with callback for en-US locale
+            chartOptions.scales.x.ticks = {
+                callback: function(value, index, values) {
+                    const date = new Date(value);
+                    return date.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+                }
+            };
             
             // Add tooltip configuration
             chartOptions.plugins.tooltip = {
@@ -219,7 +231,7 @@ new class extends Component {
                     title: function(context) {
                         if (!context[0]) return '';
                         const date = new Date(context[0].parsed.x);
-                        return date.toLocaleTimeString('id-ID', {
+                        return date.toLocaleTimeString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit',
                             second: '2-digit',
@@ -248,23 +260,54 @@ new class extends Component {
     {
         // Transform data for Chart.js
         $chartData = [];
+        $stdMinData = [];
+        $stdMaxData = [];
+        $stdMidData = [];
+
         foreach ($data as $point) {
-            // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, recipe_id]
+            // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, recipe_id, std_min, std_max, std_mid]
             $timestamp = $point[0] ?? null;
             $sensorLeft = $point[4] ?? 0;
             $sensorRight = $point[5] ?? 0;
+            
+            // New std values from positions 7, 8, 9
+            $stdMin = $point[7] ?? null;
+            $stdMax = $point[8] ?? null;
+            $stdMid = $point[9] ?? null;
 
             if ($timestamp && ($sensorLeft > 0 || $sensorRight > 0)) {
+                $parsedTime = Carbon::parse($timestamp);
+                
                 $chartData[] = [
-                    'x' => Carbon::parse($timestamp),
+                    'x' => $parsedTime,
                     'y' => $sensorLeft,
                     'side' => 'left'
                 ];
                 $chartData[] = [
-                    'x' => Carbon::parse($timestamp),
+                    'x' => $parsedTime,
                     'y' => $sensorRight,
                     'side' => 'right'
                 ];
+
+                // Add std data only if values exist
+                if ($stdMin !== null) {
+                    $stdMinData[] = [
+                        'x' => $parsedTime,
+                        'y' => $stdMin
+                    ];
+                }
+                if ($stdMax !== null) {
+                    $stdMaxData[] = [
+                        'x' => $parsedTime,
+                        'y' => $stdMax
+                    ];
+                }
+                if ($stdMid !== null) {
+                    $stdMidData[] = [
+                        'x' => $parsedTime,
+                        'y' => $stdMid
+                    ];
+                }
             }
         }
 
@@ -272,47 +315,82 @@ new class extends Component {
         $leftData = array_filter($chartData, fn($item) => $item['side'] === 'left');
         $rightData = array_filter($chartData, fn($item) => $item['side'] === 'right');
 
-        return [
-            'datasets' => [
-                [
-                    'label' => 'Sensor Kiri',
-                    'data' => array_values($leftData),
-                    'borderColor' => '#3B82F6',
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                    'tension' => 0.1,
-                    'pointRadius' => 1,
-                    'pointHoverRadius' => 3,
-                ],
-                [
-                    'label' => 'Sensor Kanan',
-                    'data' => array_values($rightData),
-                    'borderColor' => '#EF4444',
-                    'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
-                    'tension' => 0.1,
-                    'pointRadius' => 1,
-                    'pointHoverRadius' => 3,
-                ]
+        // Build datasets array starting with original sensor data
+        $datasets = [
+            [
+                'label' => 'Sensor Kiri',
+                'data' => array_values($leftData),
+                'borderColor' => '#3B82F6',
+                'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                'tension' => 0.1,
+                'pointRadius' => 1,
+                'pointHoverRadius' => 3,
+            ],
+            [
+                'label' => 'Sensor Kanan',
+                'data' => array_values($rightData),
+                'borderColor' => '#EF4444',
+                'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
+                'tension' => 0.1,
+                'pointRadius' => 1,
+                'pointHoverRadius' => 3,
             ]
+        ];
+
+        // Add std datasets only if we have data
+        if (!empty($stdMinData)) {
+            $datasets[] = [
+                'label' => 'Std Min',
+                'data' => $stdMinData,
+                'borderColor' => '#9CA3AF',
+                'backgroundColor' => 'transparent',
+                'tension' => 0.1,
+                'pointRadius' => 0,
+                'pointHoverRadius' => 2,
+                'borderWidth' => 1,
+            ];
+        }
+
+        if (!empty($stdMaxData)) {
+            $datasets[] = [
+                'label' => 'Std Max',
+                'data' => $stdMaxData,
+                'borderColor' => '#9CA3AF',
+                'backgroundColor' => 'transparent',
+                'tension' => 0.1,
+                'pointRadius' => 0,
+                'pointHoverRadius' => 2,
+                'borderWidth' => 1,
+            ];
+        }
+
+        if (!empty($stdMidData)) {
+            $datasets[] = [
+                'label' => 'Std Mid',
+                'data' => $stdMidData,
+                'borderColor' => '#9CA3AF',
+                'backgroundColor' => 'transparent',
+                'tension' => 0.1,
+                'pointRadius' => 0,
+                'pointHoverRadius' => 2,
+                'borderWidth' => 1,
+                'borderDash' => [5, 5], // Dashed line
+            ];
+        }
+
+        return [
+            'datasets' => $datasets
         ];
     }
 
     private function getChartOptions(): array
     {
-        $stdMin = $this->batch['recipe_std_min'] ?? 0;
-        $stdMax = $this->batch['recipe_std_max'] ?? 0;
-
         return [
             'responsive' => true,
             'maintainAspectRatio' => false,
             'scales' => [
                 'x' => [
                     'type' => 'time',
-                    'time' => [
-                        'displayFormats' => [
-                            'hour' => 'HH:mm',
-                            'minute' => 'HH:mm'
-                        ]
-                    ],
                     'title' => [
                         'display' => true,
                         'text' => 'Waktu'
@@ -323,7 +401,8 @@ new class extends Component {
                         'display' => true,
                         'text' => 'Ketebalan (mm)'
                     ],
-                    'beginAtZero' => false
+                    'min' => 1,
+                    'max' => 5
                 ]
             ],
             'plugins' => [
@@ -333,37 +412,14 @@ new class extends Component {
                 'legend' => [
                     'display' => true,
                     'position' => 'top'
-                ],
-                'annotation' => [
-                    'annotations' => [
-                        'toleranceZone' => [
-                            'type' => 'box',
-                            'yMin' => $stdMin,
-                            'yMax' => $stdMax,
-                            'backgroundColor' => 'rgba(255, 193, 7, 0.2)',
-                            'borderColor' => 'rgba(255, 193, 7, 0.8)',
-                            'borderWidth' => 1,
-                            'label' => [
-                                'enabled' => true,
-                                'content' => 'Standar',
-                                'position' => 'start'
-                            ]
-                        ]
-                    ]
                 ]
             ]
         ];
     }
 
-    public function customReset()
+    private function handleNotFound(): void
     {
-        $this->reset(['id', 'batch']);
-    }
-
-    public function handleNotFound()
-    {
-        $this->js('$dispatch("close")');
-        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
+        $this->js('toast("' . __('Data metrik tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
 
@@ -525,29 +581,5 @@ new class extends Component {
                 </div>
             </div>
         </div>
-
-        <!-- Modal Footer -->
-        <!-- <div class="flex justify-end items-end mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-            <x-secondary-button type="button" wire:click="downloadBatchData">
-                <i class="icon-download me-2"></i>{{ __('Unduh Data') }}
-            </x-secondary-button>
-            <x-primary-button type="button" wire:click="printBatch">
-                <i class="icon-printer me-2"></i>{{ __('Cetak') }}
-            </x-primary-button>
-        </div> -->
-    @else
-        <div class="flex justify-between items-start mb-6">
-            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Rincian Batch') }}
-            </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
-        </div>
-        
-        <div class="py-20 text-center">
-            <div class="text-neutral-500">{{ __('Memuat data...') }}</div>
-        </div>
     @endif
-
-    <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
-    <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
 </div>
