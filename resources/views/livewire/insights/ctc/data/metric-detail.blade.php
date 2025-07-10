@@ -293,9 +293,7 @@ new class extends Component {
             };
             chartOptions.plugins.datalabels.formatter = function(value, ctx) {
                 if (!ctx.raw) return '';
-                if (ctx.raw.action === 2) return '\u25B2';
-                if (ctx.raw.action === 1) return '\u25BC';
-                return '';
+                return ctx.raw.action;
             };
             chartOptions.plugins.datalabels.color = function(ctx) {
                 return ctx.dataset.borderColor;
@@ -467,8 +465,8 @@ new class extends Component {
                         'display' => true,
                         'text' => 'Ketebalan (mm)'
                     ],
-                    'min' => 2.5,
-                    'max' => 4.5
+                    'min' => 0,
+                    'max' => 6
                 ]
             ],
             'plugins' => [
@@ -480,6 +478,21 @@ new class extends Component {
                 'legend' => [
                     'display' => true,
                     'position' => 'top'
+                ],
+                'zoom' => [
+                    'zoom' => [
+                        'wheel' => [
+                            'enabled' => true,
+                        ],
+                        'pinch' => [
+                            'enabled' => true
+                        ],
+                        'mode' => 'xy', // or 'y', 'xy'
+                    ],
+                    'pan' => [
+                        'enabled' => true,
+                        'mode' => 'xy', // or 'y', 'xy'
+                    ]
                 ]
             ]
         ];
