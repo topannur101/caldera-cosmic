@@ -195,7 +195,7 @@ new class extends Component
                 $excelTimestamp = (float)$row[1];
 
                 // fix chart issue with 3 decimal places rounding
-                $excelTimestamp = round($excelTimestamp, 3);
+                $excelTimestamp = round($excelTimestamp, 4);
                 
                 // Skip duplicate timestamps
                 if (in_array($excelTimestamp, $uniqueTimestamps)) {
