@@ -60,7 +60,9 @@ Route::prefix('insights')->group(function () {
         Volt::route('/ctc/data/batch',              'insights.ctc.data.batch')       ->name('data.batch');
         Volt::route('/ctc/data',                    'insights.ctc.data.index')       ->name('data.index');
         Volt::route('/ctc/slideshows',              'insights.ctc.slideshows')       ->name('slideshows');
-        Volt::route('/ctc',                         'insights.ctc.data.index')       ->name('index');
+        Route::get('/ctc', function () {
+            return redirect()->route('insights.ctc.data.index');
+        })->name('index');
 
         // API routes for CTC (similar to RTC pattern)
         Route::get('/ctc/metric/{device_id}', function (string $device_id) {

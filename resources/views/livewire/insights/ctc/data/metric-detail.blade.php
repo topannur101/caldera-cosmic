@@ -8,6 +8,7 @@ use Carbon\Carbon;
 new class extends Component {
     
     public int $id = 0;
+    public bool $header = true;
     public array $batch = [
         'id' => 0,
         'rubber_batch_code' => '',
@@ -55,6 +56,14 @@ new class extends Component {
     ];
 
     public $metric = null;
+
+    public function mount()
+    {
+        if ($this->id) {
+            $this->loadMetric($this->id);
+            $this->header = false;
+        } 
+    }
 
     #[On('metric-detail-load')]
     public function loadMetric($id)
@@ -293,7 +302,9 @@ new class extends Component {
             };
             chartOptions.plugins.datalabels.formatter = function(value, ctx) {
                 if (!ctx.raw) return '';
-                return ctx.raw.action;
+                if (ctx.raw.action === 2) return '\u25B2';
+                if (ctx.raw.action === 1) return '\u25BC';
+                return '';
             };
             chartOptions.plugins.datalabels.color = function(ctx) {
                 return ctx.dataset.borderColor;
@@ -508,12 +519,14 @@ new class extends Component {
 ?>
 
 <div class="p-6">    
-    <div class="flex justify-between items-start mb-6">
-        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            {{ __('Rincian Batch') }}
-        </h2>
-        <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
-    </div>
+    @if($header)
+        <div class="flex justify-between items-start mb-6">
+            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                {{ __('Rincian Batch') }}
+            </h2>
+            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Side: Chart + Data Table (2 columns) -->
@@ -648,12 +661,8 @@ new class extends Component {
 
             <!-- Correction & Quality -->
             <div>
-                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Keseimbangan & Koreksi') }}</div>
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Koreksi') }}</div>
                 <div class="space-y-2 text-sm">
-                    <div>
-                        <span class="text-neutral-500">{{ __('BAL:') }}</span>
-                        <span class="font-mono">{{  number_format($batch['t_balance'], 2) }} mm</span>
-                    </div>
                     <div class="flex gap-x-3">
                         <div>
                             <span class="text-neutral-500">{{ __('CU:') }}</span>
@@ -669,14 +678,14 @@ new class extends Component {
 
             <!-- Recipe Information -->
             <div>
-                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Informasi Resep') }}</div>
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Resep') }}</div>
                 <div class="space-y-2 text-sm">
                     <div>
-                        <span class="text-neutral-500">{{ __('Recipe ID:') }}</span>
+                        <span class="text-neutral-500">{{ __('ID:') }}</span>
                         <span class="font-medium">{{ $batch['recipe_id'] }}</span>
                     </div>
                     <div>
-                        <span class="text-neutral-500">{{ __('Name:') }}</span>
+                        <span class="text-neutral-500">{{ __('Nama:') }}</span>
                         <span class="font-medium">{{ $batch['recipe_name'] }}</span>
                     </div>
                 </div>
