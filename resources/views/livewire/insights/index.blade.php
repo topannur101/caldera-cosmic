@@ -92,7 +92,7 @@ class extends Component {
     {
         return Cache::remember('ctc_lines_recent', now()->addMinutes(30), function () {
             // Mock data for now - will be replaced with actual CTC model
-            $timeWindow = Carbon::now()->subMinutes(60);
+            $timeWindow = Carbon::now()->subHours(2);
             return InsCtcMetric::where('updated_at', '>=', $timeWindow)
                 ->distinct('ins_ctc_machine_id')
                 ->count('ins_ctc_machine_id');
