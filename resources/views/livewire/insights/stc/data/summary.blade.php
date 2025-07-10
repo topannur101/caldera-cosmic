@@ -204,11 +204,13 @@ new class extends Component {
     </div>
     <div class="px-8 flex flex-col sm:flex-row gap-x-6 gap-y-3 text-sm mb-8">
         <div class="flex items-center gap-x-2">
-            <i class="icon-square text-lg text-neutral-500"></i>
+            <div class="w-4 h-4 bg-white dark:bg-neutral-800 rounded-sm border border-neutral-400 dark:border-neutral-700"></div>
+            <!-- <i class="icon-square text-lg text-neutral-500"></i> -->
             <div>{{ __('Mesin baru') }}</div>
         </div>
         <div class="flex items-center gap-x-2">
-            <i class="icon-square text-lg text-caldy-500 opacity-50"></i>
+            <div class="w-4 h-4 bg-caldy-500 rounded-sm opacity-30"></div>
+            <!-- <i class="icon-square text-lg text-caldy-500 opacity-50"></i> -->
             <div>{{ __('Mesin lama') }}</div>
         </div>
         <div class="flex items-center gap-x-2">
