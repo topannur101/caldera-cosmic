@@ -199,7 +199,7 @@ class extends Component
 
 ?>
 
-<x-slot name="title">{{ __('Project Items') . ' — ' . __('Projects') }}</x-slot>
+<x-slot name="title">{{ __('Item proyek') . ' — ' . __('Proyek') }}</x-slot>
 
 <x-slot name="header">
     <x-nav-projects></x-nav-projects>
@@ -215,17 +215,17 @@ class extends Component
                 <div class="flex justify-between items-start">
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                         <i class="icon-download mr-2"></i>
-                        {{ __('Download as...') }}
+                        {{ __('Unduh sebagai...') }}
                     </h2>
                     <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
                 </div>
                 <div x-data="{ download_as: @entangle('download_as') }">
-                    <x-radio x-model="download_as" id="as-pjt_items" name="as-pjt_items" value="pjt_items">{{ __('Projects list') }}</x-radio>
+                    <x-radio x-model="download_as" id="as-pjt_items" name="as-pjt_items" value="pjt_items">{{ __('Daftar proyek') }}</x-radio>
                 </div>
                 <div class="flex justify-end">
                     <x-secondary-button type="button" wire:click="download" x-on:click="$dispatch('close')">
                         <div class="relative">
-                            <span wire:loading.class="opacity-0" wire:target="download"><i class="icon-download"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Download') }}</span></span>
+                            <span wire:loading.class="opacity-0" wire:target="download"><i class="icon-download"></i><span class="ml-0 hidden md:ml-2 md:inline">{{ __('Unduh') }}</span></span>
                             <x-spinner wire:loading.class.remove="hidden" wire:target="download" class="hidden sm mono"></x-spinner>                
                         </div>  
                     </x-secondary-button>
@@ -249,10 +249,10 @@ class extends Component
 
             <div class="flex justify-between px-8 lg:px-3 py-3 lg:py-0 divide-x divide-neutral-200 dark:divide-neutral-700">
                 <div class="btn-group h-9 pr-3">
-                    <x-checkbox-button-t title="{{ __('Active') }}" wire:model.live="statuses" value="active" name="statuses" id="status-active">
+                    <x-checkbox-button-t title="{{ __('Aktif') }}" wire:model.live="statuses" value="active" name="statuses" id="status-active">
                         <div class="text-center my-auto"><i class="icon-play"></i></div>
                     </x-checkbox-button-t>
-                    <x-checkbox-button-t title="{{ __('Inactive') }}" wire:model.live="statuses" value="inactive" name="statuses" id="status-inactive">
+                    <x-checkbox-button-t title="{{ __('Nonaktif') }}" wire:model.live="statuses" value="inactive" name="statuses" id="status-inactive">
                         <div class="text-center my-auto"><i class="icon-pause"></i></div>
                     </x-checkbox-button-t>
                 </div>
@@ -266,7 +266,7 @@ class extends Component
             <div class="grow flex items-center gap-x-4 p-4 lg:py-0">
                 <x-dropdown align="left" width="48">
                     <x-slot name="trigger">
-                        <x-text-button class="uppercase text-xs font-semibold">{{ __('Teams') }}<i class="icon-chevron-down ms-1"></i></x-text-button>
+                        <x-text-button class="uppercase text-xs font-semibold">{{ __('Tim') }}<i class="icon-chevron-down ms-1"></i></x-text-button>
                     </x-slot>
                     <x-slot name="content">
 
@@ -292,7 +292,7 @@ class extends Component
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'download')">
-                                <i class="icon-download me-2"></i>{{ __('Download as...') }}
+                                <i class="icon-download me-2"></i>{{ __('Unduh sebagai...') }}
                             </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
@@ -303,13 +303,13 @@ class extends Component
 
     <div class="h-auto sm:h-12">
         <div class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full h-full px-8">
-            <div class="text-center sm:text-left">{{ $pjt_items->total() . ' ' . __('projects') }}</div>
+            <div class="text-center sm:text-left">{{ $pjt_items->total() . ' ' . __('proyek ') }}</div>
             <div class="grow flex flex-col sm:flex-row gap-3 items-center justify-center sm:justify-end">
                 <x-select wire:model.live="sort">
                     <option value="updated">{{ __('Last updated') }}</option>
                     <option value="created">{{ __('Recently created') }}</option>
                     <option value="name">{{ __('Name') }}</option>
-                    <option value="team">{{ __('Team') }}</option>
+                    <option value="team">{{ __('Tim') }}</option>
                 </x-select>
                 <div class="btn-group">
                     <x-radio-button wire:model.live="view" value="list" name="view" id="view-list"><i
@@ -338,7 +338,7 @@ class extends Component
                         <i class="icon-users relative"><i
                                 class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
-                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Select teams') }}
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih tim') }}
                     </div>
                 </div>
             @endif
@@ -430,14 +430,14 @@ class extends Component
                     <div wire:key="list" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto mt-6">
                         <table class="text-neutral-600 dark:text-neutral-400 w-full table text-sm [&_th]:text-center [&_th]:px-2 [&_th]:py-3 [&_td]:px-2 [&_td]:py-1">
                             <tr class="uppercase text-xs">
-                                <th>{{ __('Project') }}</th>
-                                <th>{{ __('Team') }}</th>
-                                <th>{{ __('Owner') }}</th>
-                                <th>{{ __('Members') }}</th>
-                                <th>{{ __('Tasks') }}</th>
+                                <th>{{ __('Proyek') }}</th>
+                                <th>{{ __('Tim') }}</th>
+                                <th>{{ __('Pemilik') }}</th>
+                                <th>{{ __('Anggota') }}</th>
+                                <th>{{ __('Tugas') }}</th>
                                 <th>{{ __('Progress') }}</th>
                                 <th>{{ __('Status') }}</th>
-                                <th>{{ __('Updated') }}</th>
+                                <th>{{ __('Diperbarui') }}</th>
                             </tr>
                             @foreach($pjt_items as $project)
                                 <tr class="text-nowrap hover:bg-neutral-50 dark:hover:bg-neutral-700">
@@ -489,7 +489,7 @@ class extends Component
                         }" x-init="observe"></div>
                         <x-spinner class="sm" />
                     @else
-                        <div class="mx-auto">{{ __('No more projects') }}</div>
+                        <div class="mx-auto">{{ __('Tak ada lagi') }}</div>
                     @endif
                 @endif
             </div>

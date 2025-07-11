@@ -729,10 +729,10 @@ new class extends Component {
                             </span>
                         </td>
                         <td class="px-4 py-3">
-                            {{ $worker['experience']['experience_from_hire'] ? $worker['experience']['experience_from_hire'] . ' bulan' : __('N/A') }}
+                            {{ $worker['experience']['experience_from_hire'] ? $worker['experience']['experience_from_hire'] . ' bulan' : 'N/A' }}
                         </td>
                         <td class="px-4 py-3">
-                            {{ $worker['experience']['experience_from_first_hide'] ? $worker['experience']['experience_from_first_hide'] . ' bulan' : __('N/A') }}
+                            {{ $worker['experience']['experience_from_first_hide'] ? $worker['experience']['experience_from_first_hide'] . ' bulan' : 'N/A' }}
                         </td>
                         <td class="px-4 py-3">
                             <x-text-button type="button" wire:click="showWorkerDetails('{{ $empId }}')" 
@@ -799,13 +799,13 @@ new class extends Component {
                     <div>
                         <div class="text-sm text-neutral-500">{{ __('Pengalaman (Kerja)') }}</div>
                         <div class="text-lg">
-                            {{ $workerDetails['experience']['experience_from_hire'] ? $workerDetails['experience']['experience_from_hire'] . ' bulan' : __('N/A') }}
+                            {{ $workerDetails['experience']['experience_from_hire'] ? $workerDetails['experience']['experience_from_hire'] . ' bulan' : 'N/A' }}
                         </div>
                     </div>
                     <div>
                         <div class="text-sm text-neutral-500">{{ __('Pengalaman (Caldera)') }}</div>
                         <div class="text-lg">
-                            {{ $workerDetails['experience']['experience_from_first_hide'] ? $workerDetails['experience']['experience_from_first_hide'] . ' bulan' : __('N/A') }}
+                            {{ $workerDetails['experience']['experience_from_first_hide'] ? $workerDetails['experience']['experience_from_first_hide'] . ' bulan' : 'N/A' }}
                         </div>
                     </div>
                 </div>

@@ -127,7 +127,7 @@ class extends Component {
         $columns = [
             'ID', __('Kode'), 
             'Model', __('Warna'), 'MCS',
-            __('Tipe'), __('Resep'), __('Line'), __('Team'), __('Operator 1'), __('Operator 2'), __('Evaluasi'), __('Durasi'), 'kWh', __('Jumlah Gambar'), __('Awal'), __('Akhir'),
+            __('Tipe'), __('Resep'), __('Line'), __('Tim'), __('Operator 1'), __('Operator 2'), __('Evaluasi'), __('Durasi'), 'kWh', __('Jumlah Gambar'), __('Awal'), __('Akhir'),
             __('Base original') . ' (kg)',
             __('Batch remixing') . ' (kg)',
             __('Skrap') . ' (kg)',

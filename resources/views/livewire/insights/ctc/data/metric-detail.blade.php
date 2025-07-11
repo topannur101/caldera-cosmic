@@ -665,11 +665,11 @@ new class extends Component {
                 <div class="space-y-2 text-sm">
                     <div class="flex gap-x-3">
                         <div>
-                            <span class="text-neutral-500">{{ __('CU:') }}</span>
+                            <span class="text-neutral-500">CU:</span>
                             <span class="font-mono">{{ $batch['correction_uptime'] }}%</span>
                         </div>
                         <div>
-                            <span class="text-neutral-500">{{ __('CR:') }}</span>
+                            <span class="text-neutral-500">CR:</span>
                             <span class="font-mono">{{ $batch['correction_rate'] }}%</span>
                         </div>
                     </div>

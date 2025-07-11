@@ -772,29 +772,29 @@ new #[Layout('layouts.app')] class extends Component {
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Total Batch') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Batch total') }}</div>
             <div class="text-2xl font-bold">{{ number_format($evaluationStats['total_batches'] ?? 0) }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Batches/Hour') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Batch/jam') }}</div>
             <div class="text-2xl font-bold text-blue-600">{{ $productivityStats['batches_per_hour'] ?? 0 }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Overall Performance') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Performa keseluruhan') }}</div>
             <div class="text-2xl font-bold text-green-600">{{ $evaluationStats['overall_performance'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Target Achievement') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Capaian target') }}</div>
             <div class="text-2xl font-bold text-purple-600">{{ $evaluationStats['target_achievement'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
             <div class="text-xs text-neutral-500">{{ ($evaluationStats['target_achievement_count'] ?? 0) }}/{{ ($evaluationStats['total_batches'] ?? 0) }} {{ __('batch') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Peak Production') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Puncak produksi') }}</div>
             <div class="text-2xl font-bold text-orange-600">{{ $productivityStats['peak_hour_production'] ?? 0 }}</div>
             <div class="text-xs text-neutral-500">{{ __('batch/jam') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Consistency') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Konsistensi') }}</div>
             <div class="text-2xl font-bold text-teal-600">{{ $productivityStats['production_consistency'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
         </div>
     </div>
@@ -824,7 +824,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
 
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <h3 class="text-lg font-medium mb-4">{{ __('SSD Evaluation (Consistency)') }}</h3>
+            <h3 class="text-lg font-medium mb-4">{{ __('Evaluasi SSD (Konsistensi)') }}</h3>
             <div class="h-64">
                 <canvas id="ssd-evaluation-chart" wire:ignore></canvas>
             </div>
@@ -835,7 +835,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
 
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <h3 class="text-lg font-medium mb-4">{{ __('Correction Evaluation') }}</h3>
+            <h3 class="text-lg font-medium mb-4">{{ __('Evaluasi koreksi') }}</h3>
             <div class="h-64">
                 <canvas id="correction-evaluation-chart" wire:ignore></canvas>
             </div>

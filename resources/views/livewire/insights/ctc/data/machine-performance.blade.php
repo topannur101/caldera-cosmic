@@ -757,15 +757,15 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="text-2xl font-bold">{{ $fleetStats['total_machines'] ?? 0 }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Avg Utilization') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Rerata Utilisasi') }}</div>
             <div class="text-2xl font-bold text-blue-600">{{ $fleetStats['avg_utilization'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Avg Quality') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Rerata Kualitas') }}</div>
             <div class="text-2xl font-bold text-green-600">{{ $fleetStats['avg_quality_score'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Avg Availability') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Rerata Ketersediaan') }}</div>
             <div class="text-2xl font-bold text-purple-600">{{ $fleetStats['avg_availability'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
@@ -774,7 +774,7 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="text-xs text-neutral-500">{{ __('> 80% performance') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Need Improvement') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Perlu perbaikan') }}</div>
             <div class="text-2xl font-bold text-orange-600">{{ $fleetStats['improvement_needed'] ?? 0 }}</div>
             <div class="text-xs text-neutral-500">{{ __('< 70% performance') }}</div>
         </div>

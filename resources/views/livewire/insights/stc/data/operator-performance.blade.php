@@ -726,7 +726,7 @@ new class extends Component {
                             <div class="text-lg font-bold {{ $this->getPerformanceClass($stat['efficiency_score']) }}">
                                 {{ $stat['efficiency_score'] }}
                             </div>
-                            <div class="text-xs text-neutral-500">{{ __('/100') }}</div>
+                            <div class="text-xs text-neutral-500">/100</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             <div class="text-sm font-medium {{ $this->getLatencyClass($stat['avg_latency_minutes']) }}">
@@ -760,19 +760,19 @@ new class extends Component {
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             @if($stat['efficiency_score'] >= 90)
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
-                                    {{ __('Excellent') }}
+                                    Excellent
                                 </span>
                             @elseif($stat['efficiency_score'] >= 75)
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-lime-100 text-lime-800 dark:bg-lime-800 dark:text-lime-100">
-                                    {{ __('Good') }}
+                                    Good
                                 </span>
                             @elseif($stat['efficiency_score'] >= 60)
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100">
-                                    {{ __('Average') }}
+                                    Average
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100">
-                                    {{ __('Needs Improvement') }}
+                                    Needs Improvement
                                 </span>
                             @endif
                         </td>

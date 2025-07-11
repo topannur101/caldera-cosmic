@@ -159,8 +159,8 @@ new #[Layout('layouts.app')] class extends Component {
 
                 $columns = [
                     __('Batch'), __('Line'), __('Resep'), __('MCS'), __('AVG Kiri'), __('AVG Kanan'),
-                    __('MAE Kiri'), __('MAE Kanan'), __('SSD Kiri'), __('SSD Kanan'), __('Balance'),
-                    __('CU'), __('CR'), __('Durasi'), __('Mulai'), __('Kualitas')
+                    __('MAE Kiri'), __('MAE Kanan'), __('SSD Kiri'), __('SSD Kanan'), 'BAL',
+                    'CU', 'CR', __('Durasi'), __('Mulai'), __('Kualitas')
                 ];
 
                 $callback = function () use ($columns) {
@@ -306,7 +306,7 @@ new #[Layout('layouts.app')] class extends Component {
                 
                 <div class="space-y-6 text-sm text-neutral-600 dark:text-neutral-400">
                     <div>
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('MAE (Mean Average Error)') }}</h3>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">MAE (Mean Average Error)</h3>
                         <p class="mb-2">{{ __('Rata-rata kesalahan dari target ketebalan. Mengukur seberapa dekat hasil produksi dengan target yang ditetapkan.') }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
                             {{ __('Rumus: Average of |actual_thickness - target_thickness|') }}<br>
@@ -317,7 +317,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
                     <div>
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('SSD (Sample Standard Deviation)') }}</h3>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">SSD (Sample Standard Deviation)</h3>
                         <p class="mb-2">{{ __('Standar deviasi sampel yang mengukur konsistensi ketebalan. Menunjukkan seberapa konsisten hasil produksi.') }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
                             {{ __('Unit: mm') }}<br>
@@ -327,7 +327,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
                     <div>
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('AVG (Average Thickness)') }}</h3>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">AVG (Average Thickness)</h3>
                         <p class="mb-2">{{ __('Ketebalan rata-rata aktual yang dihasilkan selama proses produksi.') }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
                             {{ __('Unit: mm') }}<br>
@@ -337,7 +337,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
                     <div>
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('BAL (Balance)') }}</h3>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">'BAL (Balance)</h3>
                         <p class="mb-2">{{ __('Keseimbangan ketebalan antara sisi kiri dan kanan. Mengukur perbedaan ketebalan antar sisi.') }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
                             {{ __('Rumus: Left thickness - Right thickness') }}<br>
@@ -348,7 +348,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
                     <div>
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('CU (Correction Uptime)') }}</h3>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">CU (Correction Uptime)</h3>
                         <p class="mb-2">{{ __('Persentase waktu sistem koreksi otomatis dinyalakan. Mengukur seberapa lama sistem auto correction aktif.') }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
                             {{ __('Unit: %') }}<br>
@@ -358,36 +358,12 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
                     <div>
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('CR (Correction Rate)') }}</h3>
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">CR (Correction Rate)</h3>
                         <p class="mb-2">{{ __('Tingkat frekuensi koreksi otomatis ditrigger. Seberapa sering koreksi auto dilakukan.') }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
                             {{ __('Unit: %') }}<br>
                             {{ __('Fungsi: Mengukur frekuensi aktivasi koreksi otomatis') }}<br>
                             {{ __('Analisis: Membantu evaluasi performa sistem koreksi') }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Quality Status (Status Kualitas)') }}</h3>
-                        <p class="mb-2">{{ __('Status kualitas batch berdasarkan nilai MAE. Menentukan apakah batch memenuhi standar kualitas.') }}</p>
-                        <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
-                            {{ __('Pass (Lulus): MAE ≤ 1.0 mm') }}<br>
-                            {{ __('Fail (Gagal): MAE > 1.0 mm') }}<br>
-                            {{ __('Basis: Threshold MAE untuk menentukan kualitas batch') }}
-                        </div>
-                    </div>
-
-                    <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4">
-                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __('Indikator Warna Kualitas') }}</h3>
-                        <div class="space-y-2 text-xs">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 bg-green-500 rounded mr-2"></div>
-                                <span>{{ __('Hijau: Pass - MAE ≤ 1.0 mm (Kualitas Baik)') }}</span>
-                            </div>
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 bg-red-500 rounded mr-2"></div>
-                                <span>{{ __('Merah: Fail - MAE > 1.0 mm (Perlu Perhatian)') }}</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -422,13 +398,13 @@ new #[Layout('layouts.app')] class extends Component {
                         <th>{{ __('Batch') }}</th>
                         <th>{{ __('Line') }}</th>
                         <th>{{ __('Resep') }}</th>
-                        <th>{{ __('MCS') }}</th>
-                        <th>{{ __('AVG') }}</th>
-                        <th>{{ __('MAE') }}</th>
-                        <th>{{ __('SSD') }}</th>
-                        <th>{{ __('BAL') }}</th>
-                        <th>{{ __('CU') }}</th>
-                        <th>{{ __('CR') }}</th>
+                        <th>MCS</th>
+                        <th>AVG</th>
+                        <th>MAE</th>
+                        <th>SSD</th>
+                        <th>BAL</th>
+                        <th>CU</th>
+                        <th>CR</th>
                         <th>{{ __('Durasi') }}</th>
                         <th>{{ __('Dibuat') }}</th>
                     </tr>

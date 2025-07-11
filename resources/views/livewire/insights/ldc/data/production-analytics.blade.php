@@ -696,11 +696,11 @@ new class extends Component {
         <x-modal name="style-details" maxWidth="4xl">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">
-                    {{ __('Detail Style Performance') }}
+                    {{ __('Rincian performa style') }}
                 </h2>
                 <!-- Style detail content will be implemented separately -->
                 <div class="text-center py-8 text-neutral-500">
-                    {{ __('Detail analytics untuk style akan ditampilkan di sini') }}
+                    {{ __('Rincian analitik untuk style akan ditampilkan di sini') }}
                 </div>
                 <div class="mt-6 flex justify-end">
                     <x-secondary-button type="button" x-on:click="$dispatch('close')">

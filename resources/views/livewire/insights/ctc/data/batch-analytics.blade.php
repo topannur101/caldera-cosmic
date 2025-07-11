@@ -86,7 +86,6 @@ new #[Layout('layouts.app')] class extends Component {
             'avg_balance' => round(abs($metrics->avg('t_balance') ?? 0), 2),
             'avg_correction_uptime' => round($metrics->avg('correction_uptime') ?? 0, 1),
             'avg_duration' => $this->calculateAverageDuration($metrics),
-            'quality_pass_rate' => $this->calculateQualityPassRate($metrics),
         ];
     }
 
@@ -543,20 +542,16 @@ new #[Layout('layouts.app')] class extends Component {
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Total Batch') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Batch total') }}</div>
             <div class="text-2xl font-bold">{{ number_format($summaryStats['total_batches'] ?? 0) }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Rata-rata MAE') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Rerata MAE') }}</div>
             <div class="text-2xl font-bold">{{ $summaryStats['avg_mae'] ?? 0 }} <span class="text-sm font-normal">mm</span></div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Correction Uptime') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">Correction Uptime</div>
             <div class="text-2xl font-bold">{{ $summaryStats['avg_correction_uptime'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
-        </div>
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Quality Pass Rate') }}</div>
-            <div class="text-2xl font-bold">{{ $summaryStats['quality_pass_rate'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
         </div>
     </div>
 

@@ -140,7 +140,6 @@ new #[Layout('layouts.app')] class extends Component {
                 'avg_cu' => round($shiftMetrics->avg('correction_uptime') ?? 0, 1),
                 'avg_cr' => round($shiftMetrics->avg('correction_rate') ?? 0, 1),
                 'avg_mae' => round($shiftMetrics->avg('t_mae') ?? 0, 2),
-                'quality_pass_rate' => $this->calculateQualityPassRate($shiftMetrics),
             ];
         })->sortBy('shift')->values()->toArray();
     }
@@ -176,7 +175,6 @@ new #[Layout('layouts.app')] class extends Component {
                 'mae' => $metric->t_mae,
                 'correction_uptime' => $metric->correction_uptime,
                 'is_auto' => $metric->correction_uptime > 50,
-                'quality_pass' => $metric->t_mae <= 1.0,
             ];
         })->toArray();
     }
@@ -679,20 +677,20 @@ new #[Layout('layouts.app')] class extends Component {
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Auto Operation') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Operasi Auto') }}</div>
             <div class="text-2xl font-bold text-green-600">{{ $correctionStats['auto_percentage'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
             <div class="text-xs text-neutral-500">{{ ($correctionStats['auto_batches'] ?? 0) . '/' . ($correctionStats['total_batches'] ?? 0) }} {{ __('batch') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Avg Correction Uptime') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Rerata Correction Uptime') }}</div>
             <div class="text-2xl font-bold">{{ $correctionStats['avg_correction_uptime'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Avg Correction Rate') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Rerata Correction Rate') }}</div>
             <div class="text-2xl font-bold">{{ $correctionStats['avg_correction_rate'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __('Correction Effectiveness') }}</div>
+            <div class="text-sm text-neutral-500 mb-1">{{ __('Efektivitas Koreksi') }}</div>
             <div class="text-2xl font-bold text-blue-600">{{ $correctionStats['correction_effectiveness'] ?? 0 }}<span class="text-sm font-normal">%</span></div>
         </div>
     </div>
@@ -759,12 +757,11 @@ new #[Layout('layouts.app')] class extends Component {
                 <thead class="bg-neutral-50 dark:bg-neutral-700">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Shift') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Total Batch') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Auto Operation') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Avg CU') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Avg CR') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Avg MAE') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Quality Pass Rate') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Batch total') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Operasi Auto') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Rerata CU') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Rerata CR') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">{{ __('Rerata MAE') }}</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-700">
@@ -791,11 +788,6 @@ new #[Layout('layouts.app')] class extends Component {
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-300">
                                 <span class="{{ $shift['avg_mae'] <= 1.0 ? 'text-green-600' : 'text-red-600' }}">
                                     {{ $shift['avg_mae'] }} mm
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-300">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $shift['quality_pass_rate'] > 80 ? 'bg-green-100 text-green-800' : ($shift['quality_pass_rate'] > 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                                    {{ $shift['quality_pass_rate'] }}%
                                 </span>
                             </td>
                         </tr>

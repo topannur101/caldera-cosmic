@@ -96,7 +96,7 @@ new class extends Component
             $this->reset(['name', 'desc', 'location', 'photo', 'team_id', 'status', 'member_ids']);
             $this->dispatch('remove-photo');   
             $this->js('$dispatch("close")');
-            $this->js('toast("' . __('Project berhasil dibuat') . '", { type: "success" })');
+            $this->js('toast("' . __('Proyek berhasil dibuat') . '", { type: "success" })');
 
         } catch (\Exception $e) {
             $this->js('toast("' . __('Terjadi kesalahan saat menyimpan') . '", { type: "danger" })');
@@ -130,7 +130,7 @@ new class extends Component
 <div class="relative flex flex-col h-full">
     <div class="flex justify-between items-start pt-6 pb-3 px-6">
         <h2 class="text-lg font-medium">
-            {{ __('Project baru') }}
+            {{ __('Proyek baru') }}
         </h2>
         <x-text-button type="button" x-on:click="$dispatch('close')">
             <i class="icon-x"></i>
@@ -164,7 +164,7 @@ new class extends Component
 
             {{-- Team Selection --}}
             <div>
-                <label for="form-team" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Team') }}</label>
+                <label for="form-team" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
                 <x-select id="form-team" wire:model.change="team_id" class="w-full">
                     <option value="">{{ __('Pilih team...') }}</option>
                     @foreach($teams as $team)
@@ -281,7 +281,7 @@ new class extends Component
                     <h4 class="font-medium mb-2">{{ __('Ringkasan') }}</h4>
                     @if($team_id)
                         <div class="flex justify-between">
-                            <span>{{ __('Team') }}:</span>
+                            <span>{{ __('Tim') }}:</span>
                             <span class="font-medium">{{ $this->getSelectedTeamName() }}</span>
                         </div>
                     @endif
