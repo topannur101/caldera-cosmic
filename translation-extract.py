@@ -136,7 +136,7 @@ def extract_translations():
     resources_directory = 'resources/'
     app_directory = 'app/'
     output_file = 'lang/en.json'
-    exclusion_file = 'translation-strings-exception.json'
+    exclusion_file = 'translation-exception.json'
     
     # Load existing translations and exclusion list
     print("\nLoading existing translations and exclusions...")
@@ -212,6 +212,97 @@ def remove_unused():
         print(f"\nRemoving unused translations...")
         remove_unused_translations(unused_keys, language_files)
         print(f"\nSuccessfully removed {len(unused_keys)} unused translations from all language files.")
+    else:
+        print("Operation cancelled.")
+
+def separate_empty_translations():
+    print("\n" + "="*60)
+    print("           SEPARATING EMPTY TRANSLATIONS")
+    print("="*60)
+    
+    # Get all language files
+    language_files = get_language_files()
+    if not language_files:
+        print("No language files found in lang/ directory.")
+        return
+    
+    print(f"\nFound {len(language_files)} language files:")
+    for lang_file in language_files:
+        print(f"  - {os.path.basename(lang_file)}")
+    
+    # Analyze each file
+    separation_plan = {}
+    total_empty_count = 0
+    
+    print(f"\nAnalyzing translation files...")
+    for lang_file in language_files:
+        translations = load_existing_translations(lang_file)
+        
+        filled_translations = {}
+        empty_translations = {}
+        
+        for key, value in translations.items():
+            if value == "":
+                empty_translations[key] = value
+            else:
+                filled_translations[key] = value
+        
+        if empty_translations:
+            separation_plan[lang_file] = {
+                'filled': filled_translations,
+                'empty': empty_translations,
+                'total': len(translations)
+            }
+            total_empty_count += len(empty_translations)
+        
+        print(f"  - {os.path.basename(lang_file)}: {len(filled_translations)} filled, {len(empty_translations)} empty")
+    
+    if not separation_plan:
+        print("\nNo empty translations found in any language files!")
+        return
+    
+    # Show separation preview
+    print(f"\nSeparation Preview:")
+    print("-" * 60)
+    for lang_file, plan in separation_plan.items():
+        print(f"{os.path.basename(lang_file)}:")
+        print(f"  - {len(plan['filled'])} filled translations (will stay at top)")
+        print(f"  - {len(plan['empty'])} empty translations (will move to bottom)")
+        
+        # Show first few empty keys as preview
+        empty_keys = list(plan['empty'].keys())
+        for key in empty_keys[:3]:
+            print(f"    └─ {key}")
+        if len(empty_keys) > 3:
+            print(f"    └─ ... and {len(empty_keys) - 3} more")
+        print()
+    
+    print(f"Total empty translations to move: {total_empty_count}")
+    
+    # Confirm separation
+    confirm = input(f"Do you want to separate empty translations in all language files? (y/N): ").strip().lower()
+    
+    if confirm in ['y', 'yes']:
+        print(f"\nSeparating empty translations...")
+        
+        for lang_file, plan in separation_plan.items():
+            # Create new ordered dictionary: filled first, then empty
+            reordered_translations = {}
+            
+            # Add filled translations first (maintain original order)
+            reordered_translations.update(plan['filled'])
+            
+            # Add empty translations at the bottom (sorted alphabetically)
+            for key in sorted(plan['empty'].keys()):
+                reordered_translations[key] = ""
+            
+            # Write back to file
+            with open(lang_file, 'w', encoding='utf-8') as json_file:
+                json.dump(reordered_translations, json_file, ensure_ascii=False, indent=4)
+            
+            print(f"  - Separated {len(plan['empty'])} empty translations in {os.path.basename(lang_file)}")
+        
+        print(f"\nSuccessfully separated empty translations in {len(separation_plan)} language files.")
     else:
         print("Operation cancelled.")
 
@@ -339,10 +430,11 @@ def main():
         print("2. Remove unused translations")
         print("3. Sort translations alphabetically")
         print("4. Sync translations across all languages")
-        print("5. Exit")
+        print("5. Separate empty translations to bottom")
+        print("6. Exit")
         print()
         
-        choice = input("Enter your choice (1-5): ").strip()
+        choice = input("Enter your choice (1-6): ").strip()
         
         if choice == '1':
             extract_translations()
@@ -353,10 +445,12 @@ def main():
         elif choice == '4':
             sync_translations()
         elif choice == '5':
+            separate_empty_translations()
+        elif choice == '6':
             print("\nGoodbye!")
             sys.exit(0)
         else:
-            print("Invalid choice. Please enter 1, 2, 3, 4, or 5.")
+            print("Invalid choice. Please enter 1, 2, 3, 4, 5, or 6.")
         
         print("\n" + "="*60)
         input("Press Enter to continue...")

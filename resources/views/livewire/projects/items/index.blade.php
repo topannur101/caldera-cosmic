@@ -329,7 +329,7 @@ class extends Component
                         <i class="icon-ghost"></i>
                     </div>
                     <div class="text-center text-neutral-400 dark:text-neutral-600">
-                        {{ __('No matching projects') }}
+                        {{ __('Tak ada proyek yang cocok') }}
                     </div>
                 </div>
             @else

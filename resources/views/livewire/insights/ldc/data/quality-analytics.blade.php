@@ -219,7 +219,7 @@ new class extends Component {
                 // Clear all charts if no data
                 ['defect-analysis-chart', 'grade-correlation-chart', 'measurement-difference-chart', 'quality-distribution-chart'].forEach(id => {
                     const container = document.getElementById(id + '-container');
-                    if (container) container.innerHTML = '<div class=\"flex items-center justify-center h-full text-neutral-500\">" . __('No data available') . "</div>';
+                    if (container) container.innerHTML = '<div class=\"flex items-center justify-center h-full text-neutral-500\">" . __('Data tak tersedia') . "</div>';
                 });
             ");
             return;
