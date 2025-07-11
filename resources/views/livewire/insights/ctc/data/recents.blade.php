@@ -30,7 +30,7 @@ new #[Layout('layouts.app')] class extends Component
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
         @foreach ($machines as $machine)
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">                
-                <div class="flex gap-x-3 items-center px-8 py-4 w-full bg-neutral-200 dark:bg-neutral-700">
+                <div class="flex gap-x-3 items-center px-8 py-4 w-full bg-caldy-200 dark:bg-caldy-700 bg-opacity-20 dark:bg-opacity-20">
                     <div class="w-2 h-2 rounded-full {{ $machine->is_online($offline_minutes) ? 'bg-green-500' : 'bg-red-500' }}"></div>
                     <div class="font-mono text-xl">{{ sprintf('%02d', $machine->line) }}</div>
                     <div class="text-sm text-neutral-500">{{ $machine->latest_metric_obj ? Carbon\Carbon::parse($machine->latest_metric_obj->created_at)->diffForHumans() : __('Belum ada batch terkini') }}</div>

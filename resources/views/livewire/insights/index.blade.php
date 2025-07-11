@@ -157,7 +157,7 @@ class extends Component {
 
 <x-slot name="title">{{ __('Wawasan') }}</x-slot>
 <div wire:poll.900s id="content" class="py-12 text-neutral-800 dark:text-neutral-200">
-    <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
         <div class="relative text-neutral h-32 sm:rounded-lg overflow-hidden mb-12">
             <img class="dark:invert absolute top-0 left-0 w-full h-full object-cover opacity-70" src="/insight-banner.jpg" />
             <div class="absolute top-0 left-0 flex h-full items-center px-4 lg:px-8 text-neutral-500">
