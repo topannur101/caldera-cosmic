@@ -540,9 +540,9 @@ new class extends Component {
             <table class="table table-xs text-sm text-center mt-6">
                 <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
                     <td></td>
-                    <td>{{ __('Kiri') }}</td>
-                    <td>{{ __('Kanan') }}</td>
-                    <td>{{ __('Gabungan') }}</td>
+                    <td>{{ __('Ki') }}</td>
+                    <td>{{ __('Ka') }}</td>
+                    <td></td>
                     <td>{{ __('Evaluasi') }}</td>
                 </tr>
                 <!-- AVG Evaluation Row -->
