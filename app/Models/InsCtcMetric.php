@@ -157,7 +157,7 @@ class InsCtcMetric extends Model
         $bal = $this->t_balance;
         $absBAL = abs($bal);
         
-        if ($absBAL <= 1) {
+        if ($absBAL <= 0.3) {
             return [
                 'status' => 'seimbang',
                 'color' => 'text-green-600',
@@ -188,7 +188,7 @@ class InsCtcMetric extends Model
     {
         $mae = $this->t_mae;
         
-        if ($mae <= 1.0) {
+        if ($mae <= 0.3) {
             return [
                 'status' => 'sesuai standar',
                 'color' => 'text-green-600',
@@ -212,7 +212,7 @@ class InsCtcMetric extends Model
     {
         $ssd = $this->t_ssd;
         
-        if ($ssd <= 1.0) {
+        if ($ssd <= 0.3) {
             return [
                 'status' => 'tebal konsisten',
                 'color' => 'text-green-600',
@@ -236,7 +236,7 @@ class InsCtcMetric extends Model
     {
         $cu = $this->correction_uptime;
         
-        if ($cu > 50) {
+        if ($cu > 40) {
             return [
                 'status' => 'auto',
                 'color' => 'text-green-600',
