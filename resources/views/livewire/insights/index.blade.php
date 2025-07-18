@@ -7,6 +7,7 @@ use App\Models\InsOmvMetric;
 use App\Models\InsCtcMetric;
 use App\Models\InsRdcTest;
 use App\Models\InsLdcHide;
+use App\Models\InsClmRecord;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -23,6 +24,11 @@ class extends Component {
     public int $ctc_lines_recent = 0;
     public int $rdc_machines_recent = 0;
     public int $ldc_codes_recent = 0;
+    
+    // Climate data properties
+    public float|null $temperature_latest = null;
+    public float|null $humidity_latest = null;
+    public bool $climate_data_stale = false;
 
     public function mount()
     {
@@ -130,6 +136,28 @@ class extends Component {
         });
     }
 
+    private function getLatestClimateData(): void
+    {
+        // Get the most recent climate record for IP location
+        $latestRecord = InsClmRecord::where('location', 'ip')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($latestRecord) {
+            $this->temperature_latest = $latestRecord->temperature;
+            $this->humidity_latest = $latestRecord->humidity;
+            
+            // Check if data is stale (older than 3 hours)
+            $threeHoursAgo = Carbon::now()->subHours(3);
+            $this->climate_data_stale = $latestRecord->created_at->isBefore($threeHoursAgo);
+        } else {
+            // No data available
+            $this->temperature_latest = null;
+            $this->humidity_latest = null;
+            $this->climate_data_stale = false;
+        }
+    }
+
     public function calculateMetrics()
     {
         $this->stc_machines_count   = $this->getCachedStcMCount();
@@ -138,6 +166,9 @@ class extends Component {
         $this->ctc_lines_recent     = $this->getCachedCtcLines();
         $this->rdc_machines_recent  = $this->getCachedRdcMachines();
         $this->ldc_codes_recent     = $this->getCachedLdcCodes();
+        
+        // Get fresh climate data (no caching)
+        $this->getLatestClimateData();
     }
 
     #[On('recalculate')]
@@ -235,6 +266,34 @@ class extends Component {
                     <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
                         {{ __('Sistem Area IP') }}</h1>
                     <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
+                        <a href="{{ route('insights.clm.index') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                            <div class="flex items-center">
+                                <div class="grow px-6 py-3 flex gap-x-6 items-center">
+                                    <div>
+                                        {{ __('Gedung IP') }}
+                                    </div>                                    
+                                    <div class="grow flex gap-x-2 items-stretch text-sm text-neutral-600 dark:text-neutral-400">
+                                        @if($climate_data_stale)
+                                            <div class="text-yellow-500 mr-1" title="{{ __('Data lebih dari 3 jam yang lalu') }}">
+                                                <i class="icon-triangle-alert"></i>
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <i class="icon icon-thermometer"></i>
+                                            <span>{{ $temperature_latest !== null ? number_format($temperature_latest, 1) : '--.-' }}</span><span>°C</span>
+                                        </div>                                   
+                                        <div class="w-px bg-neutral-200 dark:bg-neutral-700"></div>
+                                        <div>
+                                            <i class="icon icon-droplet "></i>
+                                            <span>{{ $humidity_latest !== null ? number_format($humidity_latest, 1) : '--.-' }}</span><span>%</span>
+                                        </div>                               
+                                    </div>
+                                </div>
+                                <div class="px-6 py-3 text-lg">
+                                    <i class="icon-chevron-right"></i>
+                                </div>
+                            </div>
+                        </a>
                         <a href="{{ route('insights.stc.index') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
                             <div class="flex items-center">
                                 <div class="px-6 py-3">

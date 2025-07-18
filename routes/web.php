@@ -145,6 +145,11 @@ Route::prefix('insights')->group(function () {
 
     });
 
+    Route::name('insights.clm.')->group(function () {
+
+        Volt::route('/clm/', 'insights.clm.index')     ->name('index');
+    });
+
     Route::name('insights.stc.')->group(function () {
 
         Volt::route('/stc/manage/authorizations',   'insights.stc.manage.auths')     ->name('manage.auths');
