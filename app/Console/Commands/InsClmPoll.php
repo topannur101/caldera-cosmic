@@ -24,20 +24,21 @@ class InsClmPoll extends Command
      *
      * @var string
      */
-    protected $description = 'Poll temperature and humidity data from Modbus server and save 30-minute median values with automatic STC adjustment';
+    protected $description = 'Poll temperature and humidity data from Modbus server and save 30-minute median values with cumulative ambient-based STC adjustment';
 
     // Configuration
     protected $machine_id = 7;              // ID 7 = Chamber Line 6
     protected $unit_id = 1;                 // Modbus unit ID
     // Production timing - Changed to 30 minutes
     protected $buffer_timeout = 1800;       // 30 minutes in seconds (was 3600)
-    protected $polling_interval = 30;       // 1 minute in seconds
-    protected $reset_timeout = 300;         // 10 minutes in seconds
+    protected $polling_interval = 60;       // 1 minute in seconds
+    protected $reset_timeout = 600;         // 10 minutes in seconds
     
     // State management
     protected $data_buffer = [];            // Buffer for temperature/humidity measurements
     protected $last_successful_poll = null; // Last successful measurement timestamp
-    protected $previous_ambient_temp = null; // Store previous ambient temp for comparison
+    protected $ambient_at_last_stc_adjustment = null; // Ambient temp when we last made STC adjustment
+    protected $log_file_path;               // Path for buffer processing logs
 
     /**
      * Convert 3-digit integer value to decimal format (divide by 10)
@@ -156,59 +157,74 @@ class InsClmPoll extends Command
         }
 
         // NEW: Check for STC ambient adjustment
-        $this->checkAmbientAdjustment($median_temperature);
+        $adjustment_made = $this->checkAmbientAdjustment($median_temperature);
+
+        // Log every buffer processing cycle
+        $this->logBufferProcessing($median_temperature, $median_humidity, $buffer_size, $adjustment_made);
 
         // Clear buffer after processing
         $this->resetBuffer();
     }
 
     /**
-     * Check if STC ambient adjustment should be triggered
+     * Check if STC ambient adjustment should be triggered (cumulative approach)
+     * Returns true if adjustment was made, false otherwise
      */
     function checkAmbientAdjustment($current_ambient_temp)
     {
         if ($this->option('d')) {
             $this->line("\n=== AMBIENT ADJUSTMENT CHECK ===");
             $this->line("Current ambient: {$current_ambient_temp}°C");
-            $this->line("Previous ambient: " . ($this->previous_ambient_temp ?: 'null'));
+            $this->line("Baseline (last adjustment): " . ($this->ambient_at_last_stc_adjustment ?: 'null'));
         }
 
-        // Skip if no previous ambient data
-        if ($this->previous_ambient_temp === null) {
+        // Initialize baseline if first run
+        if ($this->ambient_at_last_stc_adjustment === null) {
             if ($this->option('v')) {
-                $this->comment("→ No previous ambient data, skipping STC adjustment");
+                $this->comment("→ Initializing ambient baseline: {$current_ambient_temp}°C");
             }
-            $this->previous_ambient_temp = $current_ambient_temp;
-            return;
+            $this->ambient_at_last_stc_adjustment = $current_ambient_temp;
+            return false; // No adjustment made
         }
 
-        // Calculate ambient change
-        $ambient_change = $current_ambient_temp - $this->previous_ambient_temp;
-        $abs_ambient_change = abs($ambient_change);
+        // Calculate cumulative change since last STC adjustment
+        $cumulative_change = $current_ambient_temp - $this->ambient_at_last_stc_adjustment;
+        $abs_cumulative_change = abs($cumulative_change);
 
         if ($this->option('d')) {
-            $this->line("Ambient change: {$ambient_change}°C (absolute: {$abs_ambient_change}°C)");
+            $this->line("Cumulative change: {$cumulative_change}°C (absolute: {$abs_cumulative_change}°C)");
         }
 
-        // Check if ambient change is significant (≥1°C)
-        if ($abs_ambient_change < 1.0) {
+        // Check if cumulative change is significant (≥1°C)
+        if ($abs_cumulative_change < 1.0) {
             if ($this->option('v')) {
-                $this->comment("→ Ambient change < 1°C, skipping STC adjustment");
+                $this->comment("→ Cumulative change < 1°C, no STC adjustment needed");
             }
-            $this->previous_ambient_temp = $current_ambient_temp;
-            return;
+            return false; // No adjustment made
         }
 
         // Trigger STC adjustment
         if ($this->option('v')) {
-            $this->comment("→ Significant ambient change detected: {$ambient_change}°C");
+            $this->comment("→ Significant cumulative ambient change detected: {$cumulative_change}°C");
             $this->comment("→ Triggering STC ambient adjustment...");
         }
+
+        $adjustment_successful = false;
 
         try {
             $adjuster = new InsStcAmbientAdjust();
             $adjuster->setOutput($this->output);
-            $adjuster->adjustForAmbient($ambient_change, $this->option('dry-run'), $this->option('v'), $this->option('d'));
+            $adjuster->adjustForAmbient($cumulative_change, $this->option('dry-run'), $this->option('v'), $this->option('d'));
+            
+            $adjustment_successful = true;
+            
+            // Reset baseline after successful adjustment
+            if (!$this->option('dry-run')) {
+                $this->ambient_at_last_stc_adjustment = $current_ambient_temp;
+                if ($this->option('v')) {
+                    $this->comment("→ Baseline reset to: {$current_ambient_temp}°C");
+                }
+            }
             
         } catch (\Exception $e) {
             $this->error("✗ STC ambient adjustment failed: {$e->getMessage()}");
@@ -218,11 +234,60 @@ class InsClmPoll extends Command
             }
         }
 
-        // Update previous ambient temperature
-        $this->previous_ambient_temp = $current_ambient_temp;
-
         if ($this->option('d')) {
             $this->line("=== END AMBIENT CHECK ===\n");
+        }
+
+        return $adjustment_successful;
+    }
+
+    /**
+     * Log every buffer processing cycle
+     */
+    function logBufferProcessing($ambient_temp, $humidity, $buffer_size, $adjustment_made)
+    {
+        $timestamp = Carbon::now();
+        $cumulative_change = $this->ambient_at_last_stc_adjustment !== null 
+            ? $ambient_temp - $this->ambient_at_last_stc_adjustment 
+            : 0;
+
+        if ($adjustment_made) {
+            $status = $this->option('dry-run') ? 'STC_DRY_RUN' : 'STC_ADJUSTED';
+            $change_info = sprintf('Cumulative: %+.1f°C', $cumulative_change);
+        } else {
+            $status = 'NO_ADJUSTMENT';
+            $change_info = sprintf('Cumulative: %+.1f°C (threshold: ±1.0°C)', $cumulative_change);
+        }
+
+        $log_entry = sprintf(
+            "[%s] %s - Ambient: %.1f°C, Humidity: %.1f%% - %s - Samples: %d",
+            $timestamp->format('Y-m-d H:i:s'),
+            $status,
+            $ambient_temp,
+            $humidity,
+            $change_info,
+            $buffer_size
+        );
+
+        try {
+            // Ensure log directory exists
+            $log_dir = dirname($this->log_file_path);
+            if (!is_dir($log_dir)) {
+                mkdir($log_dir, 0755, true);
+            }
+            
+            // Append to log file
+            file_put_contents($this->log_file_path, $log_entry . "\n", FILE_APPEND | LOCK_EX);
+            
+            if ($this->option('d')) {
+                $this->line("Buffer processing logged: {$status}");
+            }
+            
+        } catch (\Throwable $e) {
+            // Log file writing failed, but don't stop the process
+            if ($this->option('v')) {
+                $this->comment("⚠ Failed to write to buffer log file: {$e->getMessage()}");
+            }
         }
     }
 
@@ -361,13 +426,13 @@ class InsClmPoll extends Command
         if ($this->option('v')) {
             $this->comment("Machine: {$machine->name} ({$machine->ip_address})");
             $this->comment("Polling every {$this->polling_interval} seconds for temperature and humidity");
-            $this->comment("Processing 30-minute median values with automatic STC ambient adjustment");
+            $this->comment("Processing 30-minute median values with cumulative ambient-based STC adjustment");
         }
 
         // Initialize state
         $this->data_buffer = [];
         $this->last_successful_poll = null;
-        $this->previous_ambient_temp = null;
+        $this->ambient_at_last_stc_adjustment = null;
 
         // Main polling loop
         $last_poll_time = 0;
