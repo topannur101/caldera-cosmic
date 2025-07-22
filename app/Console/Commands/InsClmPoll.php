@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Carbon\Carbon;
 use App\Models\InsStcMachine;
 use App\Models\InsClmRecord;
+use App\InsStcAmbientAdjust;
 use Illuminate\Console\Command;
 use ModbusTcpClient\Network\NonBlockingClient;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
@@ -16,30 +17,27 @@ class InsClmPoll extends Command
      *
      * @var string
      */
-    protected $signature = 'app:ins-clm-poll {--v : Verbose output} {--d : Debug output}';
+    protected $signature = 'app:ins-clm-poll {--v : Verbose output} {--d : Debug output} {--dry-run : Log STC adjustments but don\'t send to machines}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Poll temperature and humidity data from Modbus server and save hourly median values';
+    protected $description = 'Poll temperature and humidity data from Modbus server and save 30-minute median values with automatic STC adjustment';
 
     // Configuration
     protected $machine_id = 7;              // ID 7 = Chamber Line 6
     protected $unit_id = 1;                 // Modbus unit ID
-    // Production timing
-    protected $buffer_timeout = 3600;       // 1 hour in seconds (60 minutes)
-    protected $polling_interval = 60;       // 1 minute in seconds
-    protected $reset_timeout = 600;         // 10 minutes in seconds
-    // Testing timing
-    // protected $buffer_timeout = 60;       // 1 hour in seconds (60 minutes)
-    // protected $polling_interval = 5;       // 1 minute in seconds
-    // protected $reset_timeout = 10;         // 10 minutes in seconds
-
+    // Production timing - Changed to 30 minutes
+    protected $buffer_timeout = 1800;       // 30 minutes in seconds (was 3600)
+    protected $polling_interval = 30;       // 1 minute in seconds
+    protected $reset_timeout = 300;         // 10 minutes in seconds
+    
     // State management
     protected $data_buffer = [];            // Buffer for temperature/humidity measurements
     protected $last_successful_poll = null; // Last successful measurement timestamp
+    protected $previous_ambient_temp = null; // Store previous ambient temp for comparison
 
     /**
      * Convert 3-digit integer value to decimal format (divide by 10)
@@ -94,7 +92,7 @@ class InsClmPoll extends Command
     }
 
     /**
-     * Process completed buffer (1 hour of data)
+     * Process completed buffer (30 minutes of data) with STC ambient adjustment
      */
     function processBuffer()
     {
@@ -144,7 +142,7 @@ class InsClmPoll extends Command
 
             $record->save();
 
-            $this->info("✓ Hourly record saved: T={$median_temperature}°C, H={$median_humidity}% ({$buffer_size} samples)");
+            $this->info("✓ 30-minute record saved: T={$median_temperature}°C, H={$median_humidity}% ({$buffer_size} samples)");
 
         } catch (\Exception $e) {
             $this->error("✗ Failed to save record: {$e->getMessage()}");
@@ -157,8 +155,75 @@ class InsClmPoll extends Command
             }
         }
 
+        // NEW: Check for STC ambient adjustment
+        $this->checkAmbientAdjustment($median_temperature);
+
         // Clear buffer after processing
         $this->resetBuffer();
+    }
+
+    /**
+     * Check if STC ambient adjustment should be triggered
+     */
+    function checkAmbientAdjustment($current_ambient_temp)
+    {
+        if ($this->option('d')) {
+            $this->line("\n=== AMBIENT ADJUSTMENT CHECK ===");
+            $this->line("Current ambient: {$current_ambient_temp}°C");
+            $this->line("Previous ambient: " . ($this->previous_ambient_temp ?: 'null'));
+        }
+
+        // Skip if no previous ambient data
+        if ($this->previous_ambient_temp === null) {
+            if ($this->option('v')) {
+                $this->comment("→ No previous ambient data, skipping STC adjustment");
+            }
+            $this->previous_ambient_temp = $current_ambient_temp;
+            return;
+        }
+
+        // Calculate ambient change
+        $ambient_change = $current_ambient_temp - $this->previous_ambient_temp;
+        $abs_ambient_change = abs($ambient_change);
+
+        if ($this->option('d')) {
+            $this->line("Ambient change: {$ambient_change}°C (absolute: {$abs_ambient_change}°C)");
+        }
+
+        // Check if ambient change is significant (≥1°C)
+        if ($abs_ambient_change < 1.0) {
+            if ($this->option('v')) {
+                $this->comment("→ Ambient change < 1°C, skipping STC adjustment");
+            }
+            $this->previous_ambient_temp = $current_ambient_temp;
+            return;
+        }
+
+        // Trigger STC adjustment
+        if ($this->option('v')) {
+            $this->comment("→ Significant ambient change detected: {$ambient_change}°C");
+            $this->comment("→ Triggering STC ambient adjustment...");
+        }
+
+        try {
+            $adjuster = new InsStcAmbientAdjust();
+            $adjuster->setOutput($this->output);
+            $adjuster->adjustForAmbient($ambient_change, $this->option('dry-run'), $this->option('v'), $this->option('d'));
+            
+        } catch (\Exception $e) {
+            $this->error("✗ STC ambient adjustment failed: {$e->getMessage()}");
+            
+            if ($this->option('d')) {
+                $this->line("Stack trace: " . $e->getTraceAsString());
+            }
+        }
+
+        // Update previous ambient temperature
+        $this->previous_ambient_temp = $current_ambient_temp;
+
+        if ($this->option('d')) {
+            $this->line("=== END AMBIENT CHECK ===\n");
+        }
     }
 
     /**
@@ -206,7 +271,7 @@ class InsClmPoll extends Command
             }
         }
 
-        // Check if buffer is ready for processing (60 minutes worth of data)
+        // Check if buffer is ready for processing (30 minutes worth of data)
         if (!empty($this->data_buffer)) {
             $first_measurement_time = Carbon::parse($this->data_buffer[0]['timestamp']);
             $seconds_since_first = $first_measurement_time->diffInSeconds($now);
@@ -287,17 +352,22 @@ class InsClmPoll extends Command
         }
 
         $this->info("✓ InsClmPoll started - monitoring {$machine->name}");
-        $this->info("✓ Configuration: {$this->polling_interval}s interval, {$this->buffer_timeout}s buffer timeout");
+        $this->info("✓ Configuration: {$this->polling_interval}s interval, {$this->buffer_timeout}s buffer timeout (30 min)");
+        
+        if ($this->option('dry-run')) {
+            $this->info("✓ DRY-RUN MODE: STC adjustments will be logged but not sent to machines");
+        }
 
         if ($this->option('v')) {
             $this->comment("Machine: {$machine->name} ({$machine->ip_address})");
             $this->comment("Polling every {$this->polling_interval} seconds for temperature and humidity");
-            $this->comment("Processing hourly median values");
+            $this->comment("Processing 30-minute median values with automatic STC ambient adjustment");
         }
 
         // Initialize state
         $this->data_buffer = [];
         $this->last_successful_poll = null;
+        $this->previous_ambient_temp = null;
 
         // Main polling loop
         $last_poll_time = 0;
