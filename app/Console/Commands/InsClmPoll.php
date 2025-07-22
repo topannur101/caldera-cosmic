@@ -31,8 +31,8 @@ class InsClmPoll extends Command
     protected $unit_id = 1;                 // Modbus unit ID
     // Production timing - Changed to 30 minutes
     protected $buffer_timeout = 1800;       // 30 minutes in seconds (was 3600)
-    protected $polling_interval = 60;       // 1 minute in seconds
-    protected $reset_timeout = 600;         // 10 minutes in seconds
+    protected $polling_interval = 30;       // 0.5 minute in seconds (was 1 minute)
+    protected $reset_timeout = 300;         // 5 minutes in seconds (was 5 minutes)
     
     // State management
     protected $data_buffer = [];            // Buffer for temperature/humidity measurements
