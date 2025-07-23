@@ -1,71 +1,56 @@
 <?php
 
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Gate;
+
 use App\Models\TskAuth;
-use Livewire\Attributes\Layout;
 
 new #[Layout('layouts.app')]
-class extends Component {
+class extends Component
+{
     use WithPagination;
 
     public string $q = '';
-    public int $perPage = 10;
-
-    #[On('updated')]
-    public function refreshList()
-    {
-        // Force refresh the component
-        $this->resetPage();
-    }
 
     public function with(): array
     {
         $auths = TskAuth::with(['user', 'tsk_team'])
-            ->where('is_active', true);
-
-        if ($this->q) {
-            $q = '%' . $this->q . '%';
-            $auths->where(function ($query) use ($q) {
-                $query->whereHas('user', function ($q_user) use ($q) {
-                    $q_user->where('name', 'LIKE', $q)
-                           ->orWhere('emp_id', 'LIKE', $q);
-                })
-                ->orWhereHas('tsk_team', function ($q_team) use ($q) {
-                    $q_team->where('name', 'LIKE', $q)
-                           ->orWhere('short_name', 'LIKE', $q);
+            ->when($this->q, function ($query) {
+                return $query->whereHas('user', function ($q) {
+                    $q->where('name', 'like', '%' . $this->q . '%')
+                      ->orWhere('emp_id', 'like', '%' . $this->q . '%');
+                })->orWhereHas('tsk_team', function ($q) {
+                    $q->where('name', 'like', '%' . $this->q . '%')
+                      ->orWhere('short_name', 'like', '%' . $this->q . '%');
                 });
-            });
-        }
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
 
         return [
-            'auths' => $auths->orderBy('created_at', 'desc')->paginate($this->perPage),
-            'can_manage' => $this->canManageTeams(),
+            'auths' => $auths,
+            'can_manage' => Gate::allows('superuser'), // Use superuser gate like OMV
         ];
     }
 
-    private function canManageTeams(): bool
+    #[On('updated')]
+    public function refresh()
     {
-        $user = auth()->user();
-        
-        return $user->tsk_auths()
-            ->where('is_active', true)
-            ->get()
-            ->contains(function ($auth) {
-                return $auth->hasPermission('project-manage');
-            });
+        // Refresh the component
     }
 
-    public function loadMore()
+    public function updatedQ()
     {
-        $this->perPage += 10;
+        $this->resetPage();
     }
 };
 
 ?>
 
-<x-slot name="title">{{ __('Wewenang') . ' — ' . __('Tugas') }}</x-slot>
+<x-slot name="title">{{ __('Kelola Wewenang') . ' — ' . __('Tugas') }}</x-slot>
 <x-slot name="header">
     <x-nav-task-sub>{{ __('Kelola Wewenang') }}</x-nav-task-sub>
 </x-slot>
@@ -127,29 +112,26 @@ class extends Component {
                                                 <svg xmlns="http://www.w3.org/2000/svg"
                                                     class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
                                                     viewBox="0 0 1000 1000">
-                                                    <path
-                                                        d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
+                                                    <path d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
                                                 </svg>
                                             @endif
                                         </div>
                                         <div>
-                                            <div class="font-semibold text-neutral-900 dark:text-neutral-100">{{ $auth->user->name }}</div>
-                                            <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ $auth->user->emp_id }}</div>
+                                            <div class="font-medium">{{ $auth->user->name }}</div>
+                                            <div class="text-sm text-neutral-500">{{ $auth->user->emp_id }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
                                     <div>
-                                        <div class="font-medium text-neutral-900 dark:text-neutral-100">{{ $auth->tsk_team->name }}</div>
-                                        <div class="text-sm text-neutral-600 dark:text-neutral-400">{{ $auth->tsk_team->short_name }}</div>
+                                        <div class="font-medium">{{ $auth->tsk_team->name }}</div>
+                                        <div class="text-sm text-neutral-500">{{ $auth->tsk_team->short_name }}</div>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="flex flex-wrap gap-1">
                                         @if(empty($auth->perms))
-                                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200">
-                                                {{ __('Anggota') }}
-                                            </span>
+                                            <span class="text-neutral-500 text-sm">{{ __('Tidak ada wewenang') }}</span>
                                         @else
                                             @foreach($auth->perms as $perm)
                                                 @php
@@ -195,14 +177,6 @@ class extends Component {
         @if($auths->hasPages())
         <div class="px-6">
             {{ $auths->links() }}
-        </div>
-        @endif
-
-        @if($auths->hasMorePages())
-        <div class="flex justify-center mt-6">
-            <x-secondary-button wire:click="loadMore">
-                {{ __('Muat Lebih Banyak') }}
-            </x-secondary-button>
         </div>
         @endif
     </div>

@@ -46,14 +46,19 @@ class extends Component
     {
         $user = Auth::user();
         
-        // Check if user has project-manage permission
-        $this->can_manage_projects = TskAuth::where('user_id', $user->id)
-            ->where('is_active', true)
-            ->get()
-            ->contains(function ($auth) {
-                $perms = is_array($auth->perms) ? $auth->perms : json_decode($auth->perms ?? '[]', true);
-                return in_array('project-manage', $perms);
-            });
+        // Check if user has project-manage permission or is superuser
+        if ($user->id === 1) {
+            // Superuser can manage everything
+            $this->can_manage_projects = true;
+        } else {
+            $this->can_manage_projects = TskAuth::where('user_id', $user->id)
+                ->where('is_active', true)
+                ->get()
+                ->contains(function ($auth) {
+                    $perms = is_array($auth->perms) ? $auth->perms : json_decode($auth->perms ?? '[]', true);
+                    return in_array('project-manage', $perms);
+                });
+        }
 
         // Load teams based on permissions
         if ($this->can_manage_projects) {

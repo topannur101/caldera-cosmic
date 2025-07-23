@@ -57,6 +57,11 @@ class extends Component {
     {
         $user = auth()->user();
         
+        // Superuser can manage everything
+        if ($user->id === 1) {
+            return true;
+        }
+        
         return $user->tsk_auths()
             ->where('is_active', true)
             ->get()

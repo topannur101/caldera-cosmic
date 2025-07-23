@@ -31,9 +31,9 @@ class InsClmPoll extends Command
     protected $unit_id = 1;                 // Modbus unit ID
     // Production timing - Changed to 30 minutes
     protected $buffer_timeout = 1800;       // 30 minutes in seconds (was 3600)
-    protected $polling_interval = 30;       // 30 seconds
+    protected $polling_interval = 30;       // 30 seconds  
     protected $reset_timeout = 300;         // 5 minutes in seconds
-
+    
     // State management
     protected $data_buffer = [];            // Buffer for temperature/humidity measurements
     protected $last_successful_poll = null; // Last successful measurement timestamp
@@ -238,12 +238,11 @@ class InsClmPoll extends Command
                 $adjustment_results['status'] = $this->option('dry-run') ? 'STC_DRY_RUN' : 'STC_ADJUSTED';
                 $adjustment_results['adjustments'] = $adjustment_details['adjustments'];
                 
-                // Reset baseline after successful adjustment
-                if (!$this->option('dry-run')) {
-                    $this->ambient_at_last_stc_adjustment = $current_ambient_temp;
-                    if ($this->option('v')) {
-                        $this->comment("→ Baseline reset to: {$current_ambient_temp}°C");
-                    }
+                // Reset baseline after successful adjustment (including dry-run)
+                $this->ambient_at_last_stc_adjustment = $current_ambient_temp;
+                if ($this->option('v')) {
+                    $dry_run_label = $this->option('dry-run') ? ' [DRY-RUN]' : '';
+                    $this->comment("→ Baseline reset to: {$current_ambient_temp}°C{$dry_run_label}");
                 }
             }
             
@@ -299,7 +298,7 @@ class InsClmPoll extends Command
                     "[%s] %s - %s %s - Ambient: %+.1f°C - SV: [%s] → [%s]",
                     $timestamp->format('Y-m-d H:i:s'),
                     $status,
-                    $adjustment['line'],
+                    $adjustment['machine_name'],
                     $adjustment['position'],
                     $adjustment['ambient_change'],
                     implode(',', $adjustment['current_sv']),
@@ -362,7 +361,7 @@ class InsClmPoll extends Command
             $this->line("Last successful poll: " . ($this->last_successful_poll ? $this->last_successful_poll->format('H:i:s') : 'null'));
         }
 
-        // Check if we need to reset due to timeout (no successful polls for 10 minutes)
+        // Check if we need to reset due to timeout (no successful polls for 5 minutes)
         if ($this->last_successful_poll) {
             $seconds_since_last = $this->last_successful_poll->diffInSeconds($now);
             
@@ -372,7 +371,7 @@ class InsClmPoll extends Command
             }
             
             if ($seconds_since_last >= $this->reset_timeout) {
-                $this->line("⚠ No successful measurements for 10+ minutes, resetting buffer");
+                $this->line("⚠ No successful measurements for 5+ minutes, resetting buffer");
                 $this->resetBuffer();
                 $this->last_successful_poll = null;
                 return;
@@ -484,7 +483,7 @@ class InsClmPoll extends Command
         while (true) {
             $current_time = time();
             
-            // Check if it's time to poll (every minute)
+            // Check if it's time to poll (every 30 seconds)
             if (($current_time - $last_poll_time) >= $this->polling_interval) {
                 
                 // Poll data from machine

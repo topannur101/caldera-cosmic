@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Gate;
 
 use App\Models\User;
 use App\Models\TskAuth;
@@ -27,31 +28,16 @@ new class extends Component {
     public function with(): array
     {
         return [
-            'can_manage' => $this->canManageTeams(),
+            'is_superuser' => Gate::allows('superuser'),
             'teams' => TskTeam::where('is_active', true)->get(),
             'available_permissions' => TskAuth::getAvailablePermissions(),
         ];
     }
 
-    private function canManageTeams(): bool
-    {
-        $user = auth()->user();
-        
-        // Check if user has project-manage permission in any team
-        return $user->tsk_auths()
-            ->where('is_active', true)
-            ->get()
-            ->contains(function ($auth) {
-                return $auth->hasPermission('project-manage');
-            });
-    }
-
     public function save()
     {
-        if (!$this->canManageTeams()) {
-            $this->js('toast("' . __('Tidak memiliki izin untuk mengelola tim') . '", { type: "danger" })');
-            return;
-        }
+        // Authorize using superuser gate like OMV
+        Gate::authorize('superuser');
 
         $this->userq = trim($this->userq);
         $user = $this->userq ? User::where('emp_id', $this->userq)->first() : null;
@@ -59,24 +45,29 @@ new class extends Component {
         
         $this->validate();
 
-        // Check if user already has auth for this team
-        $existingAuth = TskAuth::where('user_id', $this->user_id)
-                              ->where('tsk_team_id', $this->tsk_team_id)
-                              ->first();
-        
-        if ($existingAuth) {
-            $this->js('toast("' . __('Pengguna sudah memiliki wewenang di tim ini') . '", { type: "danger" })');
+        // Prevent creating auth for superuser like OMV pattern
+        if ($this->user_id == 1) {
+            $this->js('toast("' . __('Superuser sudah memiliki wewenang penuh') . '", { type: "danger" })');
         } else {
-            TskAuth::create([
-                'user_id' => $this->user_id,
-                'tsk_team_id' => $this->tsk_team_id,
-                'perms' => $this->perms,
-                'is_active' => true,
-            ]);
+            // Check if user already has auth for this team
+            $existingAuth = TskAuth::where('user_id', $this->user_id)
+                                  ->where('tsk_team_id', $this->tsk_team_id)
+                                  ->first();
+            
+            if ($existingAuth) {
+                $this->js('toast("' . __('Pengguna sudah memiliki wewenang di tim ini') . '", { type: "danger" })');
+            } else {
+                TskAuth::create([
+                    'user_id' => $this->user_id,
+                    'tsk_team_id' => $this->tsk_team_id,
+                    'perms' => $this->perms,
+                    'is_active' => true,
+                ]);
 
-            $this->js('$dispatch("close")');
-            $this->js('toast("' . __('Wewenang dibuat') . '", { type: "success" })');
-            $this->dispatch('updated');
+                $this->js('$dispatch("close")');
+                $this->js('toast("' . __('Wewenang dibuat') . '", { type: "success" })');
+                $this->dispatch('updated');
+            }
         }
         $this->customReset();
     }
@@ -90,16 +81,30 @@ new class extends Component {
 ?>
 
 <div class="p-6">
-    @if($can_manage)
     <div class="mb-6">
-        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">{{ __('Buat Wewenang Baru') }}</h2>
+        <div class="flex justify-between items-start">
+            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Wewenang baru') }}</h2>
+            <x-text-button type="button" x-on:click="$dispatch('close')">
+                <i class="icon-x"></i>
+            </x-text-button>
+        </div>
     </div>
 
     <form wire:submit="save" class="space-y-6">
         <!-- User Selection -->
-        <div>
+        <div wire:key="user-select" x-data="{ open: false, userq: @entangle('userq').live }"
+            x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
             <x-input-label for="userq" :value="__('ID Pengguna')" />
-            <x-text-input wire:model="userq" id="userq" class="block mt-1 w-full" type="text" required autofocus placeholder="emp001" />
+            <div x-on:click.away="open = false">
+                <x-text-input-icon x-model="userq" icon="icon-user" x-on:change="open = true"
+                    x-ref="userq" x-on:focus="open = true" id="userq" class="mt-1 block w-full" type="text"
+                    autocomplete="off" placeholder="{{ __('emp001') }}" />
+                <div class="relative" x-show="open" x-cloak>
+                    <div class="absolute top-1 left-0 w-full">
+                        <livewire:layout.user-select />
+                    </div>
+                </div>
+            </div>
             <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
             <p class="mt-1 text-sm text-neutral-500">{{ __('Masukkan employee ID pengguna') }}</p>
         </div>
@@ -132,14 +137,12 @@ new class extends Component {
 
         <!-- Submit Button -->
         <div class="flex items-center justify-end pt-6 border-t border-neutral-200 dark:border-neutral-700">
-            <x-primary-button>
-                {{ __('Buat Wewenang') }}
+            <x-primary-button type="submit">
+                {{ __('Buat') }}
             </x-primary-button>
         </div>
     </form>
-    @else
-    <div class="text-center py-12">
-        <p class="text-neutral-500">{{ __('Anda tidak memiliki izin untuk mengelola tim.') }}</p>
-    </div>
-    @endif
+
+    <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
+    <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
 </div>

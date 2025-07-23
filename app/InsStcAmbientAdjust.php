@@ -53,7 +53,7 @@ class InsStcAmbientAdjust
 
         foreach ($machines as $machine) {
             if ($debug && $this->output) {
-                $this->output->writeln("Processing machine: {$machine->name} ({$machine->ip_address})");
+                $this->output->writeln("Processing machine: Line " . sprintf('%02d', $machine->line) . " ({$machine->ip_address})");
             }
 
             // Check both upper and lower positions
@@ -62,7 +62,7 @@ class InsStcAmbientAdjust
                 // Skip if recent worker adjustment
                 if ($this->hasRecentWorkerAdjustment($machine->id, $position)) {
                     if ($verbose && $this->output) {
-                        $this->output->writeln("→ Skipping {$machine->name} {$position} - recent worker adjustment");
+                        $this->output->writeln("→ Skipping Line " . sprintf('%02d', $machine->line) . " {$position} - recent worker adjustment");
                     }
                     continue;
                 }
@@ -72,7 +72,7 @@ class InsStcAmbientAdjust
                 
                 if ($current_sv_values === null) {
                     if ($debug && $this->output) {
-                        $this->output->writeln("✗ Failed to read SV values from {$machine->name} {$position}");
+                        $this->output->writeln("✗ Failed to read SV values from Line " . sprintf('%02d', $machine->line) . " {$position}");
                     }
                     continue;
                 }
@@ -84,7 +84,7 @@ class InsStcAmbientAdjust
                 $success = false;
                 if ($dry_run) {
                     if ($verbose && $this->output) {
-                        $this->output->writeln("→ [DRY-RUN] Would adjust {$machine->name} {$position} by {$ambient_change}°C");
+                        $this->output->writeln("→ [DRY-RUN] Would adjust Line " . sprintf('%02d', $machine->line) . " {$position} by {$ambient_change}°C");
                     }
                     $success = true; // Consider dry-run as successful
                 } else {
@@ -93,19 +93,18 @@ class InsStcAmbientAdjust
                     if ($success) {
                         $total_adjustments_made++;
                         if ($verbose && $this->output) {
-                            $this->output->writeln("✓ Adjusted {$machine->name} {$position}");
+                            $this->output->writeln("✓ Adjusted Line " . sprintf('%02d', $machine->line) . " {$position}");
                         }
                     } else {
                         if ($debug && $this->output) {
-                            $this->output->writeln("✗ Failed to adjust {$machine->name} {$position}");
+                            $this->output->writeln("✗ Failed to adjust Line " . sprintf('%02d', $machine->line) . " {$position}");
                         }
                     }
                 }
 
                 // Store adjustment details for unified logging
                 $adjustment_summary[] = [
-                    'line' => $machine->line,
-                    'machine_name' => $machine->name,
+                    'machine_name' => "Line " . sprintf('%02d', $machine->line),
                     'machine_ip' => $machine->ip_address,
                     'position' => $position,
                     'ambient_change' => $ambient_change,

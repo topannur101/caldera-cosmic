@@ -17,6 +17,9 @@
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('tasks.items.index') }}" :active="request()->is('tasks/items*')" wire:navigate>
                 <i class="icon-ticket text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Tugas') }}</span>
             </x-nav-link>
+            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('tasks.manage.index') }}" :active="request()->is('tasks/manage*')" wire:navigate>
+                <i class="icon-ellipsis text-sm"></i>
+            </x-nav-link>
         </div>
    </div>
 </header>

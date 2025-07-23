@@ -208,6 +208,11 @@ class User extends Authenticatable
     // Helper method to check task permissions
     public function hasTaskPermission($permission, $team_id = null)
     {
+        // Superuser has all permissions like OMV pattern
+        if ($this->id === 1) {
+            return true;
+        }
+
         if ($team_id) {
             $auth = $this->tsk_auths()->where('tsk_team_id', $team_id)->where('is_active', true)->first();
             return $auth ? $auth->hasPermission($permission) : false;
@@ -216,5 +221,21 @@ class User extends Authenticatable
         return $this->tsk_auths()->where('is_active', true)->get()->contains(function ($auth) use ($permission) {
             return $auth->hasPermission($permission);
         });
+    }
+
+    // Helper method to check if user can manage teams (add to User model)
+    public function canManageTeams(): bool
+    {
+        // Superuser can manage everything
+        if ($this->id === 1) {
+            return true;
+        }
+
+        return $this->tsk_auths()
+            ->where('is_active', true)
+            ->get()
+            ->contains(function ($auth) {
+                return $auth->hasPermission('project-manage');
+            });
     }
 }
