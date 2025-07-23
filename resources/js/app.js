@@ -2,6 +2,13 @@ import './bootstrap';
 import axios from 'axios';
 import { TabulatorFull as Tabulator } from 'tabulator-tables';
 
+import ApexCharts from 'apexcharts';
+import Chart from 'chart.js/auto';
+import annotationPlugin from 'chartjs-plugin-annotation';
+import datalabelsPlugin from 'chartjs-plugin-datalabels';
+import zoomPlugin from 'chartjs-plugin-zoom';
+import 'chartjs-adapter-date-fns';
+
 function calderaSetTheme()
 {
    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -71,3 +78,10 @@ window.AppWebSockets = {
        return ws;
    }
 };
+
+Chart.register(annotationPlugin);
+Chart.register(datalabelsPlugin);
+Chart.register(zoomPlugin);
+
+window.ApexCharts = ApexCharts;
+window.Chart = Chart;

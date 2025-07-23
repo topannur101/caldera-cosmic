@@ -54,7 +54,7 @@ class extends Component {
 </x-slot>
 
 <div id="content" class="relative py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
-    @vite(['resources/js/apexcharts.js'])
+    
     <div wire:key="ldc-data-index-nav" class="flex px-8 mb-6">
         <x-dropdown align="left">
             <x-slot name="trigger">

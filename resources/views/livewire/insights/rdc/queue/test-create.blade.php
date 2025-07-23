@@ -266,9 +266,8 @@ new class extends Component
          'mcs' => $this->find3Digit($value),
          'color', 'code_alt', 'model' => $this->safeString($value),
          's_max', 's_min', 'tc10', 'tc50', 'tc90' => $this->safeFloat($value),
-         's_max_low', 's_max_high', 's_min_low', 's_min_high',
-         'tc10_low', 'tc10_high', 'tc50_low', 'tc50_high',
-         'tc90_low', 'tc90_high' => $this->safeFloat($value),
+         's_max_low', 's_min_low', 'tc10_low','tc50_low', 'tc90_low' => $this->getBoundFromString($value, 'low'),
+         's_max_high', 's_min_high', 'tc10_high', 'tc50_high', 'tc90_high' => $this->getBoundFromString($value, 'high'),
          'eval' => $this->processEvalValue($value),
          default => $value
       };

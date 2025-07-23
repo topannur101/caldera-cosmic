@@ -177,4 +177,50 @@ class User extends Authenticatable
     {
         return $this->hasMany(InsStcAuth::class);
     }
+
+    public function tsk_auths()
+    {
+        return $this->hasMany(TskAuth::class);
+    }
+
+    public function tsk_teams()
+    {
+        return $this->belongsToMany(TskTeam::class, 'tsk_auths')
+                    ->withPivot(['perms', 'role', 'is_active'])
+                    ->withTimestamps();
+    }
+
+    public function created_projects()
+    {
+        return $this->hasMany(TskProject::class);
+    }
+
+    public function created_tasks()
+    {
+        return $this->hasMany(TskItem::class, 'created_by');
+    }
+
+    public function assigned_tasks()
+    {
+        return $this->hasMany(TskItem::class, 'assigned_to');
+    }
+
+    // Helper method to check task permissions
+    public function hasTaskPermission($permission, $team_id = null)
+    {
+        if ($team_id) {
+            $auth = $this->tsk_auths()->where('tsk_team_id', $team_id)->first();
+            return $auth ? $auth->hasPermission($permission) : false;
+        }
+    
+        return $this->tsk_auths()->get()->contains(function ($auth) use ($permission) {
+            return $auth->hasPermission($permission);
+        });
+    }
+
+    public function isTaskLeaderOf($team_id)
+    {
+        $auth = $this->tsk_auths()->where('tsk_team_id', $team_id)->first();
+        return $auth ? $auth->isLeader() : false;
+    }
 }

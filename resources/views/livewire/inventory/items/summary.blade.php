@@ -605,7 +605,7 @@ class extends Component
 <div 
     x-data="{ ...app(), areas: @entangle('areas'), area_id:@entangle('area_id'), progress: @entangle('progress'), aging_tag_highest: @entangle('aging_tag_highest') }" x-init="observeProgress()" 
     class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-700 dark:text-neutral-200">
-    @vite(['resources/js/apexcharts.js'])
+    
     <div class="flex gap-x-6 items-center px-4 mb-6">
         <x-select x-model="area_id" x-on:change="progress = 0; $wire.$dispatch('update');">
             <option value="0"></option>

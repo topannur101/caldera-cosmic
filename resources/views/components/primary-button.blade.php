@@ -1,6 +1,7 @@
 @props(['type', 'size', 'disabled'])
 
 @php
+$type = isset($type) ? $type : 'button';
 $size = isset($size) ? $size : false;
 $disabled = isset($disabled) ? $disabled : false;
 

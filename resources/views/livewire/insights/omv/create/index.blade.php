@@ -45,7 +45,7 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
     @else
-        @vite(['resources/js/apexcharts.js'])
+        
         <div x-data="{ ...app(), userq: @entangle('userq').live }" x-init="loadRecipes();
         fetchLine();">
             <div x-show="statsVisible" x-cloak @keydown.window.ctrl.d.prevent="statsVisible = !statsVisible"

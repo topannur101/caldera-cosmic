@@ -318,7 +318,7 @@ class extends Component
 </x-slot>
 
 <div class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-700 dark:text-neutral-200">
-    @vite(['resources/js/apexcharts.js'])
+    
     <div class="flex flex-col lg:flex-row w-full bg-white dark:bg-neutral-800 divide-x-0 divide-y lg:divide-x lg:divide-y-0 divide-neutral-200 dark:divide-neutral-700 shadow sm:rounded-lg lg:rounded-full py-0 lg:py-2 mb-6">
         <div class="px-8 py-3 lg:py-0">
             <x-select wire:model.live="area_id">

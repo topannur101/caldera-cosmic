@@ -41,14 +41,14 @@ class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('Iklim') }}</x-slot>
+<x-slot name="title">{{ __('Suhu dan Kelembaban') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-clm>{{ __('Iklim') }}</x-nav-clm>
+    <x-nav-clm>{{ __('Suhu dan Kelembaban') }}</x-nav-clm>
 </x-slot>
 
 <div id="content" class="relative py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
-    @vite(['resources/js/apexcharts.js'])
+    
     
     <div wire:key="clm-index-nav" class="flex px-8 mb-6">
         <x-dropdown align="left">

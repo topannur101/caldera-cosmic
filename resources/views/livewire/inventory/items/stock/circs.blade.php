@@ -82,7 +82,7 @@ new class extends Component
       </x-spotlight>
    </div>
    
-   @vite(['resources/js/apexcharts.js'])
+   
    <div wire:loading.class="cal-shimmer">
       @if ($circs->count())
          <table wire:key="circs" class="w-full [&_td]:py-2 [&_tr_td:first-child]:w-[1%] [&_tr_td:last-child]:w-[1%]">

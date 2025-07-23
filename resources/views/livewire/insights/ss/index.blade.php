@@ -13,7 +13,7 @@ new #[Layout('layouts.ss')] class extends Component {
 ?>
 
 <div>
-    @vite(['resources/js/apexcharts.js'])
+    
     @switch($id)
         @case(3)
             <livewire:insights.ss.3 />

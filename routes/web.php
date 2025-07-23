@@ -261,6 +261,40 @@ Route::middleware('auth')->group(function () {
 
     });
 
+    // Task Management Routes
+        Route::prefix('tasks')->name('tasks.')->group(function () {
+        
+        // Dashboard
+        Volt::route('/', 'tasks.dashboard')->name('dashboard');
+        
+        // Projects
+        Route::prefix('projects')->name('projects.')->group(function () {
+            Volt::route('/', 'tasks.projects.index')->name('index');
+            Volt::route('/create', 'tasks.projects.create')->name('create');
+            Volt::route('/{id}', 'tasks.projects.show')->name('show');
+            Volt::route('/{id}/edit', 'tasks.projects.edit')->name('edit');
+        });
+        
+        // Task Items
+        Route::prefix('items')->name('items.')->group(function () {
+            Volt::route('/', 'tasks.items.index')->name('index');
+            Volt::route('/create', 'tasks.items.create')->name('create');
+            Volt::route('/{id}', 'tasks.items.show')->name('show');
+            Volt::route('/{id}/edit', 'tasks.items.edit')->name('edit');
+        });
+        
+        // Teams (Admin only)
+        Route::prefix('teams')->name('teams.')->group(function () {
+            Volt::route('/', 'tasks.teams.index')->name('index');
+            Volt::route('/create', 'tasks.teams.create')->name('create');
+            Volt::route('/{id}', 'tasks.teams.show')->name('show');
+        });
+        
+        // Board View (Kanban)
+        Volt::route('/board', 'tasks.board.index')->name('board.index');
+        Volt::route('/board/{project_id}', 'tasks.board.project')->name('board.project');
+    });
+
     Route::prefix('projects')->group(function () {
 
         Route::name('projects.')->group(function () {

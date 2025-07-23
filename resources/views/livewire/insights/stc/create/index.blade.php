@@ -43,7 +43,7 @@ class extends Component {
             </div>
         </div>
     @else
-    @vite(['resources/js/apexcharts.js'])
+    
     <div>
         <livewire:insights.stc.create.reading />
     </div>

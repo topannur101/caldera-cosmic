@@ -93,7 +93,7 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 
 <div class="overflow-auto w-full">
-    @vite(['resources/js/apexcharts.js'])
+    
     <div class="flex justify-between items-center mb-6 px-5 py-1">
         <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">
             {{ __('Ringkasan Gilingan') }}</h1>
