@@ -103,7 +103,7 @@ class extends Component
         $this->team_members = User::whereHas('tsk_auths', function ($query) {
             $query->where('tsk_team_id', $this->tsk_team_id)
                   ->where('is_active', true);
-        })->select('id', 'name', 'employee_id')->get()->toArray();
+        })->select('id', 'name', 'emp_id')->get()->toArray();
     }
 
     public function save()
@@ -299,7 +299,7 @@ class extends Component
                                         <option value="">{{ __('Pilih Pemilik...') }}</option>
                                         @foreach($team_members as $member)
                                             <option value="{{ $member['id'] }}">
-                                                {{ $member['name'] }} @if($member['employee_id']) ({{ $member['employee_id'] }}) @endif
+                                                {{ $member['name'] }} @if($member['emp_id']) ({{ $member['emp_id'] }}) @endif
                                             </option>
                                         @endforeach
                                     </select>
