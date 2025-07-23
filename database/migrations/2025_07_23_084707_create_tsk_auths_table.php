@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('tsk_team_id')->constrained();
             $table->json('perms'); // JSON field for permissions like inventory
-            $table->enum('role', ['leader', 'member'])->default('member');
             $table->boolean('is_active')->default(true);
             $table->primary(['user_id', 'tsk_team_id']);
             $table->index('user_id');

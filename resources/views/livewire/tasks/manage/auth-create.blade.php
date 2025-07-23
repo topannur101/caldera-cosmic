@@ -7,8 +7,6 @@ use Illuminate\Validation\Rule;
 use App\Models\User;
 use App\Models\TskAuth;
 use App\Models\TskTeam;
-use Livewire\Attributes\Renderless;
-use Illuminate\Support\Facades\Gate;
 
 new class extends Component {
     public string $userq = '';
@@ -22,27 +20,43 @@ new class extends Component {
             'user_id' => ['required', 'gt:0', 'integer'],
             'tsk_team_id' => ['required', 'gt:0', 'integer', 'exists:tsk_teams,id'],
             'perms' => ['array'],
-            'perms.*' => ['string']
+            'perms.*' => ['string', Rule::in(array_keys(TskAuth::getAvailablePermissions()))]
         ];
     }
 
     public function with(): array
     {
         return [
-            // TODO: Add permission check
-            'can_manage' => true, // TODO: Check team-manage permission
+            'can_manage' => $this->canManageTeams(),
             'teams' => TskTeam::where('is_active', true)->get(),
+            'available_permissions' => TskAuth::getAvailablePermissions(),
         ];
+    }
+
+    private function canManageTeams(): bool
+    {
+        $user = auth()->user();
+        
+        // Check if user has project-manage permission in any team
+        return $user->tsk_auths()
+            ->where('is_active', true)
+            ->get()
+            ->contains(function ($auth) {
+                return $auth->hasPermission('project-manage');
+            });
     }
 
     public function save()
     {
-        // TODO: Add permission check
-        // Gate::authorize('team-manage');
+        if (!$this->canManageTeams()) {
+            $this->js('toast("' . __('Tidak memiliki izin untuk mengelola tim') . '", { type: "danger" })');
+            return;
+        }
 
         $this->userq = trim($this->userq);
         $user = $this->userq ? User::where('emp_id', $this->userq)->first() : null;
         $this->user_id = $user->id ?? 0;
+        
         $this->validate();
 
         // Check if user already has auth for this team
@@ -53,13 +67,12 @@ new class extends Component {
         if ($existingAuth) {
             $this->js('toast("' . __('Pengguna sudah memiliki wewenang di tim ini') . '", { type: "danger" })');
         } else {
-            // TODO: Create auth
-            // TskAuth::create([
-            //     'user_id' => $this->user_id,
-            //     'tsk_team_id' => $this->tsk_team_id,
-            //     'perms' => json_encode($this->perms),
-            //     'is_active' => true,
-            // ]);
+            TskAuth::create([
+                'user_id' => $this->user_id,
+                'tsk_team_id' => $this->tsk_team_id,
+                'perms' => $this->perms,
+                'is_active' => true,
+            ]);
 
             $this->js('$dispatch("close")');
             $this->js('toast("' . __('Wewenang dibuat') . '", { type: "success" })');
@@ -107,31 +120,26 @@ new class extends Component {
         <div>
             <x-input-label :value="__('Wewenang')" />
             <div class="mt-2 space-y-2">
+                @foreach($available_permissions as $perm => $label)
                 <label class="flex items-center">
-                    <input wire:model="perms" type="checkbox" value="task-assign" class="rounded border-neutral-300 text-caldy-600 shadow-sm focus:ring-caldy-500 dark:border-neutral-600 dark:bg-neutral-900 dark:focus:ring-caldy-600 dark:focus:ring-offset-neutral-800">
-                    <span class="ml-2 text-sm text-neutral-600 dark:text-neutral-400">{{ __('Tugaskan Tugas') }} - {{ __('Menugaskan tugas ke anggota tim lain') }}</span>
+                    <input wire:model="perms" type="checkbox" value="{{ $perm }}" class="rounded border-neutral-300 text-caldy-600 shadow-sm focus:ring-caldy-500 dark:border-neutral-600 dark:bg-neutral-900 dark:focus:ring-caldy-600 dark:focus:ring-offset-neutral-800">
+                    <span class="ml-2 text-sm text-neutral-600 dark:text-neutral-400">{{ $label }}</span>
                 </label>
-                <label class="flex items-center">
-                    <input wire:model="perms" type="checkbox" value="task-manage" class="rounded border-neutral-300 text-caldy-600 shadow-sm focus:ring-caldy-500 dark:border-neutral-600 dark:bg-neutral-900 dark:focus:ring-caldy-600 dark:focus:ring-offset-neutral-800">
-                    <span class="ml-2 text-sm text-neutral-600 dark:text-neutral-400">{{ __('Kelola Tugas') }} - {{ __('Membuat dan menghapus tugas di tim/proyek manapun') }}</span>
-                </label>
+                @endforeach
             </div>
             <x-input-error :messages="$errors->get('perms')" class="mt-2" />
         </div>
 
-        <!-- Actions -->
-        <div class="flex items-center justify-end space-x-3 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-            <x-secondary-button type="button" x-on:click="$dispatch('close')">
-                {{ __('Batal') }}
-            </x-secondary-button>
-            <x-primary-button type="submit">
-                <i class="icon-save mr-2"></i>{{ __('Simpan Wewenang') }}
+        <!-- Submit Button -->
+        <div class="flex items-center justify-end pt-6 border-t border-neutral-200 dark:border-neutral-700">
+            <x-primary-button>
+                {{ __('Buat Wewenang') }}
             </x-primary-button>
         </div>
     </form>
     @else
-    <div class="text-center py-8">
-        <p class="text-neutral-500">{{ __('Anda tidak memiliki wewenang untuk mengelola tim') }}</p>
+    <div class="text-center py-12">
+        <p class="text-neutral-500">{{ __('Anda tidak memiliki izin untuk mengelola tim.') }}</p>
     </div>
     @endif
 </div>

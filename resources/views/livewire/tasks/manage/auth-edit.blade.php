@@ -7,11 +7,10 @@ use Illuminate\Validation\Rule;
 use App\Models\User;
 use App\Models\TskAuth;
 use App\Models\TskTeam;
-use Livewire\Attributes\Renderless;
-use Illuminate\Support\Facades\Gate;
 
 new class extends Component {
-    public int $id;
+    public int $user_id;
+    public int $tsk_team_id;
     public string $user_name;
     public string $user_emp_id;
     public string $user_photo;
@@ -23,100 +22,105 @@ new class extends Component {
     {
         return [
             'perms' => ['array'],
-            'perms.*' => ['string'],
+            'perms.*' => ['string', Rule::in(array_keys(TskAuth::getAvailablePermissions()))],
         ];
     }
 
     #[On('auth-edit')]
-    public function loadAuth(int $id)
+    public function loadAuth(int $user_id, int $tsk_team_id)
     {
-        // TODO: Load actual auth data
-        // $auth = TskAuth::with(['user', 'tsk_team'])->find($id);
-        // if ($auth) {
-        //     $this->id = $auth->id;
-        //     $this->user_name = $auth->user->name;
-        //     $this->user_emp_id = $auth->user->emp_id;
-        //     $this->user_photo = $auth->user->photo ?? '';
-        //     $this->team_name = $auth->tsk_team->name;
-        //     $this->team_short_name = $auth->tsk_team->short_name;
-        //     $this->perms = json_decode($auth->perms ?? '[]', true);
-        //     $this->resetValidation();
-        // } else {
-        //     $this->handleNotFound();
-        // }
-
-        // Placeholder data
-        $this->id = $id;
-        $this->user_name = 'Demo User';
-        $this->user_emp_id = 'emp001';
-        $this->user_photo = '';
-        $this->team_name = 'Digitalization';
-        $this->team_short_name = 'DGT';
-        $this->perms = ['task-assign'];
-        $this->resetValidation();
+        $auth = TskAuth::with(['user', 'tsk_team'])
+            ->where('user_id', $user_id)
+            ->where('tsk_team_id', $tsk_team_id)
+            ->first();
+            
+        if ($auth) {
+            $this->user_id = $auth->user_id;
+            $this->tsk_team_id = $auth->tsk_team_id;
+            $this->user_name = $auth->user->name;
+            $this->user_emp_id = $auth->user->emp_id;
+            $this->user_photo = $auth->user->photo ?? '';
+            $this->team_name = $auth->tsk_team->name;
+            $this->team_short_name = $auth->tsk_team->short_name;
+            $this->perms = $auth->perms ?? [];
+            $this->resetValidation();
+        } else {
+            $this->handleNotFound();
+        }
     }
 
     public function with(): array
     {
         return [
-            // TODO: Add permission check
-            'can_manage' => true, // TODO: Check team-manage permission
+            'can_manage' => $this->canManageTeams(),
+            'available_permissions' => TskAuth::getAvailablePermissions(),
         ];
+    }
+
+    private function canManageTeams(): bool
+    {
+        $user = auth()->user();
+        
+        return $user->tsk_auths()
+            ->where('is_active', true)
+            ->get()
+            ->contains(function ($auth) {
+                return $auth->hasPermission('project-manage');
+            });
     }
 
     public function save()
     {
-        // TODO: Add permission check
-        // Gate::authorize('team-manage');
+        if (!$this->canManageTeams()) {
+            $this->js('toast("' . __('Tidak memiliki izin untuk mengelola tim') . '", { type: "danger" })');
+            return;
+        }
+
         $this->validate();
 
-        // TODO: Update auth
-        // $auth = TskAuth::find($this->id);
-        // if ($auth) {
-        //     $auth->perms = json_encode($this->perms);
-        //     $auth->update();
+        $auth = TskAuth::where('user_id', $this->user_id)
+                      ->where('tsk_team_id', $this->tsk_team_id)
+                      ->first();
+                      
+        if ($auth) {
+            $auth->perms = $this->perms;
+            $auth->save();
 
-        //     $this->js('$dispatch("close")');
-        //     $this->js('toast("' . __('Wewenang diperbarui') . '", { type: "success" })');
-        //     $this->dispatch('updated');
-        // } else {
-        //     $this->handleNotFound();
-        //     $this->customReset();
-        // }
-
-        // Placeholder success
-        $this->js('$dispatch("close")');
-        $this->js('toast("' . __('Wewenang diperbarui') . '", { type: "success" })');
-        $this->dispatch('updated');
+            $this->js('$dispatch("close")');
+            $this->js('toast("' . __('Wewenang diperbarui') . '", { type: "success" })');
+            $this->dispatch('updated');
+        } else {
+            $this->handleNotFound();
+        }
     }
 
     public function delete()
     {
-        // TODO: Add permission check
-        // Gate::authorize('team-manage');
+        if (!$this->canManageTeams()) {
+            $this->js('toast("' . __('Tidak memiliki izin untuk mengelola tim') . '", { type: "danger" })');
+            return;
+        }
 
-        // TODO: Delete auth
-        // $auth = TskAuth::find($this->id);
-        // if ($auth) {
-        //     $auth->delete();
+        $auth = TskAuth::where('user_id', $this->user_id)
+                      ->where('tsk_team_id', $this->tsk_team_id)
+                      ->first();
+                      
+        if ($auth) {
+            $auth->delete();
 
-        //     $this->js('$dispatch("close")');
-        //     $this->js('toast("' . __('Wewenang dicabut') . '", { type: "success" })');
-        //     $this->dispatch('updated');
-        // } else {
-        //     $this->handleNotFound();
-        // }
-
-        // Placeholder success
-        $this->js('$dispatch("close")');
-        $this->js('toast("' . __('Wewenang dicabut') . '", { type: "success" })');
-        $this->dispatch('updated');
+            $this->js('$dispatch("close")');
+            $this->js('toast("' . __('Wewenang dicabut') . '", { type: "success" })');
+            $this->dispatch('updated');
+        } else {
+            $this->handleNotFound();
+        }
+        
         $this->customReset();
     }
 
     public function customReset()
     {
-        $this->reset(['id', 'user_name', 'user_emp_id', 'user_photo', 'team_name', 'team_short_name', 'perms']);
+        $this->reset(['user_id', 'tsk_team_id', 'user_name', 'user_emp_id', 'user_photo', 'team_name', 'team_short_name', 'perms']);
     }
 
     public function handleNotFound()
@@ -171,14 +175,12 @@ new class extends Component {
         <div>
             <x-input-label :value="__('Wewenang')" />
             <div class="mt-2 space-y-2">
+                @foreach($available_permissions as $perm => $label)
                 <label class="flex items-center">
-                    <input wire:model="perms" type="checkbox" value="task-assign" class="rounded border-neutral-300 text-caldy-600 shadow-sm focus:ring-caldy-500 dark:border-neutral-600 dark:bg-neutral-900 dark:focus:ring-caldy-600 dark:focus:ring-offset-neutral-800">
-                    <span class="ml-2 text-sm text-neutral-600 dark:text-neutral-400">{{ __('Tugaskan Tugas') }} - {{ __('Menugaskan tugas ke anggota tim lain') }}</span>
+                    <input wire:model="perms" type="checkbox" value="{{ $perm }}" class="rounded border-neutral-300 text-caldy-600 shadow-sm focus:ring-caldy-500 dark:border-neutral-600 dark:bg-neutral-900 dark:focus:ring-caldy-600 dark:focus:ring-offset-neutral-800">
+                    <span class="ml-2 text-sm text-neutral-600 dark:text-neutral-400">{{ $label }}</span>
                 </label>
-                <label class="flex items-center">
-                    <input wire:model="perms" type="checkbox" value="task-manage" class="rounded border-neutral-300 text-caldy-600 shadow-sm focus:ring-caldy-500 dark:border-neutral-600 dark:bg-neutral-900 dark:focus:ring-caldy-600 dark:focus:ring-offset-neutral-800">
-                    <span class="ml-2 text-sm text-neutral-600 dark:text-neutral-400">{{ __('Kelola Tugas') }} - {{ __('Membuat dan menghapus tugas di tim/proyek manapun') }}</span>
-                </label>
+                @endforeach
             </div>
             <x-input-error :messages="$errors->get('perms')" class="mt-2" />
         </div>
@@ -186,22 +188,16 @@ new class extends Component {
         <!-- Actions -->
         <div class="flex items-center justify-between pt-6 border-t border-neutral-200 dark:border-neutral-700">
             <x-danger-button type="button" wire:click="delete" wire:confirm="{{ __('Yakin ingin mencabut wewenang pengguna ini?') }}">
-                <i class="icon-trash mr-2"></i>{{ __('Cabut Wewenang') }}
+                {{ __('Cabut Wewenang') }}
             </x-danger-button>
-            
-            <div class="flex space-x-3">
-                <x-secondary-button type="button" x-on:click="$dispatch('close')">
-                    {{ __('Batal') }}
-                </x-secondary-button>
-                <x-primary-button type="submit">
-                    <i class="icon-save mr-2"></i>{{ __('Simpan Perubahan') }}
-                </x-primary-button>
-            </div>
+            <x-primary-button>
+                {{ __('Simpan Perubahan') }}
+            </x-primary-button>
         </div>
     </form>
     @else
-    <div class="text-center py-8">
-        <p class="text-neutral-500">{{ __('Anda tidak memiliki wewenang untuk mengelola tim') }}</p>
+    <div class="text-center py-12">
+        <p class="text-neutral-500">{{ __('Anda tidak memiliki izin untuk mengelola tim.') }}</p>
     </div>
     @endif
 </div>

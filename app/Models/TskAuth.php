@@ -10,11 +10,13 @@ class TskAuth extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = null;
+    public $incrementing = false;
+    
     protected $fillable = [
         'user_id',
         'tsk_team_id',
         'perms',
-        'role',
         'is_active',
     ];
 
@@ -48,29 +50,8 @@ class TskAuth extends Model
             return false;
         }
 
-        // Leaders have all permissions
-        if ($this->isLeader()) {
-            return true;
-        }
-
         // Check if permission exists in perms array
         return in_array($permission, $this->perms ?? []);
-    }
-
-    /**
-     * Check if user is a leader
-     */
-    public function isLeader(): bool
-    {
-        return $this->role === 'leader';
-    }
-
-    /**
-     * Check if user is a member
-     */
-    public function isMember(): bool
-    {
-        return $this->role === 'member';
     }
 
     /**
@@ -106,10 +87,9 @@ class TskAuth extends Model
     public static function getAvailablePermissions(): array
     {
         return [
-            'team-manage' => 'Kelola Tim',
             'task-assign' => 'Tugaskan Tugas',
-            'task-delete' => 'Hapus Tugas',
-            'task-create' => 'Buat Tugas (Semua Tim)',
+            'task-manage' => 'Kelola Tugas',
+            'project-manage' => 'Kelola Proyek',
         ];
     }
 
@@ -119,21 +99,5 @@ class TskAuth extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
-    }
-
-    /**
-     * Scope for leaders only
-     */
-    public function scopeLeaders($query)
-    {
-        return $query->where('role', 'leader');
-    }
-
-    /**
-     * Scope for members only
-     */
-    public function scopeMembers($query)
-    {
-        return $query->where('role', 'member');
     }
 }

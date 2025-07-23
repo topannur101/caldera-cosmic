@@ -186,7 +186,7 @@ class User extends Authenticatable
     public function tsk_teams()
     {
         return $this->belongsToMany(TskTeam::class, 'tsk_auths')
-                    ->withPivot(['perms', 'role', 'is_active'])
+                    ->withPivot(['perms', 'is_active'])
                     ->withTimestamps();
     }
 
@@ -209,18 +209,12 @@ class User extends Authenticatable
     public function hasTaskPermission($permission, $team_id = null)
     {
         if ($team_id) {
-            $auth = $this->tsk_auths()->where('tsk_team_id', $team_id)->first();
+            $auth = $this->tsk_auths()->where('tsk_team_id', $team_id)->where('is_active', true)->first();
             return $auth ? $auth->hasPermission($permission) : false;
         }
-    
-        return $this->tsk_auths()->get()->contains(function ($auth) use ($permission) {
+
+        return $this->tsk_auths()->where('is_active', true)->get()->contains(function ($auth) use ($permission) {
             return $auth->hasPermission($permission);
         });
-    }
-
-    public function isTaskLeaderOf($team_id)
-    {
-        $auth = $this->tsk_auths()->where('tsk_team_id', $team_id)->first();
-        return $auth ? $auth->isLeader() : false;
     }
 }

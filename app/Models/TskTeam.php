@@ -44,7 +44,7 @@ class TskTeam extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'tsk_auths')
-                    ->withPivot(['perms', 'role', 'is_active'])
+                    ->withPivot(['perms', 'is_active'])
                     ->withTimestamps();
     }
 
@@ -65,17 +65,7 @@ class TskTeam extends Model
     }
 
     /**
-     * Get team leaders
-     */
-    public function leaders(): BelongsToMany
-    {
-        return $this->users()
-                    ->wherePivot('role', 'leader')
-                    ->wherePivot('is_active', true);
-    }
-
-    /**
-     * Get team members (including leaders)
+     * Get team members
      */
     public function members(): BelongsToMany
     {
@@ -95,38 +85,17 @@ class TskTeam extends Model
     }
 
     /**
-     * Check if user is a leader of this team
-     */
-    public function hasLeader(int $userId): bool
-    {
-        return $this->tsk_auths()
-                    ->where('user_id', $userId)
-                    ->where('role', 'leader')
-                    ->where('is_active', true)
-                    ->exists();
-    }
-
-    /**
      * Get tasks count for this team
      */
     public function getTasksCountAttribute(): int
     {
-        return $this->tsk_projects()
-                    ->withCount('tsk_items')
-                    ->get()
-                    ->sum('tsk_items_count');
+        return TskItem::whereHas('tsk_project', function ($query) {
+            $query->where('tsk_team_id', $this->id);
+        })->count();
     }
 
     /**
-     * Get active projects count
-     */
-    public function getActiveProjectsCountAttribute(): int
-    {
-        return $this->activeProjects()->count();
-    }
-
-    /**
-     * Get members count
+     * Get members count for this team
      */
     public function getMembersCountAttribute(): int
     {
@@ -142,23 +111,20 @@ class TskTeam extends Model
     }
 
     /**
-     * Scope teams that have active projects
+     * Scope teams with projects
      */
-    public function scopeWithActiveProjects($query)
+    public function scopeWithProjects($query)
     {
-        return $query->whereHas('tsk_projects', function ($query) {
-            $query->where('status', 'active');
-        });
+        return $query->whereHas('tsk_projects');
     }
 
     /**
-     * Scope teams that user is a member of
+     * Scope teams for specific user
      */
     public function scopeForUser($query, int $userId)
     {
-        return $query->whereHas('tsk_auths', function ($query) use ($userId) {
-            $query->where('user_id', $userId)
-                  ->where('is_active', true);
+        return $query->whereHas('tsk_auths', function ($q) use ($userId) {
+            $q->where('user_id', $userId)->where('is_active', true);
         });
     }
 }
