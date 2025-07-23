@@ -127,7 +127,7 @@ new class extends Component {
             $query->where('tsk_team_id', $project->tsk_team_id);
         })
         ->orderBy('name')
-        ->get(['id', 'name', 'employee_id'])
+        ->get(['id', 'name', 'emp_id'])
         ->toArray();
     }
 
@@ -302,7 +302,7 @@ new class extends Component {
                             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="">Tidak ditugaskan</option>
                         @foreach($users as $user)
-                            <option value="{{ $user['id'] }}">{{ $user['name'] }} ({{ $user['employee_id'] }})</option>
+                            <option value="{{ $user['id'] }}">{{ $user['name'] }} ({{ $user['emp_id'] }})</option>
                         @endforeach
                     </select>
                     @error('assigned_to') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
