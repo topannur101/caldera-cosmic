@@ -87,9 +87,9 @@ class TskAuth extends Model
     public static function getAvailablePermissions(): array
     {
         return [
-            'task-assign' => 'Tugaskan Tugas',
-            'task-manage' => 'Kelola Tugas',
-            'project-manage' => 'Kelola Proyek',
+            'task-assign' => __('Beri Tugas'),
+            'task-manage' => __('Kelola Tugas'),
+            'project-manage' => __('Kelola Proyek'),
         ];
     }
 
