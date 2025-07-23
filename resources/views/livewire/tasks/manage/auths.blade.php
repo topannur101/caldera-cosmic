@@ -51,7 +51,7 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 <x-slot name="title">{{ __('Wewenang') . ' — ' . __('Tugas') }}</x-slot>
 <x-slot name="header">
-    <x-nav-task-sub>{{ __('Kelola Wewenang') }}</x-nav-task-sub>
+    <x-nav-task-sub>{{ __('Kelola') }}</x-nav-task-sub>
 </x-slot>
 
 <div id="content" class="py-12 max-w-4xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">

@@ -17,12 +17,10 @@ class TskAuth extends Model
         'user_id',
         'tsk_team_id',
         'perms',
-        'is_active',
     ];
 
     protected $casts = [
         'perms' => 'array',
-        'is_active' => 'boolean',
     ];
 
     /**
@@ -46,10 +44,6 @@ class TskAuth extends Model
      */
     public function hasPermission(string $permission): bool
     {
-        if (!$this->is_active) {
-            return false;
-        }
-
         // Check if permission exists in perms array
         return in_array($permission, $this->perms ?? []);
     }
@@ -93,11 +87,4 @@ class TskAuth extends Model
         ];
     }
 
-    /**
-     * Scope for active auths only
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
 }

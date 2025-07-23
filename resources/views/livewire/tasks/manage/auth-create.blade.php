@@ -60,7 +60,6 @@ new class extends Component {
                     'user_id' => $this->user_id,
                     'tsk_team_id' => $this->tsk_team_id,
                     'perms' => $this->perms,
-                    'is_active' => true,
                 ]);
 
                 $this->js('$dispatch("close")');

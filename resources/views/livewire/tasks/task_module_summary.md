@@ -14,10 +14,12 @@
 - Users ↔ Teams (many-to-many via tsk_auths)
 - Tasks → Users (assigned_to, created_by)
 
-### Permission System (Action-Based)
-- `task-assign` - Assign tasks to other people
-- `task-manage` - Create and delete tasks in any team/project (for leaders)
-- `project-manage` - Create and archive project in any team (for leaders)
+### Permission System (Team-Specific Action-Based)
+- `task-assign` - Assign tasks to other people within their team
+- `task-manage` - Edit/delete tasks which are NOT their own within their team
+- `project-manage` - Create and archive projects within their team
+
+**Important**: All permissions are **team-specific**. Users can only perform actions within teams they belong to.
 
 ## Routes Structure
 ```
@@ -38,6 +40,15 @@
 - Trigger: `x-on:click.prevent="$dispatch('open-slide-over', 'task-create'); $dispatch('task-create')"`
 - Context-aware: Auto-populates project when triggered from project pages
 - Redirect logic: Redirects to task list unless already on task list page
+
+## Policy Implementation
+- **TskItemPolicy** - Handles all task-related authorization
+- **Superuser access**: User ID 1 has full access (before method)
+- **Team membership**: Users must be team members to access team resources
+- **Permission hierarchy**: 
+  - Any team member can create tasks
+  - Task creators/assignees can edit their own tasks
+  - Users with `task-manage` can edit/delete any task in their team
 
 ## Models
 - `TskTeam` - Basic team model
@@ -62,7 +73,7 @@ Uses existing comment system with `model_name` and `model_id`:
 - `tasks/projects/index.blade.php` - Project listing with filters
 - `tasks/projects/create.blade.php` - Create project form
 - `tasks/items/index.blade.php` - Task listing (list/board toggle)
-- `tasks/items/create-slideover.blade.php` - Task creation slideover (replaces full page)
+- `tasks/items/create.blade.php` - Task creation form with policy-based authorization
 
 ### Board Views
 - `tasks/board/index.blade.php` - Project selector for boards
@@ -80,7 +91,14 @@ todo → in_progress → review → done
 
 ### Permission-Based UI
 - Task assignment field only shows if user has `task-assign` permission
+- Project dropdown shows all projects from user's teams
 - Management area accessible to all with permission checks inside
+
+### Team-Specific Authorization
+- **Task Creation**: Any team member can create tasks in their team projects
+- **Task Assignment**: Users with `task-assign` permission can assign to team members
+- **Task Editing**: Task creators, assignees, or users with `task-manage` permission
+- **Task Deletion**: Task creators or users with `task-manage` permission
 
 ### Integration Points
 - Comment system ready (`model_name`/`model_id`)
@@ -90,17 +108,17 @@ todo → in_progress → review → done
 ## Backend TODO List
 
 ### Phase 1: Core Functionality
-1. Implement actual data loading in all components
-2. Add validation and save logic to create forms
+1. ✅ Implement TskItemPolicy for authorization
+2. ✅ Update task creation form with policy-based checks
 3. Create team and auth management modals
-4. Implement permission checking logic
+4. Add policy authorization to other task operations
 5. Add proper error handling
 
 ### Phase 2: Advanced Features
 1. Drag-and-drop for Kanban board
 2. Real-time updates
 3. Task assignment notifications
-4. Dasbor statistics calculation
+4. Dashboard statistics calculation
 5. Search and filtering logic
 
 ### Phase 3: Polish
@@ -138,13 +156,14 @@ todo → in_progress → review → done
 
 ### TskAuth
 ```php
-- user_id, tsk_team_id, perms (JSON), role, is_active
+- user_id, tsk_team_id, perms (JSON), is_active
 - Relations: user, tsk_team
 - Methods: hasPermission(), isLeader(), isMember()
 ```
 
 ## File Locations
 ```
+app/Policies/TskItemPolicy.php (NEW)
 app/Models/TskTeam.php
 app/Models/TskProject.php
 app/Models/TskItem.php
@@ -158,15 +177,8 @@ resources/views/livewire/tasks/dashboard/index.blade.php
 resources/views/livewire/tasks/projects/index.blade.php
 resources/views/livewire/tasks/projects/create.blade.php
 resources/views/livewire/tasks/items/index.blade.php
-resources/views/livewire/tasks/items/create-slideover.blade.php
+resources/views/livewire/tasks/items/create.blade.php (UPDATED)
 resources/views/livewire/tasks/board/index.blade.php
-resources/views/livewire/tasks/board/project.blade.php
-resources/views/livewire/tasks/manage/index.blade.php
-resources/views/livewire/tasks/manage/teams.blade.php
-resources/views/livewire/tasks/manage/auths.blade.php
-
-database/migrations/*_create_tsk_*_tables.php
-```board/index.blade.php
 resources/views/livewire/tasks/board/project.blade.php
 resources/views/livewire/tasks/manage/index.blade.php
 resources/views/livewire/tasks/manage/teams.blade.php
@@ -176,9 +188,8 @@ database/migrations/*_create_tsk_*_tables.php
 ```
 
 ## Next Steps for Backend Implementation
-1. Run migrations to create tables
-2. Test model relationships
-3. Implement data loading in Livewire components
-4. Add proper permission checks
-5. Create team/auth management modals
-6. Test complete workflow: team → project → task → assignment
+1. Register TskItemPolicy in AuthServiceProvider
+2. Add policy authorization to task editing/deletion operations
+3. Test complete workflow: team → project → task → assignment
+4. Create team and auth management modals
+5. Implement data loading in remaining Livewire components

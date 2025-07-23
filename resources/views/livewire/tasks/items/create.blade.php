@@ -3,93 +3,61 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
 use App\Models\TskProject;
-use App\Models\TskType;
 use App\Models\TskItem;
 use App\Models\TskAuth;
+use App\Models\TskType;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
-new class extends Component
-{
+new class extends Component {
     public string $title = '';
     public string $desc = '';
     public int $tsk_project_id = 0;
     public int $tsk_type_id = 0;
-    public int $assigned_to = 0;
     public string $start_date = '';
     public string $end_date = '';
+    public int $assigned_to = 0;
     public float $estimated_hours = 0;
 
     public array $projects = [];
-    public array $types = [];
     public array $users = [];
-    public bool $canAssign = false;
+    public array $types = [];
     public bool $hasProjects = false;
+    public bool $canAssign = false;
 
     public function mount()
     {
-        $this->loadInitialData();
+        $this->loadProjects();
+        $this->loadTypes();
+        $this->checkAssignPermission();
+        $this->hasProjects = count($this->projects) > 0;
+        
+        // Set default dates
+        $this->start_date = now()->format('Y-m-d');
+        $this->end_date = now()->addWeek()->format('Y-m-d');
     }
 
     #[On('task-create')]
-    public function handleTaskCreate($params = [])
+    public function handleTaskCreate($data = [])
     {
-        $this->reset(['title', 'desc', 'tsk_project_id', 'tsk_type_id', 'assigned_to', 'start_date', 'end_date', 'estimated_hours']);
-        
-        // Set default start date to today
-        $this->start_date = now()->format('Y-m-d');
-        
-        // Auto-select project if provided
-        if (isset($params['project_id'])) {
-            $this->tsk_project_id = (int) $params['project_id'];
-            $this->updatedTskProjectId();
+        if (isset($data['project_id'])) {
+            $this->tsk_project_id = $data['project_id'];
+            $this->loadUsersForAssignment();
         }
-        
-        $this->loadInitialData();
     }
 
-    public function loadInitialData()
+    public function updatedTskProjectId($value)
+    {
+        $this->loadUsersForAssignment();
+    }
+
+    private function loadProjects()
     {
         $user = auth()->user();
         
-        // Load projects based on permissions
-        $this->projects = $this->getAvailableProjects($user);
-        $this->hasProjects = !empty($this->projects);
-        
-        // Load task types
-        $this->types = TskType::getTypesForSelect();
-        
-        // Check if user can assign tasks
-        $this->canAssign = $this->userCanAssignTasks($user);
-        
-        // Load users for assignment if user can assign
-        if ($this->canAssign) {
-            $this->loadUsersForAssignment();
-        }
-    }
-
-    public function updatedTskProjectId()
-    {
-        if ($this->tsk_project_id && $this->canAssign) {
-            $this->loadUsersForAssignment();
-        }
-    }
-
-    private function getAvailableProjects($user): array
-    {
-        // Check if user has global task-create permission
-        $globalPerms = TskAuth::where('user_id', $user->id)
-            ->where('is_active', true)
-            ->get()
-            ->flatMap(function ($auth) {
-                return is_array($auth->perms) ? $auth->perms : json_decode($auth->perms ?? '[]', true);
-            })
-            ->unique()
-            ->values()
-            ->toArray();
-
-        if (in_array('task-create', $globalPerms)) {
-            // User can create tasks in any project
-            return TskProject::with('tsk_team')
+        // Superuser has access to all projects
+        if ($user->id === 1) {
+            $this->projects = TskProject::with('tsk_team')
                 ->active()
                 ->orderBy('name')
                 ->get()
@@ -99,15 +67,16 @@ new class extends Component
                     'team' => $p->tsk_team->short_name ?? $p->tsk_team->name
                 ])
                 ->toArray();
+            return;
         }
-
-        // User can only create tasks in their team projects
+        
+        // Get all teams where user is a member
         $teamIds = TskAuth::where('user_id', $user->id)
-            ->where('is_active', true)
             ->pluck('tsk_team_id')
             ->toArray();
 
-        return TskProject::with('tsk_team')
+        // Load projects from user's teams
+        $this->projects = TskProject::with('tsk_team')
             ->whereIn('tsk_team_id', $teamIds)
             ->active()
             ->orderBy('name')
@@ -120,20 +89,24 @@ new class extends Component
             ->toArray();
     }
 
-    private function userCanAssignTasks($user): bool
+    private function loadTypes()
     {
-        $auths = TskAuth::where('user_id', $user->id)
-            ->where('is_active', true)
-            ->get();
+        $this->types = TskType::active()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->toArray();
+    }
 
-        foreach ($auths as $auth) {
-            $perms = is_array($auth->perms) ? $auth->perms : json_decode($auth->perms ?? '[]', true);
-            if (in_array('task-assign', $perms)) {
-                return true;
-            }
-        }
-
-        return false;
+    private function checkAssignPermission()
+    {
+        $user = auth()->user();
+        
+        // Check if user has task-assign permission in any team
+        $this->canAssign = TskAuth::where('user_id', $user->id)
+            ->get()
+            ->contains(function ($auth) {
+                return $auth->hasPermission('task-assign');
+            });
     }
 
     private function loadUsersForAssignment()
@@ -150,15 +123,12 @@ new class extends Component
         }
 
         // Get team members for this project
-        $teamMembers = User::whereHas('tsk_auths', function ($query) use ($project) {
-            $query->where('tsk_team_id', $project->tsk_team_id)
-                  ->where('is_active', true);
+        $this->users = User::whereHas('tsk_auths', function ($query) use ($project) {
+            $query->where('tsk_team_id', $project->tsk_team_id);
         })
         ->orderBy('name')
         ->get(['id', 'name', 'employee_id'])
         ->toArray();
-
-        $this->users = $teamMembers;
     }
 
     public function save()
@@ -184,20 +154,19 @@ new class extends Component
             'estimated_hours.min' => 'Estimasi jam tidak boleh negatif.',
         ]);
 
-        // Validate user permissions
-        $user = auth()->user();
         $project = TskProject::find($this->tsk_project_id);
+        $user = auth()->user();
 
-        // Check if user can create tasks in this project
-        if (!$this->canCreateTaskInProject($user, $project)) {
-            $this->addError('tsk_project_id', 'Anda tidak memiliki izin untuk membuat tugas di proyek ini.');
-            return;
-        }
+        // Policy-based authorization for task creation
+        Gate::authorize('create', [TskItem::class, $project]);
 
-        // Check if user can assign to selected user
-        if ($this->assigned_to && !$this->canAssignToUser($user, $this->assigned_to, $project)) {
-            $this->addError('assigned_to', 'Anda tidak dapat menugaskan ke pengguna ini.');
-            return;
+        // If assigning to someone, check assignment permission
+        if ($this->assigned_to) {
+            $assignee = User::find($this->assigned_to);
+            $dummyTask = new TskItem(['tsk_project_id' => $project->id]);
+            $dummyTask->setRelation('tsk_project', $project);
+            
+            Gate::authorize('assign', [$dummyTask, $assignee]);
         }
 
         try {
@@ -229,45 +198,6 @@ new class extends Component
             $this->addError('general', 'Terjadi kesalahan saat membuat tugas. Silakan coba lagi.');
         }
     }
-
-    private function canCreateTaskInProject($user, $project): bool
-    {
-        // Check if user has task-create permission globally
-        $globalPerms = TskAuth::where('user_id', $user->id)
-            ->where('is_active', true)
-            ->get()
-            ->flatMap(function ($auth) {
-                return is_array($auth->perms) ? $auth->perms : json_decode($auth->perms ?? '[]', true);
-            })
-            ->unique()
-            ->values()
-            ->toArray();
-
-        if (in_array('task-create', $globalPerms)) {
-            return true;
-        }
-
-        // Check if user is member of this project's team
-        $auth = TskAuth::where('user_id', $user->id)
-            ->where('tsk_team_id', $project->tsk_team_id)
-            ->where('is_active', true)
-            ->first();
-
-        return $auth !== null;
-    }
-
-    private function canAssignToUser($user, $assigneeId, $project): bool
-    {
-        if (!$this->canAssign) return false;
-
-        // Check if assignee is member of the project's team
-        $assigneeAuth = TskAuth::where('user_id', $assigneeId)
-            ->where('tsk_team_id', $project->tsk_team_id)
-            ->where('is_active', true)
-            ->first();
-
-        return $assigneeAuth !== null;
-    }
 }; ?>
 
 <div>
@@ -297,56 +227,50 @@ new class extends Component
                     Deskripsi
                 </label>
                 <textarea id="desc"
-                          wire:model="desc"
-                          rows="3"
-                          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Deskripsi tugas (opsional)"></textarea>
+                         wire:model="desc"
+                         rows="3"
+                         class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                         placeholder="Masukkan deskripsi tugas (opsional)"></textarea>
                 @error('desc') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            <!-- Project and Type Row -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Project -->
-                <div>
-                    <label for="tsk_project_id" class="block text-sm font-medium text-gray-700 mb-1">
-                        Proyek *
-                    </label>
-                    <select id="tsk_project_id"
-                            wire:model.live="tsk_project_id"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Pilih Proyek</option>
-                        @foreach($projects as $project)
-                            <option value="{{ $project['id'] }}">
-                                {{ $project['name'] }} ({{ $project['team'] }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('tsk_project_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                <!-- Type -->
-                <div>
-                    <label for="tsk_type_id" class="block text-sm font-medium text-gray-700 mb-1">
-                        Tipe *
-                    </label>
-                    <select id="tsk_type_id"
-                            wire:model="tsk_type_id"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Pilih Tipe</option>
-                        @foreach($types as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
-                    @error('tsk_type_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
+            <!-- Project Selection -->
+            <div>
+                <label for="tsk_project_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    Proyek *
+                </label>
+                <select id="tsk_project_id"
+                        wire:model.live="tsk_project_id"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Pilih Proyek</option>
+                    @foreach($projects as $project)
+                        <option value="{{ $project['id'] }}">{{ $project['name'] }} ({{ $project['team'] }})</option>
+                    @endforeach
+                </select>
+                @error('tsk_project_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            <!-- Date Row -->
+            <!-- Task Type -->
+            <div>
+                <label for="tsk_type_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    Tipe Tugas *
+                </label>
+                <select id="tsk_type_id"
+                        wire:model="tsk_type_id"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Pilih Tipe Tugas</option>
+                    @foreach($types as $type)
+                        <option value="{{ $type['id'] }}">{{ $type['name'] }}</option>
+                    @endforeach
+                </select>
+                @error('tsk_type_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            <!-- Date Range -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Start Date -->
                 <div>
                     <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
-                        Awal *
+                        Tanggal Mulai *
                     </label>
                     <input type="date" 
                            id="start_date"
@@ -355,10 +279,9 @@ new class extends Component
                     @error('start_date') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
 
-                <!-- End Date -->
                 <div>
                     <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">
-                        Akhir *
+                        Tanggal Akhir *
                     </label>
                     <input type="date" 
                            id="end_date"
@@ -368,66 +291,55 @@ new class extends Component
                 </div>
             </div>
 
-            <!-- Assignment and Estimated Hours Row -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Assignment (only if user can assign) -->
-                @if($canAssign)
-                    <div>
-                        <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">
-                            Ditugaskan Ke
-                        </label>
-                        <select id="assigned_to"
-                                wire:model="assigned_to"
-                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                @if(!$tsk_project_id) disabled @endif>
-                            <option value="">Pilih Pengguna</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user['id'] }}">
-                                    {{ $user['name'] }} @if($user['employee_id'])({{ $user['employee_id'] }})@endif
-                                </option>
-                            @endforeach
-                        </select>
-                        @if(!$tsk_project_id)
-                            <p class="mt-1 text-xs text-gray-500">Pilih proyek terlebih dahulu</p>
-                        @endif
-                        @error('assigned_to') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                    </div>
-                @else
-                    <div></div>
-                @endif
-
-                <!-- Estimated Hours -->
+            <!-- Assignment (only show if user has permission) -->
+            @if($canAssign && count($users) > 0)
                 <div>
-                    <label for="estimated_hours" class="block text-sm font-medium text-gray-700 mb-1">
-                        Estimasi Jam
+                    <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tugaskan Kepada
                     </label>
-                    <input type="number" 
-                           id="estimated_hours"
-                           wire:model="estimated_hours"
-                           step="0.5"
-                           min="0"
-                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="0">
-                    @error('estimated_hours') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    <select id="assigned_to"
+                            wire:model="assigned_to"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Tidak ditugaskan</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user['id'] }}">{{ $user['name'] }} ({{ $user['employee_id'] }})</option>
+                        @endforeach
+                    </select>
+                    @error('assigned_to') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
+            @endif
+
+            <!-- Estimated Hours -->
+            <div>
+                <label for="estimated_hours" class="block text-sm font-medium text-gray-700 mb-1">
+                    Estimasi Jam
+                </label>
+                <input type="number" 
+                       id="estimated_hours"
+                       wire:model="estimated_hours"
+                       step="0.5"
+                       min="0"
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       placeholder="0">
+                @error('estimated_hours') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            <!-- General Error -->
+            <!-- Error Messages -->
             @error('general') 
-                <div class="bg-red-50 border border-red-200 rounded-md p-3">
-                    <p class="text-sm text-red-600">{{ $message }}</p>
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                    {{ $message }}
                 </div>
             @enderror
 
-            <!-- Form Actions -->
-            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <!-- Submit Button -->
+            <div class="flex justify-end space-x-3 pt-4 border-t">
                 <button type="button" 
                         x-on:click="$dispatch('close-slide-over')"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Batal
                 </button>
                 <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Buat Tugas
                 </button>
             </div>

@@ -12,6 +12,7 @@ use App\Models\TskTeam;
 new class extends Component {
     public int $user_id;
     public int $tsk_team_id;
+    public int $new_tsk_team_id; // For team selection
     public string $user_name;
     public string $user_emp_id;
     public string $user_photo;
@@ -22,6 +23,7 @@ new class extends Component {
     public function rules()
     {
         return [
+            'new_tsk_team_id' => ['required', 'integer', 'exists:tsk_teams,id'],
             'perms' => ['array'],
             'perms.*' => ['string', Rule::in(array_keys(TskAuth::getAvailablePermissions()))],
         ];
@@ -38,6 +40,7 @@ new class extends Component {
         if ($auth) {
             $this->user_id = $auth->user_id;
             $this->tsk_team_id = $auth->tsk_team_id;
+            $this->new_tsk_team_id = $auth->tsk_team_id; // Initialize with current team
             $this->user_name = $auth->user->name;
             $this->user_emp_id = $auth->user->emp_id;
             $this->user_photo = $auth->user->photo ?? '';
@@ -55,6 +58,7 @@ new class extends Component {
         return [
             'is_superuser' => Gate::allows('superuser'),
             'available_permissions' => TskAuth::getAvailablePermissions(),
+            'teams' => TskTeam::where('is_active', true)->orderBy('name')->get(),
         ];
     }
 
@@ -63,20 +67,45 @@ new class extends Component {
         Gate::authorize('superuser');
         $this->validate();
 
-        $auth = TskAuth::where('user_id', $this->user_id)
-                      ->where('tsk_team_id', $this->tsk_team_id)
-                      ->first();
-                      
-        if ($auth) {
-            $auth->perms = $this->perms;
-            $auth->save();
-
-            $this->js('$dispatch("close")');
-            $this->js('toast("' . __('Wewenang diperbarui') . '", { type: "success" })');
-            $this->dispatch('updated');
-        } else {
+        $currentAuth = TskAuth::where('user_id', $this->user_id)
+                             ->where('tsk_team_id', $this->tsk_team_id)
+                             ->first();
+                             
+        if (!$currentAuth) {
             $this->handleNotFound();
+            return;
         }
+
+        // Check if team is changing
+        if ($this->new_tsk_team_id != $this->tsk_team_id) {
+            // Check if user already has auth in the target team
+            $existingAuth = TskAuth::where('user_id', $this->user_id)
+                                  ->where('tsk_team_id', $this->new_tsk_team_id)
+                                  ->first();
+            
+            if ($existingAuth) {
+                $this->addError('new_tsk_team_id', __('Pengguna sudah memiliki wewenang di tim ini.'));
+                return;
+            }
+
+            // Delete old auth and create new one with preserved permissions
+            $preservedPerms = $this->perms;
+            $currentAuth->delete();
+            
+            TskAuth::create([
+                'user_id' => $this->user_id,
+                'tsk_team_id' => $this->new_tsk_team_id,
+                'perms' => $preservedPerms,
+            ]);
+        } else {
+            // Just update permissions if team hasn't changed
+            $currentAuth->perms = $this->perms;
+            $currentAuth->save();
+        }
+
+        $this->js('$dispatch("close")');
+        $this->js('toast("' . __('Wewenang diperbarui') . '", { type: "success" })');
+        $this->dispatch('updated');
     }
 
     public function delete()
@@ -101,7 +130,7 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(['user_id', 'tsk_team_id', 'user_name', 'user_emp_id', 'user_photo', 'team_name', 'team_short_name', 'perms']);
+        $this->reset(['user_id', 'tsk_team_id', 'new_tsk_team_id', 'user_name', 'user_emp_id', 'user_photo', 'team_name', 'team_short_name', 'perms']);
     }
 
     public function handleNotFound()
@@ -144,12 +173,27 @@ new class extends Component {
                         <div class="truncate">{{ $user_name ?? __('Pengguna') }}</div>
                         <div class="truncate text-xs text-neutral-400 dark:text-neutral-600">
                             {{ $user_emp_id ?? __('Nomor karyawan') }}</div>
-                        <div class="truncate text-xs text-neutral-400 dark:text-neutral-600">
-                            {{ $team_name ?? __('Tim') }} ({{ $team_short_name ?? '' }})</div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Team Selection -->
+        <div class="grid grid-cols-1 gap-y-3 mt-6">
+            <div>
+                <label for="new_tsk_team_id" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
+                <select wire:model="new_tsk_team_id" id="new_tsk_team_id" :disabled="{{ !$is_superuser ? 'true' : 'false' }}" class="block w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-caldy-500 dark:focus:border-caldy-600 focus:ring-caldy-500 dark:focus:ring-caldy-600 rounded-md shadow-sm">
+                    @foreach($teams as $team)
+                        <option value="{{ $team->id }}">{{ $team->name }} ({{ $team->short_name }})</option>
+                    @endforeach
+                </select>
+                @error('new_tsk_team_id')
+                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                @enderror
+            </div>
+        </div>
+
+        <!-- Permissions -->
         <div class="grid grid-cols-1 gap-y-3 mt-6">
             @foreach($available_permissions as $perm => $label)
             <x-checkbox id="edit-{{ $perm }}" :disabled="!$is_superuser" wire:model="perms"
