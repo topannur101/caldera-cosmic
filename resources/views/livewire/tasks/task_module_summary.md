@@ -132,7 +132,7 @@ todo → in_progress → review → done
 - id, title, desc, tsk_project_id
 - created_by, assigned_to
 - status (todo/in_progress/review/done)
-- priority, due_date, estimated_hours, actual_hours
+- priority, end_date, estimated_hours, actual_hours
 - Relations: tsk_project, creator, assignee
 ```
 

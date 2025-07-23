@@ -72,7 +72,7 @@ class extends Component {};
                </div>
                <div class="w-full mt-12 md:w-1/2 md:px-3 md:mt-0">
                      <div class="w-full h-auto overflow-hidden rounded-md shadow-xl sm:rounded-xl">
-                           <img src="/projects.jpg" alt="Task management illustration" />
+                           <img src="/projects.jpg" class="dark:invert" alt="Task management illustration" />
                      </div>
                </div>
             </div>

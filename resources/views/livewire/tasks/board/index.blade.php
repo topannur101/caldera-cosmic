@@ -101,8 +101,8 @@ class extends Component {
                             <div class="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
                                 <div class="flex justify-between items-center text-sm">
                                     <span class="text-neutral-500">
-                                        @if($project['due_date'] ?? false)
-                                            {{ __('Due: ') . $project['due_date'] }}
+                                        @if($project['end_date'] ?? false)
+                                            {{ __('Due: ') . $project['end_date'] }}
                                         @else
                                             {{ ($project['total_tasks'] ?? 0) . ' ' . __('total tugas') }}
                                         @endif

@@ -270,6 +270,7 @@ Route::middleware('auth')->group(function () {
             Route::name('manage.')->group(function () {
                 Volt::route('/manage/teams', 'tasks.manage.teams')->name('teams');
                 Volt::route('/manage/auths', 'tasks.manage.auths')->name('auths');
+                Volt::route('/manage/types', 'tasks.manage.types')->name('types');
                 Volt::route('/manage', 'tasks.manage.index')->name('index');
             });
 

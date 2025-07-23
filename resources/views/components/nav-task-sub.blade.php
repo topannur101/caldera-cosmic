@@ -23,6 +23,14 @@
                     <div>
                         <span class="hidden sm:inline">{{ $slot }}</span>
                     </div>
+                @elseif(request()->is('tasks/manage/*'))
+                    <x-link href="{{ route('tasks.manage.index') }}" class="inline-block px-3 py-6" wire:navigate>
+                        <i class="icon-arrow-left"></i>
+                    </x-link>
+                    <div>
+                        <span class="hidden sm:inline">{{ $slot }}</span>
+                    </div>
+                    
                 @else          
                     <x-link href="{{ route('tasks.dashboard.index') }}" class="inline-block px-3 py-6" wire:navigate>
                         <i class="icon-arrow-left"></i>

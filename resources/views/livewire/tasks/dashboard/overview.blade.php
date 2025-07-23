@@ -35,7 +35,7 @@ new class extends Component
                 'pending_tasks' => TskItem::whereIn('status', ['todo', 'in_progress'])->count(),
                 'completed_tasks' => TskItem::where('status', 'done')->count(),
                 'my_tasks' => TskItem::where('assigned_to', $user->id)->count(),
-                'overdue_tasks' => TskItem::where('due_date', '<', now())
+                'overdue_tasks' => TskItem::where('end_date', '<', now())
                     ->whereNotIn('status', ['done'])
                     ->count(),
             ];
@@ -55,7 +55,7 @@ new class extends Component
                     ->where('status', 'done')->count(),
                 'created_tasks' => TskItem::where('created_by', $user->id)->count(),
                 'overdue_tasks' => TskItem::where('assigned_to', $user->id)
-                    ->where('due_date', '<', now())
+                    ->where('end_date', '<', now())
                     ->whereNotIn('status', ['done'])
                     ->count(),
             ];
@@ -237,8 +237,8 @@ new class extends Component
                                 <div class="flex-1">
                                     <h4 class="font-medium text-neutral-900 dark:text-neutral-100">{{ $task['title'] }}</h4>
                                     <p class="text-sm text-neutral-500">{{ $task['tsk_project']['name'] ?? 'No Project' }}</p>
-                                    @if($task['due_date'])
-                                        <p class="text-xs text-neutral-400">{{ __('Deadline: ') . date('d M Y', strtotime($task['due_date'])) }}</p>
+                                    @if($task['end_date'])
+                                        <p class="text-xs text-neutral-400">{{ __('Deadline: ') . date('d M Y', strtotime($task['end_date'])) }}</p>
                                     @endif
                                 </div>
                                 <div class="flex items-center space-x-2">
