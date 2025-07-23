@@ -52,7 +52,7 @@ new #[Layout('layouts.app')] class extends Component {
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Tim') }}</h1>
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
                 <x-secondary-button type="button" 
-                    x-on:click.prevent="$dispatch('open-modal', 'team-create')"><i class="icon-plus"></i></x-secondary-button>
+                    x-on:click.prevent="$dispatch('open-modal', 'team-form'); $dispatch('team-create')"><i class="icon-plus"></i></x-secondary-button>
                 <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open"><i class="icon-search"></i></x-secondary-button>
                 <div class="w-40" x-show="open" x-cloak>
                     <x-text-input-search wire:model.live="q" id="team-q" x-ref="search"
@@ -60,14 +60,9 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             </div>
         </div>
-        <div wire:key="team-create">
-            <x-modal name="team-create">
-                <livewire:tasks.manage.team-create  />
-            </x-modal>
-        </div>
-        <div wire:key="team-edit">
-            <x-modal name="team-edit">
-                <livewire:tasks.manage.team-edit  />
+        <div wire:key="team-form">
+            <x-modal name="team-form">
+                <livewire:tasks.manage.team-form />
             </x-modal>
         </div>
         <div class="overflow-auto w-full my-8">
@@ -80,7 +75,7 @@ new #[Layout('layouts.app')] class extends Component {
                         </tr>
                         @foreach ($teams as $team)
                             <tr wire:key="team-tr-{{ $team->id . $loop->index }}" tabindex="0"
-                                x-on:click="$dispatch('open-modal', 'team-edit'); $dispatch('team-edit', { id: '{{ $team->id }}'})">
+                                x-on:click="$dispatch('open-modal', 'team-form'); $dispatch('team-edit', { id: '{{ $team->id }}'})">
                                 <td>
                                     <div>
                                         <div class="font-semibold">{{ $team->name }}</div>

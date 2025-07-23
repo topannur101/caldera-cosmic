@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tsk_auths', function (Blueprint $table) {
-            $table->id();
             $table->timestamps();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('tsk_team_id')->constrained();

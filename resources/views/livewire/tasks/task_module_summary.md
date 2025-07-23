@@ -15,10 +15,8 @@
 - Tasks → Users (assigned_to, created_by)
 
 ### Permission System (Action-Based)
-- `team-manage` - Add/remove users from teams
 - `task-assign` - Assign tasks to other people
-- `task-delete` - Delete tasks
-- `task-create` - Create tasks in any team (for leaders), default: own teams only
+- `task-manage` - Create and delete tasks in any team/project (for leaders)
 
 ## Routes Structure
 ```

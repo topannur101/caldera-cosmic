@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TskAuth extends Model
 {
@@ -14,7 +15,7 @@ class TskAuth extends Model
         'tsk_team_id',
         'perms',
         'role',
-        'is_active'
+        'is_active',
     ];
 
     protected $casts = [
@@ -22,28 +23,117 @@ class TskAuth extends Model
         'is_active' => 'boolean',
     ];
 
-    public function user()
+    /**
+     * Get the user that owns the auth
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function tsk_team()
+    /**
+     * Get the team that owns the auth
+     */
+    public function tsk_team(): BelongsTo
     {
         return $this->belongsTo(TskTeam::class);
     }
 
-    public function hasPermission($permission)
+    /**
+     * Check if user has a specific permission
+     */
+    public function hasPermission(string $permission): bool
     {
+        if (!$this->is_active) {
+            return false;
+        }
+
+        // Leaders have all permissions
+        if ($this->isLeader()) {
+            return true;
+        }
+
+        // Check if permission exists in perms array
         return in_array($permission, $this->perms ?? []);
     }
 
-    public function isLeader()
+    /**
+     * Check if user is a leader
+     */
+    public function isLeader(): bool
     {
         return $this->role === 'leader';
     }
 
-    public function isMember()
+    /**
+     * Check if user is a member
+     */
+    public function isMember(): bool
     {
         return $this->role === 'member';
+    }
+
+    /**
+     * Add permission to user
+     */
+    public function addPermission(string $permission): void
+    {
+        $perms = $this->perms ?? [];
+        if (!in_array($permission, $perms)) {
+            $perms[] = $permission;
+            $this->perms = $perms;
+            $this->save();
+        }
+    }
+
+    /**
+     * Remove permission from user
+     */
+    public function removePermission(string $permission): void
+    {
+        $perms = $this->perms ?? [];
+        $key = array_search($permission, $perms);
+        if ($key !== false) {
+            unset($perms[$key]);
+            $this->perms = array_values($perms);
+            $this->save();
+        }
+    }
+
+    /**
+     * Get all available task permissions
+     */
+    public static function getAvailablePermissions(): array
+    {
+        return [
+            'team-manage' => 'Kelola Tim',
+            'task-assign' => 'Tugaskan Tugas',
+            'task-delete' => 'Hapus Tugas',
+            'task-create' => 'Buat Tugas (Semua Tim)',
+        ];
+    }
+
+    /**
+     * Scope for active auths only
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope for leaders only
+     */
+    public function scopeLeaders($query)
+    {
+        return $query->where('role', 'leader');
+    }
+
+    /**
+     * Scope for members only
+     */
+    public function scopeMembers($query)
+    {
+        return $query->where('role', 'member');
     }
 }
