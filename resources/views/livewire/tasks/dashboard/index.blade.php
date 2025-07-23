@@ -24,7 +24,7 @@ class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('Dashboard Tugas') }}</x-slot>
+<x-slot name="title">{{ __('Dasbor Tugas') }}</x-slot>
 
 @auth
     <x-slot name="header">
@@ -34,12 +34,12 @@ class extends Component {
 
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white dark:bg-neutral-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-white dark:bg-neutral-800 overflow-hidden shadow sm:rounded-lg">
             <div class="p-6 text-neutral-900 dark:text-neutral-100">
                 
-                <!-- Dashboard Header -->
+                <!-- Dasbor Header -->
                 <div class="mb-8">
-                    <h1 class="text-2xl font-bold mb-2">{{ __('Dashboard Tugas') }}</h1>
+                    <h1 class="text-2xl font-bold mb-2">{{ __('Dasbor Tugas') }}</h1>
                     <p class="text-neutral-600 dark:text-neutral-400">{{ __('Ringkasan tugas dan aktivitas tim Anda') }}</p>
                 </div>
 
@@ -69,7 +69,7 @@ class extends Component {
                     <div class="border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
                         <h3 class="text-lg font-semibold mb-4">{{ __('Tugas Saya') }}</h3>
                         <div class="text-center py-12 text-neutral-500 dark:text-neutral-400">
-                            <i class="icon-list-todo text-4xl mb-4"></i>
+                            <i class="icon-ticket text-4xl mb-4"></i>
                             <p>{{ __('Belum ada tugas yang ditugaskan') }}</p>
                             <p class="text-sm mt-2">{{ __('Tugas yang ditugaskan kepada Anda akan muncul di sini') }}</p>
                         </div>
@@ -88,7 +88,7 @@ class extends Component {
 
                 <!-- Quick Actions -->
                 <div class="mt-8 flex flex-wrap gap-4">
-                    <x-primary-button onclick="window.location.href='{{ route('tasks.items.create') }}'" wire:navigate>
+                    <x-primary-button x-on:click.prevent="$dispatch('open-slide-over', 'task-create'); $dispatch('task-create')">
                         <i class="icon-plus mr-2"></i>{{ __('Buat Tugas Baru') }}
                     </x-primary-button>
                     <x-secondary-button onclick="window.location.href='{{ route('tasks.projects.create') }}'" wire:navigate>
@@ -99,7 +99,22 @@ class extends Component {
                     </x-secondary-button>
                 </div>
 
+                <!-- Management Access -->
+                <div class="mt-8 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+                    <h3 class="text-lg font-semibold mb-4">{{ __('Administrasi') }}</h3>
+                    <x-secondary-button onclick="window.location.href='{{ route('tasks.manage.index') }}'" wire:navigate>
+                        <i class="icon-cog mr-2"></i>{{ __('Kelola') }}
+                    </x-secondary-button>
+                </div>
+
             </div>
         </div>
     </div>
+    <div wire:key="slideovers">
+        <!-- Task Creation Slideover -->
+        <x-slide-over name="task-create">
+            <livewire:tasks.items.create />
+        </x-slide-over>
+    </div>
 </div>
+

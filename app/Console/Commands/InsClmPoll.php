@@ -299,7 +299,7 @@ class InsClmPoll extends Command
                     "[%s] %s - %s %s - Ambient: %+.1f°C - SV: [%s] → [%s]",
                     $timestamp->format('Y-m-d H:i:s'),
                     $status,
-                    $adjustment['machine_name'],
+                    $adjustment['line'],
                     $adjustment['position'],
                     $adjustment['ambient_change'],
                     implode(',', $adjustment['current_sv']),

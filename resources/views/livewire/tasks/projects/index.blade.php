@@ -62,7 +62,7 @@ class extends Component {
 
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white dark:bg-neutral-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-white dark:bg-neutral-800 overflow-hidden shadow sm:rounded-lg">
             <div class="p-6 text-neutral-900 dark:text-neutral-100">
                 
                 <!-- Page Header -->
@@ -155,5 +155,11 @@ class extends Component {
                 
             </div>
         </div>
+    </div>
+    <div wire:key="task-create-slideovers">
+        <!-- Task Creation Slideover -->
+        <x-slide-over name="task-create">
+            <livewire:tasks.items.create />
+        </x-slide-over>
     </div>
 </div>

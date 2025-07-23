@@ -67,7 +67,7 @@ class extends Component {
 
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white dark:bg-neutral-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-white dark:bg-neutral-800 overflow-hidden shadow sm:rounded-lg">
             <div class="p-6 text-neutral-900 dark:text-neutral-100">
                 
                 <!-- Page Header -->
@@ -92,7 +92,7 @@ class extends Component {
                         </div>
                         
                         @if($can_create)
-                        <x-primary-button onclick="window.location.href='{{ route('tasks.items.create') }}'" wire:navigate>
+                        <x-primary-button x-on:click.prevent="$dispatch('open-slide-over', 'task-create'); $dispatch('task-create')">
                             <i class="icon-plus mr-2"></i>{{ __('Buat Tugas') }}
                         </x-primary-button>
                         @endif
@@ -162,11 +162,11 @@ class extends Component {
                     <div class="space-y-4">
                         <!-- Placeholder when no tasks -->
                         <div class="text-center py-12 text-neutral-500 dark:text-neutral-400">
-                            <i class="icon-list-todo text-6xl mb-4"></i>
+                            <i class="icon-ticket text-6xl mb-4"></i>
                             <h3 class="text-lg font-semibold mb-2">{{ __('Belum ada tugas') }}</h3>
                             <p class="mb-4">{{ __('Mulai dengan membuat tugas pertama Anda') }}</p>
                             @if($can_create)
-                            <x-primary-button onclick="window.location.href='{{ route('tasks.items.create') }}'" wire:navigate>
+                            <x-primary-button x-on:click.prevent="$dispatch('open-slide-over', 'task-create'); $dispatch('task-create')">
                                 <i class="icon-plus mr-2"></i>{{ __('Buat Tugas Pertama') }}
                             </x-primary-button>
                             @endif
@@ -259,5 +259,11 @@ class extends Component {
                 
             </div>
         </div>
+    </div>
+    <div wire:key="slideovers">
+        <!-- Task Creation Slideover -->
+        <x-slide-over name="task-create">
+            <livewire:tasks.items.create />
+        </x-slide-over>
     </div>
 </div>

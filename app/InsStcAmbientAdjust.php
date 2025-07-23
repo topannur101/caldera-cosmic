@@ -104,6 +104,7 @@ class InsStcAmbientAdjust
 
                 // Store adjustment details for unified logging
                 $adjustment_summary[] = [
+                    'line' => $machine->line,
                     'machine_name' => $machine->name,
                     'machine_ip' => $machine->ip_address,
                     'position' => $position,

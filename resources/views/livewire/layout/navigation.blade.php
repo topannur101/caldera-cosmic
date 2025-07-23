@@ -91,7 +91,7 @@ new class extends Component {
                     <!-- <x-nav-link :href="route('machines')" :active="request()->routeIs('machines*')" wire:navigate>
                         {{ __('Mesin ') }}
                     </x-nav-link> -->
-                    <x-nav-link :href="route('tasks.dashboard')" :active="request()->routeIs('tasks*')" wire:navigate>
+                    <x-nav-link :href="route('tasks')" :active="request()->routeIs('tasks*')" wire:navigate>
                         {{ __('Tugas') }}
                     </x-nav-link>
                     @auth
@@ -229,7 +229,7 @@ new class extends Component {
             <x-responsive-nav-link :href="route('inventory')" :active="request()->routeIs('inventory*')" wire:navigate>
                 {{ __('Inventaris') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('tasks.dashboard')" :active="request()->routeIs('tasks*')" wire:navigate>
+            <x-responsive-nav-link :href="route('tasks')" :active="request()->routeIs('tasks*')" wire:navigate>
                 {{ __('Tugas') }}
             </x-responsive-nav-link>
             <!-- <x-responsive-nav-link :href="route('machines')" :active="request()->routeIs('machines*')" wire:navigate>
