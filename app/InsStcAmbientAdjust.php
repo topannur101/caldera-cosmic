@@ -13,17 +13,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class InsStcAmbientAdjust
 {
     protected $output;
-    protected $log_file_path;
 
     // SV limits per section (from InsStc::calculateSVP)
     protected $svp_highs = [ 83, 78, 73, 68, 63, 58, 53, 48 ];
     protected $svp_lows  = [ 73, 68, 63, 58, 53, 48, 43, 38 ];
-
-    public function __construct()
-    {
-        // Set up log file path
-        $this->log_file_path = storage_path('logs/stc_ambient_adjustments.log');
-    }
 
     /**
      * Set output for console logging
@@ -35,6 +28,7 @@ class InsStcAmbientAdjust
 
     /**
      * Main method to adjust STC based on ambient temperature changes
+     * Returns detailed adjustment information instead of logging
      */
     public function adjustForAmbient($ambient_change, $dry_run = false, $verbose = false, $debug = false)
     {
@@ -51,7 +45,7 @@ class InsStcAmbientAdjust
             if ($verbose && $this->output) {
                 $this->output->writeln("→ No eligible machines found");
             }
-            return;
+            return null;
         }
 
         $adjustment_summary = [];
@@ -87,10 +81,12 @@ class InsStcAmbientAdjust
                 $new_sv_values = $this->calculateAdjustedSV($current_sv_values, $ambient_change);
                 
                 // Apply the adjustment
+                $success = false;
                 if ($dry_run) {
                     if ($verbose && $this->output) {
                         $this->output->writeln("→ [DRY-RUN] Would adjust {$machine->name} {$position} by {$ambient_change}°C");
                     }
+                    $success = true; // Consider dry-run as successful
                 } else {
                     $success = $this->applySVAdjustment($machine, $position, $new_sv_values);
                     
@@ -106,7 +102,7 @@ class InsStcAmbientAdjust
                     }
                 }
 
-                // Store adjustment summary for logging
+                // Store adjustment details for unified logging
                 $adjustment_summary[] = [
                     'machine_name' => $machine->name,
                     'machine_ip' => $machine->ip_address,
@@ -114,14 +110,11 @@ class InsStcAmbientAdjust
                     'ambient_change' => $ambient_change,
                     'current_sv' => $current_sv_values,
                     'new_sv' => $new_sv_values,
-                    'applied' => !$dry_run,
+                    'applied' => $success,
                     'timestamp' => $timestamp->format('Y-m-d H:i:s')
                 ];
             }
         }
-
-        // Log the adjustments
-        $this->logAdjustments($adjustment_summary, $dry_run);
 
         if ($verbose && $this->output) {
             if ($dry_run) {
@@ -130,6 +123,15 @@ class InsStcAmbientAdjust
                 $this->output->writeln("✓ Successfully adjusted {$total_adjustments_made} machine positions");
             }
         }
+
+        // Return detailed adjustment information instead of logging
+        return [
+            'total_machines' => count($machines),
+            'total_positions_processed' => count($adjustment_summary),
+            'successful_adjustments' => $total_adjustments_made,
+            'adjustments' => $adjustment_summary,
+            'dry_run' => $dry_run
+        ];
     }
 
     /**
@@ -250,55 +252,6 @@ class InsStcAmbientAdjust
             
         } catch (\Throwable $e) {
             return false;
-        }
-    }
-
-    /**
-     * Log adjustments to file
-     */
-    protected function logAdjustments($adjustment_summary, $dry_run = false)
-    {
-        if (empty($adjustment_summary)) {
-            return;
-        }
-
-        $log_entries = [];
-        
-        foreach ($adjustment_summary as $adjustment) {
-            $status = $dry_run ? 'DRY-RUN' : ($adjustment['applied'] ? 'APPLIED' : 'FAILED');
-            
-            $log_entry = sprintf(
-                "[%s] %s - %s %s - Ambient: %+.1f°C - SV: [%s] → [%s]",
-                $adjustment['timestamp'],
-                $status,
-                $adjustment['machine_name'],
-                $adjustment['position'],
-                $adjustment['ambient_change'],
-                implode(',', $adjustment['current_sv']),
-                implode(',', $adjustment['new_sv'])
-            );
-            
-            $log_entries[] = $log_entry;
-        }
-        
-        // Write to log file
-        $log_content = implode("\n", $log_entries) . "\n";
-        
-        try {
-            // Ensure log directory exists
-            $log_dir = dirname($this->log_file_path);
-            if (!is_dir($log_dir)) {
-                mkdir($log_dir, 0755, true);
-            }
-            
-            // Append to log file
-            file_put_contents($this->log_file_path, $log_content, FILE_APPEND | LOCK_EX);
-            
-        } catch (\Throwable $e) {
-            // Log file writing failed, but don't stop the process
-            if ($this->output) {
-                $this->output->writeln("⚠ Failed to write to log file: {$e->getMessage()}");
-            }
         }
     }
 }

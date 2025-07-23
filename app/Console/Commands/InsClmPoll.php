@@ -31,14 +31,24 @@ class InsClmPoll extends Command
     protected $unit_id = 1;                 // Modbus unit ID
     // Production timing - Changed to 30 minutes
     protected $buffer_timeout = 1800;       // 30 minutes in seconds (was 3600)
-    protected $polling_interval = 30;       // 0.5 minute in seconds (was 1 minute)
-    protected $reset_timeout = 300;         // 5 minutes in seconds (was 5 minutes)
-    
+    protected $polling_interval = 30;       // 30 seconds
+    protected $reset_timeout = 300;         // 5 minutes in seconds
+
     // State management
     protected $data_buffer = [];            // Buffer for temperature/humidity measurements
     protected $last_successful_poll = null; // Last successful measurement timestamp
     protected $ambient_at_last_stc_adjustment = null; // Ambient temp when we last made STC adjustment
-    protected $log_file_path;               // Path for buffer processing logs
+    
+    // Unified logging
+    protected $unified_log_file_path;
+
+    public function __construct()
+    {
+        parent::__construct();
+        
+        // Set up unified log file path
+        $this->unified_log_file_path = storage_path('logs/stc_ambient_monitoring.log');
+    }
 
     /**
      * Convert 3-digit integer value to decimal format (divide by 10)
@@ -156,11 +166,11 @@ class InsClmPoll extends Command
             }
         }
 
-        // NEW: Check for STC ambient adjustment
-        $adjustment_made = $this->checkAmbientAdjustment($median_temperature);
+        // Check for STC ambient adjustment and get detailed results
+        $adjustment_results = $this->checkAmbientAdjustment($median_temperature);
 
-        // Log every buffer processing cycle
-        $this->logBufferProcessing($median_temperature, $median_humidity, $buffer_size, $adjustment_made);
+        // Write unified log entry (both buffer processing and STC details)
+        $this->writeUnifiedLog($median_temperature, $median_humidity, $buffer_size, $adjustment_results);
 
         // Clear buffer after processing
         $this->resetBuffer();
@@ -168,10 +178,16 @@ class InsClmPoll extends Command
 
     /**
      * Check if STC ambient adjustment should be triggered (cumulative approach)
-     * Returns true if adjustment was made, false otherwise
+     * Returns array with adjustment details
      */
     function checkAmbientAdjustment($current_ambient_temp)
     {
+        $adjustment_results = [
+            'status' => 'NO_ADJUSTMENT',
+            'cumulative_change' => 0,
+            'adjustments' => []
+        ];
+
         if ($this->option('d')) {
             $this->line("\n=== AMBIENT ADJUSTMENT CHECK ===");
             $this->line("Current ambient: {$current_ambient_temp}°C");
@@ -184,12 +200,14 @@ class InsClmPoll extends Command
                 $this->comment("→ Initializing ambient baseline: {$current_ambient_temp}°C");
             }
             $this->ambient_at_last_stc_adjustment = $current_ambient_temp;
-            return false; // No adjustment made
+            return $adjustment_results;
         }
 
         // Calculate cumulative change since last STC adjustment
         $cumulative_change = $current_ambient_temp - $this->ambient_at_last_stc_adjustment;
         $abs_cumulative_change = abs($cumulative_change);
+        
+        $adjustment_results['cumulative_change'] = $cumulative_change;
 
         if ($this->option('d')) {
             $this->line("Cumulative change: {$cumulative_change}°C (absolute: {$abs_cumulative_change}°C)");
@@ -200,7 +218,7 @@ class InsClmPoll extends Command
             if ($this->option('v')) {
                 $this->comment("→ Cumulative change < 1°C, no STC adjustment needed");
             }
-            return false; // No adjustment made
+            return $adjustment_results;
         }
 
         // Trigger STC adjustment
@@ -209,20 +227,23 @@ class InsClmPoll extends Command
             $this->comment("→ Triggering STC ambient adjustment...");
         }
 
-        $adjustment_successful = false;
-
         try {
             $adjuster = new InsStcAmbientAdjust();
             $adjuster->setOutput($this->output);
-            $adjuster->adjustForAmbient($cumulative_change, $this->option('dry-run'), $this->option('v'), $this->option('d'));
             
-            $adjustment_successful = true;
+            // Get detailed adjustment results instead of logging
+            $adjustment_details = $adjuster->adjustForAmbient($cumulative_change, $this->option('dry-run'), $this->option('v'), $this->option('d'));
             
-            // Reset baseline after successful adjustment
-            if (!$this->option('dry-run')) {
-                $this->ambient_at_last_stc_adjustment = $current_ambient_temp;
-                if ($this->option('v')) {
-                    $this->comment("→ Baseline reset to: {$current_ambient_temp}°C");
+            if ($adjustment_details && !empty($adjustment_details['adjustments'])) {
+                $adjustment_results['status'] = $this->option('dry-run') ? 'STC_DRY_RUN' : 'STC_ADJUSTED';
+                $adjustment_results['adjustments'] = $adjustment_details['adjustments'];
+                
+                // Reset baseline after successful adjustment
+                if (!$this->option('dry-run')) {
+                    $this->ambient_at_last_stc_adjustment = $current_ambient_temp;
+                    if ($this->option('v')) {
+                        $this->comment("→ Baseline reset to: {$current_ambient_temp}°C");
+                    }
                 }
             }
             
@@ -232,61 +253,83 @@ class InsClmPoll extends Command
             if ($this->option('d')) {
                 $this->line("Stack trace: " . $e->getTraceAsString());
             }
+            
+            $adjustment_results['status'] = 'STC_FAILED';
         }
 
         if ($this->option('d')) {
             $this->line("=== END AMBIENT CHECK ===\n");
         }
 
-        return $adjustment_successful;
+        return $adjustment_results;
     }
 
     /**
-     * Log every buffer processing cycle
+     * Write unified log entry (buffer processing + STC adjustment details)
      */
-    function logBufferProcessing($ambient_temp, $humidity, $buffer_size, $adjustment_made)
+    function writeUnifiedLog($ambient_temp, $humidity, $buffer_size, $adjustment_results)
     {
         $timestamp = Carbon::now();
-        $cumulative_change = $this->ambient_at_last_stc_adjustment !== null 
-            ? $ambient_temp - $this->ambient_at_last_stc_adjustment 
-            : 0;
+        $log_entries = [];
 
-        if ($adjustment_made) {
-            $status = $this->option('dry-run') ? 'STC_DRY_RUN' : 'STC_ADJUSTED';
-            $change_info = sprintf('Cumulative: %+.1f°C', $cumulative_change);
-        } else {
-            $status = 'NO_ADJUSTMENT';
-            $change_info = sprintf('Cumulative: %+.1f°C (threshold: ±1.0°C)', $cumulative_change);
+        // Buffer processing entry
+        $change_info = sprintf('Cumulative: %+.1f°C', $adjustment_results['cumulative_change']);
+        if ($adjustment_results['status'] === 'NO_ADJUSTMENT') {
+            $change_info .= ' (threshold: ±1.0°C)';
         }
 
-        $log_entry = sprintf(
+        $buffer_entry = sprintf(
             "[%s] %s - Ambient: %.1f°C, Humidity: %.1f%% - %s - Samples: %d",
             $timestamp->format('Y-m-d H:i:s'),
-            $status,
+            $adjustment_results['status'],
             $ambient_temp,
             $humidity,
             $change_info,
             $buffer_size
         );
+        
+        $log_entries[] = $buffer_entry;
 
+        // Add detailed STC adjustment entries if any adjustments were made
+        if (!empty($adjustment_results['adjustments'])) {
+            foreach ($adjustment_results['adjustments'] as $adjustment) {
+                $status = $adjustment['applied'] ? 'APPLIED' : 'FAILED';
+                
+                $detail_entry = sprintf(
+                    "[%s] %s - %s %s - Ambient: %+.1f°C - SV: [%s] → [%s]",
+                    $timestamp->format('Y-m-d H:i:s'),
+                    $status,
+                    $adjustment['machine_name'],
+                    $adjustment['position'],
+                    $adjustment['ambient_change'],
+                    implode(',', $adjustment['current_sv']),
+                    implode(',', $adjustment['new_sv'])
+                );
+                
+                $log_entries[] = $detail_entry;
+            }
+        }
+
+        // Write all entries to unified log file
         try {
             // Ensure log directory exists
-            $log_dir = dirname($this->log_file_path);
+            $log_dir = dirname($this->unified_log_file_path);
             if (!is_dir($log_dir)) {
                 mkdir($log_dir, 0755, true);
             }
             
-            // Append to log file
-            file_put_contents($this->log_file_path, $log_entry . "\n", FILE_APPEND | LOCK_EX);
+            // Append all entries to log file
+            $log_content = implode("\n", $log_entries) . "\n";
+            file_put_contents($this->unified_log_file_path, $log_content, FILE_APPEND | LOCK_EX);
             
             if ($this->option('d')) {
-                $this->line("Buffer processing logged: {$status}");
+                $this->line("Unified log written: " . count($log_entries) . " entries");
             }
             
         } catch (\Throwable $e) {
             // Log file writing failed, but don't stop the process
             if ($this->option('v')) {
-                $this->comment("⚠ Failed to write to buffer log file: {$e->getMessage()}");
+                $this->comment("⚠ Failed to write to unified log file: {$e->getMessage()}");
             }
         }
     }
@@ -418,6 +461,7 @@ class InsClmPoll extends Command
 
         $this->info("✓ InsClmPoll started - monitoring {$machine->name}");
         $this->info("✓ Configuration: {$this->polling_interval}s interval, {$this->buffer_timeout}s buffer timeout (30 min)");
+        $this->info("✓ Unified logging to: {$this->unified_log_file_path}");
         
         if ($this->option('dry-run')) {
             $this->info("✓ DRY-RUN MODE: STC adjustments will be logged but not sent to machines");
