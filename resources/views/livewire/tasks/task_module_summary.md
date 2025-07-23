@@ -17,6 +17,7 @@
 ### Permission System (Action-Based)
 - `task-assign` - Assign tasks to other people
 - `task-manage` - Create and delete tasks in any team/project (for leaders)
+- `project-manage` - Create and archive project in any team (for leaders)
 
 ## Routes Structure
 ```

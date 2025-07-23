@@ -2,51 +2,195 @@
 
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
+use Livewire\Attributes\Validate;
+use App\Models\TskTeam;
+use App\Models\TskProject;
+use App\Models\TskAuth;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 new #[Layout('layouts.app')]
-class extends Component {
-    
+class extends Component
+{
+    #[Validate('required|string|max:255')]
     public string $name = '';
+
+    #[Validate('nullable|string|max:1000')]
     public string $desc = '';
-    public string $code = '';
-    public int $tsk_team_id = 0;
+
+    #[Validate('required|exists:tsk_teams,id')]
+    public string $tsk_team_id = '';
+
+    #[Validate('nullable|exists:users,id')]
+    public string $user_id = '';
+
+    #[Validate('required|in:active,on_hold,cancelled')]
     public string $status = 'active';
+
+    #[Validate('required|in:low,medium,high,urgent')]
     public string $priority = 'medium';
+
+    #[Validate('nullable|date')]
     public string $start_date = '';
+
+    #[Validate('nullable|date|after_or_equal:start_date')]
     public string $end_date = '';
-    
+
+    public $teams = [];
+    public $team_members = [];
+    public $can_manage_projects = false;
+    public $user_teams = [];
+
     public function mount()
     {
-        // TODO: Check permissions
-        // TODO: Load user's teams
+        $user = Auth::user();
+        
+        // Check if user has project-manage permission
+        $this->can_manage_projects = TskAuth::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->get()
+            ->contains(function ($auth) {
+                $perms = is_array($auth->perms) ? $auth->perms : json_decode($auth->perms ?? '[]', true);
+                return in_array('project-manage', $perms);
+            });
+
+        // Load teams based on permissions
+        if ($this->can_manage_projects) {
+            // Can create projects in any team
+            $this->teams = TskTeam::where('is_active', true)->get()->toArray();
+        } else {
+            // Can only create projects in teams they're member of
+            $this->user_teams = TskAuth::where('user_id', $user->id)
+                ->where('is_active', true)
+                ->with('tsk_team')
+                ->get()
+                ->pluck('tsk_team')
+                ->where('is_active', true)
+                ->values()
+                ->toArray();
+            
+            $this->teams = $this->user_teams;
+        }
+
+        // If user only has access to one team, auto-select it
+        if (count($this->teams) === 1) {
+            $this->tsk_team_id = (string) $this->teams[0]['id'];
+            $this->loadTeamMembers();
+        }
     }
-    
-    public function with(): array
+
+    public function updatedTskTeamId()
     {
-        return [
-            // TODO: Load teams user has access to
-            'teams' => []
-        ];
+        $this->loadTeamMembers();
+        // Reset user selection when team changes
+        $this->user_id = '';
     }
-    
+
+    public function loadTeamMembers()
+    {
+        if (!$this->tsk_team_id) {
+            $this->team_members = [];
+            return;
+        }
+
+        // Load team members (users with auth for this team)
+        $this->team_members = User::whereHas('tsk_auths', function ($query) {
+            $query->where('tsk_team_id', $this->tsk_team_id)
+                  ->where('is_active', true);
+        })->select('id', 'name', 'employee_id')->get()->toArray();
+    }
+
     public function save()
     {
-        // TODO: Validate and save project
-        $this->validate([
-            'name' => 'required|string|max:255',
-            'desc' => 'nullable|string',
-            'code' => 'nullable|string|max:50',
-            'tsk_team_id' => 'required|exists:tsk_teams,id',
-            'status' => 'required|in:active,completed,on_hold,cancelled',
-            'priority' => 'required|in:low,medium,high,urgent',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
+        $user = Auth::user();
+
+        // Validate form
+        $this->validate();
+
+        // Additional business logic validation
         
-        // TODO: Create project
-        session()->flash('message', 'Proyek berhasil dibuat');
-        $this->redirect(route('tasks.projects.index'), navigate: true);
+        // 1. Check if user can create project in selected team
+        if (!$this->can_manage_projects) {
+            $userTeamIds = collect($this->user_teams)->pluck('id')->toArray();
+            if (!in_array((int) $this->tsk_team_id, $userTeamIds)) {
+                $this->addError('tsk_team_id', 'Anda tidak memiliki izin untuk membuat proyek di tim ini.');
+                return;
+            }
+        }
+
+        // 2. Check if selected owner is member of selected team
+        if ($this->user_id) {
+            $isTeamMember = TskAuth::where('user_id', $this->user_id)
+                ->where('tsk_team_id', $this->tsk_team_id)
+                ->where('is_active', true)
+                ->exists();
+            
+            if (!$isTeamMember) {
+                $this->addError('user_id', 'Pengguna yang dipilih bukan anggota tim ini.');
+                return;
+            }
+        }
+
+        // 3. Check name uniqueness (global)
+        $nameExists = TskProject::where('name', $this->name)->exists();
+        if ($nameExists) {
+            $this->addError('name', 'Nama proyek sudah digunakan.');
+            return;
+        }
+
+        // 4. Generate unique project code
+        $code = $this->generateProjectCode();
+
+        // 5. Create project
+        try {
+            $project = TskProject::create([
+                'name' => $this->name,
+                'desc' => $this->desc,
+                'code' => $code,
+                'tsk_team_id' => $this->tsk_team_id,
+                'user_id' => $this->user_id ?: $user->id, // Default to creator if no owner selected
+                'status' => $this->status,
+                'priority' => $this->priority,
+                'start_date' => $this->start_date ?: null,
+                'end_date' => $this->end_date ?: null,
+            ]);
+
+            session()->flash('success', 'Proyek berhasil dibuat!');
+            
+            // Redirect to projects index
+            return $this->redirect('/tasks/projects');
+
+        } catch (\Exception $e) {
+            $this->addError('general', 'Terjadi kesalahan saat membuat proyek. Silakan coba lagi.');
+            logger()->error('Project creation failed: ' . $e->getMessage());
+        }
     }
+
+    private function generateProjectCode(): string
+    {
+        $attempts = 0;
+        $maxAttempts = 100;
+
+        do {
+            // Generate code: PRJ + 3-digit sequence
+            $lastProject = TskProject::latest('id')->first();
+            $nextNumber = $lastProject ? $lastProject->id + 1 : 1;
+            $code = 'PRJ' . str_pad($nextNumber + $attempts, 3, '0', STR_PAD_LEFT);
+            
+            $exists = TskProject::where('code', $code)->exists();
+            $attempts++;
+
+        } while ($exists && $attempts < $maxAttempts);
+
+        if ($exists) {
+            // Fallback to timestamp-based code if we can't find unique code
+            $code = 'PRJ' . date('ymd') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+        }
+
+        return strtoupper($code);
+    }
+
 };
 
 ?>
@@ -60,66 +204,130 @@ class extends Component {
 @endauth
 
 <div class="py-12">
-    <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white dark:bg-neutral-800 overflow-hidden shadow-sm sm:rounded-lg">
+    <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <div class="bg-white dark:bg-neutral-800 overflow-hidden shadow sm:rounded-lg">
             <div class="p-6 text-neutral-900 dark:text-neutral-100">
                 
+                {{-- Page Header --}}
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+                        <i class="icon-plus mr-2"></i>{{ __('Buat Proyek Baru') }}
+                    </h2>
+                    <p class="text-neutral-600 dark:text-neutral-400">
+                        {{ __('Isi formulir di bawah untuk membuat proyek baru.') }}
+                    </p>
+                </div>
+
+                {{-- Success Message --}}
+                @if (session('success'))
+                    <div class="mb-6 p-4 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="icon-check text-green-600 dark:text-green-400 mr-2"></i>
+                            <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- General Error --}}
+                @error('general')
+                    <div class="mb-6 p-4 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="icon-alert-triangle text-red-600 dark:text-red-400 mr-2"></i>
+                            <span class="text-red-800 dark:text-red-200">{{ $message }}</span>
+                        </div>
+                    </div>
+                @enderror
+
+                {{-- Project Creation Form --}}
                 <form wire:submit="save" class="space-y-6">
                     
-                    <!-- Basic Info -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-semibold">{{ __('Informasi Dasar') }}</h3>
+                    {{-- Basic Information --}}
+                    <div class="bg-neutral-50 dark:bg-neutral-700 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-4 text-neutral-900 dark:text-neutral-100">
+                            <i class="icon-info mr-2"></i>{{ __('Informasi Dasar') }}
+                        </h3>
                         
-                        <div>
-                            <x-input-label for="name" :value="__('Nama Proyek')" />
-                            <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" required autofocus />
-                            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-                        </div>
-                        
-                        <div>
-                            <x-input-label for="desc" :value="__('Deskripsi')" />
-                            <textarea wire:model="desc" id="desc" rows="4" class="block mt-1 w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-caldy-500 dark:focus:border-caldy-600 focus:ring-caldy-500 dark:focus:ring-caldy-600 rounded-md shadow-sm" placeholder="{{ __('Jelaskan tujuan dan ruang lingkup proyek...') }}"></textarea>
-                            <x-input-error :messages="$errors->get('desc')" class="mt-2" />
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <x-input-label for="code" :value="__('Kode Proyek (Opsional)')" />
-                                <x-text-input wire:model="code" id="code" class="block mt-1 w-full" type="text" placeholder="PRJ-2025-001" />
-                                <x-input-error :messages="$errors->get('code')" class="mt-2" />
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {{-- Project Name --}}
+                            <div class="md:col-span-2">
+                                <x-input-label for="name" :value="__('Nama Proyek')" />
+                                <x-text-input 
+                                    wire:model="name" 
+                                    id="name" 
+                                    class="mt-1 block w-full" 
+                                    type="text" 
+                                    placeholder="{{ __('Masukkan nama proyek...') }}"
+                                    required 
+                                />
+                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
                             </div>
-                            
+
+                            {{-- Team Selection --}}
                             <div>
                                 <x-input-label for="tsk_team_id" :value="__('Tim')" />
-                                <select wire:model="tsk_team_id" id="tsk_team_id" class="block mt-1 w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-caldy-500 dark:focus:border-caldy-600 focus:ring-caldy-500 dark:focus:ring-caldy-600 rounded-md shadow-sm" required>
-                                    <option value="">{{ __('Pilih Tim') }}</option>
-                                    <!-- TODO: Loop through teams -->
-                                    <option value="1">{{ __('Digitalization (DGT)') }}</option>
+                                <select 
+                                    wire:model.live="tsk_team_id" 
+                                    id="tsk_team_id"
+                                    class="mt-1 block w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                    required
+                                >
+                                    <option value="">{{ __('Pilih Tim...') }}</option>
+                                    @foreach($teams as $team)
+                                        <option value="{{ $team['id'] }}">
+                                            {{ $team['name'] }} ({{ $team['short_name'] }})
+                                        </option>
+                                    @endforeach
                                 </select>
                                 <x-input-error :messages="$errors->get('tsk_team_id')" class="mt-2" />
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Project Settings -->
-                    <div class="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-                        <h3 class="text-lg font-semibold">{{ __('Pengaturan Proyek') }}</h3>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            {{-- Project Owner (only if can manage projects) --}}
+                            @if($can_manage_projects)
+                                <div>
+                                    <x-input-label for="user_id" :value="__('Pemilik Proyek')" />
+                                    <select 
+                                        wire:model="user_id" 
+                                        id="user_id"
+                                        class="mt-1 block w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                        @if(!$tsk_team_id) disabled @endif
+                                    >
+                                        <option value="">{{ __('Pilih Pemilik...') }}</option>
+                                        @foreach($team_members as $member)
+                                            <option value="{{ $member['id'] }}">
+                                                {{ $member['name'] }} @if($member['employee_id']) ({{ $member['employee_id'] }}) @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
+                                    @if(!$tsk_team_id)
+                                        <p class="mt-1 text-sm text-neutral-500">{{ __('Pilih tim terlebih dahulu') }}</p>
+                                    @endif
+                                </div>
+                            @endif
+
+                            {{-- Status --}}
                             <div>
                                 <x-input-label for="status" :value="__('Status')" />
-                                <select wire:model="status" id="status" class="block mt-1 w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-caldy-500 dark:focus:border-caldy-600 focus:ring-caldy-500 dark:focus:ring-caldy-600 rounded-md shadow-sm">
+                                <select 
+                                    wire:model="status" 
+                                    id="status"
+                                    class="mt-1 block w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                >
                                     <option value="active">{{ __('Aktif') }}</option>
-                                    <option value="on_hold">{{ __('Ditahan') }}</option>
-                                    <option value="completed">{{ __('Selesai') }}</option>
+                                    <option value="on_hold">{{ __('Ditunda') }}</option>
                                     <option value="cancelled">{{ __('Dibatalkan') }}</option>
                                 </select>
                                 <x-input-error :messages="$errors->get('status')" class="mt-2" />
                             </div>
-                            
+
+                            {{-- Priority --}}
                             <div>
                                 <x-input-label for="priority" :value="__('Prioritas')" />
-                                <select wire:model="priority" id="priority" class="block mt-1 w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-caldy-500 dark:focus:border-caldy-600 focus:ring-caldy-500 dark:focus:ring-caldy-600 rounded-md shadow-sm">
+                                <select 
+                                    wire:model="priority" 
+                                    id="priority"
+                                    class="mt-1 block w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                >
                                     <option value="low">{{ __('Rendah') }}</option>
                                     <option value="medium">{{ __('Sedang') }}</option>
                                     <option value="high">{{ __('Tinggi') }}</option>
@@ -127,35 +335,76 @@ class extends Component {
                                 </select>
                                 <x-input-error :messages="$errors->get('priority')" class="mt-2" />
                             </div>
+
+                            {{-- Description --}}
+                            <div class="md:col-span-2">
+                                <x-input-label for="desc" :value="__('Deskripsi')" />
+                                <textarea 
+                                    wire:model="desc" 
+                                    id="desc"
+                                    rows="4"
+                                    class="mt-1 block w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                    placeholder="{{ __('Masukkan deskripsi proyek...') }}"
+                                ></textarea>
+                                <x-input-error :messages="$errors->get('desc')" class="mt-2" />
+                            </div>
                         </div>
+                    </div>
+
+                    {{-- Timeline --}}
+                    <div class="bg-neutral-50 dark:bg-neutral-700 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-4 text-neutral-900 dark:text-neutral-100">
+                            <i class="icon-calendar mr-2"></i>{{ __('Timeline (Opsional)') }}
+                        </h3>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {{-- Start Date --}}
                             <div>
                                 <x-input-label for="start_date" :value="__('Tanggal Mulai')" />
-                                <x-text-input wire:model="start_date" id="start_date" class="block mt-1 w-full" type="date" />
+                                <x-text-input 
+                                    wire:model="start_date" 
+                                    id="start_date" 
+                                    class="mt-1 block w-full" 
+                                    type="date"
+                                />
                                 <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
                             </div>
-                            
+
+                            {{-- End Date --}}
                             <div>
                                 <x-input-label for="end_date" :value="__('Tanggal Selesai')" />
-                                <x-text-input wire:model="end_date" id="end_date" class="block mt-1 w-full" type="date" />
+                                <x-text-input 
+                                    wire:model="end_date" 
+                                    id="end_date" 
+                                    class="mt-1 block w-full" 
+                                    type="date"
+                                />
                                 <x-input-error :messages="$errors->get('end_date')" class="mt-2" />
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Actions -->
-                    <div class="flex items-center justify-end space-x-3 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-                        <x-secondary-button type="button" onclick="window.location.href='{{ route('tasks.projects.index') }}'" wire:navigate>
+
+                    {{-- Form Actions --}}
+                    <div class="flex items-center justify-end space-x-4 pt-6">
+                        <x-secondary-button type="button" onclick="window.location.href='/tasks/projects'">
                             {{ __('Batal') }}
                         </x-secondary-button>
-                        <x-primary-button type="submit">
-                            <i class="icon-save mr-2"></i>{{ __('Simpan Proyek') }}
+                        
+                        <x-primary-button 
+                            type="submit"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                        >
+                            <span wire:loading.remove wire:target="save">
+                                <i class="icon-plus mr-2"></i>{{ __('Buat Proyek') }}
+                            </span>
+                            <span wire:loading wire:target="save">
+                                <i class="icon-loader mr-2 animate-spin"></i>{{ __('Menyimpan...') }}
+                            </span>
                         </x-primary-button>
                     </div>
-                    
+
                 </form>
-                
             </div>
         </div>
     </div>

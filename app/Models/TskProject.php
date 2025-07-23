@@ -2,25 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
+use Carbon\Carbon;
 
 class TskProject extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'name',
-        'desc',
+        'desc', 
         'code',
         'tsk_team_id',
         'user_id',
         'status',
         'priority',
         'start_date',
-        'end_date',
+        'end_date'
     ];
 
     protected $casts = [
@@ -28,148 +27,103 @@ class TskProject extends Model
         'end_date' => 'date',
     ];
 
-    /**
-     * Get the team that owns the project
-     */
+    // ============== RELATIONSHIPS ==============
+
     public function tsk_team(): BelongsTo
     {
         return $this->belongsTo(TskTeam::class);
     }
 
-    /**
-     * Get the user who created the project
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the tasks for the project
-     */
     public function tsk_items(): HasMany
     {
         return $this->hasMany(TskItem::class);
     }
 
-    /**
-     * Get tasks with specific status
-     */
-    public function tasksWithStatus(string $status): HasMany
+    // Tasks by status for dashboard/stats
+    public function todo_tasks(): HasMany
     {
-        return $this->tsk_items()->where('status', $status);
+        return $this->hasMany(TskItem::class)->where('status', 'todo');
     }
 
-    /**
-     * Get todo tasks
-     */
-    public function todoTasks(): HasMany
+    public function in_progress_tasks(): HasMany
     {
-        return $this->tasksWithStatus('todo');
+        return $this->hasMany(TskItem::class)->where('status', 'in_progress');
     }
 
-    /**
-     * Get in progress tasks
-     */
-    public function inProgressTasks(): HasMany
+    public function review_tasks(): HasMany
     {
-        return $this->tasksWithStatus('in_progress');
+        return $this->hasMany(TskItem::class)->where('status', 'review');
     }
 
-    /**
-     * Get review tasks
-     */
-    public function reviewTasks(): HasMany
+    public function done_tasks(): HasMany
     {
-        return $this->tasksWithStatus('review');
+        return $this->hasMany(TskItem::class)->where('status', 'done');
     }
 
-    /**
-     * Get done tasks
-     */
-    public function doneTasks(): HasMany
+    // ============== ACCESSORS & BUSINESS LOGIC ==============
+
+    public function getProgressAttribute(): float
     {
-        return $this->tasksWithStatus('done');
+        $total = $this->tsk_items()->count();
+        if ($total === 0) return 0;
+        
+        $completed = $this->done_tasks()->count();
+        return round(($completed / $total) * 100, 1);
     }
 
-    /**
-     * Get overdue tasks
-     */
-    public function overdueTasks(): HasMany
+    public function getIsOverdueAttribute(): bool
     {
-        return $this->tsk_items()->overdue();
+        return $this->end_date && $this->end_date->isPast() && $this->status !== 'completed';
     }
 
-    /**
-     * Get project progress percentage
-     */
-    public function getProgressPercentageAttribute(): int
+    public function getDaysRemainingAttribute(): ?int
     {
-        $totalTasks = $this->tsk_items()->count();
-        if ($totalTasks === 0) {
-            return 0;
-        }
-
-        $completedTasks = $this->doneTasks()->count();
-        return round(($completedTasks / $totalTasks) * 100);
+        if (!$this->end_date) return null;
+        
+        return now()->diffInDays($this->end_date, false);
     }
 
-    /**
-     * Check if project is overdue
-     */
-    public function isOverdue(): bool
-    {
-        return $this->end_date && 
-               $this->end_date->isPast() && 
-               $this->status !== 'completed';
-    }
-
-    /**
-     * Get status color for UI
-     */
-    public function getStatusColor(): string
+    // Status helpers for UI
+    public function getStatusColorAttribute(): string
     {
         return match($this->status) {
             'active' => 'green',
-            'completed' => 'blue',
+            'completed' => 'blue', 
             'on_hold' => 'yellow',
             'cancelled' => 'red',
             default => 'neutral'
         };
     }
 
-    /**
-     * Get priority color for UI
-     */
-    public function getPriorityColor(): string
-    {
-        return match($this->priority) {
-            'low' => 'neutral',
-            'medium' => 'blue',
-            'high' => 'yellow',
-            'urgent' => 'red',
-            default => 'neutral'
-        };
-    }
-
-    /**
-     * Get status label
-     */
-    public function getStatusLabel(): string
+    public function getStatusLabelAttribute(): string
     {
         return match($this->status) {
             'active' => 'Aktif',
             'completed' => 'Selesai',
-            'on_hold' => 'Ditahan',
+            'on_hold' => 'Ditunda', 
             'cancelled' => 'Dibatalkan',
             default => ucfirst($this->status)
         };
     }
 
-    /**
-     * Get priority label
-     */
-    public function getPriorityLabel(): string
+    // Priority helpers for UI
+    public function getPriorityColorAttribute(): string
+    {
+        return match($this->priority) {
+            'low' => 'neutral',
+            'medium' => 'blue',
+            'high' => 'yellow', 
+            'urgent' => 'red',
+            default => 'neutral'
+        };
+    }
+
+    public function getPriorityLabelAttribute(): string
     {
         return match($this->priority) {
             'low' => 'Rendah',
@@ -180,47 +134,91 @@ class TskProject extends Model
         };
     }
 
-    /**
-     * Scope for active projects
-     */
-    public function scopeActive($query)
+    // ============== SCOPES ==============
+
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
     }
 
-    /**
-     * Scope for completed projects
-     */
-    public function scopeCompleted($query)
+    public function scopeCompleted(Builder $query): Builder
     {
         return $query->where('status', 'completed');
     }
 
-    /**
-     * Scope for overdue projects
-     */
-    public function scopeOverdue($query)
+    public function scopeOverdue(Builder $query): Builder
     {
         return $query->where('end_date', '<', now())
                     ->where('status', '!=', 'completed');
     }
 
-    /**
-     * Scope projects for specific team
-     */
-    public function scopeForTeam($query, int $teamId)
+    public function scopeForTeam(Builder $query, int $teamId): Builder
     {
         return $query->where('tsk_team_id', $teamId);
     }
 
-    /**
-     * Scope projects that user can access
-     */
-    public function scopeForUser($query, int $userId)
+    public function scopeForUser(Builder $query, int $userId): Builder
     {
-        return $query->whereHas('tsk_team.tsk_auths', function ($query) use ($userId) {
-            $query->where('user_id', $userId)
-                  ->where('is_active', true);
-        });
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeByPriority(Builder $query, string $priority): Builder
+    {
+        return $query->where('priority', $priority);
+    }
+
+    public function scopeByStatus(Builder $query, string $status): Builder
+    {
+        return $query->where('status', $status);
+    }
+
+    // ============== HELPER METHODS ==============
+
+    public function canBeEditedBy(User $user): bool
+    {
+        // Project owner can always edit
+        if ($this->user_id === $user->id) {
+            return true;
+        }
+
+        // Check if user has project-manage permission in this team
+        $auth = TskAuth::where('user_id', $user->id)
+            ->where('tsk_team_id', $this->tsk_team_id)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$auth) return false;
+
+        $perms = is_array($auth->perms) ? $auth->perms : json_decode($auth->perms ?? '[]', true);
+        return in_array('project-manage', $perms);
+    }
+
+    public function getTasksCount(): array
+    {
+        return [
+            'total' => $this->tsk_items()->count(),
+            'todo' => $this->todo_tasks()->count(),
+            'in_progress' => $this->in_progress_tasks()->count(),
+            'review' => $this->review_tasks()->count(),
+            'done' => $this->done_tasks()->count(),
+        ];
+    }
+
+    // For API/JSON responses
+    public function toArray(): array
+    {
+        $array = parent::toArray();
+        
+        // Add computed attributes
+        $array['progress'] = $this->progress;
+        $array['is_overdue'] = $this->is_overdue;
+        $array['days_remaining'] = $this->days_remaining;
+        $array['status_color'] = $this->status_color;
+        $array['status_label'] = $this->status_label;
+        $array['priority_color'] = $this->priority_color;
+        $array['priority_label'] = $this->priority_label;
+        $array['tasks_count'] = $this->getTasksCount();
+        
+        return $array;
     }
 }
