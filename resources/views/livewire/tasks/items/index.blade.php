@@ -1,483 +1,569 @@
 <?php
+// File: resources/views/livewire/tasks/items/index.blade.php
+// Complete replacement with Tabulator Excel-like interface
 
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Url;
-use Livewire\Volt\Component;
-use Livewire\WithPagination;
-use Livewire\Attributes\On;
+use function Livewire\Volt\{layout, state, computed, on, mount};
+use App\Models\TskItem;
+use App\Models\TskProject;
+use App\Models\TskType;
+use App\Models\TskTeam;
+use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
 
-use App\Models\TskItem;
-use App\Models\TskProject;
-use App\Models\TskTeam;
-use App\Models\User;
+layout('layouts.app');
 
-new #[Layout('layouts.app')]
-class extends Component {
+// State for filters
+state([
+    'search' => '',
+    'project_filter' => '',
+    'type_filter' => '', 
+    'status_filter' => '',
+    'priority_filter' => '',
+    'assignee_filter' => '',
+    'scope_filter' => 'team', // team, assigned, created
+]);
+
+// Get policy-filtered projects
+$projects = computed(function () {
+    $allProjects = TskProject::with('tsk_team')
+        ->where('status', 'active')
+        ->get();
     
-    use WithPagination;
-    
-    #[Url]
-    public string $search = '';
-    
-    #[Url]
-    public string $status = '';
-    
-    #[Url]
-    public string $type = '';
-    
-    #[Url]
-    public string $project = '';
-    
-    #[Url]
-    public string $assignee = '';
-    
-    #[Url]
-    public string $view = 'list'; // list, content, grid
-    
-    #[Url]
-    public string $filter = 'team'; // team, assigned, created
-    
-    public int $perPage = 20;
-    
-    public function mount()
-    {
-        // Policy-based access will be handled in with() method
+    return $allProjects->filter(function ($project) {
+        return Gate::allows('create', [TskItem::class, $project]);
+    })->values();
+});
+
+// Get accessible teams for current user
+$teams = computed(function () {
+    if (Auth::id() === 1) { // Superuser
+        return TskTeam::where('is_active', true)->get();
     }
     
-    public function with(): array
-    {
-        $user = Auth::user();
-        
-        // Get user's teams for filtering
-        $userTeams = $user->tsk_teams()->where('is_active', true)->pluck('tsk_teams.id');
-        
-        // Build tasks query with policy-based filtering
-        $tasksQuery = TskItem::query()
-            ->with([
-                'tsk_project.tsk_team:id,name,short_name',
-                'tsk_type:id,name',
-                'creator:id,name,emp_id,photo',
-                'assignee:id,name,emp_id,photo'
-            ]);
-        
-        // Apply team-based filtering (superuser sees all)
-        if ($user->id !== 1) {
-            // Get projects from user's teams
-            $teamProjectIds = TskProject::whereIn('tsk_team_id', $userTeams)->pluck('id');
-            $tasksQuery->whereIn('tsk_project_id', $teamProjectIds);
+    return Auth::user()->tsk_teams()
+        ->where('is_active', true)
+        ->get();
+});
+
+// Get active task types
+$taskTypes = computed(function () {
+    return TskType::where('is_active', true)
+        ->orderBy('name')
+        ->get();
+});
+
+// Get team members for assignment
+$users = computed(function () {
+    $teamIds = $this->teams->pluck('id');
+    
+    return User::whereHas('tsk_teams', function ($query) use ($teamIds) {
+        $query->whereIn('tsk_teams.id', $teamIds);
+    })
+    ->select('id', 'name', 'emp_id')
+    ->orderBy('name')
+    ->get();
+});
+
+// Check if user can assign tasks
+$canAssign = computed(function () {
+    foreach ($this->teams as $team) {
+        $auth = $team->tsk_auths()->where('user_id', Auth::id())->first();
+        if ($auth && $auth->hasPermission('task-assign')) {
+            return true;
         }
-        
-        // Apply filter type
-        switch ($this->filter) {
-            case 'assigned':
-                $tasksQuery->where('assigned_to', $user->id);
-                break;
-            case 'created':
-                $tasksQuery->where('created_by', $user->id);
-                break;
-            // 'team' is default - shows all team tasks (already filtered above)
-        }
-        
-        // Apply search
-        if ($this->search) {
-            $tasksQuery->where(function($q) {
-                $q->where('title', 'LIKE', '%' . $this->search . '%')
-                  ->orWhere('desc', 'LIKE', '%' . $this->search . '%');
-            });
-        }
-        
-        // Apply status filter
-        if ($this->status) {
-            $tasksQuery->where('status', $this->status);
-        }
-        
-        // Apply type filter
-        if ($this->type) {
-            $tasksQuery->where('tsk_type_id', $this->type);
-        }
-        
-        // Apply project filter
-        if ($this->project) {
-            $tasksQuery->where('tsk_project_id', $this->project);
-        }
-        
-        // Apply assignee filter
-        if ($this->assignee) {
-            $tasksQuery->where('assigned_to', $this->assignee);
-        }
-        
-        // Order by updated_at desc
-        $tasksQuery->orderBy('updated_at', 'desc');
-        
-        // Get projects for filter dropdown (policy-filtered)
-        $projectsQuery = TskProject::where('status', 'active')
-            ->with('tsk_team:id,name,short_name');
+    }
+    return false;
+});
+
+// Get filtered tasks
+$tasks = computed(function () {
+    $query = TskItem::with(['tsk_project.tsk_team', 'tsk_type', 'creator', 'assignee'])
+        ->whereHas('tsk_project', function ($q) {
+            $teamIds = $this->teams->pluck('id');
+            $q->whereIn('tsk_team_id', $teamIds);
             
-        if ($user->id !== 1) {
-            $projectsQuery->whereIn('tsk_team_id', $userTeams);
-        }
-        
-        // Get team members for assignee filter
-        $usersQuery = User::whereIn('id', function($query) use ($userTeams) {
-            $query->select('user_id')
-                  ->from('tsk_auths')
-                  ->whereIn('tsk_team_id', $userTeams)
-                  ->where('is_active', true);
+            if ($this->project_filter) {
+                $q->where('id', $this->project_filter);
+            }
         });
+
+    // Apply search
+    if ($this->search) {
+        $query->where(function ($q) {
+            $q->where('title', 'like', '%' . $this->search . '%')
+              ->orWhere('desc', 'like', '%' . $this->search . '%');
+        });
+    }
+
+    // Apply type filter
+    if ($this->type_filter) {
+        $query->where('tsk_type_id', $this->type_filter);
+    }
+
+    // Apply status filter
+    if ($this->status_filter) {
+        $query->where('status', $this->status_filter);
+    }
+
+    // Apply priority filter
+    if ($this->priority_filter) {
+        $query->where('priority', $this->priority_filter);
+    }
+
+    // Apply assignee filter
+    if ($this->assignee_filter) {
+        $query->where('assigned_to', $this->assignee_filter);
+    }
+
+    // Apply scope filter
+    switch ($this->scope_filter) {
+        case 'assigned':
+            $query->where('assigned_to', Auth::id());
+            break;
+        case 'created':
+            $query->where('created_by', Auth::id());
+            break;
+        // 'team' is default - no additional filter needed
+    }
+
+    return $query->orderBy('created_at', 'desc')->get();
+});
+
+// Task statistics
+$taskStats = computed(function () {
+    $tasks = $this->tasks;
+    return [
+        'total' => $tasks->count(),
+        'todo' => $tasks->where('status', 'todo')->count(),
+        'in_progress' => $tasks->where('status', 'in_progress')->count(),
+        'review' => $tasks->where('status', 'review')->count(),
+        'done' => $tasks->where('status', 'done')->count(),
+    ];
+});
+
+// Create new task via AJAX
+$createTask = function ($data) {
+    try {
+        // Find project and authorize
+        $project = TskProject::findOrFail($data['project_id']);
+        Gate::authorize('create', [TskItem::class, $project]);
         
-        if ($user->id === 1) {
-            // Superuser sees all users with task auths
-            $usersQuery = User::whereHas('tsk_auths');
+        // Validate required fields (based on migration constraints)
+        if (empty($data['title'])) {
+            return ['success' => false, 'message' => 'Judul wajib diisi'];
+        }
+        if (empty($data['project_id'])) {
+            return ['success' => false, 'message' => 'Proyek wajib dipilih'];
+        }
+        if (empty($data['start_date'])) {
+            return ['success' => false, 'message' => 'Tanggal mulai wajib diisi'];
+        }
+        if (empty($data['end_date'])) {
+            return ['success' => false, 'message' => 'Tanggal selesai wajib diisi'];
+        }
+        if (empty($data['type_id'])) {
+            return ['success' => false, 'message' => 'Tipe tugas wajib dipilih'];
         }
         
-        // Get task types
-        $taskTypes = \App\Models\TskType::where('is_active', true)->orderBy('name')->get();
+        // Create task
+        $task = new TskItem();
+        $task->title = trim($data['title']);
+        $task->desc = trim($data['description'] ?? '');
+        $task->tsk_project_id = $data['project_id'];
+        $task->tsk_type_id = $data['type_id']; // Required field
+        $task->status = $data['status'] ?? 'todo';
+        $task->priority = $data['priority'] ?? 'medium'; // Add priority field
+        $task->start_date = $data['start_date'];
+        $task->end_date = $data['end_date']; // Required field
+        $task->estimated_hours = $data['estimated_hours'] ?: null;
+        $task->created_by = Auth::id();
         
+        // Handle assignment if provided
+        if (!empty($data['assigned_to'])) {
+            $assignee = User::find($data['assigned_to']);
+            if ($assignee) {
+                Gate::authorize('assign', [$task, $assignee]);
+                $task->assigned_to = $assignee->id;
+            }
+        }
+        
+        $task->save();
+        
+        // Reload task with relationships for proper display
+        $task->load(['tsk_project.tsk_team', 'tsk_type', 'creator', 'assignee']);
+        
+        // Return success with formatted task data
         return [
-            'tasks' => $tasksQuery->paginate($this->perPage),
-            'projects' => $projectsQuery->get(),
-            'users' => $usersQuery->orderBy('name')->get(),
-            'task_types' => $taskTypes,
-            'can_create' => true,
-            'task_counts' => [
-                'total' => $tasksQuery->count(),
-                'todo' => (clone $tasksQuery)->where('status', 'todo')->count(),
-                'in_progress' => (clone $tasksQuery)->where('status', 'in_progress')->count(),
-                'review' => (clone $tasksQuery)->where('status', 'review')->count(),
-                'done' => (clone $tasksQuery)->where('status', 'done')->count(),
+            'success' => true,
+            'message' => 'Tugas berhasil dibuat',
+            'task' => [
+                'id' => $task->id,
+                'title' => $task->title,
+                'description' => $task->desc,
+                'project_id' => $task->tsk_project_id,
+                'type_id' => $task->tsk_type_id,
+                'assigned_to' => $task->assigned_to,
+                'status' => $task->status,
+                'priority' => $task->priority,
+                'start_date' => $task->start_date,
+                'end_date' => $task->end_date,
+                'estimated_hours' => $task->estimated_hours,
+                'created_at' => $task->created_at->format('Y-m-d'),
+                // Add relationship data for proper display
+                'tsk_project' => $task->tsk_project,
+                'tsk_type' => $task->tsk_type,
+                'assignee' => $task->assignee
             ]
         ];
+        
+    } catch (\Exception $e) {
+        return ['success' => false, 'message' => $e->getMessage()];
     }
+};
+
+// Update existing task
+$updateTask = function ($taskId, $data) {
+    try {
+        $task = TskItem::findOrFail($taskId);
+        Gate::authorize('update', $task);
+        
+        // Validate required fields (based on migration constraints)
+        if (empty($data['title'])) {
+            return ['success' => false, 'message' => 'Judul wajib diisi'];
+        }
+        if (empty($data['start_date'])) {
+            return ['success' => false, 'message' => 'Tanggal mulai wajib diisi'];
+        }
+        if (empty($data['end_date'])) {
+            return ['success' => false, 'message' => 'Tanggal selesai wajib diisi'];
+        }
+        if (empty($data['type_id'])) {
+            return ['success' => false, 'message' => 'Tipe tugas wajib dipilih'];
+        }
+        
+        // Update fields
+        $task->title = trim($data['title']);
+        $task->desc = trim($data['description'] ?? '');
+        $task->status = $data['status'];
+        $task->priority = $data['priority'] ?? 'medium';
+        $task->start_date = $data['start_date']; 
+        $task->end_date = $data['end_date']; // Required field
+        $task->estimated_hours = $data['estimated_hours'] ?: null;
+        $task->tsk_type_id = $data['type_id']; // Required field
+        
+        // Handle assignment change
+        if (isset($data['assigned_to'])) {
+            if ($data['assigned_to']) {
+                $assignee = User::find($data['assigned_to']);
+                if ($assignee) {
+                    Gate::authorize('assign', [$task, $assignee]);
+                    $task->assigned_to = $assignee->id;
+                }
+            } else {
+                $task->assigned_to = null;
+            }
+        }
+        
+        $task->save();
+        
+        return ['success' => true, 'message' => 'Tugas berhasil disimpan'];
+        
+    } catch (\Exception $e) {
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+};
+
+// Delete task
+$deleteTask = function ($taskId) {
+    try {
+        $task = TskItem::findOrFail($taskId);
+        Gate::authorize('delete', $task);
+        
+        $task->delete();
+        
+        return ['success' => true, 'message' => 'Tugas berhasil dihapus'];
+        
+    } catch (\Exception $e) {
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+};
+
+// Clear all filters
+$resetFilters = function () {
+    $this->search = '';
+    $this->project_filter = '';
+    $this->type_filter = '';
+    $this->status_filter = '';
+    $this->priority_filter = '';
+    $this->assignee_filter = '';
+    $this->scope_filter = 'team';
+};
+
+// Refresh data
+$refreshData = function () {
+    // Force recompute of all computed properties
+    unset($this->tasks, $this->projects, $this->taskTypes, $this->users);
     
-    public function updatedSearch()
-    {
-        $this->resetPage();
-    }
-    
-    public function updatedStatus()
-    {
-        $this->resetPage();
-    }
-    
-    public function updatedType()
-    {
-        $this->resetPage();
-    }
-    
-    public function updatedProject()
-    {
-        $this->resetPage();
-    }
-    
-    public function updatedAssignee()
-    {
-        $this->resetPage();
-    }
-    
-    public function updatedFilter()
-    {
-        $this->resetPage();
-    }
-    
-    public function loadMore()
-    {
-        $this->perPage += 20;
-    }
-    
-    public function clearFilters()
-    {
-        $this->reset(['search', 'status', 'project', 'assignee', 'type']);
-        $this->resetPage();
-    }
-    
-    #[On('task-created')]
-    public function refresh()
-    {
-        // Refresh the component when a task is created
-    }
+    // Let Livewire update, the JS will handle reloading table data
+    $this->js('toast("Data berhasil diperbarui", { type: "info" });');
 };
 
 ?>
 
-<x-slot name="title">{{ __('Tugas') }}</x-slot>
-
-@auth
-    <x-slot name="header">
-        <x-nav-task></x-nav-task>
-    </x-slot>
-@endauth
-
-
-<div class="relative py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
-        
-    <!-- Filters Card (White Background) -->
-    <div class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+<div id="content" class="relative py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+    {{-- Header --}}
+    <div class="flex justify-between items-center mb-6">
         <div>
-            <div class="grid gap-3">
+            <h1 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                {{ __('Tugas') }}
+            </h1>
+            <p class="text-neutral-600 dark:text-neutral-400">
+                Kelola tugas dalam format spreadsheet yang familiar
+            </p>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <button wire:click="refreshData" 
+                    class="px-3 py-2 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+                    title="Refresh data">
+                <i class="icon-refresh"></i>
+            </button>
+            
+            <button onclick="taskTable.addNewRow()" 
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
+                <i class="icon-plus mr-2"></i>
+                {{ __('Tambah Baris') }}
+            </button>
+        </div>
+    </div>
+
+    {{-- Statistics Bar --}}
+    <div class="bg-transparent mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-6 text-sm">
+                <div class="flex items-center">
+                    <span class="text-neutral-500 mr-2">Total:</span>
+                    <span class="font-semibold text-neutral-900 dark:text-neutral-100">
+                        {{ $this->taskStats['total'] }}
+                    </span>
+                </div>
+                <div class="flex items-center">
+                    <span class="w-3 h-3 bg-gray-400 rounded-full mr-2"></span>
+                    <span class="text-neutral-600 dark:text-neutral-400">
+                        Todo: {{ $this->taskStats['todo'] }}
+                    </span>
+                </div>
+                <div class="flex items-center">
+                    <span class="w-3 h-3 bg-blue-400 rounded-full mr-2"></span>
+                    <span class="text-neutral-600 dark:text-neutral-400">
+                        Proses: {{ $this->taskStats['in_progress'] }}
+                    </span>
+                </div>
+                <div class="flex items-center">
+                    <span class="w-3 h-3 bg-yellow-400 rounded-full mr-2"></span>
+                    <span class="text-neutral-600 dark:text-neutral-400">
+                        Review: {{ $this->taskStats['review'] }}
+                    </span>
+                </div>
+                <div class="flex items-center">
+                    <span class="w-3 h-3 bg-green-400 rounded-full mr-2"></span>
+                    <span class="text-neutral-600 dark:text-neutral-400">
+                        Selesai: {{ $this->taskStats['done'] }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Filter Bar (LDC-inspired 3-section layout) --}}
+    <div class="bg-white dark:bg-neutral-800 rounded-lg shadow mb-6 p-4">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+            {{-- Section 1: Search + Project --}}
+            <div class="lg:col-span-4 space-y-4">
                 <div>
-                    <label for="task-search" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
-                        {{ __('Pencarian') }}
+                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                        {{ __('Cari tugas') }}
                     </label>
-                    <x-text-input wire:model.live="search" 
-                        id="task-search"
-                        class="w-full"
-                        type="search" 
-                        placeholder="{{ __('Cari tugas...') }}" 
-                        autocomplete="off" />
+                    <input type="text" wire:model.live.debounce.300ms="search" 
+                           placeholder="Judul atau deskripsi..."
+                           class="w-full rounded-md border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700">
                 </div>
                 <div>
-                    <label for="task-project" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                         {{ __('Proyek') }}
                     </label>
-                    <x-select wire:model.live="project" id="task-project" class="w-full">
-                        <option value="">{{ __('Semua proyek') }}</option>
-                        @foreach($projects as $proj)
-                            <option value="{{ $proj->id }}">{{ $proj->name }} ({{ $proj->tsk_team->short_name }})</option>
+                    <select wire:model.live="project_filter" 
+                            class="w-full rounded-md border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700">
+                        <option value="">Semua proyek</option>
+                        @foreach($this->projects as $project)
+                            <option value="{{ $project->id }}">
+                                {{ $project->name }} ({{ $project->tsk_team->name }})
+                            </option>
                         @endforeach
-                    </x-select>
+                    </select>
                 </div>
             </div>
-        </div>
-        <!-- Vertical Separator -->
-        <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-3 lg:my-0"></div>
-        <!-- Section 2: Type & Filter, Status & Assignee -->
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label for="task-type" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
-                    {{ __('Tipe') }}
-                </label>
-                <x-select wire:model.live="type" id="task-type" class="w-full">
-                    <option value="">{{ __('Semua tipe') }}</option>
-                    @foreach($task_types as $taskType)
-                        <option value="{{ $taskType->id }}">{{ $taskType->name }}</option>
-                    @endforeach
-                </x-select>
-            </div>
-            <div>
-                <label for="task-filter" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
-                    {{ __('Filter') }}
-                </label>
-                <x-select wire:model.live="filter" id="task-filter" class="w-full">
-                    <option value="team">{{ __('Tim saya') }}</option>
-                    <option value="assigned">{{ __('Ditugaskan ke saya') }}</option>
-                    <option value="created">{{ __('Dibuat saya') }}</option>
-                </x-select>
-            </div>
-            <div>
-                <label for="task-status" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
-                    {{ __('Status') }}
-                </label>
-                <x-select wire:model.live="status" id="task-status" class="w-full">
-                    <option value="">{{ __('Semua status') }}</option>
-                    <option value="todo">{{ __('To Do') }}</option>
-                    <option value="in_progress">{{ __('Dalam Proses') }}</option>
-                    <option value="review">{{ __('Review') }}</option>
-                    <option value="done">{{ __('Selesai') }}</option>
-                </x-select>
-            </div>
-            <div>
-                <label for="task-assignee" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
-                    {{ __('Penugasan') }}
-                </label>
-                <x-select wire:model.live="assignee" id="task-assignee" class="w-full">
-                    <option value="">{{ __('Semua penugasan') }}</option>
-                    @foreach($users as $user)
-                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                    @endforeach
-                </x-select>
-            </div>
-        </div>
-        <!-- Vertical Separator -->
-        <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-3 lg:my-0"></div>
-        <!-- Section 3: Actions -->
-        <div class="grow flex justify-end items-center gap-3">
-            <div class="grow flex justify-center">
-                @if($can_create)
-                    <x-primary-button x-on:click.prevent="$dispatch('open-slide-over', 'task-create'); $dispatch('task-create')">
-                        <i class="icon-plus mr-2"></i>{{ __('Tugas Baru') }}
-                    </x-primary-button>
-                @endif
-            </div>
-            <x-dropdown align="right" width="48">
-                <x-slot name="trigger">
-                    <x-text-button><i class="icon-ellipsis"></i></x-text-button>
-                </x-slot>
-                <x-slot name="content">
-                    <x-dropdown-link href="#" wire:click.prevent="clearFilters">
-                        <i class="icon-rotate-cw mr-2"></i>{{ __('Reset filter') }}
-                    </x-dropdown-link>
-                </x-slot>
-            </x-dropdown>
-        </div>
-    </div>
-    
-    <!-- Stats Bar (Transparent Background) -->
-    <div class="flex items-center justify-between my-6 px-1">
-        <div class="text-sm text-neutral-600 dark:text-neutral-400">
-            {{ $tasks->total() . ' ' . __('tugas') }} • 
-            <span class="text-neutral-400 dark:text-neutral-600">{{ $task_counts['todo'] }} todo</span> • 
-            <span class="text-blue-600">{{ $task_counts['in_progress'] }} proses</span> • 
-            <span class="text-yellow-600">{{ $task_counts['review'] }} review</span> • 
-            <span class="text-green-600">{{ $task_counts['done'] }} selesai</span>
-        </div>
-        <div class="btn-group">
-            <x-radio-button wire:model.live="view" value="list" name="view" id="view-list">
-                <i class="icon-align-justify text-center m-auto"></i>
-            </x-radio-button>
-            <x-radio-button wire:model.live="view" value="content" name="view" id="view-content">
-                <i class="icon-layout-list text-center m-auto"></i>
-            </x-radio-button>
-            <x-radio-button wire:model.live="view" value="grid" name="view" id="view-grid">
-                <i class="icon-layout-grid text-center m-auto"></i>
-            </x-radio-button>
-        </div>
-    </div>
 
-    <!-- Data Display (Transparent Background) -->
-    @if (!$tasks->count())
-        <div class="py-20">
-            <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                <i class="icon-clipboard-list"></i>
+            {{-- Vertical Separator --}}
+            <div class="hidden lg:block lg:col-span-0">
+                <div class="w-px h-16 bg-neutral-200 dark:bg-neutral-700 mx-auto"></div>
             </div>
-            <div class="text-center text-neutral-400 dark:text-neutral-600 mb-4">
-                {{ __('Tidak ada tugas ditemukan') }}
-            </div>
-            @if($can_create)
-                <div class="text-center">
-                    <x-primary-button x-on:click.prevent="$dispatch('open-slide-over', 'task-create'); $dispatch('task-create')">
-                        <i class="icon-plus mr-2"></i>{{ __('Buat Tugas Pertama') }}
-                    </x-primary-button>
-                </div>
-            @endif
-        </div>
-    @else
-        @switch($view)
-            @case('grid')
-                <div wire:key="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    @foreach ($tasks as $task)
-                        <x-task-card-grid :task="$task" />
-                    @endforeach
-                </div>
-            @break
 
-            @case('list')
-                <div wire:key="list" class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-auto">
-                    <table class="text-neutral-600 dark:text-neutral-400 w-full table text-sm [&_th]:text-center [&_th]:px-2 [&_th]:py-3 [&_td]:px-2 [&_td]:py-1">
-                        <tr class="uppercase text-xs">
-                            <th>{{ __('ID') }}</th>
-                            <th>{{ __('Tugas') }}</th>
-                            <th>{{ __('Proyek') }}</th>
-                            <th>{{ __('Status') }}</th>
-                            <th>{{ __('Tipe') }}</th>
-                            <th>{{ __('Penugasan') }}</th>
-                            <th>{{ __('Deadline') }}</th>
-                            <th>{{ __('Jam') }}</th>
-                            <th></th>
-                        </tr>
-                        @foreach ($tasks as $task)
-                            <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50 cursor-pointer group"
-                                wire:key="task-{{ $task->id }}">
-                                <td class="font-mono text-xs">{{ $task->id }}</td>
-                                <td>
-                                    <div class="font-medium">
-                                        <x-link href="#" class="hover:text-caldy-600">{{ $task->title }}</x-link>
-                                    </div>
-                                    @if($task->desc)
-                                        <div class="text-xs text-neutral-500 truncate">{{ $task->desc }}</div>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="text-sm">{{ $task->tsk_project->name }}</div>
-                                    <div class="text-xs text-neutral-500">{{ $task->tsk_project->tsk_team->short_name }}</div>
-                                </td>
-                                <td>
-                                    <x-task-status-badge :status="$task->status" />
-                                </td>
-                                <td>
-                                    @if($task->tsk_type)
-                                        <span class="text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-700 rounded">
-                                            {{ $task->tsk_type->name }}
-                                        </span>
-                                    @else
-                                        <span class="text-neutral-400">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($task->assignee)
-                                        <x-user-avatar :user="$task->assignee" size="sm" />
-                                    @else
-                                        <span class="text-neutral-400">{{ __('Belum ditugaskan') }}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($task->end_date)
-                                        <span class="text-xs {{ $task->isOverdue() ? 'text-red-600' : 'text-neutral-600' }}">
-                                            {{ \Carbon\Carbon::parse($task->end_date)->format('d M') }}
-                                        </span>
-                                    @else
-                                        <span class="text-neutral-400">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($task->estimated_hours)
-                                        <span class="text-xs text-neutral-600">{{ $task->estimated_hours }}h</span>
-                                    @else
-                                        <span class="text-neutral-400">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <x-text-button size="xs" class="text-neutral-400 hover:text-caldy-600">
-                                            <i class="icon-edit-2"></i>
-                                        </x-text-button>
-                                        <x-text-button size="xs" class="text-neutral-400 hover:text-red-600">
-                                            <i class="icon-trash-2"></i>
-                                        </x-text-button>
-                                    </div>
-                                </td>
-                            </tr>
+            {{-- Section 2: 2x2 Grid --}}
+            <div class="lg:col-span-4 grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                        {{ __('Tipe') }}
+                    </label>
+                    <select wire:model.live="type_filter" 
+                            class="w-full rounded-md border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700">
+                        <option value="">Semua tipe</option>
+                        @foreach($this->taskTypes as $type)
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
                         @endforeach
-                    </table>
+                    </select>
                 </div>
-            @break
-
-            @default
-                <div wire:key="content" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    @foreach ($tasks as $task)
-                        <x-task-card-content :task="$task" />
-                    @endforeach
+                <div>
+                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                        {{ __('Filter') }}
+                    </label>
+                    <select wire:model.live="scope_filter" 
+                            class="w-full rounded-md border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700">
+                        <option value="team">Tim saya</option>
+                        <option value="assigned">Ditugaskan ke saya</option>
+                        <option value="created">Dibuat oleh saya</option>
+                    </select>
                 </div>
-        @endswitch
+                <div>
+                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                        {{ __('Status') }}
+                    </label>
+                    <select wire:model.live="status_filter" 
+                            class="w-full rounded-md border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700">
+                        <option value="">Semua status</option>
+                        <option value="todo">Todo</option>
+                        <option value="in_progress">Dalam Proses</option>
+                        <option value="review">Review</option>
+                        <option value="done">Selesai</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                        {{ __('Prioritas') }}
+                    </label>
+                    <select wire:model.live="priority_filter" 
+                            class="w-full rounded-md border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700">
+                        <option value="">Semua prioritas</option>
+                        <option value="low">Rendah</option>
+                        <option value="medium">Sedang</option>
+                        <option value="high">Tinggi</option>
+                        <option value="urgent">Mendesak</option>
+                    </select>
+                </div>
+            </div>
 
-        <!-- Pagination Observer -->
-        <div wire:key="observer" class="flex items-center relative h-16">
-            @if (!$tasks->isEmpty())
-                @if ($tasks->hasMorePages())
-                    <div wire:key="more" x-data="{
-                        observe() {
-                            const observer = new IntersectionObserver((tasks) => {
-                                tasks.forEach(task => {
-                                    if (task.isIntersecting) {
-                                        @this.loadMore()
-                                    }
-                                })
-                            })
-                            observer.observe(this.$el)
-                        }
-                    }" x-init="observe"></div>
-                    <x-spinner class="sm" />
-                @else
-                    <div class="mx-auto text-neutral-400">{{ __('Tidak ada lagi') }}</div>
-                @endif
-            @endif
+            {{-- Vertical Separator --}}
+            <div class="hidden lg:block lg:col-span-0">
+                <div class="w-px h-16 bg-neutral-200 dark:bg-neutral-700 mx-auto"></div>
+            </div>
+
+            {{-- Section 3: Actions --}}
+            <div class="lg:col-span-3 flex justify-end">
+                <button wire:click="resetFilters" 
+                        class="px-4 py-2 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-md">
+                    {{ __('Reset') }}
+                </button>
+            </div>
         </div>
-    @endif
-    <!-- Slideovers -->
-    <div wire:key="slideovers">
-        <x-slide-over name="task-create">
-            <livewire:tasks.items.create />
-        </x-slide-over>
     </div>
+
+    {{-- Spreadsheet Table --}}
+    <div class="bg-white dark:bg-neutral-800 rounded-lg shadow">
+        <div class="p-4 border-b border-neutral-200 dark:border-neutral-700">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                        Spreadsheet Tugas
+                    </h3>
+                    <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                        Klik sel untuk mengedit • <kbd class="px-1 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded text-xs">Ctrl+N</kbd> baris baru • 
+                        <kbd class="px-1 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded text-xs">Ctrl+S</kbd> simpan semua
+                    </p>
+                </div>
+                
+                <div class="text-sm text-neutral-500 dark:text-neutral-400">
+                    {{ number_format($this->tasks->count()) }} tugas
+                </div>
+            </div>
+        </div>
+        
+        {{-- Tabulator container --}}
+        <div id="task-table-container" class="p-4" style="min-height: 400px;"></div>
+    </div>
+
+    {{-- Initialize Tabulator on page load --}}
+    <script>
+        let taskTableInstance = null;
+        
+        function initializeTaskTable() {
+            // Destroy existing instance first
+            if (taskTableInstance) {
+                taskTableInstance.destroy();
+                taskTableInstance = null;
+            }
+            
+            // Wait for DOM to be ready
+            if (typeof TaskTable !== 'undefined' && document.getElementById('task-table-container')) {
+                taskTableInstance = new TaskTable('#task-table-container', {
+                    componentId: '{{ $this->getId() }}',
+                    teams: @json($this->teams),
+                    projects: @json($this->projects->toArray()),
+                    taskTypes: @json($this->taskTypes->toArray()),
+                    users: @json($this->users->toArray()),
+                    canAssign: {{ $this->canAssign ? 'true' : 'false' }}
+                });
+                
+                // Load existing tasks
+                taskTableInstance.loadTasks(@json($this->tasks->toArray()));
+            }
+        }
+        
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTaskTable();
+        });
+        
+        // Handle Livewire navigation
+        document.addEventListener('livewire:navigated', function() {
+            setTimeout(initializeTaskTable, 100);
+        });
+        
+        // Handle Livewire updates (when filters change)
+        document.addEventListener('livewire:updated', function() {
+            // Only reinitialize if the data actually changed
+            if (taskTableInstance && taskTableInstance.isTableReady) {
+                taskTableInstance.loadTasks(@json($this->tasks->toArray()));
+            }
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (taskTableInstance) {
+                taskTableInstance.destroy();
+                taskTableInstance = null;
+            }
+        });
+        
+        // Make taskTable globally available for button clicks
+        window.taskTable = {
+            addNewRow: function() {
+                if (taskTableInstance) {
+                    taskTableInstance.addNewRow();
+                } else {
+                    console.warn('Task table not initialized yet');
+                }
+            }
+        };
+    </script>
 </div>

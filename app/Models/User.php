@@ -186,7 +186,7 @@ class User extends Authenticatable
     public function tsk_teams()
     {
         return $this->belongsToMany(TskTeam::class, 'tsk_auths')
-                    ->withPivot(['perms', 'is_active'])
+                    ->withPivot(['perms'])
                     ->withTimestamps();
     }
 
