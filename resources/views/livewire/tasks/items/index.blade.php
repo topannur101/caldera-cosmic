@@ -140,7 +140,7 @@ class extends Component {
             'projects' => $projectsQuery->get(),
             'users' => $usersQuery->orderBy('name')->get(),
             'task_types' => $taskTypes,
-            'can_create' => Gate::allows('create', TskItem::class),
+            'can_create' => Gate::allows('create', Auth::user(), TskItem::class),
             'task_counts' => [
                 'total' => $tasksQuery->count(),
                 'todo' => (clone $tasksQuery)->where('status', 'todo')->count(),

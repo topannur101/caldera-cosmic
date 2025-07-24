@@ -41,7 +41,7 @@ new class extends Component
             ];
         } else {
             // For regular users, get their team-specific stats
-            $user_teams = $user->tsk_auths()->where('is_active', true)->pluck('tsk_team_id');
+            $user_teams = $user->tsk_auths()->pluck('tsk_team_id');
             
             $this->stats = [
                 'my_teams' => $user_teams->count(),
@@ -84,7 +84,7 @@ new class extends Component
                 ->get()
                 ->toArray();
         } else {
-            $user_teams = $user->tsk_auths()->where('is_active', true)->pluck('tsk_team_id');
+            $user_teams = $user->tsk_auths()->pluck('tsk_team_id');
             
             $this->recent_projects = TskProject::with(['tsk_team', 'user'])
                 ->whereIn('tsk_team_id', $user_teams)
@@ -107,7 +107,7 @@ new class extends Component
                 ->get();
         } else {
             // Regular user sees their teams
-            $user_team_ids = $user->tsk_auths()->where('is_active', true)->pluck('tsk_team_id');
+            $user_team_ids = $user->tsk_auths()->pluck('tsk_team_id');
             $teams = TskTeam::withCount(['tsk_projects', 'tsk_auths'])
                 ->whereIn('id', $user_team_ids)
                 ->where('is_active', true)
