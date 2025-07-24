@@ -186,64 +186,151 @@ class TskItem extends Model
 
     // ============== HELPER METHODS ==============
 
+    /**
+     * Check if the task is overdue
+     */
     public function isOverdue(): bool
     {
-        return $this->is_overdue;
-    }
-
-    public function canBeEditedBy(User $user): bool
-    {
-        // Task creator can always edit
-        if ($this->created_by === $user->id) {
-            return true;
+        if (!$this->end_date || $this->status === 'done') {
+            return false;
         }
+        
+        return now()->isAfter($this->end_date);
+    }
 
-        // Task assignee can edit
-        if ($this->assigned_to === $user->id) {
-            return true;
+    /**
+     * Get status color for UI
+     */
+    public function getStatusColor(): string
+    {
+        return match($this->status) {
+            'todo' => 'neutral',
+            'in_progress' => 'blue',
+            'review' => 'yellow',
+            'done' => 'green',
+            default => 'neutral',
+        };
+    }
+
+    /**
+     * Get status label
+     */
+    public function getStatusLabel(): string
+    {
+        return match($this->status) {
+            'todo' => __('To Do'),
+            'in_progress' => __('Dalam Proses'),
+            'review' => __('Review'),
+            'done' => __('Selesai'),
+            default => $this->status,
+        };
+    }
+
+    /**
+     * Get priority color for UI
+     */
+    public function getPriorityColor(): string
+    {
+        return match($this->priority) {
+            'low' => 'green',
+            'medium' => 'yellow',
+            'high' => 'orange',
+            'urgent' => 'red',
+            default => 'neutral',
+        };
+    }
+
+    /**
+     * Get priority label
+     */
+    public function getPriorityLabel(): string
+    {
+        return match($this->priority) {
+            'low' => __('Rendah'),
+            'medium' => __('Sedang'),
+            'high' => __('Tinggi'),
+            'urgent' => __('Mendesak'),
+            default => $this->priority,
+        };
+    }
+
+    /**
+     * Get progress percentage
+     */
+    public function getProgressPercentage(): int
+    {
+        return match($this->status) {
+            'todo' => 0,
+            'in_progress' => 50,
+            'review' => 80,
+            'done' => 100,
+            default => 0,
+        };
+    }
+
+    /**
+     * Check if task can be edited by user
+     */
+    public function canEdit(User $user): bool
+    {
+        return Gate::allows('update', [$this, $user]);
+    }
+
+    /**
+     * Check if task can be deleted by user
+     */
+    public function canDelete(User $user): bool
+    {
+        return Gate::allows('delete', [$this, $user]);
+    }
+
+    /**
+     * Get estimated hours formatted
+     */
+    public function getEstimatedHoursFormattedAttribute(): string
+    {
+        if (!$this->estimated_hours) {
+            return '-';
         }
-
-        // Check if user has task-manage permission in this project's team
-        $teamId = $this->tsk_project->tsk_team_id;
-        $auth = TskAuth::where('user_id', $user->id)
-            ->where('tsk_team_id', $teamId)
-            ->where('is_active', true)
-            ->first();
-
-        if (!$auth) return false;
-
-        $perms = is_array($auth->perms) ? $auth->perms : json_decode($auth->perms ?? '[]', true);
-        return in_array('task-manage', $perms);
+        
+        return $this->estimated_hours . 'h';
     }
 
-    public function canBeAssignedBy(User $user): bool
+    /**
+     * Get days until deadline
+     */
+    public function getDaysUntilDeadline(): ?int
     {
-        // Check if user has task-assign permission in this project's team
-        $teamId = $this->tsk_project->tsk_team_id;
-        $auth = TskAuth::where('user_id', $user->id)
-            ->where('tsk_team_id', $teamId)
-            ->where('is_active', true)
-            ->first();
-
-        if (!$auth) return false;
-
-        $perms = is_array($auth->perms) ? $auth->perms : json_decode($auth->perms ?? '[]', true);
-        return in_array('task-assign', $perms);
+        if (!$this->end_date) {
+            return null;
+        }
+        
+        return now()->diffInDays($this->end_date, false);
     }
 
-    // For API/JSON responses
-    public function toArray(): array
+    /**
+     * Get deadline status
+     */
+    public function getDeadlineStatus(): string
     {
-        $array = parent::toArray();
+        $days = $this->getDaysUntilDeadline();
         
-        // Add computed attributes
-        $array['is_overdue'] = $this->is_overdue;
-        $array['days_remaining'] = $this->days_remaining;
-        $array['duration_days'] = $this->duration_days;
-        $array['progress'] = $this->progress;
-        $array['status_color'] = $this->status_color;
-        $array['status_label'] = $this->status_label;
+        if ($days === null) {
+            return 'none';
+        }
         
-        return $array;
+        if ($days < 0) {
+            return 'overdue';
+        }
+        
+        if ($days <= 1) {
+            return 'urgent';
+        }
+        
+        if ($days <= 3) {
+            return 'soon';
+        }
+        
+        return 'normal';
     }
 }
