@@ -385,6 +385,9 @@ new class extends Component {
                     ],
                     'legend' => [
                         'display' => false
+                    ],
+                    'datalabels' => [
+                        'display' => false
                     ]
                 ],
                 'scales' => [
