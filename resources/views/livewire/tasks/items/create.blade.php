@@ -2,347 +2,420 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
+
 use App\Models\TskProject;
 use App\Models\TskItem;
-use App\Models\TskAuth;
 use App\Models\TskType;
 use App\Models\User;
-use Illuminate\Support\Facades\Gate;
 
-new class extends Component {
-    public string $title = '';
-    public string $desc = '';
-    public int $tsk_project_id = 0;
-    public int $tsk_type_id = 0;
-    public string $start_date = '';
-    public string $end_date = '';
-    public int $assigned_to = 0;
-    public float $estimated_hours = 0;
+new class extends Component
+{
+    public array $task = [
+        'title' => '',
+        'desc' => '',
+        'tsk_project_id' => 0,
+        'tsk_type_id' => 0,
+        'priority' => 'medium',
+        'start_date' => '',
+        'end_date' => '',
+        'assigned_to' => 0,
+        'estimated_hours' => null,
+    ];
 
     public array $projects = [];
     public array $users = [];
     public array $types = [];
-    public bool $hasProjects = false;
-    public bool $canAssign = false;
+    public bool $can_assign = false;
+    public bool $is_loading = false;
 
     public function mount()
     {
-        $this->loadProjects();
-        $this->loadTypes();
-        $this->checkAssignPermission();
-        $this->hasProjects = count($this->projects) > 0;
-        
-        // Set default dates
-        $this->start_date = now()->format('Y-m-d');
-        $this->end_date = now()->addWeek()->format('Y-m-d');
+        $this->task['start_date'] = date('Y-m-d'); // Default to today
+        $this->loadUserProjects();
+        $this->loadTaskTypes();
     }
 
-    #[On('task-create')]
-    public function handleTaskCreate($data = [])
-    {
-        if (isset($data['project_id'])) {
-            $this->tsk_project_id = $data['project_id'];
-            $this->loadUsersForAssignment();
-        }
-    }
-
-    public function updatedTskProjectId($value)
-    {
-        $this->loadUsersForAssignment();
-    }
-
-    private function loadProjects()
-    {
-        $user = auth()->user();
-        
-        // Superuser has access to all projects
-        if ($user->id === 1) {
-            $this->projects = TskProject::with('tsk_team')
-                ->active()
-                ->orderBy('name')
-                ->get()
-                ->map(fn($p) => [
-                    'id' => $p->id,
-                    'name' => $p->name,
-                    'team' => $p->tsk_team->short_name ?? $p->tsk_team->name
-                ])
-                ->toArray();
-            return;
-        }
-        
-        // Get all teams where user is a member
-        $teamIds = TskAuth::where('user_id', $user->id)
-            ->pluck('tsk_team_id')
-            ->toArray();
-
-        // Load projects from user's teams
-        $this->projects = TskProject::with('tsk_team')
-            ->whereIn('tsk_team_id', $teamIds)
-            ->active()
-            ->orderBy('name')
-            ->get()
-            ->map(fn($p) => [
-                'id' => $p->id,
-                'name' => $p->name,
-                'team' => $p->tsk_team->short_name ?? $p->tsk_team->name
-            ])
-            ->toArray();
-    }
-
-    private function loadTypes()
+    private function loadTaskTypes()
     {
         $this->types = TskType::active()
             ->orderBy('name')
             ->get(['id', 'name'])
+            ->map(function ($type) {
+                return [
+                    'id' => $type->id,
+                    'name' => $type->name,
+                ];
+            })
             ->toArray();
     }
 
-    private function checkAssignPermission()
+    private function loadUserProjects()
     {
-        $user = auth()->user();
-        
-        // Check if user has task-assign permission in any team
-        $this->canAssign = TskAuth::where('user_id', $user->id)
-            ->get()
-            ->contains(function ($auth) {
-                return $auth->hasPermission('task-assign');
-            });
+        // Load projects based on policy authorization
+        // For superuser (handled by policy before() method) or team members
+        $allProjects = TskProject::where('status', 'active')
+            ->with('tsk_team:id,name,short_name')
+            ->get();
+
+        $this->projects = $allProjects->filter(function ($project) {
+            // Use policy to check if user can create tasks in this project
+            return Gate::allows('create', [TskItem::class, $project]);
+        })->map(function ($project) {
+            return [
+                'id' => $project->id,
+                'name' => $project->name,
+                'team_name' => $project->tsk_team->name ?? '',
+                'tsk_team_id' => $project->tsk_team_id,
+            ];
+        })->values()->toArray();
     }
 
-    private function loadUsersForAssignment()
+    private function checkCanAssign()
     {
-        if (!$this->tsk_project_id) {
+        if (!$this->task['tsk_project_id']) return false;
+
+        $project = TskProject::find($this->task['tsk_project_id']);
+        if (!$project) return false;
+
+        // Create a dummy task with the project relationship for policy check
+        $dummyTask = new TskItem(['tsk_project_id' => $project->id]);
+        $dummyTask->setRelation('tsk_project', $project);
+        
+        // Create a dummy assignee for the permission check
+        $dummyAssignee = Auth::user(); // Use current user as dummy
+        
+        return Gate::allows('assign', [$dummyTask, $dummyAssignee]);
+    }
+
+    private function loadProjectUsers()
+    {
+        if (!$this->task['tsk_project_id']) {
             $this->users = [];
             return;
         }
 
-        $project = TskProject::find($this->tsk_project_id);
+        $project = TskProject::find($this->task['tsk_project_id']);
         if (!$project) {
             $this->users = [];
             return;
         }
 
-        // Get team members for this project
+        // Load users from the project's team
         $this->users = User::whereHas('tsk_auths', function ($query) use ($project) {
             $query->where('tsk_team_id', $project->tsk_team_id);
         })
         ->orderBy('name')
         ->get(['id', 'name', 'emp_id'])
+        ->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'emp_id' => $user->emp_id ?? '',
+            ];
+        })
         ->toArray();
+    }
+
+    public function updatedTaskTskProjectId()
+    {
+        $this->loadProjectUsers();
+        $this->can_assign = $this->checkCanAssign();
+        
+        // Reset assigned_to if project changes
+        $this->task['assigned_to'] = 0;
+    }
+
+    #[On('task-create')]
+    public function loadContext($project_id = null)
+    {
+        $this->resetForm();
+        
+        if ($project_id) {
+            $this->task['tsk_project_id'] = $project_id;
+            $this->loadProjectUsers();
+            $this->can_assign = $this->checkCanAssign();
+        }
+        
+        // Reset start_date to today
+        $this->task['start_date'] = date('Y-m-d');
+    }
+
+    private function resetForm()
+    {
+        $this->task = [
+            'title' => '',
+            'desc' => '',
+            'tsk_project_id' => 0,
+            'tsk_type_id' => 0,
+            'priority' => 'medium',
+            'start_date' => date('Y-m-d'),
+            'end_date' => '',
+            'assigned_to' => 0,
+            'estimated_hours' => null,
+        ];
+        $this->users = [];
+        $this->can_assign = false;
+        $this->resetErrorBag();
     }
 
     public function save()
     {
+        $this->is_loading = true;
+
+        // Clean up data
+        $this->task['title'] = trim($this->task['title']);
+        $this->task['desc'] = trim($this->task['desc']);
+        $this->task['end_date'] = $this->task['end_date'] ?: null;
+        $this->task['estimated_hours'] = $this->task['estimated_hours'] ?: null;
+        $this->task['assigned_to'] = $this->task['assigned_to'] ?: null;
+
+        // Validate
         $this->validate([
-            'title' => 'required|string|max:255',
-            'desc' => 'nullable|string',
-            'tsk_project_id' => 'required|exists:tsk_projects,id',
-            'tsk_type_id' => 'required|exists:tsk_types,id',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'assigned_to' => 'nullable|exists:users,id',
-            'estimated_hours' => 'nullable|numeric|min:0',
+            'task.title' => 'required|string|max:255',
+            'task.desc' => 'nullable|string|max:1000',
+            'task.tsk_project_id' => 'required|exists:tsk_projects,id',
+            'task.tsk_type_id' => 'nullable|exists:tsk_types,id',
+            'task.priority' => 'required|in:low,medium,high,urgent',
+            'task.start_date' => 'required|date',
+            'task.end_date' => 'nullable|date|after:task.start_date',
+            'task.assigned_to' => 'nullable|exists:users,id',
+            'task.estimated_hours' => 'nullable|numeric|min:0.5|max:999',
         ], [
-            'title.required' => 'Judul tugas harus diisi.',
-            'tsk_project_id.required' => 'Proyek harus dipilih.',
-            'tsk_type_id.required' => 'Tipe tugas harus dipilih.',
-            'start_date.required' => 'Tanggal mulai harus diisi.',
-            'end_date.required' => 'Tanggal akhir harus diisi.',
-            'end_date.after_or_equal' => 'Tanggal akhir harus setelah atau sama dengan tanggal mulai.',
-            'assigned_to.exists' => 'Pengguna yang dipilih tidak valid.',
-            'estimated_hours.numeric' => 'Estimasi jam harus berupa angka.',
-            'estimated_hours.min' => 'Estimasi jam tidak boleh negatif.',
+            'task.title.required' => 'Judul tugas wajib diisi',
+            'task.title.max' => 'Judul tugas maksimal 255 karakter',
+            'task.desc.max' => 'Deskripsi maksimal 1000 karakter',
+            'task.tsk_project_id.required' => 'Proyek wajib dipilih',
+            'task.tsk_project_id.exists' => 'Proyek tidak valid',
+            'task.tsk_type_id.exists' => 'Tipe tugas tidak valid',
+            'task.priority.required' => 'Prioritas wajib dipilih',
+            'task.priority.in' => 'Prioritas tidak valid',
+            'task.start_date.required' => 'Tanggal mulai wajib diisi',
+            'task.start_date.date' => 'Format tanggal mulai tidak valid',
+            'task.end_date.date' => 'Format tanggal deadline tidak valid',
+            'task.end_date.after' => 'Tanggal deadline harus setelah tanggal mulai',
+            'task.assigned_to.exists' => 'Pengguna yang dipilih tidak valid',
+            'task.estimated_hours.numeric' => 'Estimasi jam harus berupa angka',
+            'task.estimated_hours.min' => 'Estimasi jam minimal 0.5',
+            'task.estimated_hours.max' => 'Estimasi jam maksimal 999',
         ]);
 
-        $project = TskProject::find($this->tsk_project_id);
-        $user = auth()->user();
-
-        // Policy-based authorization for task creation
-        Gate::authorize('create', [TskItem::class, $project]);
-
-        // If assigning to someone, check assignment permission
-        if ($this->assigned_to) {
-            $assignee = User::find($this->assigned_to);
-            $dummyTask = new TskItem(['tsk_project_id' => $project->id]);
-            $dummyTask->setRelation('tsk_project', $project);
-            
-            Gate::authorize('assign', [$dummyTask, $assignee]);
-        }
-
         try {
-            TskItem::create([
-                'title' => $this->title,
-                'desc' => $this->desc,
-                'tsk_project_id' => $this->tsk_project_id,
-                'tsk_type_id' => $this->tsk_type_id,
-                'created_by' => $user->id,
-                'assigned_to' => $this->assigned_to ?: null,
+            $project = TskProject::findOrFail($this->task['tsk_project_id']);
+            
+            // Use policy for task creation authorization
+            Gate::authorize('create', [TskItem::class, $project]);
+
+            // Create task first
+            $task = TskItem::create([
+                'title' => $this->task['title'],
+                'desc' => $this->task['desc'],
+                'tsk_project_id' => $this->task['tsk_project_id'],
+                'tsk_type_id' => $this->task['tsk_type_id'] ?: null,
+                'priority' => $this->task['priority'],
+                'start_date' => $this->task['start_date'],
+                'end_date' => $this->task['end_date'],
+                'estimated_hours' => $this->task['estimated_hours'],
+                'created_by' => Auth::id(),
                 'status' => 'todo',
-                'start_date' => $this->start_date,
-                'end_date' => $this->end_date,
-                'estimated_hours' => $this->estimated_hours ?: null,
             ]);
 
-            $this->dispatch('close-slide-over');
-            $this->dispatch('task-created');
-            
-            session()->flash('success', 'Tugas berhasil dibuat.');
-
-            // Redirect logic
-            $currentRoute = request()->route()->getName();
-            if (!str_contains($currentRoute, 'tasks.items.index')) {
-                return redirect()->route('tasks.items.index');
+            // Handle assignment if specified
+            if ($this->task['assigned_to']) {
+                $assignee = User::findOrFail($this->task['assigned_to']);
+                
+                // Use policy for assignment authorization
+                Gate::authorize('assign', [$task, $assignee]);
+                
+                // Update task with assignment
+                $task->update(['assigned_to' => $this->task['assigned_to']]);
             }
 
+            $this->js('toast("' . __('Tugas berhasil dibuat') . '", { type: "success" })');
+            $this->js('window.dispatchEvent(escKey)'); // close slideover
+            $this->dispatch('task-created', $task->id);
+
+            // Smart redirect
+            $currentRoute = url()->livewire_current();
+            $path = parse_url($currentRoute, PHP_URL_PATH);
+            if ($path !== '/tasks/items') {
+                $this->redirect(route('tasks.items.index'), navigate: true); 
+            }
+
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->js('toast("' . $e->getMessage() . '", { type: "danger" })');
         } catch (\Exception $e) {
-            $this->addError('general', 'Terjadi kesalahan saat membuat tugas. Silakan coba lagi.');
+            $this->js('toast("' . __('Terjadi kesalahan saat membuat tugas') . '", { type: "danger" })');
+        } finally {
+            $this->is_loading = false;
         }
     }
-}; ?>
+};
 
-<div>
-    @if(!$hasProjects)
-        <div class="p-6 text-center text-gray-500">
-            <p>Anda tidak memiliki akses ke proyek apapun.</p>
-            <p class="text-sm mt-2">Hubungi administrator untuk mendapatkan akses.</p>
+?>
+
+<div class="relative overflow-y-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-6">
+        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+            {{ __('Tugas baru') }}
+        </h2>
+        <div>
+            <div wire:loading wire:target="save">
+                <x-primary-button type="button" disabled>
+                    <i class="icon-save mr-2"></i>{{ __('Simpan') }}
+                </x-primary-button>
+            </div>
+            <div wire:loading.remove wire:target="save">
+                <x-primary-button type="button" wire:click="save">
+                    <i class="icon-save mr-2"></i>{{ __('Simpan') }}
+                </x-primary-button>
+            </div>
         </div>
-    @else
-        <form wire:submit.prevent="save" class="space-y-6 p-6">
-            <!-- Title -->
-            <div>
-                <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
-                    Judul Tugas *
-                </label>
-                <input type="text" 
-                       id="title"
-                       wire:model="title"
-                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="Masukkan judul tugas">
-                @error('title') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+    </div>
 
-            <!-- Description -->
-            <div>
-                <label for="desc" class="block text-sm font-medium text-gray-700 mb-1">
-                    Deskripsi
-                </label>
-                <textarea id="desc"
-                         wire:model="desc"
-                         rows="3"
-                         class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Masukkan deskripsi tugas (opsional)"></textarea>
-                @error('desc') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            <!-- Project Selection -->
-            <div>
-                <label for="tsk_project_id" class="block text-sm font-medium text-gray-700 mb-1">
-                    Proyek *
-                </label>
-                <select id="tsk_project_id"
-                        wire:model.live="tsk_project_id"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="">Pilih Proyek</option>
-                    @foreach($projects as $project)
-                        <option value="{{ $project['id'] }}">{{ $project['name'] }} ({{ $project['team'] }})</option>
-                    @endforeach
-                </select>
-                @error('tsk_project_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            <!-- Task Type -->
-            <div>
-                <label for="tsk_type_id" class="block text-sm font-medium text-gray-700 mb-1">
-                    Tipe Tugas *
-                </label>
-                <select id="tsk_type_id"
-                        wire:model="tsk_type_id"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="">Pilih Tipe Tugas</option>
-                    @foreach($types as $type)
-                        <option value="{{ $type['id'] }}">{{ $type['name'] }}</option>
-                    @endforeach
-                </select>
-                @error('tsk_type_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            <!-- Date Range -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
-                        Tanggal Mulai *
-                    </label>
-                    <input type="date" 
-                           id="start_date"
-                           wire:model="start_date"
-                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    @error('start_date') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">
-                        Tanggal Akhir *
-                    </label>
-                    <input type="date" 
-                           id="end_date"
-                           wire:model="end_date"
-                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    @error('end_date') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-            </div>
-
-            <!-- Assignment (only show if user has permission) -->
-            @if($canAssign && count($users) > 0)
-                <div>
-                    <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">
-                        Tugaskan Kepada
-                    </label>
-                    <select id="assigned_to"
-                            wire:model="assigned_to"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Tidak ditugaskan</option>
-                        @foreach($users as $user)
-                            <option value="{{ $user['id'] }}">{{ $user['name'] }} ({{ $user['emp_id'] }})</option>
-                        @endforeach
-                    </select>
-                    @error('assigned_to') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-            @endif
-
-            <!-- Estimated Hours -->
-            <div>
-                <label for="estimated_hours" class="block text-sm font-medium text-gray-700 mb-1">
-                    Estimasi Jam
-                </label>
-                <input type="number" 
-                       id="estimated_hours"
-                       wire:model="estimated_hours"
-                       step="0.5"
-                       min="0"
-                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="0">
-                @error('estimated_hours') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            <!-- Error Messages -->
-            @error('general') 
-                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                    {{ $message }}
-                </div>
-            @enderror
-
-            <!-- Submit Button -->
-            <div class="flex justify-end space-x-3 pt-4 border-t">
-                <button type="button" 
-                        x-on:click="$dispatch('close-slide-over')"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Batal
-                </button>
-                <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Buat Tugas
-                </button>
-            </div>
-        </form>
+    <!-- Error Display -->
+    @if ($errors->any())
+        <div class="px-6">
+            <x-input-error :messages="$errors->first()" />
+        </div>
     @endif
+
+    <!-- Form Content -->
+    <div class="grid grid-cols-1 gap-y-6 px-6 pb-6">
+        
+        <!-- Basic Info Section (No Header) -->
+        <div class="grid grid-cols-1 gap-y-4">
+            <div>
+                <label for="task-title" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                    {{ __('Judul tugas') }}
+                </label>
+                <x-text-input 
+                    id="task-title" 
+                    wire:model="task.title" 
+                    type="text" 
+                    placeholder="{{ __('Masukkan judul tugas...') }}"
+                    class="w-full"
+                />
+            </div>
+
+            <div>
+                <label for="task-desc" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                    {{ __('Deskripsi') }}
+                </label>
+                <textarea 
+                    id="task-desc" 
+                    wire:model="task.desc"
+                    rows="3"
+                    placeholder="{{ __('Jelaskan detail tugas...') }}"
+                    class="w-full border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                ></textarea>
+            </div>
+        </div>
+
+        <!-- Identifikasi Section -->
+        <div>
+            <x-pill class="uppercase mb-4">{{ __('Identifikasi') }}</x-pill>
+            
+            <div class="grid grid-cols-1 gap-y-4">
+                <div>
+                    <label for="task-project" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                        {{ __('Proyek') }}
+                    </label>
+                    <x-select id="task-project" wire:model.live="task.tsk_project_id" class="w-full">
+                        <option value="">{{ __('Pilih proyek...') }}</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project['id'] }}">
+                                {{ $project['name'] }} ({{ $project['team_name'] }})
+                            </option>
+                        @endforeach
+                    </x-select>
+                </div>
+
+                <div>
+                    <label for="task-type" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                        {{ __('Tipe') }}
+                    </label>
+                    <x-select id="task-type" wire:model="task.tsk_type_id" class="w-full">
+                        <option value="">{{ __('Pilih tipe tugas...') }}</option>
+                        @foreach($types as $type)
+                            <option value="{{ $type['id'] }}">{{ $type['name'] }}</option>
+                        @endforeach
+                    </x-select>
+                </div>
+                
+                @if($can_assign && $task['tsk_project_id'])
+                <div>
+                    <label for="task-assigned-to" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                        {{ __('Ditugaskan kepada') }}
+                    </label>
+                    <x-select id="task-assigned-to" wire:model="task.assigned_to" class="w-full">
+                        <option value="">{{ __('Pilih anggota tim...') }}</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user['id'] }}">
+                                {{ $user['name'] }}{{ $user['emp_id'] ? ' (' . $user['emp_id'] . ')' : '' }}
+                            </option>
+                        @endforeach
+                    </x-select>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Task Details Section -->
+        <div>
+            <x-pill class="uppercase mb-4">{{ __('Penjadwalan') }}</x-pill>
+            
+            <div class="grid grid-cols-1 gap-y-4">
+                <div class="grid grid-cols-2 gap-x-4">
+                    <div>
+                        <label for="task-start-date" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                            {{ __('Tanggal mulai') }}
+                        </label>
+                        <x-text-input 
+                            id="task-start-date" 
+                            wire:model="task.start_date" 
+                            type="date" 
+                            class="w-full"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="task-end-date" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                            {{ __('Deadline') }}
+                        </label>
+                        <x-text-input 
+                            id="task-end-date" 
+                            wire:model="task.end_date" 
+                            type="date" 
+                            class="w-full"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label for="task-estimated-hours" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
+                        {{ __('Estimasi jam') }}
+                    </label>
+                    <x-text-input-suffix 
+                        suffix="jam"
+                        id="task-estimated-hours" 
+                        wire:model="task.estimated_hours" 
+                        type="number" 
+                        step="0.5"
+                        min="0.5"
+                        max="999"
+                        placeholder="{{ __('Contoh: 8') }}"
+                        autocomplete="off"
+                    />
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Loading Overlay -->
+    <x-spinner-bg wire:loading.class.remove="hidden" wire:target="save"></x-spinner-bg>
+    <x-spinner wire:loading.class.remove="hidden" wire:target="save" class="hidden"></x-spinner>
 </div>
