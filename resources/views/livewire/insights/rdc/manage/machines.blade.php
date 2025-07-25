@@ -59,7 +59,7 @@ new #[Layout('layouts.app')] class extends Component {
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
                 @can('superuser')
                     <x-secondary-button type="button" 
-                        x-on:click.prevent="$dispatch('open-modal', 'machine-create')"><i class="icon-plus"></i></x-secondary-button>
+                        x-on:click.prevent="$dispatch('open-slide-over', 'machine-create')"><i class="icon-plus"></i></x-secondary-button>
                 @endcan
                 <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open"><i class="icon-search"></i></x-secondary-button>
                 <div class="w-40" x-show="open" x-cloak>
@@ -69,14 +69,14 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div wire:key="machine-create">
-            <x-modal name="machine-create" maxWidth="4xl">
+            <x-slide-over name="machine-create" maxWidth="4xl">
                 <livewire:insights.rdc.manage.machine-create />
-            </x-modal>
+            </x-slide-over>
         </div>
         <div wire:key="machine-edit">   
-            <x-modal name="machine-edit" maxWidth="4xl">
+            <x-slide-over name="machine-edit" maxWidth="4xl">
                 <livewire:insights.rdc.manage.machine-edit />
-            </x-modal>
+            </x-slide-over>
         </div>
         <div class="overflow-auto w-full my-8">
             <div class="p-0 sm:p-1">
@@ -92,7 +92,7 @@ new #[Layout('layouts.app')] class extends Component {
                         </tr>
                         @foreach ($machines as $machine)
                             <tr wire:key="machine-tr-{{ $machine->id . $loop->index }}" tabindex="0"
-                                x-on:click="$dispatch('open-modal', 'machine-edit'); $dispatch('machine-edit', { id: {{ $machine->id }} })"
+                                x-on:click="$dispatch('open-slide-over', 'machine-edit'); $dispatch('machine-edit', { id: {{ $machine->id }} })"
                                 class="{{ !($machine->is_active ?? true) ? 'opacity-60' : '' }}">
                                 <td>
                                     {{ $machine->id }}
@@ -115,7 +115,8 @@ new #[Layout('layouts.app')] class extends Component {
                                 </td>
                                 <td>
                                     @php
-                                        $config = json_decode($machine->cells, true) ?? [];
+                                        // Since we added casting to the model, $machine->cells is already an array
+                                        $config = $machine->cells ?? [];
                                         $configCount = count($config);
                                     @endphp
                                     {{ $configCount }} {{ __('field') }}{{ $configCount !== 1 ? 's' : '' }}

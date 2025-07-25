@@ -184,9 +184,12 @@ new class extends Component
       };
    }
 
+   /**
+    * Enhanced Excel extraction method with hybrid static/dynamic support
+    */
    private function extractDataExcel(InsRdcMachine $machine)
    {
-      $config = json_decode($machine->cells, true) ?? [];
+      $config = $machine->cells ?? [];
       if (empty($config)) {
          throw new \Exception("Mesin tidak memiliki konfigurasi");
       }
@@ -198,23 +201,52 @@ new class extends Component
       $extractedData = [];
 
       foreach ($config as $fieldConfig) {
-         if (!isset($fieldConfig['field']) || !isset($fieldConfig['address'])) {
-            continue;
+         if (!isset($fieldConfig['field']) || !isset($fieldConfig['type'])) {
+               continue;
          }
 
          $field = $fieldConfig['field'];
-         $address = $fieldConfig['address'];
+         $configType = $fieldConfig['type'];
          
          try {
-            $value = $worksheet->getCell($address)->getValue();
-            $extractedData[$field] = $this->processFieldValue($field, $value);
+               $value = null;
+               
+               switch ($configType) {
+                  case 'static':
+                     $value = $this->extractStaticValue($worksheet, $fieldConfig);
+                     break;
+                  case 'dynamic':
+                     $value = $this->extractDynamicValue($worksheet, $fieldConfig);
+                     break;
+                  default:
+                     continue 2; // Skip unknown config types
+               }
+
+               if ($value !== null) {
+                  $extractedData[$field] = $this->processFieldValue($field, $value);
+               }
+
          } catch (\Exception $e) {
-            // Skip if cell doesn't exist or can't be read
-            continue;
+               // Log error but continue processing other fields
+               $this->js('console.log("Error extracting ' . $field . ': ' . addslashes($e->getMessage()) . '")');
+               continue;
          }
       }
 
       $this->applyExtractedData($extractedData);
+   }
+
+   /**
+    * Extract value using static cell address
+    */
+   private function extractStaticValue($worksheet, array $config)
+   {
+      if (!isset($config['address'])) {
+         return null;
+      }
+
+      $address = strtoupper(trim($config['address']));
+      return $worksheet->getCell($address)->getValue();
    }
 
    private function extractDataText(InsRdcMachine $machine)
@@ -246,6 +278,203 @@ new class extends Component
       $this->applyExtractedData($extractedData);
    }
 
+   /**
+    * Extract value using dynamic intersection search
+    */
+   private function extractDynamicValue($worksheet, array $config)
+   {
+      if (!isset($config['row_search']) || !isset($config['column_search'])) {
+         return null;
+      }
+
+      $rowSearch = InsRdcMachine::normalizeSearchTerm($config['row_search']);
+      $columnSearch = InsRdcMachine::normalizeSearchTerm($config['column_search']);
+      $rowOffset = $config['row_offset'] ?? 0;
+      $columnOffset = $config['column_offset'] ?? 0;
+
+      // Find row containing the search term (limit to first 30 rows)
+      $targetRow = $this->findRowBySearchTerm($worksheet, $rowSearch, 30);
+      if ($targetRow === null) {
+         throw new \Exception("Row search term '{$config['row_search']}' not found");
+      }
+
+      // Find column containing the search term (limit to first 15 columns)
+      $targetColumn = $this->findColumnBySearchTerm($worksheet, $columnSearch, 15);
+      if ($targetColumn === null) {
+         throw new \Exception("Column search term '{$config['column_search']}' not found");
+      }
+
+      // Apply offsets
+      $finalRow = $targetRow + $rowOffset;
+      $finalColumn = $this->columnLetterToNumber($targetColumn) + $columnOffset;
+
+      // Validate bounds
+      if ($finalRow < 1 || $finalColumn < 1) {
+         throw new \Exception("Intersection with offsets is out of bounds");
+      }
+
+      $finalColumnLetter = $this->numberToColumnLetter($finalColumn);
+      $intersectionAddress = $finalColumnLetter . $finalRow;
+
+      return $worksheet->getCell($intersectionAddress)->getValue();
+   }
+
+   /**
+    * Find row number containing search term
+    */
+   private function findRowBySearchTerm($worksheet, string $normalizedSearchTerm, int $maxRows): ?int
+   {
+      $highestColumn = $worksheet->getHighestColumn();
+      $columnCount = min(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn), 15);
+
+      for ($row = 1; $row <= $maxRows; $row++) {
+         for ($col = 1; $col <= $columnCount; $col++) {
+               $columnLetter = $this->numberToColumnLetter($col);
+               $cellValue = $worksheet->getCell($columnLetter . $row)->getValue();
+               
+               if ($cellValue !== null) {
+                  $normalizedCellValue = InsRdcMachine::normalizeSearchTerm((string)$cellValue);
+                  if ($normalizedCellValue === $normalizedSearchTerm) {
+                     return $row;
+                  }
+               }
+         }
+      }
+
+      return null;
+   }
+
+   /**
+    * Find column letter containing search term
+    */
+   private function findColumnBySearchTerm($worksheet, string $normalizedSearchTerm, int $maxColumns): ?string
+   {
+      for ($col = 1; $col <= $maxColumns; $col++) {
+         $columnLetter = $this->numberToColumnLetter($col);
+         
+         // Search in first 30 rows of this column
+         for ($row = 1; $row <= 30; $row++) {
+               $cellValue = $worksheet->getCell($columnLetter . $row)->getValue();
+               
+               if ($cellValue !== null) {
+                  $normalizedCellValue = InsRdcMachine::normalizeSearchTerm((string)$cellValue);
+                  if ($normalizedCellValue === $normalizedSearchTerm) {
+                     return $columnLetter;
+                  }
+               }
+         }
+      }
+
+      return null;
+   }
+
+   /**
+    * Convert column letter to number (A=1, B=2, etc.)
+    */
+   private function columnLetterToNumber(string $columnLetter): int
+   {
+      return \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($columnLetter);
+   }
+
+   /**
+    * Convert number to column letter (1=A, 2=B, etc.)
+    */
+   private function numberToColumnLetter(int $columnNumber): string
+   {
+      return \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnNumber);
+   }
+
+   /**
+    * Enhanced field value processing with bounds support
+    */
+   private function processFieldValue(string $field, $value): mixed
+   {
+      $value = trim((string)$value);
+
+      return match($field) {
+         'mcs' => $this->find3Digit($value),
+         'color', 'code_alt', 'model' => $this->safeString($value),
+         // Direct measurement fields  
+         's_max', 's_min', 'tc10', 'tc50', 'tc90' => $this->safeFloat($value),
+         // Specific bound fields
+         's_max_low', 's_min_low', 'tc10_low','tc50_low', 'tc90_low' => $this->getBoundFromString($value, 'low'),
+         's_max_high', 's_min_high', 'tc10_high', 'tc50_high', 'tc90_high' => $this->getBoundFromString($value, 'high'),
+         'eval' => $this->processEvalValue($value),
+         default => $value
+      };
+   }
+
+   /**
+    * Enhanced data application with bounds field mapping
+    */
+   private function applyExtractedData(array $extractedData)
+   {
+      // First, apply direct field mappings
+      foreach ($extractedData as $field => $value) {
+         if (InsRdcMachine::isBoundsField($field)) {
+               // This is a bounds field (s_max, s_min, tc10, tc50, tc90)
+               // Map to both low and high bounds
+               $boundsFields = InsRdcMachine::getBoundsFieldNames($field);
+               foreach ($boundsFields as $boundsField) {
+                  if ($this->type === 'excel') {
+                     // For Excel extraction, set both bounds to same value
+                     $this->test[$boundsField] = $value;
+                  } else {
+                     // For batch extraction, apply to batch data
+                     $this->{"e_" . str_replace(['_low', '_high'], '', $boundsField)} = $value;
+                  }
+               }
+         } else {
+               // Regular field mapping
+               if ($this->type === 'excel') {
+                  $this->test[$field] = $value;
+               } else {
+                  // Apply to batch data (for components that have batch properties)
+                  if (property_exists($this, "e_$field")) {
+                     $this->{"e_$field"} = $value;
+                  } else {
+                     $this->$field = $value;
+                  }
+               }
+         }
+      }
+
+      // Handle batch info updates for batch-test-create component
+      if (method_exists($this, 'updateBatchInfo')) {
+         $hasExtractedBatchData = !empty($extractedData['model']) || 
+                                 !empty($extractedData['color']) || 
+                                 !empty($extractedData['mcs']) || 
+                                 !empty($extractedData['code_alt']);
+         
+         if ($hasExtractedBatchData && $this->canUpdateBatch()) {
+               $this->update_batch = true;
+               $this->updateBatchInfo();
+         }
+      }
+   }
+
+   /**
+    * Check if batch can be updated (for batch-test-create component)
+    */
+   private function canUpdateBatch(): bool
+   {
+      return (!$this->model && !$this->color && !$this->mcs && !$this->code_alt);
+   }
+
+   /**
+    * Helper method to determine extraction type context
+    */
+   private function getExtractionContext(): string
+   {
+      // Determine if this is batch extraction or test extraction based on properties
+      if (property_exists($this, 'batch') && is_array($this->batch)) {
+         return 'test';
+      } elseif (property_exists($this, 'model') && is_string($this->model)) {
+         return 'batch';
+      }
+      return 'unknown';
+   }
+
    private function extractValueFromText(array $lines, string $pattern): ?string
    {
       foreach ($lines as $line) {
@@ -258,21 +487,6 @@ new class extends Component
       return null;
    }
 
-   private function processFieldValue(string $field, $value): mixed
-   {
-      $value = trim((string)$value);
-
-      return match($field) {
-         'mcs' => $this->find3Digit($value),
-         'color', 'code_alt', 'model' => $this->safeString($value),
-         's_max', 's_min', 'tc10', 'tc50', 'tc90' => $this->safeFloat($value),
-         's_max_low', 's_min_low', 'tc10_low','tc50_low', 'tc90_low' => $this->getBoundFromString($value, 'low'),
-         's_max_high', 's_min_high', 'tc10_high', 'tc50_high', 'tc90_high' => $this->getBoundFromString($value, 'high'),
-         'eval' => $this->processEvalValue($value),
-         default => $value
-      };
-   }
-
    private function processEvalValue(string $value): string
    {
       $value = strtolower(trim($value));
@@ -281,31 +495,6 @@ new class extends Component
          'sl', 'fail' => 'fail',
          default => ''
       };
-   }
-
-   private function applyExtractedData(array $extractedData)
-   {
-      // Apply batch data
-      $batchFields = ['code_alt', 'model', 'color', 'mcs'];
-      foreach ($batchFields as $field) {
-         if (isset($extractedData[$field]) && !empty($extractedData[$field])) {
-            $this->batch[$field] = $extractedData[$field];
-         }
-      }
-
-      // Apply test data
-      $testFields = [
-         's_max', 's_min', 'tc10', 'tc50', 'tc90', 'eval',
-         's_max_low', 's_max_high', 's_min_low', 's_min_high',
-         'tc10_low', 'tc10_high', 'tc50_low', 'tc50_high',
-         'tc90_low', 'tc90_high'
-      ];
-      
-      foreach ($testFields as $field) {
-         if (isset($extractedData[$field])) {
-            $this->test[$field] = $extractedData[$field];
-         }
-      }
    }
 
    private function find3Digit($string): ?string

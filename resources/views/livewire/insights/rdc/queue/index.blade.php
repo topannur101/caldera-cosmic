@@ -126,13 +126,6 @@ class extends Component {
             </x-modal>
         </div>
         @can('manage', InsRdcTest::class)
-        <div wire:key="batch-test-create">
-            <x-modal name="batch-test-create">
-                <livewire:insights.rdc.queue.batch-test-create />
-            </x-modal>
-        </div>
-        @endcan
-        @can('manage', InsRdcTest::class)
         <div wire:key="test-create">
             <x-modal name="test-create" maxWidth="2xl">
                 <livewire:insights.rdc.queue.test-create />

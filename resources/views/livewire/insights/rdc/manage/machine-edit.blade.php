@@ -13,30 +13,21 @@ new class extends Component {
     public string $name = '';
     public string $type = 'excel';
     public bool $is_active = true;
-    public array $excel_cells = [];
-    public array $txt_patterns = [];
+    public array $field_configs = [];
+    public bool $is_loading = false;
 
     // Available fields for configuration
     public array $available_fields = [
         'mcs' => ['label' => 'MCS', 'required' => false],
-        'color' => ['label' => 'Color/Warna', 'required' => false],
-        's_max' => ['label' => 'S Max', 'required' => false],
-        's_min' => ['label' => 'S Min', 'required' => false],
-        'tc10' => ['label' => 'TC10', 'required' => false],
-        'tc50' => ['label' => 'TC50', 'required' => false],
-        'tc90' => ['label' => 'TC90', 'required' => false],
+        'color' => ['label' => 'Warna', 'required' => false],
+        'model' => ['label' => 'Model', 'required' => false],
+        'code_alt' => ['label' => 'Kode alt', 'required' => false],
         'eval' => ['label' => 'Evaluation/Status', 'required' => false],
-        'code_alt' => ['label' => 'Alternative Code', 'required' => false],
-        's_max_low' => ['label' => 'S Max Low Bound', 'required' => false],
-        's_max_high' => ['label' => 'S Max High Bound', 'required' => false],
-        's_min_low' => ['label' => 'S Min Low Bound', 'required' => false],
-        's_min_high' => ['label' => 'S Min High Bound', 'required' => false],
-        'tc10_low' => ['label' => 'TC10 Low Bound', 'required' => false],
-        'tc10_high' => ['label' => 'TC10 High Bound', 'required' => false],
-        'tc50_low' => ['label' => 'TC50 Low Bound', 'required' => false],
-        'tc50_high' => ['label' => 'TC50 High Bound', 'required' => false],
-        'tc90_low' => ['label' => 'TC90 Low Bound', 'required' => false],
-        'tc90_high' => ['label' => 'TC90 High Bound', 'required' => false],
+        's_max' => ['label' => 'S Max (Bounds)', 'required' => false],
+        's_min' => ['label' => 'S Min (Bounds)', 'required' => false],
+        'tc10' => ['label' => 'TC10 (Bounds)', 'required' => false],
+        'tc50' => ['label' => 'TC50 (Bounds)', 'required' => false],
+        'tc90' => ['label' => 'TC90 (Bounds)', 'required' => false],
     ];
 
     // Preset patterns for TXT files
@@ -55,24 +46,23 @@ new class extends Component {
         'custom' => ['label' => 'Custom Pattern', 'pattern' => '', 'example' => 'Enter your own regex pattern']
     ];
 
-    public function initializeArrays()
+    public function initializeFieldConfigs()
     {
-        // Initialize excel_cells for all available fields
         foreach ($this->available_fields as $field => $config) {
-            if (!isset($this->excel_cells[$field])) {
-                $this->excel_cells[$field] = '';
-            }
-        }
-
-        // Initialize txt_patterns for all available fields
-        foreach ($this->available_fields as $field => $config) {
-            if (!isset($this->txt_patterns[$field])) {
-                $this->txt_patterns[$field] = [
-                    'preset' => '',
-                    'pattern' => '',
-                    'enabled' => false
-                ];
-            }
+            $this->field_configs[$field] = [
+                'enabled' => $this->field_configs[$field]['enabled'] ?? false,
+                'config_type' => $this->field_configs[$field]['config_type'] ?? ($this->type === 'excel' ? 'static' : 'pattern'),
+                // Static config
+                'address' => $this->field_configs[$field]['address'] ?? '',
+                // Dynamic config  
+                'row_search' => $this->field_configs[$field]['row_search'] ?? '',
+                'column_search' => $this->field_configs[$field]['column_search'] ?? '',
+                'row_offset' => $this->field_configs[$field]['row_offset'] ?? 0,
+                'column_offset' => $this->field_configs[$field]['column_offset'] ?? 0,
+                // Pattern config (for txt)
+                'preset' => $this->field_configs[$field]['preset'] ?? '',
+                'pattern' => $this->field_configs[$field]['pattern'] ?? '',
+            ];
         }
     }
 
@@ -85,14 +75,30 @@ new class extends Component {
             'is_active' => ['required', 'boolean'],
         ];
 
-        if ($this->type === 'excel') {
-            foreach ($this->available_fields as $field => $config) {
-                $rules["excel_cells.{$field}"] = ['nullable', 'string', 'regex:/^[A-Z]+[1-9]\d*$/'];
-            }
-        } else {
-            foreach ($this->available_fields as $field => $config) {
-                if (isset($this->txt_patterns[$field]) && $this->txt_patterns[$field]['enabled']) {
-                    $rules["txt_patterns.{$field}.pattern"] = ['required', 'string', 'min:1'];
+        $allFields = [];
+        foreach ($this->available_fields as $field => $config) {
+            $allFields[$field] = $config;
+        }
+
+        foreach ($allFields as $field => $config) {
+            if (isset($this->field_configs[$field]) && $this->field_configs[$field]['enabled']) {
+                $fieldConfig = $this->field_configs[$field];
+                
+                if ($this->type === 'excel') {
+                    switch ($fieldConfig['config_type']) {
+                        case 'static':
+                            $rules["field_configs.{$field}.address"] = ['required', 'string', 'regex:/^[A-Z]+[1-9]\d*$/'];
+                            break;
+                        case 'dynamic':
+                            $rules["field_configs.{$field}.row_search"] = ['required', 'string', 'regex:/^[a-zA-Z0-9]+$/'];
+                            $rules["field_configs.{$field}.column_search"] = ['required', 'string', 'regex:/^[a-zA-Z0-9]+$/'];
+                            $rules["field_configs.{$field}.row_offset"] = ['integer'];
+                            $rules["field_configs.{$field}.column_offset"] = ['integer'];
+                            break;
+                    }
+                } else {
+                    // TXT type
+                    $rules["field_configs.{$field}.pattern"] = ['required', 'string', 'min:1'];
                 }
             }
         }
@@ -108,35 +114,60 @@ new class extends Component {
             $this->id = $machine->id;
             $this->number = $machine->number;
             $this->name = $machine->name;
-            $this->type = $machine->type ?? 'excel'; // Default to excel for backward compatibility
-            $this->is_active = $machine->is_active ?? true; // Default to true for backward compatibility
+            $this->type = $machine->type ?? 'excel';
+            $this->is_active = $machine->is_active ?? true;
             
-            $this->initializeArrays();
+            $this->initializeFieldConfigs();
             
-            // Parse existing configuration
-            $cells = json_decode($machine->cells, true) ?? [];
+            // Load existing configuration
+            $cells = $machine->cells ?? [];
             
-            if ($this->type === 'excel') {
-                // Load Excel configuration
-                foreach ($cells as $cell) {
-                    if (isset($cell['field']) && isset($cell['address'])) {
-                        $this->excel_cells[$cell['field']] = $cell['address'];
-                    }
+            foreach ($cells as $cell) {
+                if (!isset($cell['field'])) {
+                    continue;
                 }
-            } else {
-                // Load TXT configuration
-                foreach ($cells as $cell) {
-                    if (isset($cell['field']) && isset($cell['pattern'])) {
-                        $this->txt_patterns[$cell['field']]['pattern'] = $cell['pattern'];
-                        $this->txt_patterns[$cell['field']]['enabled'] = true;
-                        
-                        // Try to match with presets
-                        foreach ($this->txt_presets as $preset_key => $preset) {
-                            if ($preset['pattern'] === $cell['pattern']) {
-                                $this->txt_patterns[$cell['field']]['preset'] = $preset_key;
-                                break;
+
+                $field = $cell['field'];
+                if (!isset($this->field_configs[$field])) {
+                    continue;
+                }
+
+                $this->field_configs[$field]['enabled'] = true;
+
+                // Handle different configuration types
+                if (isset($cell['type'])) {
+                    // New hybrid format
+                    $this->field_configs[$field]['config_type'] = $cell['type'];
+                    
+                    switch ($cell['type']) {
+                        case 'static':
+                            $this->field_configs[$field]['address'] = $cell['address'] ?? '';
+                            break;
+                        case 'dynamic':
+                            $this->field_configs[$field]['row_search'] = $cell['row_search'] ?? '';
+                            $this->field_configs[$field]['column_search'] = $cell['column_search'] ?? '';
+                            $this->field_configs[$field]['row_offset'] = $cell['row_offset'] ?? 0;
+                            $this->field_configs[$field]['column_offset'] = $cell['column_offset'] ?? 0;
+                            break;
+                        case 'pattern':
+                            $this->field_configs[$field]['pattern'] = $cell['pattern'] ?? '';
+                            // Try to match with presets
+                            foreach ($this->txt_presets as $preset_key => $preset) {
+                                if ($preset['pattern'] === $cell['pattern']) {
+                                    $this->field_configs[$field]['preset'] = $preset_key;
+                                    break;
+                                }
                             }
-                        }
+                            break;
+                    }
+                } else {
+                    // Legacy format - auto-detect
+                    if (isset($cell['address'])) {
+                        $this->field_configs[$field]['config_type'] = 'static';
+                        $this->field_configs[$field]['address'] = $cell['address'];
+                    } elseif (isset($cell['pattern'])) {
+                        $this->field_configs[$field]['config_type'] = 'pattern';
+                        $this->field_configs[$field]['pattern'] = $cell['pattern'];
                     }
                 }
             }
@@ -147,260 +178,299 @@ new class extends Component {
         }
     }
 
-    public function updatedTxtPatterns($value, $key)
+    public function updatedFieldConfigs($value, $key)
     {
-        // Handle preset selection
+        // Handle preset selection for pattern configs
         if (str_ends_with($key, '.preset')) {
-            $field = str_replace('.preset', '', $key);
-            $preset = $this->txt_patterns[$field]['preset'];
+            $field = explode('.', $key)[0];
+            $preset = $this->field_configs[$field]['preset'];
             
             if ($preset && isset($this->txt_presets[$preset])) {
-                $this->txt_patterns[$field]['pattern'] = $this->txt_presets[$preset]['pattern'];
+                $this->field_configs[$field]['pattern'] = $this->txt_presets[$preset]['pattern'];
             }
         }
     }
 
     public function save()
     {
+        if (!Gate::allows('manage', InsRdcMachine::class)) {
+            $this->js('toast("' . __('Tidak memiliki izin untuk mengedit konfigurasi') . '", { type: "danger" })');
+            return;
+        }
+
+        $this->is_loading = true;
+
         $machine = InsRdcMachine::find($this->id);
+        if (!$machine) {
+            $this->handleNotFound();
+            return;
+        }
 
         $this->name = strtoupper(trim($this->name));
-        $validated = $this->validate();
+        
+        try {
+            $this->validate();
 
-        if($machine) {
-            Gate::authorize('manage', $machine);
-
-            // Prepare configuration based on type
+            // Build configuration array
             $config = [];
             
-            if ($this->type === 'excel') {
-                foreach ($this->excel_cells as $field => $address) {
-                    if (!empty(trim($address))) {
-                        $config[] = [
-                            'field' => $field,
-                            'address' => strtoupper(trim($address))
-                        ];
-                    }
+            foreach ($this->field_configs as $field => $fieldConfig) {
+                if (!$fieldConfig['enabled']) {
+                    continue;
                 }
-            } else {
-                foreach ($this->txt_patterns as $field => $pattern_config) {
-                    if ($pattern_config['enabled'] && !empty(trim($pattern_config['pattern']))) {
-                        $config[] = [
-                            'field' => $field,
-                            'pattern' => trim($pattern_config['pattern'])
-                        ];
+
+                $configItem = ['field' => $field];
+
+                if ($this->type === 'excel') {
+                    switch ($fieldConfig['config_type']) {
+                        case 'static':
+                            $configItem['type'] = 'static';
+                            $configItem['address'] = strtoupper(trim($fieldConfig['address']));
+                            break;
+                        case 'dynamic':
+                            $configItem['type'] = 'dynamic';
+                            $configItem['row_search'] = strtolower(trim($fieldConfig['row_search']));
+                            $configItem['column_search'] = strtolower(trim($fieldConfig['column_search']));
+                            $configItem['row_offset'] = (int)$fieldConfig['row_offset'];
+                            $configItem['column_offset'] = (int)$fieldConfig['column_offset'];
+                            break;
                     }
+                } else {
+                    // TXT type
+                    $configItem['type'] = 'pattern';
+                    $configItem['pattern'] = trim($fieldConfig['pattern']);
+                }
+
+                if (!empty($configItem)) {
+                    $config[] = $configItem;
                 }
             }
 
+            // Validate the configuration
+            $validationErrors = $machine->validateHybridConfig($config);
+            if (!empty($validationErrors)) {
+                $this->js('toast("' . $validationErrors[0] . '", { type: "danger" })');
+                return;
+            }
+
             $machine->update([
-                'number' => $validated['number'],
-                'name' => $validated['name'],
-                'type' => $validated['type'],
-                'is_active' => $validated['is_active'],
-                'cells' => json_encode($config),
+                'number' => $this->number,
+                'name' => $this->name,
+                'type' => $this->type,
+                'is_active' => $this->is_active,
+                'cells' => $config,
             ]);
 
-            $this->js('$dispatch("close")');
-            $this->js('toast("' . __('Mesin diperbarui') . '", { type: "success" })');
+            $this->js('toast("' . __('Mesin berhasil diperbarui') . '", { type: "success" })');
+            $this->js('window.dispatchEvent(escKey)');
             $this->dispatch('updated');
-        } else {
-            $this->handleNotFound();
-            $this->customReset();
-        }
-    }
 
-    public function customReset()
-    {
-        $this->reset(['number', 'name', 'type', 'is_active', 'excel_cells', 'txt_patterns']);
-        $this->is_active = true; // Reset to default active state
-        $this->initializeArrays();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->js('toast("' . collect($e->errors())->flatten()->first() . '", { type: "danger" })');
+        } catch (\Exception $e) {
+            $this->js('toast("' . __('Terjadi kesalahan saat memperbarui mesin') . '", { type: "danger" })');
+        } finally {
+            $this->is_loading = false;
+        }
     }
 
     public function handleNotFound()
     {
-        $this->js('$dispatch("close")');
-        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
+        $this->js('window.dispatchEvent(escKey)');
+        $this->js('toast("' . __('Mesin tidak ditemukan') . '", { type: "danger" })');
         $this->dispatch('updated');
     }
 };
 ?>
 
-<div>
-    <form wire:submit="save" class="p-6">
-        <div class="flex justify-between items-start">
-            <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Edit Mesin') }}
-            </h2>
-            <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
+<div class="relative overflow-y-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-6">
+        <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+            {{ __('Edit mesin') }}
+        </h2>
+        <div>
+            <div wire:loading wire:target="save">
+                <x-primary-button type="button" disabled>
+                    {{ __('Simpan') }}
+                </x-primary-button>
+            </div>
+            <div wire:loading.remove wire:target="save">
+                <x-primary-button type="button" wire:click="save">
+                    {{ __('Simpan') }}
+                </x-primary-button>
+            </div>
         </div>
+    </div>
 
-        <div class="mt-6 flex flex-col md:flex-row gap-6">
-            <!-- General Info Section -->
-            <div class="md:w-1/3">
-                <h3 class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4 uppercase">
-                    {{ __('Informasi Umum') }}
-                </h3>
-                
-                <div class="space-y-6">
-                    <div>
-                        <label for="machine-number" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nomor') }}</label>
-                        <x-text-input id="machine-number" wire:model="number" type="number" :disabled="Gate::denies('manage', InsRdcMachine::class)" />
-                        @error('number')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
-                    </div>  
+    <!-- Error Display -->
+    @if ($errors->any())
+        <div class="px-6">
+            <x-input-error :messages="$errors->first()" />
+        </div>
+    @endif
 
-                    <div>
-                        <label for="machine-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
-                        <x-text-input id="machine-name" wire:model="name" type="text" :disabled="Gate::denies('manage', InsRdcMachine::class)" />
-                        @error('name')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
-                    </div>
+    <!-- Form Content -->
+    <div class="grid grid-cols-1 gap-y-6 px-6 pb-6">
+        
+        <!-- Umum Section -->
+        <div>
+            <x-pill class="uppercase mb-4">{{ __('Umum') }}</x-pill>
+            
+            <div class="grid grid-cols-1 gap-y-4">
+            <div class="grid grid-cols-2 gap-x-4">
+                <div>
+                    <label for="machine-number" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nomor') }}</label>
+                    <x-text-input id="machine-number" wire:model="number" type="number" class="w-full" />
+                </div>  
 
-                    <div>
-                        <label for="machine-type" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tipe File') }}</label>
-                        <x-select id="machine-type" wire:model.live="type" class="w-full" :disabled="Gate::denies('manage', InsRdcMachine::class)">
-                            <option value="excel">Excel (.xls, .xlsx)</option>
-                            <option value="txt">Text (.txt)</option>
-                        </x-select>
-                        @error('type')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Status') }}</label>
-                        <div class="px-3">
-                            <x-toggle wire:model="is_active" id="machine-is-active" :disabled="Gate::denies('manage', InsRdcMachine::class)">
-                                <span x-show="$wire.is_active">{{ __('Aktif') }}</span>
-                                <span x-show="!$wire.is_active">{{ __('Nonaktif') }}</span>
-                            </x-toggle>
-                        </div>
-                        @error('is_active')
-                            <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                        @enderror
-                    </div>
+                <div>
+                    <label for="machine-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+                    <x-text-input id="machine-name" wire:model="name" type="text" class="w-full" />
                 </div>
             </div>
 
-            <!-- Configuration Section -->
-            <div class="md:w-2/3">
-                <h3 class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4 uppercase">
-                    {{ $type === 'excel' ? __('Konfigurasi Alamat Sel') : __('Konfigurasi Pattern') }}
-                </h3>
-                
-                @can('manage', InsRdcMachine::class)
-                <div class="h-96 md:h-auto md:max-h-96 overflow-y-auto pr-2">
-                    @if($type === 'excel')
-                        <!-- Excel Configuration -->
-                        <div class="space-y-4">
-                            <div class="text-sm text-neutral-600 dark:text-neutral-400 px-3 mb-4">
-                                {{ __('Masukkan alamat sel Excel untuk setiap field yang ingin diambil. Kosongkan jika field tidak tersedia.') }}
+                <div>
+                    <label for="machine-type" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tipe File') }}</label>
+                    <x-select id="machine-type" wire:model.live="type" class="w-full">
+                        <option value="excel">Excel (.xls, .xlsx)</option>
+                        <option value="txt">Text (.txt)</option>
+                    </x-select>
+                </div>
+
+                <div>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Status') }}</label>
+                    <div class="px-3">
+                        <x-toggle wire:model="is_active" id="machine-is-active">
+                            <span x-show="$wire.is_active">{{ __('Aktif') }}</span>
+                            <span x-show="!$wire.is_active">{{ __('Nonaktif') }}</span>
+                        </x-toggle>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Konfigurasi Section -->
+        <div>
+            <x-pill class="uppercase mb-4">{{ __('Konfigurasi') }}</x-pill>
+            
+            <div class="space-y-4">
+                @foreach($available_fields as $field => $config)
+                    <div class="border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+                        
+                        <!-- Field Header -->
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <label class="font-medium">{{ $config['label'] }}</label>                                
                             </div>
-                            
-                            @foreach($available_fields as $field => $config)
-                                <div class="grid grid-cols-3 gap-3 items-center">
-                                    <div class="text-sm font-medium">
-                                        {{ $config['label'] }}
-                                        @if($config['required'])
-                                            <span class="text-red-500">*</span>
-                                        @endif
-                                    </div>
+                            <x-toggle 
+                                wire:model.live="field_configs.{{ $field }}.enabled"
+                                name="field_{{ $field }}_enabled"
+                            >{{ __('Aktif') }}</x-toggle>
+                        </div>
+
+                        <!-- Configuration Options -->
+                        @if(isset($field_configs[$field]) && $field_configs[$field]['enabled'])
+                        <div class="space-y-4">
+                            @if($type === 'excel')
+                                <!-- Excel Configuration Type Selection -->
+                                <div class="flex gap-4">
+                                    <x-radio 
+                                        id="{{ 'excel_address' . $loop->index . $field }}"
+                                        wire:model.live="field_configs.{{ $field }}.config_type" 
+                                        value="static" 
+                                        name="config_type_{{ $field }}"
+                                    >{{ __('Address') }}</x-radio>
+                                    <x-radio 
+                                        id="{{ 'excel_intersection' . $loop->index . $field }}"  
+                                        wire:model.live="field_configs.{{ $field }}.config_type" 
+                                        value="dynamic" 
+                                        name="config_type_{{ $field }}"
+                                    >{{ __('Intersection') }}</x-radio>
+                                </div>
+
+                                <!-- Static Configuration -->
+                                @if(isset($field_configs[$field]) && $field_configs[$field]['config_type'] === 'static')
                                     <div>
+                                        <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Excel Address') }}</label>
                                         <x-text-input 
                                             type="text" 
-                                            wire:model="excel_cells.{{ $field }}" 
-                                            placeholder="A1" 
-                                            class="uppercase"
+                                            wire:model="field_configs.{{ $field }}.address"
+                                            class="uppercase w-full"
                                         />
                                     </div>
-                                    <div class="text-xs text-neutral-500">
-                                        {{ $field }}
-                                    </div>
-                                    @error("excel_cells.{$field}")
-                                        <div class="col-span-3">
-                                            <x-input-error messages="{{ $message }}" class="px-3" />
+                                @endif
+
+                                <!-- Dynamic Configuration -->
+                                @if(isset($field_configs[$field]) && $field_configs[$field]['config_type'] === 'dynamic')
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Row Search') }}</label>
+                                            <x-text-input 
+                                                type="text" 
+                                                wire:model="field_configs.{{ $field }}.row_search"
+                                                class="w-full"
+                                            />
                                         </div>
-                                    @enderror
-                                </div>
-                            @endforeach
-                        </div>
-
-                    @else
-                        <!-- TXT Configuration -->
-                        <div class="space-y-6">
-                            <div class="text-sm text-neutral-600 dark:text-neutral-400 px-3 mb-4">
-                                {{ __('Pilih preset pattern atau buat custom pattern untuk setiap field yang ingin diambil.') }}
-                            </div>
-
-                            @foreach($available_fields as $field => $config)
-                                <div class="border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <label class="font-medium">{{ $config['label'] }}</label>
-                                        <x-toggle 
-                                            wire:model.live="txt_patterns.{{ $field }}.enabled"
-                                            name="txt_patterns_{{ $field }}_enabled"
-                                        >{{ __('Aktif') }}</x-toggle>
-                                    </div>
-
-                                    @if(isset($txt_patterns[$field]) && $txt_patterns[$field]['enabled'])
-                                        <div class="space-y-3">
-                                            <div>
-                                                <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Preset Pattern') }}</label>
-                                                <x-select wire:model.live="txt_patterns.{{ $field }}.preset" class="w-full">
-                                                    <option value="">{{ __('Pilih preset atau buat custom') }}</option>
-                                                    @foreach($txt_presets as $preset_key => $preset)
-                                                        <option value="{{ $preset_key }}">{{ $preset['label'] }}</option>
-                                                    @endforeach
-                                                </x-select>
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Pattern (Regex)') }}</label>
-                                                <x-text-input 
-                                                    type="text" 
-                                                    wire:model="txt_patterns.{{ $field }}.pattern"
-                                                    placeholder="{{ __('Masukkan regex pattern') }}"
-                                                    class="w-full font-mono text-sm"
-                                                />
-                                                @if(isset($txt_patterns[$field]['preset']) && $txt_patterns[$field]['preset'] && isset($txt_presets[$txt_patterns[$field]['preset']]))
-                                                    <div class="text-xs text-neutral-500 mt-1">
-                                                        {{ __('Contoh: ') . $txt_presets[$txt_patterns[$field]['preset']]['example'] }}
-                                                    </div>
-                                                @endif
-                                            </div>
+                                        <div>
+                                            <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Column Search') }}</label>
+                                            <x-text-input 
+                                                type="text" 
+                                                wire:model="field_configs.{{ $field }}.column_search"
+                                                class="w-full"
+                                            />
                                         </div>
-                                    @endif
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Row Offset') }}</label>
+                                            <x-text-input 
+                                                type="number" 
+                                                wire:model="field_configs.{{ $field }}.row_offset"
+                                                class="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Column Offset') }}</label>
+                                            <x-text-input 
+                                                type="number" 
+                                                wire:model="field_configs.{{ $field }}.column_offset"
+                                                class="w-full"
+                                            />
+                                        </div>
+                                    </div>
+                                @endif
 
-                                    @error("txt_patterns.{$field}.pattern")
-                                        <x-input-error messages="{{ $message }}" class="mt-2" />
-                                    @enderror
+                            @else
+                                <!-- TXT Pattern Configuration -->
+                                <div>
+                                    <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Preset Pattern') }}</label>
+                                    <x-select wire:model.live="field_configs.{{ $field }}.preset" class="w-full">
+                                        <option value="">{{ __('Pilih preset atau buat custom') }}</option>
+                                        @foreach($txt_presets as $preset_key => $preset)
+                                            <option value="{{ $preset_key }}">{{ $preset['label'] }}</option>
+                                        @endforeach
+                                    </x-select>
                                 </div>
-                            @endforeach
+
+                                <div>
+                                    <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Pattern (Regex)') }}</label>
+                                    <x-text-input 
+                                        type="text" 
+                                        wire:model="field_configs.{{ $field }}.pattern"
+                                        class="w-full font-mono text-sm"
+                                    />
+                                </div>
+                            @endif
                         </div>
-                    @endif
-                </div>
-                @else
-                <div class="h-96 md:h-auto md:max-h-96 flex items-center justify-center text-neutral-500">
-                    {{ __('Tidak memiliki izin untuk mengedit konfigurasi') }}
-                </div>
-                @endcan
+                        @endif
+                    </div>
+                @endforeach
             </div>
         </div>
+    </div>
 
-        @can('manage', InsRdcMachine::class)
-        <div class="mt-6 flex justify-between">
-            <x-secondary-button type="button" wire:click="customReset">
-                {{ __('Reset') }}
-            </x-secondary-button>
-            <x-primary-button type="submit">
-                {{ __('Simpan') }}
-            </x-primary-button>
-        </div>
-        @endcan
-    </form>
-    <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>
-    <x-spinner wire:loading.class.remove="hidden" class="hidden"></x-spinner>
+    <!-- Loading Overlay -->
+    <x-spinner-bg wire:loading.class.remove="hidden" wire:target="save"></x-spinner-bg>
+    <x-spinner wire:loading.class.remove="hidden" wire:target="save" class="hidden"></x-spinner>
 </div>
