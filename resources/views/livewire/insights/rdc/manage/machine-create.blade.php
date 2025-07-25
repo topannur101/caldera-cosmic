@@ -16,16 +16,26 @@ new class extends Component {
 
     // Available fields for configuration
     public array $available_fields = [
+        // Basic fields
         'mcs' => ['label' => 'MCS', 'required' => false],
         'color' => ['label' => 'Color/Warna', 'required' => false],
         'model' => ['label' => 'Model', 'required' => false],
         'code_alt' => ['label' => 'Alternative Code', 'required' => false],
         'eval' => ['label' => 'Evaluation/Status', 'required' => false],
-        's_max' => ['label' => 'S Max (Bounds)', 'required' => false],
-        's_min' => ['label' => 'S Min (Bounds)', 'required' => false],
-        'tc10' => ['label' => 'TC10 (Bounds)', 'required' => false],
-        'tc50' => ['label' => 'TC50 (Bounds)', 'required' => false],
-        'tc90' => ['label' => 'TC90 (Bounds)', 'required' => false],
+        
+        // Single fields (auto-populate both low/high with same value)
+        's_max_single' => ['label' => 'S Max Single', 'required' => false],
+        's_min_single' => ['label' => 'S Min Single', 'required' => false],
+        'tc10_single' => ['label' => 'TC10 Single', 'required' => false],
+        'tc50_single' => ['label' => 'TC50 Single', 'required' => false],
+        'tc90_single' => ['label' => 'TC90 Single', 'required' => false],
+        
+        // Bounds fields (extract range and split into low/high)
+        's_max_bounds' => ['label' => 'S Max Bounds', 'required' => false],
+        's_min_bounds' => ['label' => 'S Min Bounds', 'required' => false],
+        'tc10_bounds' => ['label' => 'TC10 Bounds', 'required' => false],
+        'tc50_bounds' => ['label' => 'TC50 Bounds', 'required' => false],
+        'tc90_bounds' => ['label' => 'TC90 Bounds', 'required' => false],
     ];
 
     // Preset patterns for TXT files
@@ -239,17 +249,17 @@ new class extends Component {
             <x-pill class="uppercase mb-4">{{ __('Umum') }}</x-pill>
             
             <div class="grid grid-cols-1 gap-y-4">
-            <div class="grid grid-cols-2 gap-x-4">
-                <div>
-                    <label for="machine-number" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nomor') }}</label>
-                    <x-text-input id="machine-number" wire:model="number" type="number" class="w-full" />
-                </div>  
+                <div class="grid grid-cols-2 gap-x-4">
+                    <div>
+                        <label for="machine-number" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nomor') }}</label>
+                        <x-text-input id="machine-number" wire:model="number" type="number" class="w-full" />
+                    </div>  
 
-                <div>
-                    <label for="machine-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
-                    <x-text-input id="machine-name" wire:model="name" type="text" class="w-full" />
+                    <div>
+                        <label for="machine-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Nama') }}</label>
+                        <x-text-input id="machine-name" wire:model="name" type="text" class="w-full" />
+                    </div>
                 </div>
-            </div>
 
                 <div>
                     <label for="machine-type" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tipe File') }}</label>
@@ -280,17 +290,14 @@ new class extends Component {
                     <div class="border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
                         
                         <!-- Field Header -->
-                        <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <label class="font-medium">{{ $config['label'] }}</label>
-                                @if(InsRdcMachine::isBoundsField($field))
-                                    <x-pill color="blue" class="text-xs">AUTO</x-pill>
-                                @endif
                             </div>
                             <x-toggle 
                                 wire:model.live="field_configs.{{ $field }}.enabled"
                                 name="field_{{ $field }}_enabled"
-                            >{{ __('Aktif') }}</x-toggle>
+                            ></x-toggle>
                         </div>
 
                         <!-- Configuration Options -->
@@ -298,15 +305,15 @@ new class extends Component {
                         <div class="space-y-4">
                             @if($type === 'excel')
                                 <!-- Excel Configuration Type Selection -->
-                                <div class="flex gap-4">
+                                <div class="flex gap-4 py-2">
                                     <x-radio 
-                                        id="{{ 'excel_address' . $loop->index . $field }}"  
+                                        id="{{ 'excel_static' . $field . $loop->index }}"
                                         wire:model.live="field_configs.{{ $field }}.config_type" 
                                         value="static" 
                                         name="config_type_{{ $field }}"
                                     >{{ __('Address') }}</x-radio>
                                     <x-radio 
-                                        id="{{ 'excel_address' . $loop->index . $field }}"
+                                        id="{{ 'excel_dynamic' . $field . $loop->index }}"
                                         wire:model.live="field_configs.{{ $field }}.config_type" 
                                         value="dynamic" 
                                         name="config_type_{{ $field }}"
@@ -344,8 +351,6 @@ new class extends Component {
                                                 class="w-full"
                                             />
                                         </div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Row Offset') }}</label>
                                             <x-text-input 
@@ -367,24 +372,26 @@ new class extends Component {
 
                             @else
                                 <!-- TXT Pattern Configuration -->
-                                <div>
-                                    <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Preset Pattern') }}</label>
-                                    <x-select wire:model.live="field_configs.{{ $field }}.preset" class="w-full">
-                                        <option value="">{{ __('Pilih preset atau buat custom') }}</option>
-                                        @foreach($txt_presets as $preset_key => $preset)
-                                            <option value="{{ $preset_key }}">{{ $preset['label'] }}</option>
-                                        @endforeach
-                                    </x-select>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Pattern (Regex)') }}</label>
-                                    <x-text-input 
-                                        type="text" 
-                                        wire:model="field_configs.{{ $field }}.pattern"
-                                        class="w-full font-mono text-sm"
-                                    />
-                                </div>
+                                 <div class="grid gap-y-3 mt-3">                                    
+                                     <div>
+                                         <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Preset Pattern') }}</label>
+                                         <x-select wire:model.live="field_configs.{{ $field }}.preset" class="w-full">
+                                             <option value="">{{ __('Pilih preset atau buat custom') }}</option>
+                                             @foreach($txt_presets as $preset_key => $preset)
+                                                 <option value="{{ $preset_key }}">{{ $preset['label'] }}</option>
+                                             @endforeach
+                                         </x-select>
+                                     </div>
+     
+                                     <div>
+                                         <label class="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Pattern (Regex)') }}</label>
+                                         <x-text-input 
+                                             type="text" 
+                                             wire:model="field_configs.{{ $field }}.pattern"
+                                             class="w-full font-mono text-sm"
+                                         />
+                                     </div>
+                                 </div>
                             @endif
                         </div>
                         @endif
