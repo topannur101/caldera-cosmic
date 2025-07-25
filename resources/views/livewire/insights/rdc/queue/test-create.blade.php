@@ -185,7 +185,7 @@ new class extends Component
    }
 
    /**
-    * Enhanced Excel extraction method with hybrid static/dynamic support
+    * Updated extraction for Excel files with new bounds support
     */
    private function extractDataExcel(InsRdcMachine $machine)
    {
@@ -201,25 +201,33 @@ new class extends Component
       $extractedData = [];
 
       foreach ($config as $fieldConfig) {
-         if (!isset($fieldConfig['field']) || !isset($fieldConfig['type'])) {
+         if (!isset($fieldConfig['field'])) {
                continue;
          }
 
          $field = $fieldConfig['field'];
-         $configType = $fieldConfig['type'];
          
          try {
                $value = null;
                
-               switch ($configType) {
-                  case 'static':
-                     $value = $this->extractStaticValue($worksheet, $fieldConfig);
-                     break;
-                  case 'dynamic':
-                     $value = $this->extractDynamicValue($worksheet, $fieldConfig);
-                     break;
-                  default:
-                     continue 2; // Skip unknown config types
+               // Handle new type-based configuration
+               if (isset($fieldConfig['type'])) {
+                  switch ($fieldConfig['type']) {
+                     case 'static':
+                           $value = $this->extractStaticValue($worksheet, $fieldConfig);
+                           break;
+                     case 'dynamic':
+                           $value = $this->extractDynamicValue($worksheet, $fieldConfig);
+                           break;
+                     default:
+                           continue 2;
+                  }
+               } 
+               // Handle legacy configuration for backward compatibility
+               elseif (isset($fieldConfig['address'])) {
+                  $value = $this->extractStaticValue($worksheet, ['address' => $fieldConfig['address']]);
+               } else {
+                  continue;
                }
 
                if ($value !== null) {
@@ -249,9 +257,12 @@ new class extends Component
       return $worksheet->getCell($address)->getValue();
    }
 
+   /**
+    * Updated extraction for Text files with new bounds support
+    */
    private function extractDataText(InsRdcMachine $machine)
    {
-      $config = json_decode($machine->cells, true) ?? [];
+      $config = $machine->cells ?? [];
       if (empty($config)) {
          throw new \Exception("Mesin tidak memiliki konfigurasi");
       }
@@ -262,21 +273,43 @@ new class extends Component
       $extractedData = [];
 
       foreach ($config as $fieldConfig) {
-         if (!isset($fieldConfig['field']) || !isset($fieldConfig['pattern'])) {
-            continue;
+         if (!isset($fieldConfig['field'])) {
+               continue;
          }
 
          $field = $fieldConfig['field'];
-         $pattern = $fieldConfig['pattern'];
 
-         $value = $this->extractValueFromText($lines, $pattern);
-         if ($value !== null) {
-            $extractedData[$field] = $this->processFieldValue($field, $value);
+         try {
+               $value = null;
+               $pattern = null;
+               
+               // Handle new type-based configuration
+               if (isset($fieldConfig['type']) && $fieldConfig['type'] === 'pattern') {
+                  $pattern = $fieldConfig['pattern'] ?? null;
+               } 
+               // Handle legacy configuration for backward compatibility
+               elseif (isset($fieldConfig['pattern'])) {
+                  $pattern = $fieldConfig['pattern'];
+               }
+
+               if ($pattern) {
+                  $value = $this->extractValueFromText($lines, $pattern);
+               }
+
+               if ($value !== null) {
+                  $extractedData[$field] = $this->processFieldValue($field, $value);
+               }
+
+         } catch (\Exception $e) {
+               // Log error but continue processing other fields
+               $this->js('console.log("Error extracting ' . $field . ': ' . addslashes($e->getMessage()) . '")');
+               continue;
          }
       }
 
       $this->applyExtractedData($extractedData);
    }
+
 
    /**
     * Extract value using dynamic intersection search
@@ -385,80 +418,120 @@ new class extends Component
    }
 
    /**
-    * Enhanced field value processing with bounds support
+    * Enhanced field value processing with proper bounds handling
     */
    private function processFieldValue(string $field, $value): mixed
    {
       $value = trim((string)$value);
 
+      // Handle bounds fields (s_max_bounds, s_min_bounds, tc10_bounds, etc.)
+      if (str_ends_with($field, '_bounds')) {
+         return $this->parseBoundsRange($value);
+      }
+
+      // Handle regular fields
       return match($field) {
          'mcs' => $this->find3Digit($value),
          'color', 'code_alt', 'model' => $this->safeString($value),
          // Direct measurement fields  
          's_max', 's_min', 'tc10', 'tc50', 'tc90' => $this->safeFloat($value),
-         // Specific bound fields
-         's_max_low', 's_min_low', 'tc10_low','tc50_low', 'tc90_low' => $this->getBoundFromString($value, 'low'),
-         's_max_high', 's_min_high', 'tc10_high', 'tc50_high', 'tc90_high' => $this->getBoundFromString($value, 'high'),
          'eval' => $this->processEvalValue($value),
          default => $value
       };
    }
 
    /**
-    * Enhanced data application with bounds field mapping
+    * Parse a bounds range string like "20.5-30.8" into low/high values
+    */
+   private function parseBoundsRange(string $range): array
+   {
+      if (empty($range) || !str_contains($range, '-')) {
+         return ['low' => 0, 'high' => 0]; 
+      }
+
+      // Handle different range formats: "20.5-30.8", "20.5 - 30.8", etc.
+      $range = preg_replace('/\s+/', '', $range); // Remove all spaces
+      [$part1, $part2] = explode('-', $range, 2);
+
+      $value1 = $this->safeFloat($part1);
+      $value2 = $this->safeFloat($part2);
+
+      $lower = min($value1, $value2);
+      $higher = max($value1, $value2);
+
+      return [
+         'low' => $lower,
+         'high' => $higher
+      ];
+   }
+
+   /**
+    * Process bounds value and return array with low/high values
+    */
+   private function processBoundsValue(string $value): array
+   {
+      if (empty($value) || !str_contains($value, '-')) {
+         return ['low' => 0, 'high' => 0]; 
+      }
+
+      [$part1, $part2] = explode('-', $value, 2);
+
+      $value1 = $this->safeFloat($part1);
+      $value2 = $this->safeFloat($part2);
+
+      $lower = min($value1, $value2);
+      $higher = max($value1, $value2);
+
+      return [
+         'low' => $lower,
+         'high' => $higher
+      ];
+   }
+
+   /**
+    * Enhanced data application with proper bounds field mapping
     */
    private function applyExtractedData(array $extractedData)
    {
-      // First, apply direct field mappings
       foreach ($extractedData as $field => $value) {
-         if (InsRdcMachine::isBoundsField($field)) {
-               // This is a bounds field (s_max, s_min, tc10, tc50, tc90)
-               // Map to both low and high bounds
-               $boundsFields = InsRdcMachine::getBoundsFieldNames($field);
-               foreach ($boundsFields as $boundsField) {
-                  if ($this->type === 'excel') {
-                     // For Excel extraction, set both bounds to same value
-                     $this->test[$boundsField] = $value;
-                  } else {
-                     // For batch extraction, apply to batch data
-                     $this->{"e_" . str_replace(['_low', '_high'], '', $boundsField)} = $value;
-                  }
+         if (str_ends_with($field, '_bounds')) {
+               // This is a bounds field - map to low/high test fields
+               $baseField = str_replace('_bounds', '', $field);
+               
+               if (is_array($value) && isset($value['low'], $value['high'])) {
+                  // Map s_max_bounds to s_max_low and s_max_high
+                  $this->test[$baseField . '_low'] = $value['low'];
+                  $this->test[$baseField . '_high'] = $value['high'];
                }
          } else {
                // Regular field mapping
-               if ($this->type === 'excel') {
+               if (array_key_exists($field, $this->test)) {
                   $this->test[$field] = $value;
-               } else {
-                  // Apply to batch data (for components that have batch properties)
-                  if (property_exists($this, "e_$field")) {
-                     $this->{"e_$field"} = $value;
-                  } else {
-                     $this->$field = $value;
-                  }
+               } elseif (array_key_exists($field, $this->batch)) {
+                  $this->batch[$field] = $value;
                }
          }
       }
 
-      // Handle batch info updates for batch-test-create component
-      if (method_exists($this, 'updateBatchInfo')) {
-         $hasExtractedBatchData = !empty($extractedData['model']) || 
-                                 !empty($extractedData['color']) || 
-                                 !empty($extractedData['mcs']) || 
-                                 !empty($extractedData['code_alt']);
-         
-         if ($hasExtractedBatchData && $this->canUpdateBatch()) {
-               $this->update_batch = true;
-               $this->updateBatchInfo();
-         }
+      // Handle batch info updates if batch data was extracted
+      $hasExtractedBatchData = !empty($extractedData['model']) || 
+                              !empty($extractedData['color']) || 
+                              !empty($extractedData['mcs']) || 
+                              !empty($extractedData['code_alt']);
+      
+      if ($hasExtractedBatchData && $this->canUpdateBatch()) {
+         $this->update_batch = true;
       }
    }
+
 
    /**
     * Check if batch can be updated (for batch-test-create component)
     */
    private function canUpdateBatch(): bool
    {
-      return (!$this->model && !$this->color && !$this->mcs && !$this->code_alt);
+      return (!$this->batch['model'] && !$this->batch['color'] && 
+               !$this->batch['mcs'] && !$this->batch['code_alt']);
    }
 
    /**
