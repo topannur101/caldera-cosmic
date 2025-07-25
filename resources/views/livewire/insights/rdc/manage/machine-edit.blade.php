@@ -25,12 +25,12 @@ new class extends Component {
         'code_alt' => ['label' => 'Kode alt', 'required' => false],
         'eval' => ['label' => 'Evaluation/Status', 'required' => false],
         
-        // Single fields (auto-populate both low/high with same value)
-        's_max_single' => ['label' => 'S Max Single', 'required' => false],
-        's_min_single' => ['label' => 'S Min Single', 'required' => false],
-        'tc10_single' => ['label' => 'TC10 Single', 'required' => false],
-        'tc50_single' => ['label' => 'TC50 Single', 'required' => false],
-        'tc90_single' => ['label' => 'TC90 Single', 'required' => false],
+        // Single fields (simple value extraction)
+        's_max' => ['label' => 'S Max', 'required' => false],
+        's_min' => ['label' => 'S Min', 'required' => false],
+        'tc10' => ['label' => 'TC10', 'required' => false],
+        'tc50' => ['label' => 'TC50', 'required' => false],
+        'tc90' => ['label' => 'TC90', 'required' => false],
         
         // Bounds fields (extract range and split into low/high)
         's_max_bounds' => ['label' => 'S Max Bounds', 'required' => false],
