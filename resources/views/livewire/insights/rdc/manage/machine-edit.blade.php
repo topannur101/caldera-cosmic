@@ -328,7 +328,7 @@ new class extends Component {
         @endguest
         @auth
         @cannot('manage', InsRdcMachine::class)
-            <div class="flex items-center p-4 text-sm text-neutral-800 bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-300" role="alert">
+            <div class="flex items-center p-4 text-sm text-neutral-800 bg-neutral-100 dark:bg-neutral-700 dark:text-neutral-300" role="alert">
                 <i class="icon-info mr-2"></i>
                 <div>
                     {{ __('Kamu tidak memiliki wewenang untuk mengedit') }}
