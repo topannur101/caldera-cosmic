@@ -7,6 +7,7 @@ use App\Models\InsStcDevice;
 use App\Models\InsStcDLog;
 use App\Models\InsStcDSum;
 use App\Models\InsStcMachine;
+use App\Models\InsClmRecord;
 use Carbon\Carbon;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
@@ -513,6 +514,9 @@ new class extends Component
             }
         }
 
+        // Calculate AT values
+        $at_values = $this->calculateAtValues();
+
         $device = InsStcDevice::where('code', $this->device_code)->first();
 
         $d_sum->fill([
@@ -531,6 +535,7 @@ new class extends Component
             'target_values'         => json_encode(InsStc::$target_values),
             'hb_values'             => json_encode($this->d_sum['hb_values']),
             'svp_values'            => json_encode($this->d_sum['svp_values']),
+            'at_values'             => json_encode($at_values),
             'integrity'             => $integrity,
             'is_applied'            => $is_applied,
         ]);
@@ -545,6 +550,93 @@ new class extends Component
                 'temp' => $log['temp'],
             ]);
         }
+    }
+
+    private function calculateAtValues(): array
+    {
+        // Initialize AT values array [previous_at, current_at, delta_at]
+        $at_values = [0, 0, 0];
+
+        try {
+            // Element 0: Get AT from previous d_sum (same machine and position)
+            $previous_d_sum = InsStcDSum::where('ins_stc_machine_id', $this->d_sum['ins_stc_machine_id'])
+                ->where('position', $this->d_sum['position'])
+                ->where('created_at', '<', Carbon::now())
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($previous_d_sum) {
+                // Use the model's accessor method for cleaner code
+                $at_values[0] = $previous_d_sum->current_at;
+            }
+        } catch (Exception $e) {
+            // Log the error and keep default value 0 for element 0
+            \Log::info('AT calculation: Failed to get previous d_sum AT', [
+                'machine_id' => $this->d_sum['ins_stc_machine_id'],
+                'position' => $this->d_sum['position'],
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        try {
+            // Element 1: Get latest temperature from ins_clm_records (within 1 hour)
+            $latest_clm_record = InsClmRecord::where('created_at', '>=', Carbon::now()->subHour())
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($latest_clm_record && $latest_clm_record->temperature > 0) {
+                $at_values[1] = $latest_clm_record->temperature;
+            } else {
+                \Log::info('AT calculation: No recent CLM record found or temperature <= 0', [
+                    'found_record' => !!$latest_clm_record,
+                    'temperature' => $latest_clm_record->temperature ?? 'N/A'
+                ]);
+            }
+        } catch (Exception $e) {
+            // Log the error and keep default value 0 for element 1
+            \Log::info('AT calculation: Failed to get current ambient temperature', [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        try {
+            // Element 2: Calculate delta AT with safeguards
+            if ($at_values[0] > 0 && $at_values[1] > 0) {
+                $delta = $at_values[1] - $at_values[0];
+                
+                // Apply safeguard: if delta is too aggressive (> 10 or < -10), set to 0
+                if ($delta > 10 || $delta < -10) {
+                    $at_values[2] = 0;
+                    \Log::info('AT calculation: Delta AT too aggressive, set to 0', [
+                        'previous_at' => $at_values[0],
+                        'current_at' => $at_values[1],
+                        'calculated_delta' => $delta
+                    ]);
+                } else {
+                    $at_values[2] = $delta;
+                }
+            } else {
+                \Log::info('AT calculation: Delta set to 0 due to invalid previous or current AT', [
+                    'previous_at' => $at_values[0],
+                    'current_at' => $at_values[1]
+                ]);
+            }
+            // If either element 0 or 1 is <= 0, delta remains 0 (already initialized)
+        } catch (Exception $e) {
+            // Log the error and keep default value 0 for element 2
+            \Log::info('AT calculation: Failed to calculate delta AT', [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        // Always log the final AT values for debugging
+        \Log::info('AT calculation completed', [
+            'machine_id' => $this->d_sum['ins_stc_machine_id'],
+            'position' => $this->d_sum['position'],
+            'at_values' => $at_values
+        ]);
+
+        return $at_values;
     }
 
     private function push(): bool

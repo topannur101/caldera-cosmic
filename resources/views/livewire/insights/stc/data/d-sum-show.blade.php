@@ -25,6 +25,7 @@ new class extends Component {
         'target_values'     => [],
         'hb_values'         => [],
         'svp_values'        => [],
+        'at_values'         => [0,0,0],
         
         // relationship
         'user' => [
@@ -57,8 +58,8 @@ new class extends Component {
         if ($dSum) {
             $this->d_sum = $dSum->toArray();
 
-            // Decode JSON for specified keys
-            foreach (['sv_values', 'target_values', 'hb_values', 'svp_values'] as $key) {
+            // Decode JSON for specified keys (including at_values)
+            foreach (['sv_values', 'target_values', 'hb_values', 'svp_values', 'at_values'] as $key) {
                 $this->d_sum[$key] = json_decode($this->d_sum[$key], true);
             }
 
@@ -209,6 +210,24 @@ new class extends Component {
                     @endforeach
                 </tr>
             </table>
+
+            <!-- AT Values Section -->
+            @if(isset($d_sum['at_values']) && is_array($d_sum['at_values']))
+            <table class="table table-xs text-sm text-center mt-6">
+                <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
+                    <td></td>
+                    <td>{{ __('Sebelumnya') }}</td>
+                    <td>{{ __('Pengukuran ini') }}</td>
+                    <td>{{ __('Delta (Δ)') }}</td>
+                </tr>
+                <tr>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('AT') }}</td>
+                    <td>{{ $d_sum['at_values'][0] > 0 ? number_format($d_sum['at_values'][0], 1) . '°C' : '-' }}</td>
+                    <td>{{ $d_sum['at_values'][1] > 0 ? number_format($d_sum['at_values'][1], 1) . '°C' : '-' }}</td>
+                    <td>{{ $d_sum['at_values'][2] > 0 ? number_format($d_sum['at_values'][2], 1) . '°C' : '-' }}</td>
+                </tr>
+            </table>
+            @endif
         </div>
         <div>
             <div class="grid grid-cols-1 gap-6">

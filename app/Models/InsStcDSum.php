@@ -25,6 +25,7 @@ class InsStcDSum extends Model
         'hb_values',
         'sv_values',
         'svp_values',
+        'at_values',
 
         'integrity',
 
@@ -52,7 +53,6 @@ class InsStcDSum extends Model
         return InsStc::duration($this->ended_at, $this->created_at, 'short');
     }
 
-
     public function integrity_friendly(): string
     {
         switch ($this->integrity) {
@@ -65,7 +65,6 @@ class InsStcDSum extends Model
             default:
                 return __('Tak ada pembanding');
         }
-
     }
 
     public function adjustment(): string
@@ -92,7 +91,60 @@ class InsStcDSum extends Model
             default:
                 return __('Manual');
         }
-    }    
+    }
+
+    /**
+     * Get the previous AT value (element 0 of at_values)
+     * 
+     * @return float
+     */
+    public function getPreviousAtAttribute(): float
+    {
+        $at_values = $this->at_values ? json_decode($this->at_values, true) : [0, 0, 0];
+        return isset($at_values[0]) ? (float) $at_values[0] : 0.0;
+    }
+
+    /**
+     * Get the current AT value (element 1 of at_values)
+     * 
+     * @return float
+     */
+    public function getCurrentAtAttribute(): float
+    {
+        $at_values = $this->at_values ? json_decode($this->at_values, true) : [0, 0, 0];
+        return isset($at_values[1]) ? (float) $at_values[1] : 0.0;
+    }
+
+    /**
+     * Get the delta AT value (element 2 of at_values)
+     * 
+     * @return float
+     */
+    public function getDeltaAtAttribute(): float
+    {
+        $at_values = $this->at_values ? json_decode($this->at_values, true) : [0, 0, 0];
+        return isset($at_values[2]) ? (float) $at_values[2] : 0.0;
+    }
+
+    /**
+     * Get all AT values as an array
+     * 
+     * @return array
+     */
+    public function getAtValuesArrayAttribute(): array
+    {
+        return $this->at_values ? json_decode($this->at_values, true) : [0, 0, 0];
+    }
+
+    /**
+     * Check if AT adjustment should be applied based on delta
+     * 
+     * @return bool
+     */
+    public function shouldApplyAtAdjustment(): bool
+    {
+        return $this->delta_at != 0 && $this->current_at > 0 && $this->previous_at > 0;
+    }
 
     public function ins_stc_d_logs(): HasMany
     {
@@ -113,5 +165,4 @@ class InsStcDSum extends Model
     {
         return $this->belongsTo(InsStcDevice::class);
     }
-
 }
