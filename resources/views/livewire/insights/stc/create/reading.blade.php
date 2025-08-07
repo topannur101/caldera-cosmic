@@ -555,7 +555,7 @@ new class extends Component
     private function calculateAtValues(): array
     {
         // Initialize AT values array [previous_at, current_at, delta_at]
-        $at_values = [0, 0, 0];
+        $at_values = [0.0, 0.0, 0.0];
 
         try {
             // Element 0: Get AT from previous d_sum (same machine and position)
@@ -566,11 +566,11 @@ new class extends Component
                 ->first();
 
             if ($previous_d_sum) {
-                // Use the model's accessor method for cleaner code
-                $at_values[0] = $previous_d_sum->current_at;
+                // Use the model's accessor method and format to 1 decimal place
+                $at_values[0] = round((float) $previous_d_sum->current_at, 1);
             }
         } catch (Exception $e) {
-            // Log the error and keep default value 0 for element 0
+            // Log the error and keep default value 0.0 for element 0
             \Log::info('AT calculation: Failed to get previous d_sum AT', [
                 'machine_id' => $this->d_sum['ins_stc_machine_id'],
                 'position' => $this->d_sum['position'],
@@ -585,7 +585,8 @@ new class extends Component
                 ->first();
 
             if ($latest_clm_record && $latest_clm_record->temperature > 0) {
-                $at_values[1] = $latest_clm_record->temperature;
+                // Format to 1 decimal place
+                $at_values[1] = round((float) $latest_clm_record->temperature, 1);
             } else {
                 \Log::info('AT calculation: No recent CLM record found or temperature <= 0', [
                     'found_record' => !!$latest_clm_record,
@@ -593,7 +594,7 @@ new class extends Component
                 ]);
             }
         } catch (Exception $e) {
-            // Log the error and keep default value 0 for element 1
+            // Log the error and keep default value 0.0 for element 1
             \Log::info('AT calculation: Failed to get current ambient temperature', [
                 'error' => $e->getMessage()
             ]);
@@ -606,14 +607,15 @@ new class extends Component
                 
                 // Apply safeguard: if delta is too aggressive (> 10 or < -10), set to 0
                 if ($delta > 10 || $delta < -10) {
-                    $at_values[2] = 0;
+                    $at_values[2] = 0.0;
                     \Log::info('AT calculation: Delta AT too aggressive, set to 0', [
                         'previous_at' => $at_values[0],
                         'current_at' => $at_values[1],
                         'calculated_delta' => $delta
                     ]);
                 } else {
-                    $at_values[2] = $delta;
+                    // Format to 1 decimal place
+                    $at_values[2] = round($delta, 1);
                 }
             } else {
                 \Log::info('AT calculation: Delta set to 0 due to invalid previous or current AT', [
@@ -621,9 +623,9 @@ new class extends Component
                     'current_at' => $at_values[1]
                 ]);
             }
-            // If either element 0 or 1 is <= 0, delta remains 0 (already initialized)
+            // If either element 0 or 1 is <= 0, delta remains 0.0 (already initialized)
         } catch (Exception $e) {
-            // Log the error and keep default value 0 for element 2
+            // Log the error and keep default value 0.0 for element 2
             \Log::info('AT calculation: Failed to calculate delta AT', [
                 'error' => $e->getMessage()
             ]);
