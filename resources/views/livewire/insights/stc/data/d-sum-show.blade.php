@@ -224,7 +224,7 @@ new class extends Component {
                     <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('AT') }}</td>
                     <td>{{ $d_sum['at_values'][0] > 0 ? number_format($d_sum['at_values'][0], 1) . '°C' : '-' }}</td>
                     <td>{{ $d_sum['at_values'][1] > 0 ? number_format($d_sum['at_values'][1], 1) . '°C' : '-' }}</td>
-                    <td>{{ $d_sum['at_values'][2] > 0 ? number_format($d_sum['at_values'][2], 1) . '°C' : '-' }}</td>
+                    <td>{{ number_format($d_sum['at_values'][2], 1) . '°C' }}</td>
                 </tr>
             </table>
             @endif
