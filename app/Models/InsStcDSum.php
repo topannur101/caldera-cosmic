@@ -165,4 +165,9 @@ class InsStcDSum extends Model
     {
         return $this->belongsTo(InsStcDevice::class);
     }
+
+    public function ins_stc_adjusts(): HasMany
+    {
+        return $this->hasMany(InsStcAdjust::class);
+    }
 }

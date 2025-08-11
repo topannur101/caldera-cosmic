@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
 use App\Models\InsStcDSum;
+use App\Models\InsStcAdjust;
 use App\InsStc;
 
 new class extends Component {
@@ -49,6 +50,16 @@ new class extends Component {
         'integrity_friendly'    => '',
     ];
 
+    public $adjustments = [];
+
+    public function loadAdjustments()
+    {
+        $this->adjustments = InsStcAdjust::where('ins_stc_d_sum_id', $this->id)
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->toArray();
+    }
+
     #[On('d_sum-show')]
     public function showDSum(int $id)
     {
@@ -67,6 +78,8 @@ new class extends Component {
             foreach (['duration', 'latency', 'adjustment_friendly', 'integrity_friendly'] as $key) {
                 $this->d_sum[$key] = $dSum->$key();
             }
+
+            $this->loadAdjustments();
 
             $this->js("
             const options = " . json_encode(InsStc::getChartJsOptions($this->d_sum['ins_stc_d_logs'], $this->d_sum['sv_values'])) . ";
@@ -210,24 +223,89 @@ new class extends Component {
                     @endforeach
                 </tr>
             </table>
-
-            <!-- AT Values Section -->
-            @if(isset($d_sum['at_values']) && is_array($d_sum['at_values']))
-            <table class="table table-xs text-sm text-center mt-6">
-                <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
-                    <td></td>
-                    <td>{{ __('Sebelumnya') }}</td>
-                    <td>{{ __('Pengukuran ini') }}</td>
-                    <td>{{ __('Delta (Δ)') }}</td>
-                </tr>
-                <tr>
-                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('AT') }}</td>
-                    <td>{{ $d_sum['at_values'][0] > 0 ? number_format($d_sum['at_values'][0], 1) . '°C' : '-' }}</td>
-                    <td>{{ $d_sum['at_values'][1] > 0 ? number_format($d_sum['at_values'][1], 1) . '°C' : '-' }}</td>
-                    <td>{{ number_format($d_sum['at_values'][2], 1) . '°C' }}</td>
-                </tr>
-            </table>
-            @endif
+            
+            <div>                
+                @if(count($adjustments) > 0)
+                    <div class="h-48 overflow-y-auto border border-neutral-200 dark:border-neutral-700 rounded-lg">
+                        <table class="table table-xs text-sm w-full">
+                            <thead class="sticky top-0 bg-neutral-50 dark:bg-neutral-800">
+                                <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
+                                    <th class="px-3 py-2 text-left">{{ __('Waktu') }}</th>
+                                    <th class="px-3 py-2 text-center">{{ __('Status') }}</th>
+                                    <th class="px-3 py-2 text-center">{{ __('Suhu Saat Ini') }}</th>
+                                    <th class="px-3 py-2 text-center">{{ __('Delta') }}</th>
+                                    <th class="px-3 py-2 text-center">{{ __('Perubahan SV') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($adjustments as $adjustment)
+                                    <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700 cursor-help" 
+                                        title="{{ $adjustment['adjustment_reason'] }}">
+                                        <td class="px-3 py-2 text-sm">
+                                            {{ \Carbon\Carbon::parse($adjustment['created_at'])->format('d/m H:i') }}
+                                        </td>
+                                        <td class="px-3 py-2 text-center">
+                                            @if($adjustment['adjustment_applied'])
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                                                    {{ __('Diterapkan') }}
+                                                </span>
+                                            @elseif(str_contains($adjustment['adjustment_reason'], 'DRY RUN'))
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                                                    {{ __('Dry Run') }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100">
+                                                    {{ __('Gagal') }}
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-3 py-2 text-center">
+                                            {{ number_format($adjustment['current_temp'], 1) }}°C
+                                        </td>
+                                        <td class="px-3 py-2 text-center">
+                                            <span class="{{ $adjustment['delta_temp'] > 0 ? 'text-red-600' : ($adjustment['delta_temp'] < 0 ? 'text-blue-600' : '') }}">
+                                                {{ sprintf('%+.1f', $adjustment['delta_temp']) }}°C
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-2 text-center text-xs">
+                                            @php
+                                                $svBefore = $adjustment['sv_before'];
+                                                $svAfter = $adjustment['sv_after'];
+                                                $changes = [];
+                                                
+                                                if (is_array($svBefore) && is_array($svAfter) && count($svBefore) === 8 && count($svAfter) === 8) {
+                                                    for ($i = 0; $i < 8; $i++) {
+                                                        $diff = $svAfter[$i] - $svBefore[$i];
+                                                        if ($diff != 0) {
+                                                            $changes[] = sprintf('SV%d:%+.1f', $i + 1, $diff);
+                                                        }
+                                                    }
+                                                }
+                                            @endphp
+                                            
+                                            @if(count($changes) > 0)
+                                                {{ implode(', ', array_slice($changes, 0, 3)) }}
+                                                @if(count($changes) > 3)
+                                                    <span class="text-neutral-400">+{{ count($changes) - 3 }} {{ __('lainnya') }}</span>
+                                                @endif
+                                            @else
+                                                <span class="text-neutral-400">{{ __('Tidak ada perubahan') }}</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="h-48 flex items-center justify-center border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-800">
+                        <div class="text-center text-neutral-500 dark:text-neutral-400">
+                            <i class="icon-thermometer text-2xl mb-2"></i>
+                            <p class="text-sm">{{ __('Tidak ada penyesuaian ambient ditemukan') }}</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
         </div>
         <div>
             <div class="grid grid-cols-1 gap-6">
