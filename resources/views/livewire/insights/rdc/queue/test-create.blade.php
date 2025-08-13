@@ -514,10 +514,10 @@ new class extends Component
       }
 
       // Handle batch info updates if batch data was extracted
-      $hasExtractedBatchData = !empty($extractedData['model']) || 
-                              !empty($extractedData['color']) || 
-                              !empty($extractedData['mcs']) || 
-                              !empty($extractedData['code_alt']);
+      $hasExtractedBatchData = isset($extractedData['model']) || 
+                              isset($extractedData['color']) || 
+                              isset($extractedData['mcs']) || 
+                              isset($extractedData['code_alt']);
       
       if ($hasExtractedBatchData && $this->canUpdateBatch()) {
          $this->update_batch = true;
