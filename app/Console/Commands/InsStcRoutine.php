@@ -487,14 +487,26 @@ class InsStcRoutine extends Command
      */
     function calculateAdjustedSv($current_sv, $delta_temp)
     {
-        // Simple proportional adjustment - you may want to use more sophisticated logic
+        // Section-specific SV limits
+        $svp_highs = [83, 78, 73, 68, 63, 58, 53, 48];
+        $svp_lows = [73, 68, 63, 58, 53, 48, 43, 38];
+        
         $adjusted_sv = [];
         
-        foreach ($current_sv as $sv) {
-            // Adjust each SV by the temperature delta (you can modify this logic)
-            $new_sv = $sv + $delta_temp;
-            // Ensure values stay within reasonable bounds (30-99)
-            $adjusted_sv[] = max(30, min(99, round($new_sv, 1)));
+        // Negative correlation: temperature increase causes SV decrease
+        $sv_adjustment = $delta_temp * -1;
+        
+        foreach ($current_sv as $index => $sv) {
+            $new_sv = $sv + $sv_adjustment;
+            
+            // Apply section-specific min/max validation
+            $section_max = $svp_highs[$index] ?? 99;
+            $section_min = $svp_lows[$index] ?? 30;
+            
+            $new_sv = max($section_min, min($section_max, $new_sv));
+            
+            // Round to integer
+            $adjusted_sv[] = round($new_sv, 0);
         }
 
         return $adjusted_sv;

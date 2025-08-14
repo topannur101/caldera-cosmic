@@ -61,6 +61,14 @@ class InsStcAdjust extends Model
     }
 
     /**
+     * Get formatted created_at timestamp
+     */
+    public function getFormattedCreatedAtAttribute(): string
+    {
+        return $this->created_at->format('Y-m-d H:i');
+    }
+
+    /**
      * Get SV change summary
      */
     public function getSvChangeSummaryAttribute(): string
