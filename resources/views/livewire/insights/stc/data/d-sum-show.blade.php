@@ -350,7 +350,7 @@ new class extends Component {
             </tr>
             @foreach($adjustments as $adjustment)
                 <tr>
-                    <td>{{ $adjustment['formatted_created_at'] }}</td>
+                    <td class="font-mono">{{ $adjustment['formatted_created_at'] }}</td>
                     <td>
                         @if($adjustment['adjustment_applied'])
                             <x-pill color="green">{{ strtoupper(__('Diterapkan')) }}</x-pill>
