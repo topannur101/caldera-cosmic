@@ -342,7 +342,7 @@ new class extends Component {
             </tr>
             {{-- Reference row (always first) --}}
             <tr>
-                <td>{{ \Carbon\Carbon::parse($d_sum['created_at'])->setTimezone(config('app.timezone'))->format('Y-m-d H:i') }}</td>
+                <td class="font-mono">{{ \Carbon\Carbon::parse($d_sum['created_at'])->setTimezone(config('app.timezone'))->format('Y-m-d H:i') }}</td>
                 <td><x-pill>{{ strtoupper(__('Referensi')) }}</x-pill></td>
                 <td>{{ number_format($d_sum['at_values'][1] ?? 0, 1) }}°C</td>
                 <td>0°C</td>
