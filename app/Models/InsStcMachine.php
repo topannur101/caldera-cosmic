@@ -16,10 +16,14 @@ class InsStcMachine extends Model
         'name',
         'line',
         'ip_address',
+        'is_at_adjusted',
+        'at_adjust_strength',
     ];
 
     protected $casts = [
         'line' => 'integer',
+        'is_at_adjusted' => 'boolean',
+        'at_adjust_strength' => 'array',
     ];
 
     public function ins_stc_m_logs(): HasMany
@@ -35,9 +39,8 @@ class InsStcMachine extends Model
     public function ins_stc_m_log($position): HasOne
     {
         return $this->hasOne(InsStcMLog::class)
-        ->latest()
-        ->where('position', $position)
-        ->where('created_at', '>=', now()->subHour());
+            ->latest()
+            ->where('position', $position)
+            ->where('created_at', '>=', now()->subHour());
     }
-
 }

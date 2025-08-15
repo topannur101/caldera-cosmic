@@ -68,12 +68,12 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div wire:key="machine-create">
-            <x-modal name="machine-create">
+            <x-modal name="machine-create" maxWidth="xl">
                 <livewire:insights.stc.manage.machine-create />
             </x-modal>
         </div>
         <div wire:key="machine-edit">   
-            <x-modal name="machine-edit">
+            <x-modal name="machine-edit" maxWidth="xl">
                 <livewire:insights.stc.manage.machine-edit />
             </x-modal>
         </div>
