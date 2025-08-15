@@ -96,7 +96,7 @@ Comprehensive consumables tracking with:
 
 ### Database Schema
 - **Migration-driven development** with extensive migration files
-- **Prefixed table naming**: `ins_*` (insights), `inv_*` (inventory), `tsk_*` (tasks), `pjt_*` (projects)
+- **Prefixed table naming**: `ins_*` (insights), `inv_*` (inventory)
 - **Soft deletes** and **timestamps** on most entities
 - **JSON columns** for flexible data storage (compositions, preferences)
 

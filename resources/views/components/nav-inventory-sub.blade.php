@@ -37,6 +37,13 @@
                     <div>
                         <span class="hidden sm:inline">{{ $slot }}</span>
                     </div>
+                @elseif(request()->is('inventory/manage/*'))
+                    <x-link href="{{ route('inventory.manage.index') }}" class="inline-block px-3 py-6" wire:navigate>
+                        <i class="icon-arrow-left"></i>
+                    </x-link>
+                    <div>
+                        <span class="hidden sm:inline">{{ $slot }}</span>
+                    </div>
                 @else          
                     <x-link href="{{ route('inventory') }}" class="inline-block px-3 py-6" wire:navigate>
                         <i class="icon-arrow-left"></i>
@@ -54,8 +61,8 @@
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('inventory.circs.index') }}" :active="request()->is('inventory/circs*')" wire:navigate>
                 <i class="icon-arrow-right-left text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Sirkulasi ') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('inventory.orders.index') }}" :active="request()->is('inventory/orders*')" wire:navigate>
-                <i class="icon-shopping-cart text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Pesanan') }}</span>
+            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('inventory.manage.index') }}" :active="request()->is('inventory/manage*')" wire:navigate>
+                <i class="icon-ellipsis text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Kelola') }}</span>
             </x-nav-link>
         </div>
    </div>

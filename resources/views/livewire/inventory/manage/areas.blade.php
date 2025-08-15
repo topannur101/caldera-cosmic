@@ -42,16 +42,16 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Inventaris') . ' — ' . __('Admin') }}</x-slot>
+<x-slot name="title">{{ __('Kelola area') . ' — ' . __('Inventaris') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-admin>{{ __('Inventaris') }}</x-nav-admin>
+    <x-nav-inventory-sub>{{ __('Inventaris') }}</x-nav-inventory-sub>
 </x-slot>
 
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Kelola area') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Area') }}</h1>
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
                 @can('superuser')
                     <x-secondary-button type="button" 
@@ -66,12 +66,12 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         <div wire:key="area-create">
             <x-modal name="area-create">
-                <livewire:admin.inventory.area-create />
+                <livewire:inventory.manage.area-create />
             </x-modal>
         </div>
         <div wire:key="area-edit">   
             <x-modal name="area-edit">
-                <livewire:admin.inventory.area-edit />
+                <livewire:inventory.manage.area-edit />
             </x-modal>
         </div>
         <div class="overflow-auto w-full my-8">

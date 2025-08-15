@@ -14,7 +14,7 @@
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('inventory.circs.index') }}" :active="request()->is('inventory/circs*')" wire:navigate>
                 <i class="icon-wrench text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Perawatan ') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('inventory.orders.index') }}" :active="request()->is('inventory/reqs*')" wire:navigate>
+            <x-nav-link class="text-sm px-1 uppercase" href="#" :active="request()->is('inventory/reqs*')" wire:navigate>
                 <i class="icon-clock-arrow-down text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Waktu henti') }}</span>
             </x-nav-link>
         </div>
@@ -25,7 +25,7 @@
            <x-nav-link href="{{ route('inventory.circs.index') }}" :active="request()->is('inventory/circs*')" wire:navigate>
                <i class="mx-2 icon-arrow-right-left text-sm"></i>
            </x-nav-link>
-           <x-nav-link href="{{ route('inventory.orders.index') }}" :active="request()->is('inventory/admin*')" wire:navigate>
+           <x-nav-link href="#" :active="request()->is('inventory/admin*')" wire:navigate>
                <i class="mx-2 icon-ellipsis text-sm"></i>
            </x-nav-link>
        </div> --}}

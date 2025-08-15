@@ -101,12 +101,6 @@ new class extends Component {
             :$unit_price 
             :$can_eval />
       @endif
-      <livewire:inventory.items.stock.create-order 
-         :$stock_id 
-         :$stock_uom 
-         :$curr_id 
-         :$curr_rate 
-         :$unit_price />
       <div>
          <x-dropdown align="right" width="60">
             <x-slot name="trigger">

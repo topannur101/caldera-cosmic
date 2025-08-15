@@ -4,10 +4,9 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 
-use App\Models\InvOrderBudget;
+use App\Models\InvCurr;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
-use Illuminate\Database\Eloquent\Builder;
 
 new #[Layout('layouts.app')] class extends Component {
     use WithPagination;
@@ -21,21 +20,12 @@ new #[Layout('layouts.app')] class extends Component {
     public function with(): array
     {
         $q = trim($this->q);
-        $budgets = InvOrderBudget::with(['inv_area', 'inv_curr'])
-            ->orderBy('id', 'desc');
-
-        if ($q) {
-            $budgets->where(function (Builder $query) use ($q) {
-                $query
-                    ->orWhere('name', 'LIKE', '%' . $q . '%')
-                    ->orWhereHas('inv_area', function (Builder $areaQuery) use ($q) {
-                        $areaQuery->where('name', 'LIKE', '%' . $q . '%');
-                    });
-            });
-        }
+        $currs = InvCurr::where('name', 'LIKE', '%' . $q . '%')
+            ->orderBy('id')
+            ->paginate($this->perPage);
 
         return [
-            'budgets' => $budgets->paginate($this->perPage),
+            'currs' => $currs,
         ];
     }
 
@@ -52,78 +42,78 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Inventaris') . ' — ' . __('Admin') }}</x-slot>
+<x-slot name="title">{{ __('Kelola mata uang') . ' — ' . __('Inventaris') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-admin>{{ __('Inventaris') }}</x-nav-admin>
+    <x-nav-inventory-sub>{{ __('Inventaris') }}</x-nav-inventory-sub>
 </x-slot>
 
-<div id="content" class="py-12 max-w-5xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Kelola anggaran') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Mata uang') }}</h1>
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
                 @can('superuser')
                     <x-secondary-button type="button" 
-                        x-on:click.prevent="$dispatch('open-modal', 'budget-create')"><i class="icon-plus"></i></x-secondary-button>
+                        x-on:click.prevent="$dispatch('open-modal', 'curr-create')"><i class="icon-plus"></i></x-secondary-button>
                 @endcan
                 <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open"><i class="icon-search"></i></x-secondary-button>
                 <div class="w-40" x-show="open" x-cloak>
-                    <x-text-input-search wire:model.live="q" id="budget-q" x-ref="search"
+                    <x-text-input-search wire:model.live="q" id="inv-q" x-ref="search"
                         placeholder="{{ __('CARI') }}"></x-text-input-search>
                 </div>
             </div>
         </div>
-        <div wire:key="budget-create">
-            <x-modal name="budget-create">
-                <livewire:admin.inventory.budget-create />
+        <div wire:key="curr-create">
+            <x-modal name="curr-create">
+                <livewire:inventory.manage.curr-create />
             </x-modal>
         </div>
-        <div wire:key="budget-edit">
-            <x-modal name="budget-edit">
-                <livewire:admin.inventory.budget-edit />
+        <div wire:key="curr-edit">   
+            <x-modal name="curr-edit">
+                <livewire:inventory.manage.curr-edit />
             </x-modal>
         </div>
+        <div class="mt-6 relative text-neutral h-32 sm:rounded-lg overflow-hidden mb-8 border border-dashed border-neutral-300 dark:border-neutral-500">
+                <div class="absolute top-0 left-0 flex h-full items-center px-4 lg:px-8 text-neutral-500">
+                    <div>
+                        <div class="uppercase font-bold mb-2"><i class="icon-triangle-alert me-2"></i>{{ __('Peringatan') }}</div>
+                        <div>{{ __('Nama mata uang yang telah dibuat tidak dapat diganti.') }}</div>
+                    </div>
+                </div>
+            </div>
         <div class="overflow-auto w-full my-8">
             <div class="p-0 sm:p-1">
                 <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
-                    <table wire:key="budgets-table" class="table">
+                    <table wire:key="currs-table" class="table">
                         <tr>
                             <th>{{ __('ID') }}</th>
                             <th>{{ __('Nama') }}</th>
-                            <th>{{ __('Saldo') }}</th>
-                            <th>{{ __('Mata uang') }}</th>
-                            <th>{{ __('Area') }}</th>
+                            <th>{{ __('Nilai tukar') }}</th>
                             <th>{{ __('Status') }}</th>
                         </tr>
-                        @foreach ($budgets as $budget)
-                            <tr wire:key="budget-tr-{{ $budget->id . $loop->index }}" tabindex="0"
-                                x-on:click="$dispatch('open-modal', 'budget-edit'); $dispatch('budget-edit', { id: {{ $budget->id }} })">
+                        @foreach ($currs as $curr)
+                            <tr wire:key="curr-tr-{{ $curr->id . $loop->index }}" tabindex="0"
+                                x-on:click="$dispatch('open-modal', 'curr-edit'); $dispatch('curr-edit', { id: {{ $curr->id }} })">
                                 <td>
-                                    {{ $budget->id }}
+                                    {{ $curr->id }}
                                 </td>
                                 <td>
-                                    {{ $budget->name }}
+                                    {{ $curr->name }}
                                 </td>
                                 <td>
-                                    {{ number_format($budget->balance, 2) }}
+                                    {{ $curr->rate }}
                                 </td>
                                 <td>
-                                    {{ $budget->inv_curr->name }}
-                                </td>
-                                <td>
-                                    {{ $budget->inv_area->name }}
-                                </td>
-                                <td>
-                                    {{ $budget->is_active ? __('Aktif') : __('Nonaktif') }}
+                                    {{ ($curr->id == 1 ? __('Utama') . ', ' : '' ) . ($curr->is_active ? __('Aktif') : __('Nonaktif')) }}
                                 </td>
                             </tr>
                         @endforeach
                     </table>
-                    <div wire:key="budgets-none">
-                        @if (!$budgets->count())
+                    <div wire:key="currs-none">
+                        @if (!$currs->count())
                             <div class="text-center py-12">
-                                {{ __('Tak ada anggaran ditemukan') }}
+                                {{ __('Tak ada mata uang ditemukan') }}
                             </div>
                         @endif
                     </div>
@@ -131,13 +121,13 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div wire:key="observer" class="flex items-center relative h-16">
-            @if (!$budgets->isEmpty())
-                @if ($budgets->hasMorePages())
+            @if (!$currs->isEmpty())
+                @if ($currs->hasMorePages())
                     <div wire:key="more" x-data="{
                         observe() {
-                            const observer = new IntersectionObserver((budgets) => {
-                                budgets.forEach(budget => {
-                                    if (budget.isIntersecting) {
+                            const observer = new IntersectionObserver((currs) => {
+                                currs.forEach(curr => {
+                                    if (curr.isIntersecting) {
                                         @this.loadMore()
                                     }
                                 })

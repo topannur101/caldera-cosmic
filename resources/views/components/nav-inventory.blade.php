@@ -14,8 +14,8 @@
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('inventory.circs.index') }}" :active="request()->is('inventory/circs*')" wire:navigate>
                 <i class="icon-arrow-right-left text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Sirkulasi ') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('inventory.orders.index') }}" :active="request()->is('inventory/orders*')" wire:navigate>
-                <i class="icon-shopping-cart text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Pesanan') }}</span>
+            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('inventory.manage.index') }}" :active="request()->is('inventory/manage*')" wire:navigate>
+                <i class="icon-ellipsis text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Kelola') }}</span>
             </x-nav-link>
         </div>
    </div>

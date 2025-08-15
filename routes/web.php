@@ -13,10 +13,6 @@ use Illuminate\Http\Request;
 Volt::route('/',                    'home')                 ->name('home');
 Volt::route('/inventory',           'inventory.index')      ->name('inventory');
 Volt::route('/inventory/help',      'inventory.help')       ->name('inventory.help');
-Volt::route('/tasks',               'tasks.index')          ->name('tasks');
-Volt::route('/machines',            'machines.index')       ->name('machines');
-Volt::route('/projects',            'projects.index')       ->name('projects');
-Volt::route('/contact',             'contact')              ->name('contact');
 
 Volt::route('/announcements/{id}',  'announcements.show')   ->name('announcements.show');
 
@@ -192,9 +188,6 @@ Route::name('download.')->group(function () {
     Route::get('/download/ins-rtc-metrics',         [DownloadController::class, 'insRtcMetrics'])   ->name('ins-rtc-metrics');
     Route::get('/download/ins-rtc-clumps',          [DownloadController::class, 'insRtcClumps'])    ->name('ins-rtc-clumps');
     Route::get('/download/ins-ldc-hides',           [DownloadController::class, 'insLdcHides'])     ->name('ins-ldc-hides');
-    Route::get('/download/pjt-items/{token}',       [DownloadController::class, 'pjtItems'])       ->name('pjt-items');
-    Route::get('/download/pjt-tasks/{token}',       [DownloadController::class, 'pjtTasks'])       ->name('pjt-tasks');
-
 });
 
 // All routes that needs to be authenticated
@@ -255,92 +248,14 @@ Route::middleware('auth')->group(function () {
 
         });
 
-        Route::name('inventory.orders.')->group(function () {
-            Volt::route('/orders/{id}', 'inventory.orders.show')            ->name('show');
-            Volt::route('/orders',      'inventory.orders.index')           ->name('index');
+        Route::name('inventory.manage.')->group(function () {
+            Volt::route('/manage',      'inventory.manage.index')           ->name('index');
+            Volt::route('/manage/auths', 'inventory.manage.auths')          ->name('auths');
+            Volt::route('/manage/areas', 'inventory.manage.areas')          ->name('areas');
+            Volt::route('/manage/currs', 'inventory.manage.currs')          ->name('currs');
         });
 
-    });
-
-    // Task Management Routes
-    Route::prefix('tasks')->group(function () {
-
-        Route::name('tasks.')->group(function () {
-
-            Route::name('manage.')->group(function () {
-                Volt::route('/manage/teams', 'tasks.manage.teams')->name('teams');
-                Volt::route('/manage/auths', 'tasks.manage.auths')->name('auths');
-                Volt::route('/manage/types', 'tasks.manage.types')->name('types');
-                Volt::route('/manage', 'tasks.manage.index')->name('index');
-            });
-
-            Route::name('dashboard.')->group(function () {
-                Volt::route('/dashboard', 'tasks.dashboard.index')->name('index');
-            });
-
-            Route::name('projects.')->group(function () {
-                Volt::route('/projects/create', 'tasks.projects.create')->name('create');
-                Volt::route('/projects/{id}', 'tasks.projects.show')->name('show');
-                Volt::route('/projects/{id}/edit', 'tasks.projects.edit')->name('edit');
-                Volt::route('/projects', 'tasks.projects.index')->name('index');
-            });
-
-            Route::name('items.')->group(function () {
-                Volt::route('/items/{id}', 'tasks.items.show')->name('show');
-                Volt::route('/items/{id}/edit', 'tasks.items.edit')->name('edit');
-                Volt::route('/items', 'tasks.items.index')->name('index');
-            });
-
-            Route::name('board.')->group(function () {
-                Volt::route('/board', 'tasks.board.index')->name('index');
-                Volt::route('/board/{project_id}', 'tasks.board.project')->name('project');
-            });
-
-        });
-        
-    });
-
-    Route::prefix('projects')->group(function () {
-
-        Route::name('projects.')->group(function () {
-                
-            Route::name('items.')->group(function () {
-                Volt::route('/items/{id}',          'projects.items.show')          ->name('show');
-                Volt::route('/items',               'projects.items.index')         ->name('index');
-                
-                // Only superuser can create/edit projects
-                Route::middleware('can:superuser')->group(function () {
-                    Volt::route('/items/create',    'projects.items.create')        ->name('create');
-                    Volt::route('/items/{id}/edit', 'projects.items.edit')          ->name('edit');
-                });
-            });
-    
-            Route::name('tasks.')->group(function () {
-                Volt::route('/tasks/create',        'projects.tasks.create')        ->name('create');
-                Volt::route('/tasks/{id}',          'projects.tasks.show')          ->name('show');
-                Volt::route('/tasks/{id}/edit',     'projects.tasks.edit')          ->name('edit');
-                Volt::route('/tasks',               'projects.tasks.index')         ->name('index');
-            });
-    
-            Route::name('dashboard.')->group(function () {
-                Volt::route('/dashboard',           'projects.dashboard.index')     ->name('index');
-            });
-    
-        });
-    
-    });
-    
-
-    // Caldy AI routes
-    Route::prefix('caldy')->group(function () {
-
-        // Route::name('caldy.')->group(function () {
-
-        //     Volt::route('/caldy',  'caldy.chat')     ->name('caldy.chat');
-        // });
-
-        Volt::route('/',    'caldy.index')  ->name('caldy');
-    });
+    });    
 
     // Administration routes
     Route::prefix('admin')->middleware('can:superuser')->group(function () {
@@ -348,10 +263,6 @@ Route::middleware('auth')->group(function () {
         Route::name('admin.')->group(function () {
 
             Volt::route('/account-manage',  'admin.account.manage')     ->name('account-manage');
-            Volt::route('/inventory-auths', 'admin.inventory.auths')    ->name('inventory-auths');
-            Volt::route('/inventory-areas', 'admin.inventory.areas')    ->name('inventory-areas');
-            Volt::route('/inventory-currs', 'admin.inventory.currs')    ->name('inventory-currs');
-            Volt::route('/inventory-budgets', 'admin.inventory.budgets')->name('inventory-budgets');
 
         });
 

@@ -30,63 +30,6 @@
                     </a>
                 </div>
             </div>
-            <div>
-                <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">{{ __('Inventaris') }}</h1>
-                <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
-                    <a href="{{ route('admin.inventory-areas') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
-                        <div class="flex items-center px-6 py-5">
-                            <div class="grow">
-                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola area') }}</div>
-                                <div class="text-sm text-neutral-500">
-                                    {{ __('Tambah atau edit area inventaris') }}
-                                </div>
-                            </div>
-                            <div class="text-lg">
-                                <i class="icon-chevron-right"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="{{ route('admin.inventory-auths') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
-                        <div class="flex items-center px-6 py-5">
-                            <div class="grow">
-                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola wewenang') }}</div>
-                                <div class="text-sm text-neutral-500">
-                                    {{ __('Tambah, edit, atau hapus wewenang inventaris') }}
-                                </div>
-                            </div>
-                            <div class="text-lg">
-                                <i class="icon-chevron-right"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="{{ route('admin.inventory-currs') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
-                        <div class="flex items-center px-6 py-5">
-                            <div class="grow">
-                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola mata uang') }}</div>
-                                <div class="text-sm text-neutral-500">
-                                    {{ __('Tambah atau edit mata uang inventaris') }}
-                                </div>
-                            </div>
-                            <div class="text-lg">
-                                <i class="icon-chevron-right"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="{{ route('admin.inventory-budgets') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
-                        <div class="flex items-center px-6 py-5">
-                            <div class="grow">
-                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola anggaran') }}</div>
-                                <div class="text-sm text-neutral-500">
-                                    {{ __('Tambah atau edit anggaran inventaris') }}
-                                </div>
-                            </div>
-                            <div class="text-lg">
-                                <i class="icon-chevron-right"></i>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
         </div>     
     </div>
 </x-app-layout>

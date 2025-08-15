@@ -88,17 +88,6 @@ new class extends Component {
                     <x-nav-link :href="route('inventory')" :active="request()->routeIs('inventory*')" wire:navigate>
                         {{ __('Inventaris') }}
                     </x-nav-link>
-                    <!-- <x-nav-link :href="route('machines')" :active="request()->routeIs('machines*')" wire:navigate>
-                        {{ __('Mesin ') }}
-                    </x-nav-link> -->
-                    <x-nav-link :href="route('tasks')" :active="request()->routeIs('tasks*')" wire:navigate>
-                        {{ __('Tugas') }}
-                    </x-nav-link>
-                    @auth
-                    <x-nav-link :href="route('caldy')" :active="request()->routeIs('caldy*')" wire:navigate>
-                        <x-icon-splotch class="w-3" />
-                    </x-nav-link>
-                    @endauth
                 </div>
             </div>
 
@@ -229,17 +218,6 @@ new class extends Component {
             <x-responsive-nav-link :href="route('inventory')" :active="request()->routeIs('inventory*')" wire:navigate>
                 {{ __('Inventaris') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('tasks')" :active="request()->routeIs('tasks*')" wire:navigate>
-                {{ __('Tugas') }}
-            </x-responsive-nav-link>
-            <!-- <x-responsive-nav-link :href="route('machines')" :active="request()->routeIs('machines*')" wire:navigate>
-                {{ __('Mesin') }}
-            </x-responsive-nav-link> -->
-            @auth
-            <x-responsive-nav-link :href="route('caldy')" :active="request()->routeIs('caldy*')" wire:navigate>
-                <x-icon-splotch class="w-3 me-2" />{{ __('Caldy AI') }}
-            </x-responsive-nav-link>
-            @endauth
         </div>
 
         <!-- Responsive Settings Options -->

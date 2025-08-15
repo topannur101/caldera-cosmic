@@ -32,7 +32,7 @@
                     <div class="p-1 truncate font-semibold" title="{{ $name }}">
                         <x-link :href="$url" wire:navigate>{{ $name }}</x-link>
                     </div>
-                    <div class="px-1 truncate text-neutral-500 text-sm" title="{{ $desc }}">
+                    <div class="px-1 truncate text-sm" title="{{ $desc }}">
                         {{ $desc }}
                     </div>
                     <div class="px-1 pt-1 text-sm text-neutral-500">

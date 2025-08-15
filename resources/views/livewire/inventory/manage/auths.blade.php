@@ -54,16 +54,16 @@ class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Inventaris') . ' — ' . __('Admin') }}</x-slot>
+<x-slot name="title">{{ __('Kelola wewenang') . ' — ' . __('Inventaris') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-admin>{{ __('Inventaris') }}</x-nav-admin>
+    <x-nav-inventory-sub>{{ __('Inventaris') }}</x-nav-inventory-sub>
 </x-slot>
 
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Kelola wewenang') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Wewenang') }}</h1>
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
                 @can('superuser')
                     <x-secondary-button type="button" 
@@ -78,12 +78,12 @@ class extends Component {
         </div>
         <div wire:key="auth-create">
             <x-modal name="auth-create">
-                <livewire:admin.inventory.auth-create  />
+                <livewire:inventory.manage.auth-create  />
             </x-modal>
         </div>
         <div wire:key="auth-edit">
             <x-modal name="auth-edit">
-                <livewire:admin.inventory.auth-edit  />
+                <livewire:inventory.manage.auth-edit  />
             </x-modal>
         </div>
         <div class="overflow-auto w-full my-8">
