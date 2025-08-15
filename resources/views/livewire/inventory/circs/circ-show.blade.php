@@ -205,6 +205,100 @@ new class extends Component
        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
        $this->dispatch('updated');
    }
+
+   public function canRevert(): bool
+   {
+       // Check if this circulation can be reverted (is approved and is latest for the stock)
+       if ($this->circ['eval_status'] !== 'approved') {
+           return false;
+       }
+
+       // Check if user can evaluate circulations (same permission as revert)
+       $circ = InvCirc::find($this->circ['id']);
+       if (!$circ || Gate::inspect('eval', $circ)->denied()) {
+           return false;
+       }
+
+       // Check if this is the latest approved circulation for this stock
+       $latestApproved = InvCirc::where('inv_stock_id', $this->circ['inv_stock_id'])
+           ->where('eval_status', 'approved')
+           ->orderByDesc('updated_at')
+           ->first();
+
+       return $latestApproved && $latestApproved->id === $this->circ['id'];
+   }
+
+   public function revert()
+   {
+       if (!$this->canRevert()) {
+           $this->js('toast("' . __('Sirkulasi ini tidak dapat diurungkan') . '", { type: "danger" })');
+           return;
+       }
+
+       $circ = InvCirc::find($this->circ['id']);
+       $stock = $circ->inv_stock;
+       $item = $stock->inv_item;
+
+       try {
+           // Reverse the quantity changes
+           $qty_current = $stock->qty;
+           $qty_relative = $circ->qty_relative;
+           $qty_reverted = null;
+
+           switch ($circ->type) {
+               case 'deposit':
+                   // Reverse deposit: subtract the amount that was added
+                   $qty_reverted = $qty_current - $qty_relative;
+                   break;
+               
+               case 'withdrawal':
+                   // Reverse withdrawal: add back the amount that was taken
+                   $qty_reverted = $qty_current + $qty_relative;
+                   break;
+           }
+
+           if ($qty_reverted === null && ($circ->type === 'deposit' || $circ->type === 'withdrawal')) {
+               throw new \Exception(__('Terjadi galat ketika menghitung qty pemulihan'));
+           }
+
+           if ($qty_reverted < 0) {
+               throw new \Exception(__('Pemulihan akan menghasilkan qty negatif'));
+           }
+
+           // Calculate new amount_main
+           $amount_main = 0;
+           if ($qty_reverted > 0 && $stock->unit_price > 0 && $stock->inv_curr->rate > 0) {
+               $amount_main = max(
+                   ($stock->inv_curr_id === 1) 
+                   ? $qty_reverted * $stock->unit_price
+                   : $qty_reverted * $stock->unit_price / $stock->inv_curr->rate
+                   , 0);
+           }
+
+           // Revert circulation to pending
+           $circ->update([
+               'eval_user_id'  => null,
+               'eval_status'   => 'pending', 
+               'eval_remarks'  => null
+           ]);
+
+           // Update stock quantity only for deposit/withdrawal
+           if ($circ->type === 'deposit' || $circ->type === 'withdrawal') {
+               $stock->update([
+                   'wf'            => $stock->calculateWf(),
+                   'qty'           => $qty_reverted,
+                   'amount_main'   => $amount_main
+               ]);
+           }
+
+           $this->dispatch('circ-show', $circ->id);
+           $this->dispatch('circ-updated', $circ->id);
+           $this->js('toast("' . __('Sirkulasi berhasil diurungkan ke tertunda') . '", { type: "success" })');
+
+       } catch (\Exception $e) {
+           $this->js('toast("' . $e->getMessage() . '", { type: "danger" })');
+       }
+   }
 }
 
 ?>
@@ -355,12 +449,23 @@ new class extends Component
    @if($circ['eval_status'] !== 'pending')
    <hr class="border-neutral-300 dark:border-neutral-700" />
    <div class="p-6 flex flex-col gap-y-2 text-sm">
-      <div>
-         <span class="text-neutral-500">{{ __('Evaluator') . ': ' }}</span>
-         <span class="font-medium" title="{{ $circ['eval_user']['emp_id'] ?? '' }}">{{ $circ['eval_user']['name'] ?? 'Edwin' }}</span>
-      </div>
-      <div>
-         <span>{{  $circ['eval_remarks'] ?? '' }}</span>
+      <div class="flex items-center justify-between">
+         <div>
+            <div>
+               <span class="text-neutral-500">{{ __('Evaluator') . ': ' }}</span>
+               <span class="font-medium" title="{{ $circ['eval_user']['emp_id'] ?? '' }}">{{ $circ['eval_user']['name'] ?? 'Edwin' }}</span>
+            </div>
+            <div>
+               <span>{{  $circ['eval_remarks'] ?? '' }}</span>
+            </div>
+         </div>
+         @if($this->canRevert())
+            <div>
+               <x-text-button type="button" wire:click="revert" title="{{ __('Urungkan ke tertunda') }}">
+                  <i class="icon-undo-2"></i>
+               </x-text-button>
+            </div>
+         @endif
       </div>
    </div>
    @endif
