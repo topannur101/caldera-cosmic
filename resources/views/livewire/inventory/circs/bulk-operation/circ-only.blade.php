@@ -214,7 +214,7 @@ class extends Component
             $circ,
             [
                'curr'         => ['exists:inv_currs,name'],
-               'uom'          => ['required', 'alpha_dash', 'max:5'],
+               'uom'          => ['required', 'regex:/^[a-zA-Z0-9_\/-]+$/', 'max:5'],
                'qty_relative' => ['required', 'min:0', 'max:100000'],
                'remarks'      => ['required', 'string', 'max:256'],
             ]

@@ -139,7 +139,7 @@ new class extends Component {
          'code' => ['required', 'alpha_dash', 'size:11'],
          'purpose' => ['required', 'max:500'],
          'qty' => ['required', 'integer', 'min:0', 'max:1000000'],
-         'uom' => ['required', 'alpha_dash', 'max:5'],
+         'uom' => ['required', 'regex:/^[a-zA-Z0-9_\/-]+$/', 'max:5'],
          'unit_price' => ['required', 'numeric', 'min:0', 'max:1000000000'],
       ]);
 

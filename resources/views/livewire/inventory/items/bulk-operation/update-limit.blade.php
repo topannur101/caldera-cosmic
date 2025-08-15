@@ -267,7 +267,7 @@ class extends Component
             [
                'stocks'                => ['array','min:1', 'max:3'],
                'stocks.*.currency'     => ['required', 'exists:inv_currs,name'],
-               'stocks.*.uom'          => ['required', 'alpha_dash', 'max:5'],     
+               'stocks.*.uom'          => ['required', 'regex:/^[a-zA-Z0-9_\/-]+$/', 'max:5'],     
                'stocks.*.qty_min'      => ['required', 'integer', 'lte:stocks.*.qty_max', 'lte:10000'],
                'stocks.*.qty_max'      => ['required', 'integer', 'gte:stocks.*.qty_min', 'lte:10000']       
                ]

@@ -26,7 +26,7 @@ new #[Layout('layouts.app')] class extends Component {
                 ->orWhere('code', 'LIKE', '%' . $q . '%')
                 ->orWhere('name', 'LIKE', '%' . $q . '%');
             })
-            ->orderBy('id')
+            ->orderBy('line')
             ->paginate($this->perPage);
 
         return [
@@ -51,7 +51,7 @@ new #[Layout('layouts.app')] class extends Component {
 <x-slot name="header">
     <x-nav-insights-stc-sub />
 </x-slot>
-<div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="py-12 max-w-5xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Mesin') }}</h1>
@@ -82,18 +82,16 @@ new #[Layout('layouts.app')] class extends Component {
                 <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
                     <table wire:key="machines-table" class="table">
                         <tr>
-                            <th>{{ __('ID') }}</th>
                             <th>{{ __('Kode') }}</th>
                             <th>{{ __('Nama') }}</th>
                             <th>{{ __('Line') }}</th>
                             <th>{{ __('Alamat IP') }}</th>
+                            <th>{{ __('AT') }}</th>
+                            <th>{{ __('Kekuatan AT (%)') }}</th>
                         </tr>
                         @foreach ($machines as $machine)
                             <tr wire:key="machine-tr-{{ $machine->id . $loop->index }}" tabindex="0"
                                 x-on:click="$dispatch('open-modal', 'machine-edit'); $dispatch('machine-edit', { id: {{ $machine->id }} })">
-                                <td>
-                                    {{ $machine->id }}
-                                </td>
                                 <td>
                                     {{ $machine->code }}
                                 </td>
@@ -105,6 +103,21 @@ new #[Layout('layouts.app')] class extends Component {
                                 </td>
                                 <td>
                                     {{ $machine->ip_address }}
+                                </td>
+                                <td>
+                                    <x-pill color="{{ $machine->is_at_adjusted ? 'green' : 'red' }}">
+                                        {{ $machine->is_at_adjusted ? __('Aktif') : __('Nonaktif') }}
+                                    </x-pill>
+                                </td>
+                                <td>
+                                    @if($machine->is_at_adjusted && $machine->at_adjust_strength)
+                                        <div class="text-xs">
+                                            <div>{{ implode(',', $machine->at_adjust_strength['upper'] ?? []) }}</div>
+                                            <div>{{ implode(',', $machine->at_adjust_strength['lower'] ?? []) }}</div>
+                                        </div>
+                                    @else
+                                        <span class="text-neutral-400">-</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

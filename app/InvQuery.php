@@ -80,6 +80,7 @@ class InvQuery
         $this->applySearchFilters($query);
         $this->applyAreaFilter($query);
         $this->applyLocationFilters($query);
+        $this->applyUomFilters($query);
         $this->applyTagFilters($query);
         $this->applyGeneralFilters($query);
         $this->applyAgingFilters($query);
@@ -140,6 +141,24 @@ class InvQuery
                 });
             }
         });
+    }
+
+    private function applyUomFilters($query)
+    {
+        $uom = $this->params['uom'];
+
+        if ($uom) {
+            // For stocks query, filter directly on inv_stocks.uom
+            if ($this->params['type'] === 'stocks') {
+                $query->where('uom', 'like', "%$uom%");
+            } else {
+                // For items query, filter through inv_stocks relationship
+                $query->whereHas('inv_stocks', function ($stockQuery) use ($uom) {
+                    $stockQuery->where('uom', 'like', "%$uom%")
+                              ->where('is_active', true);
+                });
+            }
+        }
     }
 
     private function applyTagFilters($query)
@@ -354,6 +373,7 @@ class InvQuery
             'code' => null,
             'loc_parent' => null,
             'loc_bin' => null,
+            'uom' => null,
             'tags' => [],
             'is_linked' => false,
             'area_ids' => [],
@@ -397,6 +417,7 @@ class InvQuery
             'code' => $sessionParams['code'] ?? null,
             'loc_parent' => $sessionParams['loc_parent'] ?? null,
             'loc_bin' => $sessionParams['loc_bin'] ?? null,
+            'uom' => $sessionParams['uom'] ?? null,
             'tags' => $sessionParams['tags'] ?? [],
             'area_ids' => $sessionParams['area_ids'] ?? [],
             'filter' => $sessionParams['filter'] ?? null,

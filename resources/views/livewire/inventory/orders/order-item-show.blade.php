@@ -314,7 +314,7 @@ new class extends Component
                 'name' => ['required', 'max:128'],
                 'desc' => ['required', 'max:256'],
                 'code' => ['required', 'alpha_dash', 'size:11'],
-                'uom' => ['required', 'alpha_dash', 'max:5'],
+                'uom' => ['required', 'regex:/^[a-zA-Z0-9_\/-]+$/', 'max:5'],
                 'unit_price' => ['required', 'numeric', 'min:0', 'max:1000000000'],
                 'currency_id' => ['required', 'exists:inv_currs,id'],
             ]);

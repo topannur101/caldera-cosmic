@@ -47,6 +47,10 @@ class extends Component
     
     public array $loc_bin_hints = [];
     
+    public string $uom = '';
+    
+    public array $uom_hints = [];
+    
     #[Url]
     public string $q = '';
 
@@ -93,6 +97,7 @@ class extends Component
                 $this->is_linked    = $itemsParams['is_linked'] ?? true;
                 $this->loc_parent   = $itemsParams['loc_parent'] ?? '';
                 $this->loc_bin      = $itemsParams['loc_bin'] ?? '';
+                $this->uom          = $itemsParams['uom'] ?? '';
                 $this->tags         = $itemsParams['tags'] ?? [];
                 $this->area_ids     = $itemsParams['area_ids'] ?? [];
                 $this->filter       = $itemsParams['filter'] ?? '';
@@ -135,6 +140,7 @@ class extends Component
             'code'          => trim($this->code),
             'loc_parent'    => trim($this->loc_parent),
             'loc_bin'       => trim($this->loc_bin),
+            'uom'           => trim($this->uom),
             'tags'          => $this->tags,
             'is_linked'     => $this->is_linked,
             'area_ids'      => $this->area_ids,
@@ -160,6 +166,7 @@ class extends Component
             'code'          => $inv_items_params['code'],
             'loc_parent'    => $inv_items_params['loc_parent'],
             'loc_bin'       => $inv_items_params['loc_bin'],
+            'uom'           => $inv_items_params['uom'],
             'tags'          => $inv_items_params['tags'],
             'is_linked'     => $inv_items_params['is_linked'],
             'area_ids'      => $inv_items_params['area_ids'],
@@ -204,7 +211,7 @@ class extends Component
 
     public function updated($property)
     {
-        $resetProps = ['q', 'view', 'sort', 'area_ids', 'loc_parent', 'loc_bin', 'tags'];
+        $resetProps = ['q', 'view', 'sort', 'area_ids', 'loc_parent', 'loc_bin', 'uom', 'tags'];
         if(in_array($property, $resetProps)) {
             $this->reset(['perPage']);
         }
@@ -232,6 +239,20 @@ class extends Component
                     ->pluck('bin')
                     ->toArray();
                 $this->loc_bin_hints = array_unique($hints);
+            }
+        }
+
+        if ($property == 'uom') {
+            $hint = trim($this->uom);
+            if ($hint) {
+                $hints = InvStock::where('uom', 'LIKE', '%' . $hint . '%')
+                    ->where('is_active', true)
+                    ->distinct()
+                    ->orderBy('uom')
+                    ->limit(100)
+                    ->pluck('uom')
+                    ->toArray();
+                $this->uom_hints = array_unique($hints);
             }
         }
     }
@@ -333,6 +354,10 @@ class extends Component
 
             <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
                 <x-inv-tag-selector isQuery="true" class="text-xs font-semibold uppercase" />
+            </div>
+
+            <div class="flex items-center gap-x-4 p-4 lg:py-0 ">
+                <x-inv-uom-selector isQuery="true" class="text-xs font-semibold uppercase" />
             </div>
 
             <div class="grow flex items-center gap-x-4 p-4 lg:py-0 ">
