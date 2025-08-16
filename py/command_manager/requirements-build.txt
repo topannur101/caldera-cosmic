@@ -1,0 +1,7 @@
+# Build requirements for creating executable
+pyinstaller==6.3.0
+flask==2.3.3
+flask-cors==4.0.0
+pystray==0.19.4
+pillow==10.0.1
+psutil==5.9.6

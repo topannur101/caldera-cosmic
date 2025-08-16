@@ -17,7 +17,7 @@ class ConfigManager:
     def _ensure_config_file(self):
         """Ensure configuration file exists"""
         if not self.config_file.exists():
-            self._save_config({"commands": []})
+            self._save_config({"commands": [], "auto_start": False})
     
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from file"""
@@ -26,7 +26,7 @@ class ConfigManager:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Error loading config: {e}")
-            return {"commands": []}
+            return {"commands": [], "auto_start": False}
     
     def _save_config(self, config: Dict[str, Any]):
         """Save configuration to file"""
@@ -166,4 +166,20 @@ class ConfigManager:
             
         except Exception as e:
             print(f"Error importing config: {e}")
+            return False
+    
+    def get_auto_start(self) -> bool:
+        """Get auto-start setting"""
+        config = self._load_config()
+        return config.get("auto_start", False)
+    
+    def set_auto_start(self, auto_start: bool) -> bool:
+        """Set auto-start setting"""
+        try:
+            config = self._load_config()
+            config["auto_start"] = auto_start
+            self._save_config(config)
+            return True
+        except Exception as e:
+            print(f"Error setting auto-start: {e}")
             return False

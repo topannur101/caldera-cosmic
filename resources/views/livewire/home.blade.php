@@ -106,14 +106,6 @@ class extends Component {
                     <img src="/favicon-32x32.png" class="h-8" alt="Flowbite Logo" />
                     <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Caldera</span>
                 </a>
-                <ul class="flex flex-wrap items-center mb-6 text-sm font-medium text-neutral-500 sm:mb-0 dark:text-neutral-400">
-                    <li>
-                        <a href="{{ route('contact') }}" class="hover:underline me-4 md:me-6">{{ __('Kontak') }}</a>
-                    </li>
-                    <!-- <li>
-                        <a href="#" class="hover:underline me-4 md:me-6">{{ __('Pengumuman') }}</a>
-                    </li> -->
-                </ul>
             </div>
             <hr class="my-6 border-neutral-200 sm:mx-auto dark:border-neutral-700 lg:my-8" />
             <span class="block text-sm text-neutral-500 sm:text-center dark:text-neutral-400">{{ __('Oleh dept. MM untuk PT. TKG Taekwang Indonesia') }}</span>

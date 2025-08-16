@@ -1,14 +1,17 @@
 # Laravel Command Manager
 
-A Python system tray application that manages Laravel artisan daemon processes with a web interface integration.
+A Python desktop application with tabbed interface that manages Laravel artisan daemon processes, featuring web interface integration.
 
 ## Features
 
-- **System Tray Application**: Runs in the background with system tray icon
-- **Web Interface**: Laravel admin interface for monitoring and controlling commands
-- **Real-time Monitoring**: Live status updates and process monitoring
-- **Log Management**: Rotating log files with web-based log viewing
-- **GUI Configuration**: Easy command setup through Python GUI
+- **Tabbed Desktop Interface**: Modern GUI with dedicated tabs for each command
+- **Overview Dashboard**: Summary statistics and system information
+- **Individual Command Tabs**: Real-time status, controls, and live output for each command
+- **Configuration Management**: Easy command setup with built-in form validation
+- **Centralized Log Viewer**: Search and filter logs from all commands
+- **System Tray Integration**: Minimize to tray for background operation
+- **Web Interface**: Laravel admin interface for remote monitoring and control
+- **Live Output Streaming**: Real-time command output with colored formatting
 - **API Integration**: RESTful API for Laravel communication
 
 ## Installation

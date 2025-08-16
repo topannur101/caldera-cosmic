@@ -81,10 +81,10 @@ class extends Component {
 };
 
 ?>
-<x-slot name="title">{{ __('Akun') . ' — ' . __('Admin') }}</x-slot>
+<x-slot name="title">{{ __('Kelola akun') . ' — ' . __('Admin') }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-admin>{{ __('Akun') }}</x-nav-admin>
+    <x-nav-admin>{{ __('Kelola akun') }}</x-nav-admin>
 </x-slot>
 
 <div class="py-12">
