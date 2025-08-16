@@ -263,6 +263,7 @@ Route::middleware('auth')->group(function () {
         Route::name('admin.')->group(function () {
 
             Volt::route('/account-manage',  'admin.account.manage')     ->name('account-manage');
+            Volt::route('/daemon-manage',   'admin.daemon.manage')      ->name('daemon-manage');
 
         });
 

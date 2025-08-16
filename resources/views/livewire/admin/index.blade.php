@@ -30,6 +30,24 @@
                     </a>
                 </div>
             </div>
+            <div>
+                <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">{{ __('Sistem') }}</h1>
+                <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
+                    <a href="{{ route('admin.daemon-manage') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                        <div class="flex items-center px-6 py-5">
+                            <div class="grow">
+                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __('Kelola daemon') }}</div>
+                                <div class="text-sm text-neutral-500">
+                                    {{ __('Jalankan, hentikan, monitor daemon artisan') }}
+                                </div>
+                            </div>
+                            <div class="text-lg">
+                                <i class="icon-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
         </div>     
     </div>
 </x-app-layout>

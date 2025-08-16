@@ -1,2 +1,2 @@
 @echo off
-php artisan app:ins-stc-routine
+php artisan app:ins-stc-routine --d
