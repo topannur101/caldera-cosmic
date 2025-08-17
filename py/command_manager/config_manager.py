@@ -17,7 +17,11 @@ class ConfigManager:
     def _ensure_config_file(self):
         """Ensure configuration file exists"""
         if not self.config_file.exists():
-            self._save_config({"commands": [], "auto_start": False})
+            self._save_config({
+                "commands": [], 
+                "auto_start": False,
+                "working_directory": ""
+            })
     
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from file"""
@@ -26,7 +30,7 @@ class ConfigManager:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Error loading config: {e}")
-            return {"commands": [], "auto_start": False}
+            return {"commands": [], "auto_start": False, "working_directory": ""}
     
     def _save_config(self, config: Dict[str, Any]):
         """Save configuration to file"""
@@ -183,3 +187,68 @@ class ConfigManager:
         except Exception as e:
             print(f"Error setting auto-start: {e}")
             return False
+    
+    def get_working_directory(self) -> str:
+        """Get working directory setting"""
+        config = self._load_config()
+        return config.get("working_directory", "")
+    
+    def set_working_directory(self, working_directory: str) -> bool:
+        """Set working directory setting"""
+        try:
+            # Validate directory before saving
+            if working_directory and not self.validate_working_directory(working_directory):
+                print(f"Invalid working directory: {working_directory}")
+                return False
+            
+            config = self._load_config()
+            config["working_directory"] = working_directory
+            self._save_config(config)
+            return True
+        except Exception as e:
+            print(f"Error setting working directory: {e}")
+            return False
+    
+    def validate_working_directory(self, directory: str) -> bool:
+        """Validate that a directory exists and is accessible"""
+        if not directory:
+            return True  # Empty directory is valid (will use fallback)
+        
+        try:
+            directory_path = Path(directory)
+            if not directory_path.exists():
+                return False
+            if not directory_path.is_dir():
+                return False
+            # Test if directory is accessible by trying to list contents
+            list(directory_path.iterdir())
+            return True
+        except (OSError, PermissionError):
+            return False
+    
+    def get_configured_working_directory(self) -> Optional[str]:
+        """Get the explicitly configured working directory (no fallbacks)"""
+        configured_dir = self.get_working_directory()
+        
+        # Only return if explicitly configured and valid
+        if configured_dir and self.validate_working_directory(configured_dir):
+            return configured_dir
+        
+        # Return None if no valid explicit configuration
+        return None
+    
+    def validate_current_working_directory(self) -> tuple[bool, str]:
+        """Validate current working directory setting and return status with message"""
+        configured_dir = self.get_working_directory()
+        
+        if not configured_dir:
+            return False, "Working directory must be explicitly configured"
+        
+        if self.validate_working_directory(configured_dir):
+            return True, f"Valid directory: {configured_dir}"
+        else:
+            return False, f"Invalid or inaccessible directory: {configured_dir}"
+    
+    def is_working_directory_configured(self) -> bool:
+        """Check if working directory is explicitly configured and valid"""
+        return self.get_configured_working_directory() is not None

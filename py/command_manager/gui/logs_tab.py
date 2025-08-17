@@ -67,7 +67,7 @@ class LogsTab:
         self.command_combo.bind("<<ComboboxSelected>>", self._on_command_selected)
         
         # Auto refresh
-        auto_refresh_check = ttk.Checkbutton(top_row, text="Auto Refresh", 
+        auto_refresh_check = ttk.Checkbutton(top_row, text="Refresh otomatis", 
                                            variable=self.auto_refresh)
         auto_refresh_check.pack(side=tk.LEFT, padx=(0, 15))
         
@@ -140,25 +140,25 @@ class LogsTab:
         status_frame = ttk.Frame(parent)
         status_frame.pack(fill=tk.X)
         
-        self.status_label = ttk.Label(status_frame, text="Ready", 
+        self.status_label = ttk.Label(status_frame, text="Siap", 
                                      font=('TkDefaultFont', 8), foreground='gray')
         self.status_label.pack(side=tk.LEFT)
         
         # Line count on the right
-        self.line_count_label = ttk.Label(status_frame, text="0 lines", 
+        self.line_count_label = ttk.Label(status_frame, text="0 baris", 
                                          font=('TkDefaultFont', 8), foreground='gray')
         self.line_count_label.pack(side=tk.RIGHT)
     
     def _populate_command_combo(self):
         """Populate command combobox with available commands"""
         commands = self.config_manager.get_commands()
-        command_names = ["ALL COMMANDS"] + [cmd['name'] for cmd in commands]
+        command_names = ["SEMUA PERINTAH"] + [cmd['name'] for cmd in commands]
         
         self.command_combo['values'] = command_names
         
         # Set default selection
         if not self.selected_command.get():
-            self.selected_command.set("ALL COMMANDS")
+            self.selected_command.set("SEMUA PERINTAH")
     
     def _on_command_selected(self, event=None):
         """Handle command selection change"""
@@ -177,8 +177,8 @@ class LogsTab:
         self.logs_text.config(state=tk.NORMAL)
         self.logs_text.delete(1.0, tk.END)
         self.logs_text.config(state=tk.DISABLED)
-        self.status_label.config(text="Logs cleared")
-        self.line_count_label.config(text="0 lines")
+        self.status_label.config(text="Log dibersihkan")
+        self.line_count_label.config(text="0 baris")
     
     def _export_logs(self):
         """Export current logs to file"""
@@ -194,12 +194,12 @@ class LogsTab:
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(content)
                 
-                messagebox.showinfo("Success", f"Logs exported to {file_path}")
-                self.status_label.config(text=f"Logs exported to {Path(file_path).name}")
+                messagebox.showinfo("Sukses", f"Log diekspor ke {file_path}")
+                self.status_label.config(text=f"Log diekspor ke {Path(file_path).name}")
                 
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to export logs: {e}")
-            self.status_label.config(text="Export failed")
+            messagebox.showerror("Galat", f"Gagal mengekspor log: {e}")
+            self.status_label.config(text="Ekspor gagal")
     
     def _apply_filters(self):
         """Apply current filters to the logs display"""
@@ -242,7 +242,7 @@ class LogsTab:
                 self._insert_log_line(line, highlight_filter=filter_text)
             
             self.logs_text.config(state=tk.DISABLED)
-            self.line_count_label.config(text=f"{len(filtered_lines)} lines")
+            self.line_count_label.config(text=f"{len(filtered_lines)} baris")
             
         except Exception as e:
             print(f"Error applying filters: {e}")
@@ -323,7 +323,7 @@ class LogsTab:
     def refresh(self):
         """Refresh logs display"""
         try:
-            self.status_label.config(text="Loading logs...")
+            self.status_label.config(text="Memuat log...")
             
             # Populate command combo if needed
             self._populate_command_combo()
@@ -334,7 +334,7 @@ class LogsTab:
             
             selected_command = self.selected_command.get()
             
-            if selected_command == "ALL COMMANDS":
+            if selected_command == "SEMUA PERINTAH":
                 # Load logs from all commands
                 commands = self.config_manager.get_commands()
                 all_logs = []
@@ -350,7 +350,7 @@ class LogsTab:
                             prefixed_line = f"[{command_name}] {log_line}"
                             all_logs.append(prefixed_line)
                     except Exception as e:
-                        print(f"Error loading logs for {command_id}: {e}")
+                        print(f"Galat memuat log untuk {command_id}: {e}")
                 
                 # Sort by timestamp if possible
                 try:
@@ -362,8 +362,8 @@ class LogsTab:
                 for log_line in all_logs:
                     self._insert_log_line(log_line)
                 
-                self.line_count_label.config(text=f"{len(all_logs)} lines")
-                self.status_label.config(text=f"Loaded logs from {len(commands)} commands")
+                self.line_count_label.config(text=f"{len(all_logs)} baris")
+                self.status_label.config(text=f"Memuat log dari {len(commands)} perintah")
                 
             else:
                 # Load logs from specific command
@@ -382,10 +382,10 @@ class LogsTab:
                     for log_line in logs:
                         self._insert_log_line(log_line)
                     
-                    self.line_count_label.config(text=f"{len(logs)} lines")
-                    self.status_label.config(text=f"Loaded logs for {selected_command}")
+                    self.line_count_label.config(text=f"{len(logs)} baris")
+                    self.status_label.config(text=f"Memuat log untuk {selected_command}")
                 else:
-                    self.status_label.config(text="Command not found")
+                    self.status_label.config(text="Perintah tidak ditemukan")
             
             self.logs_text.config(state=tk.DISABLED)
             
@@ -397,8 +397,8 @@ class LogsTab:
                 self._apply_filters()
             
         except Exception as e:
-            self.status_label.config(text=f"Error loading logs: {e}")
-            print(f"Error refreshing logs: {e}")
+            self.status_label.config(text=f"Galat memuat log: {e}")
+            print(f"Galat merefresh log: {e}")
         
         # Schedule next auto-refresh
         if self.auto_refresh.get():

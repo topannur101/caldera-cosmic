@@ -11,10 +11,11 @@ import psutil
 
 
 class OverviewTab:
-    def __init__(self, parent_frame, config_manager, command_manager):
+    def __init__(self, parent_frame, config_manager, command_manager, app_instance=None):
         self.frame = parent_frame
         self.config_manager = config_manager
         self.command_manager = command_manager
+        self.app_instance = app_instance
         
         # GUI elements
         self.summary_cards = {}
@@ -171,19 +172,18 @@ class OverviewTab:
         # System info labels (will be populated in refresh)
         self.system_info = {
             'current_time': ttk.Label(left_column, text="Waktu Saat Ini: Loading...", font=('TkDefaultFont', 9)),
-            'platform': ttk.Label(left_column, text="Platform: Loading...", font=('TkDefaultFont', 9)),
+            'system_uptime': ttk.Label(left_column, text="System Uptime: Loading...", font=('TkDefaultFont', 9)),
             'python_version': ttk.Label(left_column, text="Python: Loading...", font=('TkDefaultFont', 9)),
             'cpu_usage': ttk.Label(right_column, text="Penggunaan CPU: Loading...", font=('TkDefaultFont', 9)),
             'memory_usage': ttk.Label(right_column, text="Penggunaan Memory: Loading...", font=('TkDefaultFont', 9)),
-            'disk_usage': ttk.Label(right_column, text="Penggunaan Disk: Loading...", font=('TkDefaultFont', 9)),
-            'uptime': ttk.Label(right_column, text="System Uptime: Loading...", font=('TkDefaultFont', 9))
+            'disk_usage': ttk.Label(right_column, text="Penggunaan Disk: Loading...", font=('TkDefaultFont', 9))
         }
         
         # Pack labels
         for i, (key, label) in enumerate(self.system_info.items()):
-            if i < 3:  # Left column (current_time, platform, python_version)
+            if i < 3:  # Left column (current_time, app_uptime, system_uptime)
                 label.pack(anchor=tk.W, pady=2)
-            else:  # Right column (cpu_usage, memory_usage, disk_usage, uptime)
+            else:  # Right column (python_version, cpu_usage, memory_usage, disk_usage)
                 label.pack(anchor=tk.W, pady=2)
     
     def refresh(self):
@@ -277,7 +277,7 @@ class OverviewTab:
                 # Insert item
                 item_id = self.commands_summary.insert("", tk.END, values=(
                     command['name'],
-                    f"🟢 Berjalan" if status['status'] == 'running' else "🔴 Berhenti",
+                    "Berjalan" if status['status'] == 'running' else "Berhenti",
                     status.get('pid', 'N/A'),
                     uptime_text,
                     "Ya" if command.get('enabled', True) else "Tidak",
@@ -293,10 +293,6 @@ class OverviewTab:
             # Current time
             current_time = datetime.now().strftime("%A, %B %d, %Y - %I:%M %p")
             self.system_info['current_time'].config(text=f"Waktu Saat Ini: {current_time}")
-            
-            # Platform info
-            platform_info = f"{platform.system()} {platform.release()}"
-            self.system_info['platform'].config(text=f"Platform: {platform_info}")
             
             # Python version
             python_version = platform.python_version()
@@ -337,9 +333,9 @@ class OverviewTab:
                 else:
                     uptime_text = f"{hours} hours, {minutes} minutes"
                 
-                self.system_info['uptime'].config(text=f"Uptime: {uptime_text}")
+                self.system_info['system_uptime'].config(text=f"System Uptime: {uptime_text}")
             except:
-                self.system_info['uptime'].config(text="Uptime: N/A")
+                self.system_info['system_uptime'].config(text="System Uptime: N/A")
             
         except Exception as e:
             print(f"Error refreshing system info: {e}")
@@ -350,6 +346,15 @@ class OverviewTab:
     
     def _start_all_enabled(self):
         """Start all enabled commands that are not running"""
+        # Check if working directory is configured
+        if not self.config_manager.is_working_directory_configured():
+            messagebox.showerror(
+                "Direktori Kerja Diperlukan",
+                "Direktori kerja harus dikonfigurasi sebelum menjalankan perintah.\n\n"
+                "Silakan buka tab Konfigurasi dan pilih direktori kerja terlebih dahulu."
+            )
+            return
+        
         try:
             commands = self.config_manager.get_commands()
             started_count = 0
@@ -446,6 +451,15 @@ class OverviewTab:
                 else:
                     messagebox.showerror("Error", f"Gagal menghentikan perintah '{command_name}'.")
             else:
+                # Check if working directory is configured before starting
+                if not self.config_manager.is_working_directory_configured():
+                    messagebox.showerror(
+                        "Direktori Kerja Diperlukan",
+                        "Direktori kerja harus dikonfigurasi sebelum menjalankan perintah.\n\n"
+                        "Silakan buka tab Konfigurasi dan pilih direktori kerja terlebih dahulu."
+                    )
+                    return
+                
                 # Start the command
                 if self.command_manager.start_command(command_id):
                     messagebox.showinfo("Berhasil", f"Perintah '{command_name}' berhasil dijalankan.")

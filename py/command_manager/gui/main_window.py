@@ -18,10 +18,11 @@ from gui.logs_tab import LogsTab
 
 
 class MainWindow:
-    def __init__(self, root, config_manager, command_manager, on_close=None):
+    def __init__(self, root, config_manager, command_manager, app_instance=None, on_close=None):
         self.root = root
         self.config_manager = config_manager
         self.command_manager = command_manager
+        self.app_instance = app_instance
         self.on_close_callback = on_close
         
         # Tab management
@@ -151,7 +152,7 @@ class MainWindow:
         overview_frame = ttk.Frame(self.notebook)
         self.notebook.add(overview_frame, text="📊 Ringkasan")
         
-        overview_tab = OverviewTab(overview_frame, self.config_manager, self.command_manager)
+        overview_tab = OverviewTab(overview_frame, self.config_manager, self.command_manager, self.app_instance)
         self.tab_widgets['overview'] = overview_tab
     
     def _add_commands_tab(self):

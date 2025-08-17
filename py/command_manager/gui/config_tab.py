@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import re
 import sys
+import os
 from pathlib import Path
 
 # Add parent directory to path
@@ -33,6 +34,9 @@ class ConfigTab:
         
         # Load auto-start setting
         self._load_auto_start_setting()
+        
+        # Load working directory setting
+        self._load_working_directory_setting()
     
     def _setup_gui(self):
         """Setup the configuration tab GUI"""
@@ -108,31 +112,61 @@ class ConfigTab:
     
     
     def _create_import_export_section(self, parent):
-        """Create import/export section"""
+        """Create settings and import/export section"""
         ie_frame = ttk.Frame(parent)
         ie_frame.pack(fill=tk.X, pady=(15, 0))
         
-        # Left side - Import/Export buttons
+        # Left side - Settings (Working Directory and Auto-start)
         left_frame = ttk.Frame(ie_frame)
-        left_frame.pack(side=tk.LEFT)
+        left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(10, 25))
         
-        ttk.Button(left_frame, text="📁 Import Konfigurasi", 
-                  command=self._import_config).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(left_frame, text="💾 Export Konfigurasi", 
-                  command=self._export_config).pack(side=tk.LEFT)
+        # Working directory frame
+        wd_frame = ttk.Frame(left_frame)
+        wd_frame.pack(fill=tk.X, pady=(0, 10))
         
-        # Right side - Auto-start checkbox
-        right_frame = ttk.Frame(ie_frame)
-        right_frame.pack(side=tk.RIGHT)
+        ttk.Label(wd_frame, text="Direktori kerja:").pack(anchor=tk.W, pady=(0, 5))
         
+        # Entry with validation indicator
+        wd_input_frame = ttk.Frame(wd_frame)
+        wd_input_frame.pack(fill=tk.X)
+        
+        self.working_dir_var = tk.StringVar()
+        self.working_dir_entry = ttk.Entry(wd_input_frame, textvariable=self.working_dir_var, width=40)
+        self.working_dir_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
+        # Validation status indicator
+        self.working_dir_status_label = ttk.Label(wd_input_frame, text="", width=3)
+        self.working_dir_status_label.pack(side=tk.RIGHT, padx=(5, 0))
+        
+        # Status message label
+        self.working_dir_message_label = ttk.Label(wd_frame, text="", font=('TkDefaultFont', 8))
+        self.working_dir_message_label.pack(anchor=tk.W, pady=(2, 0))
+        
+        # Bind click event to open folder selection
+        self.working_dir_entry.bind("<Button-1>", self._on_working_dir_click)
+        # Bind variable change to validate
+        self.working_dir_var.trace_add("write", self._on_working_dir_changed)
+        # Add flag to prevent multiple dialogs
+        self._dialog_open = False
+        
+        # Auto-start checkbox
         self.auto_start_var = tk.BooleanVar()
         self.auto_start_check = ttk.Checkbutton(
-            right_frame, 
+            left_frame, 
             text="Jalankan semua perintah ketika aplikasi dijalankan",
             variable=self.auto_start_var,
             command=self._on_auto_start_changed
         )
-        self.auto_start_check.pack(side=tk.RIGHT)
+        self.auto_start_check.pack(anchor=tk.W, pady=(5, 0))
+        
+        # Right side - Import/Export buttons (vertical layout)
+        right_frame = ttk.Frame(ie_frame)
+        right_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=(25, 10))
+        
+        ttk.Button(right_frame, text="📁 Impor Konfigurasi", 
+                  command=self._import_config).pack(fill=tk.X, pady=(0, 5))
+        ttk.Button(right_frame, text="💾 Ekspor Konfigurasi", 
+                  command=self._export_config).pack(fill=tk.X)
     
     def _get_selected_command_id(self):
         """Get the selected command ID"""
@@ -267,6 +301,81 @@ class ConfigTab:
         
         if self.on_change_callback:
             self.on_change_callback()
+    
+    def _load_working_directory_setting(self):
+        """Load working directory setting from config"""
+        working_dir = self.config_manager.get_working_directory()
+        self.working_dir_var.set(working_dir)
+        # Validate immediately after loading
+        self._validate_working_directory_display()
+    
+    def _on_working_dir_click(self, event=None):
+        """Handle click on working directory entry - open folder selection"""
+        # Prevent multiple dialogs
+        if self._dialog_open:
+            return
+        
+        self._dialog_open = True
+        try:
+            self._select_working_directory()
+        finally:
+            self._dialog_open = False
+    
+    def _select_working_directory(self):
+        """Select and save working directory"""
+        current_dir = self.working_dir_var.get() or "."
+        directory = filedialog.askdirectory(
+            title="Pilih Direktori Kerja",
+            initialdir=current_dir
+        )
+        
+        if directory:
+            # Update the entry field
+            self.working_dir_var.set(directory)
+            
+            # Validate before saving
+            if not self.config_manager.validate_working_directory(directory):
+                messagebox.showwarning("Peringatan", 
+                    f"Direktori yang dipilih tidak valid atau tidak dapat diakses:\n{directory}")
+                return
+            
+            # Automatically save the setting
+            if self.config_manager.set_working_directory(directory):
+                if self.on_change_callback:
+                    self.on_change_callback()
+                self._validate_working_directory_display()
+            else:
+                messagebox.showerror("Error", "Gagal menyimpan direktori kerja.")
+    
+    def _on_working_dir_changed(self, *args):
+        """Handle working directory variable change"""
+        # Update validation display when the variable changes
+        self._validate_working_directory_display()
+    
+    def _validate_working_directory_display(self):
+        """Update the visual validation display for working directory"""
+        try:
+            is_valid, message = self.config_manager.validate_current_working_directory()
+            
+            if is_valid:
+                self.working_dir_status_label.config(text="✓", foreground="green")
+                self.working_dir_message_label.config(text=message, foreground="green")
+            else:
+                # Check if directory is not configured at all
+                configured_dir = self.config_manager.get_working_directory()
+                if not configured_dir:
+                    self.working_dir_status_label.config(text="❗", foreground="red")
+                    self.working_dir_message_label.config(
+                        text="DIPERLUKAN: Pilih direktori kerja untuk menjalankan perintah", 
+                        foreground="red"
+                    )
+                else:
+                    self.working_dir_status_label.config(text="⚠", foreground="orange")
+                    self.working_dir_message_label.config(text=message, foreground="orange")
+                
+        except Exception as e:
+            self.working_dir_status_label.config(text="✗", foreground="red")
+            self.working_dir_message_label.config(text=f"Validation error: {e}", foreground="red")
     
     def cleanup(self):
         """Cleanup resources"""

@@ -102,15 +102,44 @@ class CommandManager:
             # Split command for subprocess
             cmd_parts = command.split()
             
+            # Get explicitly configured working directory (no fallbacks)
+            working_dir = self.config_manager.get_configured_working_directory()
+            
+            # Require explicit working directory configuration
+            if not working_dir:
+                error_msg = "Working directory must be explicitly configured before starting commands. Please set it in the Configuration tab."
+                self.logger.error(error_msg)
+                command_logger.error(error_msg)
+                return False
+            
+            self.logger.info(f"Using working directory: {working_dir}")
+            command_logger.info(f"Using working directory: {working_dir}")
+            
+            # Verify we can access the working directory
+            try:
+                os.chdir(working_dir)
+                os.chdir(os.getcwd())  # Change back to current directory
+            except (OSError, PermissionError) as e:
+                error_msg = f"Cannot access working directory {working_dir}: {e}"
+                self.logger.error(error_msg)
+                command_logger.error(error_msg)
+                return False
+            
+            # Prepare subprocess arguments
+            popen_kwargs = {
+                'stdout': subprocess.PIPE,
+                'stderr': subprocess.STDOUT,
+                'universal_newlines': True,
+                'bufsize': 1,
+                'cwd': working_dir
+            }
+            
+            # Hide console window on Windows
+            if os.name == 'nt':  # Windows
+                popen_kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
+            
             # Start process
-            process = subprocess.Popen(
-                cmd_parts,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-                bufsize=1,
-                cwd=os.getcwd()  # Use current working directory (Laravel root)
-            )
+            process = subprocess.Popen(cmd_parts, **popen_kwargs)
             
             # Store process information
             self.running_processes[command_id] = {
@@ -197,6 +226,33 @@ class CommandManager:
         command_ids = list(self.running_processes.keys())
         for command_id in command_ids:
             self.stop_command(command_id)
+    
+    def validate_working_directory_for_operation(self) -> tuple[bool, str]:
+        """Validate working directory before any operation"""
+        return self.config_manager.validate_current_working_directory()
+    
+    def start_multiple_commands(self, command_ids: List[str]) -> Dict[str, bool]:
+        """Start multiple commands with working directory validation"""
+        results = {}
+        
+        # Check if working directory is configured before starting any commands
+        if not self.config_manager.is_working_directory_configured():
+            error_msg = "Working directory must be explicitly configured before starting commands. Please set it in the Configuration tab."
+            self.logger.error(error_msg)
+            # Mark all commands as failed
+            for command_id in command_ids:
+                results[command_id] = False
+            return results
+        
+        # Start each command
+        for command_id in command_ids:
+            try:
+                results[command_id] = self.start_command(command_id)
+            except Exception as e:
+                self.logger.error(f"Failed to start command {command_id}: {e}")
+                results[command_id] = False
+        
+        return results
     
     def get_command_status(self, command_id: str) -> Dict[str, Any]:
         """Get status of a command"""

@@ -42,5 +42,5 @@ yarn-error.log
 /py/command_manager/build/*
 /py/command_manager/dist/*
 /py/command_manager/logs/*
-/py/command_manager/gui/__pycache__/*
+/py/command_manager/gui/__pycache__
 
