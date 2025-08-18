@@ -121,17 +121,11 @@ class MainWindow:
         controls_frame = ttk.Frame(toolbar_frame)
         controls_frame.pack(side=tk.RIGHT)
         
-        ttk.Button(controls_frame, text="Keluar", 
-                  command=self._exit_application).pack(side=tk.RIGHT, padx=(5, 0))
-        
         ttk.Button(controls_frame, text="Tentang", 
                   command=self._show_about_dialog).pack(side=tk.RIGHT, padx=(5, 0))
         
         ttk.Button(controls_frame, text="Refresh", 
                   command=self._refresh_all_tabs).pack(side=tk.RIGHT, padx=(5, 0))
-        
-        ttk.Button(controls_frame, text="Sembunyikan", 
-                  command=self._hide_to_tray).pack(side=tk.RIGHT, padx=(5, 0))
     
     def _load_tabs(self):
         """Load all tabs"""
@@ -230,33 +224,11 @@ class MainWindow:
         # Schedule next refresh
         self.root.after(5000, self._auto_refresh)  # 5 seconds
     
-    def _hide_to_tray(self):
-        """Hide window to system tray"""
-        if self.on_close_callback:
-            self.on_close_callback()
-    
-    def _exit_application(self):
-        """Exit application with confirmation"""
-        # Show confirmation dialog
-        result = messagebox.askyesno(
-            "Konfirmasi Keluar",
-            "Semua perintah akan dihentikan. Yakin ingin keluar?",
-            icon='question'
-        )
-        
-        if result:
-            # Stop all running commands
-            self.command_manager.stop_all_commands()
-            
-            # Close the application
-            self.cleanup()
-            self.root.quit()
-            self.root.destroy()
     
     def _on_window_close(self):
         """Handle window close event"""
         if self.on_close_callback:
-            # Let the callback handle the close
+            # Let the callback handle the close (which includes confirmation)
             result = self.on_close_callback()
             if result is False:
                 return  # Prevent default close

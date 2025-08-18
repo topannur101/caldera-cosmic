@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caldera Documentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid rgb(119, 94, 150);
+            padding-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: rgb(119, 94, 150);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-style: italic;
+            color: #666;
+        }
+        
+        .toc {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .toc h2 {
+            color: rgb(119, 94, 150);
+            margin-top: 0;
+            font-size: 1.4em;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin-bottom: 8px;
+        }
+        
+        .toc a {
+            color: #333333;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .toc a:hover {
+            background-color: rgba(119, 94, 150, 0.1);
+            color: rgb(119, 94, 150);
+        }
+        
+        .section {
+            margin-bottom: 50px;
+            page-break-inside: avoid;
+        }
+        
+        .section h2 {
+            color: rgb(119, 94, 150);
+            font-size: 1.8em;
+            border-bottom: 2px solid rgb(119, 94, 150);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .section h3 {
+            color: #333333;
+            font-size: 1.3em;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .section h4 {
+            color: rgb(119, 94, 150);
+            font-size: 1.1em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .command-box {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Consolas', monospace;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        
+        .note-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .note-box strong {
+            color: rgb(119, 94, 150);
+        }
+        
+        .workflow-step {
+            background-color: #e8f4fd;
+            border-left: 4px solid #0984e3;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .workflow-step h4 {
+            margin-top: 0;
+            color: #0984e3;
+        }
+        
+        ul, ol {
+            padding-left: 25px;
+        }
+        
+        li {
+            margin-bottom: 5px;
+        }
+        
+        code {
+            background-color: #f1f3f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+        }
+        
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .architecture-card {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .architecture-card h4 {
+            color: rgb(119, 94, 150);
+            margin-top: 0;
+        }
+        
+        .workflow-diagram {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .workflow-diagram svg {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        @media print {
+            body {
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+            
+            .toc {
+                page-break-after: always;
+            }
+            
+            .section {
+                page-break-before: auto;
+                page-break-after: auto;
+            }
+            
+            .section h2 {
+                page-break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Caldera System Documentation</h1>
+        <p>Comprehensive guide for working with the Caldera manufacturing insights platform</p>
+    </div>
+
+    <div class="toc">
+        <h2>Table of Contents</h2>
+        <ul>
+            <li><a href="#infrastructure">1. Infrastructure & System Requirements</a>
+                <ul style="padding-left: 20px; margin-top: 5px;">
+                    <li><a href="#laragon">1.1 Laragon Environment</a></li>
+                    <li><a href="#ccm">1.2 Caldera Command Manager (CCM)</a></li>
+                    <li><a href="#services">1.3 Core Services</a></li>
+                    <li><a href="#scheduled-tasks">1.4 Scheduled Tasks</a></li>
+                </ul>
+            </li>
+            <li><a href="#project-structure">2. Project Structure & Architecture</a>
+                <ul style="padding-left: 20px; margin-top: 5px;">
+                    <li><a href="#framework">2.1 Framework & Stack</a></li>
+                    <li><a href="#modules">2.2 Core Application Modules</a></li>
+                    <li><a href="#database">2.3 Database Architecture</a></li>
+                    <li><a href="#directories">2.4 Directory Structure</a></li>
+                </ul>
+            </li>
+            <li><a href="#deployment">3. Server Deployment & Code Changes</a>
+                <ul style="padding-left: 20px; margin-top: 5px;">
+                    <li><a href="#current-workflow">3.1 Current Deployment Workflow</a></li>
+                    <li><a href="#commands">3.2 Deployment Commands</a></li>
+                    <li><a href="#future-workflow">3.3 Future Simplified Workflow</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="section" id="infrastructure">
+        <h2>1. Infrastructure & System Requirements</h2>
+        
+        <h3 id="laragon">1.1 Laragon Environment</h3>
+        <p>Caldera runs on <strong>Laragon</strong>, a portable development environment for Windows that provides a complete web development stack.</p>
+        
+        <h4>Laragon Components (must be started):</h4>
+        <ul>
+            <li><strong>Apache Web Server</strong> - Hosts the Laravel application</li>
+            <li><strong>MySQL Database Server</strong> - Stores all application data</li>
+            <li><strong>PHP 8.2+</strong> - Runtime environment for Laravel</li>
+        </ul>
+        
+        <div class="note-box">
+            <strong>Important:</strong> Both Apache and MySQL are integrated components within Laragon and must be started through the Laragon control panel before running Caldera.
+        </div>
+
+        <h3 id="ccm">1.2 Caldera Command Manager (CCM)</h3>
+        <p>The Caldera Command Manager is a Python-based GUI application that manages and monitors the essential background services required for Caldera's operation.</p>
+        
+        <h4>CCM Features:</h4>
+        <ul>
+            <li>Automated service management and monitoring</li>
+            <li>Real-time log viewing and analysis</li>
+            <li>Service status monitoring with automatic restart capabilities</li>
+            <li>Configuration management through GUI interface</li>
+        </ul>
+        
+        <h4>CCM Location:</h4>
+        <div class="command-box">py/command_manager/dist/ccm_v1.0/ccm.exe</div>
+        
+        <h4>CCM Management Options:</h4>
+        <ul>
+            <li><strong>Standalone Application:</strong> Run the CCM executable directly</li>
+            <li><strong>Web Interface:</strong> Access through Caldera interface at Account Menu > Administration > Manage Daemons (superuser only)</li>
+        </ul>
+
+        <h3 id="services">1.3 Core Services</h3>
+        <p>CCM manages these critical background services that must run continuously:</p>
+        
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4>Queue Worker</h4>
+                <div class="command-box">php artisan queue:work</div>
+                <p>Processes background jobs and queued tasks essential for data processing and notifications.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Schedule Worker</h4>
+                <div class="command-box">php artisan schedule:work</div>
+                <p>Executes scheduled tasks including data cleanup, calculations, and automated routines.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>CLM Polling (InsClmPoll)</h4>
+                <div class="command-box">php artisan app:ins-clm-poll --d</div>
+                <p>Climate monitoring polling daemon that collects environmental data from production areas.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>CTC Polling (InsCtcPoll)</h4>
+                <div class="command-box">php artisan app:ins-ctc-poll --d</div>
+                <p>Calendar thickness control polling daemon for rubber calendering process monitoring.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>STC Routine (InsStcRoutine)</h4>
+                <div class="command-box">php artisan app:ins-stc-routine --d</div>
+                <p>Stabilization temperature control routine daemon for environmental monitoring in stabilization chambers.</p>
+            </div>
+        </div>
+        
+        <h3 id="scheduled-tasks">1.4 Scheduled Tasks</h3>
+        <p>The Laravel scheduler runs automated tasks at specified intervals. These are defined in <code>routes/console.php</code>:</p>
+        
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4>OMV Cleanup (Daily)</h4>
+                <div class="command-box">php artisan app:ins-omv-cleanup</div>
+                <p>Cleans up old OMV (Open Mill Validation) data and temporary files to maintain database performance.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Inventory Empty Resolution (Daily)</h4>
+                <div class="command-box">php artisan app:inv-empty-resolved</div>
+                <p>Resolves empty inventory items and processes pending stock adjustments.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>User Preferences Sync (Every 5 Minutes)</h4>
+                <div class="command-box">php artisan app:sync-user-prefs</div>
+                <p>Synchronizes user preferences across sessions and maintains user setting consistency.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="project-structure">
+        <h2>2. Project Structure & Architecture</h2>
+        
+        <h3 id="framework">2.1 Framework & Stack</h3>
+        <ul>
+            <li><strong>Laravel 12</strong> with PHP 8.2+ - Core framework</li>
+            <li><strong>Livewire Volt</strong> - Reactive UI components (no traditional controllers)</li>
+            <li><strong>MySQL</strong> - Primary database with extensive migrations</li>
+            <li><strong>Vite</strong> - Asset bundling with TailwindCSS</li>
+            <li><strong>Chart.js</strong> - Data visualization</li>
+            <li><strong>Lucide</strong> - Icon library for consistent UI iconography</li>
+            <li><strong>Modbus TCP client</strong> - Industrial equipment integration</li>
+        </ul>
+
+        <h3 id="modules">2.2 Core Application Modules</h3>
+        
+        <h4>Insights System (Manufacturing Monitoring)</h4>
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4>OMV (Open Mill Validation)</h4>
+                <p>Rubber mixing process monitoring with recipe management, real-time amperage tracking, and energy calculations.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>CTC (Calendar Thickness Control)</h4>
+                <p>Thickness monitoring for rubber calendering with machine performance analytics.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>STC (Stabilization Temperature Control)</h4>
+                <p>Environmental monitoring for temperature and humidity in stabilization chambers.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>RDC (Rheometer Data Collection)</h4>
+                <p>Automated rheometer testing with TC10/TC90 analysis for rubber quality control.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>LDC (Leather Data Collection)</h4>
+                <p>Hide/leather quality inspection system with worker performance tracking.</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>CLM (Climate Monitoring)</h4>
+                <p>Environmental monitoring across production areas for optimal manufacturing conditions.</p>
+            </div>
+        </div>
+        
+        <h4>Inventory Management System</h4>
+        <ul>
+            <li>Multi-unit stock management with automatic conversions</li>
+            <li>Area-based authorization system</li>
+            <li>Circulation workflow (deposit/withdrawal) with approval processes</li>
+            <li>Multi-currency support with automatic calculations</li>
+            <li>Advanced analytics including stock aging and predictive reordering</li>
+        </ul>
+        
+        <h4>Notification System</h4>
+        <p>Built-in notification system for feature announcements and user communication:</p>
+        <ul>
+            <li><strong>Database-driven notifications</strong> stored in the notifications table</li>
+            <li><strong>Feature announcements</strong> via <code>FeatureAnnounce</code> artisan command</li>
+            <li><strong>User targeting options</strong>: superuser, active users, recent users, inventory users</li>
+            <li><strong>Rich content support</strong> with icons (using Lucide icon library), content text, and clickable URLs</li>
+            <li><strong>Announcement posts</strong> for detailed feature explanations with images</li>
+        </ul>
+        
+        <h4>Sending Notifications</h4>
+        <div class="command-box">php artisan app:feature-announce</div>
+        <p>Interactive command that allows you to:</p>
+        <ul>
+            <li>Select from predefined feature announcements</li>
+            <li>Choose target user groups (superuser, active users, recent users, etc.)</li>
+            <li>Preview notification content before sending</li>
+            <li>Automatically create announcement posts for detailed content</li>
+        </ul>
+        
+
+        <h3 id="database">2.3 Database Architecture</h3>
+        <ul>
+            <li><strong>Migration-driven development</strong> with extensive migration files</li>
+            <li><strong>Prefixed table naming:</strong> <code>ins_*</code> (insights), <code>inv_*</code> (inventory)</li>
+            <li><strong>Timestamps</strong> on most entities for audit tracking</li>
+            <li><strong>JSON columns</strong> for flexible data storage (compositions, preferences)</li>
+            <li><strong>Authorization models</strong> (<code>*Auth</code>) for granular permission control</li>
+        </ul>
+
+        <h3 id="directories">2.4 Key Directory Structure</h3>
+        <div class="command-box">
+app/
+├── Console/Commands/     # Artisan commands for data processing
+├── Models/              # Eloquent models for database entities
+├── Livewire/           # Livewire Volt components (UI logic)
+├── Http/Controllers/   # Minimal controllers (mostly API)
+├── Policies/          # Authorization policies
+└── Services/          # Business logic services
+
+resources/views/livewire/  # Livewire Volt component views
+├── insights/             # Manufacturing monitoring interfaces
+├── inventory/           # Inventory management interfaces
+└── layout/             # Shared layout components
+
+py/                    # Python integration scripts
+├── command_manager/   # CCM application
+├── omv-worker/       # OMV data processing
+└── ldc-worker/       # LDC image processing
+
+database/migrations/   # Database structure definitions
+        </div>
+    </div>
+
+    <div class="section" id="deployment">
+        <h2>3. Server Deployment & Code Changes</h2>
+        
+        <h3 id="current-workflow">3.1 Current Deployment Workflow</h3>
+        <p>Since the Caldera server is not connected to the internet, code changes must go through an intermediate PC. The workflow involves three main steps:</p>
+        
+        <div class="workflow-diagram">
+            <svg width="800" height="200" viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Local PC -->
+                <rect x="10" y="50" width="120" height="60" rx="8" fill="#e8f4fd" stroke="rgb(119, 94, 150)" stroke-width="2"/>
+                <text x="70" y="75" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Your PC</text>
+                <text x="70" y="90" text-anchor="middle" font-family="Arial" font-size="10">Local Repository</text>
+                
+                <!-- Arrow A -->
+                <path d="M 140 80 L 180 80" stroke="rgb(119, 94, 150)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                <text x="160" y="75" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">A</text>
+                
+                <!-- GitHub -->
+                <rect x="190" y="50" width="120" height="60" rx="8" fill="#f8f9fa" stroke="rgb(119, 94, 150)" stroke-width="2"/>
+                <text x="250" y="75" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">GitHub</text>
+                <text x="250" y="90" text-anchor="middle" font-family="Arial" font-size="10">Central Repository</text>
+                
+                <!-- Arrow B -->
+                <path d="M 320 80 L 360 80" stroke="rgb(119, 94, 150)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                <text x="340" y="75" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">B</text>
+                
+                <!-- Pak Khafit PC -->
+                <rect x="370" y="50" width="150" height="60" rx="8" fill="#fff3cd" stroke="rgb(119, 94, 150)" stroke-width="2"/>
+                <text x="445" y="70" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Pak Khafit PC</text>
+                <text x="445" y="85" text-anchor="middle" font-family="Arial" font-size="10">172.70.66.102</text>
+                <text x="445" y="95" text-anchor="middle" font-family="Arial" font-size="9">Shared Folder</text>
+                
+                <!-- Arrow C -->
+                <path d="M 530 80 L 570 80" stroke="rgb(119, 94, 150)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                <text x="550" y="75" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">C</text>
+                
+                <!-- Caldera Server -->
+                <rect x="580" y="50" width="150" height="60" rx="8" fill="#d4edda" stroke="rgb(119, 94, 150)" stroke-width="2"/>
+                <text x="655" y="75" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Caldera Server</text>
+                <text x="655" y="90" text-anchor="middle" font-family="Arial" font-size="10">Production Environment</text>
+                
+                <!-- Arrow marker definition -->
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="rgb(119, 94, 150)"/>
+                    </marker>
+                </defs>
+                
+                <!-- Labels -->
+                <text x="70" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#666">Development</text>
+                <text x="250" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#666">Version Control</text>
+                <text x="445" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#666">Internet Bridge</text>
+                <text x="655" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#666">No Internet Access</text>
+            </svg>
+        </div>
+        
+        <ul>
+            <li><strong>Step A:</strong> Local Development to GitHub - Develop and push changes from your PC to the central repository</li>
+            <li><strong>Step B:</strong> GitHub to Pak Khafit PC - Pull latest changes to the shared folder (172.70.66.102/mm/TIM DGT/_Repos/caldera-cosmic)</li>
+            <li><strong>Step C:</strong> Pak Khafit PC to Caldera Server - Deploy changes and update the production environment</li>
+        </ul>
+
+        <h3 id="commands">3.2 Deployment Commands</h3>
+        
+        <h4>Step A Commands (Local to GitHub):</h4>
+        <div class="command-box">
+git add .
+git commit -m "Your commit message"
+git push origin main
+        </div>
+        
+        <h4>Step B Commands (GitHub to Pak Khafit PC):</h4>
+        <div class="command-box">
+git pull origin main
+        </div>
+        
+        <h4>Step C Commands (Pak Khafit PC to Caldera Server):</h4>
+        <div class="command-box">
+git pull mm main
+php artisan config:cache
+php artisan route:cache
+npm run build
+php artisan migrate:status
+        </div>
+        
+        <div class="note-box">
+            <strong>Important:</strong> Always check <code>php artisan migrate:status</code> to ensure all database migrations have been applied successfully. Run <code>php artisan migrate</code> if there are pending migrations.
+        </div>
+
+        <h3 id="future-workflow">3.3 Future Simplified Workflow</h3>
+        <p>If the Caldera server gains internet connectivity in the future, the deployment process can be simplified to a direct two-step workflow:</p>
+        
+        <div class="workflow-diagram">
+            <svg width="600" height="200" viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Local PC -->
+                <rect x="50" y="50" width="120" height="60" rx="8" fill="#e8f4fd" stroke="rgb(119, 94, 150)" stroke-width="2"/>
+                <text x="110" y="75" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Your PC</text>
+                <text x="110" y="90" text-anchor="middle" font-family="Arial" font-size="10">Local Repository</text>
+                
+                <!-- Arrow 1 -->
+                <path d="M 180 80 L 230 80" stroke="rgb(119, 94, 150)" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                <text x="205" y="75" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">1</text>
+                
+                <!-- GitHub -->
+                <rect x="240" y="50" width="120" height="60" rx="8" fill="#f8f9fa" stroke="rgb(119, 94, 150)" stroke-width="2"/>
+                <text x="300" y="75" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">GitHub</text>
+                <text x="300" y="90" text-anchor="middle" font-family="Arial" font-size="10">Central Repository</text>
+                
+                <!-- Arrow 2 -->
+                <path d="M 370 80 L 420 80" stroke="rgb(119, 94, 150)" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                <text x="395" y="75" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">2</text>
+                
+                <!-- Caldera Server -->
+                <rect x="430" y="50" width="150" height="60" rx="8" fill="#d4edda" stroke="rgb(119, 94, 150)" stroke-width="2"/>
+                <text x="505" y="70" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Caldera Server</text>
+                <text x="505" y="85" text-anchor="middle" font-family="Arial" font-size="10">Production Environment</text>
+                <text x="505" y="95" text-anchor="middle" font-family="Arial" font-size="9">With Internet Access</text>
+                
+                <!-- Arrow marker definition -->
+                <defs>
+                    <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="rgb(119, 94, 150)"/>
+                    </marker>
+                </defs>
+                
+                <!-- Labels -->
+                <text x="110" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#666">Development</text>
+                <text x="300" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#666">Version Control</text>
+                <text x="505" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#666">Direct Deployment</text>
+                
+                <!-- Simplified badge -->
+                <rect x="220" y="10" width="160" height="25" rx="12" fill="rgb(119, 94, 150)" opacity="0.1"/>
+                <text x="300" y="26" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="rgb(119, 94, 150)">SIMPLIFIED WORKFLOW</text>
+            </svg>
+        </div>
+        
+        <div class="workflow-step">
+            <h4>Future Step 1: Local to GitHub</h4>
+            <div class="command-box">
+git add .
+git commit -m "Your commit message"
+git push origin main
+            </div>
+        </div>
+        
+        <div class="workflow-step">
+            <h4>Future Step 2: GitHub to Caldera Server (Direct)</h4>
+            <div class="command-box">
+git pull origin main
+php artisan config:cache
+php artisan route:cache
+npm run build
+php artisan migrate:status
+            </div>
+        </div>
+        
+        <div class="note-box">
+            <strong>Future Consideration:</strong> Direct internet connectivity will eliminate the need for the intermediate PC (Pak Khafit PC) and allow for more streamlined deployment processes, potentially including automated CI/CD pipelines.
+        </div>
+    </div>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Add print functionality
+        function printDoc() {
+            window.print();
+        }
+        
+        // Add print button to header
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('.header');
+            const printBtn = document.createElement('button');
+            printBtn.innerHTML = 'Print Documentation';
+            printBtn.style.cssText = `
+                background-color: rgb(119, 94, 150);
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-top: 10px;
+                font-family: Arial, sans-serif;
+            `;
+            printBtn.onclick = printDoc;
+            header.appendChild(printBtn);
+        });
+    </script>
+</body>
+</html>

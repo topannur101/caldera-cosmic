@@ -3,9 +3,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('icon.ico', '.'),  # Include icon.ico file in the bundle
-    ],
+    datas=[],
     hiddenimports=['flask'],
     hookspath=[],
     hooksconfig={},
