@@ -21,6 +21,7 @@ class extends Component {
             'summary'               => __('Ringkasan'),
             // 'summary-operational'   => __('Ringkasan operasional'),
             'readings'              => __('Pembacaan'),   
+            'adjustments'           => __('Penyetelan'),
             'history'               => __('Riwayat'), 
             'comparison'            => __('Perbandingan'),
             'machine-performance'   => __('Performa mesin'),
@@ -35,6 +36,7 @@ class extends Component {
             'summary'               => 'icon-layout-grid',
             // 'summary-operational'   => 'icon-settings',
             'readings'              => 'icon-credit-card',
+            'adjustments'           => 'icon-settings-2',
             'history'               => 'icon-clock',
             'comparison'            => 'icon-git-compare',
             'machine-performance'   => 'icon-zap',
@@ -108,6 +110,10 @@ class extends Component {
                 
             @case('readings')
             <livewire:insights.stc.data.readings />                       
+                @break
+
+            @case('adjustments')
+            <livewire:insights.stc.data.adjustments />                       
                 @break
 
             @case('history')

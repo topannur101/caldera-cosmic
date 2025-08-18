@@ -153,6 +153,7 @@ Route::prefix('insights')->group(function () {
         Volt::route('/stc/manage/machines',         'insights.stc.manage.machines')  ->name('manage.machines');
         Volt::route('/stc/manage/devices',          'insights.stc.manage.devices')   ->name('manage.devices');
         Volt::route('/stc/manage',                  'insights.stc.manage.index')     ->name('manage.index');
+        Volt::route('/stc/data/adjustments',        'insights.stc.data.adjustments') ->name('data.adjustments');
         Volt::route('/stc/data',                    'insights.stc.data.index')       ->name('data.index');
         Volt::route('/stc/create',                  'insights.stc.create.index')     ->name('create.index');
         Route::get('/stc', function () {
