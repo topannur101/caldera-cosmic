@@ -556,15 +556,23 @@ class InsStcRoutine extends Command
         try {
             $push = new InsStcPush;
 
-            // Send SV values to machine (same logic as existing system)
-            $result = $push->send(
-                $position.'_sv_w',
+            // First send the SV values using section_svp
+            $result1 = $push->send(
+                'section_svp',
                 $machine->ip_address,
                 $position,
                 $adjusted_sv
             );
 
-            return $result;
+            // Then apply the SV write using apply_svw
+            $result2 = $push->send(
+                'apply_svw',
+                $machine->ip_address,
+                $position,
+                [true]
+            );
+
+            return $result1 && $result2;
 
         } catch (\Exception $e) {
             if ($this->option('d')) {
