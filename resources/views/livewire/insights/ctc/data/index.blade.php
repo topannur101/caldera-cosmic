@@ -58,7 +58,7 @@ class extends Component {
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     
     <div wire:key="ctc-data-nav" class="flex px-8 mb-6">
-        <x-dropdown align="left">
+        <x-dropdown align="left" width="60">
             <x-slot name="trigger">
                 <x-text-button type="button" class="flex gap-2 items-center ml-1">
                     <i class="{{ $this->getViewIcon() }}"></i>

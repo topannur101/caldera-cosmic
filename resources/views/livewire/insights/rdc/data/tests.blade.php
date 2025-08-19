@@ -25,9 +25,6 @@ new class extends Component {
     public $machine_id;
 
     #[Url]
-    public $team;
-
-    #[Url]
     public $mcs;
 
     #[Url]
@@ -40,7 +37,6 @@ new class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $this->team = trim($this->team);
         $this->mcs = trim($this->mcs);
 
         $query = InsRdcTest::join('ins_rubber_batches', 'ins_rdc_tests.ins_rubber_batch_id', '=', 'ins_rubber_batches.id')
@@ -64,11 +60,6 @@ new class extends Component {
             if ($this->machine_id)
             {
                 $query->where('ins_rdc_tests.ins_rdc_machine_id', $this->machine_id);
-            }
-
-            if ($this->team)
-            {
-                $query->where('ins_rdc_tests.team', $this->team);
             }
 
             if ($this->mcs)
@@ -124,7 +115,7 @@ new class extends Component {
         ];
 
         $columns = [
-            __('Diperbarui'), __('Kode'), __('Kode alternatif'), __('Model'), __('Warna'), __('MCS'), __('Hasil'), __('Mesin'), __('Tim'), __('Tag'), __('Nama'), __('Waktu antri')
+            __('Diperbarui'), __('Kode'), __('Kode alternatif'), __('Model'), __('Warna'), __('MCS'), __('Hasil'), __('Mesin'), __('Tag'), __('Nama'), __('Waktu antri')
         ];
 
         $callback = function () use ($columns) {
@@ -142,7 +133,6 @@ new class extends Component {
                         $test->batch_mcs ?? '-',
                         $test->evalHuman(),
                         $test->machine_number,
-                        $test->team ?? '-',
                         $test->tag,
                         $test->user_name,
                         $test->test_queued_at,
@@ -203,23 +193,13 @@ new class extends Component {
             <div class="grid grid-cols-2 lg:flex gap-3">
                 <div>
                     <label for="tests-machine"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin') }}</label>
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MC') }}</label>
                     <x-select class="w-full lg:w-auto" id="tests-machine" wire:model.live="machine_id">
                         <option value=""></option>
                         @foreach($machines as $machine)
                         <option value="{{ $machine->id }}">{{ $machine->number }}</option>
                         @endforeach
                     </x-select>
-                </div>
-                <div class="w-full lg:w-28">
-                    <label for="tests-team"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Tim') }}</label>
-                    <x-text-input id="tests-team" wire:model.live="team" type="text" list="tests-teams" />
-                    <datalist id="tests-teams">
-                        <option value="A"></option>
-                        <option value="B"></option>
-                        <option value="C"></option>
-                    </datalist>
                 </div>
                 <div class="w-full lg:w-28">
                     <label for="tests-mcs"

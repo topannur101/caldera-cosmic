@@ -25,7 +25,7 @@ class InsStcRoutine extends Command
      *
      * @var string
      */
-    protected $description = 'Adjust STC machine SV values based on ambient temperature changes from baseline';
+    protected $description = 'Adjust STC machine SV values based on ambient temperature changes from baseline (fixed n+1 reference drift)';
 
     // Configuration - same timing as InsClmPoll
     protected $ambient_machine_id = 7;      // ID 7 = Chamber Line 6 (ambient sensor)
@@ -103,19 +103,35 @@ class InsStcRoutine extends Command
     /**
      * Write log entry for adjustments
      */
-    public function writeAdjustmentLog($d_sum, $machine, $position, $current_temp, $delta_temp, $applied, $reason, $sv_before = [], $sv_after = [])
+    public function writeAdjustmentLog($d_sum, $machine, $position, $current_temp, $delta_temp, $applied, $reason, $sv_before = [], $sv_after = [], $reference_info = null)
     {
         $timestamp = Carbon::now();
 
         $status = $applied ? 'APPLIED' : (str_contains($reason, 'DRY RUN') ? 'DRY_RUN' : 'FAILED');
 
+        // Build reference info string
+        $reference_str = 'Unknown Reference';
+        if ($reference_info) {
+            $ref_source = ucfirst($reference_info['source']);
+            $ref_timestamp = $reference_info['timestamp']->format('H:i:s');
+            $ref_id = $reference_info['id'];
+            $reference_str = sprintf('Reference: %.1f°C (%s ID:%d @ %s)', 
+                $current_temp - $delta_temp, 
+                $ref_source, 
+                $ref_id, 
+                $ref_timestamp
+            );
+        } else {
+            $reference_str = sprintf('Reference: %.1f°C (Legacy baseline)', $current_temp - $delta_temp);
+        }
+
         $log_entry = sprintf(
-            "[%s] %s - %s %s - Baseline: %.1f°C, Current: %.1f°C, Delta: %+.1f°C - D_Sum ID: %d - %s\n",
+            "[%s] %s - %s %s - %s, Current: %.1f°C, Delta: %+.1f°C - D_Sum ID: %d - %s\n",
             $timestamp->format('Y-m-d H:i:s'),
             $status,
             $machine->line,
             strtoupper($position),
-            $current_temp - $delta_temp, // baseline
+            $reference_str,
             $current_temp,
             $delta_temp,
             $d_sum->id,
@@ -354,6 +370,82 @@ class InsStcRoutine extends Command
     }
 
     /**
+     * Get the latest ambient temperature from either InsStcAdjust or InsStcDSum records within the specified time window
+     * 
+     * @param int $machine_id
+     * @param string $position
+     * @param int $hours_back How many hours back to look (default: 1)
+     * @return array|null Returns ['temp' => float, 'source' => string, 'timestamp' => Carbon] or null if not found
+     */
+    public function getLatestAmbientTemperature($machine_id, $position, $hours_back = 1)
+    {
+        $cutoff_time = Carbon::now()->subHours($hours_back);
+        
+        if ($this->option('d')) {
+            $this->line("→ Looking for latest ambient temp for {$machine_id} {$position} since {$cutoff_time->format('H:i:s')}");
+        }
+
+        // Check InsStcAdjust records first (more recent adjustments)
+        $latest_adjustment = InsStcAdjust::whereHas('ins_stc_d_sum', function ($query) use ($machine_id, $position) {
+            $query->where('ins_stc_machine_id', $machine_id)
+                  ->where('position', $position);
+        })
+        ->where('created_at', '>=', $cutoff_time)
+        ->where('current_temp', '>', 0) // Valid temperature
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+        // Check InsStcDSum records (d_sum baseline temperatures)
+        $latest_d_sum = InsStcDSum::where('ins_stc_machine_id', $machine_id)
+            ->where('position', $position)
+            ->where('created_at', '>=', $cutoff_time)
+            ->whereRaw('JSON_EXTRACT(at_values, "$[1]") > 0') // Valid baseline temp in at_values[1]
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        $candidates = [];
+
+        // Add adjustment candidate
+        if ($latest_adjustment) {
+            $candidates[] = [
+                'temp' => $latest_adjustment->current_temp,
+                'source' => 'adjustment',
+                'timestamp' => $latest_adjustment->created_at,
+                'id' => $latest_adjustment->id
+            ];
+        }
+
+        // Add d_sum candidate
+        if ($latest_d_sum) {
+            $at_values = json_decode($latest_d_sum->at_values, true);
+            if (is_array($at_values) && isset($at_values[1]) && $at_values[1] > 0) {
+                $candidates[] = [
+                    'temp' => (float) $at_values[1],
+                    'source' => 'd_sum',
+                    'timestamp' => $latest_d_sum->created_at,
+                    'id' => $latest_d_sum->id
+                ];
+            }
+        }
+
+        if (empty($candidates)) {
+            if ($this->option('d')) {
+                $this->line("  → No recent ambient temperature found within {$hours_back} hour(s)");
+            }
+            return null;
+        }
+
+        // Return the most recent candidate
+        $latest = collect($candidates)->sortByDesc('timestamp')->first();
+        
+        if ($this->option('d')) {
+            $this->line("  → Latest ambient temp: {$latest['temp']}°C from {$latest['source']} (ID: {$latest['id']}) at {$latest['timestamp']->format('H:i:s')}");
+        }
+
+        return $latest;
+    }
+
+    /**
      * Find eligible d_sums and perform STC adjustments
      */
     public function performAdjustments($current_ambient_temp)
@@ -370,7 +462,7 @@ class InsStcRoutine extends Command
             foreach (['upper', 'lower'] as $position) {
                 $total_checked++;
 
-                // Find latest d_sum for this machine/position within 4 hours
+                // Find latest d_sum for this machine/position within 4 hours (for SV application)
                 $latest_d_sum = InsStcDSum::where('ins_stc_machine_id', $machine->id)
                     ->where('position', $position)
                     ->where('created_at', '>=', Carbon::now()->subHours(4))
@@ -385,26 +477,27 @@ class InsStcRoutine extends Command
                     continue;
                 }
 
-                // Get baseline temperature from d_sum at_values[1]
-                $at_values = json_decode($latest_d_sum->at_values, true);
-                if (! is_array($at_values) || ! isset($at_values[1]) || $at_values[1] <= 0) {
+                // Get latest ambient temperature reference (within 1 hour) - this fixes the n+1 problem
+                $latest_ambient = $this->getLatestAmbientTemperature($machine->id, $position, 1);
+                
+                if (! $latest_ambient) {
                     if ($this->option('d')) {
-                        $this->line("Invalid baseline temperature for {$machine->line} {$position}");
+                        $this->line("No recent ambient temperature reference found for {$machine->line} {$position} (within 1 hour)");
                     }
 
                     continue;
                 }
 
-                $baseline_temp = (float) $at_values[1];
-                $delta_temp = $current_ambient_temp - $baseline_temp;
+                $reference_temp = $latest_ambient['temp'];
+                $delta_temp = $current_ambient_temp - $reference_temp;
 
                 if ($this->option('d')) {
-                    $this->line("→ {$machine->line} {$position}: baseline={$baseline_temp}°C, current={$current_ambient_temp}°C, delta={$delta_temp}°C");
+                    $this->line("→ {$machine->line} {$position}: reference={$reference_temp}°C ({$latest_ambient['source']}), current={$current_ambient_temp}°C, delta={$delta_temp}°C");
                 }
 
                 // Check if adjustment is needed (threshold ±1.0°C)
                 if (abs($delta_temp) >= $this->adjustment_threshold) {
-                    $adjustment_result = $this->adjustMachine($latest_d_sum, $machine, $position, $current_ambient_temp, $baseline_temp, $delta_temp);
+                    $adjustment_result = $this->adjustMachine($latest_d_sum, $machine, $position, $current_ambient_temp, $reference_temp, $delta_temp, $latest_ambient);
 
                     if ($adjustment_result) {
                         $adjustments_made++;
@@ -425,7 +518,7 @@ class InsStcRoutine extends Command
     /**
      * Adjust a specific machine/position
      */
-    public function adjustMachine($d_sum, $machine, $position, $current_temp, $baseline_temp, $delta_temp)
+    public function adjustMachine($d_sum, $machine, $position, $current_temp, $reference_temp, $delta_temp, $reference_info = null)
     {
         if ($this->option('v')) {
             $this->comment("→ Adjusting {$machine->line} {$position} by {$delta_temp}°C");
@@ -437,7 +530,8 @@ class InsStcRoutine extends Command
 
             if (! $current_sv) {
                 $reason = 'Failed to read current SV values from machine';
-                $this->createAdjustmentRecord($d_sum, $current_temp, $delta_temp, [], [], false, $reason);
+                $this->createAdjustmentRecord($d_sum, $current_temp, $delta_temp, [], [], false, $reason, $reference_info);
+                $this->writeAdjustmentLog($d_sum, $machine, $position, $current_temp, $delta_temp, false, $reason, [], [], $reference_info);
 
                 return false;
             }
@@ -463,15 +557,17 @@ class InsStcRoutine extends Command
                 }
             }
 
-            // Create adjustment record
-            $this->createAdjustmentRecord($d_sum, $current_temp, $delta_temp, $current_sv, $adjusted_sv, $applied, $reason);
+            // Create adjustment record and write log
+            $this->createAdjustmentRecord($d_sum, $current_temp, $delta_temp, $current_sv, $adjusted_sv, $applied, $reason, $reference_info);
+            $this->writeAdjustmentLog($d_sum, $machine, $position, $current_temp, $delta_temp, $applied, $reason, $current_sv, $adjusted_sv, $reference_info);
 
             return true;
 
         } catch (\Exception $e) {
             $reason = 'Exception during adjustment: '.$e->getMessage();
             $this->error("  → ✗ Error adjusting {$machine->line} {$position}: ".$e->getMessage());
-            $this->createAdjustmentRecord($d_sum, $current_temp, $delta_temp, [], [], false, $reason);
+            $this->createAdjustmentRecord($d_sum, $current_temp, $delta_temp, [], [], false, $reason, $reference_info);
+            $this->writeAdjustmentLog($d_sum, $machine, $position, $current_temp, $delta_temp, false, $reason, [], [], $reference_info);
 
             return false;
         }
@@ -586,7 +682,7 @@ class InsStcRoutine extends Command
     /**
      * Create adjustment record in database
      */
-    public function createAdjustmentRecord($d_sum, $current_temp, $delta_temp, $sv_before, $sv_after, $applied, $reason)
+    public function createAdjustmentRecord($d_sum, $current_temp, $delta_temp, $sv_before, $sv_after, $applied, $reason, $reference_info = null)
     {
         try {
             InsStcAdjust::create([

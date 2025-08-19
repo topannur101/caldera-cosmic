@@ -206,16 +206,16 @@ new class extends Component {
                     <div class="flex flex-col justify-around">
                         <table>
                             <tr>
-                                <td class="text-neutral-500">{{ __('Jml') . ': ' }}</td>
-                                <td>{{ $monthlyTotal }}</td>
+                                <td class="text-neutral-500">{{ __('Jml') }}</td>
+                                <td>{{ ': ' . $monthlyTotal }}</td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500">{{ __('Pass') . ': ' }}</td>
-                                <td class="text-green-600 dark:text-green-400">{{ $monthlyPass . ' (' . $passPercentage . '%)' }}</td>
+                                <td class="text-neutral-500">{{ __('Pass') }}</td>
+                                <td class="text-green-600 dark:text-green-400">{{ ': ' . $monthlyPass . ' (' . $passPercentage . '%)' }}</td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500">{{ __('Fail') . ': ' }}</td>
-                                <td class="text-red-600 dark:text-red-400">{{ $monthlyFail . ' (' . $failPercentage . '%)' }}</td>
+                                <td class="text-neutral-500">{{ __('Fail') }}</td>
+                                <td class="text-red-600 dark:text-red-400">{{ ': ' . $monthlyFail . ' (' . $failPercentage . '%)' }}</td>
                             </tr>
                         </table>
                     </div>
@@ -246,28 +246,28 @@ new class extends Component {
                 <table class="table table-sm text-sm text-neutral-600 dark:text-neutral-400 w-full">
                     <thead>
                         <tr class="uppercase text-xs border-b border-neutral-200 dark:border-neutral-700">
-                            <th rowspan="3" class="text-left px-4 py-3 bg-neutral-50 dark:bg-neutral-900 align-middle">MCS</th>
+                            <th rowspan="3" class="text-left px-4 py-3 align-middle">MCS</th>
                             @foreach($weeks as $week)
-                            <td colspan="3" class="text-center px-2 py-3 bg-neutral-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-700 uppercase text-sm font-bold">
+                            <td colspan="3" class="text-center px-2 py-3 border-l border-neutral-200 dark:border-neutral-700 uppercase text-sm font-bold">
                                 W{{ str_pad($week['week'], 2, '0', STR_PAD_LEFT) }}
                             </td>
                             @endforeach
                         </tr>
                         <tr class="text-xs border-b border-neutral-200 dark:border-neutral-700">
                             @foreach($weeks as $week)
-                            <td colspan="3" class="text-center px-2 py-2 bg-neutral-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-700 uppercase text-xs">
+                            <td colspan="3" class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700 uppercase text-xs">
                                 {{ $week['date_range_start']->format('j') }} {{ $week['date_range_start']->format('M') }} - {{ $week['date_range_end']->format('j') }} {{ $week['date_range_end']->format('M') }} ({{ $week['days'] }} {{ __('hari') }})
                             </td>
                             @endforeach
                         </tr>
                         <tr class="text-xs border-b border-neutral-200 dark:border-neutral-700">
                             @foreach($weeks as $week)
-                            <td class="text-center px-2 py-2 bg-neutral-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-700 uppercase text-xs">{{ __('Jml') }}</td>
-                            <td class="text-center px-2 py-2 bg-neutral-50 dark:bg-neutral-900 uppercase text-xs">{{ __('Pass') }}</td>
-                            <td class="text-center px-2 py-2 bg-neutral-50 dark:bg-neutral-900 uppercase text-xs">{{ __('Fail') }}</td>
+                            <td class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700 uppercase text-xs">{{ __('Jml') }}</td>
+                            <td class="text-center px-2 py-2 uppercase text-xs">{{ __('Pass') }}</td>
+                            <td class="text-center px-2 py-2 uppercase text-xs">{{ __('Fail') }}</td>
                             @endforeach
                         </tr>
-                        <tr class="font-semibold text-xs bg-neutral-100 dark:bg-neutral-800 border-b-2 border-neutral-300 dark:border-neutral-600">
+                        <tr class="font-semibold text-xs bg-neutral-100 dark:bg-neutral-700 dark:bg-opacity-50 border-b-2 border-neutral-300 dark:border-neutral-600">
                             <td class="text-left px-4 py-2 font-bold">{{ __('TOTAL') }}</td>
                             @foreach($weeks as $week)
                             <td class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700">{{ $totals[$week['week']]['jumlah'] ?? 0 }}</td>

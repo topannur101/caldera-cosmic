@@ -141,7 +141,7 @@ new class extends Component {
                 $workerStats[$empId] = [
                     'name' => $hide->user_name,
                     'emp_id' => $empId,
-                    'total_hides' => 0,
+                    'total_vn_area' => 0,
                     'total_days_worked' => 0,
                     'daily_totals' => [],
                     'shift_totals' => [],
@@ -155,9 +155,10 @@ new class extends Component {
             $shiftKey = $hide->shift;
             $defectRate = $hide->area_vn > 0 ? (($hide->area_vn - $hide->area_qt) / $hide->area_vn) * 100 : 0;
 
-            $workerStats[$empId]['total_hides']++;
-            $workerStats[$empId]['daily_totals'][$dateKey] = ($workerStats[$empId]['daily_totals'][$dateKey] ?? 0) + 1;
-            $workerStats[$empId]['shift_totals'][$shiftKey] = ($workerStats[$empId]['shift_totals'][$shiftKey] ?? 0) + 1;
+            $vnArea = is_numeric($hide->area_vn) && is_finite($hide->area_vn) ? $hide->area_vn : 0;
+            $workerStats[$empId]['total_vn_area'] += $vnArea;
+            $workerStats[$empId]['daily_totals'][$dateKey] = ($workerStats[$empId]['daily_totals'][$dateKey] ?? 0) + $vnArea;
+            $workerStats[$empId]['shift_totals'][$shiftKey] = ($workerStats[$empId]['shift_totals'][$shiftKey] ?? 0) + $vnArea;
             $workerStats[$empId]['qt_measurements'][] = $hide->area_qt;
             $workerStats[$empId]['defect_rates'][] = $defectRate;
         }
@@ -165,8 +166,9 @@ new class extends Component {
         // Calculate final metrics
         foreach ($workerStats as $empId => &$stats) {
             $stats['total_days_worked'] = count($stats['daily_totals']);
-            $stats['avg_hides_per_day'] = $stats['total_days_worked'] > 0 ? 
-                round($stats['total_hides'] / $stats['total_days_worked'], 1) : 0;
+            $avgVnArea = $stats['total_days_worked'] > 0 ? 
+                round($stats['total_vn_area'] / $stats['total_days_worked'], 1) : 0;
+            $stats['avg_vn_area_per_day'] = is_finite($avgVnArea) ? $avgVnArea : 0;
             
             $stats['avg_qt_measurement'] = count($stats['qt_measurements']) > 0 ? 
                 round(array_sum($stats['qt_measurements']) / count($stats['qt_measurements']), 2) : 0;
@@ -186,25 +188,25 @@ new class extends Component {
         $shiftStats = [];
         
         foreach ($this->workerStats as $empId => $worker) {
-            foreach ($worker['shift_totals'] as $shift => $hides) {
+            foreach ($worker['shift_totals'] as $shift => $vnArea) {
                 if (!isset($shiftStats[$shift])) {
                     $shiftStats[$shift] = [
                         'total_workers' => 0,
-                        'total_hides' => 0,
+                        'total_vn_area' => 0,
                         'worker_performances' => []
                     ];
                 }
                 
                 $shiftStats[$shift]['total_workers']++;
-                $shiftStats[$shift]['total_hides'] += $hides;
-                $shiftStats[$shift]['worker_performances'][] = $worker['avg_hides_per_day'];
+                $shiftStats[$shift]['total_vn_area'] += $vnArea;
+                $shiftStats[$shift]['worker_performances'][] = $worker['avg_vn_area_per_day'];
             }
         }
 
         // Calculate team averages
         foreach ($shiftStats as $shift => &$stats) {
-            $stats['avg_hides_per_worker'] = $stats['total_workers'] > 0 ? 
-                round($stats['total_hides'] / $stats['total_workers'], 1) : 0;
+            $stats['avg_vn_area_per_worker'] = $stats['total_workers'] > 0 ? 
+                round($stats['total_vn_area'] / $stats['total_workers'], 1) : 0;
             
             $stats['team_consistency'] = count($stats['worker_performances']) > 1 ? 
                 round($this->calculateStandardDeviation($stats['worker_performances']), 2) : 0;
@@ -224,7 +226,7 @@ new class extends Component {
                     'name' => $worker['name'],
                     'experience_hire' => $worker['experience']['experience_from_hire'],
                     'experience_system' => $worker['experience']['experience_from_first_hide'],
-                    'productivity' => $worker['avg_hides_per_day'],
+                    'productivity' => $worker['avg_vn_area_per_day'],
                     'consistency' => $worker['qt_consistency']
                 ];
             }
@@ -240,11 +242,11 @@ new class extends Component {
         $trends = [];
         
         foreach ($this->workerStats as $empId => $worker) {
-            if ($worker['total_hides'] >= 10) { // Only workers with sufficient data
+            if ($worker['total_vn_area'] >= 100) { // Only workers with sufficient data
                 // Split data into first half and second half of period
-                $totalHides = count($worker['defect_rates']);
-                $firstHalf = array_slice($worker['defect_rates'], 0, intval($totalHides / 2));
-                $secondHalf = array_slice($worker['defect_rates'], intval($totalHides / 2));
+                $totalRecords = count($worker['defect_rates']);
+                $firstHalf = array_slice($worker['defect_rates'], 0, intval($totalRecords / 2));
+                $secondHalf = array_slice($worker['defect_rates'], intval($totalRecords / 2));
                 
                 if (count($firstHalf) > 0 && count($secondHalf) > 0) {
                     $firstAvg = array_sum($firstHalf) / count($firstHalf);
@@ -269,16 +271,16 @@ new class extends Component {
     private function calculateSummaryKpis()
     {
         $totalWorkers = count($this->workerStats);
-        $totalHides = array_sum(array_column($this->workerStats, 'total_hides'));
+        $totalVnArea = array_sum(array_column($this->workerStats, 'total_vn_area'));
         $avgProductivity = $totalWorkers > 0 ? 
-            array_sum(array_column($this->workerStats, 'avg_hides_per_day')) / $totalWorkers : 0;
+            array_sum(array_column($this->workerStats, 'avg_vn_area_per_day')) / $totalWorkers : 0;
         
-        $topPerformer = collect($this->workerStats)->sortByDesc('avg_hides_per_day')->first();
+        $topPerformer = collect($this->workerStats)->sortByDesc('avg_vn_area_per_day')->first();
         $mostConsistent = collect($this->workerStats)->sortBy('qt_consistency')->first();
 
         $this->summaryKpis = [
             'total_workers' => $totalWorkers,
-            'total_hides' => $totalHides,
+            'total_vn_area' => $totalVnArea,
             'avg_productivity' => round($avgProductivity, 1),
             'top_performer' => $topPerformer,
             'most_consistent' => $mostConsistent
@@ -481,9 +483,9 @@ new class extends Component {
             $this->workerDetails = [
                 'name' => $worker['name'],
                 'emp_id' => $empId,
-                'total_hides' => $worker['total_hides'],
+                'total_vn_area' => $worker['total_vn_area'],
                 'total_days_worked' => $worker['total_days_worked'],
-                'avg_hides_per_day' => $worker['avg_hides_per_day'],
+                'avg_vn_area_per_day' => $worker['avg_vn_area_per_day'],
                 'qt_consistency' => $worker['qt_consistency'],
                 'experience' => $worker['experience'],
                 'shift_breakdown' => $worker['shift_totals']
@@ -581,20 +583,22 @@ new class extends Component {
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Pekerja') }}</div>
             <div class="text-2xl font-bold">{{ number_format($summaryKpis['total_workers'] ?? 0) }}</div>
+            <div class="text-xs text-neutral-500">{{ __('orang') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Kulit') }}</div>
-            <div class="text-2xl font-bold">{{ number_format($summaryKpis['total_hides'] ?? 0) }}</div>
+            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Area VN') }}</div>
+            <div class="text-2xl font-bold">{{ number_format($summaryKpis['total_vn_area'] ?? 0) }}</div>
+            <div class="text-xs text-neutral-500">{{ __('SF') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Rata-rata Produktivitas') }}</div>
             <div class="text-2xl font-bold">{{ ($summaryKpis['avg_productivity'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500">{{ __('lembar/hari') }}</div>
+            <div class="text-xs text-neutral-500">{{ __('area/hari') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Pekerja Terproduktif') }}</div>
             <div class="text-lg font-bold truncate">{{ $summaryKpis['top_performer']['name'] ?? __('Tidak ada') }}</div>
-            <div class="text-xs text-neutral-500">{{ ($summaryKpis['top_performer']['avg_hides_per_day'] ?? 0) }} {{ __('lembar/hari') }}</div>
+            <div class="text-xs text-neutral-500">{{ ($summaryKpis['top_performer']['avg_vn_area_per_day'] ?? 0) }} {{ __('area/hari') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Paling Konsisten') }}</div>
@@ -706,9 +710,9 @@ new class extends Component {
                     <tr class="text-xs uppercase text-neutral-500 border-b">
                         <th class="px-4 py-3">{{ __('Nama') }}</th>
                         <th class="px-4 py-3">{{ __('NIK') }}</th>
-                        <th class="px-4 py-3">{{ __('Total Kulit') }}</th>
+                        <th class="px-4 py-3">{{ __('Total Area VN') }}</th>
                         <th class="px-4 py-3">{{ __('Hari Kerja') }}</th>
-                        <th class="px-4 py-3">{{ __('Lembar/Hari') }}</th>
+                        <th class="px-4 py-3">{{ __('Area/Hari') }}</th>
                         <th class="px-4 py-3">{{ __('Konsistensi QT') }}</th>
                         <th class="px-4 py-3">{{ __('Pengalaman (Kerja)') }}</th>
                         <th class="px-4 py-3">{{ __('Pengalaman (Caldera)') }}</th>
@@ -720,9 +724,9 @@ new class extends Component {
                     <tr class="border-b border-neutral-100 dark:border-neutral-700">
                         <td class="px-4 py-3 font-medium">{{ $worker['name'] }}</td>
                         <td class="px-4 py-3 font-mono">{{ $worker['emp_id'] }}</td>
-                        <td class="px-4 py-3">{{ number_format($worker['total_hides']) }}</td>
+                        <td class="px-4 py-3">{{ number_format($worker['total_vn_area']) }}</td>
                         <td class="px-4 py-3">{{ number_format($worker['total_days_worked']) }}</td>
-                        <td class="px-4 py-3">{{ $worker['avg_hides_per_day'] }}</td>
+                        <td class="px-4 py-3">{{ $worker['avg_vn_area_per_day'] }}</td>
                         <td class="px-4 py-3">
                             <span class="{{ $worker['qt_consistency'] < 1.0 ? 'text-green-500' : ($worker['qt_consistency'] < 2.0 ? 'text-yellow-500' : 'text-red-500') }}">
                                 {{ $worker['qt_consistency'] }}
@@ -771,8 +775,8 @@ new class extends Component {
                         <div class="text-lg font-mono">{{ $workerDetails['emp_id'] }}</div>
                     </div>
                     <div>
-                        <div class="text-sm text-neutral-500">{{ __('Total Kulit') }}</div>
-                        <div class="text-lg">{{ number_format($workerDetails['total_hides']) }}</div>
+                        <div class="text-sm text-neutral-500">{{ __('Total Area VN') }}</div>
+                        <div class="text-lg">{{ number_format($workerDetails['total_vn_area']) }}</div>
                     </div>
                 </div>
 
@@ -783,7 +787,7 @@ new class extends Component {
                     </div>
                     <div>
                         <div class="text-sm text-neutral-500">{{ __('Rata-rata per Hari') }}</div>
-                        <div class="text-lg">{{ $workerDetails['avg_hides_per_day'] }}</div>
+                        <div class="text-lg">{{ $workerDetails['avg_vn_area_per_day'] }}</div>
                     </div>
                 </div>
 

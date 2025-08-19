@@ -718,6 +718,9 @@ class InsLdc
                                 return style + ": " + data.x.toFixed(1) + "% util, " + data.y.toFixed(1) + "% defect";
                             }'
                         ]
+                    ],
+                    'datalabels' => [
+                        'display' => false
                     ]
                 ]
             ]
@@ -1082,7 +1085,7 @@ class InsLdc
     {
         $workers = array_values($workerStats);
         $labels = array_map(fn($w) => $w['name'] . ' (' . $w['emp_id'] . ')', $workers);
-        $productivity = array_map(fn($w) => $w['avg_hides_per_day'], $workers);
+        $productivity = array_map(fn($w) => $w['avg_vn_area_per_day'], $workers);
 
         return [
             'type' => 'bar',
@@ -1090,7 +1093,7 @@ class InsLdc
                 'labels' => $labels,
                 'datasets' => [
                     [
-                        'label' => __('Kulit per Hari'),
+                        'label' => __('Area VN per Hari'),
                         'data' => $productivity,
                         'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
                         'borderColor' => 'rgba(54, 162, 235, 1)',
@@ -1105,7 +1108,7 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Produktivitas Pekerja (Kulit per Hari)')
+                        'text' => __('Produktivitas Pekerja (Area VN per Hari)')
                     ],
                     'legend' => [
                         'display' => false
@@ -1116,7 +1119,7 @@ class InsLdc
                         'beginAtZero' => true,
                         'title' => [
                             'display' => true,
-                            'text' => __('Kulit per Hari')
+                            'text' => __('Area VN per Hari')
                         ]
                     ]
                 ]
@@ -1138,7 +1141,7 @@ class InsLdc
                         'label' => __('Konsistensi QT'),
                         'data' => array_map(function($worker, $index) {
                             return [
-                                'x' => $worker['avg_hides_per_day'],
+                                'x' => $worker['avg_vn_area_per_day'],
                                 'y' => $worker['qt_consistency']
                             ];
                         }, $workers, array_keys($workers)),
@@ -1162,16 +1165,19 @@ class InsLdc
                                 const workerIndex = context.dataIndex;
                                 const workers = ' . json_encode($workers) . ';
                                 const worker = workers[workerIndex];
-                                return worker.name + " (" + worker.emp_id + "): " + context.parsed.x + " lembar/hari, " + context.parsed.y + " konsistensi";
+                                return worker.name + " (" + worker.emp_id + "): " + context.parsed.x + " area/hari, " + context.parsed.y + " konsistensi";
                             }'
                         ]
+                    ],
+                    'datalabels' => [
+                        'display' => false
                     ]
                 ],
                 'scales' => [
                     'x' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Produktivitas (Kulit per Hari)')
+                            'text' => __('Produktivitas (Area VN per Hari)')
                         ]
                     ],
                     'y' => [
@@ -1224,6 +1230,9 @@ class InsLdc
                     'title' => [
                         'display' => true,
                         'text' => __('Korelasi Pengalaman vs Produktivitas')
+                    ],
+                    'datalabels' => [
+                        'display' => false
                     ]
                 ],
                 'scales' => [
@@ -1236,7 +1245,7 @@ class InsLdc
                     'y' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Produktivitas (Kulit per Hari)')
+                            'text' => __('Produktivitas (Area VN per Hari)')
                         ]
                     ]
                 ]
@@ -1290,7 +1299,7 @@ class InsLdc
     public static function getShiftTeamChartOptions(array $shiftStats): array
     {
         $shifts = array_keys($shiftStats);
-        $productivity = array_map(fn($s) => $shiftStats[$s]['avg_hides_per_worker'], $shifts);
+        $productivity = array_map(fn($s) => $shiftStats[$s]['avg_vn_area_per_worker'], $shifts);
         $consistency = array_map(fn($s) => $shiftStats[$s]['team_consistency'], $shifts);
 
         return [
@@ -1299,7 +1308,7 @@ class InsLdc
                 'labels' => array_map(fn($s) => __('Shift') . ' ' . $s, $shifts),
                 'datasets' => [
                     [
-                        'label' => __('Rata-rata Kulit per Pekerja'),
+                        'label' => __('Rata-rata Area VN per Pekerja'),
                         'data' => $productivity,
                         'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
                         'borderColor' => 'rgba(54, 162, 235, 1)',
@@ -1333,7 +1342,7 @@ class InsLdc
                         'position' => 'left',
                         'title' => [
                             'display' => true,
-                            'text' => __('Kulit per Pekerja')
+                            'text' => __('Area VN per Pekerja')
                         ]
                     ],
                     'y1' => [

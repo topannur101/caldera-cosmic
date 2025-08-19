@@ -379,33 +379,34 @@ new class extends Component {
                     <div class="flex flex-col justify-around">
                         <table>
                             <tr>
-                                <td class="text-neutral-500">{{ __('Total uji') . ': ' }}</td>
-                                <td>{{ $overall_stats['total_tests'] ?? 0 }}</td>
+                                <td class="text-neutral-500">{{ __('Total') }}</td>
+                                <td>{{ ': ' . ($overall_stats['total_tests'] ?? 0) }}</td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500">{{ __('Pass') . ': ' }}</td>
-                                <td class="text-green-600 dark:text-green-400">{{ ($overall_stats['total_pass'] ?? 0) . ' (' . ($overall_stats['overall_pass_rate'] ?? 0) . '%)' }}</td>
+                                <td class="text-neutral-500">{{ __('Pass') }}</td>
+                                <td class="text-green-600 dark:text-green-400">{{ ': ' . ($overall_stats['total_pass'] ?? 0) . ' (' . ($overall_stats['overall_pass_rate'] ?? 0) . '%)' }}</td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500">{{ __('Fail') . ': ' }}</td>
-                                <td class="text-red-600 dark:text-red-400">{{ ($overall_stats['total_fail'] ?? 0) . ' (' . ($overall_stats['overall_fail_rate'] ?? 0) . '%)' }}</td>
+                                <td class="text-neutral-500">{{ __('Fail') }}</td>
+                                <td class="text-red-600 dark:text-red-400">{{ ': ' . ($overall_stats['total_fail'] ?? 0) . ' (' . ($overall_stats['overall_fail_rate'] ?? 0) . '%)' }}</td>
                             </tr>
                         </table>
                     </div>
                     <div>
                         <table>
                             <tr>
-                                <td class="text-neutral-500">{{ __('Rerata utilisasi') . ': ' }}</td>
-                                <td>{{ ($overall_stats['avg_utilization'] ?? 0) . '%' }}</td>
+                                <td class="text-neutral-500">{{ __('Utilisasi') }}</td>
+                                <td>{{ ': ' . ($overall_stats['avg_utilization'] ?? 0) . '%' }}</td>
                             </tr>
                             <tr>
-                                <td class="text-neutral-500">{{ __('Uji per mesin') . ': ' }}</td>
-                                <td>{{ $overall_stats['avg_tests_per_machine'] ?? 0 }}</td>
+                                <td class="text-neutral-500">{{ __('Uji/mesin') }}</td>
+                                <td>{{ ': ' . ($overall_stats['avg_tests_per_machine'] ?? 0) }}</td>
                             </tr>
                         </table>
                     </div>
                 </div>
             </div>
+            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>  
             <div class="grow flex justify-center gap-x-2 items-center">
                 <div wire:loading.class.remove="hidden" class="hidden px-3">
                     <x-progress-bar :$progress>                       
@@ -552,7 +553,7 @@ new class extends Component {
                 <div class="overflow-auto">
                     <table class="table table-sm text-sm text-neutral-600 dark:text-neutral-400 w-full">
                         <thead>
-                            <tr class="uppercase text-xs border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
+                            <tr class="uppercase text-xs border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-700 dark:bg-opacity-50">
                                 <th class="text-left px-4 py-3">{{ __('Mesin') }}</th>
                                 <th class="text-center px-2 py-3">{{ __('Tipe') }}</th>
                                 <th class="text-center px-2 py-3">{{ __('Total Uji') }}</th>
@@ -577,7 +578,7 @@ new class extends Component {
                                         @else
                                             <div class="w-6 h-6 flex items-center justify-center text-xs text-neutral-500">{{ $index + 1 }}</div>
                                         @endif
-                                        {{ ($machine['number'] ?? 'N/A') . '. ' . $machine['name'] }}
+                                        {{ ($index + 1) . '. ' . $machine['name'] }}
                                     </div>
                                 </td>
                                 <td class="text-center px-2 py-3">
