@@ -577,7 +577,7 @@ new class extends Component {
                                         @else
                                             <div class="w-6 h-6 flex items-center justify-center text-xs text-neutral-500">{{ $index + 1 }}</div>
                                         @endif
-                                        {{ ($index + 1) . '. ' . $machine['name'] }}
+                                        {{ ($machine['number'] ?? 'N/A') . '. ' . $machine['name'] }}
                                     </div>
                                 </td>
                                 <td class="text-center px-2 py-3">
