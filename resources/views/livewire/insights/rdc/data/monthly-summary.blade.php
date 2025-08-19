@@ -137,10 +137,30 @@ new class extends Component {
     {
         $data = $this->getMonthlySummaryData();
         
+        // Calculate monthly totals
+        $monthlyTotal = 0;
+        $monthlyPass = 0;
+        $monthlyFail = 0;
+        
+        foreach ($data['totals'] as $weekData) {
+            $monthlyTotal += $weekData['jumlah'];
+            $monthlyPass += $weekData['pass'];
+            $monthlyFail += $weekData['fail'];
+        }
+        
+        // Calculate percentages
+        $passPercentage = $monthlyTotal > 0 ? number_format(($monthlyPass / $monthlyTotal) * 100, 1) : 0;
+        $failPercentage = $monthlyTotal > 0 ? number_format(($monthlyFail / $monthlyTotal) * 100, 1) : 0;
+        
         return [
             'weeks' => $data['weeks'],
             'summary' => $data['summary'],
             'totals' => $data['totals'],
+            'monthlyTotal' => $monthlyTotal,
+            'monthlyPass' => $monthlyPass,
+            'monthlyFail' => $monthlyFail,
+            'passPercentage' => $passPercentage,
+            'failPercentage' => $failPercentage,
             'months' => [
                 1 => __('Januari'),
                 2 => __('Februari'), 
@@ -178,6 +198,27 @@ new class extends Component {
                         <option value="{{ $monthValue }}">{{ $monthName }}</option>
                         @endforeach
                     </x-select>
+                </div>
+            </div>
+            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="flex justify-between gap-x-2 items-center">
+                <div class="flex gap-3 text-sm">
+                    <div class="flex flex-col justify-around">
+                        <table>
+                            <tr>
+                                <td class="text-neutral-500">{{ __('Jml') . ': ' }}</td>
+                                <td>{{ $monthlyTotal }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500">{{ __('Pass') . ': ' }}</td>
+                                <td class="text-green-600 dark:text-green-400">{{ $monthlyPass . ' (' . $passPercentage . '%)' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-neutral-500">{{ __('Fail') . ': ' }}</td>
+                                <td class="text-red-600 dark:text-red-400">{{ $monthlyFail . ' (' . $failPercentage . '%)' }}</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>

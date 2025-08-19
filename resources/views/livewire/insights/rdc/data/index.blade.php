@@ -13,19 +13,35 @@ class extends Component {
     #[Url]
     public $view = 'tests';
     public array $view_titles = [];
+    public array $view_icons = [];
 
     public function mount()
     {
         $this->view_titles = [        
-            'tc10-tc90-chart'   => __('Bagan TC10 dan TC90'),
+            // 'tc10-tc90-chart'   => __('Bagan TC10 dan TC90'),
             'tests'             => __('Hasil uji'),
             'monthly-summary'   => __('Ringkasan bulanan'),
+            'operator-performance' => __('Kinerja operator'),
+            'machine-performance'  => __('Kinerja mesin'),
+        ];
+
+        $this->view_icons = [
+            // 'tc10-tc90-chart'   => 'icon-trending-up',
+            'tests'             => 'icon-beaker',
+            'monthly-summary'   => 'icon-calendar',
+            'operator-performance' => 'icon-users',
+            'machine-performance'  => 'icon-cpu',
         ];
     }
 
     public function getViewTitle(): string
     {
         return $this->view_titles[$this->view] ?? '';
+    }
+
+    public function getViewIcon(): string
+    {
+        return $this->view_icons[$this->view] ?? '';
     }
 };
 
@@ -40,13 +56,24 @@ class extends Component {
 <div id="content" class="relative py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
     
     <div wire:key="rdc-summary-index-nav" class="flex px-8 mb-6">
-        <x-dropdown align="left">
+        <x-dropdown align="left" width="60">
             <x-slot name="trigger">
-                <x-text-button type="button" class="flex gap-2 items-center ml-1"><div class="text-2xl">{{ $this->getViewTitle() }}</div><i class="icon-chevron-down"></i></x-text-button>
+                <x-text-button type="button" class="flex gap-2 items-center ml-1">
+                    <i class="{{ $this->getViewIcon() }}"></i>
+                    <div class="text-2xl">{{ $this->getViewTitle() }}</div>
+                    <i class="icon-chevron-down"></i>
+                </x-text-button>
             </x-slot>
             <x-slot name="content">
                 @foreach ($view_titles as $view_key => $view_title)
-                <x-dropdown-link href="#" wire:click.prevent="$set('view', '{{ $view_key }}')">{{ $view_title }}</x-dropdown-link>
+                <x-dropdown-link href="#" wire:click.prevent="$set('view', '{{ $view_key }}')"
+                    class="flex items-center gap-2">
+                    <i class="{{ $view_icons[$view_key] }}"></i>
+                    <span>{{ $view_title }}</span>
+                    @if($view === $view_key)
+                        <div class="ml-auto w-2 h-2 bg-caldy-500 rounded-full"></div>
+                    @endif
+                </x-dropdown-link>
                 @endforeach
                 {{-- <hr class="border-neutral-300 dark:border-neutral-600" /> --}}
             </x-slot>
@@ -57,14 +84,20 @@ class extends Component {
     </div>
     <div wire:key="rdc-summary-index-container" wire:loading.class="hidden">
         @switch($view)
-            @case('chart')
+            {{-- @case('chart')
                 <livewire:insights.rdc.data.tc10-tc90-chart />
-                @break
+                @break --}}
             @case('tests')
                 <livewire:insights.rdc.data.tests />
                 @break
             @case('monthly-summary')
                 <livewire:insights.rdc.data.monthly-summary />
+                @break
+            @case('operator-performance')
+                <livewire:insights.rdc.data.operator-performance />
+                @break
+            @case('machine-performance')
+                <livewire:insights.rdc.data.machine-performance />
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">
