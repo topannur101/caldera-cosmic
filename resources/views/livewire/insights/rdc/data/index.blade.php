@@ -18,7 +18,8 @@ class extends Component {
     {
         $this->view_titles = [        
             'tc10-tc90-chart'   => __('Bagan TC10 dan TC90'),
-            'tests'             => __('Hasil uji'),    
+            'tests'             => __('Hasil uji'),
+            'monthly-summary'   => __('Ringkasan bulanan'),
         ];
     }
 
@@ -61,6 +62,9 @@ class extends Component {
                 @break
             @case('tests')
                 <livewire:insights.rdc.data.tests />
+                @break
+            @case('monthly-summary')
+                <livewire:insights.rdc.data.monthly-summary />
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">

@@ -6,6 +6,7 @@ use Livewire\WithPagination;
 
 use Carbon\Carbon;
 use App\Models\InsRdcTest;
+use App\Models\InsRdcMachine;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Traits\HasDateRangeFilter;
 
@@ -20,6 +21,18 @@ new class extends Component {
     #[Url]
     public $end_at;
 
+    #[Url]
+    public $machine_id;
+
+    #[Url]
+    public $team;
+
+    #[Url]
+    public $mcs;
+
+    #[Url]
+    public $hasil;
+
     public $perPage = 20;
 
     private function getTestsQuery()
@@ -27,8 +40,8 @@ new class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        // $this->line = trim($this->line);
-        // $this->team = trim($this->team);
+        $this->team = trim($this->team);
+        $this->mcs = trim($this->mcs);
 
         $query = InsRdcTest::join('ins_rubber_batches', 'ins_rdc_tests.ins_rubber_batch_id', '=', 'ins_rubber_batches.id')
             ->join('ins_rdc_machines', 'ins_rdc_tests.ins_rdc_machine_id', '=', 'ins_rdc_machines.id')
@@ -47,15 +60,26 @@ new class extends Component {
                 'users.name as user_name'
             )
             ->whereBetween('ins_rdc_tests.created_at', [$start, $end]);
-            // if ($this->line)
-            // {
-            //     $query->where('ins_rdc_tests.line', $this->line);
-            // }
 
-            // if ($this->team)
-            // {
-            //     $query->where('ins_rdc_tests.team', $this->team);
-            // }
+            if ($this->machine_id)
+            {
+                $query->where('ins_rdc_tests.ins_rdc_machine_id', $this->machine_id);
+            }
+
+            if ($this->team)
+            {
+                $query->where('ins_rdc_tests.team', $this->team);
+            }
+
+            if ($this->mcs)
+            {
+                $query->where('ins_rubber_batches.mcs', $this->mcs);
+            }
+
+            if ($this->hasil)
+            {
+                $query->where('ins_rdc_tests.eval', $this->hasil);
+            }
 
         return $query->orderBy('updated_at', 'DESC');
     }
@@ -66,13 +90,19 @@ new class extends Component {
         {
             $this->setToday();
         }
+
     }
 
     public function with(): array
     {
         $tests = $this->getTestsQuery()->paginate($this->perPage);
+        $machines = InsRdcMachine::where('is_active', true)
+            ->orderBy('number')
+            ->get();
+            
         return [
             'tests' => $tests,
+            'machines' => $machines,
         ];
     }
 
@@ -94,7 +124,7 @@ new class extends Component {
         ];
 
         $columns = [
-            __('Diperbarui'), __('Kode'), __('Kode alternatif'), __('Model'), __('Warna'), __('MCS'), __('Hasil'), __('Mesin'), __('Tag'), __('Nama'), __('Waktu antri')
+            __('Diperbarui'), __('Kode'), __('Kode alternatif'), __('Model'), __('Warna'), __('MCS'), __('Hasil'), __('Mesin'), __('Tim'), __('Tag'), __('Nama'), __('Waktu antri')
         ];
 
         $callback = function () use ($columns) {
@@ -112,6 +142,7 @@ new class extends Component {
                         $test->batch_mcs ?? '-',
                         $test->evalHuman(),
                         $test->machine_number,
+                        $test->team ?? '-',
                         $test->tag,
                         $test->user_name,
                         $test->test_queued_at,
@@ -168,23 +199,17 @@ new class extends Component {
                     <x-text-input wire:model.live="end_at"  id="cal-date-end" type="date"></x-text-input>
                 </div>
             </div>
-            <!-- <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="flex gap-3">
-                <div class="w-full lg:w-28">
-                    <label for="tests-line"
-                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                    <x-text-input id="tests-line" wire:model.live="line" type="number" list="tests-lines" step="1" />
-                    <datalist id="tests-lines">
-                        <option value="1"></option>
-                        <option value="2"></option>
-                        <option value="3"></option>
-                        <option value="4"></option>
-                        <option value="5"></option>
-                        <option value="6"></option>
-                        <option value="7"></option>
-                        <option value="8"></option>
-                        <option value="9"></option>
-                    </datalist>
+            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="grid grid-cols-2 lg:flex gap-3">
+                <div>
+                    <label for="tests-machine"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Mesin') }}</label>
+                    <x-select class="w-full lg:w-auto" id="tests-machine" wire:model.live="machine_id">
+                        <option value=""></option>
+                        @foreach($machines as $machine)
+                        <option value="{{ $machine->id }}">{{ $machine->number }}</option>
+                        @endforeach
+                    </x-select>
                 </div>
                 <div class="w-full lg:w-28">
                     <label for="tests-team"
@@ -196,7 +221,22 @@ new class extends Component {
                         <option value="C"></option>
                     </datalist>
                 </div>
-            </div> -->
+                <div class="w-full lg:w-28">
+                    <label for="tests-mcs"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">MCS</label>
+                    <x-text-input id="tests-mcs" wire:model.live="mcs" type="text" />
+                </div>
+                <div>
+                    <label for="tests-hasil"
+                    class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Hasil') }}</label>
+                    <x-select class="w-full lg:w-auto" id="tests-hasil" wire:model.live="hasil">
+                        <option value=""></option>
+                        <option value="pass">{{ __('Pass') }}</option>
+                        <option value="fail">{{ __('Fail') }}</option>
+                        <option value="queue">{{ __('Queue') }}</option>
+                    </x-select>
+                </div>
+            </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grow flex justify-between gap-x-2 items-center">
                 <div>
