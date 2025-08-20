@@ -418,15 +418,12 @@ class ModbusConnectionTest extends Command
     private function askForPort()
     {
         while (true) {
-            $port = $this->ask('🔌 Masukkan port Modbus server (standard: 502/503)', '503');
+            $port = $this->ask('🔌 Masukkan port server (standard Modbus: 502/503)', '503');
             
             if (is_numeric($port) && $port >= 1 && $port <= 65535) {
                 $portNum = (int)$port;
                 if ($portNum != 502 && $portNum != 503) {
-                    $this->warn("⚠️  Port {$portNum} bukan port standard Modbus (502/503)");
-                    if (!$this->confirm('Lanjutkan dengan port ini?')) {
-                        continue;
-                    }
+                    $this->info("ℹ️  Info: Port {$portNum} bukan port standard Modbus (502/503)");
                 }
                 $this->info("✅ Port {$portNum} diterima");
                 return $portNum;
