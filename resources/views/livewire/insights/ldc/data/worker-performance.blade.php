@@ -544,19 +544,26 @@ new class extends Component {
                 </div>
             </div>
             <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
-            <div class="flex gap-3">
-                <div>
-                    <label for="worker-line" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
-                    <x-text-input id="worker-line" wire:model.live="line" type="text" />
-                </div>
-                <div>
-                    <label for="worker-shift" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
-                    <x-select class="w-full" id="worker-shift" wire:model.live="shift">
-                        <option value=""></option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                    </x-select>
+            <div>
+                <div class="flex gap-3">
+                    <div>
+                        <label for="worker-line" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                        <div class="w-32">
+                            <x-text-input id="worker-line" wire:model.live="line" type="text" />
+                        </div>
+                    </div>
+                    <div>
+                        <label for="worker-shift" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
+                        <x-select class="w-32" id="worker-shift" wire:model.live="shift">
+                            <option value=""></option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </x-select>
+                    </div>
+                </div>                
+                <div class="px-2 py-4 text-xs text-neutral-500">
+                    <i class="icon-info me-2"></i>{{ __('Perhitungan SF menggunakan area VN') }}
                 </div>
             </div>
             <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
@@ -593,12 +600,12 @@ new class extends Component {
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Rata-rata Produktivitas') }}</div>
             <div class="text-2xl font-bold">{{ ($summaryKpis['avg_productivity'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500">{{ __('area/hari') }}</div>
+            <div class="text-xs text-neutral-500">{{ __('SF/hari') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Pekerja Terproduktif') }}</div>
             <div class="text-lg font-bold truncate">{{ $summaryKpis['top_performer']['name'] ?? __('Tidak ada') }}</div>
-            <div class="text-xs text-neutral-500">{{ ($summaryKpis['top_performer']['avg_vn_area_per_day'] ?? 0) }} {{ __('area/hari') }}</div>
+            <div class="text-xs text-neutral-500">{{ ($summaryKpis['top_performer']['avg_vn_area_per_day'] ?? 0) }} {{ __('SF/hari') }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Paling Konsisten') }}</div>
@@ -712,7 +719,7 @@ new class extends Component {
                         <th class="px-4 py-3">{{ __('NIK') }}</th>
                         <th class="px-4 py-3">{{ __('Total Area VN') }}</th>
                         <th class="px-4 py-3">{{ __('Hari Kerja') }}</th>
-                        <th class="px-4 py-3">{{ __('Area/Hari') }}</th>
+                        <th class="px-4 py-3">{{ __('SF/Hari') }}</th>
                         <th class="px-4 py-3">{{ __('Konsistensi QT') }}</th>
                         <th class="px-4 py-3">{{ __('Pengalaman (Kerja)') }}</th>
                         <th class="px-4 py-3">{{ __('Pengalaman (Caldera)') }}</th>

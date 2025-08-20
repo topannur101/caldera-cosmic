@@ -264,11 +264,11 @@ new class extends Component {
                             </tr>
                             <tr>
                                 <td class="text-neutral-500">{{ __('Pass') }}</td>
-                                <td class="text-green-600 dark:text-green-400">{{ ': ' . $monthlyPass . ' (' . $passPercentage . '%)' }}</td>
+                                <td class="{{ $monthlyPass > 0 ? 'text-green-600 dark:text-green-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ ': ' . $monthlyPass . ' (' . $passPercentage . '%)' }}</td>
                             </tr>
                             <tr>
                                 <td class="text-neutral-500">{{ __('Fail') }}</td>
-                                <td class="text-red-600 dark:text-red-400">{{ ': ' . $monthlyFail . ' (' . $failPercentage . '%)' }}</td>
+                                <td class="{{ $monthlyFail > 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ ': ' . $monthlyFail . ' (' . $failPercentage . '%)' }}</td>
                             </tr>
                         </table>
                     </div>
@@ -341,13 +341,13 @@ new class extends Component {
                         </tr>
                         <tr class="font-semibold text-xs bg-neutral-100 dark:bg-neutral-700 dark:bg-opacity-50 border-b-2 border-neutral-300 dark:border-neutral-600">
                             <td class="text-center px-4 py-2 font-bold">{{ __('TOTAL') }}</td>
-                            <td class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700">{{ $monthlyTotal }}</td>
-                            <td class="text-center px-2 py-2 text-green-600 dark:text-green-400">{{ $monthlyPass }}</td>
-                            <td class="text-center px-2 py-2 text-red-600 dark:text-red-400">{{ $monthlyFail }}</td>
+                            <td class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700 {{ $monthlyTotal > 0 ? '' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $monthlyTotal }}</td>
+                            <td class="text-center px-2 py-2 {{ $monthlyPass > 0 ? 'text-green-600 dark:text-green-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $monthlyPass }}</td>
+                            <td class="text-center px-2 py-2 {{ $monthlyFail > 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $monthlyFail }}</td>
                             @foreach($weeks as $week)
-                            <td class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700">{{ $totals[$week['week']]['jumlah'] ?? 0 }}</td>
-                            <td class="text-center px-2 py-2 text-green-600 dark:text-green-400">{{ $totals[$week['week']]['pass'] ?? 0 }}</td>
-                            <td class="text-center px-2 py-2 text-red-600 dark:text-red-400">{{ $totals[$week['week']]['fail'] ?? 0 }}</td>
+                            <td class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700 {{ ($totals[$week['week']]['jumlah'] ?? 0) > 0 ? '' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $totals[$week['week']]['jumlah'] ?? 0 }}</td>
+                            <td class="text-center px-2 py-2 {{ ($totals[$week['week']]['pass'] ?? 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $totals[$week['week']]['pass'] ?? 0 }}</td>
+                            <td class="text-center px-2 py-2 {{ ($totals[$week['week']]['fail'] ?? 0) > 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $totals[$week['week']]['fail'] ?? 0 }}</td>
                             @endforeach
                         </tr>
                     </thead>
@@ -362,13 +362,13 @@ new class extends Component {
                                         $mcsPass = array_sum(array_column($weekData, 'pass'));
                                         $mcsFail = array_sum(array_column($weekData, 'fail'));
                                     @endphp
-                                    <td class="text-center px-2 py-3 border-l border-neutral-200 dark:border-neutral-700 font-medium">{{ $mcsTotal }}</td>
-                                    <td class="text-center px-2 py-3 text-green-600 dark:text-green-400 font-medium">{{ $mcsPass }}</td>
-                                    <td class="text-center px-2 py-3 text-red-600 dark:text-red-400 font-medium">{{ $mcsFail }}</td>
+                                    <td class="text-center px-2 py-3 border-l border-neutral-200 dark:border-neutral-700 font-medium {{ $mcsTotal > 0 ? '' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $mcsTotal }}</td>
+                                    <td class="text-center px-2 py-3 {{ $mcsPass > 0 ? 'text-green-600 dark:text-green-400' : 'text-neutral-300 dark:text-neutral-700' }} font-medium">{{ $mcsPass }}</td>
+                                    <td class="text-center px-2 py-3 {{ $mcsFail > 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-300 dark:text-neutral-700' }} font-medium">{{ $mcsFail }}</td>
                                     @foreach($weeks as $week)
-                                    <td class="text-center px-2 py-3 border-l border-neutral-200 dark:border-neutral-700">{{ $weekData[$week['week']]['jumlah'] ?? 0 }}</td>
-                                    <td class="text-center px-2 py-3 text-green-600 dark:text-green-400">{{ $weekData[$week['week']]['pass'] ?? 0 }}</td>
-                                    <td class="text-center px-2 py-3 text-red-600 dark:text-red-400">{{ $weekData[$week['week']]['fail'] ?? 0 }}</td>
+                                    <td class="text-center px-2 py-3 border-l border-neutral-200 dark:border-neutral-700 {{ ($weekData[$week['week']]['jumlah'] ?? 0) > 0 ? '' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $weekData[$week['week']]['jumlah'] ?? 0 }}</td>
+                                    <td class="text-center px-2 py-3 {{ ($weekData[$week['week']]['pass'] ?? 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $weekData[$week['week']]['pass'] ?? 0 }}</td>
+                                    <td class="text-center px-2 py-3 {{ ($weekData[$week['week']]['fail'] ?? 0) > 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $weekData[$week['week']]['fail'] ?? 0 }}</td>
                                     @endforeach
                                 </tr>
                                 @endforeach
@@ -381,13 +381,13 @@ new class extends Component {
                                         $categoryMonthlyPass = array_sum(array_column($categorized['totals'][$category], 'pass'));
                                         $categoryMonthlyFail = array_sum(array_column($categorized['totals'][$category], 'fail'));
                                     @endphp
-                                    <td class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700">{{ $categoryMonthlyTotal }}</td>
-                                    <td class="text-center px-2 py-2 text-green-600 dark:text-green-400">{{ $categoryMonthlyPass }}</td>
-                                    <td class="text-center px-2 py-2 text-red-600 dark:text-red-400">{{ $categoryMonthlyFail }}</td>
+                                    <td class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700 {{ $categoryMonthlyTotal > 0 ? '' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $categoryMonthlyTotal }}</td>
+                                    <td class="text-center px-2 py-2 {{ $categoryMonthlyPass > 0 ? 'text-green-600 dark:text-green-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $categoryMonthlyPass }}</td>
+                                    <td class="text-center px-2 py-2 {{ $categoryMonthlyFail > 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $categoryMonthlyFail }}</td>
                                     @foreach($weeks as $week)
-                                    <td class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700">{{ $categorized['totals'][$category][$week['week']]['jumlah'] ?? 0 }}</td>
-                                    <td class="text-center px-2 py-2 text-green-600 dark:text-green-400">{{ $categorized['totals'][$category][$week['week']]['pass'] ?? 0 }}</td>
-                                    <td class="text-center px-2 py-2 text-red-600 dark:text-red-400">{{ $categorized['totals'][$category][$week['week']]['fail'] ?? 0 }}</td>
+                                    <td class="text-center px-2 py-2 border-l border-neutral-200 dark:border-neutral-700 {{ ($categorized['totals'][$category][$week['week']]['jumlah'] ?? 0) > 0 ? '' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $categorized['totals'][$category][$week['week']]['jumlah'] ?? 0 }}</td>
+                                    <td class="text-center px-2 py-2 {{ ($categorized['totals'][$category][$week['week']]['pass'] ?? 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $categorized['totals'][$category][$week['week']]['pass'] ?? 0 }}</td>
+                                    <td class="text-center px-2 py-2 {{ ($categorized['totals'][$category][$week['week']]['fail'] ?? 0) > 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-300 dark:text-neutral-700' }}">{{ $categorized['totals'][$category][$week['week']]['fail'] ?? 0 }}</td>
                                     @endforeach
                                 </tr>
                             @endif

@@ -38,7 +38,7 @@ class InsStcRoutine extends Command
 
     protected $reset_timeout = 300;         // 5 minutes in seconds
 
-    protected $adjustment_threshold = 1.0;  // ±1.0°C threshold
+    protected $adjustment_threshold = 2.0;  // ±2.0°C threshold
 
     // State management
     protected $data_buffer = [];            // Buffer for ambient temperature measurements
@@ -496,7 +496,7 @@ class InsStcRoutine extends Command
                     $this->line("→ {$machine->line} {$position}: reference={$reference_temp}°C ({$latest_ambient['source']}), current={$current_ambient_temp}°C, delta={$delta_temp}°C");
                 }
 
-                // Check if adjustment is needed (threshold ±1.0°C)
+                // Check if adjustment is needed (threshold ±2.0°C)
                 if (abs($delta_temp) >= $this->adjustment_threshold) {
                     $adjustment_result = $this->adjustMachine($latest_d_sum, $machine, $position, $current_ambient_temp, $reference_temp, $delta_temp, $latest_ambient);
 

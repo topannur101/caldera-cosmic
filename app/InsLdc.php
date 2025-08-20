@@ -1093,7 +1093,7 @@ class InsLdc
                 'labels' => $labels,
                 'datasets' => [
                     [
-                        'label' => __('Area VN per Hari'),
+                        'label' => __('SF/hari'),
                         'data' => $productivity,
                         'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
                         'borderColor' => 'rgba(54, 162, 235, 1)',
@@ -1108,7 +1108,7 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Produktivitas Pekerja (Area VN per Hari)')
+                        'text' => __('Produktivitas Pekerja (SF/hari)')
                     ],
                     'legend' => [
                         'display' => false
@@ -1119,7 +1119,7 @@ class InsLdc
                         'beginAtZero' => true,
                         'title' => [
                             'display' => true,
-                            'text' => __('Area VN per Hari')
+                            'text' => __('SF/hari')
                         ]
                     ]
                 ]
@@ -1165,7 +1165,7 @@ class InsLdc
                                 const workerIndex = context.dataIndex;
                                 const workers = ' . json_encode($workers) . ';
                                 const worker = workers[workerIndex];
-                                return worker.name + " (" + worker.emp_id + "): " + context.parsed.x + " area/hari, " + context.parsed.y + " konsistensi";
+                                return worker.name + " (" + worker.emp_id + "): " + context.parsed.x + " SF/hari, " + context.parsed.y + " konsistensi";
                             }'
                         ]
                     ],
@@ -1177,7 +1177,7 @@ class InsLdc
                     'x' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Produktivitas (Area VN per Hari)')
+                            'text' => __('Produktivitas (SF/hari)')
                         ]
                     ],
                     'y' => [
@@ -1245,7 +1245,7 @@ class InsLdc
                     'y' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Produktivitas (Area VN per Hari)')
+                            'text' => __('Produktivitas (SF/hari)')
                         ]
                     ]
                 ]
