@@ -370,32 +370,22 @@ class InsStcRoutine extends Command
     }
 
     /**
-     * Get the latest ambient temperature from either InsStcAdjust or InsStcDSum records within the specified time window
+     * Get the latest ambient temperature prioritizing d-sum within 8 hours, then linked adjustments
      * 
      * @param int $machine_id
      * @param string $position
-     * @param int $hours_back How many hours back to look (default: 1)
+     * @param int $hours_back How many hours back to look for d-sum (default: 8)
      * @return array|null Returns ['temp' => float, 'source' => string, 'timestamp' => Carbon] or null if not found
      */
-    public function getLatestAmbientTemperature($machine_id, $position, $hours_back = 1)
+    public function getLatestAmbientTemperature($machine_id, $position, $hours_back = 8)
     {
         $cutoff_time = Carbon::now()->subHours($hours_back);
         
         if ($this->option('d')) {
-            $this->line("→ Looking for latest ambient temp for {$machine_id} {$position} since {$cutoff_time->format('H:i:s')}");
+            $this->line("→ Looking for d-sum within {$hours_back} hours for {$machine_id} {$position} since {$cutoff_time->format('H:i:s')}");
         }
 
-        // Check InsStcAdjust records first (more recent adjustments)
-        $latest_adjustment = InsStcAdjust::whereHas('ins_stc_d_sum', function ($query) use ($machine_id, $position) {
-            $query->where('ins_stc_machine_id', $machine_id)
-                  ->where('position', $position);
-        })
-        ->where('created_at', '>=', $cutoff_time)
-        ->where('current_temp', '>', 0) // Valid temperature
-        ->orderBy('created_at', 'desc')
-        ->first();
-
-        // Check InsStcDSum records (d_sum baseline temperatures)
+        // Step 1: Find latest d_sum within specified hours (default 8 hours)
         $latest_d_sum = InsStcDSum::where('ins_stc_machine_id', $machine_id)
             ->where('position', $position)
             ->where('created_at', '>=', $cutoff_time)
@@ -403,23 +393,44 @@ class InsStcRoutine extends Command
             ->orderBy('created_at', 'desc')
             ->first();
 
-        $candidates = [];
-
-        // Add adjustment candidate
-        if ($latest_adjustment) {
-            $candidates[] = [
-                'temp' => $latest_adjustment->current_temp,
-                'source' => 'adjustment',
-                'timestamp' => $latest_adjustment->created_at,
-                'id' => $latest_adjustment->id
-            ];
+        if (!$latest_d_sum) {
+            if ($this->option('d')) {
+                $this->line("  → No d-sum found within {$hours_back} hour(s)");
+            }
+            return null;
         }
 
-        // Add d_sum candidate
-        if ($latest_d_sum) {
+        if ($this->option('d')) {
+            $this->line("  → Found d-sum ID: {$latest_d_sum->id} at {$latest_d_sum->created_at->format('H:i:s')}");
+        }
+
+        // Step 2: Look for latest ins_stc_adjust linked to this specific d-sum
+        $linked_adjustment = InsStcAdjust::where('ins_stc_d_sum_id', $latest_d_sum->id)
+            ->where('current_temp', '>', 0) // Valid temperature
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        // Step 3: Return adjustment temp if found, otherwise return d-sum AT value
+        if ($linked_adjustment) {
+            if ($this->option('d')) {
+                $this->line("  → Using linked adjustment ID: {$linked_adjustment->id} temp: {$linked_adjustment->current_temp}°C");
+            }
+            
+            return [
+                'temp' => $linked_adjustment->current_temp,
+                'source' => 'adjustment',
+                'timestamp' => $linked_adjustment->created_at,
+                'id' => $linked_adjustment->id
+            ];
+        } else {
+            // Use d-sum AT value
             $at_values = json_decode($latest_d_sum->at_values, true);
             if (is_array($at_values) && isset($at_values[1]) && $at_values[1] > 0) {
-                $candidates[] = [
+                if ($this->option('d')) {
+                    $this->line("  → Using d-sum AT value: {$at_values[1]}°C (no linked adjustments found)");
+                }
+                
+                return [
                     'temp' => (float) $at_values[1],
                     'source' => 'd_sum',
                     'timestamp' => $latest_d_sum->created_at,
@@ -428,21 +439,11 @@ class InsStcRoutine extends Command
             }
         }
 
-        if (empty($candidates)) {
-            if ($this->option('d')) {
-                $this->line("  → No recent ambient temperature found within {$hours_back} hour(s)");
-            }
-            return null;
-        }
-
-        // Return the most recent candidate
-        $latest = collect($candidates)->sortByDesc('timestamp')->first();
-        
         if ($this->option('d')) {
-            $this->line("  → Latest ambient temp: {$latest['temp']}°C from {$latest['source']} (ID: {$latest['id']}) at {$latest['timestamp']->format('H:i:s')}");
+            $this->line("  → D-sum found but no valid AT value");
         }
-
-        return $latest;
+        
+        return null;
     }
 
     /**
@@ -477,12 +478,12 @@ class InsStcRoutine extends Command
                     continue;
                 }
 
-                // Get latest ambient temperature reference (within 1 hour) - this fixes the n+1 problem
-                $latest_ambient = $this->getLatestAmbientTemperature($machine->id, $position, 1);
+                // Get latest ambient temperature reference (within 8 hours) - this fixes the n+1 problem
+                $latest_ambient = $this->getLatestAmbientTemperature($machine->id, $position, 8);
                 
                 if (! $latest_ambient) {
                     if ($this->option('d')) {
-                        $this->line("No recent ambient temperature reference found for {$machine->line} {$position} (within 1 hour)");
+                        $this->line("No recent ambient temperature reference found for {$machine->line} {$position} (within 8 hours)");
                     }
 
                     continue;
