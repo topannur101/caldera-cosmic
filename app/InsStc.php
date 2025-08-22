@@ -830,6 +830,7 @@ class InsStc
             $yMin = $yzones[$zoneIndex];
             $yMax = $yzones[$zoneIndex + 1];
     
+            // Box annotation (existing faint red background)
             $annotations[] = [
                 'type' => 'box',
                 'xMin' => Carbon::parse($logs[$startIndex]['taken_at']),
@@ -838,6 +839,25 @@ class InsStc
                 'yMax' => $yMax,
                 'backgroundColor' => 'rgba(214, 69, 80, 0.10)', // #D64550 with 25% opacity
                 'borderWidth' => 0
+            ];
+
+            // Label annotation showing standard range
+            $xCenter = Carbon::parse($logs[$startIndex]['taken_at'])
+                ->addSeconds((Carbon::parse($logs[$endIndex]['taken_at'])->timestamp - Carbon::parse($logs[$startIndex]['taken_at'])->timestamp) / 2);
+            
+            $annotations[] = [
+                'type' => 'label',
+                'xValue' => $xCenter,
+                'yValue' => $yMax,
+                'content' => sprintf('%d-%d°C', $yMin, $yMax),
+                'backgroundColor' => 'rgba(214, 69, 80, 0.2)',
+                'color' => '#333333',
+                'font' => [
+                    'size' => 10,
+                ],
+                'padding' => 2,
+                'borderRadius' => 4,
+                'position' => 'center'
             ];
         }
     
@@ -1037,28 +1057,45 @@ class InsStc
             $zoneIndex = array_search($zoneName, array_keys($zones));
             $y = $yzones[count($yzones) - $zoneIndex - 2];
     
-            // Calculate zone value (average of two sections' median temperatures)
-            $zoneValue = round(
-                ($medians[$zoneSections[0]] + $medians[$zoneSections[1]]) / 2, 
-                2
-            );
-    
-            $pointAnnotations[] = [
-                'x' => $x,
-                'y' => $y,
-                'marker' => [
-                    'size' => 0,
-                    'strokeWidth' => 0,
-                ],
-                'label' => [
-                    'borderWidth' => 0,
-                    'text' => sprintf('%s: %.2f', __('Z') . + ++$i, $zoneValue),
-                    'style' => [
-                        'background' => '#D64550',
-                        'color' => '#ffffff',
+            // Calculate zone temperature range (min-max from both sections)
+            $sections = Self::groupValuesBySection($temps);
+            $zoneTempValues = [];
+            foreach ($zoneSections as $section) {
+                if (isset($sections[$section]) && !empty($sections[$section])) {
+                    $zoneTempValues = array_merge($zoneTempValues, $sections[$section]);
+                }
+            }
+            
+            if (!empty($zoneTempValues)) {
+                $minTemp = min($zoneTempValues);
+                $maxTemp = max($zoneTempValues);
+                $range = $maxTemp - $minTemp;
+                
+                // Color coding based on temperature range quality
+                $backgroundColor = '#D64550'; // Default red
+                if ($range <= 5) {
+                    $backgroundColor = '#10B981'; // Green for good ranges (≤5°C)
+                } elseif ($range <= 10) {
+                    $backgroundColor = '#F59E0B'; // Yellow for moderate ranges (≤10°C)
+                }
+                
+                $pointAnnotations[] = [
+                    'x' => $x,
+                    'y' => $y,
+                    'marker' => [
+                        'size' => 0,
+                        'strokeWidth' => 0,
                     ],
-                ],
-            ];
+                    'label' => [
+                        'borderWidth' => 0,
+                        'text' => sprintf('%s: %d-%d°C', __('Z') . (++$i), $minTemp, $maxTemp),
+                        'style' => [
+                            'background' => $backgroundColor,
+                            'color' => '#ffffff',
+                        ],
+                    ],
+                ];
+            }
         }
     
         return $pointAnnotations;
