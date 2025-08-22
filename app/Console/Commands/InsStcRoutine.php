@@ -608,9 +608,9 @@ class InsStcRoutine extends Command
      */
     public function calculateAdjustedSv($current_sv, $delta_temp, $machine, $position)
     {
-        // Section-specific SV limits
-        $svp_highs = [83, 78, 73, 68, 63, 58, 53, 48];
-        $svp_lows = [73, 68, 63, 58, 53, 48, 43, 38];
+        // Get machine-specific SV limits with fallback to defaults
+        $svp_highs = $machine->section_limits_high ?? [83, 78, 73, 68, 63, 58, 53, 48];
+        $svp_lows = $machine->section_limits_low ?? [73, 68, 63, 58, 53, 48, 43, 38];
 
         $adjusted_sv = [];
 

@@ -86,8 +86,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <th>{{ __('Nama') }}</th>
                             <th>{{ __('Line') }}</th>
                             <th>{{ __('Alamat IP') }}</th>
-                            <th>{{ __('AT') }}</th>
-                            <th>{{ __('Kekuatan AT (%)') }}</th>
+                            <th colspan="2">{{ __('Penyetelan AT') }}</th>
                         </tr>
                         @foreach ($machines as $machine)
                             <tr wire:key="machine-tr-{{ $machine->id . $loop->index }}" tabindex="0"

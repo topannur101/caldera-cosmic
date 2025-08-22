@@ -410,10 +410,24 @@ new class extends Component
         $this->resetPrediction();
         $this->validateBeforePredict();
 
+        // Get machine-specific limits if machine is selected
+        $svp_highs = null;
+        $svp_lows = null;
+        
+        if (!empty($this->d_sum['ins_stc_machine_id'])) {
+            $machine = InsStcMachine::find($this->d_sum['ins_stc_machine_id']);
+            if ($machine) {
+                $svp_highs = $machine->section_limits_high;
+                $svp_lows = $machine->section_limits_low;
+            }
+        }
+
         $svp_values = InsStc::calculateSVP(
             $this->d_sum['hb_values'],
             $this->d_sum['sv_values'],
-            $this->d_sum['formula_id']
+            $this->d_sum['formula_id'],
+            $svp_highs,
+            $svp_lows
         );
         $this->d_sum['svp_values'] = array_map(function ($item) {
             return $item['absolute'];

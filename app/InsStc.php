@@ -196,11 +196,13 @@ class InsStc
         return $medians;
     }
 
-    public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id): array
+    public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id, ?array $svp_highs = null, ?array $svp_lows = null): array
     {
         $target_values  = Self::$target_values;
-        $svp_highs      = [ 83, 78, 73, 68, 63, 58, 53, 48 ];
-        $svp_lows       = [ 73, 68, 63, 58, 53, 48, 43, 38 ];
+        
+        // Use provided limits or fallback to defaults
+        $svp_highs      = $svp_highs ?? [ 83, 78, 73, 68, 63, 58, 53, 48 ];
+        $svp_lows       = $svp_lows ?? [ 73, 68, 63, 58, 53, 48, 43, 38 ];
 
         // Validate input arrays have same length
         if (count($hb_values) !== count($target_values) || count($sv_values) !== count($target_values)) {
