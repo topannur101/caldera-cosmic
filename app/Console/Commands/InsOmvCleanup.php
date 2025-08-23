@@ -30,7 +30,7 @@ class InsOmvCleanup extends Command
     {
         // Deklarasikan sebulan yang lalu
         $oneMonthAgo = Carbon::now()->subMonth();
-        
+
         // ambil foto omv yang lebih dari sebulan yang lalu
         $oldRecords = DB::table('ins_omv_captures')
             ->where('created_at', '<', $oneMonthAgo)
@@ -42,7 +42,7 @@ class InsOmvCleanup extends Command
         foreach ($oldRecords as $record) {
             try {
                 // Delete the associated file
-                $filePath = 'public/omv-captures/' . $record->file_name;
+                $filePath = 'public/omv-captures/'.$record->file_name;
                 if (Storage::exists($filePath)) {
                     Storage::delete($filePath);
                 }

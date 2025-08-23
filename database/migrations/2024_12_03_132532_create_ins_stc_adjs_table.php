@@ -23,7 +23,7 @@ return new class extends Migration
             $table->foreignId('ins_stc_machine_id');
             $table->enum('position', ['upper', 'lower']);
             $table->boolean('use_m_log_sv');
-            
+
             $table->foreignId('ins_stc_d_sum_id');
             $table->foreignId('ins_stc_m_log_id')->nullable();
             $table->integer('formula_id');
@@ -35,8 +35,8 @@ return new class extends Migration
             $table->tinyInteger('sv_p_5');
             $table->tinyInteger('sv_p_6');
             $table->tinyInteger('sv_p_7');
-            $table->tinyInteger('sv_p_8');      
-            
+            $table->tinyInteger('sv_p_8');
+
             $table->string('remarks')->nullable();
             $table->boolean('is_applied')->default(0);
 

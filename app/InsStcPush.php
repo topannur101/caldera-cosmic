@@ -2,14 +2,14 @@
 
 namespace App;
 
-use ModbusTcpClient\Network\BinaryStreamConnection;
-use ModbusTcpClient\Packet\ModbusFunction\WriteMultipleRegistersRequest;
-use ModbusTcpClient\Packet\ModbusFunction\WriteSingleRegisterRequest;
-use ModbusTcpClient\Packet\ModbusFunction\WriteSingleCoilRequest;
-use ModbusTcpClient\Packet\ResponseFactory;
-use ModbusTcpClient\Utils\Types;
 use Exception;
 use InvalidArgumentException;
+use ModbusTcpClient\Network\BinaryStreamConnection;
+use ModbusTcpClient\Packet\ModbusFunction\WriteMultipleRegistersRequest;
+use ModbusTcpClient\Packet\ModbusFunction\WriteSingleCoilRequest;
+use ModbusTcpClient\Packet\ModbusFunction\WriteSingleRegisterRequest;
+use ModbusTcpClient\Packet\ResponseFactory;
+use ModbusTcpClient\Utils\Types;
 
 class InsStcPush
 {
@@ -23,187 +23,187 @@ class InsStcPush
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 322,
-                    'lower' => 312
+                    'lower' => 312,
                 ],
-                'function' => 'singleCoil'
+                'function' => 'singleCoil',
             ],
             'section_svp' => [
                 'valueCount' => 8,
                 'startAddresses' => [
                     'upper' => 230,
-                    'lower' => 130
+                    'lower' => 130,
                 ],
-                'function' => 'multipleRegisters'
+                'function' => 'multipleRegisters',
             ],
             'section_hb' => [
                 'valueCount' => 8,
                 'startAddresses' => [
                     'upper' => 270,
-                    'lower' => 170
+                    'lower' => 170,
                 ],
-                'function' => 'multipleRegisters'
+                'function' => 'multipleRegisters',
             ],
             'zone_hb' => [
                 'valueCount' => 4,
                 'startAddresses' => [
                     'upper' => 260,
-                    'lower' => 160
+                    'lower' => 160,
                 ],
-                'function' => 'multipleRegisters'
+                'function' => 'multipleRegisters',
             ],
             'chart_hb' => [
                 'valueCount' => 60,
                 'startAddresses' => [
                     'upper' => 2001,
-                    'lower' => 1001
+                    'lower' => 1001,
                 ],
-                'function' => 'multipleRegisters'
+                'function' => 'multipleRegisters',
             ],
             'info_duration' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 2110,
-                    'lower' => 1110
+                    'lower' => 1110,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'info_speed' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 2120,
-                    'lower' => 1120
+                    'lower' => 1120,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'info_device_code' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 2130,
-                    'lower' => 1130
+                    'lower' => 1130,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'info_operator' => [
                 'valueCount' => 3,
                 'startAddresses' => [
                     'upper' => 2140,
-                    'lower' => 1140
+                    'lower' => 1140,
                 ],
-                'function' => 'multipleRegisters'
+                'function' => 'multipleRegisters',
             ],
             'info_year' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 2150,
-                    'lower' => 1150
+                    'lower' => 1150,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'info_month_date' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 2160,
-                    'lower' => 1160
+                    'lower' => 1160,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'info_time' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 2170,
-                    'lower' => 1170
+                    'lower' => 1170,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'history_1_section_svp' => [
                 'valueCount' => 8,
                 'startAddresses' => [
                     'upper' => 10230,
-                    'lower' => 10130
+                    'lower' => 10130,
                 ],
-                'function' => 'multipleRegisters'
+                'function' => 'multipleRegisters',
             ],
             'history_1_chart_hb' => [
                 'valueCount' => 60,
                 'startAddresses' => [
                     'upper' => 12001,
-                    'lower' => 11001
+                    'lower' => 11001,
                 ],
-                'function' => 'multipleRegisters'
+                'function' => 'multipleRegisters',
             ],
             'history_1_info_duration' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 12110,
-                    'lower' => 11110
+                    'lower' => 11110,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'history_1_info_speed' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 12120,
-                    'lower' => 11120
+                    'lower' => 11120,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'history_1_info_device_code' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 12130,
-                    'lower' => 11130
+                    'lower' => 11130,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'history_1_info_operator' => [
                 'valueCount' => 3,
                 'startAddresses' => [
                     'upper' => 12140,
-                    'lower' => 11140
+                    'lower' => 11140,
                 ],
-                'function' => 'multipleRegisters'
+                'function' => 'multipleRegisters',
             ],
             'history_1_info_year' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 12150,
-                    'lower' => 11150
+                    'lower' => 11150,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'history_1_info_month_date' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 12160,
-                    'lower' => 11160
+                    'lower' => 11160,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
             'history_1_info_time' => [
                 'valueCount' => 1,
                 'startAddresses' => [
                     'upper' => 12170,
-                    'lower' => 11170
+                    'lower' => 11170,
                 ],
-                'function' => 'singleRegister'
+                'function' => 'singleRegister',
             ],
 
         ];
 
         if (strpos($ipAddress, '127.') === 0) {
-            throw new InvalidArgumentException("The IP is a loopback address");
+            throw new InvalidArgumentException('The IP is a loopback address');
         }
-    
-        if (!isset($typeConfigs[$type])) {
+
+        if (! isset($typeConfigs[$type])) {
             throw new InvalidArgumentException("Invalid type: $type");
         }
-    
+
         $config = $typeConfigs[$type];
 
-        if (!in_array($position, ['upper', 'lower'])) {
+        if (! in_array($position, ['upper', 'lower'])) {
             throw new InvalidArgumentException("Invalid position: $position");
         }
-    
+
         if (count($values) !== $config['valueCount']) {
             throw new InvalidArgumentException("Invalid number of values for type: $type");
         }
@@ -218,21 +218,22 @@ class InsStcPush
             $connection->connect();
 
             if ($config['function'] === 'singleCoil') {
-                $coil = (bool)$values[0];
+                $coil = (bool) $values[0];
                 $packet = new WriteSingleCoilRequest($startAddress, $coil, $unitID);
 
             } elseif ($config['function'] === 'singleRegister') {
-                $register = (int)$values[0];
+                $register = (int) $values[0];
                 $packet = new WriteSingleRegisterRequest($startAddress, $register, $unitID);
 
             } else {
-                $registers = array_map(function($value) use($type) {
-                    $intValue = (int)$value;
+                $registers = array_map(function ($value) use ($type) {
+                    $intValue = (int) $value;
                     if (($intValue < 30 || $intValue > 90) && $type === 'section_svp') {
                         throw new InvalidArgumentException(
                             __('Nilai SVP berada di luar jangkauan (30-90)')
                         );
                     }
+
                     return Types::toInt16($intValue);
                 }, $values);
                 $packet = new WriteMultipleRegistersRequest($startAddress, $registers, $unitID);
@@ -242,15 +243,16 @@ class InsStcPush
 
             if ($config['function'] === 'singleCoil') {
                 $response = ResponseFactory::parseResponseOrThrow($binaryData);
+
                 return $response->isCoil();
             } else {
                 $response = ResponseFactory::parseResponseOrThrow($binaryData);
+
                 return $response;
             }
 
         } catch (Exception $exception) {
             throw $exception;
-
         } finally {
             $connection->close();
         }

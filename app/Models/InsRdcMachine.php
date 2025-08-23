@@ -11,10 +11,10 @@ class InsRdcMachine extends Model
 
     protected $fillable = [
         'number',
-        'name', 
+        'name',
         'type',
         'cells',
-        'is_active'
+        'is_active',
     ];
 
     protected $casts = [
@@ -39,13 +39,13 @@ class InsRdcMachine extends Model
     public function getFieldConfig(string $field): ?array
     {
         $cells = $this->cells ?? [];
-        
+
         foreach ($cells as $cell) {
             if (isset($cell['field']) && $cell['field'] === $field) {
                 return $cell;
             }
         }
-        
+
         return null;
     }
 
@@ -70,7 +70,7 @@ class InsRdcMachine extends Model
      */
     public function getAcceptedFileTypes(): string
     {
-        return match($this->type) {
+        return match ($this->type) {
             'excel' => '.xls,.xlsx',
             'txt' => '.txt',
             default => '.xls,.xlsx,.txt'
@@ -82,7 +82,7 @@ class InsRdcMachine extends Model
      */
     public function getFileTypeDescription(): string
     {
-        return match($this->type) {
+        return match ($this->type) {
             'excel' => 'Excel Files (.xls, .xlsx)',
             'txt' => 'Text Files (.txt)',
             default => 'Excel or Text Files'
@@ -102,13 +102,13 @@ class InsRdcMachine extends Model
      */
     public static function getBoundsFieldNames(string $field): array
     {
-        if (!self::isBoundsField($field)) {
+        if (! self::isBoundsField($field)) {
             return [$field];
         }
 
         return [
-            $field . '_low',
-            $field . '_high'
+            $field.'_low',
+            $field.'_high',
         ];
     }
 
@@ -126,14 +126,14 @@ class InsRdcMachine extends Model
     public function hasLegacyConfig(): bool
     {
         $cells = $this->cells ?? [];
-        
+
         foreach ($cells as $cell) {
             // Legacy format has 'address' or 'pattern' without 'type'
-            if (!isset($cell['type']) && (isset($cell['address']) || isset($cell['pattern']))) {
+            if (! isset($cell['type']) && (isset($cell['address']) || isset($cell['pattern']))) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -142,7 +142,7 @@ class InsRdcMachine extends Model
      */
     public function migrateLegacyConfig(): bool
     {
-        if (!$this->hasLegacyConfig()) {
+        if (! $this->hasLegacyConfig()) {
             return false; // Already migrated or no config
         }
 
@@ -150,7 +150,7 @@ class InsRdcMachine extends Model
         $migratedCells = [];
 
         foreach ($cells as $cell) {
-            if (!isset($cell['field'])) {
+            if (! isset($cell['field'])) {
                 continue;
             }
 
@@ -172,6 +172,7 @@ class InsRdcMachine extends Model
         }
 
         $this->cells = $migratedCells;
+
         return $this->save();
     }
 
@@ -183,46 +184,47 @@ class InsRdcMachine extends Model
         $errors = [];
 
         foreach ($config as $index => $field) {
-            if (!isset($field['field']) || !isset($field['type'])) {
+            if (! isset($field['field']) || ! isset($field['type'])) {
                 $errors[] = "Configuration {$index}: Missing required fields";
+
                 continue;
             }
 
             switch ($field['type']) {
                 case 'static':
-                    if (!isset($field['address']) || !preg_match('/^[A-Z]+[1-9]\d*$/', $field['address'])) {
+                    if (! isset($field['address']) || ! preg_match('/^[A-Z]+[1-9]\d*$/', $field['address'])) {
                         $errors[] = "Field {$field['field']}: Invalid Excel address";
                     }
                     break;
 
                 case 'dynamic':
-                    if (!isset($field['row_search']) || !isset($field['column_search'])) {
+                    if (! isset($field['row_search']) || ! isset($field['column_search'])) {
                         $errors[] = "Field {$field['field']}: Missing search terms";
                         break;
                     }
 
                     // Validate alphanumeric only
-                    if (!preg_match('/^[a-zA-Z0-9]+$/', $field['row_search'])) {
+                    if (! preg_match('/^[a-zA-Z0-9]+$/', $field['row_search'])) {
                         $errors[] = "Field {$field['field']}: Row search must be alphanumeric only";
                     }
 
-                    if (!preg_match('/^[a-zA-Z0-9]+$/', $field['column_search'])) {
+                    if (! preg_match('/^[a-zA-Z0-9]+$/', $field['column_search'])) {
                         $errors[] = "Field {$field['field']}: Column search must be alphanumeric only";
                     }
 
                     // Validate offsets are integers
-                    if (isset($field['row_offset']) && !is_int($field['row_offset'])) {
+                    if (isset($field['row_offset']) && ! is_int($field['row_offset'])) {
                         $errors[] = "Field {$field['field']}: Row offset must be integer";
                     }
 
-                    if (isset($field['column_offset']) && !is_int($field['column_offset'])) {
+                    if (isset($field['column_offset']) && ! is_int($field['column_offset'])) {
                         $errors[] = "Field {$field['field']}: Column offset must be integer";
                     }
                     break;
 
                 case 'pattern':
                     // For txt machines
-                    if (!isset($field['pattern']) || empty(trim($field['pattern']))) {
+                    if (! isset($field['pattern']) || empty(trim($field['pattern']))) {
                         $errors[] = "Field {$field['field']}: Pattern cannot be empty";
                     }
                     break;

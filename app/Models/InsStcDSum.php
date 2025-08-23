@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use App\InsStc;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InsStcDSum extends Model
 {
@@ -36,10 +36,10 @@ class InsStcDSum extends Model
         'sequence',
         'position',
     ];
-    
+
     protected $casts = [
-        'started_at'    => 'datetime:Y-m-d H:i',
-        'ended_at'      => 'datetime:Y-m-d H:i',
+        'started_at' => 'datetime:Y-m-d H:i',
+        'ended_at' => 'datetime:Y-m-d H:i',
         'speed' => 'float',
     ];
 
@@ -57,9 +57,9 @@ class InsStcDSum extends Model
     {
         switch ($this->integrity) {
             case 'stable':
-                return '<i class="icon-circle-check me-2 text-green-500"></i>' . __('SV cocok');
+                return '<i class="icon-circle-check me-2 text-green-500"></i>'.__('SV cocok');
             case 'modified':
-                return '<i class="icon-circle-alert me-2 text-yellow-500"></i>' . __('SV berubah');
+                return '<i class="icon-circle-alert me-2 text-yellow-500"></i>'.__('SV berubah');
             case 'none':
                 return __('Tak ada pembanding');
             default:
@@ -71,11 +71,12 @@ class InsStcDSum extends Model
     {
         if ($this->is_applied) {
             if ($this->sv_used == 'm_log') {
-            return 'full-auto';
+                return 'full-auto';
             } elseif ($this->sv_used == 'd_sum') {
-            return 'semi-auto';
+                return 'semi-auto';
             }
         }
+
         return 'none';
     }
 
@@ -83,9 +84,9 @@ class InsStcDSum extends Model
     {
         switch ($this->adjustment()) {
             case 'full-auto':
-                return '<i class="icon-circle-check me-2 text-green-500"></i>' . __('Auto (SV auto)');
+                return '<i class="icon-circle-check me-2 text-green-500"></i>'.__('Auto (SV auto)');
             case 'semi-auto':
-                return '<i class="icon-circle-check me-2 text-yellow-500"></i>' . __('Auto (SV manual)');
+                return '<i class="icon-circle-check me-2 text-yellow-500"></i>'.__('Auto (SV manual)');
             case 'manual':
                 return __('Manual');
             default:
@@ -95,41 +96,36 @@ class InsStcDSum extends Model
 
     /**
      * Get the previous AT value (element 0 of at_values)
-     * 
-     * @return float
      */
     public function getPreviousAtAttribute(): float
     {
         $at_values = $this->at_values ? json_decode($this->at_values, true) : [0, 0, 0];
+
         return isset($at_values[0]) ? (float) $at_values[0] : 0.0;
     }
 
     /**
      * Get the current AT value (element 1 of at_values)
-     * 
-     * @return float
      */
     public function getCurrentAtAttribute(): float
     {
         $at_values = $this->at_values ? json_decode($this->at_values, true) : [0, 0, 0];
+
         return isset($at_values[1]) ? (float) $at_values[1] : 0.0;
     }
 
     /**
      * Get the delta AT value (element 2 of at_values)
-     * 
-     * @return float
      */
     public function getDeltaAtAttribute(): float
     {
         $at_values = $this->at_values ? json_decode($this->at_values, true) : [0, 0, 0];
+
         return isset($at_values[2]) ? (float) $at_values[2] : 0.0;
     }
 
     /**
      * Get all AT values as an array
-     * 
-     * @return array
      */
     public function getAtValuesArrayAttribute(): array
     {
@@ -138,8 +134,6 @@ class InsStcDSum extends Model
 
     /**
      * Check if AT adjustment should be applied based on delta
-     * 
-     * @return bool
      */
     public function shouldApplyAtAdjustment(): bool
     {

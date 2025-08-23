@@ -14,10 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 new class extends Component {
-
     use HasDateRangeFilter;
-
-
 
     public array $models = [];
 
@@ -38,80 +35,79 @@ new class extends Component {
     public string $type;
 
     #[Url]
-    public string $selection_mode = 'recents';
+    public string $selection_mode = "recents";
 
     #[Url]
-    public string $start_at = '';
+    public string $start_at = "";
 
     #[Url]
-    public string $end_at = '';
+    public string $end_at = "";
 
     #[Url]
     public int $count = 5;
 
     public function mount()
     {
-        if(!$this->start_at || !$this->end_at)
-        {
+        if (! $this->start_at || ! $this->end_at) {
             $this->setThisWeek();
         }
 
-        $this->lines = InsStcMachine::orderBy('line')->get()->pluck('line')->toArray();
+        $this->lines = InsStcMachine::orderBy("line")
+            ->get()
+            ->pluck("line")
+            ->toArray();
     }
 
-    #[On('update')]
+    #[On("update")]
     public function update()
     {
         $query = InsStcDLog::query();
-        $dSumQuery = InsStcDSum::latest('created_at');
+        $dSumQuery = InsStcDSum::latest("created_at");
 
-        if ($this->selection_mode === 'recents') {
+        if ($this->selection_mode === "recents") {
             $dSumQuery->limit($this->count);
-
-        } elseif ($this->selection_mode === 'range') {
+        } elseif ($this->selection_mode === "range") {
             $start = Carbon::parse($this->start_at);
             $end = Carbon::parse($this->end_at)->endOfDay();
-            
-            $dSumQuery->limit($this->limit)
-            ->whereBetween('created_at', [$start, $end]);
+
+            $dSumQuery->limit($this->limit)->whereBetween("created_at", [$start, $end]);
         }
 
         // Apply additional filters for line and position
         if ($this->line) {
-            $dSumQuery->whereHas('ins_stc_machine', function ($query) {
-                $query->where('line', $this->line);
+            $dSumQuery->whereHas("ins_stc_machine", function ($query) {
+                $query->where("line", $this->line);
             });
         }
 
         if ($this->position) {
-            $dSumQuery->where('position', $this->position);
+            $dSumQuery->where("position", $this->position);
         }
 
         // Get the filtered d_sum IDs
-        $dSumIds = $dSumQuery->pluck('id');
+        $dSumIds = $dSumQuery->pluck("id");
 
         // Now filter d_log using these d_sum IDs
-        $d_sums = InsStcDLog::whereIn('ins_stc_d_sum_id', $dSumIds)
+        $d_sums = InsStcDLog::whereIn("ins_stc_d_sum_id", $dSumIds)
             ->get()
-            ->groupBy('ins_stc_d_sum_id');
+            ->groupBy("ins_stc_d_sum_id");
 
         switch ($this->present_mode) {
-            case 'standard_zone':
+            case "standard_zone":
                 $chartOptions = InsStc::getStandardZoneChartOptions($d_sums, 100, 100);
                 break;
 
-            case 'boxplot':
+            case "boxplot":
                 $chartOptions = InsStc::getBoxplotChartOptions($d_sums, 100, 100);
                 break;
         }
 
-
         // Rest of your existing code remains the same
         $this->js(
             "
-            let recentsOptions = " . 
-            json_encode($chartOptions) .
-            ";
+            let recentsOptions = " .
+                json_encode($chartOptions) .
+                ";
 
             // Render recents chart
             const recentsChartContainer = \$wire.\$el.querySelector('#stc-summary-history-chart-container');
@@ -119,7 +115,7 @@ new class extends Component {
             let recentsChart = new ApexCharts(recentsChartContainer.querySelector('#stc-summary-history-chart'), recentsOptions);
             recentsChart.render();
             ",
-        );        
+        );
     }
 
     public function updated()
@@ -134,50 +130,46 @@ new class extends Component {
     <div class="p-0 sm:p-1 mb-6">
         <div class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <div class="w-full lg:w-28">
-                <label for="query-model"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Model') }}</label>
+                <label for="query-model" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Model") }}</label>
                 <x-text-input id="query-model" wire:model.live="team" type="text" list="query-models" />
                 <datalist id="query-models">
-                    @foreach($models as $model)
+                    @foreach ($models as $model)
                         <option value="{{ $model }}"></option>
                     @endforeach
                 </datalist>
             </div>
             <div class="w-full lg:w-28">
-                <label for="query-color"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Warna') }}</label>
+                <label for="query-color" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Warna") }}</label>
                 <x-text-input id="query-color" wire:model.live="team" type="text" list="query-colors" />
                 <datalist id="query-colors">
-                    @foreach($colors as $color)
+                    @foreach ($colors as $color)
                         <option value="{{ $color }}"></option>
                     @endforeach
                 </datalist>
             </div>
             <div class="w-full lg:w-28">
-                <label for="query-mcs"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
+                <label for="query-mcs" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("MCS") }}</label>
                 <x-text-input id="query-mcs" wire:mcs.live="team" type="text" list="query-mcses" />
                 <datalist id="query-mcss">
-                    @foreach($mcses as $mcs)
+                    @foreach ($mcses as $mcs)
                         <option value="{{ $mcs }}"></option>
                     @endforeach
                 </datalist>
-            </div>            
+            </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div>
-                <label for="history-selection-mode"
-                class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Seleksi') }}</label>
+                <label for="history-selection-mode" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Seleksi") }}</label>
                 <x-select id="history-selection-mode" wire:model.live="selection_mode">
-                    <option value="recents">{{ __('Data terakhir') }}</option>
-                    <option value="range">{{ __('Rentang tanggal') }}</option>
+                    <option value="recents">{{ __("Data terakhir") }}</option>
+                    <option value="range">{{ __("Rentang tanggal") }}</option>
                 </x-select>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+
             @switch($selection_mode)
-                @case('recents')
+                @case("recents")
                     <div class="w-full lg:w-28">
-                        <label for="history-count"
-                        class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Batas') }}</label>
+                        <label for="history-count" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Batas") }}</label>
                         <x-text-input id="history-count" wire:model.live="count" type="number" step="1" list="history-counts" />
                         <datalist id="history-counts">
                             <option value="1"></option>
@@ -186,35 +178,39 @@ new class extends Component {
                             <option value="50"></option>
                         </datalist>
                     </div>
+
                     @break
-                @case('range')
+                @case("range")
                     <div>
                         <div class="flex mb-2 text-xs text-neutral-500">
                             <div class="flex">
                                 <x-dropdown align="left" width="48">
                                     <x-slot name="trigger">
-                                        <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="icon-chevron-down ms-1"></i></x-text-button>
+                                        <x-text-button class="uppercase ml-3">
+                                            {{ __("Rentang") }}
+                                            <i class="icon-chevron-down ms-1"></i>
+                                        </x-text-button>
                                     </x-slot>
                                     <x-slot name="content">
                                         <x-dropdown-link href="#" wire:click.prevent="setToday">
-                                            {{ __('Hari ini') }}
+                                            {{ __("Hari ini") }}
                                         </x-dropdown-link>
                                         <x-dropdown-link href="#" wire:click.prevent="setYesterday">
-                                            {{ __('Kemarin') }}
+                                            {{ __("Kemarin") }}
                                         </x-dropdown-link>
                                         <hr class="border-neutral-300 dark:border-neutral-600" />
                                         <x-dropdown-link href="#" wire:click.prevent="setThisWeek">
-                                            {{ __('Minggu ini') }}
+                                            {{ __("Minggu ini") }}
                                         </x-dropdown-link>
                                         <x-dropdown-link href="#" wire:click.prevent="setLastWeek">
-                                            {{ __('Minggu lalu') }}
+                                            {{ __("Minggu lalu") }}
                                         </x-dropdown-link>
                                         <hr class="border-neutral-300 dark:border-neutral-600" />
                                         <x-dropdown-link href="#" wire:click.prevent="setThisMonth">
-                                            {{ __('Bulan ini') }}
+                                            {{ __("Bulan ini") }}
                                         </x-dropdown-link>
                                         <x-dropdown-link href="#" wire:click.prevent="setLastMonth">
-                                            {{ __('Bulan lalu') }}
+                                            {{ __("Bulan lalu") }}
                                         </x-dropdown-link>
                                     </x-slot>
                                 </x-dropdown>
@@ -222,11 +218,11 @@ new class extends Component {
                         </div>
                         <div class="flex gap-3">
                             <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
-                            <x-text-input wire:model.live="end_at"  id="cal-date-end" type="date"></x-text-input>
+                            <x-text-input wire:model.live="end_at" id="cal-date-end" type="date"></x-text-input>
                         </div>
                     </div>
+
                     @break
-                    
             @endswitch
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grow flex justify-center gap-x-2 items-center">
@@ -235,26 +231,27 @@ new class extends Component {
                         <x-spinner class="sm mono"></x-spinner>
                     </div>
                     <div>
-                        {{ __('Memuat...') }}
+                        {{ __("Memuat...") }}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div wire:key="modals"> 
-
-    </div>
-    <div wire:key="stc-summary-history" >
-        <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">
-            {{ __('Grafik') }}</h1>
-        <div wire:key="stc-summary-history-chart" class="h-96 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
-            id="stc-summary-history-chart-container" wire:key="stc-summary-history-chart-container" wire:ignore>
-        </div> 
+    <div wire:key="modals"></div>
+    <div wire:key="stc-summary-history">
+        <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">{{ __("Grafik") }}</h1>
+        <div
+            wire:key="stc-summary-history-chart"
+            class="h-96 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 sm:p-6 overflow-hidden"
+            id="stc-summary-history-chart-container"
+            wire:key="stc-summary-history-chart-container"
+            wire:ignore
+        ></div>
     </div>
 </div>
 
 @script
-<script>
-    $wire.$dispatch('update');
-</script>
+    <script>
+        $wire.$dispatch('update');
+    </script>
 @endscript

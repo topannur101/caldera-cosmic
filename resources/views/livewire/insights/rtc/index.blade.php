@@ -7,10 +7,9 @@ use App\Models\InsRtcMetric;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Response;
 
-new #[Layout('layouts.app')] class extends Component {
-    
+new #[Layout("layouts.app")] class extends Component {
     #[Url]
-    public $view = 'clumps';
+    public $view = "clumps";
 
     #[Url]
     public $start_at;
@@ -25,9 +24,9 @@ new #[Layout('layouts.app')] class extends Component {
     public $sline;
     public $olines = [];
 
-    public $dateViews = ['raw', 'daily', 'clumps'];
-    public $rangeViews = ['raw', 'clumps'];
-    public $filterViews = ['raw', 'clumps'];
+    public $dateViews = ["raw", "daily", "clumps"];
+    public $rangeViews = ["raw", "clumps"];
+    public $filterViews = ["raw", "clumps"];
 
     public $dataIntegrity = 0;
     public $dataAccuracy = 0;
@@ -40,18 +39,17 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function mount()
     {
-        if(!$this->start_at || !$this->end_at)
-        {
+        if (! $this->start_at || ! $this->end_at) {
             $this->setToday();
         }
-        
-        $this->olines = InsRtcMetric::join('ins_rtc_clumps', 'ins_rtc_clumps.id', '=', 'ins_rtc_metrics.ins_rtc_clump_id')
-            ->join('ins_rtc_devices', 'ins_rtc_devices.id', '=', 'ins_rtc_clumps.ins_rtc_device_id')
-            ->select('ins_rtc_devices.line')
+
+        $this->olines = InsRtcMetric::join("ins_rtc_clumps", "ins_rtc_clumps.id", "=", "ins_rtc_metrics.ins_rtc_clump_id")
+            ->join("ins_rtc_devices", "ins_rtc_devices.id", "=", "ins_rtc_clumps.ins_rtc_device_id")
+            ->select("ins_rtc_devices.line")
             ->distinct()
-            ->orderBy('ins_rtc_devices.line')
+            ->orderBy("ins_rtc_devices.line")
             ->get()
-            ->pluck('line')
+            ->pluck("line")
             ->toArray();
     }
 
@@ -66,45 +64,63 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function setToday()
     {
-        $this->start_at = Carbon::now()->startOfDay()->format('Y-m-d');
-        $this->end_at = Carbon::now()->endOfDay()->format('Y-m-d');
+        $this->start_at = Carbon::now()
+            ->startOfDay()
+            ->format("Y-m-d");
+        $this->end_at = Carbon::now()
+            ->endOfDay()
+            ->format("Y-m-d");
     }
 
     public function setYesterday()
     {
-        $this->start_at = Carbon::yesterday()->startOfDay()->format('Y-m-d');
-        $this->end_at = Carbon::yesterday()->endOfDay()->format('Y-m-d');
+        $this->start_at = Carbon::yesterday()
+            ->startOfDay()
+            ->format("Y-m-d");
+        $this->end_at = Carbon::yesterday()
+            ->endOfDay()
+            ->format("Y-m-d");
     }
 
     public function setThisMonth()
     {
-        $this->start_at = Carbon::now()->startOfMonth()->format('Y-m-d');
-        $this->end_at = Carbon::now()->endOfMonth()->format('Y-m-d');
+        $this->start_at = Carbon::now()
+            ->startOfMonth()
+            ->format("Y-m-d");
+        $this->end_at = Carbon::now()
+            ->endOfMonth()
+            ->format("Y-m-d");
     }
 
     public function setLastMonth()
     {
-        $this->start_at = Carbon::now()->subMonthNoOverflow()->startOfMonth()->format('Y-m-d');
-        $this->end_at = Carbon::now()->subMonthNoOverflow()->endOfMonth()->format('Y-m-d');
+        $this->start_at = Carbon::now()
+            ->subMonthNoOverflow()
+            ->startOfMonth()
+            ->format("Y-m-d");
+        $this->end_at = Carbon::now()
+            ->subMonthNoOverflow()
+            ->endOfMonth()
+            ->format("Y-m-d");
     }
 
     public function resetFilter()
     {
-        $this->reset('fline');
+        $this->reset("fline");
     }
 
     public function download()
     {
         switch ($this->view) {
-            case 'raw':
-                $this->redirectRoute('downloads.ins-rtc-metrics', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
+            case "raw":
+                $this->redirectRoute("downloads.ins-rtc-metrics", ["start_at" => $this->start_at, "end_at" => $this->end_at]);
                 $this->js('$dispatch("close")');
-                $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
+                $this->js('toast("' . __("Unduhan dimulai...") . '", { type: "success" })');
                 break;
-            case 'clumps':
-                $this->redirectRoute('downloads.ins-rtc-clumps', ['start_at' => $this->start_at, 'end_at' => $this->end_at]);
+            case "clumps":
+                $this->redirectRoute("downloads.ins-rtc-clumps", ["start_at" => $this->start_at, "end_at" => $this->end_at]);
                 $this->js('$dispatch("close")');
-                $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
+                $this->js('toast("' . __("Unduhan dimulai...") . '", { type: "success" })');
                 break;
         }
     }
@@ -112,7 +128,7 @@ new #[Layout('layouts.app')] class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __('Kendali tebal calendar') }}</x-slot>
+<x-slot name="title">{{ __("Kendali tebal calendar") }}</x-slot>
 
 <x-slot name="header">
     <x-nav-insights-rtc></x-nav-insights-rtc>
@@ -135,14 +151,16 @@ new #[Layout('layouts.app')] class extends Component {
                     </x-radio-button>
                     <x-radio-button wire:model.live="view" grow value="raw" name="view" id="view-raw">
                         <div class="text-center my-auto">
-                            <i class="icon-layout-grid  text-center m-auto"></i>
+                            <i class="icon-layout-grid text-center m-auto"></i>
                         </div>
                     </x-radio-button>
                 </div>
-                <div
-                    class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_line ? '' : 'hidden' }}">
+                <div class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_line ? "" : "hidden" }}">
                     <div class="flex items-start justify-between">
-                        <div><i class="icon-ruler mr-3"></i>{{ __('Line') }}</div>
+                        <div>
+                            <i class="icon-ruler mr-3"></i>
+                            {{ __("Line") }}
+                        </div>
                     </div>
                     <div class="mt-5">
                         <x-select wire:model.live="sline">
@@ -153,10 +171,12 @@ new #[Layout('layouts.app')] class extends Component {
                         </x-select>
                     </div>
                 </div>
-                <div
-                    class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_date ? '' : 'hidden' }}">
+                <div class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_date ? "" : "hidden" }}">
                     <div class="flex items-start justify-between">
-                        <div><i class="icon-calendar mr-3"></i>{{ $is_range ? __('Rentang') : __('Tanggal') }}</div>
+                        <div>
+                            <i class="icon-calendar mr-3"></i>
+                            {{ $is_range ? __("Rentang") : __("Tanggal") }}
+                        </div>
                         <div class="flex items-center">
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
@@ -164,20 +184,17 @@ new #[Layout('layouts.app')] class extends Component {
                                 </x-slot>
                                 <x-slot name="content">
                                     <x-dropdown-link href="#" wire:click.prevent="setToday">
-                                        {{ __('Hari ini') }}
+                                        {{ __("Hari ini") }}
                                     </x-dropdown-link>
                                     <x-dropdown-link href="#" wire:click.prevent="setYesterday">
-                                        {{ __('Kemarin') }}
+                                        {{ __("Kemarin") }}
                                     </x-dropdown-link>
-                                    <hr
-                                        class="border-neutral-300 dark:border-neutral-600 {{ $is_range ? '' : 'hidden' }}" />
-                                    <x-dropdown-link href="#" wire:click.prevent="setThisMonth"
-                                        class="{{ $is_range ? '' : 'hidden' }}">
-                                        {{ __('Bulan ini') }}
+                                    <hr class="border-neutral-300 dark:border-neutral-600 {{ $is_range ? "" : "hidden" }}" />
+                                    <x-dropdown-link href="#" wire:click.prevent="setThisMonth" class="{{ $is_range ? '' : 'hidden' }}">
+                                        {{ __("Bulan ini") }}
                                     </x-dropdown-link>
-                                    <x-dropdown-link href="#" wire:click.prevent="setLastMonth"
-                                        class="{{ $is_range ? '' : 'hidden' }}">
-                                        {{ __('Bulan lalu') }}
+                                    <x-dropdown-link href="#" wire:click.prevent="setLastMonth" class="{{ $is_range ? '' : 'hidden' }}">
+                                        {{ __("Bulan lalu") }}
                                     </x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
@@ -185,14 +202,15 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                     <div class="mt-5">
                         <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
-                        <x-text-input wire:model.live="end_at"  id="cal-date-end" type="date"
-                            class="mt-3 mb-1 {{ $is_range ? '' : 'hidden' }}"></x-text-input>
+                        <x-text-input wire:model.live="end_at" id="cal-date-end" type="date" class="mt-3 mb-1 {{ $is_range ? '' : 'hidden' }}"></x-text-input>
                     </div>
                 </div>
-                <div
-                    class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_filter ? '' : 'hidden' }}">
+                <div class="mt-4 bg-white dark:bg-neutral-800 shadow rounded-lg py-5 px-4 {{ $is_filter ? "" : "hidden" }}">
                     <div class="flex items-start justify-between">
-                        <div><i class="icon-funnel mr-3"></i>{{ __('Filter') }}</div>
+                        <div>
+                            <i class="icon-funnel mr-3"></i>
+                            {{ __("Filter") }}
+                        </div>
                         <div class="flex items-center">
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
@@ -200,24 +218,25 @@ new #[Layout('layouts.app')] class extends Component {
                                 </x-slot>
                                 <x-slot name="content">
                                     <x-dropdown-link href="#" wire:click.prevent="resetFilter">
-                                        {{ __('Kosongkan filter') }}
+                                        {{ __("Kosongkan filter") }}
                                     </x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
                         </div>
                     </div>
                     <div>
-                        <x-text-input wire:model.live="fline" class="mt-4" type="search"
-                            placeholder="{{ __('Line') }}" name="fline" />
+                        <x-text-input wire:model.live="fline" class="mt-4" type="search" placeholder="{{ __('Line') }}" name="fline" />
                     </div>
                 </div>
-                @if ($view == 'raw' || $view == 'clumps')
+                @if ($view == "raw" || $view == "clumps")
                     <div wire:key="raw-panel">
                         <div class="m-3">
-                            @can('download', InsRtcMetric::class)
+                            @can("download", InsRtcMetric::class)
                                 <div class="py-4">
-                                    <x-text-button type="button" wire:click="download" class="text-sm"><i
-                                        class="mr-2 icon-download"></i>{{ __('Unduh CSV') }}</x-text-button>
+                                    <x-text-button type="button" wire:click="download" class="text-sm">
+                                        <i class="mr-2 icon-download"></i>
+                                        {{ __("Unduh CSV") }}
+                                    </x-text-button>
                                 </div>
                             @endcan
                         </div>
@@ -225,27 +244,26 @@ new #[Layout('layouts.app')] class extends Component {
                 @endif
             </div>
         </div>
+
         @switch($view)
-            @case('daily')
+            @case("daily")
                 <livewire:insights.rtc.daily :$start_at :$fline />
-            @break
 
-            @case('clumps')
+                @break
+            @case("clumps")
                 <livewire:insights.rtc.clumps :$start_at :$fline />
-            @break
 
-            @case('raw')
+                @break
+            @case("raw")
                 <livewire:insights.rtc.raw :$start_at :$end_at :$fline />
-            @break
 
+                @break
             @default
                 <div wire:key="no-view" class="w-full py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                        <i class="icon-tv-minimal relative"><i
-                                class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                        <i class="icon-tv-minimal relative"><i class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                     </div>
-                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih tampilan') }}
-                    </div>
+                    <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __("Pilih tampilan") }}</div>
                 </div>
         @endswitch
     </div>

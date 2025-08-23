@@ -2,9 +2,6 @@
 
 namespace App;
 
-use Carbon\Carbon;
-use InvalidArgumentException;
-
 class InsRdc
 {
     public static function getChartOptions($tests, $height)
@@ -20,7 +17,7 @@ class InsRdc
         return [
             'chart' => [
                 'redrawOnParentResize' => true,
-                'height' => $height .'%',
+                'height' => $height.'%',
                 'type' => 'line',
                 'toolbar' => [
                     'show' => true,
@@ -45,14 +42,14 @@ class InsRdc
             'series' => [
                 [
                     'name' => __('TC10'),
-                    'data' => array_map(function($item) {
+                    'data' => array_map(function ($item) {
                         return ['x' => $item['queued_at'], 'y' => $item['tc10']];
                     }, $chartData),
                     'color' => '#D64550',
                 ],
                 [
                     'name' => __('TC90'),
-                    'data' => array_map(function($item) {
+                    'data' => array_map(function ($item) {
                         return ['x' => $item['queued_at'], 'y' => $item['tc90']];
                     }, $chartData),
                     'color' => '#4CAF50',
@@ -61,13 +58,12 @@ class InsRdc
             'yaxis' => [
                 'title' => [
                     'text' => __('Angka TC'),
-                ]
+                ],
             ],
             'stroke' => [
                 'curve' => 'smooth',
                 'width' => 1,
             ],
         ];
-    }  
-    
+    }
 }

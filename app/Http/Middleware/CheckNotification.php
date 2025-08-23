@@ -18,7 +18,7 @@ class CheckNotification
         if ($request->has('notif_id') && auth()->check()) {
             $notif_id = $request->notif_id;
             $notification = auth()->user()->notifications()->whereNull('read_at')->find($notif_id);
-            
+
             if ($notification) {
                 $notification->markAsRead();
                 $ackCount = auth()->user()->unreadNotifications->count();

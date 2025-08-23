@@ -15,12 +15,12 @@ class ComFile extends Model
         'client_name',
         'size',
         'ext',
-        'is_image'
+        'is_image',
     ];
 
     public function getIcon()
     {
-        switch($this->ext) {
+        switch ($this->ext) {
             case 'ods':
             case 'xls':
             case 'xlsx':
@@ -62,6 +62,6 @@ class ComFile extends Model
             $index++;
         }
 
-        return round($this->size, 2) . ' ' . $units[$index];
+        return round($this->size, 2).' '.$units[$index];
     }
 }

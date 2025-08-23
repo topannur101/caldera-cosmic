@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('ins_omv_recipes', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            
+
             $table->enum('type', ['new', 'remixing', 'scrap']);
             $table->string('name')->unique();
             $table->json('steps');

@@ -18,50 +18,50 @@ new class extends Component {
     public function rules()
     {
         return [
-            'actions' => ['array'],
-            'actions.*' => ['string'],
+            "actions" => ["array"],
+            "actions.*" => ["string"],
         ];
     }
 
-    #[On('auth-edit')]
+    #[On("auth-edit")]
     public function loadAuth(int $id)
     {
         // TODO: Replace with actual InsCtcAuth model when backend is ready
         // $auth = InsCtcAuth::find($id);
-        
+
         // Mock data for development
         $mockAuth = [
             1 => [
-                'id' => 1,
-                'user_name' => 'John Doe',
-                'user_emp_id' => 'EMP001',
-                'user_photo' => null,
-                'actions' => ['device-manage', 'recipe-manage', 'csv-download']
+                "id" => 1,
+                "user_name" => "John Doe",
+                "user_emp_id" => "EMP001",
+                "user_photo" => null,
+                "actions" => ["device-manage", "recipe-manage", "csv-download"],
             ],
             2 => [
-                'id' => 2,
-                'user_name' => 'Jane Smith',
-                'user_emp_id' => 'EMP002',
-                'user_photo' => 'jane.jpg',
-                'actions' => ['csv-download']
+                "id" => 2,
+                "user_name" => "Jane Smith",
+                "user_emp_id" => "EMP002",
+                "user_photo" => "jane.jpg",
+                "actions" => ["csv-download"],
             ],
             3 => [
-                'id' => 3,
-                'user_name' => 'Bob Wilson',
-                'user_emp_id' => 'EMP003',
-                'user_photo' => null,
-                'actions' => ['device-manage', 'recipe-manage']
-            ]
+                "id" => 3,
+                "user_name" => "Bob Wilson",
+                "user_emp_id" => "EMP003",
+                "user_photo" => null,
+                "actions" => ["device-manage", "recipe-manage"],
+            ],
         ];
 
         $auth = $mockAuth[$id] ?? null;
-        
+
         if ($auth) {
-            $this->id           = $auth['id'];
-            $this->user_name    = $auth['user_name'];
-            $this->user_emp_id  = $auth['user_emp_id'];
-            $this->user_photo   = $auth['user_photo'] ?? '';
-            $this->actions      = $auth['actions'];
+            $this->id = $auth["id"];
+            $this->user_name = $auth["user_name"];
+            $this->user_emp_id = $auth["user_emp_id"];
+            $this->user_photo = $auth["user_photo"] ?? "";
+            $this->actions = $auth["actions"];
             $this->resetValidation();
         } else {
             $this->handleNotFound();
@@ -71,13 +71,13 @@ new class extends Component {
     public function with(): array
     {
         return [
-            'is_superuser' => Gate::allows('superuser'),
+            "is_superuser" => Gate::allows("superuser"),
         ];
     }
 
     public function save()
     {
-        Gate::authorize('superuser');
+        Gate::authorize("superuser");
         $this->validate();
 
         // TODO: Replace with actual InsCtcAuth model when backend is ready
@@ -90,13 +90,13 @@ new class extends Component {
 
         // Mock successful update for development
         $this->js('$dispatch("close")');
-        $this->js('toast("' . __('Wewenang diperbarui') . '", { type: "success" })');
-        $this->dispatch('updated');
+        $this->js('toast("' . __("Wewenang diperbarui") . '", { type: "success" })');
+        $this->dispatch("updated");
     }
 
     public function delete()
     {
-        Gate::authorize('superuser');
+        Gate::authorize("superuser");
 
         // TODO: Replace with actual InsCtcAuth model when backend is ready
         // $auth = InsCtcAuth::find($this->id);
@@ -107,30 +107,31 @@ new class extends Component {
 
         // Mock successful deletion for development
         $this->js('$dispatch("close")');
-        $this->js('toast("' . __('Wewenang dicabut') . '", { type: "success" })');
-        $this->dispatch('updated');
+        $this->js('toast("' . __("Wewenang dicabut") . '", { type: "success" })');
+        $this->dispatch("updated");
         $this->customReset();
     }
 
     public function customReset()
     {
-        $this->reset(['id', 'user_name', 'user_emp_id', 'user_photo', 'actions']);
+        $this->reset(["id", "user_name", "user_emp_id", "user_photo", "actions"]);
     }
 
     public function handleNotFound()
     {
         $this->js('$dispatch("close")');
-        $this->js('toast("' . __('Tidak ditemukan') . '", { type: "danger" })');
-        $this->dispatch('updated');
+        $this->js('toast("' . __("Tidak ditemukan") . '", { type: "danger" })');
+        $this->dispatch("updated");
     }
 };
 
 ?>
+
 <div>
     <form wire:submit="save" class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Wewenang') }}
+                {{ __("Wewenang") }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
@@ -138,54 +139,54 @@ new class extends Component {
             <div wire:key="user-info" class="grid gap-3 grid-cols-1">
                 <div class="flex p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
                     <div>
-                        <div
-                            class="w-8 h-8 my-auto mr-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                        <div class="w-8 h-8 my-auto mr-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                             @if ($user_photo)
-                                <img class="w-full h-full object-cover dark:brightness-75"
-                                    src="{{ '/storage/users/' . $user_photo }}" />
+                                <img class="w-full h-full object-cover dark:brightness-75" src="{{ "/storage/users/" . $user_photo }}" />
                             @else
-                                <svg xmlns="http://www.w3.org/2000/svg"
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
                                     class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
-                                    viewBox="0 0 1000 1000" xmlns:v="https://vecta.io/nano">
+                                    viewBox="0 0 1000 1000"
+                                    xmlns:v="https://vecta.io/nano"
+                                >
                                     <path
-                                        d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z" />
+                                        d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"
+                                    />
                                 </svg>
                             @endif
                         </div>
                     </div>
                     <div class="truncate">
-                        <div class="truncate">{{ $user_name ?? __('Pengguna') }}</div>
-                        <div class="truncate text-xs text-neutral-400 dark:text-neutral-600">
-                            {{ $user_emp_id ?? __('Nomor karyawan') }}</div>
+                        <div class="truncate">{{ $user_name ?? __("Pengguna") }}</div>
+                        <div class="truncate text-xs text-neutral-400 dark:text-neutral-600">{{ $user_emp_id ?? __("Nomor karyawan") }}</div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-6">
-            <x-checkbox id="device-manage" :disabled="!$is_superuser" wire:model="actions"
-                value="device-manage">{{ __('Kelola perangkat') }}</x-checkbox>
-            <x-checkbox id="recipe-manage" :disabled="!$is_superuser" wire:model="actions"
-                value="recipe-manage">{{ __('Kelola resep') }}</x-checkbox>
-            <x-checkbox id="batch-manage" :disabled="!$is_superuser" wire:model="actions"
-                value="batch-manage">{{ __('Kelola gilingan') }}</x-checkbox>
-            <x-checkbox id="csv-download" :disabled="!$is_superuser" wire:model="actions"
-                value="csv-download">{{ __('Unduh CSV') }}</x-checkbox>
+            <x-checkbox id="device-manage" :disabled="!$is_superuser" wire:model="actions" value="device-manage">{{ __("Kelola perangkat") }}</x-checkbox>
+            <x-checkbox id="recipe-manage" :disabled="!$is_superuser" wire:model="actions" value="recipe-manage">{{ __("Kelola resep") }}</x-checkbox>
+            <x-checkbox id="batch-manage" :disabled="!$is_superuser" wire:model="actions" value="batch-manage">{{ __("Kelola gilingan") }}</x-checkbox>
+            <x-checkbox id="csv-download" :disabled="!$is_superuser" wire:model="actions" value="csv-download">{{ __("Unduh CSV") }}</x-checkbox>
         </div>
-        @can('superuser')
+        @can("superuser")
             <div class="mt-6 flex justify-between items-end">
                 <div>
-                    <x-text-button type="button" class="uppercase text-xs text-red-500" wire:click="delete"
-                        wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}">
-                        {{ __('Cabut') }}
+                    <x-text-button
+                        type="button"
+                        class="uppercase text-xs text-red-500"
+                        wire:click="delete"
+                        wire:confirm="{{ __('Tindakan ini tidak dapat diurungkan. Lanjutkan?') }}"
+                    >
+                        {{ __("Cabut") }}
                     </x-text-button>
                 </div>
                 <x-primary-button type="submit">
-                    {{ __('Perbarui') }}
+                    {{ __("Perbarui") }}
                 </x-primary-button>
             </div>
         @endcan
     </form>
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
-
 </div>

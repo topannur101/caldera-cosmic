@@ -13,7 +13,7 @@ class InsOmvRecipe extends Model
         'type',
         'name',
         'capture_points',
-        'steps'
+        'steps',
     ];
 
     protected $casts = [
@@ -24,12 +24,14 @@ class InsOmvRecipe extends Model
     public function capturePointsCount()
     {
         $capture_points = json_decode($this->capture_points ?? '{}', true);
+
         return count($capture_points);
     }
 
     public function stepsCount()
     {
         $steps = json_decode($this->steps ?? '{}', true);
+
         return count($steps);
     }
 
@@ -43,6 +45,7 @@ class InsOmvRecipe extends Model
                 $totalDuration += $step['duration'];
             }
         }
+
         return $totalDuration;
     }
 
@@ -54,5 +57,4 @@ class InsOmvRecipe extends Model
 
         return sprintf('%02d:%02d', $minutes, $seconds);
     }
-
 }

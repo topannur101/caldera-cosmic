@@ -9,36 +9,36 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Illuminate\Database\Eloquent\Builder;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout("layouts.app")] class extends Component {
     use WithPagination;
 
     #[Url]
-    public $q = '';
+    public $q = "";
 
     public $perPage = 20;
 
-    #[On('updated')]
+    #[On("updated")]
     public function with(): array
     {
         $q = trim($this->q);
         $machines = InsRdcMachine::where(function (Builder $query) use ($q) {
             $query
-                ->orWhere('number', 'LIKE', '%' . $q . '%')
-                ->orWhere('name', 'LIKE', '%' . $q . '%')
-                ->orWhere('type', 'LIKE', '%' . $q . '%');
-            })
-            ->orderBy('id')
+                ->orWhere("number", "LIKE", "%" . $q . "%")
+                ->orWhere("name", "LIKE", "%" . $q . "%")
+                ->orWhere("type", "LIKE", "%" . $q . "%");
+        })
+            ->orderBy("id")
             ->paginate($this->perPage);
 
         return [
-            'machines' => $machines,
+            "machines" => $machines,
         ];
     }
 
     public function updating($property)
     {
-        if ($property == 'q') {
-            $this->reset('perPage');
+        if ($property == "q") {
+            $this->reset("perPage");
         }
     }
 
@@ -48,23 +48,25 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Mesin') . ' — ' . __('Sistem data rheometer') }}</x-slot>
+
+<x-slot name="title">{{ __("Mesin") . " — " . __("Sistem data rheometer") }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-rdc-sub />
 </x-slot>
 <div id="content" class="py-12 max-w-4xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Mesin') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __("Mesin") }}</h1>
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
-                @can('superuser')
-                    <x-secondary-button type="button" 
-                        x-on:click.prevent="$dispatch('open-slide-over', 'machine-create')"><i class="icon-plus"></i></x-secondary-button>
+                @can("superuser")
+                    <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-slide-over', 'machine-create')"><i class="icon-plus"></i></x-secondary-button>
                 @endcan
-                <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open"><i class="icon-search"></i></x-secondary-button>
+
+                <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open">
+                    <i class="icon-search"></i>
+                </x-secondary-button>
                 <div class="w-40" x-show="open" x-cloak>
-                    <x-text-input-search wire:model.live="q" id="inv-q" x-ref="search"
-                        placeholder="{{ __('CARI') }}"></x-text-input-search>
+                    <x-text-input-search wire:model.live="q" id="inv-q" x-ref="search" placeholder="{{ __('CARI') }}"></x-text-input-search>
                 </div>
             </div>
         </div>
@@ -73,7 +75,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <livewire:insights.rdc.manage.machine-create />
             </x-slide-over>
         </div>
-        <div wire:key="machine-edit">   
+        <div wire:key="machine-edit">
             <x-slide-over name="machine-edit" maxWidth="4xl">
                 <livewire:insights.rdc.manage.machine-edit />
             </x-slide-over>
@@ -83,17 +85,23 @@ new #[Layout('layouts.app')] class extends Component {
                 <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
                     <table wire:key="machines-table" class="table">
                         <tr>
-                            <th>{{ __('ID') }}</th>
-                            <th>{{ __('Nomor') }}</th>
-                            <th>{{ __('Nama') }}</th>
-                            <th>{{ __('Tipe') }}</th>
-                            <th>{{ __('Status') }}</th>
-                            <th>{{ __('Konfigurasi') }}</th>
+                            <th>{{ __("ID") }}</th>
+                            <th>{{ __("Nomor") }}</th>
+                            <th>{{ __("Nama") }}</th>
+                            <th>{{ __("Tipe") }}</th>
+                            <th>{{ __("Status") }}</th>
+                            <th>{{ __("Konfigurasi") }}</th>
                         </tr>
                         @foreach ($machines as $machine)
-                            <tr wire:key="machine-tr-{{ $machine->id . $loop->index }}" tabindex="0"
-                                x-on:click="$dispatch('open-slide-over', 'machine-edit'); $dispatch('machine-edit', { id: {{ $machine->id }} })"
-                                class="{{ !($machine->is_active ?? true) ? 'opacity-60' : '' }}">
+                            <tr
+                                wire:key="machine-tr-{{ $machine->id . $loop->index }}"
+                                tabindex="0"
+                                x-on:click="
+                                    $dispatch('open-slide-over', 'machine-edit')
+                                    $dispatch('machine-edit', { id: {{ $machine->id }} })
+                                "
+                                class="{{ ! ($machine->is_active ?? true) ? "opacity-60" : "" }}"
+                            >
                                 <td>
                                     {{ $machine->id }}
                                 </td>
@@ -105,12 +113,12 @@ new #[Layout('layouts.app')] class extends Component {
                                 </td>
                                 <td>
                                     <x-pill class="uppercase" color="{{ $machine->type === 'excel' ? 'green' : 'blue' }}">
-                                        {{ $machine->type === 'excel' ? 'Excel' : 'TXT' }}
+                                        {{ $machine->type === "excel" ? "Excel" : "TXT" }}
                                     </x-pill>
                                 </td>
                                 <td>
                                     <x-pill color="{{ ($machine->is_active ?? true) ? 'green' : 'red' }}">
-                                        {{ ($machine->is_active ?? true) ? __('Aktif') : __('Nonaktif') }}
+                                        {{ $machine->is_active ?? true ? __("Aktif") : __("Nonaktif") }}
                                     </x-pill>
                                 </td>
                                 <td>
@@ -119,15 +127,16 @@ new #[Layout('layouts.app')] class extends Component {
                                         $config = $machine->cells ?? [];
                                         $configCount = count($config);
                                     @endphp
-                                    {{ $configCount }} {{ __('field') }}{{ $configCount !== 1 ? 's' : '' }}
+
+                                    {{ $configCount }} {{ __("field") }}{{ $configCount !== 1 ? "s" : "" }}
                                 </td>
                             </tr>
                         @endforeach
                     </table>
                     <div wire:key="machines-none">
-                        @if (!$machines->count())
+                        @if (! $machines->count())
                             <div class="text-center py-12">
-                                {{ __('Tak ada mesin ditemukan') }}
+                                {{ __("Tak ada mesin ditemukan") }}
                             </div>
                         @endif
                     </div>
@@ -135,9 +144,11 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div wire:key="observer" class="flex items-center relative h-16">
-            @if (!$machines->isEmpty())
+            @if (! $machines->isEmpty())
                 @if ($machines->hasMorePages())
-                    <div wire:key="more" x-data="{
+                    <div
+                        wire:key="more"
+                        x-data="{
                         observe() {
                             const observer = new IntersectionObserver((machines) => {
                                 machines.forEach(machine => {
@@ -148,10 +159,12 @@ new #[Layout('layouts.app')] class extends Component {
                             })
                             observer.observe(this.$el)
                         }
-                    }" x-init="observe"></div>
+                    }"
+                        x-init="observe"
+                    ></div>
                     <x-spinner class="sm" />
                 @else
-                    <div class="mx-auto">{{ __('Tidak ada lagi') }}</div>
+                    <div class="mx-auto">{{ __("Tidak ada lagi") }}</div>
                 @endif
             @endif
         </div>

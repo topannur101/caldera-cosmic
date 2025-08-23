@@ -8,11 +8,11 @@ use App\Models\InsRtcMetric;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Response;
 
-new #[Layout('layouts.app')] class extends Component {};
+new #[Layout("layouts.app")] class extends Component {};
 
 ?>
 
-<x-slot name="title">{{ __('Tayangan slide') . ' — ' . __('Kendali tebal calendar') }}</x-slot>
+<x-slot name="title">{{ __("Tayangan slide") . " — " . __("Kendali tebal calendar") }}</x-slot>
 
 <x-slot name="header">
     <x-nav-insights-rtc></x-nav-insights-rtc>
@@ -20,9 +20,8 @@ new #[Layout('layouts.app')] class extends Component {};
 
 <div class="py-12">
     <div class="max-w-xl mx-auto sm:px-6 lg:px-8 text-neutral-600 dark:text-neutral-400">
-        <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-8">
-            {{ __('Tayangan slide') }}</h1>
-        <div class="grid grid-cols-1 gap-1 my-8 ">
+        <h1 class="text-2xl mb-6 text-neutral-900 dark:text-neutral-100 px-8">{{ __("Tayangan slide") }}</h1>
+        <div class="grid grid-cols-1 gap-1 my-8">
             <x-card-link href="{{ route('insights.ss', ['id' => 3]) }}" wire:navigate>
                 <div class="flex px-8">
                     <div>
@@ -32,10 +31,10 @@ new #[Layout('layouts.app')] class extends Component {};
                     </div>
                     <div class="grow truncate py-4">
                         <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Bagan garis waktu nyata') }}
+                            {{ __("Bagan garis waktu nyata") }}
                         </div>
                         <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
-                            {{ __('Tampilkan bagan garis pada satu line produksi') }}
+                            {{ __("Tampilkan bagan garis pada satu line produksi") }}
                         </div>
                     </div>
                 </div>
@@ -49,10 +48,10 @@ new #[Layout('layouts.app')] class extends Component {};
                     </div>
                     <div class="grow truncate py-4">
                         <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Ringkasan harian waktu nyata') }}
+                            {{ __("Ringkasan harian waktu nyata") }}
                         </div>
                         <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
-                            {{ __('Tampilkan ringkasan harian pada satu line produksi') }}
+                            {{ __("Tampilkan ringkasan harian pada satu line produksi") }}
                         </div>
                     </div>
                 </div>
@@ -66,10 +65,10 @@ new #[Layout('layouts.app')] class extends Component {};
                     </div>
                     <div class="grow truncate py-4">
                         <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Ringkasan gilingan waktu nyata') }}
+                            {{ __("Ringkasan gilingan waktu nyata") }}
                         </div>
                         <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
-                            {{ __('Tampilkan ringkasan gilingan pada satu line produksi') }}
+                            {{ __("Tampilkan ringkasan gilingan pada satu line produksi") }}
                         </div>
                     </div>
                 </div>
@@ -83,10 +82,10 @@ new #[Layout('layouts.app')] class extends Component {};
                     </div>
                     <div class="grow truncate py-4">
                         <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Data mentah waktu nyata') }}
+                            {{ __("Data mentah waktu nyata") }}
                         </div>
                         <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
-                            {{ __('Tampilkan riwayat data mentah pada satu line produksi') }}
+                            {{ __("Tampilkan riwayat data mentah pada satu line produksi") }}
                         </div>
                     </div>
                 </div>
@@ -100,10 +99,10 @@ new #[Layout('layouts.app')] class extends Component {};
                     </div>
                     <div class="grow truncate py-4">
                         <div class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                            {{ __('Info model waktu nyata') }}
+                            {{ __("Info model waktu nyata") }}
                         </div>
                         <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
-                            {{ __('Tampilkan info model pada satu line produksi') }}
+                            {{ __("Tampilkan info model pada satu line produksi") }}
                         </div>
                     </div>
                 </div>

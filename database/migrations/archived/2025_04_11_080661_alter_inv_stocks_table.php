@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('inv_stocks', function (Blueprint $table) {
             $table->unsignedInteger('qty_min')->default(0);
             $table->unsignedInteger('qty_max')->default(0);
-   
+
         });
     }
 
@@ -24,8 +24,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('inv_stocks', function (Blueprint $table) {
-            $table->dropColumn('qty_min');  
-            $table->dropColumn('qty_max');  
+            $table->dropColumn('qty_min');
+            $table->dropColumn('qty_max');
 
         });
     }

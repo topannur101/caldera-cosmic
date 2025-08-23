@@ -6,8 +6,6 @@ use App\InsStc;
 use App\Models\InsStcDLog;
 use App\Models\InsStcDSum;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 
 class InsStcDSumUpdate extends Command
 {
@@ -29,21 +27,21 @@ class InsStcDSumUpdate extends Command
      * Execute the console command.
      */
     public function handle()
-    {        
+    {
         $dsums = InsStcDSum::query()
-        ->where('section_1', 0)
-        ->where('section_2', 0)
-        ->where('section_3', 0)
-        ->where('section_4', 0)
-        ->where('section_5', 0)
-        ->where('section_6', 0)
-        ->where('section_7', 0)
-        ->where('section_8', 0)
-        ->get();
+            ->where('section_1', 0)
+            ->where('section_2', 0)
+            ->where('section_3', 0)
+            ->where('section_4', 0)
+            ->where('section_5', 0)
+            ->where('section_6', 0)
+            ->where('section_7', 0)
+            ->where('section_8', 0)
+            ->get();
 
         foreach ($dsums as $dsum) {
             $logs = InsStcDLog::where('ins_stc_d_sum_id', $dsum->id)->get()->toArray();
-            $temps = array_map(fn($item) => $item['temp'], $logs);
+            $temps = array_map(fn ($item) => $item['temp'], $logs);
             $medians = InsStc::getMediansBySection($temps);
 
             $dsum->update([
@@ -57,9 +55,9 @@ class InsStcDSumUpdate extends Command
                 'section_8' => $medians['section_8'],
             ]);
 
-            $this->info($dsum->id . ' updated');        
+            $this->info($dsum->id.' updated');
         }
 
-        !$dsums->count() ? $this->info('Are you nuts?') : $this->info ('All done, sir.');
+        ! $dsums->count() ? $this->info('Are you nuts?') : $this->info('All done, sir.');
     }
 }

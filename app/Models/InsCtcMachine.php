@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class InsCtcMachine extends Model
 {
@@ -13,7 +13,7 @@ class InsCtcMachine extends Model
 
     protected $fillable = [
         'line',
-        'ip_address'
+        'ip_address',
     ];
 
     protected $casts = [
@@ -52,9 +52,8 @@ class InsCtcMachine extends Model
 
     /**
      * Check if machine is online based on recent activity
-     * 
-     * @param int $minutes Minutes to consider for "recent activity" (default: 60)
-     * @return bool
+     *
+     * @param  int  $minutes  Minutes to consider for "recent activity" (default: 60)
      */
     public function is_online(int $minutes = 60): bool
     {
@@ -65,7 +64,7 @@ class InsCtcMachine extends Model
         if ($latestMetric) {
             $now = Carbon::now();
             $lastActivity = Carbon::parse($latestMetric->created_at);
-            
+
             return $lastActivity->greaterThanOrEqualTo($now->subMinutes($minutes));
         }
 
@@ -84,9 +83,7 @@ class InsCtcMachine extends Model
 
     /**
      * Get metrics for a specific time period
-     * 
-     * @param Carbon $from
-     * @param Carbon $to
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function metrics_between(Carbon $from, Carbon $to)
@@ -110,10 +107,6 @@ class InsCtcMachine extends Model
 
     /**
      * Get average thickness metrics for a time period
-     * 
-     * @param Carbon $from
-     * @param Carbon $to
-     * @return array
      */
     public function average_metrics_between(Carbon $from, Carbon $to): array
     {
@@ -151,41 +144,37 @@ class InsCtcMachine extends Model
 
     /**
      * Get quality statistics for a time period
-     * 
-     * @param Carbon $from
-     * @param Carbon $to
-     * @return array
      */
     public function quality_stats_between(Carbon $from, Carbon $to): array
     {
         $metrics = $this->average_metrics_between($from, $to);
-        
+
         // Calculate quality indicators
         $total_batches = $metrics['batch_count'];
         $avg_mae = $metrics['mae_combined'];
         $avg_ssd = $metrics['ssd_combined'];
         $avg_balance = abs($metrics['balance']);
-        
+
         // Quality score calculation (example - adjust based on your requirements)
         $quality_score = 100;
-        
+
         // Penalize high MAE (worse accuracy)
         if ($avg_mae > 0.1) {
             $quality_score -= ($avg_mae - 0.1) * 100;
         }
-        
+
         // Penalize high SSD (less consistency)
         if ($avg_ssd > 0.05) {
             $quality_score -= ($avg_ssd - 0.05) * 200;
         }
-        
+
         // Penalize imbalance
         if ($avg_balance > 0.1) {
             $quality_score -= ($avg_balance - 0.1) * 150;
         }
-        
+
         $quality_score = max(0, min(100, $quality_score));
-        
+
         return array_merge($metrics, [
             'quality_score' => round($quality_score, 1),
             'avg_mae_rating' => $avg_mae <= 0.1 ? 'Good' : ($avg_mae <= 0.2 ? 'Fair' : 'Poor'),
@@ -208,11 +197,11 @@ class InsCtcMachine extends Model
     public function last_batch_size(): int
     {
         $latestMetric = $this->latest_metric();
-        
+
         if ($latestMetric && $latestMetric->data) {
             return count($latestMetric->data);
         }
-        
+
         return 0;
     }
 
@@ -222,11 +211,11 @@ class InsCtcMachine extends Model
     public function current_recipe(): ?InsCtcRecipe
     {
         $latestMetric = $this->latest_metric();
-        
+
         if ($latestMetric && $latestMetric->ins_ctc_recipe_id) {
             return InsCtcRecipe::find($latestMetric->ins_ctc_recipe_id);
         }
-        
+
         return null;
     }
 
@@ -238,7 +227,7 @@ class InsCtcMachine extends Model
         $latestMetric = $this->latest_metric();
         $isOnline = $this->is_online();
         $currentRecipe = $this->current_recipe();
-        
+
         return [
             'is_online' => $isOnline,
             'line' => $this->line,
@@ -249,7 +238,7 @@ class InsCtcMachine extends Model
             'current_recipe_id' => $currentRecipe?->id,
             'latest_avg_thickness' => $latestMetric?->t_avg,
             'latest_balance' => $latestMetric?->t_balance,
-            'status' => $isOnline ? 'Online' : 'Offline'
+            'status' => $isOnline ? 'Online' : 'Offline',
         ];
     }
 

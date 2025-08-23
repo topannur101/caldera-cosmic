@@ -19,12 +19,13 @@ class InsRdcTagPolicy
     {
         $auth = $user->ins_rdc_auths->first();
         $actions = json_decode($auth->actions ?? '{}', true);
+
         return in_array('tag-manage', $actions)
         ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk membuat atau memperbarui mesin rheometer') );
+        : Response::deny(__('Kamu tak memiliki wewenang untuk membuat atau memperbarui mesin rheometer'));
     }
 
-    public function before(User $user): bool|null
+    public function before(User $user): ?bool
     {
         return $user->id == 1 ? true : null;
     }

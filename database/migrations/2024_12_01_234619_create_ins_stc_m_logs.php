@@ -54,7 +54,7 @@ return new class extends Migration
             $table->tinyInteger('sv_w_6');
             $table->tinyInteger('sv_w_7');
             $table->tinyInteger('sv_w_8');
-            
+
             // value masuk ke sini jika mode override (boolean) true
             $table->tinyInteger('sv_r_1');
             $table->tinyInteger('sv_r_2');

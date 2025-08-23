@@ -2,18 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Models\ComItem;
+use App\Models\InvArea;
+use App\Models\InvCirc;
+use App\Models\InvCurr;
+use App\Models\InvItem;
+use App\Models\InvLoc;
+use App\Models\InvStock;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use App\Models\InvCurr;
-use App\Models\InvStock;
-use App\Models\InvItem;
-use App\Models\InvArea;
-use App\Models\InvLoc;
-use App\Models\InvCirc;
-use App\Models\User;
-use App\Models\ComItem;
-use App\Models\ComFile;
-
 
 class InvMigrate extends Command
 {
@@ -41,61 +39,66 @@ class InvMigrate extends Command
         $inv_area_id = $this->ask('Please enter destination inventory area ID');
 
         // Validate the input is numeric
-        if (!is_numeric($legacy_area_id)) {
+        if (! is_numeric($legacy_area_id)) {
             $this->error('Invalid input. Please enter a numeric value.');
+
             return 1; // Exit with error code
         }
-        if (!is_numeric($inv_area_id)) {
+        if (! is_numeric($inv_area_id)) {
             $this->error('Invalid input. Please enter a numeric value.');
-            return 1; // Exit with error code
-        }
-        
-        // Check if the area exists
-        $legacy_area = DB::connection('caldera_legacy')->table('areas')->find($legacy_area_id);
-        if (!$legacy_area) {
-            $this->error('No legacy inventory area with that ID.');
+
             return 1; // Exit with error code
         }
 
-        $inv_area =InvArea::find($inv_area_id);
-        if (!$inv_area) {
-            $this->error('No destination inventory area with that ID.');
+        // Check if the area exists
+        $legacy_area = DB::connection('caldera_legacy')->table('areas')->find($legacy_area_id);
+        if (! $legacy_area) {
+            $this->error('No legacy inventory area with that ID.');
+
             return 1; // Exit with error code
         }
-        
+
+        $inv_area = InvArea::find($inv_area_id);
+        if (! $inv_area) {
+            $this->error('No destination inventory area with that ID.');
+
+            return 1; // Exit with error code
+        }
+
         // Confirm the operation
-        if (!$this->confirm('Do you wish to proceed to migrate items from ' . $legacy_area->name . ' (legacy) to ' . $inv_area->name. ' (destination)?')) {
+        if (! $this->confirm('Do you wish to proceed to migrate items from '.$legacy_area->name.' (legacy) to '.$inv_area->name.' (destination)?')) {
             $this->info('Operation cancelled');
+
             return 0; // Exit successfully but without doing the operation
         }
 
         $igoods = DB::connection('caldera_legacy')->table('igoods')
-        ->where('area_id', $legacy_area->id)
-        ->whereNotNull('ttcurr_id')
-        ->whereNotNull('iuom_id')
-        ->get();
+            ->where('area_id', $legacy_area->id)
+            ->whereNotNull('ttcurr_id')
+            ->whereNotNull('iuom_id')
+            ->get();
 
         foreach ($igoods as $igood) {
 
-            $ttcurr = $igood->ttcurr_id 
-            ? DB::connection('caldera_legacy')->table('ttcurrs')->find($igood->ttcurr_id) 
+            $ttcurr = $igood->ttcurr_id
+            ? DB::connection('caldera_legacy')->table('ttcurrs')->find($igood->ttcurr_id)
             : null;
-            
+
             $inv_curr = $ttcurr
             ? InvCurr::where('name', $ttcurr->name)->first()
             : null;
 
-            $uom = $igood->iuom_id 
+            $uom = $igood->iuom_id
             ? DB::connection('caldera_legacy')->table('iuoms')->find($igood->iuom_id)?->name
             : null;
 
             $item = new InvItem([
-                'inv_area_id'   => $inv_area->id,
-                'name'          => $igood->name,
-                'desc'          => $igood->spec,
-                'photo'         => $igood->image ? 'legacy/' . $igood->image : null,
-                'is_active'     => true,
-                'legacy_id'     => $igood->id
+                'inv_area_id' => $inv_area->id,
+                'name' => $igood->name,
+                'desc' => $igood->spec,
+                'photo' => $igood->image ? 'legacy/'.$igood->image : null,
+                'is_active' => true,
+                'legacy_id' => $igood->id,
             ]);
 
             // check whether the item code duplicate
@@ -103,7 +106,7 @@ class InvMigrate extends Command
                 $item_exists = InvItem::where('inv_area_id', $inv_area->id)->where('code', $igood->ttcode)->first();
 
                 if ($item_exists) {
-                    $item->desc = $igood->spec . ' [duplicate_code:' . $igood->ttcode . ' legacy_area:'. $legacy_area->name  . ']';
+                    $item->desc = $igood->spec.' [duplicate_code:'.$igood->ttcode.' legacy_area:'.$legacy_area->name.']';
 
                 } else {
                     $item->code = $igood->ttcode;
@@ -119,33 +122,33 @@ class InvMigrate extends Command
             $bin = '';
 
             if ($loc) {
-                $parts  = explode('-', $loc, 2);
+                $parts = explode('-', $loc, 2);
                 $parent = $parts[0];
-                $bin    = isset($parts[1]) ? $parts[1] : '';
+                $bin = isset($parts[1]) ? $parts[1] : '';
             }
 
             if ($parent && $bin) {
                 $inv_loc = InvLoc::firstOrCreate([
                     'parent' => $parent,
-                    'bin'   => $bin,
+                    'bin' => $bin,
                 ]);
                 $item->inv_loc_id = $inv_loc->id;
-            }        
+            }
 
             $item->save();
             if ($item->id && $inv_curr && $uom) {
                 $stock = InvStock::updateOrCreate([
                     'inv_item_id' => $item->id,
                     'inv_curr_id' => $inv_curr->id,
-                    'uom'         => $uom,
-                ],[
-                    'qty'         => max($igood->qty, 0),
-                    'qty_min'     => $igood->qty_min ?? 0,
-                    'qty_max'     => $igood->qty_max ?? 0,
-                    'unit_price'  => $igood->ttprice,
-                    'is_active'   => true
+                    'uom' => $uom,
+                ], [
+                    'qty' => max($igood->qty, 0),
+                    'qty_min' => $igood->qty_min ?? 0,
+                    'qty_max' => $igood->qty_max ?? 0,
+                    'unit_price' => $igood->ttprice,
+                    'is_active' => true,
                 ]);
-                $this->info('Stock for legacy item ID: ' . $igood->id . ' created. New ID: ' . $item->id);
+                $this->info('Stock for legacy item ID: '.$igood->id.' created. New ID: '.$item->id);
 
                 $ilogs = DB::connection('caldera_legacy')->table('ilogs')
                     ->where('igood_id', $item->legacy_id)
@@ -158,77 +161,78 @@ class InvMigrate extends Command
 
                     $user_legacy = DB::connection('caldera_legacy')->table('users')->find($ilog->user_id);
                     $user = User::firstOrCreate([
-                        'emp_id' => 'TT' . $user_legacy->tt
+                        'emp_id' => 'TT'.$user_legacy->tt,
                     ], [
-                        'name' => $user_legacy->name . ' ' . $user_legacy->lastname,
+                        'name' => $user_legacy->name.' '.$user_legacy->lastname,
                         'photo' => $user_legacy->image,
-                        'password' => '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC'
+                        'password' => '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC',
                     ]);
 
                     $approver_user = DB::connection('caldera_legacy')->table('users')->find($ilog->approver_id);
                     $eval_user = User::firstOrCreate([
-                        'emp_id' => 'TT' . $approver_user->tt
+                        'emp_id' => 'TT'.$approver_user->tt,
                     ], [
-                        'name' => $approver_user->name . ' ' . $approver_user->lastname,
+                        'name' => $approver_user->name.' '.$approver_user->lastname,
                         'photo' => $approver_user->image,
-                        'password' => '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC'
+                        'password' => '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC',
                     ]);
 
                     // InvCirc::withoutTimestamps(function () use ($user, $ilog, $eval_user, $stock) {
-                        InvCirc::create([
-                            'user_id'       => $user->id,
-                            'type'          => $ilog->iact_id == 3 ? 'withdrawal' : 'deposit',
-                            'eval_status'   => 'approved',
-                            'eval_user_id'  => $eval_user->id,
-                            'inv_stock_id'  => $stock->id,
-                            'qty_relative'  => abs($ilog->static_qty),
-                            'amount'        => $ilog->static_ttprice_usd * $ilog->static_qty,
-                            'unit_price'    => $ilog->static_ttprice_usd,
-                            'remarks'       => $ilog->ket ?? 'No remarks',
-                            'is_delegated'  => false,
-                            'created_at'    => $ilog->created_at,
-                            'updated_at'    => $ilog->updated_at
-                        ]);
-                    // });                   
+                    InvCirc::create([
+                        'user_id' => $user->id,
+                        'type' => $ilog->iact_id == 3 ? 'withdrawal' : 'deposit',
+                        'eval_status' => 'approved',
+                        'eval_user_id' => $eval_user->id,
+                        'inv_stock_id' => $stock->id,
+                        'qty_relative' => abs($ilog->static_qty),
+                        'amount' => $ilog->static_ttprice_usd * $ilog->static_qty,
+                        'unit_price' => $ilog->static_ttprice_usd,
+                        'remarks' => $ilog->ket ?? 'No remarks',
+                        'is_delegated' => false,
+                        'created_at' => $ilog->created_at,
+                        'updated_at' => $ilog->updated_at,
+                    ]);
+                    // });
                 }
 
                 $legacy_comments = DB::connection('caldera_legacy')->table('comments')
-                ->where('commentable', 'Igood')
-                ->where('commentable_id', $igood->id)
-                ->get();
-        
+                    ->where('commentable', 'Igood')
+                    ->where('commentable_id', $igood->id)
+                    ->get();
+
                 foreach ($legacy_comments as $legacy_comment) {
                     $user_legacy = DB::connection('caldera_legacy')->table('users')->find($legacy_comment->user_id);
                     $user = User::firstOrCreate([
-                        'emp_id' => 'TT' . $user_legacy->tt
+                        'emp_id' => 'TT'.$user_legacy->tt,
                     ], [
-                        'name' => $user_legacy->name . ' ' . $user_legacy->lastname,
+                        'name' => $user_legacy->name.' '.$user_legacy->lastname,
                         'photo' => $user_legacy->image,
-                        'password' => '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC'
+                        'password' => '$2y$12$0KKCawG6HLkTJP3BPUJ5xupcpSGiYdL2CV13Eku8eID48YFN2L.aC',
                     ]);
 
                     if ($user && $legacy_comment->content && $item->id) {
                         ComItem::create([
                             'model_name' => 'InvItem',
-                            'model_id'  => $item->id,
-                            'user_id' => $user->id,       
+                            'model_id' => $item->id,
+                            'user_id' => $user->id,
                             'content' => $legacy_comment->content,
                             'created_at' => $legacy_comment->created_at,
                             'updated_at' => $legacy_comment->updated_at,
-                            'url' => 'http://172.70.66.131/inventory/items/' . $item->id
+                            'url' => 'http://172.70.66.131/inventory/items/'.$item->id,
                         ]);
-                        
-                        $this->info('Comment for legacy item ID: ' . $igood->id . ' created.');
+
+                        $this->info('Comment for legacy item ID: '.$igood->id.' created.');
                     }
                 }
 
             } else {
                 $item->delete();
-                $this->warn('Stock for legacy item ID: ' . $igood->id . ' was not created. Item destroyed.');
-            } 
-            
+                $this->warn('Stock for legacy item ID: '.$igood->id.' was not created. Item destroyed.');
+            }
+
         }
         $this->info('Operation completed. Bye!');
-        return 0; // Exit successfully        
+
+        return 0; // Exit successfully
     }
 }

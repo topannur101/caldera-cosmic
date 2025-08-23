@@ -27,7 +27,7 @@ class InsStcFixAtValues extends Command
     public function handle()
     {
         $isDryRun = $this->option('dry-run');
-        
+
         if ($isDryRun) {
             $this->info('🔍 DRY RUN MODE - No changes will be saved');
         } else {
@@ -38,7 +38,7 @@ class InsStcFixAtValues extends Command
 
         // Get all d_sums with at_values
         $dSums = InsStcDSum::whereNotNull('at_values')->get();
-        
+
         $this->info("Found {$dSums->count()} records with at_values");
         $this->newLine();
 
@@ -49,11 +49,12 @@ class InsStcFixAtValues extends Command
         foreach ($dSums as $dSum) {
             try {
                 $originalAtValues = json_decode($dSum->at_values, true);
-                
+
                 // Skip if already null or not an array
-                if (!is_array($originalAtValues)) {
+                if (! is_array($originalAtValues)) {
                     $this->warn("ID {$dSum->id}: Skipping - at_values is not a valid array");
                     $skippedCount++;
+
                     continue;
                 }
 
@@ -61,6 +62,7 @@ class InsStcFixAtValues extends Command
                 if (count($originalAtValues) !== 3) {
                     $this->warn("ID {$dSum->id}: Skipping - at_values doesn't have exactly 3 elements");
                     $skippedCount++;
+
                     continue;
                 }
 
@@ -68,7 +70,7 @@ class InsStcFixAtValues extends Command
                 $fixedAtValues = [
                     round((float) $originalAtValues[0], 1),
                     round((float) $originalAtValues[1], 1),
-                    round((float) $originalAtValues[2], 1)
+                    round((float) $originalAtValues[2], 1),
                 ];
 
                 // Check if formatting is needed
@@ -78,9 +80,9 @@ class InsStcFixAtValues extends Command
                 }
 
                 // Show the change
-                $this->line("ID {$dSum->id}: " . json_encode($originalAtValues) . " → " . json_encode($fixedAtValues));
+                $this->line("ID {$dSum->id}: ".json_encode($originalAtValues).' → '.json_encode($fixedAtValues));
 
-                if (!$isDryRun) {
+                if (! $isDryRun) {
                     // Apply the fix
                     $dSum->at_values = json_encode($fixedAtValues);
                     $dSum->save();
@@ -89,34 +91,34 @@ class InsStcFixAtValues extends Command
                 $fixedCount++;
 
             } catch (\Exception $e) {
-                $this->error("ID {$dSum->id}: Error - " . $e->getMessage());
+                $this->error("ID {$dSum->id}: Error - ".$e->getMessage());
                 $errorCount++;
             }
         }
 
         $this->newLine();
-        
+
         // Summary
         if ($isDryRun) {
-            $this->info("📊 DRY RUN SUMMARY:");
+            $this->info('📊 DRY RUN SUMMARY:');
         } else {
-            $this->info("✅ OPERATION COMPLETE:");
+            $this->info('✅ OPERATION COMPLETE:');
         }
-        
+
         $this->table(
             ['Status', 'Count'],
             [
                 ['Fixed/Would Fix', $fixedCount],
                 ['Skipped', $skippedCount],
                 ['Errors', $errorCount],
-                ['Total Processed', $dSums->count()]
+                ['Total Processed', $dSums->count()],
             ]
         );
 
         if ($isDryRun && $fixedCount > 0) {
             $this->newLine();
-            $this->comment("💡 Run without --dry-run to apply these changes:");
-            $this->comment("   php artisan app:ins-stc-fix-at-values");
+            $this->comment('💡 Run without --dry-run to apply these changes:');
+            $this->comment('   php artisan app:ins-stc-fix-at-values');
         }
 
         return Command::SUCCESS;

@@ -13,44 +13,44 @@ class InsLdc
     {
         // Group hides berdasarkan Material and calculate defect percentages
         $materialData = [];
-        
+
         foreach ($hides as $hide) {
             $material = $hide['group_material'] ?? 'Unknown';
             $defectPercent = $hide['area_vn'] > 0 ? (($hide['area_vn'] - $hide['area_qt']) / $hide['area_vn']) * 100 : 0;
-            
-            if (!isset($materialData[$material])) {
+
+            if (! isset($materialData[$material])) {
                 $materialData[$material] = [
                     'defects' => [],
                     'total_vn' => 0,
                     'total_qt' => 0,
-                    'count' => 0
+                    'count' => 0,
                 ];
             }
-            
+
             $materialData[$material]['defects'][] = $defectPercent;
             $materialData[$material]['total_vn'] += $hide['area_vn'];
             $materialData[$material]['total_qt'] += $hide['area_qt'];
             $materialData[$material]['count']++;
         }
-        
+
         // Calculate average defect percentage per material
         $labels = [];
         $data = [];
         $backgroundColors = [];
         $colors = [
             'rgba(255, 99, 132, 0.8)',
-            'rgba(54, 162, 235, 0.8)', 
+            'rgba(54, 162, 235, 0.8)',
             'rgba(255, 205, 86, 0.8)',
             'rgba(75, 192, 192, 0.8)',
             'rgba(153, 102, 255, 0.8)',
-            'rgba(255, 159, 64, 0.8)'
+            'rgba(255, 159, 64, 0.8)',
         ];
-        
+
         $colorIndex = 0;
         foreach ($materialData as $material => $materialInfo) {
-            $avgDefect = $materialInfo['total_vn'] > 0 ? 
+            $avgDefect = $materialInfo['total_vn'] > 0 ?
                 (($materialInfo['total_vn'] - $materialInfo['total_qt']) / $materialInfo['total_vn']) * 100 : 0;
-            
+
             $labels[] = $material;
             $data[] = round($avgDefect, 2);
             $backgroundColors[] = $colors[$colorIndex % count($colors)];
@@ -66,10 +66,10 @@ class InsLdc
                         'label' => __('Tingkat defect (%)'),
                         'data' => $data,
                         'backgroundColor' => $backgroundColors,
-                        'borderColor' => array_map(fn($color) => str_replace('0.8', '1', $color), $backgroundColors),
-                        'borderWidth' => 1
-                    ]
-                ]
+                        'borderColor' => array_map(fn ($color) => str_replace('0.8', '1', $color), $backgroundColors),
+                        'borderWidth' => 1,
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -78,11 +78,11 @@ class InsLdc
                     'title' => [
                         'display' => true,
                         'text' => __('Tingkat defect berdasarkan Material'),
-                        'color' => session('bg') === 'dark' ? '#FFF' : '#000'
+                        'color' => session('bg') === 'dark' ? '#FFF' : '#000',
                     ],
                     'legend' => [
-                        'display' => false
-                    ]
+                        'display' => false,
+                    ],
                 ],
                 'scales' => [
                     'y' => [
@@ -90,26 +90,26 @@ class InsLdc
                         'title' => [
                             'display' => true,
                             'text' => __('Tingkat defect (%)'),
-                            'color' => session('bg') === 'dark' ? '#FFF' : '#000'
+                            'color' => session('bg') === 'dark' ? '#FFF' : '#000',
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                            'callback' => 'function(value) { return value + "%"; }'
+                            'callback' => 'function(value) { return value + "%"; }',
                         ],
                         'grid' => [
-                            'color' => session('bg') === 'dark' ? '#404040' : '#e5e5e5'
-                        ]
+                            'color' => session('bg') === 'dark' ? '#404040' : '#e5e5e5',
+                        ],
                     ],
                     'x' => [
                         'ticks' => [
-                            'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3'
+                            'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
-                            'display' => false
-                        ]
-                    ]
-                ]
-            ]
+                            'display' => false,
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -120,7 +120,7 @@ class InsLdc
     {
         // Group by grade and calculate average Persentase QT
         $gradeData = [1 => [], 2 => [], 3 => [], 4 => [], 5 => []];
-        
+
         foreach ($hides as $hide) {
             $grade = $hide['grade'] ?? null;
             if ($grade && isset($gradeData[$grade]) && $hide['area_vn'] > 0) {
@@ -128,13 +128,13 @@ class InsLdc
                 $gradeData[$grade][] = $qtPercent;
             }
         }
-        
+
         $labels = [];
         $data = [];
-        
+
         foreach ($gradeData as $grade => $qtPercentages) {
-            if (!empty($qtPercentages)) {
-                $labels[] = __('Grade') . ' ' . $grade;
+            if (! empty($qtPercentages)) {
+                $labels[] = __('Grade').' '.$grade;
                 $data[] = round(array_sum($qtPercentages) / count($qtPercentages), 2);
             }
         }
@@ -151,9 +151,9 @@ class InsLdc
                         'backgroundColor' => 'rgba(214, 69, 80, 0.1)',
                         'borderWidth' => 2,
                         'fill' => true,
-                        'tension' => 0.4
-                    ]
-                ]
+                        'tension' => 0.4,
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -162,8 +162,8 @@ class InsLdc
                     'title' => [
                         'display' => true,
                         'text' => __('Korelasi antara Grade vs QT'),
-                        'color' => session('bg') === 'dark' ? '#FFF' : '#000'
-                    ]
+                        'color' => session('bg') === 'dark' ? '#FFF' : '#000',
+                    ],
                 ],
                 'scales' => [
                     'y' => [
@@ -172,26 +172,26 @@ class InsLdc
                         'title' => [
                             'display' => true,
                             'text' => __('Persentase QT (%)'),
-                            'color' => session('bg') === 'dark' ? '#FFF' : '#000'
+                            'color' => session('bg') === 'dark' ? '#FFF' : '#000',
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                            'callback' => 'function(value) { return value + "%"; }'
+                            'callback' => 'function(value) { return value + "%"; }',
                         ],
                         'grid' => [
-                            'color' => session('bg') === 'dark' ? '#404040' : '#e5e5e5'
-                        ]
+                            'color' => session('bg') === 'dark' ? '#404040' : '#e5e5e5',
+                        ],
                     ],
                     'x' => [
                         'ticks' => [
-                            'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3'
+                            'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
-                            'display' => false
-                        ]
-                    ]
-                ]
-            ]
+                            'display' => false,
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -202,26 +202,26 @@ class InsLdc
     {
         // Group by machine code (first 2 characters of hide code)
         $machineData = [];
-        
+
         foreach ($hides as $hide) {
             $machineCode = substr($hide['code'], 0, 2); // XA, XB, XC
             $difference = $hide['area_vn'] - $hide['area_ab'];
             $diffPercent = $hide['area_vn'] > 0 ? ($difference / $hide['area_vn']) * 100 : 0;
-            
-            if (!isset($machineData[$machineCode])) {
+
+            if (! isset($machineData[$machineCode])) {
                 $machineData[$machineCode] = [];
             }
-            
+
             $machineData[$machineCode][] = $diffPercent;
         }
-        
+
         $labels = [];
         $avgData = [];
         $minData = [];
         $maxData = [];
-        
+
         foreach ($machineData as $machine => $differences) {
-            if (!empty($differences)) {
+            if (! empty($differences)) {
                 $labels[] = $machine;
                 $avgData[] = round(array_sum($differences) / count($differences), 2);
                 $minData[] = round(min($differences), 2);
@@ -239,23 +239,23 @@ class InsLdc
                         'data' => $avgData,
                         'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
                         'borderColor' => 'rgba(54, 162, 235, 1)',
-                        'borderWidth' => 1
+                        'borderWidth' => 1,
                     ],
                     [
                         'label' => __('Selisih min (%)'),
                         'data' => $minData,
                         'backgroundColor' => 'rgba(75, 192, 192, 0.8)',
                         'borderColor' => 'rgba(75, 192, 192, 1)',
-                        'borderWidth' => 1
+                        'borderWidth' => 1,
                     ],
                     [
                         'label' => __('Selish maks (%)'),
                         'data' => $maxData,
                         'backgroundColor' => 'rgba(255, 99, 132, 0.8)',
                         'borderColor' => 'rgba(255, 99, 132, 1)',
-                        'borderWidth' => 1
-                    ]
-                ]
+                        'borderWidth' => 1,
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -264,34 +264,34 @@ class InsLdc
                     'title' => [
                         'display' => true,
                         'text' => __('Perbedaan VN vs AB (Selisih) per mesin'),
-                        'color' => session('bg') === 'dark' ? '#FFF' : '#000'
-                    ]
+                        'color' => session('bg') === 'dark' ? '#FFF' : '#000',
+                    ],
                 ],
                 'scales' => [
                     'y' => [
                         'title' => [
                             'display' => true,
                             'text' => __('Selisih (%)'),
-                            'color' => session('bg') === 'dark' ? '#FFF' : '#000'
+                            'color' => session('bg') === 'dark' ? '#FFF' : '#000',
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                            'callback' => 'function(value) { return value + "%"; }'
+                            'callback' => 'function(value) { return value + "%"; }',
                         ],
                         'grid' => [
-                            'color' => session('bg') === 'dark' ? '#404040' : '#e5e5e5'
-                        ]
+                            'color' => session('bg') === 'dark' ? '#404040' : '#e5e5e5',
+                        ],
                     ],
                     'x' => [
                         'ticks' => [
-                            'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3'
+                            'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
-                            'display' => false
-                        ]
-                    ]
-                ]
-            ]
+                            'display' => false,
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -306,9 +306,9 @@ class InsLdc
             'Grade 2' => 0,
             'Grade 3' => 0,
             'Grade 4' => 0,
-            'Grade 5' => 0
+            'Grade 5' => 0,
         ];
-        
+
         foreach ($hides as $hide) {
             $grade = $hide['grade'] ?? null;
             if ($grade) {
@@ -317,10 +317,10 @@ class InsLdc
                 $gradeCount['No Grade']++;
             }
         }
-        
+
         // Remove zero counts
         $gradeCount = array_filter($gradeCount);
-        
+
         return [
             'type' => 'doughnut',
             'data' => [
@@ -331,15 +331,15 @@ class InsLdc
                         'backgroundColor' => [
                             'rgba(201, 203, 207, 0.8)', // No Grade - Gray
                             'rgba(75, 192, 92, 0.8)',   // Grade 1 - Green
-                            'rgba(54, 162, 235, 0.8)',  // Grade 2 - Blue  
+                            'rgba(54, 162, 235, 0.8)',  // Grade 2 - Blue
                             'rgba(255, 205, 86, 0.8)',  // Grade 3 - Yellow
                             'rgba(255, 159, 64, 0.8)',  // Grade 4 - Orange
-                            'rgba(255, 99, 132, 0.8)'   // Grade 5 - Red
+                            'rgba(255, 99, 132, 0.8)',   // Grade 5 - Red
                         ],
                         'borderWidth' => 2,
-                        'borderColor' => session('bg') === 'dark' ? '#374151' : '#ffffff'
-                    ]
-                ]
+                        'borderColor' => session('bg') === 'dark' ? '#374151' : '#ffffff',
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -348,16 +348,16 @@ class InsLdc
                     'title' => [
                         'display' => true,
                         'text' => __('Distribusi Grade'),
-                        'color' => session('bg') === 'dark' ? '#FFF' : '#000'
+                        'color' => session('bg') === 'dark' ? '#FFF' : '#000',
                     ],
                     'legend' => [
                         'position' => 'bottom',
                         'labels' => [
-                            'color' => session('bg') === 'dark' ? '#FFF' : '#000'
-                        ]
-                    ]
-                ]
-            ]
+                            'color' => session('bg') === 'dark' ? '#FFF' : '#000',
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -372,34 +372,34 @@ class InsLdc
         return [
             'type' => 'bar',
             'data' => [
-                'labels' => array_map(fn($line) => "Line $line", $lines),
+                'labels' => array_map(fn ($line) => "Line $line", $lines),
                 'datasets' => [
                     [
                         'label' => __('Output (Lembar)'),
                         'data' => $throughput,
                         'backgroundColor' => 'rgba(54, 162, 235, 0.7)',
-                        'yAxisID' => 'y'
+                        'yAxisID' => 'y',
                     ],
                     [
                         'label' => __('Rerata tingkat defect (%)'),
                         'data' => $avgDefect,
                         'backgroundColor' => 'rgba(255, 99, 132, 0.7)',
-                        'yAxisID' => 'y1'
+                        'yAxisID' => 'y1',
                     ],
                     [
                         'label' => __('Rerata tingkat selisih (%)'),
                         'data' => $avgDifference,
                         'backgroundColor' => 'rgba(255, 206, 86, 0.7)',
-                        'yAxisID' => 'y1'
+                        'yAxisID' => 'y1',
                     ],
                     [
                         'label' => __('Rerata kelayakan (%)'),
                         'data' => $avgUtilization,
                         'hidden' => true,
                         'backgroundColor' => 'rgba(75, 192, 192, 0.7)',
-                        'yAxisID' => 'y1'
-                    ]
-                ]
+                        'yAxisID' => 'y1',
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -411,11 +411,11 @@ class InsLdc
                 'scales' => [
                     'x' => [
                         'grid' => [
-                            'display' => false
+                            'display' => false,
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
+                        ],
                     ],
                     'y' => [
                         'type' => 'linear',
@@ -427,11 +427,11 @@ class InsLdc
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
-                            'display' => false
+                            'display' => false,
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
+                        ],
                     ],
                     'y1' => [
                         'type' => 'linear',
@@ -447,8 +447,8 @@ class InsLdc
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
                 'plugins' => [
                     'title' => [
@@ -460,10 +460,10 @@ class InsLdc
                         'display' => true,
                         'labels' => [
                             'color' => session('bg') === 'dark' ? '#a3a3a3' : '#525252',
-                        ]
-                    ]
-                ]
-            ]
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -477,7 +477,7 @@ class InsLdc
         return [
             'type' => 'radar',
             'data' => [
-                'labels' => array_map(fn($shift) => __('Shift') . " $shift", $shifts),
+                'labels' => array_map(fn ($shift) => __('Shift')." $shift", $shifts),
                 'datasets' => [
                     [
                         'label' => __('Output (Dinormalisasi)'),
@@ -487,17 +487,17 @@ class InsLdc
                     ],
                     [
                         'label' => __('Skor kualitas (100 - Tingkat defect)'),
-                        'data' => array_map(fn($rate) => 100 - $rate, $avgDefect),
+                        'data' => array_map(fn ($rate) => 100 - $rate, $avgDefect),
                         'borderColor' => 'rgba(75, 192, 192, 1)',
                         'backgroundColor' => 'rgba(75, 192, 192, 0.2)',
                     ],
                     [
                         'label' => __('Skor selisih (100 - Tingkat selisih)'),
-                        'data' => array_map(fn($rate) => 100 - $rate, $avgDifference),
+                        'data' => array_map(fn ($rate) => 100 - $rate, $avgDifference),
                         'borderColor' => 'rgba(255, 206, 86, 1)',
                         'backgroundColor' => 'rgba(255, 206, 86, 0.2)',
-                    ]
-                ]
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -514,8 +514,8 @@ class InsLdc
                         ],
                         'angleLines' => [
                             'color' => session('bg') === 'dark' ? '#404040' : '#e5e5e5',
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
                 'plugins' => [
                     'title' => [
@@ -527,10 +527,10 @@ class InsLdc
                         'display' => true,
                         'labels' => [
                             'color' => session('bg') === 'dark' ? '#a3a3a3' : '#525252',
-                        ]
-                    ]
-                ]
-            ]
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -543,7 +543,7 @@ class InsLdc
         return [
             'type' => 'line',
             'data' => [
-                'labels' => array_map(fn($date) => Carbon::parse($date)->format('M d'), $dates),
+                'labels' => array_map(fn ($date) => Carbon::parse($date)->format('M d'), $dates),
                 'datasets' => [
                     [
                         'label' => __('Output harian'),
@@ -552,7 +552,7 @@ class InsLdc
                         'backgroundColor' => 'rgba(54, 162, 235, 0.1)',
                         'fill' => true,
                         'tension' => 0.4,
-                        'yAxisID' => 'y'
+                        'yAxisID' => 'y',
                     ],
                     [
                         'label' => __('Rerata tingkat defect harian (%)'),
@@ -561,9 +561,9 @@ class InsLdc
                         'backgroundColor' => 'rgba(255, 99, 132, 0.1)',
                         'fill' => false,
                         'tension' => 0.4,
-                        'yAxisID' => 'y1'
-                    ]
-                ]
+                        'yAxisID' => 'y1',
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -575,11 +575,11 @@ class InsLdc
                 'scales' => [
                     'x' => [
                         'grid' => [
-                            'display' => false
+                            'display' => false,
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
+                        ],
                     ],
                     'y' => [
                         'type' => 'linear',
@@ -591,11 +591,11 @@ class InsLdc
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
-                            'display' => false
+                            'display' => false,
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
+                        ],
                     ],
                     'y1' => [
                         'type' => 'linear',
@@ -611,8 +611,8 @@ class InsLdc
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
                 'plugins' => [
                     'title' => [
@@ -624,10 +624,10 @@ class InsLdc
                         'display' => true,
                         'labels' => [
                             'color' => session('bg') === 'dark' ? '#a3a3a3' : '#525252',
-                        ]
-                    ]
-                ]
-            ]
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -644,15 +644,15 @@ class InsLdc
                 'datasets' => [
                     [
                         'label' => __('Performa Style'),
-                        'data' => array_map(function($i) use ($efficiency, $defectRates, $volume, $styles) {
+                        'data' => array_map(function ($i) use ($efficiency, $defectRates, $volume, $styles) {
                             return [
                                 'x' => $efficiency[$i],
                                 'y' => $defectRates[$i],
                                 'r' => max(5, min(25, $volume[$i] / 10)), // Bubble size based on volume
-                                'style' => $styles[$i]
+                                'style' => $styles[$i],
                             ];
                         }, array_keys($styles)),
-                        'backgroundColor' => array_map(function($i) {
+                        'backgroundColor' => array_map(function ($i) {
                             $colors = [
                                 'rgba(255, 99, 132, 0.7)',
                                 'rgba(54, 162, 235, 0.7)',
@@ -663,12 +663,13 @@ class InsLdc
                                 'rgba(199, 199, 199, 0.7)',
                                 'rgba(83, 102, 255, 0.7)',
                                 'rgba(255, 99, 255, 0.7)',
-                                'rgba(99, 255, 132, 0.7)'
+                                'rgba(99, 255, 132, 0.7)',
                             ];
+
                             return $colors[$i % count($colors)];
-                        }, array_keys($styles))
-                    ]
-                ]
+                        }, array_keys($styles)),
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -681,11 +682,11 @@ class InsLdc
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
-                            'display' => false
+                            'display' => false,
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
+                        ],
                     ],
                     'y' => [
                         'title' => [
@@ -694,12 +695,12 @@ class InsLdc
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
-                            'display' => false
+                            'display' => false,
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
                 'plugins' => [
                     'title' => [
@@ -708,7 +709,7 @@ class InsLdc
                         'color' => session('bg') === 'dark' ? '#f5f5f5' : '#171717',
                     ],
                     'legend' => [
-                        'display' => false
+                        'display' => false,
                     ],
                     'tooltip' => [
                         'callbacks' => [
@@ -716,14 +717,14 @@ class InsLdc
                                 const data = context.parsed;
                                 const style = context.raw.style;
                                 return style + ": " + data.x.toFixed(1) + "% util, " + data.y.toFixed(1) + "% defect";
-                            }'
-                        ]
+                            }',
+                        ],
                     ],
                     'datalabels' => [
-                        'display' => false
-                    ]
-                ]
-            ]
+                        'display' => false,
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -737,8 +738,8 @@ class InsLdc
         return [
             'type' => 'bar',
             'data' => [
-                'labels' => array_map(function($material) {
-                    return strlen($material) > 20 ? substr($material, 0, 17) . '...' : $material;
+                'labels' => array_map(function ($material) {
+                    return strlen($material) > 20 ? substr($material, 0, 17).'...' : $material;
                 }, $materials),
                 'datasets' => [
                     [
@@ -756,8 +757,8 @@ class InsLdc
                         'label' => __('Selisih (%)'),
                         'data' => $wasteRates,
                         'backgroundColor' => 'rgba(255, 206, 86, 0.7)',
-                    ]
-                ]
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -772,20 +773,20 @@ class InsLdc
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
-                            'display' => false
+                            'display' => false,
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
+                        ],
                     ],
                     'y' => [
                         'grid' => [
-                            'display' => false
+                            'display' => false,
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
                 'plugins' => [
                     'title' => [
@@ -797,24 +798,28 @@ class InsLdc
                         'display' => true,
                         'labels' => [
                             'color' => session('bg') === 'dark' ? '#a3a3a3' : '#525252',
-                        ]
-                    ]
-                ]
-            ]
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
     private static function normalizeArray(array $data): array
     {
-        if (empty($data)) return [];
-        
+        if (empty($data)) {
+            return [];
+        }
+
         $max = max($data);
         $min = min($data);
         $range = $max - $min;
-        
-        if ($range == 0) return array_fill(0, count($data), 50);
-        
-        return array_map(function($value) use ($min, $range) {
+
+        if ($range == 0) {
+            return array_fill(0, count($data), 50);
+        }
+
+        return array_map(function ($value) use ($min, $range) {
             return round((($value - $min) / $range) * 100, 2);
         }, $data);
     }
@@ -824,11 +829,11 @@ class InsLdc
         $labels = [];
         $avgVarianceData = [];
         $colors = [];
-        
+
         foreach ($machineData as $machine => $data) {
             $labels[] = $machine;
             $avgVarianceData[] = $data['avg_variance'];
-            
+
             // Color coding based on variance level
             if ($data['avg_variance'] > 2.0) {
                 $colors[] = 'rgba(255, 99, 132, 0.8)'; // Red for high variance
@@ -848,12 +853,12 @@ class InsLdc
                         'label' => __('Rata-rata Varians (SF)'),
                         'data' => $avgVarianceData,
                         'backgroundColor' => $colors,
-                        'borderColor' => array_map(function($color) {
+                        'borderColor' => array_map(function ($color) {
                             return str_replace('0.8', '1', $color);
                         }, $colors),
-                        'borderWidth' => 1
-                    ]
-                ]
+                        'borderWidth' => 1,
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -861,28 +866,28 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Akurasi Pengukuran per Mesin (VN vs AB)')
+                        'text' => __('Akurasi Pengukuran per Mesin (VN vs AB)'),
                     ],
                     'legend' => [
-                        'display' => false
-                    ]
+                        'display' => false,
+                    ],
                 ],
                 'scales' => [
                     'y' => [
                         'beginAtZero' => true,
                         'title' => [
                             'display' => true,
-                            'text' => __('Varians Rata-rata (SF)')
-                        ]
+                            'text' => __('Varians Rata-rata (SF)'),
+                        ],
                     ],
                     'x' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Mesin')
-                        ]
-                    ]
-                ]
-            ]
+                            'text' => __('Mesin'),
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -908,9 +913,9 @@ class InsLdc
                     [
                         'data' => $volumeData,
                         'backgroundColor' => array_slice($colors, 0, count($labels)),
-                        'borderWidth' => 2
-                    ]
-                ]
+                        'borderWidth' => 2,
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -918,13 +923,13 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Distribusi Volume per Mesin')
+                        'text' => __('Distribusi Volume per Mesin'),
                     ],
                     'legend' => [
-                        'position' => 'right'
-                    ]
-                ]
-            ]
+                        'position' => 'right',
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -951,9 +956,9 @@ class InsLdc
                         'data' => $qtPercentageData,
                         'backgroundColor' => 'rgba(153, 102, 255, 0.8)',
                         'borderColor' => 'rgba(153, 102, 255, 1)',
-                        'borderWidth' => 1
-                    ]
-                ]
+                        'borderWidth' => 1,
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -961,11 +966,11 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Kualitas Output per Mesin (Area QT)')
+                        'text' => __('Kualitas Output per Mesin (Area QT)'),
                     ],
                     'legend' => [
-                        'display' => false
-                    ]
+                        'display' => false,
+                    ],
                 ],
                 'scales' => [
                     'y' => [
@@ -973,17 +978,17 @@ class InsLdc
                         'max' => 100,
                         'title' => [
                             'display' => true,
-                            'text' => __('Persentase QT (%)')
-                        ]
+                            'text' => __('Persentase QT (%)'),
+                        ],
                     ],
                     'x' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Mesin')
-                        ]
-                    ]
-                ]
-            ]
+                            'text' => __('Mesin'),
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -1001,7 +1006,7 @@ class InsLdc
         $machineGroups = [];
         foreach ($trendData as $data) {
             $machine = $data['machine'];
-            if (!isset($machineGroups[$machine])) {
+            if (! isset($machineGroups[$machine])) {
                 $machineGroups[$machine] = [];
             }
             $machineGroups[$machine][] = $data;
@@ -1018,7 +1023,7 @@ class InsLdc
         // Create dataset for each machine
         foreach ($machineGroups as $machine => $machineData) {
             $dataPoints = [];
-            
+
             foreach ($labels as $date) {
                 $found = false;
                 foreach ($machineData as $point) {
@@ -1028,7 +1033,7 @@ class InsLdc
                         break;
                     }
                 }
-                if (!$found) {
+                if (! $found) {
                     $dataPoints[] = null;
                 }
             }
@@ -1039,7 +1044,7 @@ class InsLdc
                 'borderColor' => $colors[$colorIndex % count($colors)],
                 'backgroundColor' => str_replace('1)', '0.2)', $colors[$colorIndex % count($colors)]),
                 'fill' => false,
-                'tension' => 0.1
+                'tension' => 0.1,
             ];
             $colorIndex++;
         }
@@ -1048,7 +1053,7 @@ class InsLdc
             'type' => 'line',
             'data' => [
                 'labels' => $labels,
-                'datasets' => $datasets
+                'datasets' => $datasets,
             ],
             'options' => [
                 'responsive' => true,
@@ -1056,36 +1061,36 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Tren Akurasi Mesin dari Waktu ke Waktu')
+                        'text' => __('Tren Akurasi Mesin dari Waktu ke Waktu'),
                     ],
                     'legend' => [
-                        'position' => 'top'
-                    ]
+                        'position' => 'top',
+                    ],
                 ],
                 'scales' => [
                     'y' => [
                         'beginAtZero' => true,
                         'title' => [
                             'display' => true,
-                            'text' => __('Varians (SF)')
-                        ]
+                            'text' => __('Varians (SF)'),
+                        ],
                     ],
                     'x' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Tanggal')
-                        ]
-                    ]
-                ]
-            ]
+                            'text' => __('Tanggal'),
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
     public static function getWorkerProductivityChartOptions(array $workerStats): array
     {
         $workers = array_values($workerStats);
-        $labels = array_map(fn($w) => $w['name'] . ' (' . $w['emp_id'] . ')', $workers);
-        $productivity = array_map(fn($w) => $w['avg_vn_area_per_day'], $workers);
+        $labels = array_map(fn ($w) => $w['name'].' ('.$w['emp_id'].')', $workers);
+        $productivity = array_map(fn ($w) => $w['avg_vn_area_per_day'], $workers);
 
         return [
             'type' => 'bar',
@@ -1097,9 +1102,9 @@ class InsLdc
                         'data' => $productivity,
                         'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
                         'borderColor' => 'rgba(54, 162, 235, 1)',
-                        'borderWidth' => 1
-                    ]
-                ]
+                        'borderWidth' => 1,
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -1108,30 +1113,30 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Produktivitas Pekerja (SF/hari)')
+                        'text' => __('Produktivitas Pekerja (SF/hari)'),
                     ],
                     'legend' => [
-                        'display' => false
-                    ]
+                        'display' => false,
+                    ],
                 ],
                 'scales' => [
                     'x' => [
                         'beginAtZero' => true,
                         'title' => [
                             'display' => true,
-                            'text' => __('SF/hari')
-                        ]
-                    ]
-                ]
-            ]
+                            'text' => __('SF/hari'),
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
     public static function getWorkerConsistencyChartOptions(array $workerStats): array
     {
         $workers = array_values($workerStats);
-        $labels = array_map(fn($w) => $w['name'], $workers);
-        $consistency = array_map(fn($w) => $w['qt_consistency'], $workers);
+        $labels = array_map(fn ($w) => $w['name'], $workers);
+        $consistency = array_map(fn ($w) => $w['qt_consistency'], $workers);
 
         return [
             'type' => 'scatter',
@@ -1139,17 +1144,17 @@ class InsLdc
                 'datasets' => [
                     [
                         'label' => __('Konsistensi QT'),
-                        'data' => array_map(function($worker, $index) {
+                        'data' => array_map(function ($worker, $index) {
                             return [
                                 'x' => $worker['avg_vn_area_per_day'],
-                                'y' => $worker['qt_consistency']
+                                'y' => $worker['qt_consistency'],
                             ];
                         }, $workers, array_keys($workers)),
                         'backgroundColor' => 'rgba(255, 99, 132, 0.8)',
                         'borderColor' => 'rgba(255, 99, 132, 1)',
-                        'pointRadius' => 6
-                    ]
-                ]
+                        'pointRadius' => 6,
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -1157,37 +1162,37 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Produktivitas vs Konsistensi Pengukuran')
+                        'text' => __('Produktivitas vs Konsistensi Pengukuran'),
                     ],
                     'tooltip' => [
                         'callbacks' => [
                             'label' => 'function(context) {
                                 const workerIndex = context.dataIndex;
-                                const workers = ' . json_encode($workers) . ';
+                                const workers = '.json_encode($workers).';
                                 const worker = workers[workerIndex];
                                 return worker.name + " (" + worker.emp_id + "): " + context.parsed.x + " SF/hari, " + context.parsed.y + " konsistensi";
-                            }'
-                        ]
+                            }',
+                        ],
                     ],
                     'datalabels' => [
-                        'display' => false
-                    ]
+                        'display' => false,
+                    ],
                 ],
                 'scales' => [
                     'x' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Produktivitas (SF/hari)')
-                        ]
+                            'text' => __('Produktivitas (SF/hari)'),
+                        ],
                     ],
                     'y' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Konsistensi QT (Lower = Better)')
-                        ]
-                    ]
-                ]
-            ]
+                            'text' => __('Konsistensi QT (Lower = Better)'),
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -1199,29 +1204,29 @@ class InsLdc
                 'datasets' => [
                     [
                         'label' => __('Pengalaman Kerja'),
-                        'data' => array_map(function($worker) {
+                        'data' => array_map(function ($worker) {
                             return [
                                 'x' => $worker['experience_hire'],
-                                'y' => $worker['productivity']
+                                'y' => $worker['productivity'],
                             ];
                         }, $experienceData),
                         'backgroundColor' => 'rgba(75, 192, 192, 0.8)',
                         'borderColor' => 'rgba(75, 192, 192, 1)',
-                        'pointRadius' => 6
+                        'pointRadius' => 6,
                     ],
                     [
                         'label' => __('Pengalaman Caldera'),
-                        'data' => array_map(function($worker) {
+                        'data' => array_map(function ($worker) {
                             return [
                                 'x' => $worker['experience_system'] ?? 0,
-                                'y' => $worker['productivity']
+                                'y' => $worker['productivity'],
                             ];
                         }, $experienceData),
                         'backgroundColor' => 'rgba(153, 102, 255, 0.8)',
                         'borderColor' => 'rgba(153, 102, 255, 1)',
-                        'pointRadius' => 6
-                    ]
-                ]
+                        'pointRadius' => 6,
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -1229,35 +1234,35 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Korelasi Pengalaman vs Produktivitas')
+                        'text' => __('Korelasi Pengalaman vs Produktivitas'),
                     ],
                     'datalabels' => [
-                        'display' => false
-                    ]
+                        'display' => false,
+                    ],
                 ],
                 'scales' => [
                     'x' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Pengalaman (Bulan)')
-                        ]
+                            'text' => __('Pengalaman (Bulan)'),
+                        ],
                     ],
                     'y' => [
                         'title' => [
                             'display' => true,
-                            'text' => __('Produktivitas (SF/hari)')
-                        ]
-                    ]
-                ]
-            ]
+                            'text' => __('Produktivitas (SF/hari)'),
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
     public static function getImprovementTrendChartOptions(array $improvementData): array
     {
-        $improving = array_filter($improvementData, fn($w) => $w['trend'] === 'improving');
-        $declining = array_filter($improvementData, fn($w) => $w['trend'] === 'declining');
-        $stable = array_filter($improvementData, fn($w) => $w['trend'] === 'stable');
+        $improving = array_filter($improvementData, fn ($w) => $w['trend'] === 'improving');
+        $declining = array_filter($improvementData, fn ($w) => $w['trend'] === 'declining');
+        $stable = array_filter($improvementData, fn ($w) => $w['trend'] === 'stable');
 
         return [
             'type' => 'doughnut',
@@ -1269,16 +1274,16 @@ class InsLdc
                         'backgroundColor' => [
                             'rgba(75, 192, 192, 0.8)',
                             'rgba(255, 99, 132, 0.8)',
-                            'rgba(255, 205, 86, 0.8)'
+                            'rgba(255, 205, 86, 0.8)',
                         ],
                         'borderColor' => [
                             'rgba(75, 192, 192, 1)',
                             'rgba(255, 99, 132, 1)',
-                            'rgba(255, 205, 86, 1)'
+                            'rgba(255, 205, 86, 1)',
                         ],
-                        'borderWidth' => 1
-                    ]
-                ]
+                        'borderWidth' => 1,
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -1286,26 +1291,26 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Tren Peningkatan Kualitas Pekerja')
+                        'text' => __('Tren Peningkatan Kualitas Pekerja'),
                     ],
                     'legend' => [
-                        'position' => 'bottom'
-                    ]
-                ]
-            ]
+                        'position' => 'bottom',
+                    ],
+                ],
+            ],
         ];
     }
 
     public static function getShiftTeamChartOptions(array $shiftStats): array
     {
         $shifts = array_keys($shiftStats);
-        $productivity = array_map(fn($s) => $shiftStats[$s]['avg_vn_area_per_worker'], $shifts);
-        $consistency = array_map(fn($s) => $shiftStats[$s]['team_consistency'], $shifts);
+        $productivity = array_map(fn ($s) => $shiftStats[$s]['avg_vn_area_per_worker'], $shifts);
+        $consistency = array_map(fn ($s) => $shiftStats[$s]['team_consistency'], $shifts);
 
         return [
             'type' => 'bar',
             'data' => [
-                'labels' => array_map(fn($s) => __('Shift') . ' ' . $s, $shifts),
+                'labels' => array_map(fn ($s) => __('Shift').' '.$s, $shifts),
                 'datasets' => [
                     [
                         'label' => __('Rata-rata Area VN per Pekerja'),
@@ -1313,7 +1318,7 @@ class InsLdc
                         'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
                         'borderColor' => 'rgba(54, 162, 235, 1)',
                         'borderWidth' => 1,
-                        'yAxisID' => 'y'
+                        'yAxisID' => 'y',
                     ],
                     [
                         'label' => __('Konsistensi Tim'),
@@ -1322,9 +1327,9 @@ class InsLdc
                         'backgroundColor' => 'rgba(255, 99, 132, 0.8)',
                         'borderColor' => 'rgba(255, 99, 132, 1)',
                         'borderWidth' => 2,
-                        'yAxisID' => 'y1'
-                    ]
-                ]
+                        'yAxisID' => 'y1',
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -1332,8 +1337,8 @@ class InsLdc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Performa Tim per Shift')
-                    ]
+                        'text' => __('Performa Tim per Shift'),
+                    ],
                 ],
                 'scales' => [
                     'y' => [
@@ -1342,8 +1347,8 @@ class InsLdc
                         'position' => 'left',
                         'title' => [
                             'display' => true,
-                            'text' => __('Area VN per Pekerja')
-                        ]
+                            'text' => __('Area VN per Pekerja'),
+                        ],
                     ],
                     'y1' => [
                         'type' => 'linear',
@@ -1351,14 +1356,14 @@ class InsLdc
                         'position' => 'right',
                         'title' => [
                             'display' => true,
-                            'text' => __('Konsistensi Tim')
+                            'text' => __('Konsistensi Tim'),
                         ],
                         'grid' => [
-                            'drawOnChartArea' => false
-                        ]
-                    ]
-                ]
-            ]
+                            'drawOnChartArea' => false,
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 }

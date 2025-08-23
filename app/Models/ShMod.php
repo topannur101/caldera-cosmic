@@ -11,7 +11,7 @@ class ShMod extends Model
 
     protected $fillable = [
         'name',
-        'is_active'
+        'is_active',
     ];
 
     protected static function boot()
@@ -26,6 +26,7 @@ class ShMod extends Model
             $model->manageActive();
         });
     }
+
     public function manageActive()
     {
         if ($this->is_active) {

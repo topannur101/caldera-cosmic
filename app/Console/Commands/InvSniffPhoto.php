@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
+use App\Inv;
 use App\Models\InvArea;
 use App\Models\InvItem;
-use App\Inv;
+use Illuminate\Console\Command;
 
 class InvSniffPhoto extends Command
 {
@@ -32,51 +32,57 @@ class InvSniffPhoto extends Command
         $inv_area_id = $this->ask('Please enter inventory area ID');
 
         // Validate the input is numeric
-        if (!is_numeric($inv_area_id)) {
+        if (! is_numeric($inv_area_id)) {
             $this->error('Invalid input. Please enter a numeric value.');
+
             return 1; // Exit with error code
         }
-        
+
         // Check if the area exists
         $inv_area = InvArea::find($inv_area_id);
-        if (!$inv_area) {
+        if (! $inv_area) {
             $this->error('No destination inventory area with that ID.');
+
             return 1; // Exit with error code
         }
 
         $user_name = $this->ask('Please enter groupware account');
 
-        if (!$user_name) {
+        if (! $user_name) {
             $this->error('Invalid input. Please enter a username.');
+
             return 1; // Exit with error code
         }
-        
+
         // Confirm the operation
-        if (!$this->confirm('Do you wish to proceed to SNIFF photos for ' . $inv_area->name. ' inventory area using account: ' . $user_name .'?')) {
+        if (! $this->confirm('Do you wish to proceed to SNIFF photos for '.$inv_area->name.' inventory area using account: '.$user_name.'?')) {
             $this->info('Operation cancelled');
+
             return 0; // Exit successfully but without doing the operation
         }
 
         $items = InvItem::where('inv_area_id', $inv_area->id)
             ->whereNotNull('code')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('photo')
                     ->orWhere('photo', '');
             })
             ->get();
 
         $ci_session = Inv::getCiSession($user_name);
-        
+
         if ($ci_session) {
             foreach ($items as $item) {
 
-                if (!$item->code) {
+                if (! $item->code) {
                     $this->info("Barang dengan ID {$item->id}, tidak memiliki item code.");
+
                     continue;
                 }
 
                 if ($item->photo) {
                     $this->info("Barang dengan ID {$item->id}, sudah memiliki foto.");
+
                     continue;
                 }
 
@@ -88,8 +94,8 @@ class InvSniffPhoto extends Command
 
                 } else {
                     $this->warn("{$item->code}: {$result['message']}");
-                }               
-    
+                }
+
             }
         }
 

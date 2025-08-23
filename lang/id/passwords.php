@@ -17,6 +17,6 @@ return [
     'sent' => 'Email yang berisi tautan atur ulang sandi telah dikirim.',
     'throttled' => 'Harap tunggu sebelum mencoba lagi.',
     'token' => 'Token atur ulang sandi ini tidak sah.',
-    'user' => "Pengguna dengan alamat email tersebut tak dapat ditemukan.",
+    'user' => 'Pengguna dengan alamat email tersebut tak dapat ditemukan.',
 
 ];

@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class InsStcAdjust extends Model
 {
@@ -44,11 +44,11 @@ class InsStcAdjust extends Model
         if ($this->adjustment_applied) {
             return 'Applied';
         }
-        
+
         if (str_contains($this->adjustment_reason, 'DRY RUN')) {
             return 'Dry Run';
         }
-        
+
         return 'Failed';
     }
 
@@ -75,11 +75,11 @@ class InsStcAdjust extends Model
     {
         $before = $this->sv_before;
         $after = $this->sv_after;
-        
-        if (!is_array($before) || !is_array($after) || count($before) !== 8 || count($after) !== 8) {
+
+        if (! is_array($before) || ! is_array($after) || count($before) !== 8 || count($after) !== 8) {
             return 'Invalid SV data';
         }
-        
+
         $changes = [];
         for ($i = 0; $i < 8; $i++) {
             $diff = $after[$i] - $before[$i];
@@ -87,7 +87,7 @@ class InsStcAdjust extends Model
                 $changes[] = sprintf('SV%d: %+.1f', $i + 1, $diff);
             }
         }
-        
+
         return empty($changes) ? 'No changes' : implode(', ', $changes);
     }
 }

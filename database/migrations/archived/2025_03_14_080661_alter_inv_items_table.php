@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('inv_items', function (Blueprint $table) {
             $table->unsignedBigInteger('legacy_id')->nullable();
-   
+
         });
     }
 
@@ -23,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('inv_items', function (Blueprint $table) {
-            $table->dropColumn('legacy_id');  
+            $table->dropColumn('legacy_id');
 
         });
     }

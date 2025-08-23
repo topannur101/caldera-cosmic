@@ -13,35 +13,38 @@ use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Traits\HasDateRangeFilter;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout("layouts.app")] class extends Component {
     use WithPagination;
     use HasDateRangeFilter;
 
     #[Url]
-    public string $start_at = '';
+    public string $start_at = "";
 
     #[Url]
-    public string $end_at = '';
+    public string $end_at = "";
 
     #[Url]
     public $machine_id;
 
     #[Url]
-    public string $recipe_name = '';
+    public string $recipe_name = "";
 
     #[Url]
-    public string $mcs = '';
+    public string $mcs = "";
 
     public array $machines = [];
     public int $perPage = 20;
 
     public function mount()
     {
-        if (!$this->start_at || !$this->end_at) {
+        if (! $this->start_at || ! $this->end_at) {
             $this->setThisWeek();
         }
 
-        $this->machines = InsCtcMachine::orderBy('line')->get()->pluck('line', 'id')->toArray();
+        $this->machines = InsCtcMachine::orderBy("line")
+            ->get()
+            ->pluck("line", "id")
+            ->toArray();
     }
 
     private function getMetricsQuery()
@@ -49,91 +52,87 @@ new #[Layout('layouts.app')] class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $query = InsCtcMetric::leftJoin('ins_ctc_machines', 'ins_ctc_metrics.ins_ctc_machine_id', '=', 'ins_ctc_machines.id')
-            ->leftJoin('ins_ctc_recipes', 'ins_ctc_metrics.ins_ctc_recipe_id', '=', 'ins_ctc_recipes.id')
-            ->leftJoin('ins_rubber_batches', 'ins_ctc_metrics.ins_rubber_batch_id', '=', 'ins_rubber_batches.id')
+        $query = InsCtcMetric::leftJoin("ins_ctc_machines", "ins_ctc_metrics.ins_ctc_machine_id", "=", "ins_ctc_machines.id")
+            ->leftJoin("ins_ctc_recipes", "ins_ctc_metrics.ins_ctc_recipe_id", "=", "ins_ctc_recipes.id")
+            ->leftJoin("ins_rubber_batches", "ins_ctc_metrics.ins_rubber_batch_id", "=", "ins_rubber_batches.id")
             ->select(
-                'ins_ctc_metrics.*',
-                'ins_ctc_metrics.created_at as metric_created_at',
-                'ins_ctc_machines.line as machine_line',
-                'ins_ctc_recipes.name as recipe_name',
-                'ins_ctc_recipes.std_min',
-                'ins_ctc_recipes.std_max',
-                'ins_rubber_batches.code as batch_code',
-                'ins_rubber_batches.mcs as batch_mcs',
-                'ins_rubber_batches.color as batch_color'
+                "ins_ctc_metrics.*",
+                "ins_ctc_metrics.created_at as metric_created_at",
+                "ins_ctc_machines.line as machine_line",
+                "ins_ctc_recipes.name as recipe_name",
+                "ins_ctc_recipes.std_min",
+                "ins_ctc_recipes.std_max",
+                "ins_rubber_batches.code as batch_code",
+                "ins_rubber_batches.mcs as batch_mcs",
+                "ins_rubber_batches.color as batch_color",
             )
-            ->whereBetween('ins_ctc_metrics.created_at', [$start, $end]);
+            ->whereBetween("ins_ctc_metrics.created_at", [$start, $end]);
 
         if ($this->machine_id) {
-            $query->where('ins_ctc_machines.id', $this->machine_id);
+            $query->where("ins_ctc_machines.id", $this->machine_id);
         }
 
         if ($this->recipe_name) {
-            $query->where('ins_ctc_recipes.name', 'like', '%' . $this->recipe_name . '%');
+            $query->where("ins_ctc_recipes.name", "like", "%" . $this->recipe_name . "%");
         }
 
         if ($this->mcs) {
-            $query->where('ins_rubber_batches.mcs', $this->mcs);
+            $query->where("ins_rubber_batches.mcs", $this->mcs);
         }
 
-        return $query->orderBy('ins_ctc_metrics.created_at', 'DESC');
+        return $query->orderBy("ins_ctc_metrics.created_at", "DESC");
     }
 
-    #[On('updated')]
+    #[On("updated")]
     public function with(): array
     {
         $metrics = $this->getMetricsQuery()->paginate($this->perPage);
 
         return [
-            'metrics' => $metrics,
+            "metrics" => $metrics,
         ];
     }
 
     private function calculateDuration($data): string
     {
-        if (!$data || !is_array($data) || count($data) < 2) {
-            return '00:00:00';
+        if (! $data || ! is_array($data) || count($data) < 2) {
+            return "00:00:00";
         }
 
         $firstTimestamp = $data[0][0] ?? null;
         $lastTimestamp = $data[count($data) - 1][0] ?? null;
 
-        if (!$firstTimestamp || !$lastTimestamp) {
-            return '00:00:00';
+        if (! $firstTimestamp || ! $lastTimestamp) {
+            return "00:00:00";
         }
 
         try {
             $start = new DateTime($firstTimestamp);
             $end = new DateTime($lastTimestamp);
             $interval = $start->diff($end);
-            
-            return sprintf('%02d:%02d:%02d', 
-                $interval->h, 
-                $interval->i, 
-                $interval->s
-            );
+
+            return sprintf("%02d:%02d:%02d", $interval->h, $interval->i, $interval->s);
         } catch (Exception $e) {
-            return '00:00:00';
+            return "00:00:00";
         }
     }
 
     private function getStartedAt($data): string
     {
-        if (!$data || !is_array($data) || count($data) === 0) {
-            return 'N/A';
+        if (! $data || ! is_array($data) || count($data) === 0) {
+            return "N/A";
         }
 
         $firstTimestamp = $data[0][0] ?? null;
-        
-        if (!$firstTimestamp) {
-            return 'N/A';
+
+        if (! $firstTimestamp) {
+            return "N/A";
         }
 
         try {
-            return (new DateTime($firstTimestamp))->format('H:i:s');
+            return (new DateTime($firstTimestamp))->format("H:i:s");
         } catch (Exception $e) {
-            return 'N/A';
+            return "N/A";
         }
     }
 
@@ -145,26 +144,39 @@ new #[Layout('layouts.app')] class extends Component {
     public function download($type)
     {
         switch ($type) {
-            case 'metrics':
-                $this->js('toast("' . __('Unduhan dimulai...') . '", { type: "success" })');
-                $filename = 'ctc_metrics_export_' . now()->format('Y-m-d_His') . '.csv';
+            case "metrics":
+                $this->js('toast("' . __("Unduhan dimulai...") . '", { type: "success" })');
+                $filename = "ctc_metrics_export_" . now()->format("Y-m-d_His") . ".csv";
 
                 $headers = [
-                    'Content-type' => 'text/csv',
-                    'Content-Disposition' => "attachment; filename=$filename",
-                    'Pragma' => 'no-cache',
-                    'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-                    'Expires' => '0',
+                    "Content-type" => "text/csv",
+                    "Content-Disposition" => "attachment; filename=$filename",
+                    "Pragma" => "no-cache",
+                    "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+                    "Expires" => "0",
                 ];
 
                 $columns = [
-                    __('Batch'), __('Line'), __('Resep'), __('MCS'), __('AVG Kiri'), __('AVG Kanan'),
-                    __('MAE Kiri'), __('MAE Kanan'), __('SSD Kiri'), __('SSD Kanan'), 'BAL',
-                    'CU', 'CR', __('Durasi'), __('Mulai'), __('Kualitas')
+                    __("Batch"),
+                    __("Line"),
+                    __("Resep"),
+                    __("MCS"),
+                    __("AVG Kiri"),
+                    __("AVG Kanan"),
+                    __("MAE Kiri"),
+                    __("MAE Kanan"),
+                    __("SSD Kiri"),
+                    __("SSD Kanan"),
+                    "BAL",
+                    "CU",
+                    "CR",
+                    __("Durasi"),
+                    __("Mulai"),
+                    __("Kualitas"),
                 ];
 
                 $callback = function () use ($columns) {
-                    $file = fopen('php://output', 'w');
+                    $file = fopen("php://output", "w");
                     fputcsv($file, $columns);
 
                     $this->getMetricsQuery()->chunk(1000, function ($metrics) use ($file) {
@@ -181,11 +193,11 @@ new #[Layout('layouts.app')] class extends Component {
                                 number_format($metric->t_ssd_left, 2),
                                 number_format($metric->t_ssd_right, 2),
                                 number_format($metric->t_balance, 2),
-                                $metric->correction_uptime . '%',
-                                $metric->correction_rate . '%',
+                                $metric->correction_uptime . "%",
+                                $metric->correction_rate . "%",
                                 $this->calculateDuration($metric->data),
                                 $this->getStartedAt($metric->data),
-                                $metric->t_mae <= 1.0 ? __('Lulus') : __('Gagal'),
+                                $metric->t_mae <= 1.0 ? __("Lulus") : __("Gagal"),
                             ]);
                         }
                     });
@@ -208,28 +220,31 @@ new #[Layout('layouts.app')] class extends Component {
                     <div class="flex">
                         <x-dropdown align="left" width="48">
                             <x-slot name="trigger">
-                                <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="icon-chevron-down ms-1"></i></x-text-button>
+                                <x-text-button class="uppercase ml-3">
+                                    {{ __("Rentang") }}
+                                    <i class="icon-chevron-down ms-1"></i>
+                                </x-text-button>
                             </x-slot>
                             <x-slot name="content">
                                 <x-dropdown-link href="#" wire:click.prevent="setToday">
-                                    {{ __('Hari ini') }}
+                                    {{ __("Hari ini") }}
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" wire:click.prevent="setYesterday">
-                                    {{ __('Kemarin') }}
+                                    {{ __("Kemarin") }}
                                 </x-dropdown-link>
                                 <hr class="border-neutral-300 dark:border-neutral-600" />
                                 <x-dropdown-link href="#" wire:click.prevent="setThisWeek">
-                                    {{ __('Minggu ini') }}
+                                    {{ __("Minggu ini") }}
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" wire:click.prevent="setLastWeek">
-                                    {{ __('Minggu lalu') }}
+                                    {{ __("Minggu lalu") }}
                                 </x-dropdown-link>
                                 <hr class="border-neutral-300 dark:border-neutral-600" />
                                 <x-dropdown-link href="#" wire:click.prevent="setThisMonth">
-                                    {{ __('Bulan ini') }}
+                                    {{ __("Bulan ini") }}
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" wire:click.prevent="setLastMonth">
-                                    {{ __('Bulan lalu') }}
+                                    {{ __("Bulan lalu") }}
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
@@ -243,22 +258,22 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grid grid-cols-2 lg:flex gap-3">
                 <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
                     <x-select wire:model.live="machine_id" class="w-full lg:w-20">
                         <option value=""></option>
-                        @foreach($machines as $id => $line)
+                        @foreach ($machines as $id => $line)
                             <option value="{{ $id }}">{{ $line }}</option>
                         @endforeach
                     </x-select>
                 </div>
-                
+
                 <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Resep') }}</label>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Resep") }}</label>
                     <x-text-input wire:model.live="recipe_name" class="w-full lg:w-32" />
                 </div>
-                
+
                 <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('MCS') }}</label>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("MCS") }}</label>
                     <x-text-input wire:model.live="mcs" class="w-full lg:w-20" />
                 </div>
             </div>
@@ -266,8 +281,8 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="grow flex justify-between gap-x-2 items-center">
                 <div>
                     <div class="px-3">
-                        <div wire:loading.class="hidden">{{ $metrics->total() . ' ' . __('entri') }}</div>
-                        <div wire:loading.class.remove="hidden" class="hidden">{{ __('Memuat...') }}</div>
+                        <div wire:loading.class="hidden">{{ $metrics->total() . " " . __("entri") }}</div>
+                        <div wire:loading.class.remove="hidden" class="hidden">{{ __("Memuat...") }}</div>
                     </div>
                 </div>
                 <div class="flex gap-x-2">
@@ -277,11 +292,13 @@ new #[Layout('layouts.app')] class extends Component {
                         </x-slot>
                         <x-slot name="content">
                             <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-slide-over', 'metrics-info')">
-                                <i class="icon-info me-2"></i>{{ __('Penjelasan Metrik') }}
+                                <i class="icon-info me-2"></i>
+                                {{ __("Penjelasan Metrik") }}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
                             <x-dropdown-link href="#" wire:click.prevent="download('metrics')">
-                                <i class="icon-download me-2"></i>{{ __('CSV Metrik') }}
+                                <i class="icon-download me-2"></i>
+                                {{ __("CSV Metrik") }}
                             </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
@@ -297,73 +314,87 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="p-6 overflow-auto">
                 <div class="flex justify-between items-start mb-6">
                     <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                        {{ __('Penjelasan Metrik') }}
+                        {{ __("Penjelasan Metrik") }}
                     </h2>
                     <x-text-button type="button" x-on:click="window.dispatchEvent(escKey)">
                         <i class="icon-x"></i>
                     </x-text-button>
                 </div>
-                
+
                 <div class="space-y-6 text-sm text-neutral-600 dark:text-neutral-400">
                     <div>
                         <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">MAE (Mean Average Error)</h3>
-                        <p class="mb-2">{{ __('Rata-rata kesalahan dari target ketebalan. Mengukur seberapa dekat hasil produksi dengan target yang ditetapkan.') }}</p>
+                        <p class="mb-2">{{ __("Rata-rata kesalahan dari target ketebalan. Mengukur seberapa dekat hasil produksi dengan target yang ditetapkan.") }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
-                            {{ __('Rumus: Average of |actual_thickness - target_thickness|') }}<br>
-                            {{ __('Unit: mm') }}<br>
-                            {{ __('Kualitas: ≤ 1.0 mm = Lulus, > 1.0 mm = Gagal') }}<br>
-                            {{ __('Interpretasi: Nilai lebih rendah = akurasi lebih baik') }}
+                            {{ __("Rumus: Average of |actual_thickness - target_thickness|") }}
+                            <br />
+                            {{ __("Unit: mm") }}
+                            <br />
+                            {{ __("Kualitas: ≤ 1.0 mm = Lulus, > 1.0 mm = Gagal") }}
+                            <br />
+                            {{ __("Interpretasi: Nilai lebih rendah = akurasi lebih baik") }}
                         </div>
                     </div>
 
                     <div>
                         <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">SSD (Sample Standard Deviation)</h3>
-                        <p class="mb-2">{{ __('Standar deviasi sampel yang mengukur konsistensi ketebalan. Menunjukkan seberapa konsisten hasil produksi.') }}</p>
+                        <p class="mb-2">{{ __("Standar deviasi sampel yang mengukur konsistensi ketebalan. Menunjukkan seberapa konsisten hasil produksi.") }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
-                            {{ __('Unit: mm') }}<br>
-                            {{ __('Interpretasi: Nilai lebih rendah = konsistensi lebih baik') }}<br>
-                            {{ __('Fungsi: Mengidentifikasi variabilitas dalam proses produksi') }}
+                            {{ __("Unit: mm") }}
+                            <br />
+                            {{ __("Interpretasi: Nilai lebih rendah = konsistensi lebih baik") }}
+                            <br />
+                            {{ __("Fungsi: Mengidentifikasi variabilitas dalam proses produksi") }}
                         </div>
                     </div>
 
                     <div>
                         <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">AVG (Average Thickness)</h3>
-                        <p class="mb-2">{{ __('Ketebalan rata-rata aktual yang dihasilkan selama proses produksi.') }}</p>
+                        <p class="mb-2">{{ __("Ketebalan rata-rata aktual yang dihasilkan selama proses produksi.") }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
-                            {{ __('Unit: mm') }}<br>
-                            {{ __('Format: Left side | Right side') }}<br>
-                            {{ __('Fungsi: Menunjukkan ketebalan rata-rata pada setiap sisi') }}
+                            {{ __("Unit: mm") }}
+                            <br />
+                            {{ __("Format: Left side | Right side") }}
+                            <br />
+                            {{ __("Fungsi: Menunjukkan ketebalan rata-rata pada setiap sisi") }}
                         </div>
                     </div>
 
                     <div>
                         <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">'BAL (Balance)</h3>
-                        <p class="mb-2">{{ __('Keseimbangan ketebalan antara sisi kiri dan kanan. Mengukur perbedaan ketebalan antar sisi.') }}</p>
+                        <p class="mb-2">{{ __("Keseimbangan ketebalan antara sisi kiri dan kanan. Mengukur perbedaan ketebalan antar sisi.") }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
-                            {{ __('Rumus: Left thickness - Right thickness') }}<br>
-                            {{ __('Unit: mm') }}<br>
-                            {{ __('Ideal: Mendekati 0 mm (balanced)') }}<br>
-                            {{ __('Positif: Sisi kiri lebih tebal, Negatif: Sisi kanan lebih tebal') }}
+                            {{ __("Rumus: Left thickness - Right thickness") }}
+                            <br />
+                            {{ __("Unit: mm") }}
+                            <br />
+                            {{ __("Ideal: Mendekati 0 mm (balanced)") }}
+                            <br />
+                            {{ __("Positif: Sisi kiri lebih tebal, Negatif: Sisi kanan lebih tebal") }}
                         </div>
                     </div>
 
                     <div>
                         <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">CU (Correction Uptime)</h3>
-                        <p class="mb-2">{{ __('Persentase waktu sistem koreksi otomatis dinyalakan. Mengukur seberapa lama sistem auto correction aktif.') }}</p>
+                        <p class="mb-2">{{ __("Persentase waktu sistem koreksi otomatis dinyalakan. Mengukur seberapa lama sistem auto correction aktif.") }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
-                            {{ __('Unit: %') }}<br>
-                            {{ __('Interpretasi: Nilai tinggi = sistem auto correction lebih lama aktif') }}<br>
-                            {{ __('Fungsi: Monitoring utilisasi sistem koreksi otomatis') }}
+                            {{ __("Unit: %") }}
+                            <br />
+                            {{ __("Interpretasi: Nilai tinggi = sistem auto correction lebih lama aktif") }}
+                            <br />
+                            {{ __("Fungsi: Monitoring utilisasi sistem koreksi otomatis") }}
                         </div>
                     </div>
 
                     <div>
                         <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">CR (Correction Rate)</h3>
-                        <p class="mb-2">{{ __('Tingkat frekuensi koreksi otomatis ditrigger. Seberapa sering koreksi auto dilakukan.') }}</p>
+                        <p class="mb-2">{{ __("Tingkat frekuensi koreksi otomatis ditrigger. Seberapa sering koreksi auto dilakukan.") }}</p>
                         <div class="bg-neutral-50 dark:bg-neutral-800 p-3 rounded text-xs font-mono">
-                            {{ __('Unit: %') }}<br>
-                            {{ __('Fungsi: Mengukur frekuensi aktivasi koreksi otomatis') }}<br>
-                            {{ __('Analisis: Membantu evaluasi performa sistem koreksi') }}
+                            {{ __("Unit: %") }}
+                            <br />
+                            {{ __("Fungsi: Mengukur frekuensi aktivasi koreksi otomatis") }}
+                            <br />
+                            {{ __("Analisis: Membantu evaluasi performa sistem koreksi") }}
                         </div>
                     </div>
                 </div>
@@ -371,23 +402,20 @@ new #[Layout('layouts.app')] class extends Component {
         </x-slide-over>
     </div>
 
-    @if (!$metrics->count())
-        @if (!$start_at || !$end_at)
+    @if (! $metrics->count())
+        @if (! $start_at || ! $end_at)
             <div wire:key="no-range" class="py-20">
                 <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                    <i class="icon-calendar relative"><i
-                            class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
+                    <i class="icon-calendar relative"><i class="icon-circle-help absolute bottom-0 -right-1 text-lg text-neutral-500 dark:text-neutral-400"></i></i>
                 </div>
-                <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __('Pilih rentang tanggal') }}
-                </div>
+                <div class="text-center text-neutral-400 dark:text-neutral-600">{{ __("Pilih rentang tanggal") }}</div>
             </div>
         @else
             <div wire:key="no-match" class="py-20">
                 <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
                     <i class="icon-ghost"></i>
                 </div>
-                <div class="text-center text-neutral-500 dark:text-neutral-600">{{ __('Tidak ada yang cocok') }}
-                </div>
+                <div class="text-center text-neutral-500 dark:text-neutral-600">{{ __("Tidak ada yang cocok") }}</div>
             </div>
         @endif
     @else
@@ -395,9 +423,9 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                 <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
-                        <th>{{ __('Batch') }}</th>
-                        <th>{{ __('Line') }}</th>
-                        <th>{{ __('Resep') }}</th>
+                        <th>{{ __("Batch") }}</th>
+                        <th>{{ __("Line") }}</th>
+                        <th>{{ __("Resep") }}</th>
                         <th>MCS</th>
                         <th>AVG</th>
                         <th>MAE</th>
@@ -405,47 +433,52 @@ new #[Layout('layouts.app')] class extends Component {
                         <th>BAL</th>
                         <th>CU</th>
                         <th>CR</th>
-                        <th>{{ __('Durasi') }}</th>
-                        <th>{{ __('Dibuat') }}</th>
+                        <th>{{ __("Durasi") }}</th>
+                        <th>{{ __("Dibuat") }}</th>
                     </tr>
                     @foreach ($metrics as $metric)
-                        <tr wire:key="metric-tr-{{ $metric->id }}" tabindex="0"
+                        <tr
+                            wire:key="metric-tr-{{ $metric->id }}"
+                            tabindex="0"
                             x-on:click="
-                                $dispatch('open-modal', 'metric-detail');
-                                $dispatch('metric-detail-load', { id: '{{ $metric->id }}'})"
-                            class="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                            <td>{{ $metric->batch_code ?? 'N/A' }}</td>
-                            <td>{{ $metric->machine_line ?? 'N/A' }}</td>
-                            <td class="max-w-32 truncate" title="{{ $metric->recipe_name }}">{{ $metric->recipe_name ?? 'N/A' }}</td>
-                            <td>{{ $metric->batch_mcs ?? 'N/A' }}</td>
+                                $dispatch('open-modal', 'metric-detail')
+                                $dispatch('metric-detail-load', { id: '{{ $metric->id }}' })
+                            "
+                            class="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                        >
+                            <td>{{ $metric->batch_code ?? "N/A" }}</td>
+                            <td>{{ $metric->machine_line ?? "N/A" }}</td>
+                            <td class="max-w-32 truncate" title="{{ $metric->recipe_name }}">{{ $metric->recipe_name ?? "N/A" }}</td>
+                            <td>{{ $metric->batch_mcs ?? "N/A" }}</td>
                             @php
                                 $avgEval = $metric->avg_evaluation;
                                 $maeEval = $metric->mae_evaluation;
                                 $ssdEval = $metric->ssd_evaluation;
                                 $cuEval = $metric->correction_evaluation;
                             @endphp
+
                             <td class="font-mono whitespace-nowrap">
                                 <div class="flex items-center gap-1">
-                                    <i class="{{ ($avgEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
+                                    <i class="{{ $avgEval["is_good"] ?? false ? "icon-circle-check text-green-500" : "icon-circle-x text-red-500" }}"></i>
                                     <span>{{ number_format($metric->t_avg_left, 2) }} | {{ number_format($metric->t_avg_right, 2) }}</span>
                                 </div>
                             </td>
                             <td class="font-mono whitespace-nowrap">
                                 <div class="flex items-center gap-1">
-                                    <i class="{{ ($maeEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
+                                    <i class="{{ $maeEval["is_good"] ?? false ? "icon-circle-check text-green-500" : "icon-circle-x text-red-500" }}"></i>
                                     <span>{{ number_format($metric->t_mae_left, 2) }} | {{ number_format($metric->t_mae_right, 2) }}</span>
                                 </div>
                             </td>
                             <td class="font-mono whitespace-nowrap">
                                 <div class="flex items-center gap-1">
-                                    <i class="{{ ($ssdEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
+                                    <i class="{{ $ssdEval["is_good"] ?? false ? "icon-circle-check text-green-500" : "icon-circle-x text-red-500" }}"></i>
                                     <span>{{ number_format($metric->t_ssd_left, 2) }} | {{ number_format($metric->t_ssd_right, 2) }}</span>
                                 </div>
                             </td>
                             <td class="font-mono">{{ number_format($metric->t_balance, 2) }}</td>
                             <td class="font-mono whitespace-nowrap">
                                 <div class="flex items-center gap-1">
-                                    <i class="{{ ($cuEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
+                                    <i class="{{ $cuEval["is_good"] ?? false ? "icon-circle-check text-green-500" : "icon-circle-x text-red-500" }}"></i>
                                     <span>{{ $metric->correction_uptime }}%</span>
                                 </div>
                             </td>
@@ -458,9 +491,11 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div class="flex items-center relative h-16">
-            @if (!$metrics->isEmpty())
+            @if (! $metrics->isEmpty())
                 @if ($metrics->hasMorePages())
-                    <div wire:key="more" x-data="{
+                    <div
+                        wire:key="more"
+                        x-data="{
                         observe() {
                             const observer = new IntersectionObserver((metrics) => {
                                 metrics.forEach(metric => {
@@ -471,10 +506,12 @@ new #[Layout('layouts.app')] class extends Component {
                             })
                             observer.observe(this.$el)
                         }
-                    }" x-init="observe"></div>
+                    }"
+                        x-init="observe"
+                    ></div>
                     <x-spinner class="sm" />
                 @else
-                    <div class="mx-auto">{{ __('Tidak ada lagi') }}</div>
+                    <div class="mx-auto">{{ __("Tidak ada lagi") }}</div>
                 @endif
             @endif
         </div>
@@ -482,6 +519,7 @@ new #[Layout('layouts.app')] class extends Component {
 </div>
 
 @script
-<script>
-    $wire.$dispatch('updated');
-</script>@endscript
+    <script>
+        $wire.$dispatch('updated');
+    </script>
+@endscript

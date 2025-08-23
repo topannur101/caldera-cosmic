@@ -9,33 +9,33 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Illuminate\Database\Eloquent\Builder;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout("layouts.app")] class extends Component {
     use WithPagination;
 
     #[Url]
-    public $q = '';
+    public $q = "";
 
     public $perPage = 20;
 
-    #[On('updated')]
+    #[On("updated")]
     public function with(): array
     {
         $q = trim($this->q);
         $devices = InsRtcDevice::where(function (Builder $query) use ($q) {
-            $query->orWhere('line', 'LIKE', '%' . $q . '%')->orWhere('ip_address', 'LIKE', '%' . $q . '%');
+            $query->orWhere("line", "LIKE", "%" . $q . "%")->orWhere("ip_address", "LIKE", "%" . $q . "%");
         })
-            ->orderBy('line')
+            ->orderBy("line")
             ->paginate($this->perPage);
 
         return [
-            'devices' => $devices,
+            "devices" => $devices,
         ];
     }
 
     public function updating($property)
     {
-        if ($property == 'q') {
-            $this->reset('perPage');
+        if ($property == "q") {
+            $this->reset("perPage");
         }
     }
 
@@ -45,23 +45,25 @@ new #[Layout('layouts.app')] class extends Component {
     }
 };
 ?>
-<x-slot name="title">{{ __('Perangkat') . ' — ' . __('Kendali tebal calendar') }}</x-slot>
+
+<x-slot name="title">{{ __("Perangkat") . " — " . __("Kendali tebal calendar") }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-rtc-sub />
 </x-slot>
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __('Perangkat') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __("Perangkat") }}</h1>
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
-                @can('superuser')
-                    <x-secondary-button type="button" 
-                        x-on:click.prevent="$dispatch('open-modal', 'device-create')"><i class="icon-plus"></i></x-secondary-button>
+                @can("superuser")
+                    <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'device-create')"><i class="icon-plus"></i></x-secondary-button>
                 @endcan
-                <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open"><i class="icon-search"></i></x-secondary-button>
+
+                <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open">
+                    <i class="icon-search"></i>
+                </x-secondary-button>
                 <div class="w-40" x-show="open" x-cloak>
-                    <x-text-input-search wire:model.live="q" id="inv-q" x-ref="search"
-                        placeholder="{{ __('CARI') }}"></x-text-input-search>
+                    <x-text-input-search wire:model.live="q" id="inv-q" x-ref="search" placeholder="{{ __('CARI') }}"></x-text-input-search>
                 </div>
             </div>
         </div>
@@ -70,7 +72,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <livewire:insights.rtc.manage.device-create />
             </x-modal>
         </div>
-        <div wire:key="device-edit"> 
+        <div wire:key="device-edit">
             <x-modal name="device-edit" maxWidth="sm">
                 <livewire:insights.rtc.manage.device-edit wire:key="device-edit" />
             </x-modal>
@@ -80,13 +82,19 @@ new #[Layout('layouts.app')] class extends Component {
                 <div class="bg-white table dark:bg-neutral-800 shadow sm:rounded-lg">
                     <table wire:key="devices-table" class="table">
                         <tr>
-                            <th>{{ __('ID') }}</th>
-                            <th>{{ __('Line') }}</th>
-                            <th>{{ __('Alamat IP') }}</th>
+                            <th>{{ __("ID") }}</th>
+                            <th>{{ __("Line") }}</th>
+                            <th>{{ __("Alamat IP") }}</th>
                         </tr>
                         @foreach ($devices as $device)
-                            <tr wire:key="device-tr-{{ $device->id . $loop->index }}" tabindex="0"
-                                x-on:click="$dispatch('open-modal', 'device-edit'); $dispatch('device-edit', { id: {{ $device->id }} })">
+                            <tr
+                                wire:key="device-tr-{{ $device->id . $loop->index }}"
+                                tabindex="0"
+                                x-on:click="
+                                    $dispatch('open-modal', 'device-edit')
+                                    $dispatch('device-edit', { id: {{ $device->id }} })
+                                "
+                            >
                                 <td>
                                     {{ $device->id }}
                                 </td>
@@ -100,9 +108,9 @@ new #[Layout('layouts.app')] class extends Component {
                         @endforeach
                     </table>
                     <div wire:key="devices-none">
-                        @if (!$devices->count())
+                        @if (! $devices->count())
                             <div class="text-center py-12">
-                                {{ __('Tak ada perangkat ditemukan') }}
+                                {{ __("Tak ada perangkat ditemukan") }}
                             </div>
                         @endif
                     </div>
@@ -110,9 +118,11 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
         <div wire:key="observer" class="flex items-center relative h-16">
-            @if (!$devices->isEmpty())
+            @if (! $devices->isEmpty())
                 @if ($devices->hasMorePages())
-                    <div wire:key="more" x-data="{
+                    <div
+                        wire:key="more"
+                        x-data="{
                         observe() {
                             const observer = new IntersectionObserver((devices) => {
                                 devices.forEach(device => {
@@ -123,10 +133,12 @@ new #[Layout('layouts.app')] class extends Component {
                             })
                             observer.observe(this.$el)
                         }
-                    }" x-init="observe"></div>
+                    }"
+                        x-init="observe"
+                    ></div>
                     <x-spinner class="sm" />
                 @else
-                    <div class="mx-auto">{{ __('Tidak ada lagi') }}</div>
+                    <div class="mx-auto">{{ __("Tidak ada lagi") }}</div>
                 @endif
             @endif
         </div>

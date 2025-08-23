@@ -4,20 +4,20 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
-use Intervention\Image\ImageManager;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Notifications\Notifiable;
-use Intervention\Image\Drivers\Gd\Driver;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -30,7 +30,7 @@ class User extends Authenticatable
         'password',
         'photo',
         'is_active',
-        'seen_at'
+        'seen_at',
     ];
 
     /**
@@ -55,37 +55,36 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
     public function updatePhoto($photo)
     {
-        if($photo) {
+        if ($photo) {
             if ($this->photo != $photo) {
-                $path = storage_path('app/livewire-tmp/'.$photo);        
+                $path = storage_path('app/livewire-tmp/'.$photo);
                 // $image = Image::make($path);
-            
+
                 // // Resize the image to a maximum height of 600 pixels while maintaining aspect ratio
                 // $image->resize(192, 192, function ($constraint) {
                 //     $constraint->aspectRatio();
                 //     $constraint->upsize();
                 // });
-                
+
                 // $image->encode('jpg', 70);
 
                 // process photo
-                $manager = new ImageManager(new Driver());
+                $manager = new ImageManager(new Driver);
                 $image = $manager->read($path)
-                ->scaleDown(width: 192)
-                ->toJpeg(90);
+                    ->scaleDown(width: 192)
+                    ->toJpeg(90);
 
-
-        
                 // Set file name and save to disk and save filename to inv_item
-                $id     = $this->id;
-                $time   = Carbon::now()->format('YmdHis');
-                $rand   = Str::random(5);
-                $name   = $id.'_'.$time.'_'.$rand.'.jpg';
-        
+                $id = $this->id;
+                $time = Carbon::now()->format('YmdHis');
+                $rand = Str::random(5);
+                $name = $id.'_'.$time.'_'.$rand.'.jpg';
+
                 Storage::put('/public/users/'.$name, $image);
-        
+
                 return $this->update([
                     'photo' => $name,
                 ]);
@@ -96,7 +95,7 @@ class User extends Authenticatable
             ]);
         }
     }
-    
+
     public function prefs(): HasMany
     {
         return $this->hasMany(Pref::class);
@@ -132,7 +131,7 @@ class User extends Authenticatable
     public function loadPreferencesToSession()
     {
         $prefs = $this->prefs()->pluck('data', 'name');
-        
+
         foreach ($prefs as $name => $data) {
             session([$name => json_decode($data, true)]);
         }
@@ -144,13 +143,14 @@ class User extends Authenticatable
     public function getPreference($name, $default = null)
     {
         $pref = $this->prefs()->where('name', $name)->first();
+
         return $pref ? json_decode($pref->data, true) : $default;
     }
 
     public function ins_omv_metrics(): HasMany
     {
         return $this->hasMany(InsOmvMetric::class, 'user_1_id')
-                    ->orWhere('user_2_id', $this->id);
+            ->orWhere('user_2_id', $this->id);
     }
 
     public function ins_rtc_auths(): HasMany

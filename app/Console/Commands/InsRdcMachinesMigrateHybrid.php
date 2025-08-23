@@ -2,9 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\InsRdcMachine;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Console\Command;
 
 class InsRdcMachinesMigrateHybrid extends Command
 {
@@ -29,7 +28,7 @@ class InsRdcMachinesMigrateHybrid extends Command
     {
         $isDryRun = $this->option('dry-run');
         $force = $this->option('force');
-        
+
         if ($isDryRun) {
             $this->info('🔍 DRY RUN MODE - No changes will be made');
             $this->newLine();
@@ -37,9 +36,10 @@ class InsRdcMachinesMigrateHybrid extends Command
 
         // Get all machines
         $machines = InsRdcMachine::all();
-        
+
         if ($machines->isEmpty()) {
             $this->info('No machines found to migrate.');
+
             return 0;
         }
 
@@ -50,6 +50,7 @@ class InsRdcMachinesMigrateHybrid extends Command
 
         if ($legacyMachines->isEmpty()) {
             $this->info('✅ All machines are already using hybrid configuration format.');
+
             return 0;
         }
 
@@ -62,18 +63,19 @@ class InsRdcMachinesMigrateHybrid extends Command
         }
 
         // Confirmation
-        if (!$isDryRun && !$force) {
+        if (! $isDryRun && ! $force) {
             $this->newLine();
             $this->warn('⚠️  This will update machine configurations to hybrid format!');
-            
-            if (!$this->confirm('Are you sure you want to continue?')) {
+
+            if (! $this->confirm('Are you sure you want to continue?')) {
                 $this->info('Migration cancelled.');
+
                 return 0;
             }
         }
 
         // Perform migration
-        if (!$isDryRun) {
+        if (! $isDryRun) {
             $this->info('🔄 Starting migration...');
             $this->newLine();
         }
@@ -84,24 +86,24 @@ class InsRdcMachinesMigrateHybrid extends Command
         foreach ($legacyMachines as $machine) {
             try {
                 $this->line("Migrating Machine #{$machine->number} - {$machine->name}");
-                
-                if (!$isDryRun) {
+
+                if (! $isDryRun) {
                     $success = $machine->migrateLegacyConfig();
-                    
+
                     if ($success) {
-                        $this->line("  ✅ Migrated successfully");
+                        $this->line('  ✅ Migrated successfully');
                         $migratedCount++;
                     } else {
-                        $this->line("  ❌ Migration failed");
+                        $this->line('  ❌ Migration failed');
                         $errorCount++;
                     }
                 } else {
-                    $this->line("  📝 Would be migrated");
+                    $this->line('  📝 Would be migrated');
                     $migratedCount++;
                 }
 
             } catch (\Exception $e) {
-                $this->line("  ❌ Error: " . $e->getMessage());
+                $this->line('  ❌ Error: '.$e->getMessage());
                 $errorCount++;
             }
         }
@@ -112,8 +114,8 @@ class InsRdcMachinesMigrateHybrid extends Command
         $this->info('=== MIGRATION SUMMARY ===');
         $this->line("✅ Migrated: {$migratedCount}");
         $this->line("❌ Errors: {$errorCount}");
-        $this->line("⏭️  Already hybrid: " . ($machines->count() - $legacyMachines->count()));
-        
+        $this->line('⏭️  Already hybrid: '.($machines->count() - $legacyMachines->count()));
+
         if ($isDryRun) {
             $this->newLine();
             $this->info('This was a dry run. To apply changes, run:');
@@ -129,16 +131,16 @@ class InsRdcMachinesMigrateHybrid extends Command
     private function showMigrationPreview(InsRdcMachine $machine): void
     {
         $this->line("Machine #{$machine->number} - {$machine->name} ({$machine->type})");
-        
+
         $currentConfig = $machine->cells ?? [];
-        
+
         foreach ($currentConfig as $field) {
-            if (!isset($field['field'])) {
+            if (! isset($field['field'])) {
                 continue;
             }
 
             $fieldName = $field['field'];
-            
+
             if (isset($field['address'])) {
                 // Excel legacy format
                 $this->line("  📍 {$fieldName}: address '{$field['address']}' → static '{$field['address']}'");
@@ -149,7 +151,7 @@ class InsRdcMachinesMigrateHybrid extends Command
                 $this->line("  ⚠️  {$fieldName}: unknown format");
             }
         }
-        
+
         $this->newLine();
     }
 }

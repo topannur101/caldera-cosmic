@@ -13,5 +13,4 @@ class InsStcDevice extends Model
         'code',
         'name',
     ];
-
 }

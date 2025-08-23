@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class InvLoc extends Model
 {
@@ -11,7 +11,6 @@ class InvLoc extends Model
 
     protected $fillable = [
         'parent',
-        'bin'
+        'bin',
     ];
-
 }

@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class InsStcDLog extends Model
 {
@@ -15,7 +15,7 @@ class InsStcDLog extends Model
         'taken_at',
         'temp',
     ];
-    
+
     protected $casts = [
         'taken_at' => 'datetime',
         'temp' => 'float',

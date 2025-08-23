@@ -13,23 +13,22 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 new class extends Component {
-
     use HasDateRangeFilter;
 
     #[Url]
-    public string $start_at = '';
+    public string $start_at = "";
 
     #[Url]
-    public string $end_at = '';
+    public string $end_at = "";
 
     #[Url]
     public bool $is_workdate = false;
 
     #[Url]
-    public string $line = '';
+    public string $line = "";
 
     #[Url]
-    public string $shift = '';
+    public string $shift = "";
 
     public int $progress = 0;
 
@@ -38,12 +37,12 @@ new class extends Component {
     public array $experienceCorrelation = [];
     public array $improvementTrends = [];
     public array $summaryKpis = [];
-    public string $selectedWorker = '';
+    public string $selectedWorker = "";
     public array $workerDetails = [];
 
     public function mount()
     {
-        if(!$this->start_at || !$this->end_at) {
+        if (! $this->start_at || ! $this->end_at) {
             $this->setThisWeek();
         }
     }
@@ -53,32 +52,32 @@ new class extends Component {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
-        $query = InsLdcHide::join('ins_ldc_groups', 'ins_ldc_hides.ins_ldc_group_id', '=', 'ins_ldc_groups.id')
-            ->join('users', 'ins_ldc_hides.user_id', '=', 'users.id')
+        $query = InsLdcHide::join("ins_ldc_groups", "ins_ldc_hides.ins_ldc_group_id", "=", "ins_ldc_groups.id")
+            ->join("users", "ins_ldc_hides.user_id", "=", "users.id")
             ->select(
-                'ins_ldc_hides.*',
-                'ins_ldc_hides.updated_at as hide_updated_at',
-                'ins_ldc_groups.workdate as group_workdate',
-                'ins_ldc_groups.style as group_style',
-                'ins_ldc_groups.line as group_line',
-                'ins_ldc_groups.material as group_material',
-                'users.emp_id as user_emp_id',
-                'users.name as user_name',
-                'users.created_at as user_created_at'
+                "ins_ldc_hides.*",
+                "ins_ldc_hides.updated_at as hide_updated_at",
+                "ins_ldc_groups.workdate as group_workdate",
+                "ins_ldc_groups.style as group_style",
+                "ins_ldc_groups.line as group_line",
+                "ins_ldc_groups.material as group_material",
+                "users.emp_id as user_emp_id",
+                "users.name as user_name",
+                "users.created_at as user_created_at",
             );
 
-        if (!$this->is_workdate) {
-            $query->whereBetween('ins_ldc_hides.updated_at', [$start, $end]);
+        if (! $this->is_workdate) {
+            $query->whereBetween("ins_ldc_hides.updated_at", [$start, $end]);
         } else {
-            $query->whereBetween('ins_ldc_groups.workdate', [$start, $end]);
+            $query->whereBetween("ins_ldc_groups.workdate", [$start, $end]);
         }
 
         if ($this->line) {
-            $query->where('ins_ldc_groups.line', $this->line);
+            $query->where("ins_ldc_groups.line", $this->line);
         }
 
         if ($this->shift) {
-            $query->where('ins_ldc_hides.shift', $this->shift);
+            $query->where("ins_ldc_hides.shift", $this->shift);
         }
 
         return $query;
@@ -88,27 +87,25 @@ new class extends Component {
     {
         // Parse emp_id for hire date (e.g., TT1711 = Nov 2017)
         $hireYearMonth = null;
-        if (preg_match('/[A-Z]{2}(\d{4})/', $empId, $matches)) {
+        if (preg_match("/[A-Z]{2}(\d{4})/", $empId, $matches)) {
             $yearMonth = $matches[1];
-            $year = 2000 + (int)substr($yearMonth, 0, 2);
-            $month = (int)substr($yearMonth, 2, 2);
+            $year = 2000 + (int) substr($yearMonth, 0, 2);
+            $month = (int) substr($yearMonth, 2, 2);
             if ($month >= 1 && $month <= 12) {
                 $hireYearMonth = Carbon::create($year, $month, 1);
             }
         }
 
         // Calculate experience from both methods (positive values)
-        $experienceFromHire = $hireYearMonth ? 
-            round($hireYearMonth->diffInMonths(Carbon::now()), 1) : null;
-        
-        $experienceFromFirstHide = $firstHideDate ? 
-            round(Carbon::parse($firstHideDate)->diffInMonths(Carbon::now()), 1) : null;
+        $experienceFromHire = $hireYearMonth ? round($hireYearMonth->diffInMonths(Carbon::now()), 1) : null;
+
+        $experienceFromFirstHide = $firstHideDate ? round(Carbon::parse($firstHideDate)->diffInMonths(Carbon::now()), 1) : null;
 
         return [
-            'hire_date' => $hireYearMonth,
-            'first_hide_date' => $firstHideDate,
-            'experience_from_hire' => $experienceFromHire,
-            'experience_from_first_hide' => $experienceFromFirstHide
+            "hire_date" => $hireYearMonth,
+            "first_hide_date" => $firstHideDate,
+            "experience_from_hire" => $experienceFromHire,
+            "experience_from_first_hide" => $experienceFromFirstHide,
         ];
     }
 
@@ -119,65 +116,56 @@ new class extends Component {
         $workerFirstHides = [];
 
         // Get first hide date for each worker
-        $firstHides = DB::table('ins_ldc_hides')
-            ->join('users', 'ins_ldc_hides.user_id', '=', 'users.id')
-            ->select('users.emp_id', 'users.name', 'users.created_at as user_created_at', 
-                     DB::raw('MIN(ins_ldc_hides.updated_at) as first_hide_date'))
-            ->groupBy('users.emp_id', 'users.name', 'users.created_at')
+        $firstHides = DB::table("ins_ldc_hides")
+            ->join("users", "ins_ldc_hides.user_id", "=", "users.id")
+            ->select("users.emp_id", "users.name", "users.created_at as user_created_at", DB::raw("MIN(ins_ldc_hides.updated_at) as first_hide_date"))
+            ->groupBy("users.emp_id", "users.name", "users.created_at")
             ->get()
-            ->keyBy('emp_id');
+            ->keyBy("emp_id");
 
         foreach ($hides as $hide) {
             $empId = $hide->user_emp_id;
-            
-            if (!isset($workerStats[$empId])) {
+
+            if (! isset($workerStats[$empId])) {
                 $firstHideInfo = $firstHides[$empId] ?? null;
-                $experience = $this->calculateWorkerExperience(
-                    $empId, 
-                    $hide->user_created_at,
-                    $firstHideInfo->first_hide_date ?? null
-                );
+                $experience = $this->calculateWorkerExperience($empId, $hide->user_created_at, $firstHideInfo->first_hide_date ?? null);
 
                 $workerStats[$empId] = [
-                    'name' => $hide->user_name,
-                    'emp_id' => $empId,
-                    'total_vn_area' => 0,
-                    'total_days_worked' => 0,
-                    'daily_totals' => [],
-                    'shift_totals' => [],
-                    'qt_measurements' => [],
-                    'defect_rates' => [],
-                    'experience' => $experience
+                    "name" => $hide->user_name,
+                    "emp_id" => $empId,
+                    "total_vn_area" => 0,
+                    "total_days_worked" => 0,
+                    "daily_totals" => [],
+                    "shift_totals" => [],
+                    "qt_measurements" => [],
+                    "defect_rates" => [],
+                    "experience" => $experience,
                 ];
             }
 
-            $dateKey = $this->is_workdate ? $hide->group_workdate : date('Y-m-d', strtotime($hide->hide_updated_at));
+            $dateKey = $this->is_workdate ? $hide->group_workdate : date("Y-m-d", strtotime($hide->hide_updated_at));
             $shiftKey = $hide->shift;
             $defectRate = $hide->area_vn > 0 ? (($hide->area_vn - $hide->area_qt) / $hide->area_vn) * 100 : 0;
 
             $vnArea = is_numeric($hide->area_vn) && is_finite($hide->area_vn) ? $hide->area_vn : 0;
-            $workerStats[$empId]['total_vn_area'] += $vnArea;
-            $workerStats[$empId]['daily_totals'][$dateKey] = ($workerStats[$empId]['daily_totals'][$dateKey] ?? 0) + $vnArea;
-            $workerStats[$empId]['shift_totals'][$shiftKey] = ($workerStats[$empId]['shift_totals'][$shiftKey] ?? 0) + $vnArea;
-            $workerStats[$empId]['qt_measurements'][] = $hide->area_qt;
-            $workerStats[$empId]['defect_rates'][] = $defectRate;
+            $workerStats[$empId]["total_vn_area"] += $vnArea;
+            $workerStats[$empId]["daily_totals"][$dateKey] = ($workerStats[$empId]["daily_totals"][$dateKey] ?? 0) + $vnArea;
+            $workerStats[$empId]["shift_totals"][$shiftKey] = ($workerStats[$empId]["shift_totals"][$shiftKey] ?? 0) + $vnArea;
+            $workerStats[$empId]["qt_measurements"][] = $hide->area_qt;
+            $workerStats[$empId]["defect_rates"][] = $defectRate;
         }
 
         // Calculate final metrics
         foreach ($workerStats as $empId => &$stats) {
-            $stats['total_days_worked'] = count($stats['daily_totals']);
-            $avgVnArea = $stats['total_days_worked'] > 0 ? 
-                round($stats['total_vn_area'] / $stats['total_days_worked'], 1) : 0;
-            $stats['avg_vn_area_per_day'] = is_finite($avgVnArea) ? $avgVnArea : 0;
-            
-            $stats['avg_qt_measurement'] = count($stats['qt_measurements']) > 0 ? 
-                round(array_sum($stats['qt_measurements']) / count($stats['qt_measurements']), 2) : 0;
-            
-            $stats['qt_consistency'] = count($stats['qt_measurements']) > 1 ? 
-                round($this->calculateStandardDeviation($stats['qt_measurements']), 2) : 0;
-            
-            $stats['avg_defect_rate'] = count($stats['defect_rates']) > 0 ? 
-                round(array_sum($stats['defect_rates']) / count($stats['defect_rates']), 2) : 0;
+            $stats["total_days_worked"] = count($stats["daily_totals"]);
+            $avgVnArea = $stats["total_days_worked"] > 0 ? round($stats["total_vn_area"] / $stats["total_days_worked"], 1) : 0;
+            $stats["avg_vn_area_per_day"] = is_finite($avgVnArea) ? $avgVnArea : 0;
+
+            $stats["avg_qt_measurement"] = count($stats["qt_measurements"]) > 0 ? round(array_sum($stats["qt_measurements"]) / count($stats["qt_measurements"]), 2) : 0;
+
+            $stats["qt_consistency"] = count($stats["qt_measurements"]) > 1 ? round($this->calculateStandardDeviation($stats["qt_measurements"]), 2) : 0;
+
+            $stats["avg_defect_rate"] = count($stats["defect_rates"]) > 0 ? round(array_sum($stats["defect_rates"]) / count($stats["defect_rates"]), 2) : 0;
         }
 
         $this->workerStats = $workerStats;
@@ -186,30 +174,28 @@ new class extends Component {
     private function calculateShiftTeamStats()
     {
         $shiftStats = [];
-        
+
         foreach ($this->workerStats as $empId => $worker) {
-            foreach ($worker['shift_totals'] as $shift => $vnArea) {
-                if (!isset($shiftStats[$shift])) {
+            foreach ($worker["shift_totals"] as $shift => $vnArea) {
+                if (! isset($shiftStats[$shift])) {
                     $shiftStats[$shift] = [
-                        'total_workers' => 0,
-                        'total_vn_area' => 0,
-                        'worker_performances' => []
+                        "total_workers" => 0,
+                        "total_vn_area" => 0,
+                        "worker_performances" => [],
                     ];
                 }
-                
-                $shiftStats[$shift]['total_workers']++;
-                $shiftStats[$shift]['total_vn_area'] += $vnArea;
-                $shiftStats[$shift]['worker_performances'][] = $worker['avg_vn_area_per_day'];
+
+                $shiftStats[$shift]["total_workers"]++;
+                $shiftStats[$shift]["total_vn_area"] += $vnArea;
+                $shiftStats[$shift]["worker_performances"][] = $worker["avg_vn_area_per_day"];
             }
         }
 
         // Calculate team averages
         foreach ($shiftStats as $shift => &$stats) {
-            $stats['avg_vn_area_per_worker'] = $stats['total_workers'] > 0 ? 
-                round($stats['total_vn_area'] / $stats['total_workers'], 1) : 0;
-            
-            $stats['team_consistency'] = count($stats['worker_performances']) > 1 ? 
-                round($this->calculateStandardDeviation($stats['worker_performances']), 2) : 0;
+            $stats["avg_vn_area_per_worker"] = $stats["total_workers"] > 0 ? round($stats["total_vn_area"] / $stats["total_workers"], 1) : 0;
+
+            $stats["team_consistency"] = count($stats["worker_performances"]) > 1 ? round($this->calculateStandardDeviation($stats["worker_performances"]), 2) : 0;
         }
 
         $this->shiftTeamStats = $shiftStats;
@@ -218,16 +204,16 @@ new class extends Component {
     private function calculateExperienceCorrelation()
     {
         $correlationData = [];
-        
+
         foreach ($this->workerStats as $empId => $worker) {
-            if ($worker['experience']['experience_from_hire'] !== null) {
+            if ($worker["experience"]["experience_from_hire"] !== null) {
                 $correlationData[] = [
-                    'emp_id' => $empId,
-                    'name' => $worker['name'],
-                    'experience_hire' => $worker['experience']['experience_from_hire'],
-                    'experience_system' => $worker['experience']['experience_from_first_hide'],
-                    'productivity' => $worker['avg_vn_area_per_day'],
-                    'consistency' => $worker['qt_consistency']
+                    "emp_id" => $empId,
+                    "name" => $worker["name"],
+                    "experience_hire" => $worker["experience"]["experience_from_hire"],
+                    "experience_system" => $worker["experience"]["experience_from_first_hide"],
+                    "productivity" => $worker["avg_vn_area_per_day"],
+                    "consistency" => $worker["qt_consistency"],
                 ];
             }
         }
@@ -240,26 +226,27 @@ new class extends Component {
         // This would require time-series analysis over weeks/months
         // For now, we'll create a simplified version comparing first vs recent performance
         $trends = [];
-        
+
         foreach ($this->workerStats as $empId => $worker) {
-            if ($worker['total_vn_area'] >= 100) { // Only workers with sufficient data
+            if ($worker["total_vn_area"] >= 100) {
+                // Only workers with sufficient data
                 // Split data into first half and second half of period
-                $totalRecords = count($worker['defect_rates']);
-                $firstHalf = array_slice($worker['defect_rates'], 0, intval($totalRecords / 2));
-                $secondHalf = array_slice($worker['defect_rates'], intval($totalRecords / 2));
-                
+                $totalRecords = count($worker["defect_rates"]);
+                $firstHalf = array_slice($worker["defect_rates"], 0, intval($totalRecords / 2));
+                $secondHalf = array_slice($worker["defect_rates"], intval($totalRecords / 2));
+
                 if (count($firstHalf) > 0 && count($secondHalf) > 0) {
                     $firstAvg = array_sum($firstHalf) / count($firstHalf);
                     $secondAvg = array_sum($secondHalf) / count($secondHalf);
                     $improvement = $firstAvg - $secondAvg; // Positive = improvement (lower defect rate)
-                    
+
                     $trends[] = [
-                        'emp_id' => $empId,
-                        'name' => $worker['name'],
-                        'first_period_avg' => round($firstAvg, 2),
-                        'second_period_avg' => round($secondAvg, 2),
-                        'improvement' => round($improvement, 2),
-                        'trend' => $improvement > 1 ? 'improving' : ($improvement < -1 ? 'declining' : 'stable')
+                        "emp_id" => $empId,
+                        "name" => $worker["name"],
+                        "first_period_avg" => round($firstAvg, 2),
+                        "second_period_avg" => round($secondAvg, 2),
+                        "improvement" => round($improvement, 2),
+                        "trend" => $improvement > 1 ? "improving" : ($improvement < -1 ? "declining" : "stable"),
                     ];
                 }
             }
@@ -271,157 +258,106 @@ new class extends Component {
     private function calculateSummaryKpis()
     {
         $totalWorkers = count($this->workerStats);
-        $totalVnArea = array_sum(array_column($this->workerStats, 'total_vn_area'));
-        $avgProductivity = $totalWorkers > 0 ? 
-            array_sum(array_column($this->workerStats, 'avg_vn_area_per_day')) / $totalWorkers : 0;
-        
-        $topPerformer = collect($this->workerStats)->sortByDesc('avg_vn_area_per_day')->first();
-        $mostConsistent = collect($this->workerStats)->sortBy('qt_consistency')->first();
+        $totalVnArea = array_sum(array_column($this->workerStats, "total_vn_area"));
+        $avgProductivity = $totalWorkers > 0 ? array_sum(array_column($this->workerStats, "avg_vn_area_per_day")) / $totalWorkers : 0;
+
+        $topPerformer = collect($this->workerStats)
+            ->sortByDesc("avg_vn_area_per_day")
+            ->first();
+        $mostConsistent = collect($this->workerStats)
+            ->sortBy("qt_consistency")
+            ->first();
 
         $this->summaryKpis = [
-            'total_workers' => $totalWorkers,
-            'total_vn_area' => $totalVnArea,
-            'avg_productivity' => round($avgProductivity, 1),
-            'top_performer' => $topPerformer,
-            'most_consistent' => $mostConsistent
+            "total_workers" => $totalWorkers,
+            "total_vn_area" => $totalVnArea,
+            "avg_productivity" => round($avgProductivity, 1),
+            "top_performer" => $topPerformer,
+            "most_consistent" => $mostConsistent,
         ];
     }
 
     private function calculateStandardDeviation(array $values)
     {
-        if (count($values) < 2) return 0;
-        
+        if (count($values) < 2) {
+            return 0;
+        }
+
         $mean = array_sum($values) / count($values);
-        $squaredDiffs = array_map(function($value) use ($mean) {
+        $squaredDiffs = array_map(function ($value) use ($mean) {
             return pow($value - $mean, 2);
         }, $values);
-        
+
         return sqrt(array_sum($squaredDiffs) / (count($values) - 1));
     }
 
-#[On('update')]
+    #[On("update")]
     public function updated()
     {
         $this->progress = 0;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         // Phase 1: Data Retrieval (0-15%)
         $this->progress = 5;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         // Initialize and validate date range
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at)->endOfDay();
 
         $this->progress = 15;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         // Phase 2: Worker Stats (15-35%)
         $this->progress = 20;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         $this->calculateWorkerStats();
 
         $this->progress = 35;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         // Phase 3: Shift Team Stats (35-50%)
         $this->progress = 40;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         $this->calculateShiftTeamStats();
 
         $this->progress = 50;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         // Phase 4: Experience Correlation (50-65%)
         $this->progress = 55;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         $this->calculateExperienceCorrelation();
 
         $this->progress = 65;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         // Phase 5: Improvement Trends (65-80%)
         $this->progress = 70;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         $this->calculateImprovementTrends();
 
         $this->progress = 80;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         // Phase 6: Summary KPIs (80-98%)
         $this->progress = 90;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         $this->calculateSummaryKpis();
 
         $this->progress = 98;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
 
         // Phase 7: Chart Rendering (98-100%)
         $this->renderCharts();
 
         $this->progress = 100;
-        $this->stream(
-            to: 'progress',
-            content: $this->progress,
-            replace: true
-        );
+        $this->stream(to: "progress", content: $this->progress, replace: true);
     }
 
     private function renderCharts()
@@ -432,7 +368,8 @@ new class extends Component {
         $improvementOptions = InsLdc::getImprovementTrendChartOptions($this->improvementTrends);
         $teamOptions = InsLdc::getShiftTeamChartOptions($this->shiftTeamStats);
 
-        $this->js("
+        $this->js(
+            "
             (function() {
                 // Destroy existing charts
                 if (window.productivityChart) window.productivityChart.destroy();
@@ -444,53 +381,64 @@ new class extends Component {
                 // Worker Productivity Chart
                 const productivityCtx = document.getElementById('productivity-chart');
                 if (productivityCtx) {
-                    window.productivityChart = new Chart(productivityCtx, " . json_encode($productivityOptions) . ");
+                    window.productivityChart = new Chart(productivityCtx, " .
+                json_encode($productivityOptions) .
+                ");
                 }
 
                 // Worker Consistency Chart
                 const consistencyCtx = document.getElementById('consistency-chart');
                 if (consistencyCtx) {
-                    window.consistencyChart = new Chart(consistencyCtx, " . json_encode($consistencyOptions) . ");
+                    window.consistencyChart = new Chart(consistencyCtx, " .
+                json_encode($consistencyOptions) .
+                ");
                 }
 
                 // Experience Correlation Chart
                 const experienceCtx = document.getElementById('experience-chart');
                 if (experienceCtx) {
-                    window.experienceChart = new Chart(experienceCtx, " . json_encode($experienceOptions) . ");
+                    window.experienceChart = new Chart(experienceCtx, " .
+                json_encode($experienceOptions) .
+                ");
                 }
 
                 // Improvement Trend Chart
                 const improvementCtx = document.getElementById('improvement-chart');
                 if (improvementCtx) {
-                    window.improvementChart = new Chart(improvementCtx, " . json_encode($improvementOptions) . ");
+                    window.improvementChart = new Chart(improvementCtx, " .
+                json_encode($improvementOptions) .
+                ");
                 }
 
                 // Shift Team Chart
                 const teamCtx = document.getElementById('team-chart');
                 if (teamCtx) {
-                    window.teamChart = new Chart(teamCtx, " . json_encode($teamOptions) . ");
+                    window.teamChart = new Chart(teamCtx, " .
+                json_encode($teamOptions) .
+                ");
                 }
             })();
-        ");
+        ",
+        );
     }
 
     public function showWorkerDetails(string $empId)
     {
         $this->selectedWorker = $empId;
         $worker = $this->workerStats[$empId] ?? null;
-        
+
         if ($worker) {
             $this->workerDetails = [
-                'name' => $worker['name'],
-                'emp_id' => $empId,
-                'total_vn_area' => $worker['total_vn_area'],
-                'total_days_worked' => $worker['total_days_worked'],
-                'avg_vn_area_per_day' => $worker['avg_vn_area_per_day'],
-                'qt_consistency' => $worker['qt_consistency'],
-                'experience' => $worker['experience'],
-                'shift_breakdown' => $worker['shift_totals']
+                "name" => $worker["name"],
+                "emp_id" => $empId,
+                "total_vn_area" => $worker["total_vn_area"],
+                "total_days_worked" => $worker["total_days_worked"],
+                "avg_vn_area_per_day" => $worker["avg_vn_area_per_day"],
+                "qt_consistency" => $worker["qt_consistency"],
+                "experience" => $worker["experience"],
+                "shift_breakdown" => $worker["shift_totals"],
             ];
-            
+
             $this->js('$dispatch("open-modal", "worker-details")');
         }
     }
@@ -507,28 +455,31 @@ new class extends Component {
                     <div class="flex">
                         <x-dropdown align="left" width="48">
                             <x-slot name="trigger">
-                                <x-text-button class="uppercase ml-3">{{ __('Rentang') }}<i class="icon-chevron-down ms-1"></i></x-text-button>
+                                <x-text-button class="uppercase ml-3">
+                                    {{ __("Rentang") }}
+                                    <i class="icon-chevron-down ms-1"></i>
+                                </x-text-button>
                             </x-slot>
                             <x-slot name="content">
                                 <x-dropdown-link href="#" wire:click.prevent="setToday">
-                                    {{ __('Hari ini') }}
+                                    {{ __("Hari ini") }}
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" wire:click.prevent="setYesterday">
-                                    {{ __('Kemarin') }}
+                                    {{ __("Kemarin") }}
                                 </x-dropdown-link>
                                 <hr class="border-neutral-300 dark:border-neutral-600" />
                                 <x-dropdown-link href="#" wire:click.prevent="setThisWeek">
-                                    {{ __('Minggu ini') }}
+                                    {{ __("Minggu ini") }}
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" wire:click.prevent="setLastWeek">
-                                    {{ __('Minggu lalu') }}
+                                    {{ __("Minggu lalu") }}
                                 </x-dropdown-link>
                                 <hr class="border-neutral-300 dark:border-neutral-600" />
                                 <x-dropdown-link href="#" wire:click.prevent="setThisMonth">
-                                    {{ __('Bulan ini') }}
+                                    {{ __("Bulan ini") }}
                                 </x-dropdown-link>
                                 <x-dropdown-link href="#" wire:click.prevent="setLastMonth">
-                                    {{ __('Bulan lalu') }}
+                                    {{ __("Bulan lalu") }}
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
@@ -538,8 +489,9 @@ new class extends Component {
                     <x-text-input wire:model.live="start_at" id="cal-date-start" type="date"></x-text-input>
                     <x-text-input wire:model.live="end_at" id="cal-date-end" type="date"></x-text-input>
                     <div class="px-3">
-                        <x-checkbox id="worker_is_workdate" wire:model.live="is_workdate"
-                            value="is_workdate"><span class="uppercase text-xs">{{ __('Workdate') }}</span></x-checkbox>
+                        <x-checkbox id="worker_is_workdate" wire:model.live="is_workdate" value="is_workdate">
+                            <span class="uppercase text-xs">{{ __("Workdate") }}</span>
+                        </x-checkbox>
                     </div>
                 </div>
             </div>
@@ -547,13 +499,13 @@ new class extends Component {
             <div>
                 <div class="flex gap-3">
                     <div>
-                        <label for="worker-line" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Line') }}</label>
+                        <label for="worker-line" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
                         <div class="w-32">
                             <x-text-input id="worker-line" wire:model.live="line" type="text" />
                         </div>
                     </div>
                     <div>
-                        <label for="worker-shift" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __('Shift') }}</label>
+                        <label for="worker-shift" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Shift") }}</label>
                         <x-select class="w-32" id="worker-shift" wire:model.live="shift">
                             <option value=""></option>
                             <option value="1">1</option>
@@ -561,24 +513,33 @@ new class extends Component {
                             <option value="3">3</option>
                         </x-select>
                     </div>
-                </div>                
+                </div>
                 <div class="px-2 py-4 text-xs text-neutral-500">
-                    <i class="icon-info me-2"></i>{{ __('Perhitungan SF menggunakan area VN') }}
+                    <i class="icon-info me-2"></i>
+                    {{ __("Perhitungan SF menggunakan area VN") }}
                 </div>
             </div>
             <div class="border-t border-l border-neutral-300 dark:border-neutral-700 mx-0 my-6 lg:mx-6 lg:my-0"></div>
-            <div class="grow flex justify-center gap-x-2 items-center"> 
+            <div class="grow flex justify-center gap-x-2 items-center">
                 <div wire:loading.class.remove="hidden" class="hidden">
-                    <x-progress-bar :$progress>                        
-                        <span x-text="
-                        progress < 15 ? '{{ __('Mengambil data...') }}' : 
-                        progress < 35 ? '{{ __('Menghitung statistik pekerja...') }}' : 
-                        progress < 50 ? '{{ __('Menganalisis tim shift...') }}' : 
-                        progress < 65 ? '{{ __('Menganalisis korelasi pengalaman...') }}' : 
-                        progress < 80 ? '{{ __('Menghitung tren peningkatan...') }}' : 
-                        progress < 98 ? '{{ __('Menghitung ringkasan KPI...') }}' : 
-                        '{{ __('Merender grafik...') }}'
-                        "></span>
+                    <x-progress-bar :$progress>
+                        <span
+                            x-text="
+                                progress < 15
+                                    ? '{{ __("Mengambil data...") }}'
+                                    : progress < 35
+                                      ? '{{ __("Menghitung statistik pekerja...") }}'
+                                      : progress < 50
+                                        ? '{{ __("Menganalisis tim shift...") }}'
+                                        : progress < 65
+                                          ? '{{ __("Menganalisis korelasi pengalaman...") }}'
+                                          : progress < 80
+                                            ? '{{ __("Menghitung tren peningkatan...") }}'
+                                            : progress < 98
+                                              ? '{{ __("Menghitung ringkasan KPI...") }}'
+                                              : '{{ __("Merender grafik...") }}'
+                            "
+                        ></span>
                     </x-progress-bar>
                 </div>
             </div>
@@ -588,29 +549,29 @@ new class extends Component {
     <!-- Summary KPIs -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Pekerja') }}</div>
-            <div class="text-2xl font-bold">{{ number_format($summaryKpis['total_workers'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500">{{ __('orang') }}</div>
+            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __("Total Pekerja") }}</div>
+            <div class="text-2xl font-bold">{{ number_format($summaryKpis["total_workers"] ?? 0) }}</div>
+            <div class="text-xs text-neutral-500">{{ __("orang") }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Total Area VN') }}</div>
-            <div class="text-2xl font-bold">{{ number_format($summaryKpis['total_vn_area'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500">{{ __('SF') }}</div>
+            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __("Total Area VN") }}</div>
+            <div class="text-2xl font-bold">{{ number_format($summaryKpis["total_vn_area"] ?? 0) }}</div>
+            <div class="text-xs text-neutral-500">{{ __("SF") }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Rata-rata Produktivitas') }}</div>
-            <div class="text-2xl font-bold">{{ ($summaryKpis['avg_productivity'] ?? 0) }}</div>
-            <div class="text-xs text-neutral-500">{{ __('SF/hari') }}</div>
+            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __("Rata-rata Produktivitas") }}</div>
+            <div class="text-2xl font-bold">{{ $summaryKpis["avg_productivity"] ?? 0 }}</div>
+            <div class="text-xs text-neutral-500">{{ __("SF/hari") }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Pekerja Terproduktif') }}</div>
-            <div class="text-lg font-bold truncate">{{ $summaryKpis['top_performer']['name'] ?? __('Tidak ada') }}</div>
-            <div class="text-xs text-neutral-500">{{ ($summaryKpis['top_performer']['avg_vn_area_per_day'] ?? 0) }} {{ __('SF/hari') }}</div>
+            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __("Pekerja Terproduktif") }}</div>
+            <div class="text-lg font-bold truncate">{{ $summaryKpis["top_performer"]["name"] ?? __("Tidak ada") }}</div>
+            <div class="text-xs text-neutral-500">{{ $summaryKpis["top_performer"]["avg_vn_area_per_day"] ?? 0 }} {{ __("SF/hari") }}</div>
         </div>
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Paling Konsisten') }}</div>
-            <div class="text-lg font-bold truncate">{{ $summaryKpis['most_consistent']['name'] ?? __('Tidak ada') }}</div>
-            <div class="text-xs text-neutral-500">{{ ($summaryKpis['most_consistent']['qt_consistency'] ?? 0) }} {{ __('konsistensi') }}</div>
+            <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __("Paling Konsisten") }}</div>
+            <div class="text-lg font-bold truncate">{{ $summaryKpis["most_consistent"]["name"] ?? __("Tidak ada") }}</div>
+            <div class="text-xs text-neutral-500">{{ $summaryKpis["most_consistent"]["qt_consistency"] ?? 0 }} {{ __("konsistensi") }}</div>
         </div>
     </div>
 
@@ -653,53 +614,57 @@ new class extends Component {
             </div>
             <div class="lg:col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
                 <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                    <h3 class="text-lg font-medium">{{ __('Tren Peningkatan Pekerja') }}</h3>
+                    <h3 class="text-lg font-medium">{{ __("Tren Peningkatan Pekerja") }}</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="table table-sm text-sm w-full">
                         <thead>
                             <tr class="text-xs uppercase text-neutral-500 border-b">
-                                <th class="px-4 py-3">{{ __('Nama') }}</th>
-                                <th class="px-4 py-3">{{ __('Periode Awal') }}</th>
-                                <th class="px-4 py-3">{{ __('Periode Akhir') }}</th>
-                                <th class="px-4 py-3">{{ __('Peningkatan') }}</th>
-                                <th class="px-4 py-3">{{ __('Status') }}</th>
+                                <th class="px-4 py-3">{{ __("Nama") }}</th>
+                                <th class="px-4 py-3">{{ __("Periode Awal") }}</th>
+                                <th class="px-4 py-3">{{ __("Periode Akhir") }}</th>
+                                <th class="px-4 py-3">{{ __("Peningkatan") }}</th>
+                                <th class="px-4 py-3">{{ __("Status") }}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($improvementTrends as $trend)
-                            <tr class="border-b border-neutral-100 dark:border-neutral-700">
-                                <td class="px-4 py-3 font-medium">{{ $trend['name'] }}</td>
-                                <td class="px-4 py-3">{{ $trend['first_period_avg'] }}%</td>
-                                <td class="px-4 py-3">{{ $trend['second_period_avg'] }}%</td>
-                                <td class="px-4 py-3">
-                                    <span class="{{ $trend['improvement'] > 0 ? 'text-green-500' : ($trend['improvement'] < 0 ? 'text-red-500' : 'text-neutral-500') }}">
-                                        {{ $trend['improvement'] > 0 ? '+' : '' }}{{ $trend['improvement'] }}%
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    @if($trend['trend'] === 'improving')
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
-                                            {{ __('Membaik') }}
+                            @foreach ($improvementTrends as $trend)
+                                <tr class="border-b border-neutral-100 dark:border-neutral-700">
+                                    <td class="px-4 py-3 font-medium">{{ $trend["name"] }}</td>
+                                    <td class="px-4 py-3">{{ $trend["first_period_avg"] }}%</td>
+                                    <td class="px-4 py-3">{{ $trend["second_period_avg"] }}%</td>
+                                    <td class="px-4 py-3">
+                                        <span class="{{ $trend["improvement"] > 0 ? "text-green-500" : ($trend["improvement"] < 0 ? "text-red-500" : "text-neutral-500") }}">
+                                            {{ $trend["improvement"] > 0 ? "+" : "" }}{{ $trend["improvement"] }}%
                                         </span>
-                                    @elseif($trend['trend'] === 'declining')
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100">
-                                            {{ __('Menurun') }}
-                                        </span>
-                                    @else
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-100">
-                                            {{ __('Stabil') }}
-                                        </span>
-                                    @endif
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        @if ($trend["trend"] === "improving")
+                                            <span
+                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                            >
+                                                {{ __("Membaik") }}
+                                            </span>
+                                        @elseif ($trend["trend"] === "declining")
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100">
+                                                {{ __("Menurun") }}
+                                            </span>
+                                        @else
+                                            <span
+                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
+                                            >
+                                                {{ __("Stabil") }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
-                    @if(empty($improvementTrends))
-                    <div class="text-center py-8 text-neutral-500">
-                        {{ __('Tidak ada data peningkatan yang cukup untuk analisis') }}
-                    </div>
+                    @if (empty($improvementTrends))
+                        <div class="text-center py-8 text-neutral-500">
+                            {{ __("Tidak ada data peningkatan yang cukup untuk analisis") }}
+                        </div>
                     @endif
                 </div>
             </div>
@@ -709,57 +674,56 @@ new class extends Component {
     <!-- Detailed Worker Statistics Table -->
     <div class="mt-8 bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-            <h3 class="text-lg font-medium">{{ __('Statistik Detail Pekerja') }}</h3>
+            <h3 class="text-lg font-medium">{{ __("Statistik Detail Pekerja") }}</h3>
         </div>
         <div class="overflow-x-auto">
             <table class="table table-sm text-sm w-full">
                 <thead>
                     <tr class="text-xs uppercase text-neutral-500 border-b">
-                        <th class="px-4 py-3">{{ __('Nama') }}</th>
-                        <th class="px-4 py-3">{{ __('NIK') }}</th>
-                        <th class="px-4 py-3">{{ __('Total Area VN') }}</th>
-                        <th class="px-4 py-3">{{ __('Hari Kerja') }}</th>
-                        <th class="px-4 py-3">{{ __('SF/Hari') }}</th>
-                        <th class="px-4 py-3">{{ __('Konsistensi QT') }}</th>
-                        <th class="px-4 py-3">{{ __('Pengalaman (Kerja)') }}</th>
-                        <th class="px-4 py-3">{{ __('Pengalaman (Caldera)') }}</th>
-                        <th class="px-4 py-3">{{ __('Aksi') }}</th>
+                        <th class="px-4 py-3">{{ __("Nama") }}</th>
+                        <th class="px-4 py-3">{{ __("NIK") }}</th>
+                        <th class="px-4 py-3">{{ __("Total Area VN") }}</th>
+                        <th class="px-4 py-3">{{ __("Hari Kerja") }}</th>
+                        <th class="px-4 py-3">{{ __("SF/Hari") }}</th>
+                        <th class="px-4 py-3">{{ __("Konsistensi QT") }}</th>
+                        <th class="px-4 py-3">{{ __("Pengalaman (Kerja)") }}</th>
+                        <th class="px-4 py-3">{{ __("Pengalaman (Caldera)") }}</th>
+                        <th class="px-4 py-3">{{ __("Aksi") }}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($workerStats as $empId => $worker)
-                    <tr class="border-b border-neutral-100 dark:border-neutral-700">
-                        <td class="px-4 py-3 font-medium">{{ $worker['name'] }}</td>
-                        <td class="px-4 py-3 font-mono">{{ $worker['emp_id'] }}</td>
-                        <td class="px-4 py-3">{{ number_format($worker['total_vn_area']) }}</td>
-                        <td class="px-4 py-3">{{ number_format($worker['total_days_worked']) }}</td>
-                        <td class="px-4 py-3">{{ $worker['avg_vn_area_per_day'] }}</td>
-                        <td class="px-4 py-3">
-                            <span class="{{ $worker['qt_consistency'] < 1.0 ? 'text-green-500' : ($worker['qt_consistency'] < 2.0 ? 'text-yellow-500' : 'text-red-500') }}">
-                                {{ $worker['qt_consistency'] }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3">
-                            {{ $worker['experience']['experience_from_hire'] ? $worker['experience']['experience_from_hire'] . ' bulan' : 'N/A' }}
-                        </td>
-                        <td class="px-4 py-3">
-                            {{ $worker['experience']['experience_from_first_hide'] ? $worker['experience']['experience_from_first_hide'] . ' bulan' : 'N/A' }}
-                        </td>
-                        <td class="px-4 py-3">
-                            <x-text-button type="button" wire:click="showWorkerDetails('{{ $empId }}')" 
-                                class="text-xs">{{ __('Detail') }}</x-text-button>
-                        </td>
-                    </tr>
+                    @foreach ($workerStats as $empId => $worker)
+                        <tr class="border-b border-neutral-100 dark:border-neutral-700">
+                            <td class="px-4 py-3 font-medium">{{ $worker["name"] }}</td>
+                            <td class="px-4 py-3 font-mono">{{ $worker["emp_id"] }}</td>
+                            <td class="px-4 py-3">{{ number_format($worker["total_vn_area"]) }}</td>
+                            <td class="px-4 py-3">{{ number_format($worker["total_days_worked"]) }}</td>
+                            <td class="px-4 py-3">{{ $worker["avg_vn_area_per_day"] }}</td>
+                            <td class="px-4 py-3">
+                                <span class="{{ $worker["qt_consistency"] < 1.0 ? "text-green-500" : ($worker["qt_consistency"] < 2.0 ? "text-yellow-500" : "text-red-500") }}">
+                                    {{ $worker["qt_consistency"] }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                {{ $worker["experience"]["experience_from_hire"] ? $worker["experience"]["experience_from_hire"] . " bulan" : "N/A" }}
+                            </td>
+                            <td class="px-4 py-3">
+                                {{ $worker["experience"]["experience_from_first_hide"] ? $worker["experience"]["experience_from_first_hide"] . " bulan" : "N/A" }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <x-text-button type="button" wire:click="showWorkerDetails('{{ $empId }}')" class="text-xs">{{ __("Detail") }}</x-text-button>
+                            </td>
+                        </tr>
                     @endforeach
                 </tbody>
             </table>
-            @if(empty($workerStats))
-            <div class="text-center py-12">
-                <div class="text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
-                    <i class="icon-users"></i>
+            @if (empty($workerStats))
+                <div class="text-center py-12">
+                    <div class="text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
+                        <i class="icon-users"></i>
+                    </div>
+                    <div class="text-neutral-500 dark:text-neutral-600">{{ __("Tidak ada data pekerja untuk periode yang dipilih") }}</div>
                 </div>
-                <div class="text-neutral-500 dark:text-neutral-600">{{ __('Tidak ada data pekerja untuk periode yang dipilih') }}</div>
-            </div>
             @endif
         </div>
     </div>
@@ -768,76 +732,76 @@ new class extends Component {
     <x-modal name="worker-details" maxWidth="md">
         <div class="p-6">
             <div class="flex justify-between items-start">
-                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                    {{ __('Detail Pekerja') }}: {{ $workerDetails['name'] ?? '' }}
-                </h2>
+                <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Detail Pekerja") }}: {{ $workerDetails["name"] ?? "" }}</h2>
                 <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
             </div>
 
-            @if($workerDetails)
-            <div class="mt-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <div class="text-sm text-neutral-500">{{ __('NIK') }}</div>
-                        <div class="text-lg font-mono">{{ $workerDetails['emp_id'] }}</div>
-                    </div>
-                    <div>
-                        <div class="text-sm text-neutral-500">{{ __('Total Area VN') }}</div>
-                        <div class="text-lg">{{ number_format($workerDetails['total_vn_area']) }}</div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <div class="text-sm text-neutral-500">{{ __('Hari Kerja') }}</div>
-                        <div class="text-lg">{{ number_format($workerDetails['total_days_worked']) }}</div>
-                    </div>
-                    <div>
-                        <div class="text-sm text-neutral-500">{{ __('Rata-rata per Hari') }}</div>
-                        <div class="text-lg">{{ $workerDetails['avg_vn_area_per_day'] }}</div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="text-sm text-neutral-500">{{ __('Konsistensi QT') }}</div>
-                    <div class="text-lg {{ $workerDetails['qt_consistency'] < 1.0 ? 'text-green-500' : ($workerDetails['qt_consistency'] < 2.0 ? 'text-yellow-500' : 'text-red-500') }}">
-                        {{ $workerDetails['qt_consistency'] }}
-                        <span class="text-sm text-neutral-500">({{ __('semakin rendah semakin baik') }})</span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <div class="text-sm text-neutral-500">{{ __('Pengalaman (Kerja)') }}</div>
-                        <div class="text-lg">
-                            {{ $workerDetails['experience']['experience_from_hire'] ? $workerDetails['experience']['experience_from_hire'] . ' bulan' : 'N/A' }}
+            @if ($workerDetails)
+                <div class="mt-6 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-sm text-neutral-500">{{ __("NIK") }}</div>
+                            <div class="text-lg font-mono">{{ $workerDetails["emp_id"] }}</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-neutral-500">{{ __("Total Area VN") }}</div>
+                            <div class="text-lg">{{ number_format($workerDetails["total_vn_area"]) }}</div>
                         </div>
                     </div>
-                    <div>
-                        <div class="text-sm text-neutral-500">{{ __('Pengalaman (Caldera)') }}</div>
-                        <div class="text-lg">
-                            {{ $workerDetails['experience']['experience_from_first_hide'] ? $workerDetails['experience']['experience_from_first_hide'] . ' bulan' : 'N/A' }}
-                        </div>
-                    </div>
-                </div>
 
-                <div>
-                    <div class="text-sm text-neutral-500 mb-3">{{ __('Distribusi Shift') }}</div>
-                    <div class="grid grid-cols-3 gap-2">
-                        @for($shift = 1; $shift <= 3; $shift++)
-                        <div class="text-center p-2 bg-neutral-100 dark:bg-neutral-700 rounded">
-                            <div class="text-xs text-neutral-500">{{ __('Shift') }} {{ $shift }}</div>
-                            <div class="font-semibold">{{ $workerDetails['shift_breakdown'][$shift] ?? 0 }}</div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-sm text-neutral-500">{{ __("Hari Kerja") }}</div>
+                            <div class="text-lg">{{ number_format($workerDetails["total_days_worked"]) }}</div>
                         </div>
-                        @endfor
+                        <div>
+                            <div class="text-sm text-neutral-500">{{ __("Rata-rata per Hari") }}</div>
+                            <div class="text-lg">{{ $workerDetails["avg_vn_area_per_day"] }}</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-sm text-neutral-500">{{ __("Konsistensi QT") }}</div>
+                        <div
+                            class="text-lg {{ $workerDetails["qt_consistency"] < 1.0 ? "text-green-500" : ($workerDetails["qt_consistency"] < 2.0 ? "text-yellow-500" : "text-red-500") }}"
+                        >
+                            {{ $workerDetails["qt_consistency"] }}
+                            <span class="text-sm text-neutral-500">({{ __("semakin rendah semakin baik") }})</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-sm text-neutral-500">{{ __("Pengalaman (Kerja)") }}</div>
+                            <div class="text-lg">
+                                {{ $workerDetails["experience"]["experience_from_hire"] ? $workerDetails["experience"]["experience_from_hire"] . " bulan" : "N/A" }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-neutral-500">{{ __("Pengalaman (Caldera)") }}</div>
+                            <div class="text-lg">
+                                {{ $workerDetails["experience"]["experience_from_first_hide"] ? $workerDetails["experience"]["experience_from_first_hide"] . " bulan" : "N/A" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-sm text-neutral-500 mb-3">{{ __("Distribusi Shift") }}</div>
+                        <div class="grid grid-cols-3 gap-2">
+                            @for ($shift = 1; $shift <= 3; $shift++)
+                                <div class="text-center p-2 bg-neutral-100 dark:bg-neutral-700 rounded">
+                                    <div class="text-xs text-neutral-500">{{ __("Shift") }} {{ $shift }}</div>
+                                    <div class="font-semibold">{{ $workerDetails["shift_breakdown"][$shift] ?? 0 }}</div>
+                                </div>
+                            @endfor
+                        </div>
                     </div>
                 </div>
-            </div>
             @endif
 
             <div class="mt-6 flex justify-end">
                 <x-primary-button type="button" x-on:click="$dispatch('close')">
-                    {{ __('Tutup') }}
+                    {{ __("Tutup") }}
                 </x-primary-button>
             </div>
         </div>
@@ -845,7 +809,7 @@ new class extends Component {
 </div>
 
 @script
-<script>
-    $wire.$dispatch('update');
-</script>
+    <script>
+        $wire.$dispatch('update');
+    </script>
 @endscript

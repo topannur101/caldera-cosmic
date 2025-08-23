@@ -11,6 +11,6 @@ class InvCurr extends Model
 
     protected $fillable = [
         'name',
-        'rate'
+        'rate',
     ];
 }

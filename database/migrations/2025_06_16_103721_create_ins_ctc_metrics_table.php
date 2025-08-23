@@ -20,30 +20,30 @@ return new class extends Migration
             $table->foreignId('ins_rubber_batch_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('ins_ctc_recipe_id')->nullable()->constrained();
             $table->boolean('is_auto')->default(0);
-            
+
             // Left side thickness metrics
             $table->decimal('t_mae_left', 4, 2)->nullable(); // Mean Average Error left
             $table->decimal('t_ssd_left', 4, 2)->nullable();  // Sample Standard Deviation left
             $table->decimal('t_avg_left', 4, 2)->nullable(); // Average thickness left
-            
+
             // Right side thickness metrics
             $table->decimal('t_mae_right', 4, 2)->nullable(); // Mean Average Error right
             $table->decimal('t_ssd_right', 4, 2)->nullable();  // Sample Standard Deviation right
             $table->decimal('t_avg_right', 4, 2)->nullable(); // Average thickness right
-            
+
             // Balance metric between left and right
             $table->decimal('t_balance', 4, 2)->nullable(); // Thickness balance (t_avg_left - t_avg_right)
-            
+
             // Combined metrics (average of left and right)
             $table->decimal('t_mae', 4, 2)->nullable(); // Mean Average Error (average of left and right)
             $table->decimal('t_ssd', 4, 2)->nullable();  // Sample Standard Deviation (average of left and right)
             $table->decimal('t_avg', 4, 2)->nullable(); // Average thickness (average of left and right)
-            
+
             // Detailed measurement data
-            $table->json('data'); // timestamp (date time), is_correcting (boolean), 
-                                 // action_left (boolean), action_right (boolean), 
-                                 // left (decimal), right (decimal)
-                                 // eg arrays of array of timestamp, is_correcting, action_left, action_right, left, right
+            $table->json('data'); // timestamp (date time), is_correcting (boolean),
+            // action_left (boolean), action_right (boolean),
+            // left (decimal), right (decimal)
+            // eg arrays of array of timestamp, is_correcting, action_left, action_right, left, right
         });
     }
 

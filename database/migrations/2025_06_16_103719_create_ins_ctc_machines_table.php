@@ -20,18 +20,18 @@ return new class extends Migration
 
             $table->index('line');
             $table->unique(['line', 'ip_address']);
-            
+
         });
 
-                // Seed the recipe data (converted from legacy data)
+        // Seed the recipe data (converted from legacy data)
         DB::table('ins_ctc_machines')->insert([
             [
                 'line' => 3,
-                'ip_address' => '172.70.86.50'
+                'ip_address' => '172.70.86.50',
             ],
             [
                 'line' => 4,
-                'ip_address' => '172.70.89.149'
+                'ip_address' => '172.70.89.149',
             ],
         ]);
     }

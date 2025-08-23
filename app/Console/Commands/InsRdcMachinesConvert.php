@@ -2,9 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\InsRdcMachine;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Console\Command;
 
 class InsRdcMachinesConvert extends Command
 {
@@ -28,7 +27,7 @@ class InsRdcMachinesConvert extends Command
     public function handle()
     {
         $isDryRun = $this->option('dry-run');
-        
+
         if ($isDryRun) {
             $this->info('🔍 DRY RUN MODE - No changes will be made');
             $this->newLine();
@@ -36,9 +35,10 @@ class InsRdcMachinesConvert extends Command
 
         // Get all machines that need conversion
         $machines = InsRdcMachine::all();
-        
+
         if ($machines->isEmpty()) {
             $this->info('No machines found to convert.');
+
             return 0;
         }
 
@@ -51,39 +51,41 @@ class InsRdcMachinesConvert extends Command
 
         foreach ($machines as $machine) {
             $this->line("Processing Machine #{$machine->number} - {$machine->name}");
-            
+
             try {
                 // Check if machine already has type set (already converted)
-                if (!empty($machine->type) && $machine->type !== 'excel') {
+                if (! empty($machine->type) && $machine->type !== 'excel') {
                     $this->line("  ⏭️  Already converted (type: {$machine->type})");
                     $skippedCount++;
+
                     continue;
                 }
 
                 // Parse existing cells configuration
                 $legacyCells = $machine->cells;
-                
+
                 if (empty($legacyCells)) {
-                    $this->line("  ⚠️  No configuration found, setting as Excel with empty config");
-                    
-                    if (!$isDryRun) {
+                    $this->line('  ⚠️  No configuration found, setting as Excel with empty config');
+
+                    if (! $isDryRun) {
                         $machine->update([
                             'type' => 'excel',
-                            'cells' => json_encode([])
+                            'cells' => json_encode([]),
                         ]);
                     }
-                    
+
                     $convertedCount++;
+
                     continue;
                 }
 
                 // Determine machine type based on configuration
                 $machineType = $this->determineMachineType($legacyCells);
                 $newConfig = $this->convertConfiguration($legacyCells, $machineType);
-                
+
                 $this->line("  📝 Type: {$machineType}");
-                $this->line("  📊 Fields: " . count($newConfig));
-                
+                $this->line('  📊 Fields: '.count($newConfig));
+
                 if ($this->output->isVerbose()) {
                     foreach ($newConfig as $field) {
                         if ($machineType === 'excel') {
@@ -94,21 +96,21 @@ class InsRdcMachinesConvert extends Command
                     }
                 }
 
-                if (!$isDryRun) {
+                if (! $isDryRun) {
                     $machine->update([
                         'type' => $machineType,
-                        'cells' => json_encode($newConfig)
+                        'cells' => json_encode($newConfig),
                     ]);
                 }
 
-                $this->line("  ✅ Converted successfully");
+                $this->line('  ✅ Converted successfully');
                 $convertedCount++;
 
             } catch (\Exception $e) {
-                $this->line("  ❌ Error: " . $e->getMessage());
+                $this->line('  ❌ Error: '.$e->getMessage());
                 $errorCount++;
             }
-            
+
             $this->newLine();
         }
 
@@ -117,7 +119,7 @@ class InsRdcMachinesConvert extends Command
         $this->line("✅ Converted: {$convertedCount}");
         $this->line("⏭️  Skipped: {$skippedCount}");
         $this->line("❌ Errors: {$errorCount}");
-        
+
         if ($isDryRun) {
             $this->newLine();
             $this->info('This was a dry run. To apply changes, run:');
@@ -141,7 +143,7 @@ class InsRdcMachinesConvert extends Command
                 return 'txt';
             }
         }
-        
+
         // Default to excel if we can't determine
         return 'excel';
     }
@@ -154,7 +156,7 @@ class InsRdcMachinesConvert extends Command
         $newConfig = [];
 
         foreach ($legacyCells as $cell) {
-            if (!isset($cell['field'])) {
+            if (! isset($cell['field'])) {
                 continue;
             }
 
@@ -165,7 +167,7 @@ class InsRdcMachinesConvert extends Command
                 if (isset($cell['address'])) {
                     $newConfig[] = [
                         'field' => $field,
-                        'address' => strtoupper(trim($cell['address']))
+                        'address' => strtoupper(trim($cell['address'])),
                     ];
                 }
             } else {
@@ -173,7 +175,7 @@ class InsRdcMachinesConvert extends Command
                 if (isset($cell['pattern'])) {
                     $newConfig[] = [
                         'field' => $field,
-                        'pattern' => $cell['pattern']
+                        'pattern' => $cell['pattern'],
                     ];
                 } else {
                     // Convert from address to default pattern if possible
@@ -181,7 +183,7 @@ class InsRdcMachinesConvert extends Command
                     if ($defaultPattern) {
                         $newConfig[] = [
                             'field' => $field,
-                            'pattern' => $defaultPattern
+                            'pattern' => $defaultPattern,
                         ];
                     }
                 }

@@ -6,32 +6,41 @@ use App\Models\Session;
 use Carbon\Carbon;
 use App\Models\User;
 
-new #[Layout('layouts.app')] 
-class extends Component {
-
-    public function with(): array {
-        $greetings = [__('Gimana kabarnya?'), __('Apa kabar?'), __('Selamat datang!'), __('Eh ketemu lagi!'), __('Ada yang bisa dibantu?'), __('Hai,') . ' ' . (Auth::user()->name ?? __('Tamu')) . '!', __('Gimana gimana?')];
-        $qago = Carbon::now()->subMinutes(30)->getTimestamp();
-        $sessions = Session::where('last_activity', '>', $qago)->get();
-        $user_ids = $sessions->pluck('user_id');
+new #[Layout("layouts.app")] class extends Component {
+    public function with(): array
+    {
+        $greetings = [
+            __("Gimana kabarnya?"),
+            __("Apa kabar?"),
+            __("Selamat datang!"),
+            __("Eh ketemu lagi!"),
+            __("Ada yang bisa dibantu?"),
+            __("Hai,") . " " . (Auth::user()->name ?? __("Tamu")) . "!",
+            __("Gimana gimana?"),
+        ];
+        $qago = Carbon::now()
+            ->subMinutes(30)
+            ->getTimestamp();
+        $sessions = Session::where("last_activity", ">", $qago)->get();
+        $user_ids = $sessions->pluck("user_id");
 
         return [
-            'greeting' => $greetings[array_rand($greetings)],
-            'time' => Carbon::now()->locale(app()->getLocale())->isoFormat('dddd, D MMMM YYYY, HH:mm:ss'),
-            'users' => User::whereIn('id', $user_ids)->get(),
-            'guests' => Session::whereNull('user_id')->get()
+            "greeting" => $greetings[array_rand($greetings)],
+            "time" => Carbon::now()
+                ->locale(app()->getLocale())
+                ->isoFormat("dddd, D MMMM YYYY, HH:mm:ss"),
+            "users" => User::whereIn("id", $user_ids)->get(),
+            "guests" => Session::whereNull("user_id")->get(),
         ];
     }
-
-}
+};
 
 ?>
 
 <div wire:poll.9s class="relative">
-    
     @if (Auth::user()->id ?? false)
         <div class="py-32 px-4 lg:px-8 relative overflow-hidden">
-            <div class="container relative max-w-2xl mx-auto text-center tracking-widest text-neutral-500 ">
+            <div class="container relative max-w-2xl mx-auto text-center tracking-widest text-neutral-500">
                 <div class="card-container w-full my-auto">
                     <div class="card relative h-40">
                         <div class="front w-full h-full">
@@ -40,14 +49,12 @@ class extends Component {
                             </div>
                         </div>
                         <div class="back w-full h-full">
-                            <div class="p-5 text-3xl sm:text-5xl">
-                                Caldera
-                            </div>
+                            <div class="p-5 text-3xl sm:text-5xl">Caldera</div>
                         </div>
                     </div>
-                </div>                
+                </div>
             </div>
-            <x-home-users :$time :$users :$guests centered="true" ></x-home-users>
+            <x-home-users :$time :$users :$guests centered="true"></x-home-users>
             <x-aurora />
         </div>
     @else
@@ -56,26 +63,23 @@ class extends Component {
             <div class="container items-center max-w-6xl px-8 mx-auto xl:px-5">
                 <div class="flex flex-wrap sm:-mx-3">
                     <div class="w-full md:w-1/2 md:px-3">
-                        <div
-                            class="w-full pb-6 space-y-6 sm:max-w-md lg:max-w-lg md:space-y-4 lg:space-y-8 xl:space-y-9 sm:pr-5 lg:pr-0 md:pb-0">
-                            <h1
-                                class="text-4xl font-bold tracking-tight text-neutral-900 dark:text-neutral-300 sm:text-5xl md:text-4xl lg:text-5xl xl:text-6xl">
-                                @if (app()->getLocale() === 'ko')
-                                    <span class="block text-caldy-600 xl:inline">{{ __('home.hero2') }}</span><span
-                                        class="block xl:inline">{{ __('home.hero1') }}</span>
+                        <div class="w-full pb-6 space-y-6 sm:max-w-md lg:max-w-lg md:space-y-4 lg:space-y-8 xl:space-y-9 sm:pr-5 lg:pr-0 md:pb-0">
+                            <h1 class="text-4xl font-bold tracking-tight text-neutral-900 dark:text-neutral-300 sm:text-5xl md:text-4xl lg:text-5xl xl:text-6xl">
+                                @if (app()->getLocale() === "ko")
+                                    <span class="block text-caldy-600 xl:inline">{{ __("home.hero2") }}</span>
+                                    <span class="block xl:inline">{{ __("home.hero1") }}</span>
                                 @else
-                                    <span class="block xl:inline">{{ __('home.hero1') }}</span><span
-                                        class="block text-caldy-600 xl:inline">{{ __('home.hero2') }}</span>
+                                    <span class="block xl:inline">{{ __("home.hero1") }}</span>
+                                    <span class="block text-caldy-600 xl:inline">{{ __("home.hero2") }}</span>
                                 @endif
-
                             </h1>
                             <p class="mx-auto text-base text-neutral-500 sm:max-w-md lg:text-xl md:max-w-3xl">
-                                {{ __('Manfaatkan kekuatan data real-time untuk membantu menyelesaikan tugas dan membuat keputusan.') }}
+                                {{ __("Manfaatkan kekuatan data real-time untuk membantu menyelesaikan tugas dan membuat keputusan.") }}
                             </p>
                             <!-- <div class="relative flex flex-col sm:flex-row sm:space-x-4">
-                                <a href="{{ route('login') }}" wire:navigate
+                                <a href="{{ route("login") }}" wire:navigate
                                     class="flex items-center w-full px-6 py-3 mb-3 text-lg text-white bg-caldy-600 rounded-md sm:mb-0 hover:bg-caldy-700 sm:w-auto">
-                                    {{ __('Masuk') }}
+                                    {{ __("Masuk") }}
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-1" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round">
@@ -90,7 +94,7 @@ class extends Component {
                     </div>
                     <div class="w-full md:w-1/2">
                         <div class="w-full h-auto aspect-video sm:aspect-auto overflow-hidden rounded-md shadow-xl sm:rounded-xl">
-                            <img src="/home.jpg" class="dark:invert">
+                            <img src="/home.jpg" class="dark:invert" />
                         </div>
                     </div>
                 </div>
@@ -98,7 +102,7 @@ class extends Component {
             <x-aurora />
         </section>
     @endif
-    
+
     <footer class="max-w-6xl mx-auto">
         <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
             <div class="sm:flex sm:items-center sm:justify-between">
@@ -108,7 +112,7 @@ class extends Component {
                 </a>
             </div>
             <hr class="my-6 border-neutral-200 sm:mx-auto dark:border-neutral-700 lg:my-8" />
-            <span class="block text-sm text-neutral-500 sm:text-center dark:text-neutral-400">{{ __('Oleh dept. MM untuk PT. TKG Taekwang Indonesia') }}</span>
+            <span class="block text-sm text-neutral-500 sm:text-center dark:text-neutral-400">{{ __("Oleh dept. MM untuk PT. TKG Taekwang Indonesia") }}</span>
         </div>
     </footer>
 
@@ -159,7 +163,7 @@ class extends Component {
             }
         }
 
-        .front>div {
+        .front > div {
             animation-name: expand;
             animation-duration: 5s;
             animation-iteration-count: 1;
@@ -198,7 +202,6 @@ class extends Component {
             animation-iteration-count: 1;
             animation-fill-mode: forwards;
             animation-delay: 1s;
-
         }
 
         .card .back {
@@ -208,7 +211,6 @@ class extends Component {
             animation-iteration-count: 1;
             animation-fill-mode: forwards;
             animation-delay: 1s;
-
         }
     </style>
 </div>

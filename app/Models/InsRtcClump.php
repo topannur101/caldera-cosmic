@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InsRtcClump extends Model
@@ -13,7 +13,7 @@ class InsRtcClump extends Model
 
     protected $fillable = [
         'ins_rtc_recipe_id',
-        'ins_rtc_device_id'
+        'ins_rtc_device_id',
     ];
 
     public function ins_rtc_device(): BelongsTo
@@ -26,7 +26,7 @@ class InsRtcClump extends Model
         return $this->belongsTo(InsRtcRecipe::class);
     }
 
-    public function ins_rtc_metrics():  HasMany
+    public function ins_rtc_metrics(): HasMany
     {
         return $this->hasMany(InsRtcMetric::class);
     }

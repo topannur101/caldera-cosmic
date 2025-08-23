@@ -22,7 +22,7 @@ class InsStc
                     ->int16(116, 'lower_pv_r_7')
                     ->int16(117, 'lower_pv_r_8')
                     ->build();
-                    
+
             case 'lower_sv_w':
                 return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
                     ->int16(150, 'lower_sv_w_1')
@@ -34,7 +34,7 @@ class InsStc
                     ->int16(156, 'lower_sv_w_7')
                     ->int16(157, 'lower_sv_w_8')
                     ->build();
-                    
+
             case 'lower_sv_r':
                 return ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$port}", $unit_id)
                     ->int16(140, 'lower_sv_r_1')
@@ -46,7 +46,7 @@ class InsStc
                     ->int16(146, 'lower_sv_r_7')
                     ->int16(147, 'lower_sv_r_8')
                     ->build();
-                    
+
             case 'lower_sv_p':
                 return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
                     ->int16(130, 'lower_sv_p_1')
@@ -58,7 +58,6 @@ class InsStc
                     ->int16(136, 'lower_sv_p_7')
                     ->int16(137, 'lower_sv_p_8')
                     ->build();
-                    
 
             case 'upper_pv_r':
                 return ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$port}", $unit_id)
@@ -71,7 +70,7 @@ class InsStc
                     ->int16(216, 'upper_pv_r_7')
                     ->int16(217, 'upper_pv_r_8')
                     ->build();
-                    
+
             case 'upper_sv_w':
                 return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
                     ->int16(250, 'upper_sv_w_1')
@@ -83,7 +82,7 @@ class InsStc
                     ->int16(256, 'upper_sv_w_7')
                     ->int16(257, 'upper_sv_w_8')
                     ->build();
-                    
+
             case 'upper_sv_r':
                 return ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$port}", $unit_id)
                     ->int16(240, 'upper_sv_r_1')
@@ -95,7 +94,7 @@ class InsStc
                     ->int16(246, 'upper_sv_r_7')
                     ->int16(247, 'upper_sv_r_8')
                     ->build();
-                    
+
             case 'upper_sv_p':
                 return ReadRegistersBuilder::newReadHoldingRegisters("tcp://{$ip}:{$port}", $unit_id)
                     ->int16(230, 'upper_sv_p_1')
@@ -107,7 +106,7 @@ class InsStc
                     ->int16(236, 'upper_sv_p_7')
                     ->int16(237, 'upper_sv_p_8')
                     ->build();
-                    
+
         }
     }
 
@@ -124,7 +123,7 @@ class InsStc
         'postheat' => 0.08,
     ];
 
-    public static array $target_values = [ 75, 73, 68, 63, 58, 53, 43, 43 ];
+    public static array $target_values = [75, 73, 68, 63, 58, 53, 43, 43];
 
     public static function groupValuesBySection($values): array
     {
@@ -148,13 +147,13 @@ class InsStc
         if (empty($values)) {
             throw new InvalidArgumentException('Values array cannot be empty.');
         }
-        
+
         $sections = self::groupValuesBySection($values);
 
         // Calculate medians for each section
         $medians = [];
         foreach ($sections as $section => $sectionValues) {
-            if (!empty($sectionValues)) {
+            if (! empty($sectionValues)) {
                 sort($sectionValues); // Sort the section values to calculate median
                 $count = count($sectionValues);
                 $middle = (int) floor($count / 2);
@@ -172,6 +171,7 @@ class InsStc
                 $medians[$section] = null; // No data in this section
             }
         }
+
         return $medians;
     }
 
@@ -193,16 +193,17 @@ class InsStc
     {
         $flattenedDLogs = self::flattenDLogs($dLogs);
         $medians = self::getMediansBySection($flattenedDLogs);
+
         return $medians;
     }
 
     public static function calculateSVP(array $hb_values, array $sv_values, int $formula_id, ?array $svp_highs = null, ?array $svp_lows = null): array
     {
-        $target_values  = Self::$target_values;
-        
+        $target_values = self::$target_values;
+
         // Use provided limits or fallback to defaults
-        $svp_highs      = $svp_highs ?? [ 83, 78, 73, 68, 63, 58, 53, 48 ];
-        $svp_lows       = $svp_lows ?? [ 73, 68, 63, 58, 53, 48, 43, 38 ];
+        $svp_highs = $svp_highs ?? [83, 78, 73, 68, 63, 58, 53, 48];
+        $svp_lows = $svp_lows ?? [73, 68, 63, 58, 53, 48, 43, 38];
 
         // Validate input arrays have same length
         if (count($hb_values) !== count($target_values) || count($sv_values) !== count($target_values)) {
@@ -219,8 +220,9 @@ class InsStc
             if ($sv_value == 0) {
                 $svp_results[] = [
                     'absolute' => 0,
-                    'relative' => ''
+                    'relative' => '',
                 ];
+
                 continue;
             }
 
@@ -236,16 +238,16 @@ class InsStc
                     $diff = ($hb_value - $hb_target) / 2;
                     $sv_adjusted = (int) max(0, round($sv_value - $diff, 0));
                     break;
-                
+
                 case '421':
                     if ($hb_value < $hb_target) {
                         $ratio = $hb_value > 0 ? ($hb_value / ($hb_target > 0 ? $hb_target : $hb_value)) : 0;
                         $sv_adjusted = (int) max(0, round($sv_value + ($sv_value * (1 - $ratio))));
-                    } else if ($hb_value > $hb_target) {
+                    } elseif ($hb_value > $hb_target) {
                         $ratio = $hb_target > 0 ? ($hb_target / ($hb_value > 0 ? $hb_value : $hb_target)) : 0;
                         $sv_adjusted = (int) max(0, round($sv_value - ($sv_value * (1 - $ratio))));
                     }
-                    
+
                     break;
             }
 
@@ -258,11 +260,11 @@ class InsStc
 
             // Calculate relative difference between adjusted and original SV
             $relative = $sv_adjusted - $sv_value;
-            $relative = $relative > 0 ? '+' . abs($relative) : ( $relative < 0 ? '-' . abs($relative) : '' );
+            $relative = $relative > 0 ? '+'.abs($relative) : ($relative < 0 ? '-'.abs($relative) : '');
 
             $svp_results[] = [
                 'absolute' => $sv_adjusted,
-                'relative' => $relative ?: null
+                'relative' => $relative ?: null,
             ];
         }
 
@@ -274,7 +276,7 @@ class InsStc
         $ymax = 90;
         $ymin = 30;
 
-        $logs = [ [ 'taken_at' => 1*60, 'temp' => 75 ], [ 'taken_at' => 2*60, 'temp' => 75 ], [ 'taken_at' => 3*60, 'temp' => 75 ], [ 'taken_at' => 4*60, 'temp' => 75 ], [ 'taken_at' => 5*60, 'temp' => 75 ], [ 'taken_at' => 6*60, 'temp' => 75 ], [ 'taken_at' => 7*60, 'temp' => 75 ], [ 'taken_at' => 8*60, 'temp' => 75 ], [ 'taken_at' => 9*60, 'temp' => 75 ], [ 'taken_at' => 10*60, 'temp' => 75 ], [ 'taken_at' => 11*60, 'temp' => 75 ], [ 'taken_at' => 12*60, 'temp' => 75 ], [ 'taken_at' => 13*60, 'temp' => 75 ], [ 'taken_at' => 14*60, 'temp' => 75 ], [ 'taken_at' => 15*60, 'temp' => 75 ], [ 'taken_at' => 16*60, 'temp' => 75 ], [ 'taken_at' => 17*60, 'temp' => 75 ], [ 'taken_at' => 18*60, 'temp' => 65 ], [ 'taken_at' => 19*60, 'temp' => 65 ], [ 'taken_at' => 20*60, 'temp' => 65 ], [ 'taken_at' => 21*60, 'temp' => 65 ], [ 'taken_at' => 22*60, 'temp' => 65 ], [ 'taken_at' => 23*60, 'temp' => 65 ], [ 'taken_at' => 24*60, 'temp' => 65 ], [ 'taken_at' => 25*60, 'temp' => 65 ], [ 'taken_at' => 26*60, 'temp' => 65 ], [ 'taken_at' => 27*60, 'temp' => 65 ], [ 'taken_at' => 28*60, 'temp' => 65 ], [ 'taken_at' => 29*60, 'temp' => 65 ], [ 'taken_at' => 30*60, 'temp' => 55 ], [ 'taken_at' => 31*60, 'temp' => 55 ], [ 'taken_at' => 32*60, 'temp' => 55 ], [ 'taken_at' => 33*60, 'temp' => 55 ], [ 'taken_at' => 34*60, 'temp' => 55 ], [ 'taken_at' => 35*60, 'temp' => 55 ], [ 'taken_at' => 36*60, 'temp' => 55 ], [ 'taken_at' => 37*60, 'temp' => 55 ], [ 'taken_at' => 38*60, 'temp' => 55 ], [ 'taken_at' => 39*60, 'temp' => 55 ], [ 'taken_at' => 40*60, 'temp' => 55 ], [ 'taken_at' => 41*60, 'temp' => 55 ], [ 'taken_at' => 42*60, 'temp' => 45 ], [ 'taken_at' => 43*60, 'temp' => 45 ], [ 'taken_at' => 44*60, 'temp' => 45 ], [ 'taken_at' => 45*60, 'temp' => 45 ], [ 'taken_at' => 46*60, 'temp' => 45 ], [ 'taken_at' => 47*60, 'temp' => 45 ], [ 'taken_at' => 48*60, 'temp' => 45 ], [ 'taken_at' => 49*60, 'temp' => 45 ], [ 'taken_at' => 50*60, 'temp' => 45 ], [ 'taken_at' => 51*60, 'temp' => 45 ], [ 'taken_at' => 52*60, 'temp' => 45 ], [ 'taken_at' => 53*60, 'temp' => 45 ], [ 'taken_at' => 54*60, 'temp' => 45 ], [ 'taken_at' => 55*60, 'temp' => 45 ], [ 'taken_at' => 56*60, 'temp' => 45 ], [ 'taken_at' => 57*60, 'temp' => 45 ], [ 'taken_at' => 58*60, 'temp' => 45 ] ];       
+        $logs = [['taken_at' => 1 * 60, 'temp' => 75], ['taken_at' => 2 * 60, 'temp' => 75], ['taken_at' => 3 * 60, 'temp' => 75], ['taken_at' => 4 * 60, 'temp' => 75], ['taken_at' => 5 * 60, 'temp' => 75], ['taken_at' => 6 * 60, 'temp' => 75], ['taken_at' => 7 * 60, 'temp' => 75], ['taken_at' => 8 * 60, 'temp' => 75], ['taken_at' => 9 * 60, 'temp' => 75], ['taken_at' => 10 * 60, 'temp' => 75], ['taken_at' => 11 * 60, 'temp' => 75], ['taken_at' => 12 * 60, 'temp' => 75], ['taken_at' => 13 * 60, 'temp' => 75], ['taken_at' => 14 * 60, 'temp' => 75], ['taken_at' => 15 * 60, 'temp' => 75], ['taken_at' => 16 * 60, 'temp' => 75], ['taken_at' => 17 * 60, 'temp' => 75], ['taken_at' => 18 * 60, 'temp' => 65], ['taken_at' => 19 * 60, 'temp' => 65], ['taken_at' => 20 * 60, 'temp' => 65], ['taken_at' => 21 * 60, 'temp' => 65], ['taken_at' => 22 * 60, 'temp' => 65], ['taken_at' => 23 * 60, 'temp' => 65], ['taken_at' => 24 * 60, 'temp' => 65], ['taken_at' => 25 * 60, 'temp' => 65], ['taken_at' => 26 * 60, 'temp' => 65], ['taken_at' => 27 * 60, 'temp' => 65], ['taken_at' => 28 * 60, 'temp' => 65], ['taken_at' => 29 * 60, 'temp' => 65], ['taken_at' => 30 * 60, 'temp' => 55], ['taken_at' => 31 * 60, 'temp' => 55], ['taken_at' => 32 * 60, 'temp' => 55], ['taken_at' => 33 * 60, 'temp' => 55], ['taken_at' => 34 * 60, 'temp' => 55], ['taken_at' => 35 * 60, 'temp' => 55], ['taken_at' => 36 * 60, 'temp' => 55], ['taken_at' => 37 * 60, 'temp' => 55], ['taken_at' => 38 * 60, 'temp' => 55], ['taken_at' => 39 * 60, 'temp' => 55], ['taken_at' => 40 * 60, 'temp' => 55], ['taken_at' => 41 * 60, 'temp' => 55], ['taken_at' => 42 * 60, 'temp' => 45], ['taken_at' => 43 * 60, 'temp' => 45], ['taken_at' => 44 * 60, 'temp' => 45], ['taken_at' => 45 * 60, 'temp' => 45], ['taken_at' => 46 * 60, 'temp' => 45], ['taken_at' => 47 * 60, 'temp' => 45], ['taken_at' => 48 * 60, 'temp' => 45], ['taken_at' => 49 * 60, 'temp' => 45], ['taken_at' => 50 * 60, 'temp' => 45], ['taken_at' => 51 * 60, 'temp' => 45], ['taken_at' => 52 * 60, 'temp' => 45], ['taken_at' => 53 * 60, 'temp' => 45], ['taken_at' => 54 * 60, 'temp' => 45], ['taken_at' => 55 * 60, 'temp' => 45], ['taken_at' => 56 * 60, 'temp' => 45], ['taken_at' => 57 * 60, 'temp' => 45], ['taken_at' => 58 * 60, 'temp' => 45]];
 
         $zones = [
             'zone_1' => ['section_1', 'section_2'],
@@ -283,32 +285,32 @@ class InsStc
             'zone_4' => ['section_7', 'section_8'],
         ];
 
-        $temps = array_map(fn($item) => $item['temp'], $logs);
-        $sections = Self::groupValuesBySection($temps);
+        $temps = array_map(fn ($item) => $item['temp'], $logs);
+        $sections = self::groupValuesBySection($temps);
         $xzones = array_map('count', $sections);
-        $yzones = [ 40, 50, 60, 70, 80 ];
+        $yzones = [40, 50, 60, 70, 80];
 
         $chartData = $chartData->map(function ($group) {
             // Sort the group by taken_at to ensure chronological order
             $sortedGroup = $group->sortBy('taken_at');
-            
+
             // Get the first timestamp as the reference point
             $firstTimestamp = strtotime($sortedGroup->first()['taken_at']);
 
-            $firstLog       = $sortedGroup->first();
-            $line           = sprintf('%02d', $firstLog->ins_stc_d_sum->ins_stc_machine->line);
-            $position       = $firstLog->ins_stc_d_sum->position;
-            $taken_at       = Carbon::parse($firstLog->taken_at)->format('mdH');
+            $firstLog = $sortedGroup->first();
+            $line = sprintf('%02d', $firstLog->ins_stc_d_sum->ins_stc_machine->line);
+            $position = $firstLog->ins_stc_d_sum->position;
+            $taken_at = Carbon::parse($firstLog->taken_at)->format('mdH');
             $positionSymbol = $position == 'upper' ? '△' : ($position == 'lower' ? '▽' : '');
-    
+
             return [
-                'name' => $line . ' ' . $positionSymbol . ' ' . $taken_at,
+                'name' => $line.' '.$positionSymbol.' '.$taken_at,
                 'data' => $sortedGroup->map(function ($item) use ($firstTimestamp) {
                     return [
                         'x' => (strtotime($item['taken_at']) - $firstTimestamp) * 1000, // Convert to milliseconds
-                        'y' => $item['temp']
+                        'y' => $item['temp'],
                     ];
-                })->toArray()
+                })->toArray(),
             ];
         })->values()->toArray();
 
@@ -316,8 +318,8 @@ class InsStc
             'chart' => [
                 'redrawOnParentResize' => true,
                 'background' => 'transparent',
-                'width' => $width . '%',
-                'height' => $height .'%',
+                'width' => $width.'%',
+                'height' => $height.'%',
                 'type' => 'line',
                 'toolbar' => [
                     'show' => true,
@@ -347,7 +349,7 @@ class InsStc
                 'type' => 'datetime',
                 'labels' => [
                     'show' => true,
-                    'datetimeUTC' => true
+                    'datetimeUTC' => true,
                 ],
             ],
             'yaxis' => [
@@ -397,8 +399,8 @@ class InsStc
     {
         $ymax = 90;
         $ymin = 30;
-        $logs = [ [ 'taken_at' => 1*60, 'temp' => 75 ], [ 'taken_at' => 2*60, 'temp' => 75 ], [ 'taken_at' => 3*60, 'temp' => 75 ], [ 'taken_at' => 4*60, 'temp' => 75 ], [ 'taken_at' => 5*60, 'temp' => 75 ], [ 'taken_at' => 6*60, 'temp' => 75 ], [ 'taken_at' => 7*60, 'temp' => 75 ], [ 'taken_at' => 8*60, 'temp' => 75 ], [ 'taken_at' => 9*60, 'temp' => 75 ], [ 'taken_at' => 10*60, 'temp' => 75 ], [ 'taken_at' => 11*60, 'temp' => 75 ], [ 'taken_at' => 12*60, 'temp' => 75 ], [ 'taken_at' => 13*60, 'temp' => 75 ], [ 'taken_at' => 14*60, 'temp' => 75 ], [ 'taken_at' => 15*60, 'temp' => 75 ], [ 'taken_at' => 16*60, 'temp' => 75 ], [ 'taken_at' => 17*60, 'temp' => 75 ], [ 'taken_at' => 18*60, 'temp' => 65 ], [ 'taken_at' => 19*60, 'temp' => 65 ], [ 'taken_at' => 20*60, 'temp' => 65 ], [ 'taken_at' => 21*60, 'temp' => 65 ], [ 'taken_at' => 22*60, 'temp' => 65 ], [ 'taken_at' => 23*60, 'temp' => 65 ], [ 'taken_at' => 24*60, 'temp' => 65 ], [ 'taken_at' => 25*60, 'temp' => 65 ], [ 'taken_at' => 26*60, 'temp' => 65 ], [ 'taken_at' => 27*60, 'temp' => 65 ], [ 'taken_at' => 28*60, 'temp' => 65 ], [ 'taken_at' => 29*60, 'temp' => 65 ], [ 'taken_at' => 30*60, 'temp' => 55 ], [ 'taken_at' => 31*60, 'temp' => 55 ], [ 'taken_at' => 32*60, 'temp' => 55 ], [ 'taken_at' => 33*60, 'temp' => 55 ], [ 'taken_at' => 34*60, 'temp' => 55 ], [ 'taken_at' => 35*60, 'temp' => 55 ], [ 'taken_at' => 36*60, 'temp' => 55 ], [ 'taken_at' => 37*60, 'temp' => 55 ], [ 'taken_at' => 38*60, 'temp' => 55 ], [ 'taken_at' => 39*60, 'temp' => 55 ], [ 'taken_at' => 40*60, 'temp' => 55 ], [ 'taken_at' => 41*60, 'temp' => 55 ], [ 'taken_at' => 42*60, 'temp' => 45 ], [ 'taken_at' => 43*60, 'temp' => 45 ], [ 'taken_at' => 44*60, 'temp' => 45 ], [ 'taken_at' => 45*60, 'temp' => 45 ], [ 'taken_at' => 46*60, 'temp' => 45 ], [ 'taken_at' => 47*60, 'temp' => 45 ], [ 'taken_at' => 48*60, 'temp' => 45 ], [ 'taken_at' => 49*60, 'temp' => 45 ], [ 'taken_at' => 50*60, 'temp' => 45 ], [ 'taken_at' => 51*60, 'temp' => 45 ], [ 'taken_at' => 52*60, 'temp' => 45 ], [ 'taken_at' => 53*60, 'temp' => 45 ], [ 'taken_at' => 54*60, 'temp' => 45 ], [ 'taken_at' => 55*60, 'temp' => 45 ], [ 'taken_at' => 56*60, 'temp' => 45 ], [ 'taken_at' => 57*60, 'temp' => 45 ], [ 'taken_at' => 58*60, 'temp' => 45 ] ];       
-        $yzones = [ 37.5, 42.5, 47.5, 52.5, 57.5, 62.5, 67.5, 72.5, 77.5 ];
+        $logs = [['taken_at' => 1 * 60, 'temp' => 75], ['taken_at' => 2 * 60, 'temp' => 75], ['taken_at' => 3 * 60, 'temp' => 75], ['taken_at' => 4 * 60, 'temp' => 75], ['taken_at' => 5 * 60, 'temp' => 75], ['taken_at' => 6 * 60, 'temp' => 75], ['taken_at' => 7 * 60, 'temp' => 75], ['taken_at' => 8 * 60, 'temp' => 75], ['taken_at' => 9 * 60, 'temp' => 75], ['taken_at' => 10 * 60, 'temp' => 75], ['taken_at' => 11 * 60, 'temp' => 75], ['taken_at' => 12 * 60, 'temp' => 75], ['taken_at' => 13 * 60, 'temp' => 75], ['taken_at' => 14 * 60, 'temp' => 75], ['taken_at' => 15 * 60, 'temp' => 75], ['taken_at' => 16 * 60, 'temp' => 75], ['taken_at' => 17 * 60, 'temp' => 75], ['taken_at' => 18 * 60, 'temp' => 65], ['taken_at' => 19 * 60, 'temp' => 65], ['taken_at' => 20 * 60, 'temp' => 65], ['taken_at' => 21 * 60, 'temp' => 65], ['taken_at' => 22 * 60, 'temp' => 65], ['taken_at' => 23 * 60, 'temp' => 65], ['taken_at' => 24 * 60, 'temp' => 65], ['taken_at' => 25 * 60, 'temp' => 65], ['taken_at' => 26 * 60, 'temp' => 65], ['taken_at' => 27 * 60, 'temp' => 65], ['taken_at' => 28 * 60, 'temp' => 65], ['taken_at' => 29 * 60, 'temp' => 65], ['taken_at' => 30 * 60, 'temp' => 55], ['taken_at' => 31 * 60, 'temp' => 55], ['taken_at' => 32 * 60, 'temp' => 55], ['taken_at' => 33 * 60, 'temp' => 55], ['taken_at' => 34 * 60, 'temp' => 55], ['taken_at' => 35 * 60, 'temp' => 55], ['taken_at' => 36 * 60, 'temp' => 55], ['taken_at' => 37 * 60, 'temp' => 55], ['taken_at' => 38 * 60, 'temp' => 55], ['taken_at' => 39 * 60, 'temp' => 55], ['taken_at' => 40 * 60, 'temp' => 55], ['taken_at' => 41 * 60, 'temp' => 55], ['taken_at' => 42 * 60, 'temp' => 45], ['taken_at' => 43 * 60, 'temp' => 45], ['taken_at' => 44 * 60, 'temp' => 45], ['taken_at' => 45 * 60, 'temp' => 45], ['taken_at' => 46 * 60, 'temp' => 45], ['taken_at' => 47 * 60, 'temp' => 45], ['taken_at' => 48 * 60, 'temp' => 45], ['taken_at' => 49 * 60, 'temp' => 45], ['taken_at' => 50 * 60, 'temp' => 45], ['taken_at' => 51 * 60, 'temp' => 45], ['taken_at' => 52 * 60, 'temp' => 45], ['taken_at' => 53 * 60, 'temp' => 45], ['taken_at' => 54 * 60, 'temp' => 45], ['taken_at' => 55 * 60, 'temp' => 45], ['taken_at' => 56 * 60, 'temp' => 45], ['taken_at' => 57 * 60, 'temp' => 45], ['taken_at' => 58 * 60, 'temp' => 45]];
+        $yzones = [37.5, 42.5, 47.5, 52.5, 57.5, 62.5, 67.5, 72.5, 77.5];
 
         // Initialize sections to collect temperatures
         $sectionTemperatures = [
@@ -411,14 +413,14 @@ class InsStc
             'section_6' => [],
             'section_7' => [],
             'section_8' => [],
-            'postheat' => []
+            'postheat' => [],
         ];
 
         // Iterate through each element in chartData
         $chartData->each(function ($group) use (&$sectionTemperatures) {
             // Group temperatures for this specific group
-            $groupSections = Self::groupValuesBySection($group->pluck('temp')->toArray());
-            
+            $groupSections = self::groupValuesBySection($group->pluck('temp')->toArray());
+
             // Aggregate temperatures for each section
             foreach ($sectionTemperatures as $section => $temps) {
                 if (isset($groupSections[$section])) {
@@ -428,7 +430,7 @@ class InsStc
         });
 
         // Function to calculate boxplot statistics
-        $calculateBoxplotStats = function($values) {
+        $calculateBoxplotStats = function ($values) {
             if (empty($values)) {
                 return [0, 0, 0, 0, 0];
             }
@@ -436,22 +438,22 @@ class InsStc
             // Sort the values
             sort($values);
             $count = count($values);
-            
+
             // Calculate quartiles
             $min = $values[0];
             $max = $values[$count - 1];
-            
+
             // Median (Q2)
             $medianIndex = floor(($count - 1) / 2);
-            $median = $count % 2 ? $values[$medianIndex] : 
+            $median = $count % 2 ? $values[$medianIndex] :
                 ($values[$medianIndex] + $values[$medianIndex + 1]) / 2;
-            
+
             // Q1 and Q3
             $q1Index = floor(($count - 1) / 4);
             $q3Index = floor(3 * ($count - 1) / 4);
-            $q1 = $count % 4 ? $values[$q1Index] : 
+            $q1 = $count % 4 ? $values[$q1Index] :
                 ($values[$q1Index] + $values[$q1Index + 1]) / 2;
-            $q3 = $count % 4 ? $values[$q3Index] : 
+            $q3 = $count % 4 ? $values[$q3Index] :
                 ($values[$q3Index] + $values[$q3Index + 1]) / 2;
 
             return [
@@ -465,10 +467,10 @@ class InsStc
 
         // Prepare boxplot data
         $boxplotData = collect($sectionTemperatures)
-            ->map(function($temps, $sectionName) use ($calculateBoxplotStats) {
+            ->map(function ($temps, $sectionName) use ($calculateBoxplotStats) {
                 return [
                     'x' => $sectionName,
-                    'y' => $calculateBoxplotStats($temps)
+                    'y' => $calculateBoxplotStats($temps),
                 ];
             })
             ->values()
@@ -478,8 +480,8 @@ class InsStc
             'chart' => [
                 'redrawOnParentResize' => true,
                 'background' => 'transparent',
-                'width' => $width . '%',
-                'height' => $height .'%',
+                'width' => $width.'%',
+                'height' => $height.'%',
                 'type' => 'boxPlot',
                 'toolbar' => [
                     'show' => true,
@@ -508,8 +510,8 @@ class InsStc
                 [
                     'name' => 'box',
                     'type' => 'boxPlot',
-                    'data' => $boxplotData
-                ]
+                    'data' => $boxplotData,
+                ],
             ],
             'xaxis' => [
                 'type' => 'category',
@@ -537,27 +539,27 @@ class InsStc
                 'show' => true,
                 'showForSingleSeries' => true,
                 'position' => 'right',
-                'customLegendItems' => [ __('Standar') ],
+                'customLegendItems' => [__('Standar')],
                 'markers' => [
-                    'fillColors' => ['#D64550']
-                ]
+                    'fillColors' => ['#D64550'],
+                ],
             ],
             'plotOptions' => [
                 'boxPlot' => [
                     'colors' => [
                         'upper' => '#A8D8EA',
-                        'lower' => '#A8EAC1'
-                    ]
-                ]
-            ]
+                        'lower' => '#A8EAC1',
+                    ],
+                ],
+            ],
         ];
     }
 
-    public static function getChartJsOptions($logs, array $sv_temps = []) 
+    public static function getChartJsOptions($logs, array $sv_temps = [])
     {
-        $temps = array_map(fn($item) => $item['temp'], $logs);
+        $temps = array_map(fn ($item) => $item['temp'], $logs);
         $sections = self::groupValuesBySection($temps);
-        
+
         $zones = [
             'zone_1' => ['section_1', 'section_2'],
             'zone_2' => ['section_3', 'section_4'],
@@ -574,7 +576,7 @@ class InsStc
         $chartData = array_map(function ($log) {
             return [
                 'x' => Carbon::parse($log['taken_at']),
-                'y' => $log['temp']
+                'y' => $log['temp'],
             ];
         }, $logs);
 
@@ -587,8 +589,8 @@ class InsStc
                         'data' => $chartData,
                         'borderColor' => '#D64550',
                         'borderWidth' => 1,
-                    ]
-                ]
+                    ],
+                ],
             ],
             'options' => [
                 'responsive' => true,
@@ -603,15 +605,15 @@ class InsStc
                         'time' => [
                             'displayFormats' => [
                                 'hour' => 'HH:mm',
-                                'minute' => 'HH:mm'
-                            ]
+                                'minute' => 'HH:mm',
+                            ],
                         ],
                         'grid' => [
-                            'display' => false
-                        ],                        
+                            'display' => false,
+                        ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
+                        ],
                     ],
                     'y' => [
                         'min' => $ymin,
@@ -622,12 +624,12 @@ class InsStc
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
                         ],
                         'grid' => [
-                            'display' => false
+                            'display' => false,
                         ],
                         'ticks' => [
                             'color' => session('bg') === 'dark' ? '#525252' : '#a3a3a3',
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
                 'plugins' => [
                     'annotation' => [
@@ -636,20 +638,20 @@ class InsStc
                             self::generateChartJsYAnnotations($yzones),
                             self::generateChartJsZoneAnnotations($zones, $yzones, $logs),
                             self::generateChartJsSVAnnotations($sections, $sv_temps, $logs)
-                        )
+                        ),
                     ],
                     'legend' => [
-                        'display' => false
+                        'display' => false,
                     ],
                     'datalabels' => [
-                        'display' => false
-                    ]
-                ]
-            ]
+                        'display' => false,
+                    ],
+                ],
+            ],
         ];
     }
 
-    private static function generateChartJsXAnnotations($zones, $xzones, $logs) 
+    private static function generateChartJsXAnnotations($zones, $xzones, $logs)
     {
         $annotations = [];
         $previousCount = $xzones['preheat'];
@@ -685,9 +687,9 @@ class InsStc
         return $annotations;
     }
 
-    private static function generateChartJsYAnnotations($yzones) 
+    private static function generateChartJsYAnnotations($yzones)
     {
-        return array_map(function($value) {
+        return array_map(function ($value) {
             return [
                 'type' => 'line',
                 'yMin' => $value,
@@ -695,11 +697,11 @@ class InsStc
                 'borderColor' => session('bg') === 'dark' ? '#404040' : '#e5e5e5',
                 'borderWidth' => 1,
                 'label' => [
-                    'content' => $value . '°C',
+                    'content' => $value.'°C',
                     'color' => session('bg') === 'dark' ? '#404040' : '#e5e5e5',
                     'backgroundColor' => 'transparent',
-                    'position' => 'start'
-                ]
+                    'position' => 'start',
+                ],
             ];
         }, $yzones);
     }
@@ -710,28 +712,29 @@ class InsStc
         if (count($sv_temps) !== 8) {
             return []; // Return empty array if sv_temps is invalid
         }
-    
+
         $annotations = [];
         $cursorLogsIndex = 0;
         $cursorSVTempIndex = 0;
-    
+
         foreach ($sections as $sectionName => $values) {
             if (in_array($sectionName, ['preheat'])) {
                 $cursorLogsIndex = $values ? count($values) : 0;
+
                 continue;
             }
 
             if (in_array($sectionName, ['postheat'])) {
                 continue;
             }
-    
+
             if (empty($values)) {
                 continue; // Skip if section is missing or empty
             }
 
             // Get the original indices before sorting
             $originalIndices = array_keys($values);
-    
+
             // Find the middle index of the sorted values
             $middleIndex = (int) floor(count($values) / 2);
 
@@ -745,24 +748,23 @@ class InsStc
                 'borderWidth' => 0,
                 'backgroundColor' => 'red',
             ];
-            
+
             $cursorLogsIndex = $cursorLogsIndex + count($values);
             $cursorSVTempIndex++;
-            
-    
+
             // // Get the original index of the middle value
             // $originalMiddleIndex = $originalIndices[$middleIndex];
-    
+
             // // Use the original index to find the corresponding log entry
             // $middleValue = $values[$middleIndex] ?? null;
-            
+
             // if ($middleValue !== null && isset($sv_temps[$sectionIndex])) {
 
             //     // Find the corresponding datetime from logs using the original index
             //     $logIndex = array_search($middleValue, array_column($logs, 'value'), true);
             //     dd($logIndex);
             //     $datetime = $logIndex !== false ? $logs[$logIndex]['datetime'] : null;
-    
+
             //     if ($datetime) {
             //         $annotations[] = [
             //             'type' => 'point',
@@ -777,13 +779,12 @@ class InsStc
             //         ];
             //     }
             // }
-    
+
             // $sectionIndex++;
         }
-    
+
         return $annotations;
     }
-    
 
     public static function getMedians(array $values): ?float
     {
@@ -802,16 +803,16 @@ class InsStc
         return $values[$middleIndex];
     }
 
-    private static function generateChartJsZoneAnnotations($zones, $yzones, $logs) 
+    private static function generateChartJsZoneAnnotations($zones, $yzones, $logs)
     {
         $annotations = [];
-        $temps = array_map(fn($item) => $item['temp'], $logs);
+        $temps = array_map(fn ($item) => $item['temp'], $logs);
         $counts = array_map('count', self::groupValuesBySection($temps));
-    
+
         // Calculate start positions for each section
         $cumulativeCounts = [];
         $total = $counts['preheat'];
-    
+
         foreach (['section_1', 'section_2', 'section_3', 'section_4', 'section_5', 'section_6', 'section_7', 'section_8'] as $section) {
             $total += $counts[$section];
             $cumulativeCounts[$section] = $total;
@@ -821,15 +822,15 @@ class InsStc
             // Get start and end indexes for the zone
             $startSection = $zoneSections[0];
             $endSection = $zoneSections[1];
-            
+
             $startIndex = $cumulativeCounts[$startSection] - $counts[$startSection];
             $endIndex = min($cumulativeCounts[$endSection], count($logs) - 1);
-            
+
             // Get temperature range for the zone from yzones
             $zoneIndex = array_search($zoneName, array_keys($zones));
             $yMin = $yzones[$zoneIndex];
             $yMax = $yzones[$zoneIndex + 1];
-    
+
             // Box annotation (existing faint red background)
             $annotations[] = [
                 'type' => 'box',
@@ -838,13 +839,13 @@ class InsStc
                 'yMin' => $yMin,
                 'yMax' => $yMax,
                 'backgroundColor' => 'rgba(214, 69, 80, 0.10)', // #D64550 with 25% opacity
-                'borderWidth' => 0
+                'borderWidth' => 0,
             ];
 
             // Label annotation showing standard range
             $xCenter = Carbon::parse($logs[$startIndex]['taken_at'])
                 ->addSeconds((Carbon::parse($logs[$endIndex]['taken_at'])->timestamp - Carbon::parse($logs[$startIndex]['taken_at'])->timestamp) / 2);
-            
+
             $annotations[] = [
                 'type' => 'label',
                 'xValue' => $xCenter,
@@ -857,10 +858,10 @@ class InsStc
                 ],
                 'padding' => 2,
                 'borderRadius' => 4,
-                'position' => 'center'
+                'position' => 'center',
             ];
         }
-    
+
         return $annotations;
     }
 
@@ -868,11 +869,11 @@ class InsStc
     {
 
         $chartData = array_map(function ($log) {
-            return [Self::parseDate($log['taken_at']), $log['temp']];
+            return [self::parseDate($log['taken_at']), $log['temp']];
         }, $logs);
 
-        $temps = array_map(fn($item) => $item['temp'], $logs);
-        $sections = Self::groupValuesBySection($temps);
+        $temps = array_map(fn ($item) => $item['temp'], $logs);
+        $sections = self::groupValuesBySection($temps);
         $zones = [
             'zone_1' => ['section_1', 'section_2'],
             'zone_2' => ['section_3', 'section_4'],
@@ -881,7 +882,7 @@ class InsStc
         ];
 
         $xzones = array_map('count', $sections);
-        $yzones = [ 40, 50, 60, 70, 80 ];
+        $yzones = [40, 50, 60, 70, 80];
         $ymax = 90;
         $ymin = 30;
         $chartDataJs = json_encode($chartData);
@@ -890,8 +891,8 @@ class InsStc
             'chart' => [
                 'redrawOnParentResize' => true,
                 'background' => 'transparent',
-                'width' => $width . '%',
-                'height' => $height .'%',
+                'width' => $width.'%',
+                'height' => $height.'%',
                 'type' => 'line',
                 'toolbar' => [
                     'show' => true,
@@ -958,7 +959,7 @@ class InsStc
                 ],
             ],
         ];
-    }  
+    }
 
     private static function generateXAnnotations($zones, $xzones, $logs)
     {
@@ -976,15 +977,15 @@ class InsStc
                 'text' => '',
             ],
         ];
-    
+
         foreach ($zones as $zoneName => $zoneSections) {
-    
+
             // Calculate the position of the last section's end
             $lastSectionPosition = $previousCount;
             foreach ($zoneSections as $section) {
                 $lastSectionPosition += $xzones[$section];
             }
-    
+
             // Last border: end of the last section in the zone
             if (isset($logs[$lastSectionPosition])) {
                 $annotations[] = [
@@ -999,11 +1000,11 @@ class InsStc
                     ],
                 ];
             }
-    
+
             // Update previous count for next iteration
             $previousCount = $lastSectionPosition;
         }
-    
+
         return $annotations;
     }
 
@@ -1020,21 +1021,22 @@ class InsStc
                         'color' => '#bcbcbc',
                         'background' => 'transparent',
                     ],
-                    'text' => $value . '°C',
+                    'text' => $value.'°C',
                 ],
             ];
         }
+
         return $annotations;
     }
 
     private static function generateZoneAnnotations($zones, $yzones, $logs)
     {
         $pointAnnotations = [];
-        $temps = array_map(fn($item) => $item['temp'], $logs);
-        $medians = Self::getMediansBySection($temps);
-    
-        $counts = array_map('count', Self::groupValuesBySection($temps));
-    
+        $temps = array_map(fn ($item) => $item['temp'], $logs);
+        $medians = self::getMediansBySection($temps);
+
+        $counts = array_map('count', self::groupValuesBySection($temps));
+
         // Calculate cumulative counts to determine x-coordinates
         $cumulativeCounts = [];
         $total = $counts['preheat']; // Start with full preheat count
@@ -1043,34 +1045,34 @@ class InsStc
             $total += $counts[$section];
             $cumulativeCounts[$section] = $total;
         }
-    
+
         $i = 0;
         foreach ($zones as $zoneName => $zoneSections) {
             // Calculate index as the last log entry in the cumulative count
             $firstSection = $zoneSections[0];
             $index = $cumulativeCounts[$firstSection]; // subtract 1 to get correct zero-based index
-    
+
             // Get the 'taken_at' timestamp for this index
             $x = self::parseDate($logs[$index]['taken_at']);
-    
+
             // Calculate y as the middle of the y-zones
             $zoneIndex = array_search($zoneName, array_keys($zones));
             $y = $yzones[count($yzones) - $zoneIndex - 2];
-    
+
             // Calculate zone temperature range (min-max from both sections)
-            $sections = Self::groupValuesBySection($temps);
+            $sections = self::groupValuesBySection($temps);
             $zoneTempValues = [];
             foreach ($zoneSections as $section) {
-                if (isset($sections[$section]) && !empty($sections[$section])) {
+                if (isset($sections[$section]) && ! empty($sections[$section])) {
                     $zoneTempValues = array_merge($zoneTempValues, $sections[$section]);
                 }
             }
-            
-            if (!empty($zoneTempValues)) {
+
+            if (! empty($zoneTempValues)) {
                 $minTemp = min($zoneTempValues);
                 $maxTemp = max($zoneTempValues);
                 $range = $maxTemp - $minTemp;
-                
+
                 // Color coding based on temperature range quality
                 $backgroundColor = '#D64550'; // Default red
                 if ($range <= 5) {
@@ -1078,7 +1080,7 @@ class InsStc
                 } elseif ($range <= 10) {
                     $backgroundColor = '#F59E0B'; // Yellow for moderate ranges (≤10°C)
                 }
-                
+
                 $pointAnnotations[] = [
                     'x' => $x,
                     'y' => $y,
@@ -1088,7 +1090,7 @@ class InsStc
                     ],
                     'label' => [
                         'borderWidth' => 0,
-                        'text' => sprintf('%s: %d-%d°C', __('Z') . (++$i), $minTemp, $maxTemp),
+                        'text' => sprintf('%s: %d-%d°C', __('Z').(++$i), $minTemp, $maxTemp),
                         'style' => [
                             'background' => $backgroundColor,
                             'color' => '#ffffff',
@@ -1097,35 +1099,35 @@ class InsStc
                 ];
             }
         }
-    
+
         return $pointAnnotations;
     }
 
     private static function generateSectionAnnotations($yzones)
     {
         $pointAnnotations = [];
-    
+
         // Directly create annotations for sections
         $sections = ['section_1', 'section_2', 'section_3', 'section_4', 'section_5', 'section_6', 'section_7', 'section_8'];
-        
+
         foreach ($sections as $index => $section) {
             // Use the section name as x-coordinate
             $x = $section;
-    
+
             // Calculate y as the middle of the y-zones, starting from the end
             $y = $yzones[count($yzones) - $index - 1];
-    
+
             $pointAnnotations[] = [
                 'x' => $x,
                 'y' => $y,
                 'marker' => [
                     'size' => 4,
                     'strokeWidth' => 0,
-                    'fillColor' => '#D64550'
+                    'fillColor' => '#D64550',
                 ],
             ];
         }
-    
+
         return $pointAnnotations;
     }
 
@@ -1136,24 +1138,24 @@ class InsStc
 
     public static function medianTemp(array $data): float
     {
-        $temperatures = array_map(function($item) {
-            return is_numeric($item['temp']) ? (float)$item['temp'] : null;
+        $temperatures = array_map(function ($item) {
+            return is_numeric($item['temp']) ? (float) $item['temp'] : null;
         }, $data);
-    
-        $temperatures = array_filter($temperatures, function($temp) {
+
+        $temperatures = array_filter($temperatures, function ($temp) {
             return $temp !== null;
         });
-    
+
         $count = count($temperatures);
-    
+
         if ($count === 0) {
             return 0;
         }
-    
+
         sort($temperatures);
-    
+
         $middle = floor($count / 2);
-    
+
         if ($count % 2 === 0) {
             return ($temperatures[$middle - 1] + $temperatures[$middle]) / 2;
         } else {
@@ -1165,7 +1167,7 @@ class InsStc
     {
         $x = Carbon::parse($start_time);
         $y = Carbon::parse($end_time);
-    
+
         if ($mode === 'short') {
             return $x->diff($y)->forHumans([
                 'parts' => 1,
@@ -1173,7 +1175,7 @@ class InsStc
                 'short' => true,
             ]);
         }
-    
+
         // Default 'hm' mode (hours and minutes)
         return $x->diff($y)->forHumans([
             'parts' => 2,
@@ -1181,7 +1183,6 @@ class InsStc
             'short' => false,
         ]);
     }
-    
 
     public static function positionHuman(string $position): string
     {
@@ -1194,8 +1195,9 @@ class InsStc
                 $positionHuman = __('Bawah');
                 break;
         }
+
         return $positionHuman;
-    }    
+    }
 
     public static function getAdjustmentChartJsOptions(array $dSums): array
     {
@@ -1203,16 +1205,16 @@ class InsStc
         $lineData = [];
         foreach ($dSums as $dSum) {
             $line = $dSum['ins_stc_machine']['line'];
-            
-            if (!isset($lineData[$line])) {
+
+            if (! isset($lineData[$line])) {
                 $lineData[$line] = [
                     'auto' => 0,      // is_applied true & sv_used m_log
                     'semi_auto' => 0, // is_applied true & sv_used d_sum
-                    'none' => 0       // is_applied false
+                    'none' => 0,       // is_applied false
                 ];
             }
-            
-            if (!$dSum['is_applied']) {
+
+            if (! $dSum['is_applied']) {
                 $lineData[$line]['none']++;
             } else {
                 if ($dSum['sv_used'] === 'm_log') {
@@ -1222,14 +1224,14 @@ class InsStc
                 }
             }
         }
-        
+
         // Sort lines numerically
         ksort($lineData);
-    
+
         return [
             'type' => 'bar',
             'data' => [
-                'labels' => array_map(fn($line) => "Line $line", array_keys($lineData)),
+                'labels' => array_map(fn ($line) => "Line $line", array_keys($lineData)),
                 'datasets' => [
                     [
                         'label' => __('Auto'),
@@ -1245,8 +1247,8 @@ class InsStc
                         'label' => __('Manual'),
                         'data' => array_column($lineData, 'none'),
                         'backgroundColor' => 'rgba(255, 99, 132, 0.5)',
-                    ]
-                ]
+                    ],
+                ],
             ],
             'options' => [
                 'indexAxis' => 'y',
@@ -1263,7 +1265,7 @@ class InsStc
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Modus penyetelan berdasarkan Line')
+                        'text' => __('Modus penyetelan berdasarkan Line'),
                     ],
                 ],
 
@@ -1271,7 +1273,7 @@ class InsStc
         ];
     }
 
-    public static function getIntegrityChartJsOptions(array $dSums): array 
+    public static function getIntegrityChartJsOptions(array $dSums): array
     {
         // Define integrity label mapping
         $integrityLabels = [
@@ -1279,21 +1281,21 @@ class InsStc
             'modified' => __('SV berubah'),
             'none' => __('Tak ada pembanding'),
         ];
-        
+
         // Group by line and count integrity types
         $lineData = [];
         foreach ($dSums as $dSum) {
             $line = $dSum['ins_stc_machine']['line'];
-            
-            if (!isset($lineData[$line])) {
+
+            if (! isset($lineData[$line])) {
                 $lineData[$line] = [
                     'stable' => 0,
                     'modified' => 0,
                     'none' => 0,
-                    'unknown' => 0
+                    'unknown' => 0,
                 ];
             }
-            
+
             // Handle integrity value
             $integrity = $dSum['integrity'] ?? 'unknown';
             if (array_key_exists($integrity, $integrityLabels)) {
@@ -1302,15 +1304,15 @@ class InsStc
                 $lineData[$line]['unknown']++;
             }
         }
-        
+
         // Sort lines numerically
         ksort($lineData);
-        
+
         // Prepare data in ChartJS format
         return [
             'type' => 'bar',
             'data' => [
-                'labels' => array_map(fn($line) => "Line $line", array_keys($lineData)),
+                'labels' => array_map(fn ($line) => "Line $line", array_keys($lineData)),
                 'datasets' => [
                     [
                         'label' => $integrityLabels['stable'],
@@ -1331,8 +1333,8 @@ class InsStc
                         'label' => __('Tak diketahui'),
                         'data' => array_column($lineData, 'unknown'),
                         'backgroundColor' => 'rgba(201, 203, 207, 0.5)',
-                    ]
-                ]
+                    ],
+                ],
             ],
             'options' => [
                 'indexAxis' => 'y',
@@ -1344,16 +1346,16 @@ class InsStc
                     ],
                     'y' => [
                         'stacked' => true,
-                        'beginAtZero' => true
-                    ]
+                        'beginAtZero' => true,
+                    ],
                 ],
                 'plugins' => [
                     'title' => [
                         'display' => true,
-                        'text' => __('Integritas berdasarkan Line')
+                        'text' => __('Integritas berdasarkan Line'),
                     ],
-                ]
-            ]
+                ],
+            ],
         ];
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\InvItem;
+use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
 class InvItemPolicy
@@ -35,7 +35,7 @@ class InvItemPolicy
 
         return $auth
         ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk melihat barang ini'));
+        : Response::deny(__('Kamu tak memiliki wewenang untuk melihat barang ini'));
     }
 
     public function create(User $user): Response
@@ -47,6 +47,7 @@ class InvItemPolicy
             $authActions = json_decode($auth->actions, true);
             $actions = array_merge($actions, $authActions);
         }
+
         return in_array('item-manage', $actions)
             ? Response::allow()
             : Response::deny(__('Kamu tak memiliki wewenang untuk membuat barang'));
@@ -57,9 +58,10 @@ class InvItemPolicy
         $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();
 
         $actions = json_decode($auth->actions ?? '{}', true);
+
         return in_array('item-manage', $actions)
         ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk mengelola barang di area ini'));
+        : Response::deny(__('Kamu tak memiliki wewenang untuk mengelola barang di area ini'));
     }
 
     public function download(User $user, InvItem $invItem): Response
@@ -67,15 +69,17 @@ class InvItemPolicy
         $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();
 
         $actions = json_decode($auth->actions ?? '{}', true);
+
         return in_array('item-manage', $actions)
         ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk mengunduh barang di area ini'));
+        : Response::deny(__('Kamu tak memiliki wewenang untuk mengunduh barang di area ini'));
     }
 
     public function circEval(User $user, InvItem $invItem): bool
     {
         $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();
         $actions = json_decode($auth->actions ?? '{}', true);
+
         return in_array('circ-eval', $actions);
     }
 
@@ -83,11 +87,11 @@ class InvItemPolicy
     {
         $auth = $user->inv_auths->where('inv_area_id', $invItem->inv_area_id)->first();
         $actions = json_decode($auth->actions ?? '{}', true);
+
         return in_array('circ-create', $actions);
     }
 
-
-    public function before(User $user): bool|null
+    public function before(User $user): ?bool
     {
         return $user->id == 1 ? true : null;
     }

@@ -36,7 +36,7 @@ class LoginForm extends Form
             throw ValidationException::withMessages([
                 'form.emp_id' => trans('auth.failed'),
             ]);
-        } 
+        }
 
         RateLimiter::clear($this->throttleKey());
     }

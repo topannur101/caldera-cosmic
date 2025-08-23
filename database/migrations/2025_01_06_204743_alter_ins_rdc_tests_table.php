@@ -25,11 +25,11 @@ return new class extends Migration
             $table->decimal('tc50_high', 5, 2)->default(0);
             $table->decimal('tc90_low', 5, 2)->default(0);
             $table->decimal('tc90_high', 5, 2)->default(0);
-            
+
             $table->enum('type', ['-', 'slow', 'fast'])->default('-');
 
             $table->index('type');
-            
+
         });
     }
 
@@ -45,14 +45,14 @@ return new class extends Migration
             $table->decimal('tc10_max', 5, 2)->nullable();
             $table->decimal('tc90_min', 5, 2)->nullable();
             $table->decimal('tc90_max', 5, 2)->nullable();
-    
+
             // Drop newly added columns
             $table->dropColumn([
                 's_min_low', 's_min_high', 's_max_low', 's_max_high',
                 'tc10_low', 'tc10_high', 'tc50_low', 'tc50_high',
-                'tc90_low', 'tc90_high'
+                'tc90_low', 'tc90_high',
             ]);
-    
+
             // Drop the added 'type' column and its index
             $table->dropIndex(['type']); // Drop the index first
             $table->dropColumn('type');

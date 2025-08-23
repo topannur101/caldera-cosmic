@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class InsRdcAuth extends Model
 {
@@ -12,7 +12,7 @@ class InsRdcAuth extends Model
 
     protected $fillable = [
         'user_id',
-        'actions'
+        'actions',
     ];
 
     public function user(): BelongsTo
@@ -23,6 +23,7 @@ class InsRdcAuth extends Model
     public function countActions()
     {
         $actions = json_decode($this->actions ?? '{}', true);
+
         return count($actions);
     }
 }

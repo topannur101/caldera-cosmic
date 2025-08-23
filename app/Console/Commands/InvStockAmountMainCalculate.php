@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\InvStock;
+use Illuminate\Console\Command;
 
 class InvStockAmountMainCalculate extends Command
 {
@@ -32,7 +32,7 @@ class InvStockAmountMainCalculate extends Command
             $amount_main = 0;
             if ($inv_stock->qty > 0 && $inv_stock->unit_price > 0 && $inv_stock->inv_curr->rate > 0) {
                 $amount_main = abs(
-                    ($inv_stock->inv_curr_id === 1) 
+                    ($inv_stock->inv_curr_id === 1)
                     ? $inv_stock->qty * $inv_stock->unit_price
                     : $inv_stock->qty * $inv_stock->unit_price / $inv_stock->inv_curr->rate
                 );
@@ -40,7 +40,7 @@ class InvStockAmountMainCalculate extends Command
 
             $inv_stock->amount_main = $amount_main;
             $inv_stock->save();
-            $this->info('InvStock ' . $inv_stock->id . ' updated');
+            $this->info('InvStock '.$inv_stock->id.' updated');
         }
     }
 }

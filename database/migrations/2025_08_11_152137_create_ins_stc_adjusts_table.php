@@ -21,7 +21,7 @@ return new class extends Migration
             $table->boolean('adjustment_applied')->default(false); // Whether adjustment was actually sent to machine
             $table->string('adjustment_reason')->nullable(); // Reason for adjustment or failure
             $table->timestamps();
-            
+
             // Index for performance
             $table->index('ins_stc_d_sum_id');
             $table->index('created_at');

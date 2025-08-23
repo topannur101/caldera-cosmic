@@ -1,12 +1,12 @@
 <?php
 
+use App\InsStc;
+use App\Models\InsStcAdj;
+use App\Models\InsStcDSum;
+use App\Models\InsStcMLog;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\InsStcDSum;
-use App\Models\InsStcMLog;
-use App\Models\InsStcAdj;
-use App\InsStc;
 
 return new class extends Migration
 {
@@ -21,11 +21,11 @@ return new class extends Migration
 
             $table->integer('formula_id')->nullable();                          // 👍🏽
             $table->enum('sv_used', ['d_sum', 'm_log'])->nullable();   // 👍🏽 from submission
-            $table->boolean('is_applied')->default(false); 
+            $table->boolean('is_applied')->default(false);
             $table->json('target_values')->nullable();                          // 👍🏽
             $table->json('hb_values')->nullable();                              // 👍🏽
             $table->json('svp_values')->nullable();                             // 👍🏽
-            $table->enum('integrity', ['stable', 'modified', 'none'])->nullable();  // from submission treat d_sum and m_log differently     
+            $table->enum('integrity', ['stable', 'modified', 'none'])->nullable();  // from submission treat d_sum and m_log differently
         });
 
         $dSums = InsStcDSum::all();
@@ -34,14 +34,14 @@ return new class extends Migration
             $formula_id = 412;
             $dSum->formula_id = $formula_id;
 
-            $targets = [ 78, 73, 68, 63, 58, 53, 48, 43 ];
+            $targets = [78, 73, 68, 63, 58, 53, 48, 43];
             $dSum->target_values = json_encode($targets);
 
             $x = [];
             $z = [];
 
             $x = json_decode($dSum->sv_values, true);
-            foreach($x as $y) {
+            foreach ($x as $y) {
                 $z[] = (int) round($y, 0);
             }
             $dSum->sv_values = json_encode($z);
@@ -54,7 +54,7 @@ return new class extends Migration
                 (int) round($dSum->section_5, 0),
                 (int) round($dSum->section_6, 0),
                 (int) round($dSum->section_7, 0),
-                (int) round($dSum->section_8, 0)
+                (int) round($dSum->section_8, 0),
             ];
             $dSum->hb_values = json_encode($hb_values);
 
@@ -66,9 +66,9 @@ return new class extends Migration
                 ->where('ins_stc_machine_id', $dSum->ins_stc_machine_id)
                 ->where('position', $dSum->position)
                 ->where('created_at', '>=', $dSum->created_at->subHour())
-                ->orderBy('created_at', 'desc') 
+                ->orderBy('created_at', 'desc')
                 ->first();
-            
+
             $sv_values = [];
             if ($m_log) {
 
@@ -96,16 +96,16 @@ return new class extends Migration
                     $svp_values[$key] = $value['absolute'];
                 }
             }
-            
+
             if ($svp_values) {
                 $dSum->svp_values = json_encode($svp_values);
             }
 
-            $dSumBefore= InsStcDSum::where('created_at', '<', $dSum->created_at)
+            $dSumBefore = InsStcDSum::where('created_at', '<', $dSum->created_at)
                 ->where('ins_stc_machine_id', $dSum->ins_stc_machine_id)
                 ->where('position', $dSum->position)
                 ->where('created_at', '>=', $dSum->created_at->subHours(6))
-                ->orderBy('created_at', 'desc') 
+                ->orderBy('created_at', 'desc')
                 ->first();
 
             $adj = false;
@@ -127,21 +127,21 @@ return new class extends Migration
                 ];
             }
 
-            if (!$svpb) {
+            if (! $svpb) {
                 $svpb = json_decode($dSum->sv_values, true);
             }
 
             if ($svp_values && $svpb) {
                 // Assume the arrays are the same length for comparison
                 $isStable = true;
-            
+
                 foreach ($svp_values as $key => $value) {
-                    if (!isset($svpb[$key]) || abs($value - $svpb[$key]) > 2) {
+                    if (! isset($svpb[$key]) || abs($value - $svpb[$key]) > 2) {
                         $isStable = false;
                         break;
                     }
                 }
-            
+
                 if ($isStable) {
                     $dSum->integrity = 'stable';
                 } else {
@@ -159,18 +159,18 @@ return new class extends Migration
 
             $table->dropForeign(['user_2_id']);
             $table->dropColumn([
-                'user_2_id', 
-                'preheat', 
-                'postheat', 
-                'section_1', 
-                'section_2', 
-                'section_3', 
-                'section_4', 
-                'section_5', 
-                'section_6', 
-                'section_7', 
-                'section_8'
-            ]); 
+                'user_2_id',
+                'preheat',
+                'postheat',
+                'section_1',
+                'section_2',
+                'section_3',
+                'section_4',
+                'section_5',
+                'section_6',
+                'section_7',
+                'section_8',
+            ]);
 
             Schema::dropIfExists('ins_stc_adjs');
         });

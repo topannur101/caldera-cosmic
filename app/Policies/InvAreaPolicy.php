@@ -17,10 +17,10 @@ class InvAreaPolicy
 
     public function manage(User $user): Response
     {
-        return Response::deny( __('Kamu tak memiliki wewenang untuk membuat atau memperbarui area inventaris') );
+        return Response::deny(__('Kamu tak memiliki wewenang untuk membuat atau memperbarui area inventaris'));
     }
 
-    public function before(User $user): bool|null
+    public function before(User $user): ?bool
     {
         return $user->id == 1 ? true : null;
     }

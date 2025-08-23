@@ -2,8 +2,8 @@
 
 namespace App;
 
-use App\Models\InvStock;
 use App\Models\InvItem;
+use App\Models\InvStock;
 use Carbon\Carbon;
 
 class InvQuery
@@ -13,9 +13,9 @@ class InvQuery
     public function __construct(array $params = [])
     {
         $this->params = array_merge($this->getDefaults(), $this->validateParams($params));
-        
+
         // Require type parameter
-        if (!in_array($this->params['type'], ['stocks', 'items'])) {
+        if (! in_array($this->params['type'], ['stocks', 'items'])) {
             throw new \InvalidArgumentException("Type must be 'stocks' or 'items'");
         }
     }
@@ -23,11 +23,11 @@ class InvQuery
     public function build()
     {
         $type = $this->params['type'];
-        
+
         if ($type === 'stocks') {
             return $this->buildStocksQuery();
         }
-        
+
         return $this->buildItemsQuery();
     }
 
@@ -42,15 +42,15 @@ class InvQuery
     private function buildStocksQuery()
     {
         $query = InvStock::with([
-            'inv_item', 
+            'inv_item',
             'inv_curr',
-            'inv_item.inv_loc', 
-            'inv_item.inv_area', 
-            'inv_item.inv_tags'
+            'inv_item.inv_loc',
+            'inv_item.inv_area',
+            'inv_item.inv_tags',
         ])
-        ->whereHas('inv_item', function ($itemQuery) {
-            $this->applyFilters($itemQuery);
-        });
+            ->whereHas('inv_item', function ($itemQuery) {
+                $this->applyFilters($itemQuery);
+            });
 
         // Active inv_stocks only
         $query->where('is_active', true);
@@ -66,7 +66,7 @@ class InvQuery
             'inv_tags',
             'inv_stocks',
             'inv_stocks.inv_curr',
-            'inv_area'
+            'inv_area',
         ]);
 
         $this->applyFilters($query);
@@ -98,8 +98,8 @@ class InvQuery
         if ($isLinked && $q) {
             $query->where(function ($subQuery) use ($q) {
                 $subQuery->where('name', 'like', "%$q%")
-                         ->orWhere('code', 'like', "%$q%")
-                         ->orWhere('desc', 'like', "%$q%");
+                    ->orWhere('code', 'like', "%$q%")
+                    ->orWhere('desc', 'like', "%$q%");
             });
         } else {
             if ($name) {
@@ -119,7 +119,7 @@ class InvQuery
     private function applyAreaFilter($query)
     {
         $areaIds = $this->params['area_ids'];
-        if (!empty($areaIds)) {
+        if (! empty($areaIds)) {
             $query->whereIn('inv_area_id', $areaIds);
         }
     }
@@ -155,7 +155,7 @@ class InvQuery
                 // For items query, filter through inv_stocks relationship
                 $query->whereHas('inv_stocks', function ($stockQuery) use ($uom) {
                     $stockQuery->where('uom', 'like', "%$uom%")
-                              ->where('is_active', true);
+                        ->where('is_active', true);
                 });
             }
         }
@@ -209,7 +209,7 @@ class InvQuery
     {
         $aging = $this->params['aging'];
 
-        if (!$aging) {
+        if (! $aging) {
             return;
         }
 
@@ -223,7 +223,7 @@ class InvQuery
             case 'gt-100-days':
                 $query->where(function ($q) use ($sub_100_days) {
                     $q->where('last_withdrawal', '<', $sub_100_days)
-                      ->orWhereNull('last_withdrawal');
+                        ->orWhereNull('last_withdrawal');
                 });
                 break;
 
@@ -359,7 +359,7 @@ class InvQuery
                 $query->orderBy('name');
                 break;
 
-            // Items don't have qty/amt/wf directly, so we skip those
+                // Items don't have qty/amt/wf directly, so we skip those
         }
     }
 
@@ -389,11 +389,11 @@ class InvQuery
     private function validateParams(array $params)
     {
         // Ensure arrays are actually arrays
-        if (isset($params['tags']) && !is_array($params['tags'])) {
+        if (isset($params['tags']) && ! is_array($params['tags'])) {
             $params['tags'] = [];
         }
-        
-        if (isset($params['area_ids']) && !is_array($params['area_ids'])) {
+
+        if (isset($params['area_ids']) && ! is_array($params['area_ids'])) {
             $params['area_ids'] = [];
         }
 
@@ -403,10 +403,10 @@ class InvQuery
     /**
      * Create InvQuery from session parameters (for controller usage)
      */
-    public static function fromSessionParams(array $sessionParams = [], string $type = null)
+    public static function fromSessionParams(array $sessionParams = [], ?string $type = null)
     {
-        if (!$type) {
-            throw new \InvalidArgumentException("Type parameter is required");
+        if (! $type) {
+            throw new \InvalidArgumentException('Type parameter is required');
         }
 
         return new static([

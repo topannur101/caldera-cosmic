@@ -115,10 +115,10 @@ class InsStcRoutine extends Command
             $ref_source = ucfirst($reference_info['source']);
             $ref_timestamp = $reference_info['timestamp']->format('H:i:s');
             $ref_id = $reference_info['id'];
-            $reference_str = sprintf('Reference: %.1f°C (%s ID:%d @ %s)', 
-                $current_temp - $delta_temp, 
-                $ref_source, 
-                $ref_id, 
+            $reference_str = sprintf('Reference: %.1f°C (%s ID:%d @ %s)',
+                $current_temp - $delta_temp,
+                $ref_source,
+                $ref_id,
                 $ref_timestamp
             );
         } else {
@@ -371,16 +371,16 @@ class InsStcRoutine extends Command
 
     /**
      * Get the latest ambient temperature prioritizing d-sum within 8 hours, then linked adjustments
-     * 
-     * @param int $machine_id
-     * @param string $position
-     * @param int $hours_back How many hours back to look for d-sum (default: 8)
+     *
+     * @param  int  $machine_id
+     * @param  string  $position
+     * @param  int  $hours_back  How many hours back to look for d-sum (default: 8)
      * @return array|null Returns ['temp' => float, 'source' => string, 'timestamp' => Carbon] or null if not found
      */
     public function getLatestAmbientTemperature($machine_id, $position, $hours_back = 8)
     {
         $cutoff_time = Carbon::now()->subHours($hours_back);
-        
+
         if ($this->option('d')) {
             $this->line("→ Looking for d-sum within {$hours_back} hours for {$machine_id} {$position} since {$cutoff_time->format('H:i:s')}");
         }
@@ -393,10 +393,11 @@ class InsStcRoutine extends Command
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if (!$latest_d_sum) {
+        if (! $latest_d_sum) {
             if ($this->option('d')) {
                 $this->line("  → No d-sum found within {$hours_back} hour(s)");
             }
+
             return null;
         }
 
@@ -415,12 +416,12 @@ class InsStcRoutine extends Command
             if ($this->option('d')) {
                 $this->line("  → Using linked adjustment ID: {$linked_adjustment->id} temp: {$linked_adjustment->current_temp}°C");
             }
-            
+
             return [
                 'temp' => $linked_adjustment->current_temp,
                 'source' => 'adjustment',
                 'timestamp' => $linked_adjustment->created_at,
-                'id' => $linked_adjustment->id
+                'id' => $linked_adjustment->id,
             ];
         } else {
             // Use d-sum AT value
@@ -429,20 +430,20 @@ class InsStcRoutine extends Command
                 if ($this->option('d')) {
                     $this->line("  → Using d-sum AT value: {$at_values[1]}°C (no linked adjustments found)");
                 }
-                
+
                 return [
                     'temp' => (float) $at_values[1],
                     'source' => 'd_sum',
                     'timestamp' => $latest_d_sum->created_at,
-                    'id' => $latest_d_sum->id
+                    'id' => $latest_d_sum->id,
                 ];
             }
         }
 
         if ($this->option('d')) {
-            $this->line("  → D-sum found but no valid AT value");
+            $this->line('  → D-sum found but no valid AT value');
         }
-        
+
         return null;
     }
 
@@ -480,7 +481,7 @@ class InsStcRoutine extends Command
 
                 // Get latest ambient temperature reference (within 8 hours) - this fixes the n+1 problem
                 $latest_ambient = $this->getLatestAmbientTemperature($machine->id, $position, 8);
-                
+
                 if (! $latest_ambient) {
                     if ($this->option('d')) {
                         $this->line("No recent ambient temperature reference found for {$machine->line} {$position} (within 8 hours)");

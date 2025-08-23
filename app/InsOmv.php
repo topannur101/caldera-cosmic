@@ -8,10 +8,10 @@ class InsOmv
 {
     public static function getRunningTimeChartOptions($data)
     {
-        $lines = array_map(function($line) {
-            return "Line " . intval($line);
+        $lines = array_map(function ($line) {
+            return 'Line '.intval($line);
         }, array_keys($data->toArray()));
-        
+
         return [
             'series' => [
                 [
@@ -25,7 +25,7 @@ class InsOmv
                     'color' => '#80CC80',  // Darker shade of pastel green
                 ],
                 [
-                    'name' => __('Tepat waktu') . ' (' . __('manual') .')',
+                    'name' => __('Tepat waktu').' ('.__('manual').')',
                     'data' => $data->pluck('on_time_manual')->values(),
                     'color' => '#FFB366',  // Darker shade of pastel orange
                 ],
@@ -56,7 +56,7 @@ class InsOmv
                 'formatter' => null,
                 'background' => [
                     'enabled' => false,
-                ]
+                ],
             ],
             'plotOptions' => [
                 'bar' => [
@@ -68,21 +68,21 @@ class InsOmv
                             'style' => [
                                 'fontSize' => '13px',
                                 'fontWeight' => 900,
-                                'color' => session('bg') == 'dark' ? '#FFF' : null
+                                'color' => session('bg') == 'dark' ? '#FFF' : null,
                             ],
                         ],
                     ],
                 ],
             ],
             'stroke' => [
-                'width' => 0
+                'width' => 0,
             ],
             'theme' => [
                 'mode' => session('bg'),
             ],
             'tooltip' => [
-                'y'=> [
-                    'formatter' => null
+                'y' => [
+                    'formatter' => null,
                 ],
             ],
             'xaxis' => [
@@ -103,7 +103,7 @@ class InsOmv
                 'offsetX' => 40,
                 'markers' => [
                     'strokeWidth' => 0,
-                ]
+                ],
             ],
         ];
     }
@@ -121,10 +121,10 @@ class InsOmv
                 break;
         }
 
-        $groups = array_map(function($group) use ($groupByName) {
-            return $groupByName . " " . $group;
+        $groups = array_map(function ($group) use ($groupByName) {
+            return $groupByName.' '.$group;
         }, array_keys($data->toArray()));
-        
+
         return [
             'series' => [
                 [
@@ -138,7 +138,7 @@ class InsOmv
                     'color' => '#80CC80',  // Darker shade of pastel green
                 ],
                 [
-                    'name' => __('Tepat waktu') . ' (' . __('manual') .')',
+                    'name' => __('Tepat waktu').' ('.__('manual').')',
                     'data' => $data->pluck('on_time_manual')->values(),
                     'color' => '#FFB366',  // Darker shade of pastel orange
                 ],
@@ -170,7 +170,7 @@ class InsOmv
                 'formatter' => null,
                 'background' => [
                     'enabled' => false,
-                ]
+                ],
             ],
             'plotOptions' => [
                 'bar' => [
@@ -181,21 +181,21 @@ class InsOmv
                             'style' => [
                                 'fontSize' => '11px',
                                 'fontWeight' => 900,
-                                'color' => session('bg') == 'dark' ? '#FFF' : null
+                                'color' => session('bg') == 'dark' ? '#FFF' : null,
                             ],
                         ],
                     ],
                 ],
             ],
             'stroke' => [
-                'width' => 0
+                'width' => 0,
             ],
             'theme' => [
                 'mode' => session('bg'),
             ],
             'tooltip' => [
-                'y'=> [
-                    'formatter' => null
+                'y' => [
+                    'formatter' => null,
                 ],
             ],
             'xaxis' => [
@@ -216,17 +216,17 @@ class InsOmv
                 'offsetX' => 40,
                 'markers' => [
                     'strokeWidth' => 0,
-                ]
+                ],
             ],
         ];
     }
 
     public static function getBatchIdentityChartOptions($data)
     {
-        $groups = array_map(function($group) {
-            return __('Tim') . " " . $group;
+        $groups = array_map(function ($group) {
+            return __('Tim').' '.$group;
         }, array_keys($data->toArray()));
-        
+
         return [
             'series' => [
                 [
@@ -262,7 +262,7 @@ class InsOmv
                 'formatter' => null,
                 'background' => [
                     'enabled' => false,
-                ]
+                ],
             ],
             'plotOptions' => [
                 'bar' => [
@@ -273,21 +273,21 @@ class InsOmv
                             'style' => [
                                 'fontSize' => '11px',
                                 'fontWeight' => 900,
-                                'color' => session('bg') == 'dark' ? '#FFF' : null
+                                'color' => session('bg') == 'dark' ? '#FFF' : null,
                             ],
                         ],
                     ],
                 ],
             ],
             'stroke' => [
-                'width' => 0
+                'width' => 0,
             ],
             'theme' => [
                 'mode' => session('bg'),
             ],
             'tooltip' => [
-                'y'=> [
-                    'formatter' => null
+                'y' => [
+                    'formatter' => null,
                 ],
             ],
             'xaxis' => [
@@ -308,12 +308,12 @@ class InsOmv
                 'offsetX' => 40,
                 'markers' => [
                     'strokeWidth' => 0,
-                ]
+                ],
             ],
         ];
     }
 
-    public static function getChartOptions(array $amps, Carbon $start_at, array $step_durations, array $capture_points, int $height) 
+    public static function getChartOptions(array $amps, Carbon $start_at, array $step_durations, array $capture_points, int $height)
     {
         // Create a base datetime at 00:00:00
         $base_time = Carbon::today();
@@ -322,7 +322,7 @@ class InsOmv
             array_map(function ($amp) use ($base_time) {
                 // Add the seconds to 00:00:00
                 $taken_at = $base_time->copy()->addSeconds($amp['taken_at'])->timestamp * 1000;
-                
+
                 return [
                     'taken_at' => $taken_at,
                     'value' => $amp['value'],
@@ -330,11 +330,11 @@ class InsOmv
             }, $amps)
         );
         array_unshift($step_durations, 0);
-    
-        $x_annos = array_map(function($duration, $index) use ($base_time, $step_durations) {
+
+        $x_annos = array_map(function ($duration, $index) use ($base_time, $step_durations) {
             $timestamp = $base_time->copy()->addSeconds($duration)->timestamp * 1000;
             $isLast = $index === array_key_last($step_durations);
-            
+
             return [
                 'x' => $timestamp,
                 'borderColor' => $isLast ? '#FF0000' : '#008080',
@@ -344,16 +344,16 @@ class InsOmv
                         'background' => $isLast ? '#FF0000' : '#008080',
                         'color' => '#fff',
                     ],
-                    'text' => $isLast ? __('Standar') : __('Langkah') . ' ' . ($index + 1),
+                    'text' => $isLast ? __('Standar') : __('Langkah').' '.($index + 1),
                 ],
             ];
         }, $step_durations, array_keys($step_durations));
-    
+
         return [
             'chart' => [
                 'redrawOnParentResize' => true,
                 'background' => 'transparent',
-                'height' => $height .'%',
+                'height' => $height.'%',
                 'type' => 'line',
                 'toolbar' => [
                     'show' => true,
@@ -378,7 +378,7 @@ class InsOmv
             'series' => [
                 [
                     'name' => __('Arus listrik'),
-                    'data' => array_map(function($item) {
+                    'data' => array_map(function ($item) {
                         return ['x' => $item['taken_at'], 'y' => $item['value']];
                     }, $chart_data),
                     'color' => '#D64550',
@@ -397,7 +397,7 @@ class InsOmv
                         'day' => 'dd MMM',
                         'hour' => 'mm:ss',  // Changed to show minutes:seconds
                         'minute' => 'mm:ss', // Changed to show minutes:seconds
-                        'second' => 'mm:ss'  // Changed to show minutes:seconds
+                        'second' => 'mm:ss',  // Changed to show minutes:seconds
                     ],
                 ],
             ],
@@ -406,7 +406,7 @@ class InsOmv
                 'max' => 300,
                 'title' => [
                     'text' => __('Arus listrik'),
-                ]
+                ],
             ],
             'stroke' => [
                 'curve' => 'smooth',
@@ -417,10 +417,9 @@ class InsOmv
             ],
             'tooltip' => [
                 'x' => [
-                    'format' => 'mm:ss'
-                ]
-            ]
+                    'format' => 'mm:ss',
+                ],
+            ],
         ];
     }
-    
 }

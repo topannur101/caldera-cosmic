@@ -1,65 +1,63 @@
 <?php
 
-use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
 use App\Models\InvArea;
 use App\Models\InvItem;
 use App\Models\User;
-
+use Livewire\Attributes\Layout;
+use Livewire\Volt\Component;
 
 new #[Layout('layouts.app')]
 class extends Component
 {
-   public array $areas = [];
+    public array $areas = [];
 
-   public int $area_id = 0;
+    public int $area_id = 0;
 
-   public int $progress = 0;
+    public int $progress = 0;
 
-   public array $items = [];
+    public array $items = [];
 
-   public function mount()
-   {
-      $area_ids = [];
-      $user = User::find(Auth::user()->id);
+    public function mount()
+    {
+        $area_ids = [];
+        $user = User::find(Auth::user()->id);
 
-      // superuser uses id 1
-      if ($user->id === 1) {
-         $area_ids = InvArea::all()->pluck('id');
+        // superuser uses id 1
+        if ($user->id === 1) {
+            $area_ids = InvArea::all()->pluck('id');
 
-      } else {
-         $areas = $user->inv_areas;
+        } else {
+            $areas = $user->inv_areas;
 
-         foreach ($areas as $area) {
-            $item = new InvItem;
-            $item->inv_area_id = $area->id;
-            $response = Gate::inspect('download', $item);
+            foreach ($areas as $area) {
+                $item = new InvItem;
+                $item->inv_area_id = $area->id;
+                $response = Gate::inspect('download', $item);
 
-            if ($response->allowed()) {
-               $area_ids[] = $area->id;
+                if ($response->allowed()) {
+                    $area_ids[] = $area->id;
+                }
             }
-         }
-      }
+        }
 
-      $this->areas = InvArea::whereIn('id', $area_ids)->get()->toArray();
-   }
+        $this->areas = InvArea::whereIn('id', $area_ids)->get()->toArray();
+    }
 
-   public function begin()
-   {
-       while ($this->progress < 100) {
-           // Stream the current count to the browser...
-           $this->stream(  
-               to: 'progress',
-               content: $this->progress,
-               replace: true,
-           );
+    public function begin()
+    {
+        while ($this->progress < 100) {
+            // Stream the current count to the browser...
+            $this->stream(
+                to: 'progress',
+                content: $this->progress,
+                replace: true,
+            );
 
-           // Pause for 1 second between numbers...
-           usleep(5000);
-           $this->progress++;
-       };
-   }
-
+            // Pause for 1 second between numbers...
+            usleep(5000);
+            $this->progress++;
+        }
+    }
 };
 
 ?>

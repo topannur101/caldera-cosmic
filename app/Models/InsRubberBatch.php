@@ -18,7 +18,7 @@ class InsRubberBatch extends Model
         'color',
         'mcs',
         'rdc_queue',
-        'composition'
+        'composition',
     ];
 
     public function ins_omv_metric(): HasOne
@@ -40,6 +40,7 @@ class InsRubberBatch extends Model
     {
         $composition = json_decode($this->composition) ?? [];
         $value = $index < count($composition) ? $composition[$index] : 0;
+
         return (float) $value;
     }
 }

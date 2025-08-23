@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Validation\ValidationException;
 
 class InsCtcRecipe extends Model
@@ -31,7 +31,7 @@ class InsCtcRecipe extends Model
 
     protected $appends = [
         'std_mid', // Add computed attribute to JSON output
-        'target_thickness'
+        'target_thickness',
     ];
 
     /**
@@ -115,11 +115,11 @@ class InsCtcRecipe extends Model
     {
         $target = $this->target_thickness;
         $tolerance = $this->tolerance;
-        
+
         // Calculate deviation from target as percentage of tolerance
         $deviation = abs($thickness - $target);
         $deviation_percentage = $tolerance > 0 ? ($deviation / ($tolerance / 2)) * 100 : 0;
-        
+
         if ($deviation_percentage <= 25) {
             return 'Excellent';
         } elseif ($deviation_percentage <= 50) {
@@ -143,8 +143,8 @@ class InsCtcRecipe extends Model
         }
 
         $target = $this->target_thickness;
-        $errors = array_map(fn($measurement) => abs($measurement - $target), $measurements);
-        
+        $errors = array_map(fn ($measurement) => abs($measurement - $target), $measurements);
+
         return round(array_sum($errors) / count($errors), 2);
     }
 
@@ -189,27 +189,27 @@ class InsCtcRecipe extends Model
         $avg_mae = $metrics->avg('t_mae');
         $avg_ssd = $metrics->avg('t_ssd');
         $avg_balance = abs($metrics->avg('t_balance'));
-        
+
         $tolerance = $this->tolerance;
-        
+
         // Quality score calculation (0-100)
         $quality_score = 100;
-        
+
         // Penalize high MAE relative to tolerance
         if ($avg_mae > ($tolerance * 0.1)) {
             $quality_score -= (($avg_mae - ($tolerance * 0.1)) / $tolerance) * 30;
         }
-        
+
         // Penalize high SSD relative to tolerance
         if ($avg_ssd > ($tolerance * 0.05)) {
             $quality_score -= (($avg_ssd - ($tolerance * 0.05)) / $tolerance) * 40;
         }
-        
+
         // Penalize imbalance
         if ($avg_balance > ($tolerance * 0.1)) {
             $quality_score -= (($avg_balance - ($tolerance * 0.1)) / $tolerance) * 30;
         }
-        
+
         return round(max(0, min(100, $quality_score)), 1);
     }
 
@@ -220,7 +220,7 @@ class InsCtcRecipe extends Model
     {
         return InsCtcMachine::whereHas('ins_ctc_metrics', function ($query) {
             $query->where('ins_ctc_recipe_id', $this->id)
-                  ->where('created_at', '>=', now()->subHours(1));
+                ->where('created_at', '>=', now()->subHours(1));
         });
     }
 
@@ -268,14 +268,14 @@ class InsCtcRecipe extends Model
             // Ensure std_min <= std_max
             if ($recipe->std_min > $recipe->std_max) {
                 throw ValidationException::withMessages([
-                    'std_max' => 'Standard maximum must be greater than or equal to standard minimum.'
+                    'std_max' => 'Standard maximum must be greater than or equal to standard minimum.',
                 ]);
             }
 
             // Ensure pfc_min <= pfc_max
             if ($recipe->pfc_min > $recipe->pfc_max) {
                 throw ValidationException::withMessages([
-                    'pfc_max' => 'PFC maximum must be greater than or equal to PFC minimum.'
+                    'pfc_max' => 'PFC maximum must be greater than or equal to PFC minimum.',
                 ]);
             }
         });
@@ -288,11 +288,11 @@ class InsCtcRecipe extends Model
     {
         return $query->where(function ($q) use ($min, $max) {
             $q->whereBetween('std_min', [$min, $max])
-              ->orWhereBetween('std_max', [$min, $max])
-              ->orWhere(function ($qq) use ($min, $max) {
-                  $qq->where('std_min', '<=', $min)
-                     ->where('std_max', '>=', $max);
-              });
+                ->orWhereBetween('std_max', [$min, $max])
+                ->orWhere(function ($qq) use ($min, $max) {
+                    $qq->where('std_min', '<=', $min)
+                        ->where('std_max', '>=', $max);
+                });
         });
     }
 
@@ -313,5 +313,4 @@ class InsCtcRecipe extends Model
             $subQuery->where('created_at', '>=', now()->subDays($days));
         });
     }
-
 }

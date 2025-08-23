@@ -13,5 +13,4 @@ class InsLdcQuota extends Model
         'machine',
         'value',
     ];
-
 }

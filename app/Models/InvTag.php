@@ -10,7 +10,7 @@ class InvTag extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name'
+        'name',
     ];
 
     public function inv_items()

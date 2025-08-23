@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('ins_omv_metrics', function (Blueprint $table) {
             $table->enum('eval', ['too_soon', 'on_time', 'too_late', 'on_time_manual'])
-                  ->change();
+                ->change();
         });
 
         Schema::table('ins_rubber_batches', function (Blueprint $table) {
@@ -28,7 +28,7 @@ return new class extends Migration
     {
         Schema::table('ins_omv_metrics', function (Blueprint $table) {
             $table->enum('eval', ['too_soon', 'on_time', 'too_late'])
-                  ->change();
+                ->change();
         });
         Schema::table('ins_rubber_batches', function (Blueprint $table) {
             $table->enum('omv_eval', ['too_soon', 'on_time', 'too_late'])->nullable()->change();

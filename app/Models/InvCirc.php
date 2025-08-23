@@ -22,14 +22,13 @@ class InvCirc extends Model
         'remarks',
         'is_delegated',
         'created_at',
-        'updated_at'
+        'updated_at',
     ];
 
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i',
         'updated_at' => 'datetime:Y-m-d H:i',
     ];
-
 
     public function getCreatedAtAttribute($value)
     {
@@ -40,7 +39,6 @@ class InvCirc extends Model
     {
         return \Carbon\Carbon::parse($value)->setTimezone('Asia/Jakarta');
     }
-
 
     public function type_color(): string
     {
@@ -56,6 +54,7 @@ class InvCirc extends Model
                 $color = 'text-red-500';
                 break;
         }
+
         return $color;
     }
 
@@ -73,6 +72,7 @@ class InvCirc extends Model
                 $text = __('Ambil');
                 break;
         }
+
         return $text;
     }
 
@@ -90,6 +90,7 @@ class InvCirc extends Model
                 $icon = 'icon-minus';
                 break;
         }
+
         return $icon;
     }
 
@@ -122,6 +123,7 @@ class InvCirc extends Model
                 $icon = 'icon-thumbs-down text-red-500 opacity-50';
                 break;
         }
+
         return $icon;
     }
 
@@ -139,17 +141,18 @@ class InvCirc extends Model
                 $eval = __('Ditolak');
                 break;
         }
+
         return $eval;
     }
-    
+
     public function inv_curr()
     {
         return $this->hasOneThrough(
-            InvCurr::class, 
-            InvStock::class, 
-            'id',   
-            'id', 
-            'inv_stock_id', 
+            InvCurr::class,
+            InvStock::class,
+            'id',
+            'id',
+            'inv_stock_id',
             'inv_curr_id'
         );
     }
@@ -157,11 +160,11 @@ class InvCirc extends Model
     public function inv_item()
     {
         return $this->hasOneThrough(
-            InvItem::class, 
-            InvStock::class, 
-            'id',   
-            'id', 
-            'inv_stock_id', 
+            InvItem::class,
+            InvStock::class,
+            'id',
+            'id',
+            'inv_stock_id',
             'inv_item_id'
         );
     }

@@ -23,7 +23,7 @@ return new class extends Migration
     {
         Schema::table('ins_omv_metrics', function (Blueprint $table) {
             $table->dropForeign(['ins_rubber_batch_id']);
-            $table->dropColumn('ins_rubber_batch_id');        
+            $table->dropColumn('ins_rubber_batch_id');
         });
     }
 };

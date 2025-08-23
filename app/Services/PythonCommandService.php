@@ -4,14 +4,16 @@ namespace App\Services;
 
 use Exception;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class PythonCommandService
 {
     private string $baseUrl;
+
     private int $timeout;
+
     private int $cacheTime;
 
     public function __construct()
@@ -29,13 +31,14 @@ class PythonCommandService
         try {
             $response = Http::timeout($this->timeout)
                 ->get("{$this->baseUrl}/api/health");
-            
+
             return $response->successful() && $response->json('success', false);
         } catch (Exception $e) {
             Log::warning('Python Command Manager API unavailable', [
                 'error' => $e->getMessage(),
-                'url' => $this->baseUrl
+                'url' => $this->baseUrl,
             ]);
+
             return false;
         }
     }
@@ -46,7 +49,7 @@ class PythonCommandService
     public function getCommands(): array
     {
         $cacheKey = 'python_commands_list';
-        
+
         return Cache::remember($cacheKey, $this->cacheTime, function () {
             try {
                 $response = Http::timeout($this->timeout)
@@ -54,20 +57,22 @@ class PythonCommandService
 
                 if ($response->successful()) {
                     $data = $response->json();
+
                     return $data['success'] ? $data['data'] : [];
                 }
 
                 Log::error('Failed to fetch commands from Python API', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'body' => $response->body(),
                 ]);
 
                 return [];
             } catch (RequestException $e) {
                 Log::error('Python Command API request failed', [
                     'error' => $e->getMessage(),
-                    'url' => "{$this->baseUrl}/api/commands"
+                    'url' => "{$this->baseUrl}/api/commands",
                 ]);
+
                 return [];
             }
         });
@@ -90,35 +95,35 @@ class PythonCommandService
             if ($response->successful() && $data['success']) {
                 Log::info('Command started successfully', [
                     'command_id' => $commandId,
-                    'message' => $data['message'] ?? 'Command started'
+                    'message' => $data['message'] ?? 'Command started',
                 ]);
 
                 return [
                     'success' => true,
-                    'message' => $data['message'] ?? 'Command started successfully'
+                    'message' => $data['message'] ?? 'Command started successfully',
                 ];
             }
 
             Log::warning('Failed to start command', [
                 'command_id' => $commandId,
                 'status' => $response->status(),
-                'error' => $data['error'] ?? 'Unknown error'
+                'error' => $data['error'] ?? 'Unknown error',
             ]);
 
             return [
                 'success' => false,
-                'message' => $data['error'] ?? 'Failed to start command'
+                'message' => $data['error'] ?? 'Failed to start command',
             ];
 
         } catch (RequestException $e) {
             Log::error('Failed to start command via API', [
                 'command_id' => $commandId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'API communication error: ' . $e->getMessage()
+                'message' => 'API communication error: '.$e->getMessage(),
             ];
         }
     }
@@ -140,35 +145,35 @@ class PythonCommandService
             if ($response->successful() && $data['success']) {
                 Log::info('Command stopped successfully', [
                     'command_id' => $commandId,
-                    'message' => $data['message'] ?? 'Command stopped'
+                    'message' => $data['message'] ?? 'Command stopped',
                 ]);
 
                 return [
                     'success' => true,
-                    'message' => $data['message'] ?? 'Command stopped successfully'
+                    'message' => $data['message'] ?? 'Command stopped successfully',
                 ];
             }
 
             Log::warning('Failed to stop command', [
                 'command_id' => $commandId,
                 'status' => $response->status(),
-                'error' => $data['error'] ?? 'Unknown error'
+                'error' => $data['error'] ?? 'Unknown error',
             ]);
 
             return [
                 'success' => false,
-                'message' => $data['error'] ?? 'Failed to stop command'
+                'message' => $data['error'] ?? 'Failed to stop command',
             ];
 
         } catch (RequestException $e) {
             Log::error('Failed to stop command via API', [
                 'command_id' => $commandId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'API communication error: ' . $e->getMessage()
+                'message' => 'API communication error: '.$e->getMessage(),
             ];
         }
     }
@@ -184,6 +189,7 @@ class PythonCommandService
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return $data['success'] ? $data['data'] : [];
             }
 
@@ -192,8 +198,9 @@ class PythonCommandService
         } catch (RequestException $e) {
             Log::warning('Failed to get command status', [
                 'command_id' => $commandId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -206,11 +213,12 @@ class PythonCommandService
         try {
             $response = Http::timeout($this->timeout)
                 ->get("{$this->baseUrl}/api/commands/{$commandId}/logs", [
-                    'lines' => $lines
+                    'lines' => $lines,
                 ]);
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return $data['success'] ? $data['data']['logs'] : [];
             }
 
@@ -219,8 +227,9 @@ class PythonCommandService
         } catch (RequestException $e) {
             Log::warning('Failed to get command logs', [
                 'command_id' => $commandId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -231,7 +240,7 @@ class PythonCommandService
     public function getCommand(string $commandId): ?array
     {
         $commands = $this->getCommands();
-        
+
         foreach ($commands as $command) {
             if ($command['id'] === $commandId) {
                 return $command;
@@ -247,7 +256,7 @@ class PythonCommandService
     public function getRunningCommands(): array
     {
         $commands = $this->getCommands();
-        
+
         return array_filter($commands, function ($command) {
             return $command['status'] === 'running';
         });
@@ -259,7 +268,7 @@ class PythonCommandService
     public function getEnabledCommands(): array
     {
         $commands = $this->getCommands();
-        
+
         return array_filter($commands, function ($command) {
             return $command['enabled'] === true;
         });
@@ -284,24 +293,25 @@ class PythonCommandService
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return [
                     'available' => $data['success'] ?? false,
                     'message' => $data['message'] ?? 'Unknown status',
-                    'version' => $data['version'] ?? 'Unknown'
+                    'version' => $data['version'] ?? 'Unknown',
                 ];
             }
 
             return [
                 'available' => false,
                 'message' => 'API not responding',
-                'version' => null
+                'version' => null,
             ];
 
         } catch (RequestException $e) {
             return [
                 'available' => false,
-                'message' => 'Connection failed: ' . $e->getMessage(),
-                'version' => null
+                'message' => 'Connection failed: '.$e->getMessage(),
+                'version' => null,
             ];
         }
     }
@@ -312,7 +322,7 @@ class PythonCommandService
     public function startMultipleCommands(array $commandIds): array
     {
         $results = [];
-        
+
         foreach ($commandIds as $commandId) {
             $results[$commandId] = $this->startCommand($commandId);
         }
@@ -326,7 +336,7 @@ class PythonCommandService
     public function stopMultipleCommands(array $commandIds): array
     {
         $results = [];
-        
+
         foreach ($commandIds as $commandId) {
             $results[$commandId] = $this->stopCommand($commandId);
         }
@@ -340,11 +350,11 @@ class PythonCommandService
     public function getSummary(): array
     {
         $commands = $this->getCommands();
-        
+
         $total = count($commands);
-        $running = count(array_filter($commands, fn($cmd) => $cmd['status'] === 'running'));
-        $stopped = count(array_filter($commands, fn($cmd) => $cmd['status'] === 'stopped'));
-        $enabled = count(array_filter($commands, fn($cmd) => $cmd['enabled'] === true));
+        $running = count(array_filter($commands, fn ($cmd) => $cmd['status'] === 'running'));
+        $stopped = count(array_filter($commands, fn ($cmd) => $cmd['status'] === 'stopped'));
+        $enabled = count(array_filter($commands, fn ($cmd) => $cmd['enabled'] === true));
 
         return [
             'total' => $total,
@@ -352,7 +362,7 @@ class PythonCommandService
             'stopped' => $stopped,
             'enabled' => $enabled,
             'disabled' => $total - $enabled,
-            'api_available' => $this->isAvailable()
+            'api_available' => $this->isAvailable(),
         ];
     }
 }

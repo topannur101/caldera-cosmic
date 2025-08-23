@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class InvItem extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'last_withdrawal',
         'last_deposit',
@@ -18,7 +19,7 @@ class InvItem extends Model
         'is_active',
         'inv_loc_id',
         'inv_area_id',
-        'legacy_id'
+        'legacy_id',
     ];
 
     public function inv_loc()
@@ -39,21 +40,21 @@ class InvItem extends Model
     public function tags_facade(): string
     {
         $tags = $this->inv_tags;
-    
+
         if ($tags->isEmpty()) {
             return ''; // or return '';
         }
-    
+
         $tagNames = $tags->pluck('name');
-    
+
         if ($tagNames->count() <= 3) {
             return $tagNames->implode(', ');
         }
-    
+
         $firstThreeTags = $tagNames->take(3)->implode(', ');
         $additionalCount = $tagNames->count() - 3;
-    
-        return $firstThreeTags . ' +' . $additionalCount;
+
+        return $firstThreeTags.' +'.$additionalCount;
     }
 
     public function inv_stocks()
@@ -66,5 +67,4 @@ class InvItem extends Model
         return $this->hasMany(ComItem::class, 'model_id')
             ->where('model_name', 'InvItem');
     }
-
 }

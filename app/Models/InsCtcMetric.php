@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InsCtcMetric extends Model
@@ -27,7 +27,7 @@ class InsCtcMetric extends Model
         't_mae',
         't_ssd',
         't_avg',
-        'data'
+        'data',
     ];
 
     protected $casts = [
@@ -44,7 +44,7 @@ class InsCtcMetric extends Model
         't_avg_left' => 'decimal:2',
         't_avg_right' => 'decimal:2',
         't_avg' => 'decimal:2',
-        't_balance' => 'decimal:2'
+        't_balance' => 'decimal:2',
     ];
 
     /**
@@ -85,14 +85,14 @@ class InsCtcMetric extends Model
      */
     public function getDurationAttribute(): string
     {
-        if (!$this->data || !is_array($this->data) || count($this->data) < 2) {
+        if (! $this->data || ! is_array($this->data) || count($this->data) < 2) {
             return '00:00:00';
         }
 
         $firstTimestamp = $this->data[0][0] ?? null;
         $lastTimestamp = $this->data[count($this->data) - 1][0] ?? null;
 
-        if (!$firstTimestamp || !$lastTimestamp) {
+        if (! $firstTimestamp || ! $lastTimestamp) {
             return '00:00:00';
         }
 
@@ -100,10 +100,10 @@ class InsCtcMetric extends Model
             $start = new \DateTime($firstTimestamp);
             $end = new \DateTime($lastTimestamp);
             $interval = $start->diff($end);
-            
-            return sprintf('%02d:%02d:%02d', 
-                $interval->h, 
-                $interval->i, 
+
+            return sprintf('%02d:%02d:%02d',
+                $interval->h,
+                $interval->i,
                 $interval->s
             );
         } catch (\Exception $e) {
@@ -116,13 +116,13 @@ class InsCtcMetric extends Model
      */
     public function getStartedAtAttribute(): string
     {
-        if (!$this->data || !is_array($this->data) || count($this->data) === 0) {
+        if (! $this->data || ! is_array($this->data) || count($this->data) === 0) {
             return 'N/A';
         }
 
         $firstTimestamp = $this->data[0][0] ?? null;
-        
-        if (!$firstTimestamp) {
+
+        if (! $firstTimestamp) {
             return 'N/A';
         }
 
@@ -138,7 +138,7 @@ class InsCtcMetric extends Model
      */
     public function getFormattedCorrectionUptimeAttribute(): string
     {
-        return $this->correction_uptime . '%';
+        return $this->correction_uptime.'%';
     }
 
     /**
@@ -146,7 +146,7 @@ class InsCtcMetric extends Model
      */
     public function getFormattedCorrectionRateAttribute(): string
     {
-        return $this->correction_rate . '%';
+        return $this->correction_rate.'%';
     }
 
     /**
@@ -156,27 +156,27 @@ class InsCtcMetric extends Model
     {
         $bal = $this->t_balance;
         $absBAL = abs($bal);
-        
+
         if ($absBAL <= 0.3) {
             return [
                 'status' => 'seimbang',
                 'color' => 'text-green-600',
                 'icon_color' => 'text-green-500',
-                'is_good' => true
+                'is_good' => true,
             ];
         } elseif ($bal > 1) {
             return [
                 'status' => 'jomplang kiri',
                 'color' => 'text-red-600',
                 'icon_color' => 'text-red-500',
-                'is_good' => false
+                'is_good' => false,
             ];
         } else {
             return [
                 'status' => 'jomplang kanan',
                 'color' => 'text-red-600',
                 'icon_color' => 'text-red-500',
-                'is_good' => false
+                'is_good' => false,
             ];
         }
     }
@@ -187,20 +187,20 @@ class InsCtcMetric extends Model
     public function getMaeEvaluationAttribute(): array
     {
         $mae = $this->t_mae;
-        
+
         if ($mae <= 0.3) {
             return [
                 'status' => 'sesuai standar',
                 'color' => 'text-green-600',
                 'icon_color' => 'text-green-500',
-                'is_good' => true
+                'is_good' => true,
             ];
         } else {
             return [
                 'status' => 'di luar standar',
                 'color' => 'text-red-600',
                 'icon_color' => 'text-red-500',
-                'is_good' => false
+                'is_good' => false,
             ];
         }
     }
@@ -211,20 +211,20 @@ class InsCtcMetric extends Model
     public function getSsdEvaluationAttribute(): array
     {
         $ssd = $this->t_ssd;
-        
+
         if ($ssd <= 0.3) {
             return [
                 'status' => 'tebal konsisten',
                 'color' => 'text-green-600',
                 'icon_color' => 'text-green-500',
-                'is_good' => true
+                'is_good' => true,
             ];
         } else {
             return [
                 'status' => 'tebal fluktuatif',
                 'color' => 'text-red-600',
                 'icon_color' => 'text-red-500',
-                'is_good' => false
+                'is_good' => false,
             ];
         }
     }
@@ -235,20 +235,20 @@ class InsCtcMetric extends Model
     public function getCorrectionEvaluationAttribute(): array
     {
         $cu = $this->correction_uptime;
-        
+
         if ($cu > 40) {
             return [
                 'status' => 'auto',
                 'color' => 'text-green-600',
                 'icon_color' => 'text-green-500',
-                'is_good' => true
+                'is_good' => true,
             ];
         } else {
             return [
                 'status' => 'manual',
                 'color' => 'text-red-600',
                 'icon_color' => 'text-red-500',
-                'is_good' => false
+                'is_good' => false,
             ];
         }
     }
@@ -262,7 +262,7 @@ class InsCtcMetric extends Model
             'avg' => $this->avg_evaluation,
             'mae' => $this->mae_evaluation,
             'ssd' => $this->ssd_evaluation,
-            'correction' => $this->correction_evaluation
+            'correction' => $this->correction_evaluation,
         ];
     }
 
@@ -274,20 +274,20 @@ class InsCtcMetric extends Model
         $evaluations = $this->all_evaluations;
         $goodCount = 0;
         $totalCount = count($evaluations);
-        
+
         foreach ($evaluations as $eval) {
             if ($eval['is_good']) {
                 $goodCount++;
             }
         }
-        
+
         $percentage = round(($goodCount / $totalCount) * 100);
-        
+
         return [
             'good_count' => $goodCount,
             'total_count' => $totalCount,
             'percentage' => $percentage,
-            'grade' => $this->getGradeFromPercentage($percentage)
+            'grade' => $this->getGradeFromPercentage($percentage),
         ];
     }
 
@@ -296,10 +296,19 @@ class InsCtcMetric extends Model
      */
     private function getGradeFromPercentage(int $percentage): string
     {
-        if ($percentage >= 90) return 'A';
-        if ($percentage >= 80) return 'B';
-        if ($percentage >= 70) return 'C';
-        if ($percentage >= 60) return 'D';
+        if ($percentage >= 90) {
+            return 'A';
+        }
+        if ($percentage >= 80) {
+            return 'B';
+        }
+        if ($percentage >= 70) {
+            return 'C';
+        }
+        if ($percentage >= 60) {
+            return 'D';
+        }
+
         return 'F';
     }
 }

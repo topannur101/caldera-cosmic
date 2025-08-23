@@ -9,6 +9,6 @@ class InsClmRecord extends Model
     protected $fillable = [
         'location',
         'temperature',
-        'humidity'
+        'humidity',
     ];
 }

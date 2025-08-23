@@ -13,6 +13,6 @@ class LatihanSiswa extends Model
         'nama',         // text
         'umur',         // nomor
         'jk',           // enum
-        'kelas_id',     // foreignId   
+        'kelas_id',     // foreignId
     ];
 }

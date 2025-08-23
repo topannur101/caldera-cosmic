@@ -9,6 +9,7 @@ use Illuminate\View\Component;
 class InvAreaSelector extends Component
 {
     public array $areas;
+
     /**
      * Create a new component instance.
      */

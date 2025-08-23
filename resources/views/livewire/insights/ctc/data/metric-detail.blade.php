@@ -6,53 +6,52 @@ use App\Models\InsCtcMetric;
 use Carbon\Carbon;
 
 new class extends Component {
-    
     public int $id = 0;
     public bool $header = true;
     public array $batch = [
-        'id' => 0,
-        'rubber_batch_code' => '',
-        'machine_line' => '',
-        'mcs' => '',
-    
+        "id" => 0,
+        "rubber_batch_code" => "",
+        "machine_line" => "",
+        "mcs" => "",
+
         // Recipe information
-        'recipe_id' => 0,
-        'recipe_name' => '',
-        'recipe_target' => 0,
-        'recipe_std_min' => 0,
-        'recipe_std_max' => 0,
-        'recipe_scale' => 0,
-    
+        "recipe_id" => 0,
+        "recipe_name" => "",
+        "recipe_target" => 0,
+        "recipe_std_min" => 0,
+        "recipe_std_max" => 0,
+        "recipe_scale" => 0,
+
         // Performance metrics
-        't_avg_left' => 0,
-        't_avg_right' => 0,
-        't_avg' => 0,
-        't_mae_left' => 0,
-        't_mae_right' => 0,
-        't_mae' => 0,
-        't_ssd_left' => 0,
-        't_ssd_right' => 0,
-        't_ssd' => 0,
-        't_balance' => 0,
-    
+        "t_avg_left" => 0,
+        "t_avg_right" => 0,
+        "t_avg" => 0,
+        "t_mae_left" => 0,
+        "t_mae_right" => 0,
+        "t_mae" => 0,
+        "t_ssd_left" => 0,
+        "t_ssd_right" => 0,
+        "t_ssd" => 0,
+        "t_balance" => 0,
+
         // Correction metrics
-        'correction_uptime' => 0,
-        'correction_rate' => 0,
-    
+        "correction_uptime" => 0,
+        "correction_rate" => 0,
+
         // Quality
-        'quality_status' => 'fail',
-    
+        "quality_status" => "fail",
+
         // Timing and data
-        'data' => '',
-        'started_at' => '',
-        'ended_at' => '',
-        'duration' => '',
-        'shift' => '',
-    
+        "data" => "",
+        "started_at" => "",
+        "ended_at" => "",
+        "duration" => "",
+        "shift" => "",
+
         // Correction counts
-        'corrections_left' => 0,
-        'corrections_right' => 0,
-        'corrections_total' => 0,
+        "corrections_left" => 0,
+        "corrections_right" => 0,
+        "corrections_total" => 0,
     ];
 
     public $metric = null;
@@ -62,60 +61,60 @@ new class extends Component {
         if ($this->id) {
             $this->loadMetric($this->id);
             $this->header = false;
-        } 
+        }
     }
 
-    #[On('metric-detail-load')]
+    #[On("metric-detail-load")]
     public function loadMetric($id)
     {
         $this->id = $id;
-        $this->metric = InsCtcMetric::with(['ins_ctc_machine', 'ins_ctc_recipe', 'ins_rubber_batch'])->find($id);
+        $this->metric = InsCtcMetric::with(["ins_ctc_machine", "ins_ctc_recipe", "ins_rubber_batch"])->find($id);
 
         if ($this->metric) {
             $this->batch = [
-                'id' => $this->metric->id,
-                'rubber_batch_code' => $this->metric->ins_rubber_batch->code ?? 'N/A',
-                'machine_line' => $this->metric->ins_ctc_machine->line ?? 'N/A',
-                'mcs' => $this->metric->ins_rubber_batch->mcs ?? 'N/A',
-                
+                "id" => $this->metric->id,
+                "rubber_batch_code" => $this->metric->ins_rubber_batch->code ?? "N/A",
+                "machine_line" => $this->metric->ins_ctc_machine->line ?? "N/A",
+                "mcs" => $this->metric->ins_rubber_batch->mcs ?? "N/A",
+
                 // Recipe information
-                'recipe_id' => $this->metric->ins_ctc_recipe->id ?? 'N/A',
-                'recipe_name' => $this->metric->ins_ctc_recipe->name ?? 'N/A',
-                'recipe_target' => $this->metric->ins_ctc_recipe->std_mid ?? 0,
-                'recipe_std_min' => $this->metric->ins_ctc_recipe->std_min ?? 0,
-                'recipe_std_max' => $this->metric->ins_ctc_recipe->std_max ?? 0,
-                'recipe_scale' => $this->metric->ins_ctc_recipe->scale ?? 0,
-                
+                "recipe_id" => $this->metric->ins_ctc_recipe->id ?? "N/A",
+                "recipe_name" => $this->metric->ins_ctc_recipe->name ?? "N/A",
+                "recipe_target" => $this->metric->ins_ctc_recipe->std_mid ?? 0,
+                "recipe_std_min" => $this->metric->ins_ctc_recipe->std_min ?? 0,
+                "recipe_std_max" => $this->metric->ins_ctc_recipe->std_max ?? 0,
+                "recipe_scale" => $this->metric->ins_ctc_recipe->scale ?? 0,
+
                 // Performance metrics
-                't_avg_left' => $this->metric->t_avg_left,
-                't_avg_right' => $this->metric->t_avg_right,
-                't_avg' => $this->metric->t_avg,
-                't_mae_left' => $this->metric->t_mae_left,
-                't_mae_right' => $this->metric->t_mae_right,
-                't_mae' => $this->metric->t_mae,
-                't_ssd_left' => $this->metric->t_ssd_left,
-                't_ssd_right' => $this->metric->t_ssd_right,
-                't_ssd' => $this->metric->t_ssd,
-                't_balance' => $this->metric->t_balance,
-                
+                "t_avg_left" => $this->metric->t_avg_left,
+                "t_avg_right" => $this->metric->t_avg_right,
+                "t_avg" => $this->metric->t_avg,
+                "t_mae_left" => $this->metric->t_mae_left,
+                "t_mae_right" => $this->metric->t_mae_right,
+                "t_mae" => $this->metric->t_mae,
+                "t_ssd_left" => $this->metric->t_ssd_left,
+                "t_ssd_right" => $this->metric->t_ssd_right,
+                "t_ssd" => $this->metric->t_ssd,
+                "t_balance" => $this->metric->t_balance,
+
                 // Correction metrics
-                'correction_uptime' => $this->metric->correction_uptime,
-                'correction_rate' => $this->metric->correction_rate,
-                
+                "correction_uptime" => $this->metric->correction_uptime,
+                "correction_rate" => $this->metric->correction_rate,
+
                 // Quality
-                'quality_status' => $this->metric->t_mae <= 1.0 ? 'pass' : 'fail',
-                
+                "quality_status" => $this->metric->t_mae <= 1.0 ? "pass" : "fail",
+
                 // Timing and data
-                'data' => $this->metric->data,
-                'started_at' => $this->getStartedAt($this->metric->data),
-                'ended_at' => $this->getEndedAt($this->metric->data),
-                'duration' => $this->calculateDuration($this->metric->data),
-                'shift' => $this->determineShift($this->metric->data),
-                
+                "data" => $this->metric->data,
+                "started_at" => $this->getStartedAt($this->metric->data),
+                "ended_at" => $this->getEndedAt($this->metric->data),
+                "duration" => $this->calculateDuration($this->metric->data),
+                "shift" => $this->determineShift($this->metric->data),
+
                 // Correction counts
-                'corrections_left' => $this->countCorrections($this->metric->data, 'left'),
-                'corrections_right' => $this->countCorrections($this->metric->data, 'right'),
-                'corrections_total' => $this->countCorrections($this->metric->data, 'total'),
+                "corrections_left" => $this->countCorrections($this->metric->data, "left"),
+                "corrections_right" => $this->countCorrections($this->metric->data, "right"),
+                "corrections_total" => $this->countCorrections($this->metric->data, "total"),
             ];
 
             $this->generateChart();
@@ -126,101 +125,97 @@ new class extends Component {
 
     private function getStartedAt($data): string
     {
-        if (!$data || !is_array($data) || count($data) === 0) {
-            return 'N/A';
+        if (! $data || ! is_array($data) || count($data) === 0) {
+            return "N/A";
         }
 
         $firstTimestamp = $data[0][0] ?? null;
-        
-        if (!$firstTimestamp) {
-            return 'N/A';
+
+        if (! $firstTimestamp) {
+            return "N/A";
         }
 
         try {
-            return Carbon::parse($firstTimestamp)->format('H:i:s');
+            return Carbon::parse($firstTimestamp)->format("H:i:s");
         } catch (Exception $e) {
-            return 'N/A';
+            return "N/A";
         }
     }
 
     private function getEndedAt($data): string
     {
-        if (!$data || !is_array($data) || count($data) === 0) {
-            return 'N/A';
+        if (! $data || ! is_array($data) || count($data) === 0) {
+            return "N/A";
         }
 
         $lastTimestamp = $data[count($data) - 1][0] ?? null;
-        
-        if (!$lastTimestamp) {
-            return 'N/A';
+
+        if (! $lastTimestamp) {
+            return "N/A";
         }
 
         try {
-            return Carbon::parse($lastTimestamp)->format('H:i:s');
+            return Carbon::parse($lastTimestamp)->format("H:i:s");
         } catch (Exception $e) {
-            return 'N/A';
+            return "N/A";
         }
     }
 
     private function calculateDuration($data): string
     {
-        if (!$data || !is_array($data) || count($data) < 2) {
-            return '00:00:00';
+        if (! $data || ! is_array($data) || count($data) < 2) {
+            return "00:00:00";
         }
 
         $firstTimestamp = $data[0][0] ?? null;
         $lastTimestamp = $data[count($data) - 1][0] ?? null;
 
-        if (!$firstTimestamp || !$lastTimestamp) {
-            return '00:00:00';
+        if (! $firstTimestamp || ! $lastTimestamp) {
+            return "00:00:00";
         }
 
         try {
             $start = Carbon::parse($firstTimestamp);
             $end = Carbon::parse($lastTimestamp);
             $interval = $start->diff($end);
-            
-            return sprintf('%02d:%02d:%02d', 
-                $interval->h, 
-                $interval->i, 
-                $interval->s
-            );
+
+            return sprintf("%02d:%02d:%02d", $interval->h, $interval->i, $interval->s);
         } catch (Exception $e) {
-            return '00:00:00';
+            return "00:00:00";
         }
     }
 
     private function determineShift($data): string
     {
-        if (!$data || !is_array($data) || count($data) === 0) {
-            return 'N/A';
+        if (! $data || ! is_array($data) || count($data) === 0) {
+            return "N/A";
         }
 
         $firstTimestamp = $data[0][0] ?? null;
-        
-        if (!$firstTimestamp) {
-            return 'N/A';
+
+        if (! $firstTimestamp) {
+            return "N/A";
         }
 
         try {
-            $hour = Carbon::parse($firstTimestamp)->format('H');
+            $hour = Carbon::parse($firstTimestamp)->format("H");
             $hour = (int) $hour;
-            
+
             if ($hour >= 6 && $hour < 14) {
-                return '1';
+                return "1";
             } elseif ($hour >= 14 && $hour < 22) {
-                return '2';
+                return "2";
             } else {
-                return '3';
+                return "3";
             }
         } catch (Exception $e) {
-            return 'N/A';
+            return "N/A";
         }
     }
 
-    private function countCorrections($data, $type = 'total'): int
+    private function countCorrections($data, $type = "total"): int
     {
-        if (!$data || !is_array($data)) {
+        if (! $data || ! is_array($data)) {
             return 0;
         }
 
@@ -232,20 +227,22 @@ new class extends Component {
             $actionLeft = $point[2] ?? 0;
             $actionRight = $point[3] ?? 0;
 
-            if ($actionLeft == 1 || $actionLeft == 2) { // 1=thin, 2=thick
+            if ($actionLeft == 1 || $actionLeft == 2) {
+                // 1=thin, 2=thick
                 $leftCount++;
             }
-            if ($actionRight == 1 || $actionRight == 2) { // 1=thin, 2=thick
+            if ($actionRight == 1 || $actionRight == 2) {
+                // 1=thin, 2=thick
                 $rightCount++;
             }
         }
 
         switch ($type) {
-            case 'left':
+            case "left":
                 return $leftCount;
-            case 'right':
+            case "right":
                 return $rightCount;
-            case 'total':
+            case "total":
             default:
                 return $leftCount + $rightCount;
         }
@@ -253,17 +250,22 @@ new class extends Component {
 
     private function generateChart(): void
     {
-        if (empty($this->batch['data'])) {
+        if (empty($this->batch["data"])) {
             return;
         }
 
         // Prepare data for Chart.js
-        $chartData = $this->prepareChartData($this->batch['data']);
+        $chartData = $this->prepareChartData($this->batch["data"]);
         $chartOptions = $this->getChartOptions();
 
-        $this->js("
-            const chartData = " . json_encode($chartData) . ";
-            const chartOptions = " . json_encode($chartOptions) . ";
+        $this->js(
+            "
+            const chartData = " .
+                json_encode($chartData) .
+                ";
+            const chartOptions = " .
+                json_encode($chartOptions) .
+                ";
 
             // Configure time formatting with callback for en-US locale
             chartOptions.scales.x.ticks = {
@@ -276,7 +278,7 @@ new class extends Component {
                     });
                 }
             };
-            
+
             // Add tooltip configuration
             chartOptions.plugins.tooltip = {
                 callbacks: {
@@ -316,13 +318,14 @@ new class extends Component {
             const canvas = document.createElement('canvas');
             canvas.id = 'batch-chart';
             chartContainer.appendChild(canvas);
-            
+
             const chart = new Chart(canvas, {
                 type: 'line',
                 data: chartData,
                 options: chartOptions
             });
-        ");
+        ",
+        );
     }
 
     private function prepareChartData($data): array
@@ -340,7 +343,7 @@ new class extends Component {
             $actionRight = $point[3] ?? 0;
             $sensorLeft = $point[4] ?? 0;
             $sensorRight = $point[5] ?? 0;
-            
+
             // New std values from positions 7, 8, 9
             $stdMin = $point[7] ?? null;
             $stdMax = $point[8] ?? null;
@@ -348,181 +351,181 @@ new class extends Component {
 
             if ($timestamp && ($sensorLeft > 0 || $sensorRight > 0)) {
                 $parsedTime = Carbon::parse($timestamp);
-                
+
                 $chartData[] = [
-                    'x' => $parsedTime,
-                    'y' => $sensorLeft,
-                    'side' => 'left',
-                    'action' => $actionLeft
+                    "x" => $parsedTime,
+                    "y" => $sensorLeft,
+                    "side" => "left",
+                    "action" => $actionLeft,
                 ];
                 $chartData[] = [
-                    'x' => $parsedTime,
-                    'y' => $sensorRight,
-                    'side' => 'right',
-                    'action' => $actionRight
+                    "x" => $parsedTime,
+                    "y" => $sensorRight,
+                    "side" => "right",
+                    "action" => $actionRight,
                 ];
 
                 // Add std data only if values exist
                 if ($stdMin !== null) {
                     $stdMinData[] = [
-                        'x' => $parsedTime,
-                        'y' => $stdMin
+                        "x" => $parsedTime,
+                        "y" => $stdMin,
                     ];
                 }
                 if ($stdMax !== null) {
                     $stdMaxData[] = [
-                        'x' => $parsedTime,
-                        'y' => $stdMax
+                        "x" => $parsedTime,
+                        "y" => $stdMax,
                     ];
                 }
                 if ($stdMid !== null) {
                     $stdMidData[] = [
-                        'x' => $parsedTime,
-                        'y' => $stdMid
+                        "x" => $parsedTime,
+                        "y" => $stdMid,
                     ];
                 }
             }
         }
 
         // Separate left and right data
-        $leftData = array_filter($chartData, fn($item) => $item['side'] === 'left');
-        $rightData = array_filter($chartData, fn($item) => $item['side'] === 'right');
+        $leftData = array_filter($chartData, fn ($item) => $item["side"] === "left");
+        $rightData = array_filter($chartData, fn ($item) => $item["side"] === "right");
 
         // Build datasets array starting with original sensor data
         $datasets = [
             [
-                'label' => 'Sensor Kiri',
-                'data' => array_values($leftData),
-                'borderColor' => '#3B82F6',
-                'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                'tension' => 0.1,
-                'pointRadius' => 2,
-                'pointHoverRadius' => 3,
-                'borderWidth' => 1,
+                "label" => "Sensor Kiri",
+                "data" => array_values($leftData),
+                "borderColor" => "#3B82F6",
+                "backgroundColor" => "rgba(59, 130, 246, 0.1)",
+                "tension" => 0.1,
+                "pointRadius" => 2,
+                "pointHoverRadius" => 3,
+                "borderWidth" => 1,
             ],
             [
-                'label' => 'Sensor Kanan',
-                'data' => array_values($rightData),
-                'borderColor' => '#EF4444',
-                'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
-                'tension' => 0.1,
-                'pointRadius' => 2,
-                'pointHoverRadius' => 3,
-                'borderWidth' => 1,
-            ]
+                "label" => "Sensor Kanan",
+                "data" => array_values($rightData),
+                "borderColor" => "#EF4444",
+                "backgroundColor" => "rgba(239, 68, 68, 0.1)",
+                "tension" => 0.1,
+                "pointRadius" => 2,
+                "pointHoverRadius" => 3,
+                "borderWidth" => 1,
+            ],
         ];
 
         // Add std datasets only if we have data
-        if (!empty($stdMinData)) {
+        if (! empty($stdMinData)) {
             $datasets[] = [
-                'label' => 'Std Min',
-                'data' => $stdMinData,
-                'borderColor' => '#9CA3AF',
-                'backgroundColor' => 'transparent',
-                'tension' => 0.1,
-                'pointRadius' => 0,
-                'pointHoverRadius' => 2,
-                'borderWidth' => 1,
+                "label" => "Std Min",
+                "data" => $stdMinData,
+                "borderColor" => "#9CA3AF",
+                "backgroundColor" => "transparent",
+                "tension" => 0.1,
+                "pointRadius" => 0,
+                "pointHoverRadius" => 2,
+                "borderWidth" => 1,
             ];
         }
 
-        if (!empty($stdMaxData)) {
+        if (! empty($stdMaxData)) {
             $datasets[] = [
-                'label' => 'Std Max',
-                'data' => $stdMaxData,
-                'borderColor' => '#9CA3AF',
-                'backgroundColor' => 'transparent',
-                'tension' => 0.1,
-                'pointRadius' => 0,
-                'pointHoverRadius' => 2,
-                'borderWidth' => 1,
+                "label" => "Std Max",
+                "data" => $stdMaxData,
+                "borderColor" => "#9CA3AF",
+                "backgroundColor" => "transparent",
+                "tension" => 0.1,
+                "pointRadius" => 0,
+                "pointHoverRadius" => 2,
+                "borderWidth" => 1,
             ];
         }
 
-        if (!empty($stdMidData)) {
+        if (! empty($stdMidData)) {
             $datasets[] = [
-                'label' => 'Std Mid',
-                'data' => $stdMidData,
-                'borderColor' => '#9CA3AF',
-                'backgroundColor' => 'transparent',
-                'tension' => 0.1,
-                'pointRadius' => 0,
-                'pointHoverRadius' => 2,
-                'borderWidth' => 1,
-                'borderDash' => [5, 5], // Dashed line
+                "label" => "Std Mid",
+                "data" => $stdMidData,
+                "borderColor" => "#9CA3AF",
+                "backgroundColor" => "transparent",
+                "tension" => 0.1,
+                "pointRadius" => 0,
+                "pointHoverRadius" => 2,
+                "borderWidth" => 1,
+                "borderDash" => [5, 5], // Dashed line
             ];
         }
 
         return [
-            'datasets' => $datasets
+            "datasets" => $datasets,
         ];
     }
 
     private function getChartOptions(): array
     {
         return [
-            'responsive' => true,
-            'maintainAspectRatio' => false,
-            'scales' => [
-                'x' => [
-                    'type' => 'time',
-                    'title' => [
-                        'display' => true,
-                        'text' => 'Waktu'
-                    ]
-                ],
-                'y' => [
-                    'title' => [
-                        'display' => true,
-                        'text' => 'Ketebalan (mm)'
+            "responsive" => true,
+            "maintainAspectRatio" => false,
+            "scales" => [
+                "x" => [
+                    "type" => "time",
+                    "title" => [
+                        "display" => true,
+                        "text" => "Waktu",
                     ],
-                    'min' => 0,
-                    'max' => 6
-                ]
+                ],
+                "y" => [
+                    "title" => [
+                        "display" => true,
+                        "text" => "Ketebalan (mm)",
+                    ],
+                    "min" => 0,
+                    "max" => 6,
+                ],
             ],
-            'plugins' => [
-                'datalabels' => [
-                    'display' => true,
-                    'anchor' => 'end',
-                    'align' => 'top'
+            "plugins" => [
+                "datalabels" => [
+                    "display" => true,
+                    "anchor" => "end",
+                    "align" => "top",
                 ],
-                'legend' => [
-                    'display' => true,
-                    'position' => 'top'
+                "legend" => [
+                    "display" => true,
+                    "position" => "top",
                 ],
-                'zoom' => [
-                    'zoom' => [
-                        'wheel' => [
-                            'enabled' => true,
+                "zoom" => [
+                    "zoom" => [
+                        "wheel" => [
+                            "enabled" => true,
                         ],
-                        'pinch' => [
-                            'enabled' => true
+                        "pinch" => [
+                            "enabled" => true,
                         ],
-                        'mode' => 'xy', // or 'y', 'xy'
+                        "mode" => "xy", // or 'y', 'xy'
                     ],
-                    'pan' => [
-                        'enabled' => true,
-                        'mode' => 'xy', // or 'y', 'xy'
-                    ]
-                ]
-            ]
+                    "pan" => [
+                        "enabled" => true,
+                        "mode" => "xy", // or 'y', 'xy'
+                    ],
+                ],
+            ],
         ];
     }
 
     private function handleNotFound(): void
     {
-        $this->js('toast("' . __('Data metrik tidak ditemukan') . '", { type: "danger" })');
-        $this->dispatch('updated');
+        $this->js('toast("' . __("Data metrik tidak ditemukan") . '", { type: "danger" })');
+        $this->dispatch("updated");
     }
 };
 
 ?>
 
-<div class="p-6">    
-    @if($header)
+<div class="p-6">
+    @if ($header)
         <div class="flex justify-between items-start mb-6">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Rincian Batch') }}
+                {{ __("Rincian Batch") }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
@@ -532,83 +535,85 @@ new class extends Component {
         <!-- Left Side: Chart + Data Table (2 columns) -->
         <div class="col-span-2 space-y-6">
             <!-- Chart Container -->
-            <div class="h-80 overflow-hidden"
-                id="batch-chart-container" wire:key="batch-chart-container" wire:ignore>
-            </div>
+            <div class="h-80 overflow-hidden" id="batch-chart-container" wire:key="batch-chart-container" wire:ignore></div>
 
             <!-- Performance Data Table -->
             <table class="table table-xs text-sm text-center mt-6">
                 <tr class="text-xs uppercase text-neutral-500 dark:text-neutral-400 border-b border-neutral-300 dark:border-neutral-700">
                     <td></td>
-                    <td>{{ __('Ki') }}</td>
-                    <td>{{ __('Ka') }}</td>
+                    <td>{{ __("Ki") }}</td>
+                    <td>{{ __("Ka") }}</td>
                     <td></td>
-                    <td>{{ __('Evaluasi') }}</td>
+                    <td>{{ __("Evaluasi") }}</td>
                 </tr>
                 <!-- AVG Evaluation Row -->
                 <tr>
-                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('AVG') }}</td>
-                    <td>{{ number_format($batch['t_avg_left'], 2) }}</td>
-                    <td>{{ number_format($batch['t_avg_right'], 2) }}</td>
-                    <td>{{ number_format($batch['t_avg'], 2) }}</td>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __("AVG") }}</td>
+                    <td>{{ number_format($batch["t_avg_left"], 2) }}</td>
+                    <td>{{ number_format($batch["t_avg_right"], 2) }}</td>
+                    <td>{{ number_format($batch["t_avg"], 2) }}</td>
                     <td>
                         @php
                             $avgEval = $metric?->avg_evaluation;
                         @endphp
+
                         <div class="flex items-center gap-2">
-                            <i class="{{ ($avgEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
-                            <span class="{{ $avgEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($avgEval['status'] ?? '') }}</span>
+                            <i class="{{ $avgEval["is_good"] ?? false ? "icon-circle-check text-green-500" : "icon-circle-x text-red-500" }}"></i>
+                            <span class="{{ $avgEval["color"] ?? "" }} text-xs font-medium">{{ ucfirst($avgEval["status"] ?? "") }}</span>
                         </div>
                     </td>
                 </tr>
 
                 <!-- MAE Evaluation Row -->
                 <tr>
-                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('MAE') }}</td>
-                    <td>{{ number_format($batch['t_mae_left'], 2) }}</td>
-                    <td>{{ number_format($batch['t_mae_right'], 2) }}</td>
-                    <td>{{ number_format($batch['t_mae'], 2) }}</td>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __("MAE") }}</td>
+                    <td>{{ number_format($batch["t_mae_left"], 2) }}</td>
+                    <td>{{ number_format($batch["t_mae_right"], 2) }}</td>
+                    <td>{{ number_format($batch["t_mae"], 2) }}</td>
                     <td>
                         @php
                             $maeEval = $metric?->mae_evaluation;
                         @endphp
+
                         <div class="flex items-center gap-2">
-                            <i class="{{ ($maeEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
-                            <span class="{{ $maeEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($maeEval['status'] ?? '') }}</span>
+                            <i class="{{ $maeEval["is_good"] ?? false ? "icon-circle-check text-green-500" : "icon-circle-x text-red-500" }}"></i>
+                            <span class="{{ $maeEval["color"] ?? "" }} text-xs font-medium">{{ ucfirst($maeEval["status"] ?? "") }}</span>
                         </div>
                     </td>
                 </tr>
 
                 <!-- SSD Evaluation Row -->
                 <tr>
-                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('SSD') }}</td>
-                    <td>{{ number_format($batch['t_ssd_left'], 2) }}</td>
-                    <td>{{ number_format($batch['t_ssd_right'], 2) }}</td>
-                    <td>{{ number_format($batch['t_ssd'], 2) }}</td>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __("SSD") }}</td>
+                    <td>{{ number_format($batch["t_ssd_left"], 2) }}</td>
+                    <td>{{ number_format($batch["t_ssd_right"], 2) }}</td>
+                    <td>{{ number_format($batch["t_ssd"], 2) }}</td>
                     <td>
                         @php
                             $ssdEval = $metric?->ssd_evaluation;
                         @endphp
+
                         <div class="flex items-center gap-2">
-                            <i class="{{ ($ssdEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
-                            <span class="{{ $ssdEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($ssdEval['status'] ?? '') }}</span>
+                            <i class="{{ $ssdEval["is_good"] ?? false ? "icon-circle-check text-green-500" : "icon-circle-x text-red-500" }}"></i>
+                            <span class="{{ $ssdEval["color"] ?? "" }} text-xs font-medium">{{ ucfirst($ssdEval["status"] ?? "") }}</span>
                         </div>
                     </td>
                 </tr>
 
                 <!-- Correction Evaluation Row -->
                 <tr>
-                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __('Koreksi') }}</td>
-                    <td>{{ $batch['corrections_left'] }}</td>
-                    <td>{{ $batch['corrections_right'] }}</td>
-                    <td>{{ $batch['corrections_total'] }}</td>
+                    <td class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{{ __("Koreksi") }}</td>
+                    <td>{{ $batch["corrections_left"] }}</td>
+                    <td>{{ $batch["corrections_right"] }}</td>
+                    <td>{{ $batch["corrections_total"] }}</td>
                     <td>
                         @php
                             $correctionEval = $metric?->correction_evaluation;
                         @endphp
+
                         <div class="flex items-center gap-2">
-                            <i class="{{ ($correctionEval['is_good'] ?? false) ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }}"></i>
-                            <span class="{{ $correctionEval['color'] ?? '' }} text-xs font-medium">{{ ucfirst($correctionEval['status'] ?? '') }}</span>
+                            <i class="{{ $correctionEval["is_good"] ?? false ? "icon-circle-check text-green-500" : "icon-circle-x text-red-500" }}"></i>
+                            <span class="{{ $correctionEval["color"] ?? "" }} text-xs font-medium">{{ ucfirst($correctionEval["status"] ?? "") }}</span>
                         </div>
                     </td>
                 </tr>
@@ -619,58 +624,58 @@ new class extends Component {
         <div class="space-y-6">
             <!-- Batch Information -->
             <div>
-                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Informasi Batch') }}</div>
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __("Informasi Batch") }}</div>
                 <div class="space-y-2 text-sm">
                     <div>
-                        <span class="text-neutral-500">{{ __('Batch:') }}</span>
-                        <span class="font-medium">{{ $batch['rubber_batch_code'] }}</span>
+                        <span class="text-neutral-500">{{ __("Batch:") }}</span>
+                        <span class="font-medium">{{ $batch["rubber_batch_code"] }}</span>
                     </div>
                     <div>
-                        <span class="text-neutral-500">{{ __('MCS:') }}</span>
-                        <span class="font-medium">{{ $batch['mcs'] }}</span>
+                        <span class="text-neutral-500">{{ __("MCS:") }}</span>
+                        <span class="font-medium">{{ $batch["mcs"] }}</span>
                     </div>
                     <div>
-                        <span class="text-neutral-500">{{ __('Line:') }}</span>
-                        <span class="font-medium">{{ $batch['machine_line'] }}</span>
+                        <span class="text-neutral-500">{{ __("Line:") }}</span>
+                        <span class="font-medium">{{ $batch["machine_line"] }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Timing Information -->
             <div>
-                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Waktu Proses') }}</div>
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __("Waktu Proses") }}</div>
                 <div class="space-y-2 text-sm">
                     <div>
-                        <span class="text-neutral-500">{{ __('Mulai:') }}</span>
-                        <span class="font-mono">{{ $batch['started_at'] }}</span>
+                        <span class="text-neutral-500">{{ __("Mulai:") }}</span>
+                        <span class="font-mono">{{ $batch["started_at"] }}</span>
                     </div>
                     <div>
-                        <span class="text-neutral-500">{{ __('Selesai:') }}</span>
-                        <span class="font-mono">{{ $batch['ended_at'] }}</span>
+                        <span class="text-neutral-500">{{ __("Selesai:") }}</span>
+                        <span class="font-mono">{{ $batch["ended_at"] }}</span>
                     </div>
                     <div>
-                        <span class="text-neutral-500">{{ __('Durasi:') }}</span>
-                        <span class="font-mono">{{ $batch['duration'] }}</span>
+                        <span class="text-neutral-500">{{ __("Durasi:") }}</span>
+                        <span class="font-mono">{{ $batch["duration"] }}</span>
                     </div>
                     <div>
-                        <span class="text-neutral-500">{{ __('Shift:') }}</span>
-                        <span class="font-medium">{{ $batch['shift'] }}</span>
+                        <span class="text-neutral-500">{{ __("Shift:") }}</span>
+                        <span class="font-medium">{{ $batch["shift"] }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Correction & Quality -->
             <div>
-                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Koreksi') }}</div>
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __("Koreksi") }}</div>
                 <div class="space-y-2 text-sm">
                     <div class="flex gap-x-3">
                         <div>
                             <span class="text-neutral-500">CU:</span>
-                            <span class="font-mono">{{ $batch['correction_uptime'] }}%</span>
+                            <span class="font-mono">{{ $batch["correction_uptime"] }}%</span>
                         </div>
                         <div>
                             <span class="text-neutral-500">CR:</span>
-                            <span class="font-mono">{{ $batch['correction_rate'] }}%</span>
+                            <span class="font-mono">{{ $batch["correction_rate"] }}%</span>
                         </div>
                     </div>
                 </div>
@@ -678,15 +683,15 @@ new class extends Component {
 
             <!-- Recipe Information -->
             <div>
-                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __('Resep') }}</div>
+                <div class="text-neutral-500 dark:text-neutral-400 text-xs uppercase mb-2">{{ __("Resep") }}</div>
                 <div class="space-y-2 text-sm">
                     <div>
-                        <span class="text-neutral-500">{{ __('ID:') }}</span>
-                        <span class="font-medium">{{ $batch['recipe_id'] }}</span>
+                        <span class="text-neutral-500">{{ __("ID:") }}</span>
+                        <span class="font-medium">{{ $batch["recipe_id"] }}</span>
                     </div>
                     <div>
-                        <span class="text-neutral-500">{{ __('Nama:') }}</span>
-                        <span class="font-medium">{{ $batch['recipe_name'] }}</span>
+                        <span class="text-neutral-500">{{ __("Nama:") }}</span>
+                        <span class="font-medium">{{ $batch["recipe_name"] }}</span>
                     </div>
                 </div>
             </div>

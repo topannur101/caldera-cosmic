@@ -8,7 +8,6 @@ use Illuminate\View\Component;
 
 class DateSelector extends Component
 {
-    
     // what properties are needed?
     /**
      * Create a new component instance.

@@ -26,7 +26,7 @@ return new class extends Migration
             if (Schema::hasColumn('ins_rdc_machines', 'type')) {
                 $table->dropColumn('type');
             }
-            
+
             if (Schema::hasColumn('ins_rdc_machines', 'is_active')) {
                 $table->dropColumn('is_active');
             }

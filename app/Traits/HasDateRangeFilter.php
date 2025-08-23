@@ -6,7 +6,6 @@ use Carbon\Carbon;
 
 trait HasDateRangeFilter
 {
-
     public function setToday()
     {
         $this->start_at = Carbon::now()->startOfDay()->format('Y-m-d');
@@ -63,4 +62,3 @@ trait HasDateRangeFilter
         $this->dispatch('update');
     }
 }
-

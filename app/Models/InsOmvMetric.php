@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InsOmvMetric extends Model
@@ -24,7 +24,7 @@ class InsOmvMetric extends Model
         'end_at',
         'ins_rubber_batch_id',
         'data',
-        'kwh_usage'
+        'kwh_usage',
     ];
 
     protected $casts = [
@@ -44,7 +44,7 @@ class InsOmvMetric extends Model
 
     public function ins_omv_captures(): HasMany
     {
-        return $this->hasMany(InsOmvCapture::class)->orderBy('taken_at', 'asc');;
+        return $this->hasMany(InsOmvCapture::class)->orderBy('taken_at', 'asc');
     }
 
     public function capturesCount()
@@ -66,7 +66,7 @@ class InsOmvMetric extends Model
     {
         $start = Carbon::parse($this->start_at);
         $end = Carbon::parse($this->end_at);
-        
+
         return $start->diffInSeconds($end);
     }
 
@@ -75,8 +75,8 @@ class InsOmvMetric extends Model
         $duration_seconds = $this->durationSeconds();
         $minutes = floor($duration_seconds / 60);
         $seconds = $duration_seconds % 60;
-        
-        return sprintf("%02d:%02d", $minutes, $seconds);
+
+        return sprintf('%02d:%02d', $minutes, $seconds);
     }
 
     public function evalHuman()
@@ -86,7 +86,7 @@ class InsOmvMetric extends Model
             case 'on_time':
                 $eval = __('Tepat waktu');
                 break;
-            
+
             case 'too_soon':
                 $eval = __('Terlalu awal');
                 break;
@@ -97,6 +97,7 @@ class InsOmvMetric extends Model
                 $eval = __('Tepat waktu');
                 break;
         }
+
         return $eval;
     }
 }

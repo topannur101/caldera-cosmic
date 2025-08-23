@@ -1,7 +1,8 @@
 body * {
     visibility: hidden;
 }
-#print-container, #print-container * {
+#print-container,
+#print-container * {
     visibility: visible;
 }
 #print-container {

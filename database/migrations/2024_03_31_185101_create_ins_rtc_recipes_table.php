@@ -1,9 +1,9 @@
 <?php
 
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -39,8 +39,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.4',
                 'PFC_MAX' => '3.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 2,
                 'NAME' => 'AF1 GS (ONE COLOR)',
                 'OG_RS' => 1,
@@ -50,8 +50,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.4',
                 'PFC_MAX' => '3.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 3,
                 'NAME' => 'AF1 GS (TWO COLOR)',
                 'OG_RS' => 1,
@@ -61,8 +61,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.2',
                 'PFC_MAX' => '3.4',
-                ],
-                [
+            ],
+            [
                 'ID' => 4,
                 'NAME' => 'AF1 WS (BOTOM/CLEAR)',
                 'OG_RS' => 13,
@@ -72,8 +72,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.6',
                 'PFC_MAX' => '3.8',
-                ],
-                [
+            ],
+            [
                 'ID' => 5,
                 'NAME' => 'AF1 WS (LOGO)',
                 'OG_RS' => 7,
@@ -83,8 +83,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '0.6',
                 'PFC_MAX' => '0.8',
-                ],
-                [
+            ],
+            [
                 'ID' => 6,
                 'NAME' => 'AF1 WS (ONE COLOR)',
                 'OG_RS' => 11,
@@ -94,8 +94,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.4',
                 'PFC_MAX' => '3.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 7,
                 'NAME' => 'AF1 WS (TWO COLOR)',
                 'OG_RS' => 7,
@@ -105,8 +105,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.4',
                 'PFC_MAX' => '3.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 8,
                 'NAME' => 'AM 270 (CENTER)',
                 'OG_RS' => 1,
@@ -116,8 +116,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.7',
                 'PFC_MAX' => '2.9',
-                ],
-                [
+            ],
+            [
                 'ID' => 9,
                 'NAME' => 'AM 270 (FOREFOOT)',
                 'OG_RS' => 1,
@@ -127,8 +127,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => 2,
                 'PFC_MAX' => '2.2',
-                ],
-                [
+            ],
+            [
                 'ID' => 10,
                 'NAME' => 'AM 270 (HEEL)',
                 'OG_RS' => 13,
@@ -138,8 +138,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.8',
                 'PFC_MAX' => 3,
-                ],
-                [
+            ],
+            [
                 'ID' => 11,
                 'NAME' => 'AM 270 (TOE)',
                 'OG_RS' => 1,
@@ -149,8 +149,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.7',
                 'PFC_MAX' => '2.9',
-                ],
-                [
+            ],
+            [
                 'ID' => 12,
                 'NAME' => 'AM 95 (FF)',
                 'OG_RS' => 1,
@@ -160,8 +160,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.8',
                 'PFC_MAX' => 3,
-                ],
-                [
+            ],
+            [
                 'ID' => 13,
                 'NAME' => 'AM 95 (HEEL)',
                 'OG_RS' => 1,
@@ -171,8 +171,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.8',
                 'PFC_MAX' => 3,
-                ],
-                [
+            ],
+            [
                 'ID' => 14,
                 'NAME' => 'AM 95 (LOGO)',
                 'OG_RS' => 28,
@@ -182,8 +182,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '0.6',
                 'PFC_MAX' => '0.8',
-                ],
-                [
+            ],
+            [
                 'ID' => 15,
                 'NAME' => 'AM 95 (ONE COLOR)',
                 'OG_RS' => 1,
@@ -193,8 +193,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.8',
                 'PFC_MAX' => 3,
-                ],
-                [
+            ],
+            [
                 'ID' => 16,
                 'NAME' => 'AM TW (CENTER)',
                 'OG_RS' => 1,
@@ -204,8 +204,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.4',
                 'PFC_MAX' => '3.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 17,
                 'NAME' => 'AM TW (HEEL POD)',
                 'OG_RS' => 1,
@@ -215,8 +215,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '5.5',
                 'PFC_MAX' => '5.7',
-                ],
-                [
+            ],
+            [
                 'ID' => 18,
                 'NAME' => 'AM TW (ONE COLOR)',
                 'OG_RS' => 5,
@@ -226,8 +226,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.4',
                 'PFC_MAX' => '3.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 19,
                 'NAME' => 'AM TW (TWO COLOR)',
                 'OG_RS' => 5,
@@ -237,8 +237,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.4',
                 'PFC_MAX' => '3.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 20,
                 'NAME' => 'ALPHA 4',
                 'OG_RS' => 1,
@@ -248,8 +248,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.6',
                 'PFC_MAX' => '2.8',
-                ],
-                [
+            ],
+            [
                 'ID' => 21,
                 'NAME' => 'ALPHA 5',
                 'OG_RS' => 1,
@@ -259,8 +259,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.2',
                 'PFC_MAX' => '3.4',
-                ],
-                [
+            ],
+            [
                 'ID' => 22,
                 'NAME' => 'ALPHA 5 (MARBLE)',
                 'OG_RS' => 1,
@@ -270,8 +270,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.2',
                 'PFC_MAX' => '3.4',
-                ],
-                [
+            ],
+            [
                 'ID' => 23,
                 'NAME' => 'ALPHA 6',
                 'OG_RS' => 1,
@@ -281,8 +281,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.8',
                 'PFC_MAX' => 3,
-                ],
-                [
+            ],
+            [
                 'ID' => 24,
                 'NAME' => 'CBR (BOTTOM)',
                 'OG_RS' => 1,
@@ -292,8 +292,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.8',
                 'PFC_MAX' => 4,
-                ],
-                [
+            ],
+            [
                 'ID' => 25,
                 'NAME' => 'CBR (ONE COLOR)',
                 'OG_RS' => 1,
@@ -303,8 +303,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.4',
                 'PFC_MAX' => '3.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 26,
                 'NAME' => 'CBR (TWO COLOR)',
                 'OG_RS' => 1,
@@ -314,8 +314,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.4',
                 'PFC_MAX' => '3.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 27,
                 'NAME' => 'DWS 11',
                 'OG_RS' => 11,
@@ -325,8 +325,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.4',
                 'PFC_MAX' => '2.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 28,
                 'NAME' => 'DWS 12 (ONE COLOR)',
                 'OG_RS' => 5,
@@ -336,8 +336,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.2',
                 'PFC_MAX' => '2.4',
-                ],
-                [
+            ],
+            [
                 'ID' => 29,
                 'NAME' => 'DWS 12 (TWO COLOR FF)',
                 'OG_RS' => 5,
@@ -347,8 +347,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.2',
                 'PFC_MAX' => '2.4',
-                ],
-                [
+            ],
+            [
                 'ID' => 30,
                 'NAME' => 'DWS 12 (TWO COLOR HEEL)',
                 'OG_RS' => 5,
@@ -358,8 +358,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.6',
                 'PFC_MAX' => '2.8',
-                ],
-                [
+            ],
+            [
                 'ID' => 31,
                 'NAME' => 'DWS 13',
                 'OG_RS' => 5,
@@ -369,8 +369,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => 2,
                 'PFC_MAX' => '2.2',
-                ],
-                [
+            ],
+            [
                 'ID' => 32,
                 'NAME' => 'INVIGOR',
                 'OG_RS' => 1,
@@ -380,8 +380,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => 5,
                 'PFC_MAX' => '5.2',
-                ],
-                [
+            ],
+            [
                 'ID' => 33,
                 'NAME' => 'PEG 37/38 (LATERAL)',
                 'OG_RS' => 2,
@@ -391,8 +391,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.8',
                 'PFC_MAX' => 3,
-                ],
-                [
+            ],
+            [
                 'ID' => 34,
                 'NAME' => 'PEG 37/38 (MEDIAL)',
                 'OG_RS' => 1,
@@ -402,8 +402,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.4',
                 'PFC_MAX' => '2.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 35,
                 'NAME' => 'PEG 39/40 (LETERAL)',
                 'OG_RS' => 45,
@@ -413,8 +413,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.3',
                 'PFC_MAX' => '2.5',
-                ],
-                [
+            ],
+            [
                 'ID' => 36,
                 'NAME' => 'PEG 39/40 (MEDIAL)',
                 'OG_RS' => 45,
@@ -424,8 +424,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.1',
                 'PFC_MAX' => '2.3',
-                ],
-                [
+            ],
+            [
                 'ID' => 37,
                 'NAME' => 'PEG 39/40 (ONE COLOR)',
                 'OG_RS' => 45,
@@ -435,8 +435,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.3',
                 'PFC_MAX' => '2.5',
-                ],
-                [
+            ],
+            [
                 'ID' => 38,
                 'NAME' => 'PEG 41 (LATERAL)',
                 'OG_RS' => 48,
@@ -446,8 +446,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.6',
                 'PFC_MAX' => '2.8',
-                ],
-                [
+            ],
+            [
                 'ID' => 39,
                 'NAME' => 'PEG 41 (MEDIAL)',
                 'OG_RS' => 48,
@@ -457,8 +457,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.6',
                 'PFC_MAX' => '2.8',
-                ],
-                [
+            ],
+            [
                 'ID' => 40,
                 'NAME' => 'PHOENIX WAFFLE',
                 'OG_RS' => 1,
@@ -468,8 +468,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.8',
                 'PFC_MAX' => 3,
-                ],
-                [
+            ],
+            [
                 'ID' => 41,
                 'NAME' => 'QUEST 6',
                 'OG_RS' => 5,
@@ -479,8 +479,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.4',
                 'PFC_MAX' => '2.6',
-                ],
-                [
+            ],
+            [
                 'ID' => 42,
                 'NAME' => 'ALPHA 8 (FOREFOOT)',
                 'OG_RS' => 11,
@@ -490,8 +490,8 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '2.8',
                 'PFC_MAX' => 3,
-                ],
-                [
+            ],
+            [
                 'ID' => 43,
                 'NAME' => 'ALPHA 8 (HEEL)',
                 'OG_RS' => 11,
@@ -501,7 +501,7 @@ return new class extends Migration
                 'SCALE' => 1,
                 'PFC_MIN' => '3.3',
                 'PFC_MAX' => '3.5',
-                ],                
+            ],
         ]);
     }
 

@@ -8,10 +8,9 @@ use App\Models\InsRtcRecipe;
 use Carbon\Carbon;
 
 new class extends Component {
-    
     public int $id = 0;
 
-    #[On('clump-load')]
+    #[On("clump-load")]
     public function clumpLoad($id)
     {
         $this->id = $id;
@@ -19,14 +18,13 @@ new class extends Component {
 
     public function with(): array
     {
-        
         $clump = InsRtcClump::find($this->id);
-        $line           = '';
-        $start_at       = '';
-        $end_at         = '';
-        $duration       = '';
-        $recipe_id      = 0;
-        $recipe_name    = '';
+        $line = "";
+        $start_at = "";
+        $end_at = "";
+        $duration = "";
+        $recipe_id = 0;
+        $recipe_name = "";
         $recipe_std_mid = 0;
         $recipe_std_min = 0;
         $recipe_std_max = 0;
@@ -34,16 +32,16 @@ new class extends Component {
         $recipe_pfc_max = 0;
 
         if ($clump) {
-            $metrics    = InsRtcMetric::where('ins_rtc_clump_id', $this->id)->get();
-            $line       = $clump->ins_rtc_device_id;
-            $start_at   = $metrics->min('dt_client');
-            $end_at     = $metrics->max('dt_client');
-            $duration   = Carbon::createFromTimestampUTC($start_at->diffInSeconds($end_at))->format('i:s');
-            $recipe     = $clump->ins_rtc_recipe;
+            $metrics = InsRtcMetric::where("ins_rtc_clump_id", $this->id)->get();
+            $line = $clump->ins_rtc_device_id;
+            $start_at = $metrics->min("dt_client");
+            $end_at = $metrics->max("dt_client");
+            $duration = Carbon::createFromTimestampUTC($start_at->diffInSeconds($end_at))->format("i:s");
+            $recipe = $clump->ins_rtc_recipe;
 
-            if($recipe) {
-                $recipe_id      = $recipe->id;
-                $recipe_name    = $recipe->name;
+            if ($recipe) {
+                $recipe_id = $recipe->id;
+                $recipe_name = $recipe->name;
                 $recipe_std_mid = $recipe->std_mid;
                 $recipe_std_min = $recipe->std_min;
                 $recipe_std_max = $recipe->std_max;
@@ -57,8 +55,8 @@ new class extends Component {
                     return [$item->sensor_left > 0 ? $item->sensor_left : null, $item->sensor_right > 0 ? $item->sensor_right : null];
                 })
                 ->filter();
-                $minY = floor($nonZeroValues->min() * 2) / 2;
-                $maxY = ceil($nonZeroValues->max() * 2) / 2;
+            $minY = floor($nonZeroValues->min() * 2) / 2;
+            $maxY = ceil($nonZeroValues->max() * 2) / 2;
 
             // Prepare the data for the JavaScript
             $kiriData = $metrics
@@ -77,54 +75,54 @@ new class extends Component {
 
             foreach ($metrics as $metric) {
                 // Process action_left
-                if ($metric->action_left === 'thin' || $metric->action_left === 'thick') {
-                    $action = $metric->action_left === 'thick' ? '▲' : '▼';
+                if ($metric->action_left === "thin" || $metric->action_left === "thick") {
+                    $action = $metric->action_left === "thick" ? "▲" : "▼";
                     $actions[] = [
-                        'x' => $metric->dt_client->valueOf(),
-                        'y' => $metric->sensor_left,
-                        'marker' => [
-                            'size'          => 0,
-                            'strokeWidth'   => 0
+                        "x" => $metric->dt_client->valueOf(),
+                        "y" => $metric->sensor_left,
+                        "marker" => [
+                            "size" => 0,
+                            "strokeWidth" => 0,
                         ],
-                        'label' => [
-                            'borderWidth' => 0,
-                            'text' => $action . ' ' . number_format($metric->push_left, 1),
-                            'style' => [
-                                'background' => 'transparent',
-                                'color' => '#78d1fc'
-                            ]
+                        "label" => [
+                            "borderWidth" => 0,
+                            "text" => $action . " " . number_format($metric->push_left, 1),
+                            "style" => [
+                                "background" => "transparent",
+                                "color" => "#78d1fc",
+                            ],
                         ],
                     ];
                 }
 
                 // Process action_right
-                if ($metric->action_right === 'thin' || $metric->action_right === 'thick') {
-                    $action = $metric->action_right === 'thick' ? '▲' : '▼';
+                if ($metric->action_right === "thin" || $metric->action_right === "thick") {
+                    $action = $metric->action_right === "thick" ? "▲" : "▼";
                     $actions[] = [
-                        'x' => $metric->dt_client->valueOf(),
-                        'y' => $metric->sensor_right,
-                        'marker' => [
-                            'size'          => 0,
-                            'strokeWidth'   => 0
+                        "x" => $metric->dt_client->valueOf(),
+                        "y" => $metric->sensor_right,
+                        "marker" => [
+                            "size" => 0,
+                            "strokeWidth" => 0,
                         ],
-                        'label' => [
-                            'borderWidth' => 0,
-                            'text' => $action . ' ' . number_format($metric->push_right, 1),
-                            'style' => [
-                                'background' => 'transparent',
-                                'color' => '#eea1a7'
-                            ]
+                        "label" => [
+                            "borderWidth" => 0,
+                            "text" => $action . " " . number_format($metric->push_right, 1),
+                            "style" => [
+                                "background" => "transparent",
+                                "color" => "#eea1a7",
+                            ],
                         ],
                     ];
                 }
             }
 
             // Convert PHP arrays to JavaScript arrays
-            $kiriDataJs     = json_encode($kiriData);
-            $kananDataJs    = json_encode($kananData);
-            $actionsJs      = json_encode($actions); 
+            $kiriDataJs = json_encode($kiriData);
+            $kananDataJs = json_encode($kananData);
+            $actionsJs = json_encode($actions);
 
-           $this->js(
+            $this->js(
                 "
             let options = {
             chart: {
@@ -152,7 +150,7 @@ new class extends Component {
             },
             series: [{
                 name: '" .
-                    __('Kiri') .
+                    __("Kiri") .
                     "',
                 data: " .
                     $kiriDataJs .
@@ -160,7 +158,7 @@ new class extends Component {
                 color: '#00BBF9'
             }, {
                 name: '" .
-                    __('Kanan') .
+                    __("Kanan") .
                     "',
                 data: " .
                     $kananDataJs .
@@ -191,23 +189,25 @@ new class extends Component {
                 yaxis: [
                     {
                         y: " .
-                        $recipe_std_min -
-                        0.05 .
-                        ",
+                    $recipe_std_min -
+                    0.05 .
+                    ",
                         y2: " .
-                        $recipe_std_max +
-                        0.05 .
-                        ",
+                    $recipe_std_max +
+                    0.05 .
+                    ",
                         borderColor: 'transparent',
                         fillColor: '#654db8',
                         label: {
                             text: '" .
-                        __('Standar') .
-                        "'
+                    __("Standar") .
+                    "'
                         }
                     }
                 ],
-                points: " . $actionsJs . "
+                points: " .
+                    $actionsJs .
+                    "
             },
             tooltip: {
                 x: {
@@ -228,48 +228,44 @@ new class extends Component {
             );
         }
         return [
-            'line'              => $line,
-            'start_at'          => $start_at,
-            'end_at'            => $end_at,
-            'duration'          => $duration,
-            'recipe_id'         => $recipe_id,
-            'recipe_name'       => $recipe_name,
-            'recipe_std_mid'    => $recipe_std_mid,
-            'recipe_std_min'    => $recipe_std_min,
-            'recipe_std_max'    => $recipe_std_max,
-            'recipe_pfc_min'    => $recipe_pfc_min,
-            'recipe_pfc_max'    => $recipe_pfc_max
-    ];
+            "line" => $line,
+            "start_at" => $start_at,
+            "end_at" => $end_at,
+            "duration" => $duration,
+            "recipe_id" => $recipe_id,
+            "recipe_name" => $recipe_name,
+            "recipe_std_mid" => $recipe_std_mid,
+            "recipe_std_min" => $recipe_std_min,
+            "recipe_std_max" => $recipe_std_max,
+            "recipe_pfc_min" => $recipe_pfc_min,
+            "recipe_pfc_max" => $recipe_pfc_max,
+        ];
     }
 };
 ?>
 
-
 <div class="p-6">
     <div class="flex justify-between items-start">
         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            {{ __('Rincian Gilingan') }}
+            {{ __("Rincian Gilingan") }}
         </h2>
         <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
     </div>
-    <div class="h-80 bg-white dark:brightness-75 text-neutral-900 rounded overflow-hidden my-8" id="chart-container" wire:key="chart-container" wire:ignore>
-    </div>
+    <div class="h-80 bg-white dark:brightness-75 text-neutral-900 rounded overflow-hidden my-8" id="chart-container" wire:key="chart-container" wire:ignore></div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4">
         <div>
-            <h3 class="mb-2 font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Info gilingan') . ' [' . $id . ']' }}</h3>
-            <div>{{ __('Line') . ': ' . $line }}</div>
-            <div>{{ __('Awal') . ': ' . $start_at }}</div>
-            <div>{{ __('Akhir') . ': ' . $end_at }}</div>
-            <div>{{ __('Durasi') . ': ' . $duration }}</div>
+            <h3 class="mb-2 font-medium text-neutral-900 dark:text-neutral-100">{{ __("Info gilingan") . " [" . $id . "]" }}</h3>
+            <div>{{ __("Line") . ": " . $line }}</div>
+            <div>{{ __("Awal") . ": " . $start_at }}</div>
+            <div>{{ __("Akhir") . ": " . $end_at }}</div>
+            <div>{{ __("Durasi") . ": " . $duration }}</div>
         </div>
         <div>
-            <h3 class="mb-2 font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __('Info resep') . ' [' . $recipe_id . ']' }}</h3>
+            <h3 class="mb-2 font-medium text-neutral-900 dark:text-neutral-100">{{ __("Info resep") . " [" . $recipe_id . "]" }}</h3>
             <div>{{ $recipe_name }}</div>
-            <div>{{ __('Standar tengah') . ': ' . $recipe_std_mid }}</div>
-            <div>{{ __('Standar') . ': ' . $recipe_std_min  . ' — ' . $recipe_std_max }}</div>
-            <div>{{ __('PFC') . ': ' . $recipe_pfc_min . ' — ' . $recipe_pfc_max }}</div>
+            <div>{{ __("Standar tengah") . ": " . $recipe_std_mid }}</div>
+            <div>{{ __("Standar") . ": " . $recipe_std_min . " — " . $recipe_std_max }}</div>
+            <div>{{ __("PFC") . ": " . $recipe_pfc_min . " — " . $recipe_pfc_max }}</div>
         </div>
     </div>
     <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>

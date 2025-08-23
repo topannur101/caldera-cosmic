@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class InsRdcTag extends Model
 {
     use HasFactory;
-    
+
     protected $fillable = [
         'name',
     ];
-
 }

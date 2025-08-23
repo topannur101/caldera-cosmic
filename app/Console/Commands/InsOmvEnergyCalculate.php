@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\InsOmvMetric;
+use Illuminate\Console\Command;
 
 class InsOmvEnergyCalculate extends Command
 {
@@ -41,7 +41,7 @@ class InsOmvEnergyCalculate extends Command
                 // Use average current of the interval
                 $avgCurrent = ($amps[$i]['value'] + $amps[$i - 1]['value']) / 2;
                 $timeInterval = ($amps[$i]['taken_at'] - $amps[$i - 1]['taken_at']) / 3600; // Convert time interval to hours
-                
+
                 // Calculate energy for the interval (including power factor)
                 $energy = (sqrt(3) * $avgCurrent * $voltage * $timeInterval * $powerFactor * $calibrationFactor) / 1000;
                 $kwhUsage += $energy; // Sum up the energy

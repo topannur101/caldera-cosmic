@@ -60,7 +60,7 @@ return new class extends Migration
                 'section_5',
                 'section_6',
                 'section_7',
-                'section_8'
+                'section_8',
             ]);
         });
     }

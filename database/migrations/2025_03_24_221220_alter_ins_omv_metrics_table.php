@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('ins_omv_metrics', function (Blueprint $table) {
-            $table->dropColumn('kwh_usage');  
+            $table->dropColumn('kwh_usage');
 
         });
     }

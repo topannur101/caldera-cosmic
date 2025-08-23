@@ -2,16 +2,14 @@
 
 namespace App\Console\Commands;
 
-use Carbon\Carbon;
 use App\Models\InsRtcClump;
 use App\Models\InsRtcDevice;
 use App\Models\InsRtcMetric;
-use App\Models\InsRtcRecipe;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection;
-use ModbusTcpClient\Network\NonBlockingClient;
 use ModbusTcpClient\Composer\Read\ReadCoilsBuilder;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
+use ModbusTcpClient\Network\NonBlockingClient;
 
 class InsRtcFetch extends Command
 {
@@ -29,17 +27,17 @@ class InsRtcFetch extends Command
      */
     protected $description = 'Poll rubber thickness data from Modbus server installed in HMI';
 
-    function convertToDecimal($value)
+    public function convertToDecimal($value)
     {
         $value = (int) $value; // Cast to integer to remove any leading zeros
         $length = strlen((string) $value);
 
         if ($length == 3) {
-            $decimal = substr((string) $value, 0, -2) . '.' . substr((string) $value, -2);
+            $decimal = substr((string) $value, 0, -2).'.'.substr((string) $value, -2);
         } elseif ($length == 2) {
-            $decimal = '0.' . (string) $value;
+            $decimal = '0.'.(string) $value;
         } elseif ($length == 1) {
-            $decimal = '0.0' . (string) $value;
+            $decimal = '0.0'.(string) $value;
         } else {
             $decimal = '0.00';
         }
@@ -47,15 +45,15 @@ class InsRtcFetch extends Command
         return $decimal;
     }
 
-    function convertPushTime($value)
+    public function convertPushTime($value)
     {
         $value = (int) $value; // Cast to integer to remove any leading zeros
         $length = strlen((string) $value);
 
         if ($length == 3 || $length == 2) {
-            $decimal = substr((string) $value, 0, -1) . '.' . substr((string) $value, -1);
+            $decimal = substr((string) $value, 0, -1).'.'.substr((string) $value, -1);
         } elseif ($length == 1) {
-            $decimal = '0.' . (string) $value;
+            $decimal = '0.'.(string) $value;
         } else {
             $decimal = '0.0';
         }
@@ -63,7 +61,7 @@ class InsRtcFetch extends Command
         return $decimal;
     }
 
-    function action($pushThin, $pushThick)
+    public function action($pushThin, $pushThick)
     {
         $action = null;
         if ($pushThin > 0 && $pushThick == 0) {
@@ -71,24 +69,32 @@ class InsRtcFetch extends Command
         } elseif ($pushThin == 0 && $pushThick > 0) {
             $action = 'thick';
         }
+
         return $action;
     }
 
-    protected $sensor_prev      = [];
-    protected $zero_metrics     = [];
-    protected $clump_id_prev    = [];
-    protected $clump_timeout    = 90; // original 60
-    protected $recipe_id_prev   = [];
+    protected $sensor_prev = [];
+
+    protected $zero_metrics = [];
+
+    protected $clump_id_prev = [];
+
+    protected $clump_timeout = 90; // original 60
+
+    protected $recipe_id_prev = [];
+
     // protected $recipe_timeout   = 5;
     // Latest dt_client
-    protected $dt_prev          = [];
-    // System time (HMI) previous triggered correction
-    protected $st_cl_prev       = [];
-    protected $st_cr_prev       = [];
+    protected $dt_prev = [];
 
-    function saveMetric($metric): void
+    // System time (HMI) previous triggered correction
+    protected $st_cl_prev = [];
+
+    protected $st_cr_prev = [];
+
+    public function saveMetric($metric): void
     {
-        $sensor = $metric['sensor_left'] . $metric['st_correct_left'] . $metric['sensor_right'] . $metric['st_correct_right'];
+        $sensor = $metric['sensor_left'].$metric['st_correct_left'].$metric['sensor_right'].$metric['st_correct_right'];
         // Save to database if new value deteced AND both sensor are not zero
         if ($sensor !== $this->sensor_prev[$metric['device_id']] && ($metric['sensor_left'] || $metric['sensor_right'])) {
 
@@ -108,10 +114,10 @@ class InsRtcFetch extends Command
             // Calculate the difference in seconds
             $differenceInSeconds = $minDtClient->diffInSeconds($maxDtClient);
 
-            if ($differenceInSeconds > $this->clump_timeout || !$this->clump_id_prev[$metric['device_id']]) {
+            if ($differenceInSeconds > $this->clump_timeout || ! $this->clump_id_prev[$metric['device_id']]) {
                 $clump = InsRtcClump::create([
                     'ins_rtc_recipe_id' => $metric['recipe_id'],
-                    'ins_rtc_device_id' => $metric['device_id']
+                    'ins_rtc_device_id' => $metric['device_id'],
                 ]);
                 $this->clump_id_prev[$metric['device_id']] = $clump->id;
                 $this->recipe_id_prev[$metric['device_id']] = $metric['recipe_id'];
@@ -121,7 +127,7 @@ class InsRtcFetch extends Command
                 $clump = InsRtcClump::find($this->clump_id_prev[$metric['device_id']]);
                 if ($clump) {
                     $clump->update([
-                        'ins_rtc_recipe_id' => $metric['recipe_id']
+                        'ins_rtc_recipe_id' => $metric['recipe_id'],
                     ]);
                 }
             }
@@ -137,9 +143,9 @@ class InsRtcFetch extends Command
             // Save 'thin' or 'thick' action if there's new correction system time
             if (($st_cl !== $this->st_cl_prev[$metric['device_id']]) && $metric['is_correcting']) {
                 $action_left = $this->action($metric['push_thin_left'], $metric['push_thick_left']);
-                $thin_left  = (int) $metric['push_thin_left'];
+                $thin_left = (int) $metric['push_thin_left'];
                 $thick_left = (int) $metric['push_thick_left'];
-                if($thin_left xor $thick_left) {
+                if ($thin_left xor $thick_left) {
                     $push_left = $thin_left + $thick_left;
                 }
                 $this->st_cl_prev[$metric['device_id']] = $st_cl;
@@ -147,39 +153,39 @@ class InsRtcFetch extends Command
 
             if ($st_cr !== $this->st_cr_prev[$metric['device_id']] && $metric['is_correcting']) {
                 $action_right = $this->action($metric['push_thin_right'], $metric['push_thick_right']);
-                $thin_right  = (int) $metric['push_thin_right'];
+                $thin_right = (int) $metric['push_thin_right'];
                 $thick_right = (int) $metric['push_thick_right'];
-                if($thin_right xor $thick_right) {
+                if ($thin_right xor $thick_right) {
                     $push_right = $thin_right + $thick_right;
                 }
                 $this->st_cr_prev[$metric['device_id']] = $st_cr;
             }
 
             InsRtcMetric::create([
-                'ins_rtc_clump_id'      => $this->clump_id_prev[$metric['device_id']],
-                'sensor_left'           => $this->convertToDecimal($metric['sensor_left']),
-                'sensor_right'          => $this->convertToDecimal($metric['sensor_right']),
-                'action_left'           => $action_left,
-                'action_right'          => $action_right,
-                'push_left'             => $push_left ? $this->convertPushTime($push_left) : null,
-                'push_right'            => $push_right ? $this->convertPushTime($push_right) : null,
-                'is_correcting'         => (bool) $metric['is_correcting'],
-                'clump_id'              => $this->clump_id_prev[$metric['device_id']],
-                'dt_client'             => $metric['dt_client'],
+                'ins_rtc_clump_id' => $this->clump_id_prev[$metric['device_id']],
+                'sensor_left' => $this->convertToDecimal($metric['sensor_left']),
+                'sensor_right' => $this->convertToDecimal($metric['sensor_right']),
+                'action_left' => $action_left,
+                'action_right' => $action_right,
+                'push_left' => $push_left ? $this->convertPushTime($push_left) : null,
+                'push_right' => $push_right ? $this->convertPushTime($push_right) : null,
+                'is_correcting' => (bool) $metric['is_correcting'],
+                'clump_id' => $this->clump_id_prev[$metric['device_id']],
+                'dt_client' => $metric['dt_client'],
             ]);
-            $this->sensor_prev[$metric['device_id']]    = $sensor;
-            $this->zero_metrics[$metric['device_id']]   = [];
-            echo 'Data is saved' . PHP_EOL;
+            $this->sensor_prev[$metric['device_id']] = $sensor;
+            $this->zero_metrics[$metric['device_id']] = [];
+            echo 'Data is saved'.PHP_EOL;
         } else {
-            if (!$metric['sensor_left'] && !$metric['sensor_right']) {
-                
+            if (! $metric['sensor_left'] && ! $metric['sensor_right']) {
+
                 $this->zero_metrics[$metric['device_id']][] = $metric;
-                echo 'Zero data is not saved' . PHP_EOL;
+                echo 'Zero data is not saved'.PHP_EOL;
 
             } else {
-                echo 'Consecutive data is not saved' . PHP_EOL;
+                echo 'Consecutive data is not saved'.PHP_EOL;
             }
-            
+
         }
     }
 
@@ -190,27 +196,27 @@ class InsRtcFetch extends Command
         $unit_id = 1;
 
         // Initialize variables
-        foreach($devices as $device) {
-            $this->sensor_prev[$device->id]     = null;
-            $this->zero_metrics[$device->id]    = null;
-            $this->clump_id_prev[$device->id]   = null;
-            $this->recipe_id_prev[$device->id]  = null;
-            $this->st_cl_prev[$device->id]      = null;
-            $this->st_cr_prev[$device->id]      = null;
+        foreach ($devices as $device) {
+            $this->sensor_prev[$device->id] = null;
+            $this->zero_metrics[$device->id] = null;
+            $this->clump_id_prev[$device->id] = null;
+            $this->recipe_id_prev[$device->id] = null;
+            $this->st_cl_prev[$device->id] = null;
+            $this->st_cr_prev[$device->id] = null;
         }
 
         while (true) {
             $dt_now = Carbon::now()->format('Y-m-d H:i:s');
-            
+
             // Tarik data MODBUS ke semua perangkat
             foreach ($devices as $device) {
-                
-                $fc2 = ReadCoilsBuilder::newReadInputDiscretes('tcp://' . $device->ip_address . ':502', $unit_id)
+
+                $fc2 = ReadCoilsBuilder::newReadInputDiscretes('tcp://'.$device->ip_address.':502', $unit_id)
                     ->coil(0, 'is_correcting')
                     // ->coil(1, 'is_holding')
                     ->build();
 
-                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://' . $device->ip_address . ':502', $unit_id)
+                $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://'.$device->ip_address.':502', $unit_id)
                     ->int16(0, 'sensor_left')
                     ->int16(1, 'sensor_right')
                     // something missing here
@@ -227,30 +233,30 @@ class InsRtcFetch extends Command
                     // Tarik data MODBUS
                     $fc2_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc2);
                     $fc3_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc3);
-                    echo 'Response from: ' . $device->ip_address . ' (Line ' . $device->line . ')';
+                    echo 'Response from: '.$device->ip_address.' (Line '.$device->line.')';
                     $fc2_data = $fc2_response->getData();
                     $fc3_data = $fc3_response->getData();
 
                     $metric = [
-                        'device_id'         => $device->id,
-                        'sensor_left'       => $fc3_data['sensor_left'],
-                        'sensor_right'      => $fc3_data['sensor_right'],
-                        'recipe_id'         => $fc3_data['recipe_id'],
-                        'is_correcting'     => $fc2_data['is_correcting'],
-                        'push_thin_left'    => $fc3_data['push_thin_left'],
-                        'push_thick_left'   => $fc3_data['push_thick_left'],
-                        'push_thin_right'   => $fc3_data['push_thin_right'],
-                        'push_thick_right'  => $fc3_data['push_thick_right'],
-                        'st_correct_left'   => $fc3_data['st_correct_left'],
-                        'st_correct_right'  => $fc3_data['st_correct_right'],
-                        'dt_client'         => $dt_now,
+                        'device_id' => $device->id,
+                        'sensor_left' => $fc3_data['sensor_left'],
+                        'sensor_right' => $fc3_data['sensor_right'],
+                        'recipe_id' => $fc3_data['recipe_id'],
+                        'is_correcting' => $fc2_data['is_correcting'],
+                        'push_thin_left' => $fc3_data['push_thin_left'],
+                        'push_thick_left' => $fc3_data['push_thick_left'],
+                        'push_thin_right' => $fc3_data['push_thin_right'],
+                        'push_thick_right' => $fc3_data['push_thick_right'],
+                        'st_correct_left' => $fc3_data['st_correct_left'],
+                        'st_correct_right' => $fc3_data['st_correct_right'],
+                        'dt_client' => $dt_now,
                     ];
 
                     print_r($metric);
                     $this->saveMetric($metric);
 
                 } catch (\Throwable $th) {
-                    echo PHP_EOL . 'Exception: ' . $th->getMessage();
+                    echo PHP_EOL.'Exception: '.$th->getMessage();
                 }
             }
             sleep(1);

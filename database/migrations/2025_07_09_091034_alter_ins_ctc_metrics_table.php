@@ -15,13 +15,13 @@ return new class extends Migration
             // Add correction metrics after is_auto column
             $table->tinyInteger('correction_uptime')->default(0)->after('is_auto')
                 ->comment('Percentage of time auto-correction was running (0-100)');
-            
+
             $table->tinyInteger('correction_rate')->default(0)->after('correction_uptime')
                 ->comment('Percentage of actual correction actions taken (0-100)');
-            
+
             $table->integer('correction_left')->default(0)->after('correction_rate')
                 ->comment('Count of left-side correction actions');
-            
+
             $table->integer('correction_right')->default(0)->after('correction_left')
                 ->comment('Count of right-side correction actions');
 
@@ -42,13 +42,13 @@ return new class extends Migration
             $table->dropIndex(['ins_ctc_metrics_correction_uptime_index']);
             $table->dropIndex(['ins_ctc_metrics_correction_rate_index']);
             $table->dropIndex(['ins_ctc_metrics_correction_left_correction_right_index']);
-            
+
             // Drop columns
             $table->dropColumn([
                 'correction_uptime',
-                'correction_rate', 
+                'correction_rate',
                 'correction_left',
-                'correction_right'
+                'correction_right',
             ]);
         });
     }

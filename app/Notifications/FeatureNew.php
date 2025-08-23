@@ -11,7 +11,7 @@ class FeatureNew extends Notification implements ShouldQueue
     use Queueable;
 
     protected $feature; // Add this property declaration
-    
+
     /**
      * Create a new notification instance.
      */
@@ -30,7 +30,6 @@ class FeatureNew extends Notification implements ShouldQueue
         return ['database'];
     }
 
-
     /**
      * Get the array representation of the notification.
      *
@@ -39,9 +38,9 @@ class FeatureNew extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'icon'          => $this->feature['icon'],
-            'content'       => $this->feature['content'],
-            'url'           => $this->feature['url'],
+            'icon' => $this->feature['icon'],
+            'content' => $this->feature['content'],
+            'url' => $this->feature['url'],
         ];
     }
 }

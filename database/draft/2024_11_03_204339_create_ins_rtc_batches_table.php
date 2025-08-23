@@ -37,7 +37,7 @@ return new class extends Migration
         Schema::dropIfExists('ins_rtc_batches');
     }
 
-        // public function up(): void
+    // public function up(): void
     // {
     //     Schema::create('ins_rtc_clumps', function (Blueprint $table) {
     //         $table->id();

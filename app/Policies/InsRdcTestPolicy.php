@@ -19,12 +19,13 @@ class InsRdcTestPolicy
     {
         $auth = $user->ins_rdc_auths->first();
         $actions = json_decode($auth->actions ?? '{}', true);
+
         return in_array('test-manage', $actions)
         ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk mengelola hasil uji') );
+        : Response::deny(__('Kamu tak memiliki wewenang untuk mengelola hasil uji'));
     }
 
-    public function before(User $user): bool|null
+    public function before(User $user): ?bool
     {
         return $user->id == 1 ? true : null;
     }

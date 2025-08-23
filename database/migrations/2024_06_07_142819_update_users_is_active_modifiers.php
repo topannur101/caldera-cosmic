@@ -15,7 +15,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(1)->change();
         });
     }
-    
+
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {

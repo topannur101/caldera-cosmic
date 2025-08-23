@@ -17,10 +17,10 @@ class ShModPolicy
 
     public function manage(User $user): Response
     {
-        return Response::deny( __('Kamu tak memiliki wewenang untuk mengelola model') );
+        return Response::deny(__('Kamu tak memiliki wewenang untuk mengelola model'));
     }
 
-    public function before(User $user): bool|null
+    public function before(User $user): ?bool
     {
         return $user->id == 1 ? true : null;
     }

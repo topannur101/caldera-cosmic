@@ -2,13 +2,7 @@
 
 namespace App;
 
-
-
 class InvItemSummary
 {
-    public static function incompleteBasics($data)
-    {
-        
-    }
-
+    public static function incompleteBasics($data) {}
 }

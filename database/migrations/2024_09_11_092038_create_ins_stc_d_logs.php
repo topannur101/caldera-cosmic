@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('ins_stc_d_sum_id')->constrained()->cascadeOnDelete();
             $table->timestamp('taken_at');
             $table->decimal('temp', 3, 1);
-            
+
             $table->index('ins_stc_d_sum_id');
             $table->index('taken_at');
         });

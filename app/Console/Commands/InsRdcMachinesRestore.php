@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\InsRdcMachine;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class InsRdcMachinesRestore extends Command
 {
@@ -30,33 +30,36 @@ class InsRdcMachinesRestore extends Command
     {
         $filename = $this->argument('filename');
         $path = "backups/rdc_machines/{$filename}";
-        
-        if (!Storage::disk('local')->exists($path)) {
+
+        if (! Storage::disk('local')->exists($path)) {
             $this->error("❌ Backup file not found: {$path}");
+
             return 1;
         }
-        
+
         $this->info("📁 Found backup file: {$filename}");
-        
+
         // Read backup data
         try {
             $backupContent = Storage::disk('local')->get($path);
             $backupData = json_decode($backupContent, true);
-            
-            if (!$backupData || !isset($backupData['machines'])) {
-                $this->error("❌ Invalid backup file format");
+
+            if (! $backupData || ! isset($backupData['machines'])) {
+                $this->error('❌ Invalid backup file format');
+
                 return 1;
             }
-            
+
         } catch (\Exception $e) {
-            $this->error("❌ Error reading backup file: " . $e->getMessage());
+            $this->error('❌ Error reading backup file: '.$e->getMessage());
+
             return 1;
         }
-        
+
         $machines = $backupData['machines'];
         $this->line("📊 Backup contains {$backupData['total_machines']} machine(s)");
         $this->line("📅 Created: {$backupData['created_at']}");
-        
+
         // Show what will be restored
         $this->newLine();
         $this->info('Machines to restore:');
@@ -65,26 +68,27 @@ class InsRdcMachinesRestore extends Command
             $type = $machine['type'] ?? 'unknown';
             $this->line("  - #{$machine['number']} {$machine['name']} ({$type}, {$configCount} fields)");
         }
-        
+
         // Confirmation
-        if (!$this->option('force')) {
+        if (! $this->option('force')) {
             $this->newLine();
             $this->warn('⚠️  This will REPLACE all existing machine configurations!');
-            
-            if (!$this->confirm('Are you sure you want to continue?')) {
+
+            if (! $this->confirm('Are you sure you want to continue?')) {
                 $this->info('Restore cancelled.');
+
                 return 0;
             }
         }
-        
+
         // Perform restore
         $this->info('🔄 Starting restore...');
-        
+
         try {
             DB::transaction(function () use ($machines) {
                 // Clear existing machines
                 InsRdcMachine::truncate();
-                
+
                 // Restore machines
                 foreach ($machines as $machineData) {
                     InsRdcMachine::create([
@@ -98,15 +102,16 @@ class InsRdcMachinesRestore extends Command
                     ]);
                 }
             });
-            
+
             $this->info('✅ Restore completed successfully!');
             $this->line("📊 Restored {$backupData['total_machines']} machine(s)");
-            
+
         } catch (\Exception $e) {
-            $this->error("❌ Restore failed: " . $e->getMessage());
+            $this->error('❌ Restore failed: '.$e->getMessage());
+
             return 1;
         }
-        
+
         return 0;
     }
 }

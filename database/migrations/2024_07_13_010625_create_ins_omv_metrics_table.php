@@ -35,7 +35,7 @@ return new class extends Migration
             $table->index('eval');
             $table->index('start_at');
             $table->index('end_at');
-            
+
         });
     }
 

@@ -2,14 +2,14 @@
 
 namespace App\Console\Commands;
 
-use Carbon\Carbon;
 use App\Models\InsCtcMachine;
 use App\Models\InsCtcMetric;
 use App\Models\InsCtcRecipe;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
-use ModbusTcpClient\Network\NonBlockingClient;
 use ModbusTcpClient\Composer\Read\ReadCoilsBuilder;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
+use ModbusTcpClient\Network\NonBlockingClient;
 
 class InsCtcPoll extends Command
 {
@@ -29,31 +29,38 @@ class InsCtcPoll extends Command
 
     // Configuration
     protected $batch_timeout = 60;        // seconds - same as old clump timeout, def 60
+
     protected $minimum_measurements = 10; // minimum measurements per batch (configurable), def 10
 
     // State management arrays (per machine)
     protected $batch_buffers = [];        // Raw measurement data per machine
+
     protected $last_activity = [];       // Last measurement timestamp per machine
-    protected $sensor_prev = [];         // Previous sensor readings per machine  
+
+    protected $sensor_prev = [];         // Previous sensor readings per machine
+
     protected $recipe_cache = [];        // Cached recipe targets
+
     protected $recipe_id_prev = [];      // Previous recipe ID per machine
+
     protected $st_cl_prev = [];          // Previous system time correction left
+
     protected $st_cr_prev = [];          // Previous system time correction right
 
     /**
      * Convert integer value to decimal format for thickness measurements
      */
-    function convertToDecimal($value)
+    public function convertToDecimal($value)
     {
         $value = (int) $value;
         $length = strlen((string) $value);
 
         if ($length == 3) {
-            $decimal = substr((string) $value, 0, -2) . '.' . substr((string) $value, -2);
+            $decimal = substr((string) $value, 0, -2).'.'.substr((string) $value, -2);
         } elseif ($length == 2) {
-            $decimal = '0.' . (string) $value;
+            $decimal = '0.'.(string) $value;
         } elseif ($length == 1) {
-            $decimal = '0.0' . (string) $value;
+            $decimal = '0.0'.(string) $value;
         } else {
             $decimal = '0.00';
         }
@@ -64,15 +71,15 @@ class InsCtcPoll extends Command
     /**
      * Convert push time values to decimal format
      */
-    function convertPushTime($value)
+    public function convertPushTime($value)
     {
         $value = (int) $value;
         $length = strlen((string) $value);
 
         if ($length == 3 || $length == 2) {
-            $decimal = substr((string) $value, 0, -1) . '.' . substr((string) $value, -1);
+            $decimal = substr((string) $value, 0, -1).'.'.substr((string) $value, -1);
         } elseif ($length == 1) {
-            $decimal = '0.' . (string) $value;
+            $decimal = '0.'.(string) $value;
         } else {
             $decimal = '0.0';
         }
@@ -83,37 +90,42 @@ class InsCtcPoll extends Command
     /**
      * Get action code from push values
      */
-    function getActionCode($push_thin, $push_thick)
+    public function getActionCode($push_thin, $push_thick)
     {
-        if ($push_thin && !$push_thick) {
+        if ($push_thin && ! $push_thick) {
             return 1; // Push thin
-        } elseif (!$push_thin && $push_thick) {
+        } elseif (! $push_thin && $push_thick) {
             return 2; // Push thick
         }
+
         return 0; // No action
     }
 
     /**
      * Get recipe target from cache or database
      */
-    function getRecipeTarget($recipe_id)
+    public function getRecipeTarget($recipe_id)
     {
-        if (!$recipe_id) return null;
-        
-        if (!isset($this->recipe_cache[$recipe_id])) {
+        if (! $recipe_id) {
+            return null;
+        }
+
+        if (! isset($this->recipe_cache[$recipe_id])) {
             $recipe = InsCtcRecipe::find($recipe_id);
             $this->recipe_cache[$recipe_id] = $recipe ? $recipe->target : null;
         }
-        
+
         return $this->recipe_cache[$recipe_id];
     }
 
     /**
      * Calculate batch statistics
      */
-    function calculateBatchStatistics($batch_data, $target = null)
+    public function calculateBatchStatistics($batch_data, $target = null)
     {
-        if (empty($batch_data)) return null;
+        if (empty($batch_data)) {
+            return null;
+        }
 
         $left_values = [];
         $right_values = [];
@@ -128,8 +140,8 @@ class InsCtcPoll extends Command
         }
 
         // Filter out thickness values <= 0 (invalid sensor readings)
-        $valid_left_values = array_filter($left_values, fn($value) => $value > 0);
-        $valid_right_values = array_filter($right_values, fn($value) => $value > 0);
+        $valid_left_values = array_filter($left_values, fn ($value) => $value > 0);
+        $valid_right_values = array_filter($right_values, fn ($value) => $value > 0);
 
         // Recalculate averages using only valid values
         if (count($valid_left_values) > 0) {
@@ -182,19 +194,19 @@ class InsCtcPoll extends Command
         $t_mae_left = null;
         $t_mae_right = null;
         $t_mae = null;
-        
+
         // Filter out null values but keep 0 values for left side
-        $valid_errors_left = array_filter($errors_left, fn($error) => $error !== null);
+        $valid_errors_left = array_filter($errors_left, fn ($error) => $error !== null);
         if (count($valid_errors_left) > 0) {
             $t_mae_left = array_sum($valid_errors_left) / count($valid_errors_left);
         }
-        
-        // Filter out null values but keep 0 values for right side  
-        $valid_errors_right = array_filter($errors_right, fn($error) => $error !== null);
+
+        // Filter out null values but keep 0 values for right side
+        $valid_errors_right = array_filter($errors_right, fn ($error) => $error !== null);
         if (count($valid_errors_right) > 0) {
             $t_mae_right = array_sum($valid_errors_right) / count($valid_errors_right);
         }
-        
+
         // Combined MAE only if both sides have valid data
         if ($t_mae_left !== null && $t_mae_right !== null) {
             $t_mae = ($t_mae_left + $t_mae_right) / 2;
@@ -224,20 +236,22 @@ class InsCtcPoll extends Command
     /**
      * Process completed batch
      */
-    function processBatch($machine_id, $batch_data)
+    public function processBatch($machine_id, $batch_data)
     {
         $batch_size = count($batch_data);
-        
+
         if ($batch_size < $this->minimum_measurements) {
             if ($this->option('d')) {
                 $this->line("Batch too small ({$batch_size} < {$this->minimum_measurements}), discarding");
             }
+
             return;
         }
 
         $machine = InsCtcMachine::find($machine_id);
-        if (!$machine) {
+        if (! $machine) {
             $this->error("✗ Machine not found: {$machine_id}");
+
             return;
         }
 
@@ -261,15 +275,16 @@ class InsCtcPoll extends Command
         if ($this->option('v')) {
             $this->comment("→ Batch recipe: {$batch_recipe_id} ({$most_frequent_count}/{$batch_size} = {$percentage}%)");
             if (count($recipe_counts) > 1) {
-                $this->comment("→ Recipe distribution: " . json_encode($recipe_counts));
+                $this->comment('→ Recipe distribution: '.json_encode($recipe_counts));
             }
         }
 
         // Calculate statistics using pre-calculated errors (no need for target parameter)
         $stats = $this->calculateBatchStatistics($batch_data);
-        
-        if (!$stats) {
+
+        if (! $stats) {
             $this->error("✗ Failed to calculate statistics for batch (Machine: {$machine->name})");
+
             return;
         }
 
@@ -286,8 +301,12 @@ class InsCtcPoll extends Command
         $correction_left = 0;
         $correction_right = 0;
         foreach ($batch_data as $record) {
-            if ($record[2] > 0) $correction_left++;  // action_left > 0
-            if ($record[3] > 0) $correction_right++; // action_right > 0
+            if ($record[2] > 0) {
+                $correction_left++;
+            }  // action_left > 0
+            if ($record[3] > 0) {
+                $correction_right++;
+            } // action_right > 0
         }
 
         // Calculate correction rate percentage
@@ -299,20 +318,20 @@ class InsCtcPoll extends Command
 
         // Debug statistics if requested
         if ($this->option('d')) {
-            $this->line("Statistics calculated:");
+            $this->line('Statistics calculated:');
             $this->table(['Metric', 'Left', 'Right', 'Combined'], [
-                ['MAE', 
-                    $stats['t_mae_left'] !== null ? round($stats['t_mae_left'], 2) : 'null', 
-                    $stats['t_mae_right'] !== null ? round($stats['t_mae_right'], 2) : 'null', 
-                    $stats['t_mae'] !== null ? round($stats['t_mae'], 2) : 'null'
+                ['MAE',
+                    $stats['t_mae_left'] !== null ? round($stats['t_mae_left'], 2) : 'null',
+                    $stats['t_mae_right'] !== null ? round($stats['t_mae_right'], 2) : 'null',
+                    $stats['t_mae'] !== null ? round($stats['t_mae'], 2) : 'null',
                 ],
                 ['SSD', round($stats['t_ssd_left'], 2), round($stats['t_ssd_right'], 2), round($stats['t_ssd'], 2)],
                 ['AVG', round($stats['t_avg_left'], 2), round($stats['t_avg_right'], 2), round($stats['t_avg'], 2)],
                 ['Balance', '', '', round($stats['t_balance'], 2)],
-                ['Correction Uptime', '', '', $correction_uptime . '%'],
+                ['Correction Uptime', '', '', $correction_uptime.'%'],
                 ['Correction Count', $correction_left, $correction_right, $correction_left + $correction_right],
-                ['Correction Rate', '', '', $correction_rate . '%'],
-                ['Is Auto', '', '', $is_auto ? 'Yes' : 'No']
+                ['Correction Rate', '', '', $correction_rate.'%'],
+                ['Is Auto', '', '', $is_auto ? 'Yes' : 'No'],
             ]);
         }
 
@@ -346,24 +365,24 @@ class InsCtcPoll extends Command
 
             // Debug saved data format if requested
             if ($this->option('d')) {
-                $this->line("Sample data saved (first 2 records):");
+                $this->line('Sample data saved (first 2 records):');
                 $sample_data = array_slice($batch_data, 0, 2);
                 foreach ($sample_data as $i => $record) {
-                    $this->line("  [{$i}] " . json_encode($record));
+                    $this->line("  [{$i}] ".json_encode($record));
                 }
             }
 
         } catch (\Exception $e) {
             $this->error("✗ Failed to save batch: {$e->getMessage()}");
-            
+
             // Additional debugging for database errors
             if ($this->option('d')) {
-                $this->line("Debug info:");
+                $this->line('Debug info:');
                 $this->line("  Machine ID: {$machine_id}");
                 $this->line("  Recipe ID: {$batch_recipe_id}");
                 $this->line("  Batch size: {$batch_size}");
-                $this->line("  Data type: " . gettype($batch_data));
-                $this->line("  Data sample: " . json_encode(array_slice($batch_data, 0, 1)));
+                $this->line('  Data type: '.gettype($batch_data));
+                $this->line('  Data sample: '.json_encode(array_slice($batch_data, 0, 1)));
             }
         }
     }
@@ -371,62 +390,62 @@ class InsCtcPoll extends Command
     /**
      * Add measurement to batch buffer
      */
-    function addToBatch($machine_id, $metric)
+    public function addToBatch($machine_id, $metric)
     {
         $dt_now = Carbon::now()->format('Y-m-d H:i:s');
-        
+
         // Detect sensor value changes (same logic as old system)
-        $sensor_signature = $metric['sensor_left'] . $metric['st_correct_left'] . $metric['sensor_right'] . $metric['st_correct_right'];
+        $sensor_signature = $metric['sensor_left'].$metric['st_correct_left'].$metric['sensor_right'].$metric['st_correct_right'];
 
         if ($this->option('d')) {
             $this->line("DEBUG: Machine {$machine_id}");
             $this->line("  Sensor signature: {$sensor_signature}");
-            $this->line("  Previous signature: " . ($this->sensor_prev[$machine_id] ?? 'null'));
+            $this->line('  Previous signature: '.($this->sensor_prev[$machine_id] ?? 'null'));
             $this->line("  Sensor values: L={$metric['sensor_left']}, R={$metric['sensor_right']}");
         }
-        
+
         // Only process if sensor values changed AND at least one sensor is not zero
         if ($sensor_signature !== $this->sensor_prev[$machine_id] && ($metric['sensor_left'] || $metric['sensor_right'])) {
-            
+
             // Convert sensor values
             $left_thickness = $this->convertToDecimal($metric['sensor_left']);
             $right_thickness = $this->convertToDecimal($metric['sensor_right']);
-            
+
             // Convert std values
             $std_min = $this->convertToDecimal($metric['std_min']);
             $std_max = $this->convertToDecimal($metric['std_max']);
             $std_mid = $this->convertToDecimal($metric['std_mid']);
-            
+
             // Calculate individual errors against Modbus std_mid
             $error_left = null;
             $error_right = null;
-            
+
             if ($std_mid > 0 && $left_thickness !== 0) {
                 $error_left = abs($left_thickness - $std_mid);
             }
-            
+
             if ($std_mid > 0 && $right_thickness !== 0) {
                 $error_right = abs($right_thickness - $std_mid);
             }
-            
+
             // Determine actions (same logic as old system)
             $action_left = 0;
             $action_right = 0;
-            
+
             $st_cl = $metric['st_correct_left'];
             $st_cr = $metric['st_correct_right'];
-            
+
             // Check for correction actions
             if (($st_cl !== $this->st_cl_prev[$machine_id]) && $metric['is_correcting']) {
                 $action_left = $this->getActionCode($metric['push_thin_left'], $metric['push_thick_left']);
                 $this->st_cl_prev[$machine_id] = $st_cl;
             }
-            
+
             if (($st_cr !== $this->st_cr_prev[$machine_id]) && $metric['is_correcting']) {
                 $action_right = $this->getActionCode($metric['push_thin_right'], $metric['push_thick_right']);
                 $this->st_cr_prev[$machine_id] = $st_cr;
             }
-            
+
             // Store measurement data with calculated errors
             $measurement = [
                 $dt_now,                // 0: timestamp
@@ -442,23 +461,23 @@ class InsCtcPoll extends Command
                 $error_left,            // 10: error_left
                 $error_right,           // 11: error_right
             ];
-            
+
             // Initialize batch buffer if needed
-            if (!isset($this->batch_buffers[$machine_id])) {
+            if (! isset($this->batch_buffers[$machine_id])) {
                 $this->batch_buffers[$machine_id] = [];
             }
-            
+
             // Add to batch buffer
             $this->batch_buffers[$machine_id][] = $measurement;
             $this->last_activity[$machine_id] = time();
-            
+
             if ($this->option('d')) {
                 $this->line("  Added measurement: L={$left_thickness}, R={$right_thickness}, std_mid={$std_mid}");
                 $this->line("  Errors: L={$error_left}, R={$error_right}");
-                $this->line("  Buffer size: " . count($this->batch_buffers[$machine_id]));
+                $this->line('  Buffer size: '.count($this->batch_buffers[$machine_id]));
             }
         }
-        
+
         // Update sensor signature for next iteration
         $this->sensor_prev[$machine_id] = $sensor_signature;
     }
@@ -466,70 +485,70 @@ class InsCtcPoll extends Command
     /**
      * Check for batch timeouts and process completed batches
      */
-    function checkBatchTimeouts()
+    public function checkBatchTimeouts()
     {
         $now = Carbon::now();
-        
+
         if ($this->option('d')) {
             $this->line("\n=== TIMEOUT CHECK DEBUG ===");
-            $this->line("Current time: " . $now->format('H:i:s'));
+            $this->line('Current time: '.$now->format('H:i:s'));
             $this->line("Batch timeout: {$this->batch_timeout} seconds");
         }
-        
+
         foreach ($this->last_activity as $machine_id => $last_time) {
             $buffer_count = count($this->batch_buffers[$machine_id] ?? []);
-            
+
             if ($this->option('d')) {
-                $this->line("ID {$machine_id}: {$buffer_count} measurements, last activity: " . 
+                $this->line("ID {$machine_id}: {$buffer_count} measurements, last activity: ".
                     ($last_time ? Carbon::parse($last_time)->format('H:i:s') : 'null'));
             }
-            
+
             // Check if we have a valid last_time and non-empty buffer
-            if ($last_time && !empty($this->batch_buffers[$machine_id])) {
-                
+            if ($last_time && ! empty($this->batch_buffers[$machine_id])) {
+
                 // Ensure last_time is a Carbon instance
-                if (!($last_time instanceof Carbon)) {
+                if (! ($last_time instanceof Carbon)) {
                     $last_time = Carbon::parse($last_time);
                 }
-                
+
                 // Calculate time difference
                 $seconds_since_last = $last_time->diffInSeconds($now);
-                
+
                 if ($this->option('d')) {
-                    $this->line("  → Last time: " . $last_time->format('Y-m-d H:i:s'));
+                    $this->line('  → Last time: '.$last_time->format('Y-m-d H:i:s'));
                     $this->line("  → Seconds since last activity: {$seconds_since_last}");
-                    $this->line("  → Should trigger? " . ($seconds_since_last >= $this->batch_timeout ? 'YES' : 'NO'));
+                    $this->line('  → Should trigger? '.($seconds_since_last >= $this->batch_timeout ? 'YES' : 'NO'));
                 }
-                
+
                 // Check if timeout has been reached
                 if ($seconds_since_last >= $this->batch_timeout) {
-                    
+
                     if ($this->option('d')) {
-                        $this->line("  → TIMEOUT TRIGGERED! Processing batch...");
+                        $this->line('  → TIMEOUT TRIGGERED! Processing batch...');
                     }
-                    
+
                     // Process the completed batch
                     $this->processBatch($machine_id, $this->batch_buffers[$machine_id]);
-                    
+
                     // Clear batch buffer and reset activity
                     $this->batch_buffers[$machine_id] = [];
                     $this->last_activity[$machine_id] = null;
-                    
+
                     if ($this->option('d')) {
-                        $this->line("  → Batch processed and buffer cleared");
+                        $this->line('  → Batch processed and buffer cleared');
                     }
                 }
             } else {
                 if ($this->option('d')) {
-                    if (!$last_time) {
-                        $this->line("  → No last_time set, skipping");
+                    if (! $last_time) {
+                        $this->line('  → No last_time set, skipping');
                     } elseif (empty($this->batch_buffers[$machine_id])) {
-                        $this->line("  → Buffer is empty, skipping");
+                        $this->line('  → Buffer is empty, skipping');
                     }
                 }
             }
         }
-        
+
         if ($this->option('d')) {
             $this->line("=== END TIMEOUT CHECK ===\n");
         }
@@ -538,7 +557,7 @@ class InsCtcPoll extends Command
     /**
      * Initialize state variables for all machines
      */
-    function initializeState($machines)
+    public function initializeState($machines)
     {
         foreach ($machines as $machine) {
             $this->batch_buffers[$machine->id] = [];
@@ -560,15 +579,16 @@ class InsCtcPoll extends Command
         $unit_id = 1;
 
         if ($machines->isEmpty()) {
-            $this->error("✗ No machines found in database");
+            $this->error('✗ No machines found in database');
+
             return 1;
         }
 
-        $this->info("✓ InsCtcPoll started - monitoring " . count($machines) . " machines");
+        $this->info('✓ InsCtcPoll started - monitoring '.count($machines).' machines');
         $this->info("✓ Configuration: {$this->batch_timeout}s timeout, {$this->minimum_measurements} min measurements");
 
         if ($this->option('v')) {
-            $this->comment("Machines:");
+            $this->comment('Machines:');
             foreach ($machines as $machine) {
                 $this->comment("  → {$machine->name} ({$machine->ip_address})");
             }
@@ -580,21 +600,21 @@ class InsCtcPoll extends Command
         // Main polling loop
         while (true) {
             $dt_now = Carbon::now()->format('Y-m-d H:i:s');
-            
+
             // Poll all machines
             foreach ($machines as $machine) {
-                
+
                 if ($this->option('v')) {
                     $this->comment("→ Polling {$machine->name} ({$machine->ip_address})");
                 }
-                
+
                 try {
                     // Build Modbus requests (same as old system)
-                    $fc2 = ReadCoilsBuilder::newReadInputDiscretes('tcp://' . $machine->ip_address . ':502', $unit_id)
+                    $fc2 = ReadCoilsBuilder::newReadInputDiscretes('tcp://'.$machine->ip_address.':502', $unit_id)
                         ->coil(0, 'is_correcting')
                         ->build();
 
-                    $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://' . $machine->ip_address . ':502', $unit_id)
+                    $fc3 = ReadRegistersBuilder::newReadHoldingRegisters('tcp://'.$machine->ip_address.':502', $unit_id)
                         ->int16(0, 'sensor_left')
                         ->int16(1, 'sensor_right')
                         // ->int16(2, 'unknown') // missing register
@@ -613,7 +633,7 @@ class InsCtcPoll extends Command
                     // Execute Modbus requests
                     $fc2_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc2);
                     $fc3_response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($fc3);
-                    
+
                     $fc2_data = $fc2_response->getData();
                     $fc3_data = $fc3_response->getData();
 
@@ -635,7 +655,7 @@ class InsCtcPoll extends Command
                     ];
 
                     if ($this->option('d')) {
-                        $this->line("");
+                        $this->line('');
                         $this->line("Raw data from {$machine->name}");
                         $this->line("IP address {$machine->ip_address}:");
                         $this->table(['Field', 'Value'], [
@@ -657,13 +677,13 @@ class InsCtcPoll extends Command
                     $this->addToBatch($machine->id, $metric);
 
                 } catch (\Throwable $th) {
-                    $this->error("✗ Error polling {$machine->name} ({$machine->ip_address}): " . $th->getMessage());
+                    $this->error("✗ Error polling {$machine->name} ({$machine->ip_address}): ".$th->getMessage());
                 }
             }
-            
+
             // Check for batch timeouts and process completed batches
             $this->checkBatchTimeouts();
-            
+
             // Sleep before next iteration
             sleep(1);
         }

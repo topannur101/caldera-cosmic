@@ -40,7 +40,7 @@ class InsStcMLog extends Model
         'sv_w_6',
         'sv_w_7',
         'sv_w_8',
-        
+
         'sv_r_1',
         'sv_r_2',
         'sv_r_3',
@@ -48,9 +48,9 @@ class InsStcMLog extends Model
         'sv_r_5',
         'sv_r_6',
         'sv_r_7',
-        'sv_r_8',        
+        'sv_r_8',
     ];
-    
+
     // protected $casts = [
     //     'taken_at' => 'datetime',
     //     'temp' => 'float',

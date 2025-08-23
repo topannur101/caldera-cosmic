@@ -15,16 +15,16 @@ return new class extends Migration
         Schema::table('ins_omv_captures', function (Blueprint $table) {
             $table->unsignedSmallInteger('taken_at')->nullable()->after('file_name');
         });
-        
+
         $captures = InsOmvCapture::all();
-    
+
         foreach ($captures as $capture) {
             $file_name = $capture->file_name;
-            
+
             // Adjust regex to capture numbers with optional decimals
             preg_match('/(?:.*_){2}(\d+(?:\.\d+)?)_/', $file_name, $matches);
             $number = $matches[1] ?? null;
-            
+
             if ($number !== null) {
                 // Round to the nearest integer if a number is found
                 $capture->taken_at = (int) round($number);
@@ -33,13 +33,12 @@ return new class extends Migration
                 $capture->delete();
             }
         }
-        
+
         // Make 'taken_at' not nullable after populating existing data
         Schema::table('ins_omv_captures', function (Blueprint $table) {
             $table->unsignedSmallInteger('taken_at')->nullable(false)->change();
         });
     }
-    
 
     /**
      * Reverse the migrations.

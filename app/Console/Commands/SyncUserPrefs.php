@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Pref;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use App\Models\Pref;
 
 class SyncUserPrefs extends Command
 {
@@ -38,13 +38,13 @@ class SyncUserPrefs extends Command
 
         // Get active users with their most recent session
         $activeUsers = $this->getActiveUsers();
-        
+
         $syncedCount = 0;
         $deletedCount = 0;
 
         foreach ($activeUsers as $user) {
             $sessionData = $this->getSessionData($user->payload);
-            
+
             foreach ($this->sessionParams as $paramName) {
                 if (array_key_exists($paramName, $sessionData)) {
                     // Parameter exists in session
@@ -85,7 +85,7 @@ class SyncUserPrefs extends Command
     {
         // Laravel sessions are serialized, need to unserialize
         $data = base64_decode($payload);
-        
+
         // Handle Laravel's session serialization format
         if (strpos($data, 'a:') === 0) {
             // PHP serialize format
@@ -111,6 +111,7 @@ class SyncUserPrefs extends Command
             if ($existingPref->data !== $newValueJson) {
                 $existingPref->update(['data' => $newValueJson]);
                 $this->line("Updated {$paramName} for user {$userId}");
+
                 return true;
             }
         } else {
@@ -118,9 +119,10 @@ class SyncUserPrefs extends Command
             Pref::create([
                 'user_id' => $userId,
                 'name' => $paramName,
-                'data' => $newValueJson
+                'data' => $newValueJson,
             ]);
             $this->line("Created {$paramName} for user {$userId}");
+
             return true;
         }
 
@@ -135,6 +137,7 @@ class SyncUserPrefs extends Command
 
         if ($deleted) {
             $this->line("Deleted {$paramName} for user {$userId}");
+
             return true;
         }
 

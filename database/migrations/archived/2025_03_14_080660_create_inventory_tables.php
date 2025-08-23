@@ -28,9 +28,9 @@ return new class extends Migration
             [
                 'name' => 'IDR',
                 'rate' => 16290.00,
-            ]
+            ],
         ]);
-        
+
         Schema::create('inv_areas', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
@@ -39,10 +39,9 @@ return new class extends Migration
 
         DB::table('inv_areas')->insert([
             [
-                'name' => 'DEMO AREA'
-            ]
+                'name' => 'DEMO AREA',
+            ],
         ]);
-        
 
         Schema::create('inv_auths', function (Blueprint $table) {
             $table->id();
@@ -99,7 +98,7 @@ return new class extends Migration
             $table->timestamps();
             $table->foreignId('inv_item_id')->constrained();
             $table->foreignId('inv_tag_id')->constrained();
-            $table->primary(['inv_item_id', 'inv_tag_id']);            
+            $table->primary(['inv_item_id', 'inv_tag_id']);
             $table->index('inv_item_id');
             $table->index('inv_tag_id');
         });

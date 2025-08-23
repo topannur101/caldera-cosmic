@@ -19,12 +19,13 @@ class InsStcLogPolicy
     {
         $auth = $user->ins_stc_auths->first();
         $actions = json_decode($auth->actions ?? '{}', true);
+
         return in_array('log-manage', $actions)
         ? Response::allow()
-        : Response::deny( __('Kamu tak memiliki wewenang untuk mengelola hasil ukur alat') );
+        : Response::deny(__('Kamu tak memiliki wewenang untuk mengelola hasil ukur alat'));
     }
 
-    public function before(User $user): bool|null
+    public function before(User $user): ?bool
     {
         return $user->id == 1 ? true : null;
     }

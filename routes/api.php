@@ -1,37 +1,39 @@
 <?php
 
-use Carbon\Carbon;
-use App\Models\User;
-use Illuminate\Support\Str;
+use App\Models\InsOmvCapture;
 use App\Models\InsOmvMetric;
 use App\Models\InsOmvRecipe;
-use Illuminate\Http\Request;
-use App\Models\InsOmvCapture;
 use App\Models\InsRubberBatch;
+use App\Models\InvTag;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use App\Models\InvTag;
+use Illuminate\Support\Str;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
-Route::get('/ins-rubber-batches/recents', function() {
+Route::get('/ins-rubber-batches/recents', function () {
     $batches = InsRubberBatch::latest('updated_at')->limit(19)->get();
+
     return response()->json($batches);
 });
 
-Route::get('/ins-rubber-batches/{code}', function($code) {
+Route::get('/ins-rubber-batches/{code}', function ($code) {
     $batch = InsRubberBatch::where('code', $code)->latest('updated_at')->first();
+
     return response()->json($batch);
 });
 
-Route::get('/inv-tags', function(Request $request) {
+Route::get('/inv-tags', function (Request $request) {
     $q = trim($request['q']);
     $hints = [];
     if ($q) {
-        $hints = InvTag::where('name', 'LIKE', '%' . $q . '%')
+        $hints = InvTag::where('name', 'LIKE', '%'.$q.'%')
             ->orderBy('name')
             ->limit(100)
             ->get()
@@ -42,16 +44,17 @@ Route::get('/inv-tags', function(Request $request) {
     return response()->json($hints);
 });
 
-Route::get('/time', function() {
+Route::get('/time', function () {
     $currentTime = Carbon::now('UTC');
+
     return response()->json([
         'timestamp' => $currentTime->timestamp,
         'formatted' => $currentTime->toIso8601String(),
     ]);
 });
 
-Route::get('/omv-recipes', function() {
-    $recipes = InsOmvRecipe::all()->map(function($recipe) {
+Route::get('/omv-recipes', function () {
+    $recipes = InsOmvRecipe::all()->map(function ($recipe) {
         // Parse the steps JSON field
         $steps = json_decode($recipe->steps);
 
@@ -72,79 +75,79 @@ Route::get('/omv-recipes', function() {
 
 Route::post('/omv-metric', function (Request $request) {
     $validator = Validator::make($request->all(), [
-        'recipe_id'         => 'required|exists:ins_omv_recipes,id',
-        'code'              => 'nullable|string|max:20',
-        'model'             => 'nullable|string|max:30',    
-        'color'             => 'nullable|string|max:20',
-        'mcs'               => 'nullable|string|max:10',
-        'line'              => 'required|integer|min:1|max:99',
-        'team'              => 'required|in:A,B,C',
-        'user_1_emp_id'     => 'required|exists:users,emp_id',
-        'user_2_emp_id'     => 'nullable|string',
-        'eval'              => 'required|in:too_soon,on_time,too_late,on_time_manual',
-        'start_at'          => 'required|date_format:Y-m-d H:i:s',
-        'end_at'            => 'required|date_format:Y-m-d H:i:s',
-        'images'            => 'nullable|array',
+        'recipe_id' => 'required|exists:ins_omv_recipes,id',
+        'code' => 'nullable|string|max:20',
+        'model' => 'nullable|string|max:30',
+        'color' => 'nullable|string|max:20',
+        'mcs' => 'nullable|string|max:10',
+        'line' => 'required|integer|min:1|max:99',
+        'team' => 'required|in:A,B,C',
+        'user_1_emp_id' => 'required|exists:users,emp_id',
+        'user_2_emp_id' => 'nullable|string',
+        'eval' => 'required|in:too_soon,on_time,too_late,on_time_manual',
+        'start_at' => 'required|date_format:Y-m-d H:i:s',
+        'end_at' => 'required|date_format:Y-m-d H:i:s',
+        'images' => 'nullable|array',
         'images.*.step_index' => 'required|integer',
         'images.*.taken_at' => 'required|numeric',
-        'images.*.image'    => 'required|string',
-        'amps'              => 'nullable|array',
-        'amps.*.taken_at'   => 'required|numeric',
-        'amps.*.value'      => 'required|integer',
-        'composition'       => 'required|size:7|array',
-        'composition.*'     => 'nullable|min:0|max:5000|numeric',
+        'images.*.image' => 'required|string',
+        'amps' => 'nullable|array',
+        'amps.*.taken_at' => 'required|numeric',
+        'amps.*.value' => 'required|integer',
+        'composition' => 'required|size:7|array',
+        'composition.*' => 'nullable|min:0|max:5000|numeric',
     ]);
 
     if ($validator->fails()) {
         return response()->json([
-            'status'        => 'invalid',
-            'msg'           => $validator->errors()->all(),
+            'status' => 'invalid',
+            'msg' => $validator->errors()->all(),
         ], 400);
-    } 
-    
+    }
+
     $validated = $validator->validated();
     $user1 = User::where('emp_id', $validated['user_1_emp_id'])->first();
     $user2 = User::where('emp_id', $validated['user_2_emp_id'])->first();
 
     $errors = [];
 
-    if (!$user1) {
+    if (! $user1) {
         $errors[] = "The emp_id '{$validated['user_1_emp_id']}' on user_1_emp_id does not exist.";
     }
 
     $isExists = InsOmvMetric::where('line', $validated['line'])->where('start_at', $validated['start_at'])->exists();
 
-    if($isExists) {
+    if ($isExists) {
         $errors[] = "A metric for line '{$validated['line']}' already exists at '{$validated['start_at']}'.";
     }
 
-    if (!empty($errors)) {
+    if (! empty($errors)) {
         return response()->json([
             'status' => 'invalid',
             'msg' => $errors,
         ], 400);
     }
 
-    $code   = strtoupper(trim($validated['code']));
-    $model  = strtoupper(trim($validated['model']));
-    $color  = strtoupper(trim($validated['color']));
-    $mcs    = strtoupper(trim($validated['mcs']));
+    $code = strtoupper(trim($validated['code']));
+    $model = strtoupper(trim($validated['model']));
+    $color = strtoupper(trim($validated['color']));
+    $mcs = strtoupper(trim($validated['mcs']));
 
     $batch = null;
     if ($code) {
         $batch = InsRubberBatch::updateOrCreate(
             [
-                'code' => $code
-            ], 
+                'code' => $code,
+            ],
             [
                 'model' => $model,
                 'color' => $color,
-                'mcs' => $mcs, 
+                'mcs' => $mcs,
                 'composition' => json_encode($validated['composition']),
             ]);
     }
 
-    $amps = $validated['amps']; 
+    $amps = $validated['amps'];
     $filteredAmps = [];
 
     // limit the array if it's too big then just return empty filteredamps altogether
@@ -175,14 +178,14 @@ Route::post('/omv-metric', function (Request $request) {
         $avgCurrent = ($amps[$i]['value'] + $amps[$i - 1]['value']) / 2;
 
         // Hitung durasi interval lalu konversi dari detik ke jam
-        $timeInterval = ($amps[$i]['taken_at'] - $amps[$i - 1]['taken_at']) / 3600; 
-        
+        $timeInterval = ($amps[$i]['taken_at'] - $amps[$i - 1]['taken_at']) / 3600;
+
         // Hitung energi per interval
         $energy = (sqrt(3) * $avgCurrent * $voltage * $timeInterval * $powerFactor * $calibrationFactor) / 1000;
         $kwhUsage += $energy; // Jumlahkan total energi semua interval
     }
-    
-    $omvMetric = new InsOmvMetric();
+
+    $omvMetric = new InsOmvMetric;
     $omvMetric->ins_omv_recipe_id = $validated['recipe_id'];
     $omvMetric->line = $validated['line'];
     $omvMetric->team = $validated['team'];
@@ -195,62 +198,62 @@ Route::post('/omv-metric', function (Request $request) {
     $omvMetric->ins_rubber_batch_id = $batch ? $batch->id : null;
     $omvMetric->kwh_usage = $kwhUsage;
     $omvMetric->save();
-    
+
     $captureMessages = [];
-    
+
     foreach ($validated['images'] as $index => $image) {
         try {
-            if (!isset($image['image'])) {
-                throw new Exception("Image data is missing.");
+            if (! isset($image['image'])) {
+                throw new Exception('Image data is missing.');
             }
 
             $parts = explode(',', $image['image']);
             if (count($parts) != 2) {
-                throw new Exception("Invalid image format.");
+                throw new Exception('Invalid image format.');
             }
-        
+
             $imageData = base64_decode($parts[1], true);
             if ($imageData === false) {
-                throw new Exception("Invalid base64 encoding.");
+                throw new Exception('Invalid base64 encoding.');
             }
 
             $imageInfo = getimagesizefromstring($imageData);
             if ($imageInfo === false) {
-                throw new Exception("Invalid image data.");
+                throw new Exception('Invalid image data.');
             }
-        
+
             $mimeType = $imageInfo['mime'];
             $extension = explode('/', $mimeType)[1] ?? 'png'; // Default to png if mime type is unexpected
-        
+
             $fileName = sprintf(
                 '$s_%s.%s',
                 $omvMetric->id,
                 Str::random(6),
                 $extension
             );
-        
-            if (!Storage::put('/public/omv-captures/'.$fileName, $imageData)) {
-                throw new Exception("Failed to save image file.");
+
+            if (! Storage::put('/public/omv-captures/'.$fileName, $imageData)) {
+                throw new Exception('Failed to save image file.');
             }
-        
-            $omvCapture = new InsOmvCapture();
+
+            $omvCapture = new InsOmvCapture;
             $omvCapture->ins_omv_metric_id = $omvMetric->id;
             $omvCapture->file_name = $fileName;
             $omvCapture->taken_at = $image['taken_at'];
             $omvCapture->save();
-        
+
         } catch (Exception $e) {
-            $captureMessages[] = "Error saving capture {$index}: " . $e->getMessage();
+            $captureMessages[] = "Error saving capture {$index}: ".$e->getMessage();
             // You might want to log the full exception details here
             // Log::error('Image capture error: ' . $e->getMessage(), ['exception' => $e]);
         }
     }
-    
+
     $responseMessage = 'OMV Metric saved successfully.';
-    if (!empty($captureMessages)) {
-        $responseMessage .= ' However, there were issues with some captures: ' . implode(', ', $captureMessages);
+    if (! empty($captureMessages)) {
+        $responseMessage .= ' However, there were issues with some captures: '.implode(', ', $captureMessages);
     }
-    
+
     return response()->json([
         'status' => 'valid',
         'msg' => $responseMessage,

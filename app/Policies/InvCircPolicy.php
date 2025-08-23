@@ -2,9 +2,9 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\InvCirc;
 use App\Models\InvItem;
+use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
 class InvCircPolicy
@@ -26,6 +26,7 @@ class InvCircPolicy
             $authActions = json_decode($auth->actions, true);
             $actions = array_merge($actions, $authActions);
         }
+
         return in_array('circ-create', $actions)
             ? Response::allow()
             : Response::deny(__('Kamu tak memiliki wewenang untuk membuat sirkulasi'));
@@ -34,7 +35,7 @@ class InvCircPolicy
     public function create(User $user, InvCirc $invCirc): Response
     {
         $item = InvItem::with(['inv_stocks'])
-            ->whereHas('inv_stocks', function($query) use ($invCirc) {
+            ->whereHas('inv_stocks', function ($query) use ($invCirc) {
                 $query->where('id', $invCirc->inv_stock_id);
             })->first();
 
@@ -50,6 +51,7 @@ class InvCircPolicy
     {
         $auth = $user->inv_auths->where('inv_area_id', $invCirc->inv_stock->inv_item->inv_area_id)->first();
         $actions = json_decode($auth->actions ?? '{}', true);
+
         return in_array('circ-eval', $actions);
     }
 
@@ -58,7 +60,7 @@ class InvCircPolicy
         return $this->eval($user, $invCirc) || $invCirc->user_id === $user->id;
     }
 
-    public function before(User $user): bool|null
+    public function before(User $user): ?bool
     {
         return $user->id == 1 ? true : null;
     }

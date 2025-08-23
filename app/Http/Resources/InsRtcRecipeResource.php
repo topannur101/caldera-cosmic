@@ -15,12 +15,12 @@ class InsRtcRecipeResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'        => $this->id,
-            'name'      => $this->name,
-            'og_rs'     => $this->og_rs,
-            'std_min'   => $this->std_min,
-            'std_max'   => $this->std_max,
-            'std_mid'   => $this->std_mid,
+            'id' => $this->id,
+            'name' => $this->name,
+            'og_rs' => $this->og_rs,
+            'std_min' => $this->std_min,
+            'std_max' => $this->std_max,
+            'std_mid' => $this->std_mid,
 
         ];
     }

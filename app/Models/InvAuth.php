@@ -14,9 +14,9 @@ class InvAuth extends Model
     protected $fillable = [
         'user_id',
         'inv_area_id',
-        'actions'
+        'actions',
     ];
-    
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -30,6 +30,7 @@ class InvAuth extends Model
     public function countActions()
     {
         $actions = json_decode($this->actions ?? '{}', true);
+
         return count($actions);
     }
 }

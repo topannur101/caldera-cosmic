@@ -54,12 +54,12 @@ class InsStcMachine extends Model
     public function getSectionLimitsHighAttribute($value)
     {
         $limits = $this->castAttribute('section_limits_high', $value);
-        
+
         // Fallback to default values if not set or invalid
-        if (!is_array($limits) || count($limits) !== 8) {
+        if (! is_array($limits) || count($limits) !== 8) {
             return [83, 78, 73, 68, 63, 58, 53, 48];
         }
-        
+
         return $limits;
     }
 
@@ -69,12 +69,12 @@ class InsStcMachine extends Model
     public function getSectionLimitsLowAttribute($value)
     {
         $limits = $this->castAttribute('section_limits_low', $value);
-        
+
         // Fallback to default values if not set or invalid
-        if (!is_array($limits) || count($limits) !== 8) {
+        if (! is_array($limits) || count($limits) !== 8) {
             return [73, 68, 63, 58, 53, 48, 43, 38];
         }
-        
+
         return $limits;
     }
 }

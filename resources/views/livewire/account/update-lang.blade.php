@@ -6,41 +6,38 @@ use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
 use App\Models\Pref;
 
-new class extends Component
-{
-    public string $lang = '';
+new class extends Component {
+    public string $lang = "";
 
     public function mount()
     {
-        $accountPref = Pref::where('user_id', Auth::user()->id)->where('name', 'account')->first();
+        $accountPref = Pref::where("user_id", Auth::user()->id)
+            ->where("name", "account")
+            ->first();
         $data = $accountPref ? json_decode($accountPref->data, true) : [];
-        $this->lang = isset($data['lang']) ? $data['lang'] : 'id';
+        $this->lang = isset($data["lang"]) ? $data["lang"] : "id";
     }
 
     public function updateLang(): void
     {
         try {
             $validated = $this->validate([
-                'lang' => ['required', Rule::in(['id', 'en', 'vi', 'ko'])]
+                "lang" => ["required", Rule::in(["id", "en", "vi", "ko"])],
             ]);
-            $pref = Pref::firstOrCreate(
-                ['user_id' => Auth::user()->id, 'name' => 'account'],
-                ['data' => json_encode([])]
-            );
+            $pref = Pref::firstOrCreate(["user_id" => Auth::user()->id, "name" => "account"], ["data" => json_encode([])]);
             $existingData = json_decode($pref->data, true);
-            $existingData['lang'] = $validated['lang'];
+            $existingData["lang"] = $validated["lang"];
 
-            App::setLocale($validated['lang']);
-            session()->put('lang', $validated['lang']);
+            App::setLocale($validated["lang"]);
+            session()->put("lang", $validated["lang"]);
 
-            $pref->update(['data' => json_encode($existingData)]);
+            $pref->update(["data" => json_encode($existingData)]);
 
             $this->js('$dispatch("close")');
-            $this->redirectIntended(default: route('account', absolute: false), navigate: false);
-
+            $this->redirectIntended(default: route("account", absolute: false), navigate: false);
         } catch (\Throwable $th) {
-            $this->js('toast("' . __('Terjadi kesalahan pada server') . '", { type: "danger" })');
-            $this->reset('lang');
+            $this->js('toast("' . __("Terjadi kesalahan pada server") . '", { type: "danger" })');
+            $this->reset("lang");
         }
     }
 }; ?>
@@ -48,7 +45,7 @@ new class extends Component
 <section>
     <header>
         <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            {{ __('Bahasa') }}
+            {{ __("Bahasa") }}
         </h2>
     </header>
 
@@ -60,11 +57,12 @@ new class extends Component
             <x-radio wire:model="lang" id="lang-ko" name="lang" value="ko">한국</x-radio>
         </div>
         <div class="flex items-center justify-end gap-4">
-            <x-primary-button type="submit">{{ __('Simpan') }}</x-primary-button>
-{{-- 
-            <x-action-message class="me-3" on="password-updated">
+            <x-primary-button type="submit">{{ __("Simpan") }}</x-primary-button>
+            {{--
+                <x-action-message class="me-3" on="password-updated">
                 {{ __('Tersimpan.') }}
-            </x-action-message> --}}
+                </x-action-message>
+            --}}
         </div>
     </form>
     <x-spinner-bg wire:loading.class.remove="hidden"></x-spinner-bg>

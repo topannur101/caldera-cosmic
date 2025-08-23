@@ -32,5 +32,4 @@ class InsRtcMetric extends Model
     {
         return $this->belongsTo(InsRtcClump::class);
     }
-
 }

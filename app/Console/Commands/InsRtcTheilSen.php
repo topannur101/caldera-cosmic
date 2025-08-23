@@ -25,10 +25,11 @@ class InsRtcTheilSen extends Command
      */
     public function handle()
     {
-        function theilSenEstimator($x, $y) {
+        function theilSenEstimator($x, $y)
+        {
             $n = count($x);
             $slopes = [];
-        
+
             // Calculate slopes between all pairs of points
             for ($i = 0; $i < $n - 1; $i++) {
                 for ($j = $i + 1; $j < $n; $j++) {
@@ -37,36 +38,36 @@ class InsRtcTheilSen extends Command
                     }
                 }
             }
-        
+
             // Compute the median slope
             sort($slopes);
             $medianSlope = $slopes[intval(count($slopes) / 2)];
-        
+
             // Compute the intercept
             $intercepts = [];
             for ($i = 0; $i < $n; $i++) {
                 $intercepts[] = $y[$i] - $medianSlope * $x[$i];
             }
-        
+
             sort($intercepts);
             $medianIntercept = $intercepts[intval(count($intercepts) / 2)];
-        
+
             return [$medianSlope, $medianIntercept];
         }
-        
+
         // Sample data
         $data = [
-            ["3.03", "2024-05-16 08:18:07"],
-            ["3.08", "2024-05-16 08:18:05"],
-            ["3.10", "2024-05-16 08:17:58"],
-            ["3.22", "2024-05-16 08:17:56"],
-            ["3.22", "2024-05-16 08:17:51"],
-            ["3.22", "2024-05-16 08:17:47"],
-            ["2.98", "2024-05-16 08:17:42"],
-            ["3.04", "2024-05-16 08:17:40"],
-            ["3.11", "2024-05-16 08:17:37"],
-            ["3.16", "2024-05-16 08:17:34"],
-            ["3.16", "2024-05-16 08:17:32"],
+            ['3.03', '2024-05-16 08:18:07'],
+            ['3.08', '2024-05-16 08:18:05'],
+            ['3.10', '2024-05-16 08:17:58'],
+            ['3.22', '2024-05-16 08:17:56'],
+            ['3.22', '2024-05-16 08:17:51'],
+            ['3.22', '2024-05-16 08:17:47'],
+            ['2.98', '2024-05-16 08:17:42'],
+            ['3.04', '2024-05-16 08:17:40'],
+            ['3.11', '2024-05-16 08:17:37'],
+            ['3.16', '2024-05-16 08:17:34'],
+            ['3.16', '2024-05-16 08:17:32'],
         ];
 
         // Convert data to x and y arrays
@@ -79,13 +80,13 @@ class InsRtcTheilSen extends Command
 
         // Normalize the x values by subtracting the minimum timestamp
         $minX = min($x);
-        $x = array_map(function($value) use ($minX) {
+        $x = array_map(function ($value) use ($minX) {
             return $value - $minX;
         }, $x);
 
         // Calculate the Theil-Sen estimator
-        list($slope, $intercept) = theilSenEstimator($x, $y);
-        
+        [$slope, $intercept] = theilSenEstimator($x, $y);
+
         echo "Slope: $slope\n";
         echo "Intercept: $intercept\n";
     }

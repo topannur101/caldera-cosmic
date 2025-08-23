@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class InsOmvCapture extends Model
 {
@@ -13,7 +13,7 @@ class InsOmvCapture extends Model
     protected $fillable = [
         'ins_omv_metric_id',
         'file_name',
-        'taken_at'
+        'taken_at',
     ];
 
     public function ins_omv_metric(): BelongsTo

@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class InsRtcDevice extends Model
@@ -14,7 +14,7 @@ class InsRtcDevice extends Model
 
     protected $fillable = [
         'line',
-        'ip_address'
+        'ip_address',
     ];
 
     public function ins_rtc_clumps(): HasMany
@@ -34,11 +34,10 @@ class InsRtcDevice extends Model
         if ($latestMetric) {
             $now = Carbon::now();
             $dt_client = Carbon::parse($latestMetric->dt_client);
-            
+
             return $dt_client->greaterThanOrEqualTo($now->subMinutes(60));
         }
 
         return false;
     }
-    
 }
