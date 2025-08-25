@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script to verify Python Command Manager integration
+Test script to verify Python Daemon Manager integration
 """
 
 import requests
@@ -115,7 +115,7 @@ def test_laravel_service():
 
 def main():
     """Run all integration tests"""
-    print("Laravel Command Manager Integration Test")
+    print("Laravel Daemon Manager Integration Test")
     print("=" * 50)
     print()
     
@@ -148,7 +148,7 @@ def main():
         print("🎉 All tests passed! Integration is working correctly.")
         return 0
     else:
-        print("❌ Some tests failed. Check the Python Command Manager setup.")
+        print("❌ Some tests failed. Check the Python Daemon Manager setup.")
         return 1
 
 

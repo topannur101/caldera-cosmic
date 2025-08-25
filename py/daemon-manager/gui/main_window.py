@@ -1,5 +1,5 @@
 """
-Main GUI Window for Laravel Command Manager
+Main GUI Window for Laravel Daemon Manager
 Tabbed interface with overview, command tabs, and configuration
 """
 

@@ -19,7 +19,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='ccm',
+    name='cdm',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -39,5 +39,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='ccm_v1.0',
+    name='cdm_v1.0',
 )

@@ -1,5 +1,5 @@
 """
-Command Manager for Laravel Artisan Commands
+Daemon Manager for Laravel Artisan Commands
 Handles starting, stopping, and monitoring of artisan commands
 """
 

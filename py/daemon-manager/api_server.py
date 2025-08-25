@@ -1,5 +1,5 @@
 """
-Flask API Server for Laravel Command Manager
+Flask API Server for Laravel Daemon Manager
 Provides RESTful API endpoints for Laravel to communicate with
 """
 
@@ -153,7 +153,7 @@ class APIServer:
             """Health check endpoint"""
             return jsonify({
                 'success': True,
-                'message': 'Laravel Command Manager API is running',
+                'message': 'Laravel Daemon Manager API is running',
                 'version': '1.0.0'
             })
         

@@ -97,7 +97,7 @@
         }
         
         .command-box {
-            background-color: #2d3748;
+            background-color: #4a5568;
             color: #e2e8f0;
             padding: 15px;
             margin: 15px 0;
@@ -209,9 +209,10 @@
             <li><a href="#infrastructure">1. Infrastruktur & Persyaratan Sistem</a>
                 <ul style="padding-left: 20px; margin-top: 5px;">
                     <li><a href="#laragon">1.1 Lingkungan Laragon</a></li>
-                    <li><a href="#ccm">1.2 Caldera Command Manager (CCM)</a></li>
+                    <li><a href="#cdm">1.2 Caldera Daemon Manager (CDM)</a></li>
                     <li><a href="#services">1.3 Layanan Inti</a></li>
                     <li><a href="#scheduled-tasks">1.4 Tugas Terjadwal</a></li>
+                    <li><a href="#data-cleanup-config">1.5 Konfigurasi & Monitoring Data Cleanup</a></li>
                 </ul>
             </li>
             <li><a href="#project-structure">2. Struktur Proyek & Arsitektur</a>
@@ -227,6 +228,14 @@
                     <li><a href="#current-workflow">3.1 Alur Deployment Saat Ini</a></li>
                     <li><a href="#commands">3.2 Perintah Deployment</a></li>
                     <li><a href="#future-workflow">3.3 Alur Deployment Masa Depan</a></li>
+                </ul>
+            </li>
+            <li><a href="#python-utilities">4. Python Utilities</a>
+                <ul style="padding-left: 20px; margin-top: 5px;">
+                    <li><a href="#daemon-manager">4.1 Daemon Manager</a></li>
+                    <li><a href="#ldc-worker">4.2 LDC Worker</a></li>
+                    <li><a href="#omv-worker">4.3 OMV Worker</a></li>
+                    <li><a href="#translation-extract">4.4 Translation Extract</a></li>
                 </ul>
             </li>
         </ul>
@@ -249,10 +258,10 @@
             <strong>Penting:</strong> Apache dan MySQL adalah komponen terintegrasi dalam Laragon dan harus dijalankan melalui panel kontrol Laragon sebelum menjalankan Caldera.
         </div>
 
-        <h3 id="ccm">1.2 Caldera Command Manager (CCM)</h3>
-        <p>Caldera Command Manager adalah aplikasi GUI berbasis Python yang mengelola dan memantau layanan background penting yang diperlukan untuk operasi Caldera.</p>
+        <h3 id="cdm">1.2 Caldera Daemon Manager (CDM)</h3>
+        <p>Caldera Daemon Manager adalah aplikasi GUI berbasis Python yang mengelola dan memantau layanan background penting yang diperlukan untuk operasi Caldera.</p>
         
-        <h4>Fitur CCM:</h4>
+        <h4>Fitur CDM:</h4>
         <ul>
             <li>Manajemen dan monitoring layanan otomatis</li>
             <li>Viewing dan analisis log real-time</li>
@@ -260,17 +269,17 @@
             <li>Manajemen konfigurasi melalui antarmuka GUI</li>
         </ul>
         
-        <h4>Lokasi CCM:</h4>
-        <div class="command-box">py/command_manager/dist/ccm_v1.0/ccm.exe</div>
+        <h4>Lokasi CDM:</h4>
+        <div class="command-box">py/daemon-manager/dist/cdm_v1.0/cdm.exe</div>
         
-        <h4>Opsi Manajemen CCM:</h4>
+        <h4>Opsi Manajemen CDM:</h4>
         <ul>
-            <li><strong>Aplikasi Standalone:</strong> Jalankan executable CCM secara langsung</li>
+            <li><strong>Aplikasi Standalone:</strong> Jalankan executable CDM secara langsung</li>
             <li><strong>Interface Web:</strong> Akses melalui interface Caldera di Menu Akun > Administrasi > Kelola Daemon (khusus superuser)</li>
         </ul>
 
         <h3 id="services">1.3 Layanan Inti</h3>
-        <p>CCM mengelola layanan background kritis berikut yang harus berjalan terus-menerus:</p>
+        <p>CDM mengelola layanan background kritis berikut yang harus berjalan terus-menerus:</p>
         
         <div class="architecture-grid">
             <div class="architecture-card">
@@ -309,22 +318,83 @@
         
         <div class="architecture-grid">
             <div class="architecture-card">
-                <h4>Pembersihan OMV (Harian)</h4>
-                <div class="command-box">php artisan app:ins-omv-cleanup</div>
-                <p>Membersihkan data OMV (Open Mill Validation) lama dan file sementara untuk menjaga performa database.</p>
+                <h4>Pembersihan Data (Harian)</h4>
+                <div class="command-box">php artisan app:data-cleanup</div>
+                <p>Sistem pembersihan data terpadu dengan retensi yang dapat dikonfigurasi per modul:</p>
+                <ul>
+                    <li><strong>OMV:</strong> 6 bulan (captures & metrics)</li>
+                    <li><strong>CTC:</strong> 6 bulan (metrics)</li>
+                    <li><strong>RDC:</strong> 6 bulan (hasil uji)</li>
+                    <li><strong>STC:</strong> 6 bulan (log perangkat & ringkasan)</li>
+                    <li><strong>CLM:</strong> 12 bulan (record lingkungan)</li>
+                    <li><strong>LDC:</strong> 24 bulan (record hide)</li>
+                    <li><strong>RUB:</strong> 12 bulan (record rubber batch)</li>
+                    <li><strong>INV:</strong> 60 bulan (record sirkulasi inventaris)</li>
+                </ul>
             </div>
             
             <div class="architecture-card">
-                <h4>Resolusi Inventaris Kosong (Harian)</h4>
-                <div class="command-box">php artisan app:inv-empty-resolved</div>
-                <p>Menyelesaikan item inventaris kosong dan memproses penyesuaian stok tertunda.</p>
+                <h4>Sinkronisasi Query Inventaris (Setiap 5 Menit)</h4>
+                <div class="command-box">php artisan app:sync-inv-query</div>
+                <p>Menyinkronkan parameter query inventaris pengguna (items, sirkulasi, area) dari sesi ke database untuk konsistensi filter dan pencarian.</p>
+            </div>
+        </div>
+        
+        <h3 id="data-cleanup-config">1.5 Konfigurasi & Monitoring Data Cleanup</h3>
+        <p>Sistem data cleanup dapat dikonfigurasi dan dipantau untuk memastikan operasi yang optimal.</p>
+        
+        <h4>Mengonfigurasi Data Cleanup</h4>
+        <p>Untuk mengubah periode retensi data per modul:</p>
+        <ol>
+            <li>Edit file: <code>app/Console/Commands/InsDataCleanup.php</code></li>
+            <li>Ubah array <code>$retentionConfig</code> (nilai dalam bulan, 0 = tidak pernah cleanup)</li>
+            <li>Deploy perubahan ke server</li>
+        </ol>
+        
+        <div class="command-box">private array $retentionConfig = [
+    'omv' => 6,    // OMV captures and metrics
+    'ctc' => 6,    // CTC metrics  
+    'rdc' => 6,    // RDC test results
+    'stc' => 6,    // STC device logs and summaries
+    'clm' => 12,   // CLM environmental records
+    'ldc' => 24,   // LDC hide records
+    'rubber_batches' => 12, // Rubber batch records
+    'inv' => 60,   // Inventory circulation records
+];</div>
+
+        <h4>Testing Data Cleanup</h4>
+        <p>Sebelum menjalankan cleanup di production, gunakan mode testing:</p>
+        
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4>Dry-Run Mode</h4>
+                <div class="command-box">php artisan app:data-cleanup --dry-run</div>
+                <p>Preview apa yang akan dihapus tanpa melakukan penghapusan sebenarnya.</p>
             </div>
             
             <div class="architecture-card">
-                <h4>Sinkronisasi Preferensi User (Setiap 5 Menit)</h4>
-                <div class="command-box">php artisan app:sync-user-prefs</div>
-                <p>Menyinkronkan preferensi pengguna antar sesi dan menjaga konsistensi pengaturan pengguna.</p>
+                <h4>Test Mode</h4>
+                <div class="command-box">php artisan app:data-cleanup --test</div>
+                <p>Mode testing dengan jumlah record terbatas untuk pengujian aman.</p>
             </div>
+            
+            <div class="architecture-card">
+                <h4>Combined Testing</h4>
+                <div class="command-box">php artisan app:data-cleanup --dry-run --test</div>
+                <p>Kombinasi dry-run dan test mode untuk pengujian yang paling aman.</p>
+            </div>
+        </div>
+        
+        <h4>Monitoring Data Cleanup</h4>
+        <p>Untuk memantau operasi pembersihan data:</p>
+        <ul>
+            <li><strong>Daemon Manager:</strong> Periksa log di <code>py/daemon-manager/logs/schedule-work.log</code></li>
+            <li><strong>Output real-time:</strong> Lihat statistik penghapusan dan error melalui log files</li>
+            <li><strong>Verification:</strong> Gunakan dry-run untuk memverifikasi operasi sebelum execution</li>
+        </ul>
+        
+        <div class="note-box">
+            <strong>Catatan Penting:</strong> Selalu gunakan dry-run mode terlebih dahulu untuk memverifikasi operasi cleanup sebelum menjalankan penghapusan data yang sebenarnya di lingkungan produksi.
         </div>
     </div>
 
@@ -363,7 +433,7 @@
             
             <div class="architecture-card">
                 <h4>RDC (Rheometer Data Collection)</h4>
-                <p>Testing rheometer otomatis dengan analisis TC10/TC90 untuk kontrol kualitas karet.</p>
+                <p>Testing rheometer otomatis untuk kontrol kualitas karet.</p>
             </div>
             
             <div class="architecture-card">
@@ -431,9 +501,10 @@ resources/views/livewire/  # View komponen Livewire Volt
 └── layout/             # Komponen layout bersama
 
 py/                    # Script integrasi Python
-├── command_manager/   # Aplikasi CCM
+├── daemon-manager/    # Aplikasi CDM
 ├── omv-worker/       # Pemrosesan data OMV
-└── ldc-worker/       # Pemrosesan gambar LDC
+├── ldc-worker/       # Pemrosesan gambar LDC
+└── translation-extract/ # Tool manajemen terjemahan Laravel
 
 database/migrations/   # Definisi struktur database
         </div>
@@ -454,7 +525,7 @@ database/migrations/   # Definisi struktur database
                 
                 <!-- Arrow A -->
                 <path d="M 140 80 L 180 80" stroke="rgb(119, 94, 150)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-                <text x="160" y="75" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">A</text>
+                <text x="160" y="60" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">A</text>
                 
                 <!-- GitHub -->
                 <rect x="190" y="50" width="120" height="60" rx="8" fill="#f8f9fa" stroke="rgb(119, 94, 150)" stroke-width="2"/>
@@ -463,7 +534,7 @@ database/migrations/   # Definisi struktur database
                 
                 <!-- Arrow B -->
                 <path d="M 320 80 L 360 80" stroke="rgb(119, 94, 150)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-                <text x="340" y="75" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">B</text>
+                <text x="340" y="60" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">B</text>
                 
                 <!-- Pak Khafit PC -->
                 <rect x="370" y="50" width="150" height="60" rx="8" fill="#fff3cd" stroke="rgb(119, 94, 150)" stroke-width="2"/>
@@ -473,7 +544,7 @@ database/migrations/   # Definisi struktur database
                 
                 <!-- Arrow C -->
                 <path d="M 530 80 L 570 80" stroke="rgb(119, 94, 150)" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-                <text x="550" y="75" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">C</text>
+                <text x="550" y="60" text-anchor="middle" font-family="Arial" font-size="10" fill="rgb(119, 94, 150)">C</text>
                 
                 <!-- Caldera Server -->
                 <rect x="580" y="50" width="150" height="60" rx="8" fill="#d4edda" stroke="rgb(119, 94, 150)" stroke-width="2"/>
@@ -588,6 +659,302 @@ php artisan migrate:status</div>
         <div class="note-box">
             <strong>Pertimbangan Masa Depan:</strong> Konektivitas internet langsung akan menghilangkan kebutuhan untuk PC perantara (PC Pak Khafit) dan memungkinkan proses deployment yang lebih efisien, berpotensi termasuk pipeline CI/CD otomatis.
         </div>
+    </div>
+
+    <div class="section" id="python-utilities">
+        <h2>4. Python Utilities</h2>
+        <p>Sistem Caldera menggunakan beberapa utility Python yang mendukung operasi inti. Setiap utility dirancang untuk menangani aspek spesifik dari pipeline data dan manajemen sistem.</p>
+        
+        <h3 id="daemon-manager">4.1 Daemon Manager</h3>
+        <p>Aplikasi GUI berbasis Python untuk mengelola dan memantau layanan background Caldera.</p>
+        
+        <h4>Lokasi & Struktur:</h4>
+        <div class="command-box">py/daemon-manager/
+├── main.py              # File utama aplikasi GUI
+├── main.spec           # Spec file PyInstaller untuk build executable
+├── main_backup.spec    # Backup spec file (gunakan jika main.spec terewrite)
+├── gui/                # Komponen GUI
+├── dist/cdm_v1.0/     # Executable hasil build
+└── requirements.txt    # Dependencies Python</div>
+        
+        <h4>Development & Modification:</h4>
+        <ul>
+            <li><strong>File untuk diedit:</strong> <code>main.py</code> - Entry point dan logika utama aplikasi</li>
+            <li><strong>Komponen GUI:</strong> Direktori <code>gui/</code> berisi modul-modul interface</li>
+            <li><strong>Dependencies:</strong> Install dengan <code>pip install -r requirements.txt</code></li>
+        </ul>
+        
+        <h4>Building Executable:</h4>
+        <div class="command-box">cd py/daemon-manager
+pyinstaller main.spec</div>
+        
+        <div class="note-box">
+            <strong>Penting:</strong> Jika <code>main.spec</code> tidak terdefinisi atau terewrite dengan nilai default, gunakan <code>main_backup.spec</code> sebagai template. Copy <code>main_backup.spec</code> ke <code>main.spec</code> dan sesuaikan jika diperlukan.
+        </div>
+        
+        <h4>Deployment & Konfigurasi Instance:</h4>
+        <div class="architecture-card">
+            <h4>Lokasi Deployment</h4>
+            <p><strong>Server Caldera</strong> - Berjalan sebagai aplikasi terpusat untuk mengelola semua layanan background</p>
+        </div>
+        
+        <div class="architecture-card">
+            <h4>Jumlah Instance</h4>
+            <p><strong>1 Instance</strong> - Satu copy tunggal yang mengelola seluruh sistem</p>
+        </div>
+        
+        <div class="note-box">
+            <strong>Catatan Deployment:</strong> CDM harus berjalan di server utama Caldera karena memerlukan akses langsung ke database dan file konfigurasi sistem. Tidak diperlukan instalasi di mesin produksi individual.
+        </div>
+        
+        <h4>Fitur Utama:</h4>
+        <ul>
+            <li>Monitoring real-time status layanan background</li>
+            <li>Start/stop/restart layanan melalui GUI</li>
+            <li>Viewing log files dengan filter dan pencarian</li>
+            <li>Manajemen konfigurasi sistem</li>
+            <li>Overview statistik sistem</li>
+        </ul>
+
+        <h3 id="ldc-worker">4.2 LDC Worker</h3>
+        <p>Server WebSocket FastAPI untuk Leather Data Collection dengan packet sniffing dan broadcasting data real-time.</p>
+        
+        <h4>Lokasi & Struktur:</h4>
+        <div class="command-box">py/ldc-worker/
+├── app.py              # Aplikasi FastAPI utama
+├── app.spec           # PyInstaller spec file
+├── requirements.txt   # Dependencies Python
+└── dist/              # Executable hasil build</div>
+        
+        <h4>Fitur Teknis:</h4>
+        <ul>
+            <li><strong>Framework:</strong> FastAPI dengan WebSocket support</li>
+            <li><strong>Packet Sniffing:</strong> Menggunakan Scapy untuk monitoring traffic loopback</li>
+            <li><strong>Data Processing:</strong> Parsing HTTP POST requests dengan chunked encoding</li>
+            <li><strong>Broadcasting:</strong> Real-time data ke connected WebSocket clients</li>
+            <li><strong>Deduplication:</strong> Cache untuk mencegah pengiriman data duplikat</li>
+        </ul>
+        
+        <h4>Requirements:</h4>
+        <ul>
+            <li><strong>Administrator privileges:</strong> Diperlukan untuk packet capture</li>
+            <li><strong>Dependencies:</strong> <code>fastapi</code>, <code>uvicorn</code>, <code>scapy</code>, <code>websockets</code></li>
+            <li><strong>Port:</strong> 32998 (WebSocket endpoint: <code>/ws</code>)</li>
+        </ul>
+        
+        <h4>Building Executable:</h4>
+        <p>Untuk membuat executable standalone:</p>
+        <div class="command-box">cd py/ldc-worker
+pyinstaller app.spec</div>
+        
+        <p>Executable akan tersedia di direktori <code>dist/</code> setelah build selesai.</p>
+        
+        <h4>Usage:</h4>
+        <p>Silakan merujuk ke instalasi yang sudah ada di mesin dan cara menjalankannya dengan benar.</p>
+        
+        <h4>Deployment & Konfigurasi Instance:</h4>
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4>Lokasi Deployment</h4>
+                <p><strong>Comelz Nesting Machines</strong></p>
+                <ul>
+                    <li>Model: NT/NEK/NEK+</li>
+                    <li>Machine XA, XB, XC, XD</li>
+                    <li>Total: 4 instance terpisah</li>
+                </ul>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Konfigurasi Display</h4>
+                <p><strong>Dual Monitor Setup:</strong></p>
+                <ul>
+                    <li><strong>Main Display:</strong> Comelz Quality Editor app</li>
+                    <li><strong>Secondary Display:</strong> Waterfox browser (Caldera interface) + LDC Worker (minimized)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="note-box">
+            <strong>Catatan Deployment:</strong> LDC Worker harus dijalankan dengan administrator privileges pada setiap mesin Comelz untuk packet capture. Pastikan aplikasi berjalan minimized agar tidak mengganggu operasi Comelz Quality Editor di main display.
+        </div>
+        
+        <h4>Penggunaan Dalam Sistem:</h4>
+        <ul>
+            <li>Menangkap data POST dari aplikasi leather inspection</li>
+            <li>Konversi area measurements dari mm² ke ft²</li>
+            <li>Broadcasting data ke Caldera untuk real-time monitoring</li>
+            <li>Monitoring kualitas kulit pada 4 mesin secara bersamaan</li>
+        </ul>
+
+        <h3 id="omv-worker">4.3 OMV Worker</h3>
+        <p>Server Flask API untuk Open Mill Validation dengan komunikasi serial, capture kamera, dan database queuing.</p>
+        
+        <h4>Lokasi & Struktur:</h4>
+        <div class="command-box">py/omv-worker/
+├── app.py              # Aplikasi Flask utama
+├── config.json         # File konfigurasi
+├── config.json.example # Template konfigurasi
+├── database.db         # Database SQLite untuk queue
+├── launcher.bat        # Script launcher Windows
+└── requirements.txt    # Dependencies Python</div>
+        
+        <h4>Fitur Teknis:</h4>
+        <ul>
+            <li><strong>Framework:</strong> Flask dengan CORS support</li>
+            <li><strong>Serial Communication:</strong> Komunikasi dengan Arduino via serial port</li>
+            <li><strong>Camera Capture:</strong> OpenCV untuk capture dan processing gambar</li>
+            <li><strong>Database Queue:</strong> SQLite untuk antrian data dengan retry mechanism</li>
+            <li><strong>Time Synchronization:</strong> Sinkronisasi waktu dengan server utama</li>
+        </ul>
+        
+        <h4>API Endpoints:</h4>
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4><code>GET /get-line</code></h4>
+                <p>Mengambil nomor line dari konfigurasi</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4><code>POST /send-data</code></h4>
+                <p>Mengirim data OMV ke server dengan queuing jika gagal</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4><code>GET /get-data</code></h4>
+                <p>Membaca data sensor dari Arduino via serial</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4><code>GET /get-photo</code></h4>
+                <p>Capture dan crop gambar dari kamera</p>
+            </div>
+        </div>
+        
+        <h4>Konfigurasi:</h4>
+        <p>File <code>config.json</code> berisi pengaturan untuk:</p>
+        <ul>
+            <li>Server endpoints dan IP addresses</li>
+            <li>Serial port settings (port, baud rate, threshold)</li>
+            <li>Camera settings (index, resolution, frame count)</li>
+            <li>Data handling (retry attempts, backoff timing)</li>
+        </ul>
+        
+        <h4>Usage:</h4>
+        <p>Silakan merujuk ke instalasi yang sudah ada dan cara menjalankannya dengan benar.</p>
+        
+        <h4>Deployment & Konfigurasi Instance:</h4>
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4>Lokasi Deployment</h4>
+                <p><strong>Open-roll Mixing Machines</strong></p>
+                <ul>
+                    <li>Dipasang pada setiap mesin mixing karet</li>
+                    <li>Instance terpisah per mesin</li>
+                    <li>Terhubung ke Arduino dan kamera</li>
+                </ul>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Konfigurasi Display</h4>
+                <p><strong>Setup Display:</strong></p>
+                <ul>
+                    <li><strong>Waterfox Browser:</strong> Caldera interface</li>
+                    <li><strong>OMV Worker:</strong> Berjalan minimized di background</li>
+                    <li>Akses mudah untuk monitoring proses mixing</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="note-box">
+            <strong>Catatan Deployment:</strong> OMV Worker memerlukan konfigurasi hardware yang tepat (serial port untuk Arduino, kamera index) dan harus dikonfigurasi untuk auto-start saat sistem boot. Aplikasi berjalan minimized untuk tidak mengganggu operasi mixing.
+        </div>
+
+        <h3 id="translation-extract">4.4 Translation Extract</h3>
+        <p>Tool interaktif untuk manajemen string terjemahan Laravel dengan ekstraksi, pembersihan, dan sinkronisasi fitur.</p>
+        
+        <h4>Lokasi & Struktur:</h4>
+        <div class="command-box">py/translation-extract/
+├── app.py              # Aplikasi utama
+└── exception.json      # Daftar string yang dikecualikan dari ekstraksi</div>
+        
+        <h4>Fitur Utama:</h4>
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4>Extract New Translations</h4>
+                <p>Scan file <code>.blade.php</code> dan <code>.php</code> untuk mencari string <code>__()</code> dan menambahkannya ke file bahasa</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Remove Unused Translations</h4>
+                <p>Identifikasi dan hapus key terjemahan yang tidak digunakan lagi dalam kode</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Sort Translations</h4>
+                <p>Urutkan semua key terjemahan secara alfabetis dalam file bahasa</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Sync Translations</h4>
+                <p>Sinkronisasi key antar semua file bahasa (en.json, id.json, dll.)</p>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Separate Empty Translations</h4>
+                <p>Pisahkan terjemahan kosong ke bagian bawah file untuk kemudahan editing</p>
+            </div>
+        </div>
+        
+        <h4>Penggunaan:</h4>
+        <div class="command-box"># Jalankan dari root directory proyek Caldera
+python py/translation-extract/app.py</div>
+        
+        <h4>File Konfigurasi:</h4>
+        <ul>
+            <li><strong>exception.json:</strong> Berisi array string yang dikecualikan dari ekstraksi</li>
+            <li><strong>Target direktori:</strong> <code>resources/</code> dan <code>app/</code> untuk scanning</li>
+            <li><strong>Output file:</strong> <code>lang/en.json</code> sebagai file utama</li>
+        </ul>
+        
+        <div class="note-box">
+            <strong>Catatan:</strong> Tool ini harus dijalankan dari root directory proyek Caldera untuk memastikan path relatif yang benar ke direktori <code>resources/</code>, <code>app/</code>, dan <code>lang/</code>.
+        </div>
+        
+        <h4>Deployment & Konfigurasi Instance:</h4>
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4>Lokasi Deployment</h4>
+                <p><strong>Development Machines</strong></p>
+                <ul>
+                    <li>PC developer atau PC Pak Khafit</li>
+                    <li>Tidak perlu instalasi permanen</li>
+                    <li>Akses ke codebase diperlukan</li>
+                </ul>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Frequency & Usage</h4>
+                <p><strong>On-Demand Basis</strong></p>
+                <ul>
+                    <li>Hanya dijalankan saat update bahasa</li>
+                    <li>Tidak perlu berjalan background</li>
+                    <li>Tool maintenance berkala</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="note-box">
+            <strong>Catatan Deployment:</strong> Translation Extract adalah utility maintenance yang hanya digunakan saat diperlukan update localization. Tidak memerlukan instalasi khusus di mesin produksi dan cukup dijalankan dari environment development.
+        </div>
+        
+        <h4>Workflow Typical:</h4>
+        <ol>
+            <li>Extract new translations dari kode terbaru</li>
+            <li>Sync translations across semua file bahasa</li>
+            <li>Separate empty translations untuk memudahkan penerjemahan</li>
+            <li>Remove unused translations secara periodik untuk cleanup</li>
+            <li>Deploy hasil update ke server production melalui git workflow</li>
+        </ol>
     </div>
 
     <script>

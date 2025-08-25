@@ -48,7 +48,7 @@ The application's core is a manufacturing insights platform with multiple specia
 - **OMV (Open Mill Validation)**: Rubber mixing process monitoring with recipe management, real-time amperage tracking, and energy calculations
 - **CTC (Calendar Thickness Control)**: Thickness monitoring for rubber calendering with machine performance analytics
 - **STC (Stabilization Temperature Control)**: Environmental monitoring for temperature and humidity in stabilization chambers
-- **RDC (Rheometer Data Collection)**: Automated rheometer testing with TC10/TC90 analysis
+- **RDC (Rheometer Data Collection)**: Automated rheometer testing with T10/T90 analysis
 - **LDC (Leather Data Collection)**: Hide/leather quality inspection system
 - **CLM (Climate Monitoring)**: Environmental monitoring across production areas
 

@@ -6,26 +6,26 @@ use App\Models\Pref;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-class SyncUserPrefs extends Command
+class SyncInvQuery extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:sync-user-prefs';
+    protected $signature = 'app:sync-inv-query';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Sync user session parameters to preferences table';
+    protected $description = 'Sync inventory query parameters (items, circulation, areas) from user sessions to preferences table';
 
     /**
      * Execute the console command.
      */
-    // Define the session parameters you want to sync
+    // Define the inventory query session parameters to sync
     protected $sessionParams = [
         'inv_circs_params',
         'inv_items_params',
@@ -34,7 +34,7 @@ class SyncUserPrefs extends Command
 
     public function handle()
     {
-        $this->info('Starting user preferences sync...');
+        $this->info('Starting inventory query parameters sync...');
 
         // Get active users with their most recent session
         $activeUsers = $this->getActiveUsers();
@@ -63,7 +63,7 @@ class SyncUserPrefs extends Command
             }
         }
 
-        $this->info("Preferences sync completed. Synced: {$syncedCount}, Deleted: {$deletedCount}");
+        $this->info("Inventory query sync completed. Synced: {$syncedCount}, Deleted: {$deletedCount}");
     }
 
     private function getActiveUsers()

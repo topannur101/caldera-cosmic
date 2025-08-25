@@ -1,5 +1,5 @@
 """
-Configuration Manager for Laravel Command Manager
+Configuration Manager for Laravel Daemon Manager
 Handles reading/writing command configurations to JSON file
 """
 

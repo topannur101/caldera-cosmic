@@ -8,6 +8,5 @@ use Illuminate\Support\Facades\Schedule;
 //     $this->comment(Inspiring::quote());
 // })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command('app:ins-omv-cleanup')->daily();
-Schedule::command('app:inv-empty-resolved')->daily();
-Schedule::command('app:sync-user-prefs')->everyFiveMinutes();
+Schedule::command('app:data-cleanup')->daily();
+Schedule::command('app:sync-inv-query')->everyFiveMinutes();

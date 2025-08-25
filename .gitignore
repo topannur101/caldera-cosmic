@@ -34,13 +34,13 @@ yarn-error.log
 /py/omv-worker-ui/database.db
 /py/omv-worker-ui/debug.log
 /py/omv-worker-ui/__pycache__
-/py/command_manager/env/*
-/py/command_manager/config.json
-/py/command_manager/database.db
-/py/command_manager/debug.log
-/py/command_manager/__pycache__
-/py/command_manager/build/*
-/py/command_manager/dist/*
-/py/command_manager/logs/*
-/py/command_manager/gui/__pycache__
+/py/daemon-manager/env/*
+/py/daemon-manager/config.json
+/py/daemon-manager/database.db
+/py/daemon-manager/debug.log
+/py/daemon-manager/__pycache__
+/py/daemon-manager/build/*
+/py/daemon-manager/dist/*
+/py/daemon-manager/logs/*
+/py/daemon-manager/gui/__pycache__
 

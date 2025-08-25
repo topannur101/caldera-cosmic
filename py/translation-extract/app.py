@@ -136,7 +136,7 @@ def extract_translations():
     resources_directory = 'resources/'
     app_directory = 'app/'
     output_file = 'lang/en.json'
-    exclusion_file = 'translation-exception.json'
+    exclusion_file = 'py/translation-extract/exception.json'
     
     # Load existing translations and exclusion list
     print("\nLoading existing translations and exclusions...")

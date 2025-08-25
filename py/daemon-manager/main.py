@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Laravel Artisan Command Manager
+Laravel Artisan Daemon Manager
 Main entry point with tabbed GUI interface
 """
 
@@ -284,11 +284,11 @@ class CommandManagerApp:
     
     def run(self):
         """Run the application"""
-        print("Starting Laravel Command Manager...")
+        print("Starting Laravel Daemon Manager...")
         
         # Check for single instance
         if not self.check_single_instance():
-            print("Another instance of Command Manager is already running.")
+            print("Another instance of Daemon Manager is already running.")
             print("Exiting...")
             
             # Show message box to user
