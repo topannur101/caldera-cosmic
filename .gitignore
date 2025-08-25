@@ -17,6 +17,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/.claude
 /py/ldc-worker/env/*
 /py/ldc-worker/config.json
 /py/ldc-worker/database.db

@@ -39,7 +39,7 @@
                         <div class="uppercase">
                             {{ $code ? $code : __('Tak ada kode')}}
                         </div>
-                        <div title="{{ $price ? ($curr  . ' ' . number_format($price, 0) . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}">
+                        <div title="{{ $price ? ($curr  . ' ' . number_format($price, 0) . ' / ' . $uom) : (' • ' .__('Tak ada harga')) }}"">
                             {{ $price ? ($curr  . ' ' . number_format($price, 0) . ' / ' . $uom) : __('Tak ada harga') }}
                         </div>
                     </div>

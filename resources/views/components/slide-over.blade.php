@@ -1,6 +1,6 @@
 @props([
-    "name",
-    "show" => false,
+    'name',
+    'show' => false,
 ])
 <div
     x-data="{
@@ -19,30 +19,31 @@
         nextFocusableIndex() { return (this.focusables().indexOf(document.activeElement) + 1) % (this.focusables().length + 1) },
         prevFocusableIndex() { return Math.max(0, this.focusables().indexOf(document.activeElement)) -1 },
     }"
-    x-init="
-        $watch('show', (value) => {
-            if (value) {
-                document.body.classList.add('overflow-y-hidden')
-                {{ $attributes->has("focusable") ? "setTimeout(() => firstFocusable().focus(), 100)" : "" }}
-            } else {
-                document.body.classList.remove('overflow-y-hidden')
-            }
-        })
-    "
-    x-on:open-slide-over.window="$event.detail == '{{ $name }}' ? (show = true) : null"
-    x-on:close-slide-over.window="$event.detail == '{{ $name }}' ? (show = false) : null"
+    x-init="$watch('show', value => {
+        if (value) {
+            document.body.classList.add('overflow-y-hidden');
+            {{ $attributes->has('focusable') ? 'setTimeout(() => firstFocusable().focus(), 100)' : '' }}
+        } else {
+            document.body.classList.remove('overflow-y-hidden');
+        }
+    })"
+    x-on:open-slide-over.window="$event.detail == '{{ $name }}' ? show = true : null"
+    x-on:close-slide-over.window="$event.detail == '{{ $name }}' ? show = false : null"
     x-on:close-slide-over.stop="show = false"
     x-on:keydown.escape.window="show = false"
     x-on:keydown.tab.prevent="$event.shiftKey || nextFocusable().focus()"
     x-on:keydown.shift.tab.prevent="prevFocusable().focus()"
-    class="relative w-auto h-auto"
->
+    class="relative w-auto h-auto">
+   
     <template x-teleport="body">
-        <div x-show="show" class="relative z-50" style="display: {{ $show ? "block" : "none" }}">
+        <div
+            x-show="show"
+            class="relative z-50"
+            style="display: {{ $show ? 'block' : 'none' }};">
             <!-- Backdrop with click handler -->
-            <div
-                x-show="show"
-                class="fixed {{ session("mblur") ? "backdrop-blur" : "" }} inset-0 transform transition-all"
+            <div 
+                x-show="show"                 
+                class="fixed {{ session('mblur') ? 'backdrop-blur' : ''}} inset-0 transform transition-all"
                 x-transition:enter="ease-out duration-300"
                 x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100"
@@ -63,8 +64,7 @@
                             x-transition:leave="transform transition ease-in duration-200"
                             x-transition:leave-start="translate-x-0"
                             x-transition:leave-end="translate-x-full"
-                            class="w-screen max-w-md"
-                        >
+                            class="w-screen max-w-md">
                             <!-- Removed @click.away and kept only @click.stop -->
                             <div @click.stop class="bg-white dark:bg-neutral-800 flex flex-col h-full text-neutral-900 dark:text-neutral-100">
                                 {{ $slot }}

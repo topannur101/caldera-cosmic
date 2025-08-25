@@ -68,7 +68,7 @@
             <div class="truncate">
                 <div class="truncate">
                     <div class="text-xs truncate text-neutral-400 dark:text-neutral-600">{{ $user_name }} @if($assigner) <span title="{{ $assigner }}">• <i class="icon-handshake"></i></span> @endif {{ ' • '. $date_human}}</div>
-                    <div class="truncate">@switch($qtype) @case(2) <x-badge>{{ __('Bekas') }}</x-badge> @break @case(3) <x-badge>{{ __('Diperbaiki') }}</x-badge> @break @endswitch {{ $remarks }}</div>
+                    <div class="truncate">@switch($qtype) @case(2) <x-badge>{{ __('Bekas') }}</x-badge> @break @case(3) <x-badge>{{ __('Diperbaiki') }}</x-badge> @break @endswitch{{ $remarks }}</div>
                 </div>
             </div>
         </div>
