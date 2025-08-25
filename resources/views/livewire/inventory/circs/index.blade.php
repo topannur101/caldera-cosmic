@@ -160,19 +160,29 @@ new #[Layout("layouts.app")] class extends Component {
 
         switch ($this->sort) {
             case "updated":
-                $inv_circs_query->orderByDesc("updated_at");
+                $inv_circs_query->orderByDesc("updated_at")
+                    ->orderBy("inv_stock_id")
+                    ->orderByRaw('(SELECT inv_item_id FROM inv_stocks WHERE inv_stocks.id = inv_circs.inv_stock_id) ASC');
                 break;
             case "qty_low":
-                $inv_circs_query->orderBy("qty_relative");
+                $inv_circs_query->orderBy("qty_relative")
+                    ->orderBy("inv_stock_id")
+                    ->orderByRaw('(SELECT inv_item_id FROM inv_stocks WHERE inv_stocks.id = inv_circs.inv_stock_id) ASC');
                 break;
             case "qty_high":
-                $inv_circs_query->orderByDesc("qty_relative");
+                $inv_circs_query->orderByDesc("qty_relative")
+                    ->orderBy("inv_stock_id")
+                    ->orderByRaw('(SELECT inv_item_id FROM inv_stocks WHERE inv_stocks.id = inv_circs.inv_stock_id) ASC');
                 break;
             case "amount_low":
-                $inv_circs_query->orderBy("amount");
+                $inv_circs_query->orderBy("amount")
+                    ->orderBy("inv_stock_id")
+                    ->orderByRaw('(SELECT inv_item_id FROM inv_stocks WHERE inv_stocks.id = inv_circs.inv_stock_id) ASC');
                 break;
             case "amount_high":
-                $inv_circs_query->orderByDesc("amount");
+                $inv_circs_query->orderByDesc("amount")
+                    ->orderBy("inv_stock_id")
+                    ->orderByRaw('(SELECT inv_item_id FROM inv_stocks WHERE inv_stocks.id = inv_circs.inv_stock_id) ASC');
                 break;
         }
 

@@ -28,7 +28,7 @@
                     href="{{ route('home') }}"
                     wire:navigate
                 >
-                    {{ __("Beranda") }}
+                    <i class="icon-house me-2"></i>{{ __("Beranda") }}
                 </x-link>
             </div>
         </div>

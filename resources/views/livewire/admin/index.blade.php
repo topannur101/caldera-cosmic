@@ -51,5 +51,14 @@
                 </div>
             </div>
         </div>
+        <div class="mt-10 text-center">
+            <x-link
+                class="text-sm uppercase font-medium leading-5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300"
+                href="/documentation-id.html"
+                target="_blank"
+            >
+                <i class="icon-book-open me-2"></i>{{ __("Dokumentasi") }}
+            </x-link>
+        </div>
     </div>
 </x-app-layout>
