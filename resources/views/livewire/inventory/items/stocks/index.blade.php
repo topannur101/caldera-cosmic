@@ -133,7 +133,7 @@ new class extends Component {
                                 <div class="text-sm font-extrabold">{{ $stock["uom"] }}</div>
                             </div>
                             <div class="text-center text-xs">
-                                {{ $stock["inv_curr"]["name"] . " " . number_format($stock["unit_price"], 0) }}
+                                {{ $stock["inv_curr"]["name"] . " " . number_format($stock["unit_price"], 0) . " / " . $stock["uom"] }}
                             </div>
                         </div>
                     </li>

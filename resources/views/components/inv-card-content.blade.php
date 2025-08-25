@@ -45,7 +45,7 @@
                     </div>
                 </div>
                 <div class="text-right">
-                    <div class="p-1 font-semibold">{{ $qty }}</div>
+                    <div class="p-1 font-semibold @if($qty_min > 0 && $qty < $qty_min) text-red-500 @elseif($qty_max > 0 && $qty > $qty_max) text-yellow-500 @endif">{{ $qty }}</div>
                     <div class="px-1 text-sm text-nowrap text-neutral-500">{{ $uom }}</div>
                     <div class="px-1 pt-1 text-sm text-neutral-500">
                         <i class="icon-chevrons-down-up mr-1"></i>{{ $qty_min . '-' . $qty_max }}

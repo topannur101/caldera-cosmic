@@ -6,7 +6,9 @@
     'uom', 
     'loc', 
     'qty',  
-    'photo'
+    'photo',
+    'qty_min' => null,
+    'qty_max' => null
     ])
 
 <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden rounded-none sm:rounded-md">
@@ -20,7 +22,7 @@
             @if($photo)
             <img class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="{{ '/storage/inv-items/' . $photo }}" />
             @endif
-            <div class="absolute bottom-0 right-0 font-medium text-sm px-3 py-1 rounded-tl-md bg-white/70 dark:bg-black/70">
+            <div class="absolute bottom-0 right-0 font-medium text-sm px-3 py-1 rounded-tl-md bg-white/70 dark:bg-black/70 @if($qty_min > 0 && $qty < $qty_min) text-red-500 @elseif($qty_max > 0 && $qty > $qty_max) text-yellow-500 @endif">
                 {{ $qty . ' ' . $uom }}
             </div>
         </div>

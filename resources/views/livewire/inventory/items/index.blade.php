@@ -70,6 +70,9 @@ new #[Layout("layouts.app")] class extends Component {
     public string $aging = "";
 
     #[Url]
+    public string $limit = "";
+
+    #[Url]
     public bool $is_deleted = false;
 
     #[Url]
@@ -100,6 +103,7 @@ new #[Layout("layouts.app")] class extends Component {
                 $this->area_ids = $itemsParams["area_ids"] ?? [];
                 $this->filter = $itemsParams["filter"] ?? "";
                 $this->aging = $itemsParams["aging"] ?? "";
+                $this->limit = $itemsParams["limit"] ?? "";
                 $this->view = $itemsParams["view"] ?? "content";
                 $this->sort = $itemsParams["sort"] ?? "";
             }
@@ -143,6 +147,7 @@ new #[Layout("layouts.app")] class extends Component {
             "area_ids" => $this->area_ids,
             "filter" => $this->filter,
             "aging" => $this->aging,
+            "limit" => $this->limit,
             "sort" => $this->sort,
             "view" => $this->view,
         ];
@@ -169,6 +174,7 @@ new #[Layout("layouts.app")] class extends Component {
             "area_ids" => $inv_items_params["area_ids"],
             "filter" => $inv_items_params["filter"],
             "aging" => $inv_items_params["aging"],
+            "limit" => $inv_items_params["limit"],
             "sort" => $inv_items_params["sort"],
         ]);
 
@@ -525,6 +531,8 @@ new #[Layout("layouts.app")] class extends Component {
                                 :uom="$inv_stock->uom"
                                 :loc="$inv_stock->inv_item->inv_loc_id ? ($inv_stock->inv_item->inv_loc->parent . '-' . $inv_stock->inv_item->inv_loc->bin ) : null"
                                 :qty="$inv_stock->qty"
+                                :qty_min="$inv_stock->qty_min"
+                                :qty_max="$inv_stock->qty_max"
                                 :photo="$inv_stock->inv_item->photo"
                             ></x-inv-card-grid>
                         @endforeach
@@ -582,7 +590,7 @@ new #[Layout("layouts.app")] class extends Component {
                                         {{ $inv_stock->inv_item->inv_loc_id ? $inv_stock->inv_item->inv_loc->parent . "-" . $inv_stock->inv_item->inv_loc->bin : "-" }}
                                     </td>
                                     <td class="w-[1%]">{{ $inv_stock->inv_item->tags_facade() ?: "-" }}</td>
-                                    <td>{{ $inv_stock->qty . " " . $inv_stock->uom }}</td>
+                                    <td class="@if($inv_stock->qty_min > 0 && $inv_stock->qty < $inv_stock->qty_min) text-red-500 @elseif($inv_stock->qty_max > 0 && $inv_stock->qty > $inv_stock->qty_max) text-yellow-500 @endif">{{ $inv_stock->qty . " " . $inv_stock->uom }}</td>
                                     <td>{{ $inv_stock->inv_curr->name . " " . $inv_stock->unit_price }}</td>
                                     <td>{{ $inv_stock->amount_main }}</td>
                                     <td class="w-[1%]">{{ $inv_stock->inv_item->inv_area->name }}</td>

@@ -84,6 +84,7 @@ class InvQuery
         $this->applyTagFilters($query);
         $this->applyGeneralFilters($query);
         $this->applyAgingFilters($query);
+        $this->applyLimitFilters($query);
     }
 
     private function applySearchFilters($query)
@@ -172,6 +173,107 @@ class InvQuery
                 });
             }
         });
+    }
+
+    private function applyLimitFilters($query)
+    {
+        $limit = $this->params['limit'];
+        
+        if (!$limit) {
+            return;
+        }
+
+        if ($this->params['type'] === 'stocks') {
+            switch ($limit) {
+                case 'under-qty-limit':
+                    $query->whereColumn('qty', '<', 'qty_min')
+                          ->where('qty_min', '>', 0);
+                    break;
+
+                case 'over-qty-limit':
+                    $query->whereColumn('qty', '>', 'qty_max')
+                          ->where('qty_max', '>', 0);
+                    break;
+
+                case 'outside-qty-limit':
+                    $query->where(function ($subQuery) {
+                        $subQuery->where(function ($q) {
+                            $q->whereColumn('qty', '<', 'qty_min')
+                              ->where('qty_min', '>', 0);
+                        })->orWhere(function ($q) {
+                            $q->whereColumn('qty', '>', 'qty_max')
+                              ->where('qty_max', '>', 0);
+                        });
+                    });
+                    break;
+
+                case 'inside-qty-limit':
+                    $query->whereColumn('qty', '>=', 'qty_min')
+                          ->whereColumn('qty', '<=', 'qty_max')
+                          ->where('qty_min', '>', 0)
+                          ->where('qty_max', '>', 0);
+                    break;
+
+                case 'no-qty-limit':
+                    $query->where(function ($subQuery) {
+                        $subQuery->where('qty_min', 0)
+                                 ->where('qty_max', 0);
+                    });
+                    break;
+            }
+        } else {
+            // For items query, filter through inv_stocks relationship
+            switch ($limit) {
+                case 'under-qty-limit':
+                    $query->whereHas('inv_stocks', function ($stockQuery) {
+                        $stockQuery->where('is_active', true)
+                                   ->whereColumn('qty', '<', 'qty_min')
+                                   ->where('qty_min', '>', 0);
+                    });
+                    break;
+
+                case 'over-qty-limit':
+                    $query->whereHas('inv_stocks', function ($stockQuery) {
+                        $stockQuery->where('is_active', true)
+                                   ->whereColumn('qty', '>', 'qty_max')
+                                   ->where('qty_max', '>', 0);
+                    });
+                    break;
+
+                case 'outside-qty-limit':
+                    $query->whereHas('inv_stocks', function ($stockQuery) {
+                        $stockQuery->where('is_active', true)
+                                   ->where(function ($subQuery) {
+                                       $subQuery->where(function ($q) {
+                                           $q->whereColumn('qty', '<', 'qty_min')
+                                             ->where('qty_min', '>', 0);
+                                       })->orWhere(function ($q) {
+                                           $q->whereColumn('qty', '>', 'qty_max')
+                                             ->where('qty_max', '>', 0);
+                                       });
+                                   });
+                    });
+                    break;
+
+                case 'inside-qty-limit':
+                    $query->whereHas('inv_stocks', function ($stockQuery) {
+                        $stockQuery->where('is_active', true)
+                                   ->whereColumn('qty', '>=', 'qty_min')
+                                   ->whereColumn('qty', '<=', 'qty_max')
+                                   ->where('qty_min', '>', 0)
+                                   ->where('qty_max', '>', 0);
+                    });
+                    break;
+
+                case 'no-qty-limit':
+                    $query->whereHas('inv_stocks', function ($stockQuery) {
+                        $stockQuery->where('is_active', true)
+                                   ->where('qty_min', 0)
+                                   ->where('qty_max', 0);
+                    });
+                    break;
+            }
+        }
     }
 
     private function applyGeneralFilters($query)
@@ -379,6 +481,7 @@ class InvQuery
             'area_ids' => [],
             'filter' => null,
             'aging' => null,
+            'limit' => null,
             'sort' => null,
         ];
     }
@@ -422,6 +525,7 @@ class InvQuery
             'area_ids' => $sessionParams['area_ids'] ?? [],
             'filter' => $sessionParams['filter'] ?? null,
             'aging' => $sessionParams['aging'] ?? null,
+            'limit' => $sessionParams['limit'] ?? null,
             'sort' => $sessionParams['sort'] ?? 'updated',
             'is_linked' => $sessionParams['is_linked'] ?? false,
         ]);
