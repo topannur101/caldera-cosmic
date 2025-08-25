@@ -85,7 +85,7 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
     @else
         <div class="text-center w-72 py-20 mx-auto">
-            <i class="icon-octagon-minus text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
+            <i class="icon-octagon-minus block text-5xl mb-8 text-neutral-400 dark:text-neutral-600"></i>
             <div class="text-neutral-500">{{ __("Kamu tidak memiliki wewenang untuk melihat barang di area ini.") }}</div>
         </div>
     @endif
