@@ -176,6 +176,55 @@
             height: auto;
         }
         
+        .doc-image {
+            width: 300px;
+            height: 200px;
+            object-fit: cover;
+            border: 2px solid rgb(119, 94, 150);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 15px auto;
+            display: block;
+        }
+        
+        .doc-image-large {
+            width: 400px;
+            height: 250px;
+            object-fit: cover;
+            border: 2px solid rgb(119, 94, 150);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            display: block;
+        }
+        
+        .doc-image-small {
+            width: 200px;
+            height: 130px;
+            object-fit: cover;
+            border: 2px solid rgb(119, 94, 150);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 10px auto;
+            display: block;
+        }
+        
+        .module-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px auto;
+            display: block;
+        }
+        
+        .image-caption {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+
         @media print {
             body {
                 font-size: 12pt;
@@ -221,6 +270,7 @@
                     <li><a href="#modules">2.2 Modul Aplikasi Inti</a></li>
                     <li><a href="#database">2.3 Arsitektur Database</a></li>
                     <li><a href="#directories">2.4 Struktur Direktori</a></li>
+                    <li><a href="#dev-tools">2.5 Tools Pengembangan</a></li>
                 </ul>
             </li>
             <li><a href="#deployment">3. Deployment Server & Perubahan Kode</a>
@@ -254,6 +304,9 @@
             <li><strong>PHP 8.2+</strong> - Runtime environment untuk Laravel</li>
         </ul>
         
+        <img src="images/laragon-screenshot.png" alt="Laragon Control Panel Interface" class="doc-image">
+        <div class="image-caption">Panel kontrol Laragon menampilkan layanan Apache dan MySQL yang sedang berjalan</div>
+        
         <div class="note-box">
             <strong>Penting:</strong> Apache dan MySQL adalah komponen terintegrasi dalam Laragon dan harus dijalankan melalui panel kontrol Laragon sebelum menjalankan Caldera.
         </div>
@@ -272,11 +325,17 @@
         <h4>Lokasi CDM:</h4>
         <div class="command-box">py/daemon-manager/dist/cdm_v1.0/cdm.exe</div>
         
+        <img src="images/cdm-ui-screenshot.png" alt="Caldera Daemon Manager GUI Interface" class="doc-image">
+        <div class="image-caption">Interface GUI Caldera Daemon Manager menampilkan status layanan dan kontrol management</div>
+        
         <h4>Opsi Manajemen CDM:</h4>
         <ul>
             <li><strong>Aplikasi Standalone:</strong> Jalankan executable CDM secara langsung</li>
             <li><strong>Interface Web:</strong> Akses melalui interface Caldera di Menu Akun > Administrasi > Kelola Daemon (khusus superuser)</li>
         </ul>
+        
+        <img src="images/daemon-manager-web-interface.png" alt="Daemon Manager Web Interface in Caldera" class="doc-image">
+        <div class="image-caption">Interface web daemon manager dalam aplikasi Caldera untuk superuser</div>
 
         <h3 id="services">1.3 Layanan Inti</h3>
         <p>CDM mengelola layanan background kritis berikut yang harus berjalan terus-menerus:</p>
@@ -417,33 +476,39 @@
         <h4>Sistem Insights (Monitoring Manufaktur)</h4>
         <div class="architecture-grid">
             <div class="architecture-card">
+                <img src="ink-omv.svg" alt="OMV Open Mill Validation Icon" class="module-icon">
                 <h4>OMV (Open Mill Validation)</h4>
                 <p>Monitoring proses pencampuran karet dengan manajemen resep, pelacakan ampere real-time, dan kalkulasi energi.</p>
             </div>
             
             <div class="architecture-card">
+                <img src="ink-rtc.svg" alt="CTC Calendar Thickness Control Icon" class="module-icon">
                 <h4>CTC (Calendar Thickness Control)</h4>
                 <p>Monitoring ketebalan untuk calendering karet dengan analitik performa mesin.</p>
             </div>
             
             <div class="architecture-card">
+                <img src="ink-stc.svg" alt="STC Stabilization Temperature Control Icon" class="module-icon">
                 <h4>STC (Stabilization Temperature Control)</h4>
                 <p>Monitoring lingkungan untuk suhu dan kelembaban di ruang stabilisasi.</p>
             </div>
             
             <div class="architecture-card">
+                <img src="ink-rdc.svg" alt="RDC Rheometer Data Collection Icon" class="module-icon">
                 <h4>RDC (Rheometer Data Collection)</h4>
                 <p>Testing rheometer otomatis untuk kontrol kualitas karet.</p>
             </div>
             
             <div class="architecture-card">
+                <img src="ink-ldc.svg" alt="LDC Leather Data Collection Icon" class="module-icon">
                 <h4>LDC (Leather Data Collection)</h4>
                 <p>Sistem inspeksi kualitas kulit/hide dengan pelacakan performa pekerja.</p>
             </div>
             
             <div class="architecture-card">
-                <h4>CLM (Climate Monitoring)</h4>
-                <p>Monitoring lingkungan di seluruh area produksi untuk kondisi manufaktur optimal.</p>
+                <img src="ink-dwp.svg" alt="DWP Deep Well Press Icon" class="module-icon">
+                <h4>DWP (Deep Well Press)</h4>
+                <p>Monitoring proses deep well press untuk pembentukan komponen karet dengan kontrol tekanan dan suhu yang presisi.</p>
             </div>
         </div>
         
@@ -507,6 +572,117 @@ py/                    # Script integrasi Python
 └── translation-extract/ # Tool manajemen terjemahan Laravel
 
 database/migrations/   # Definisi struktur database
+        </div>
+
+        <h3 id="dev-tools">2.5 Tools Pengembangan</h3>
+        <p>Berikut adalah tools penting yang diperlukan untuk pengembangan dan maintenance sistem Caldera:</p>
+
+        <h4>Integrated Development Environment</h4>
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <img src="images/vscode-interface.png" alt="Visual Studio Code Interface" class="doc-image-large">
+                <div class="image-caption">Visual Studio Code dengan ekstensi Laravel dan PHP untuk development</div>
+                <h4>Visual Studio Code</h4>
+                <p><strong>IDE utama</strong> untuk pengembangan dengan dukungan penuh untuk:</p>
+                <ul>
+                    <li>PHP & Laravel development</li>
+                    <li>Blade templating</li>
+                    <li>Git integration</li>
+                    <li>Extension ecosystem</li>
+                    <li>Integrated terminal</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4>Command Line Interface</h4>
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <img src="images/command-prompt.png" alt="Command Prompt Interface" class="doc-image">
+                <div class="image-caption">Command Prompt untuk menjalankan perintah Laravel Artisan</div>
+                <h4>Command Prompt</h4>
+                <p><strong>Terminal Windows</strong> untuk:</p>
+                <ul>
+                    <li>Artisan commands</li>
+                    <li>Git operations</li>
+                    <li>NPM/Composer commands</li>
+                    <li>Migration & seeding</li>
+                </ul>
+            </div>
+            
+            <div class="architecture-card">
+                <img src="images/windows-terminal.png" alt="Windows Terminal Interface" class="doc-image">
+                <div class="image-caption">Windows Terminal dengan multiple tabs untuk development workflow</div>
+                <h4>Windows Terminal</h4>
+                <p><strong>Terminal modern</strong> dengan:</p>
+                <ul>
+                    <li>Multiple tabs & panes</li>
+                    <li>PowerShell & CMD support</li>
+                    <li>Customizable themes</li>
+                    <li>Better Unicode support</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4>Database Management</h4>
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <img src="images/heidisql-interface.png" alt="HeidiSQL Database Management Interface" class="doc-image-large">
+                <div class="image-caption">HeidiSQL interface untuk manajemen database MySQL Caldera</div>
+                <h4>HeidiSQL (Bundled dengan Laragon)</h4>
+                <p><strong>GUI database client</strong> terintegrasi dalam Laragon untuk:</p>
+                <ul>
+                    <li>Database exploration & browsing</li>
+                    <li>SQL query execution</li>
+                    <li>Table data viewing & editing</li>
+                    <li>Schema management</li>
+                    <li>Export/import operations</li>
+                    <li>User & permission management</li>
+                </ul>
+                
+                <h4>Mengakses HeidiSQL:</h4>
+                <ol>
+                    <li>Buka Laragon control panel</li>
+                    <li>Klik tombol "Database" atau gunakan menu Tools > HeidiSQL</li>
+                    <li>Koneksi otomatis ke MySQL server dengan kredensial Laragon</li>
+                    <li>Browse database Caldera untuk inspeksi data</li>
+                </ol>
+                
+                <div class="note-box">
+                    <strong>Tips HeidiSQL:</strong> Gunakan fitur "Export database as SQL" untuk backup, dan "Data" tab untuk viewing/editing record secara visual.
+                </div>
+            </div>
+        </div>
+
+        <h4>Workflow Development Typical</h4>
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4>1. Setup Environment</h4>
+                <ul>
+                    <li>Start Laragon (Apache + MySQL)</li>
+                    <li>Open VS Code di project folder</li>
+                    <li>Open terminal (Command Prompt/Windows Terminal)</li>
+                </ul>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>2. Development Cycle</h4>
+                <ul>
+                    <li>Code di VS Code</li>
+                    <li>Test dengan <code>php artisan serve</code></li>
+                    <li>Database inspection via HeidiSQL</li>
+                    <li>Git commit & push</li>
+                </ul>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>3. Database Operations</h4>
+                <ul>
+                    <li>Migrations: <code>php artisan migrate</code></li>
+                    <li>Seeding: <code>php artisan db:seed</code></li>
+                    <li>Inspection: HeidiSQL browser</li>
+                    <li>Backup: HeidiSQL export tools</li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -707,6 +883,9 @@ pyinstaller main.spec</div>
             <strong>Catatan Deployment:</strong> CDM harus berjalan di server utama Caldera karena memerlukan akses langsung ke database dan file konfigurasi sistem. Tidak diperlukan instalasi di mesin produksi individual.
         </div>
         
+        <img src="images/cdm-gui-interface.png" alt="CDM GUI Main Interface" class="doc-image">
+        <div class="image-caption">Interface utama Caldera Daemon Manager dengan monitoring real-time layanan</div>
+        
         <h4>Fitur Utama:</h4>
         <ul>
             <li>Monitoring real-time status layanan background</li>
@@ -718,6 +897,9 @@ pyinstaller main.spec</div>
 
         <h3 id="ldc-worker">4.2 LDC Worker</h3>
         <p>Server WebSocket FastAPI untuk Leather Data Collection dengan packet sniffing dan broadcasting data real-time.</p>
+        
+        <img src="images/ldc-worker-console.png" alt="LDC Worker Console Output" class="doc-image">
+        <div class="image-caption">LDC Worker console menampilkan packet capture dan WebSocket broadcasting</div>
         
         <h4>Lokasi & Struktur:</h4>
         <div class="command-box">py/ldc-worker/
@@ -788,6 +970,9 @@ pyinstaller app.spec</div>
 
         <h3 id="omv-worker">4.3 OMV Worker</h3>
         <p>Server Flask API untuk Open Mill Validation dengan komunikasi serial, capture kamera, dan database queuing.</p>
+        
+        <img src="images/omv-worker-interface.png" alt="OMV Worker API Interface" class="doc-image">
+        <div class="image-caption">OMV Worker Flask API interface dengan endpoint monitoring</div>
         
         <h4>Lokasi & Struktur:</h4>
         <div class="command-box">py/omv-worker/
@@ -871,6 +1056,9 @@ pyinstaller app.spec</div>
 
         <h3 id="translation-extract">4.4 Translation Extract</h3>
         <p>Tool interaktif untuk manajemen string terjemahan Laravel dengan ekstraksi, pembersihan, dan sinkronisasi fitur.</p>
+        
+        <img src="images/translation-extract-output.png" alt="Translation Extract Tool Output" class="doc-image">
+        <div class="image-caption">Translation Extract tool menampilkan proses ekstraksi dan sinkronisasi string terjemahan</div>
         
         <h4>Lokasi & Struktur:</h4>
         <div class="command-box">py/translation-extract/
