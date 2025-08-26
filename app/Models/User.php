@@ -163,6 +163,11 @@ class User extends Authenticatable
         return $this->hasMany(InsOmvAuth::class);
     }
 
+    public function ins_dwp_auths(): HasMany
+    {
+        return $this->hasMany(InsDwpAuth::class);
+    }
+
     public function ins_rdc_auths(): HasMany
     {
         return $this->hasMany(InsRdcAuth::class);

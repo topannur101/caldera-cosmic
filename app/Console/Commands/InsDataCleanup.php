@@ -33,6 +33,7 @@ class InsDataCleanup extends Command
         'stc' => 6,    // STC device logs and summaries
         'clm' => 12,   // CLM environmental records
         'ldc' => 24,   // LDC hide records
+        'dwp' => 6,    // DWP count records
         'rubber_batches' => 12,   // Rubber batch records
         'inv' => 60,   // Inventory circulation records
     ];
@@ -104,6 +105,9 @@ class InsDataCleanup extends Command
                 break;
             case 'clm':
                 $result = $this->cleanupClm($cutoffDate, $isDryRun, $isTestMode);
+                break;
+            case 'dwp':
+                $result = $this->cleanupDwp($cutoffDate, $isDryRun, $isTestMode);
                 break;
             case 'inv':
                 $result = $this->cleanupInv($cutoffDate, $isDryRun, $isTestMode);
@@ -447,6 +451,38 @@ class InsDataCleanup extends Command
             $deletedCount = $count;
         } catch (\Exception $e) {
             $this->error("   Error deleting rubber batch records: " . $e->getMessage());
+            $errorCount++;
+        }
+
+        return ['deleted' => $deletedCount, 'errors' => $errorCount];
+    }
+
+    /**
+     * Clean up DWP data (count records)
+     */
+    private function cleanupDwp(Carbon $cutoffDate, bool $isDryRun, bool $isTestMode = false): array
+    {
+        $deletedCount = 0;
+        $errorCount = 0;
+
+        try {
+            $query = DB::table('ins_dwp_counts')
+                ->where('created_at', '<', $cutoffDate);
+            
+            if ($isTestMode) {
+                $query->limit(5);
+            }
+            
+            $count = $query->count();
+
+            if (!$isDryRun && $count > 0) {
+                DB::table('ins_dwp_counts')
+                    ->where('created_at', '<', $cutoffDate)
+                    ->delete();
+            }
+            $deletedCount = $count;
+        } catch (\Exception $e) {
+            $this->error("   Error deleting DWP count records: " . $e->getMessage());
             $errorCount++;
         }
 

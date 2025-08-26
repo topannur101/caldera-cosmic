@@ -178,6 +178,18 @@ Route::prefix('insights')->group(function () {
         Volt::route('/erd', 'insights.erd.index')->name('index');
 
     });
+
+    Route::name('insights.dwp.')->group(function () {
+
+        Volt::route('/dwp/manage/authorizations', 'insights.dwp.manage.auths')->name('manage.auths');
+        Volt::route('/dwp/manage/devices', 'insights.dwp.manage.devices')->name('manage.devices');
+        Volt::route('/dwp/manage', 'insights.dwp.manage.index')->name('manage.index');
+        Volt::route('/dwp/data', 'insights.dwp.data.index')->name('data.index');
+        Route::get('/dwp', function () {
+            return redirect()->route('insights.dwp.data.index');
+        })->name('index');
+
+    });
     Volt::route('/', 'insights.index')->name('insights');
 });
 

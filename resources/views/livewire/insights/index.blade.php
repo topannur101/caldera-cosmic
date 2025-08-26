@@ -8,6 +8,7 @@ use App\Models\InsCtcMetric;
 use App\Models\InsRdcTest;
 use App\Models\InsLdcHide;
 use App\Models\InsClmRecord;
+use App\Models\InsDwpCount;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -22,6 +23,7 @@ new #[Layout("layouts.app")] class extends Component {
     public int $ctc_lines_recent = 0;
     public int $rdc_machines_recent = 0;
     public int $ldc_codes_recent = 0;
+    public int $dwp_lines_recent = 0;
 
     // Climate data properties
     public float|null $temperature_latest = null;
@@ -132,6 +134,16 @@ new #[Layout("layouts.app")] class extends Component {
         });
     }
 
+    private function getCachedDwpLines(): int
+    {
+        return Cache::remember("dwp_lines_recent", now()->addMinutes(30), function () {
+            $timeWindow = Carbon::now()->subHours(2);
+            return InsDwpCount::where("updated_at", ">=", $timeWindow)
+                ->distinct("line")
+                ->count("line");
+        });
+    }
+
     private function getLatestClimateData(): void
     {
         // Get the most recent climate record for IP location
@@ -162,6 +174,7 @@ new #[Layout("layouts.app")] class extends Component {
         $this->ctc_lines_recent = $this->getCachedCtcLines();
         $this->rdc_machines_recent = $this->getCachedRdcMachines();
         $this->ldc_codes_recent = $this->getCachedLdcCodes();
+        $this->dwp_lines_recent = $this->getCachedDwpLines();
 
         // Get fresh climate data (no caching)
         $this->getLatestClimateData();
@@ -176,6 +189,7 @@ new #[Layout("layouts.app")] class extends Component {
         Cache::forget("ctc_lines_recent"); // New CTC cache clear
         Cache::forget("rdc_machines_recent");
         Cache::forget("ldc_codes_recent");
+        Cache::forget("dwp_lines_recent");
         $this->calculateMetrics();
     }
 };
@@ -195,66 +209,92 @@ new #[Layout("layouts.app")] class extends Component {
             </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">{{ __("Sistem Rubber Terintegrasi") }}</h1>
-                <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
-                    <a href="{{ route("insights.omv.index") }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
-                        <div class="flex items-center">
-                            <div class="px-6 py-3">
-                                <img src="/ink-omv.svg" class="w-16 h-16 dark:invert" />
-                            </div>
-                            <div class="grow">
-                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Pemantauan open mill") }}</div>
-                                <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
-                                    <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
-                                        <div class="w-2 h-2 {{ $omv_lines_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
-                                        <div class="">{{ $omv_lines_recent > 0 ? $omv_lines_recent . " " . __("line ") : __("luring") }}</div>
+            <div class="flex flex-col gap-6">
+                <div>
+                    <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">{{ __("Sistem Rubber Terintegrasi") }}</h1>
+                    <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
+                        <a href="{{ route("insights.omv.index") }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                            <div class="flex items-center">
+                                <div class="px-6 py-3">
+                                    <img src="/ink-omv.svg" class="w-16 h-16 dark:invert" />
+                                </div>
+                                <div class="grow">
+                                    <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Pemantauan open mill") }}</div>
+                                    <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
+                                        <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
+                                            <div class="w-2 h-2 {{ $omv_lines_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
+                                            <div class="">{{ $omv_lines_recent > 0 ? $omv_lines_recent . " " . __("line ") : __("luring") }}</div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="px-6 py-3 text-lg">
-                                <i class="icon-chevron-right"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="{{ route("insights.ctc.index") }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
-                        <div class="flex items-center">
-                            <div class="px-6 py-3">
-                                <img src="/ink-rtc.svg" class="w-16 h-16 dark:invert" />
-                            </div>
-                            <div class="grow">
-                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Kendali tebal calendar") }}</div>
-                                <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
-                                    <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
-                                        <div class="w-2 h-2 {{ $ctc_lines_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
-                                        <div class="">{{ $ctc_lines_recent > 0 ? $ctc_lines_recent . " " . __("line ") : __("luring") }}</div>
-                                    </div>
+                                <div class="px-6 py-3 text-lg">
+                                    <i class="icon-chevron-right"></i>
                                 </div>
                             </div>
-                            <div class="px-6 py-3 text-lg">
-                                <i class="icon-chevron-right"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="{{ route("insights.rdc.index") }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
-                        <div class="flex items-center">
-                            <div class="px-6 py-3">
-                                <img src="/ink-rdc.svg" class="w-16 h-16 dark:invert" />
-                            </div>
-                            <div class="grow">
-                                <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Sistem data rheometer") }}</div>
-                                <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
-                                    <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
-                                        <div class="w-2 h-2 {{ $rdc_machines_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
-                                        <div class="">{{ $rdc_machines_recent > 0 ? $rdc_machines_recent . " " . __("mesin ") : __("luring") }}</div>
+                        </a>
+                        <a href="{{ route("insights.ctc.index") }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                            <div class="flex items-center">
+                                <div class="px-6 py-3">
+                                    <img src="/ink-rtc.svg" class="w-16 h-16 dark:invert" />
+                                </div>
+                                <div class="grow">
+                                    <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Kendali tebal calendar") }}</div>
+                                    <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
+                                        <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
+                                            <div class="w-2 h-2 {{ $ctc_lines_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
+                                            <div class="">{{ $ctc_lines_recent > 0 ? $ctc_lines_recent . " " . __("line ") : __("luring") }}</div>
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="px-6 py-3 text-lg">
+                                    <i class="icon-chevron-right"></i>
+                                </div>
                             </div>
-                            <div class="px-6 py-3 text-lg">
-                                <i class="icon-chevron-right"></i>
+                        </a>
+                        <a href="{{ route("insights.rdc.index") }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                            <div class="flex items-center">
+                                <div class="px-6 py-3">
+                                    <img src="/ink-rdc.svg" class="w-16 h-16 dark:invert" />
+                                </div>
+                                <div class="grow">
+                                    <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Sistem data rheometer") }}</div>
+                                    <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
+                                        <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
+                                            <div class="w-2 h-2 {{ $rdc_machines_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
+                                            <div class="">{{ $rdc_machines_recent > 0 ? $rdc_machines_recent . " " . __("mesin ") : __("luring") }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="px-6 py-3 text-lg">
+                                    <i class="icon-chevron-right"></i>
+                                </div>
                             </div>
-                        </div>
-                    </a>
+                        </a>
+                    </div>                
+                </div>
+                <div>
+                    <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">{{ __("Sistem area assembly") }}</h1>
+                    <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
+                        <a href="{{ route("insights.dwp.index") }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                            <div class="flex items-center">
+                                <div class="px-6 py-3">
+                                    <img src="/ink-dwp.svg" class="w-16 h-16 dark:invert" />
+                                </div>
+                                <div class="grow">
+                                    <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Pemantauan proses DWP") }}</div>
+                                    <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
+                                        <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
+                                            <div class="w-2 h-2 {{ $dwp_lines_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
+                                            <div class="">{{ $dwp_lines_recent > 0 ? $dwp_lines_recent . " " . __("line ") : __("luring") }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="px-6 py-3 text-lg">
+                                    <i class="icon-chevron-right"></i>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
                 </div>
             </div>
             <div class="flex flex-col gap-6">
