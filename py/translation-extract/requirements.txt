@@ -1,0 +1,13 @@
+# Laravel Translation String Manager
+# This application uses only Python standard library modules
+# No external dependencies are required
+
+# Standard library modules used (included with Python):
+# - os (built-in)
+# - re (built-in) 
+# - json (built-in)
+# - sys (built-in)
+# - time (built-in)
+
+# To run this application, you only need Python 3.6 or higher
+# No additional packages need to be installed via pip

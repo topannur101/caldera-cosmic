@@ -44,4 +44,5 @@ yarn-error.log
 /py/daemon-manager/dist/*
 /py/daemon-manager/logs/*
 /py/daemon-manager/gui/__pycache__
+/py/translation-extract/env/*
 

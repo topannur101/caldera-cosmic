@@ -6,7 +6,7 @@ import time
 
 def print_header():
     print("=" * 60)
-    print("         LARAVEL TRANSLATION STRING MANAGER")
+    print("         PENGELOLA STRING TERJEMAHAN LARAVEL")
     print("=" * 60)
     print()
 
@@ -23,7 +23,7 @@ def extract_translation_strings(file_path):
             content = file.read()
         return pattern.findall(content)
     except Exception as e:
-        print(f"\nWarning: Could not read file {file_path}: {e}")
+        print(f"\nPeringatan: Tidak dapat membaca file {file_path}: {e}")
         return []
 
 def scan_directory(directory, file_extension, show_progress=True):
@@ -37,12 +37,12 @@ def scan_directory(directory, file_extension, show_progress=True):
                 files_to_scan.append(os.path.join(root, file))
     
     total_files = len(files_to_scan)
-    print(f"\nScanning {total_files} {file_extension} files in {directory}...")
+    print(f"\nMemindai {total_files} file {file_extension} di {directory}...")
     
     for i, file_path in enumerate(files_to_scan, 1):
         if show_progress:
             print_progress_bar(i, total_files, 
-                             prefix=f"Processing", 
+                             prefix=f"Memproses", 
                              suffix=f"({i}/{total_files}) {os.path.basename(file_path)}")
         
         strings = extract_translation_strings(file_path)
@@ -62,7 +62,7 @@ def load_existing_translations(file_path):
             with open(file_path, 'r', encoding='utf-8') as json_file:
                 return json.load(json_file)
         except Exception as e:
-            print(f"Warning: Could not read {file_path}: {e}")
+            print(f"Peringatan: Tidak dapat membaca {file_path}: {e}")
             return {}
     return {}
 
@@ -72,14 +72,14 @@ def load_exclusion_list(file_path):
             with open(file_path, 'r', encoding='utf-8') as json_file:
                 return set(json.load(json_file))
         except Exception as e:
-            print(f"Warning: Could not read exclusion file {file_path}: {e}")
+            print(f"Peringatan: Tidak dapat membaca file pengecualian {file_path}: {e}")
             return set()
     return set()
 
 def get_language_files():
     lang_dir = 'lang/'
     if not os.path.exists(lang_dir):
-        print(f"Warning: Language directory '{lang_dir}' does not exist.")
+        print(f"Peringatan: Direktori bahasa '{lang_dir}' tidak ada.")
         return []
     
     language_files = []
@@ -125,11 +125,11 @@ def remove_unused_translations(unused_keys, language_files):
         if removed_count > 0:
             with open(lang_file, 'w', encoding='utf-8') as json_file:
                 json.dump(existing_translations, json_file, ensure_ascii=False, indent=4)
-            print(f"  - Removed {removed_count} unused translations from {os.path.basename(lang_file)}")
+            print(f"  - Menghapus {removed_count} terjemahan yang tidak digunakan dari {os.path.basename(lang_file)}")
 
 def extract_translations():
     print("\n" + "="*60)
-    print("                EXTRACTING TRANSLATIONS")
+    print("                MENGEKSTRAK TERJEMAHAN")
     print("="*60)
     
     # Define directories
@@ -139,12 +139,12 @@ def extract_translations():
     exclusion_file = 'py/translation-extract/exception.json'
     
     # Load existing translations and exclusion list
-    print("\nLoading existing translations and exclusions...")
+    print("\nMemuat terjemahan yang ada dan pengecualian...")
     existing_translations = load_existing_translations(output_file)
     exclusions = load_exclusion_list(exclusion_file)
     
-    print(f"  - Loaded {len(existing_translations)} existing translations")
-    print(f"  - Loaded {len(exclusions)} exclusion strings")
+    print(f"  - Memuat {len(existing_translations)} terjemahan yang ada")
+    print(f"  - Memuat {len(exclusions)} string pengecualian")
     
     # Extract translation strings from both directories
     blade_strings = scan_directory(resources_directory, '.blade.php')
@@ -154,79 +154,79 @@ def extract_translations():
     all_translation_strings = blade_strings.union(php_strings)
     
     # Update en.json file
-    print(f"\nUpdating {output_file}...")
+    print(f"\nMemperbarui {output_file}...")
     new_strings = create_or_update_translation_file(all_translation_strings, existing_translations, exclusions, output_file)
     
     # Summary
     print("\n" + "-"*60)
-    print("                    EXTRACTION SUMMARY")
+    print("                    RINGKASAN EKSTRAKSI")
     print("-"*60)
-    print(f"Translation strings found:")
-    print(f"  - {len(blade_strings)} from resources/ (.blade.php files)")
-    print(f"  - {len(php_strings)} from app/ (.php files)")
-    print(f"  - {len(all_translation_strings)} total unique strings")
-    print(f"New strings added: {new_strings}")
-    print(f"Excluded strings: {len(exclusions)}")
-    print(f"Output file: {output_file}")
+    print(f"String terjemahan ditemukan:")
+    print(f"  - {len(blade_strings)} dari resources/ (file .blade.php)")
+    print(f"  - {len(php_strings)} dari app/ (file .php)")
+    print(f"  - {len(all_translation_strings)} total string unik")
+    print(f"String baru ditambahkan: {new_strings}")
+    print(f"String dikecualikan: {len(exclusions)}")
+    print(f"File output: {output_file}")
 
 def remove_unused():
     print("\n" + "="*60)
-    print("              REMOVING UNUSED TRANSLATIONS")
+    print("              MENGHAPUS TERJEMAHAN YANG TIDAK DIGUNAKAN")
     print("="*60)
     
     # Get all language files
     language_files = get_language_files()
     if not language_files:
-        print("No language files found in lang/ directory.")
+        print("Tidak ada file bahasa yang ditemukan di direktori lang/.")
         return
     
-    print(f"\nFound {len(language_files)} language files:")
+    print(f"\nDitemukan {len(language_files)} file bahasa:")
     for lang_file in language_files:
         print(f"  - {os.path.basename(lang_file)}")
     
     # Scan for current translation strings
-    print("\nScanning for current translation strings...")
+    print("\nMemindai string terjemahan saat ini...")
     blade_strings = scan_directory('resources/', '.blade.php')
     php_strings = scan_directory('app/', '.php')
     all_translation_strings = blade_strings.union(php_strings)
     
     # Find unused translations
-    print(f"\nAnalyzing unused translations...")
+    print(f"\nMenganalisis terjemahan yang tidak digunakan...")
     unused_keys = find_unused_translations(all_translation_strings, language_files)
     
     if not unused_keys:
-        print("No unused translations found!")
+        print("Tidak ada terjemahan yang tidak digunakan!")
         return
     
     # Show unused translations
-    print(f"\nFound {len(unused_keys)} unused translation keys:")
+    print(f"\nDitemukan {len(unused_keys)} kunci terjemahan yang tidak digunakan:")
     print("-" * 40)
     for i, key in enumerate(sorted(unused_keys), 1):
         print(f"{i:3d}. {key}")
     
     # Confirm deletion
     print("-" * 40)
-    confirm = input(f"\nDo you want to remove these {len(unused_keys)} unused translations from ALL language files? (y/N): ").strip().lower()
+    confirm = input(f"\nApakah Anda ingin menghapus {len(unused_keys)} terjemahan yang tidak digunakan dari SEMUA file bahasa? (y/N): ").strip().lower()
     
     if confirm in ['y', 'yes']:
-        print(f"\nRemoving unused translations...")
+        print(f"\nMenghapus terjemahan yang tidak digunakan...")
         remove_unused_translations(unused_keys, language_files)
-        print(f"\nSuccessfully removed {len(unused_keys)} unused translations from all language files.")
+        print(f"\nBerhasil menghapus {len(unused_keys)} terjemahan yang tidak digunakan dari semua file bahasa.")
     else:
-        print("Operation cancelled.")
+        print("Operasi dibatalkan.")
 
 def separate_empty_translations():
     print("\n" + "="*60)
-    print("           SEPARATING EMPTY TRANSLATIONS")
+    print("           MEMISAHKAN TERJEMAHAN KOSONG")
     print("="*60)
     
     # Get all language files
     language_files = get_language_files()
     if not language_files:
-        print("No language files found in lang/ directory.")
+        print("Tidak ada file bahasa yang ditemukan di direktori lang/.")
         return
     
-    print(f"\nFound {len(language_files)} language files:")
+    print(f"\nDitemukan {len(language_files)} file bahasa:")
     for lang_file in language_files:
         print(f"  - {os.path.basename(lang_file)}")
     
@@ -234,7 +234,7 @@ def separate_empty_translations():
     separation_plan = {}
     total_empty_count = 0
     
-    print(f"\nAnalyzing translation files...")
+    print(f"\nMenganalisis file terjemahan...")
     for lang_file in language_files:
         translations = load_existing_translations(lang_file)
         
@@ -255,35 +255,35 @@ def separate_empty_translations():
             }
             total_empty_count += len(empty_translations)
         
-        print(f"  - {os.path.basename(lang_file)}: {len(filled_translations)} filled, {len(empty_translations)} empty")
+        print(f"  - {os.path.basename(lang_file)}: {len(filled_translations)} terisi, {len(empty_translations)} kosong")
     
     if not separation_plan:
-        print("\nNo empty translations found in any language files!")
+        print("\nTidak ada terjemahan kosong yang ditemukan di file bahasa manapun!")
         return
     
     # Show separation preview
-    print(f"\nSeparation Preview:")
+    print(f"\nPratinjau Pemisahan:")
     print("-" * 60)
     for lang_file, plan in separation_plan.items():
         print(f"{os.path.basename(lang_file)}:")
-        print(f"  - {len(plan['filled'])} filled translations (will stay at top)")
-        print(f"  - {len(plan['empty'])} empty translations (will move to bottom)")
+        print(f"  - {len(plan['filled'])} terjemahan terisi (akan tetap di atas)")
+        print(f"  - {len(plan['empty'])} terjemahan kosong (akan dipindah ke bawah)")
         
         # Show first few empty keys as preview
         empty_keys = list(plan['empty'].keys())
         for key in empty_keys[:3]:
             print(f"    └─ {key}")
         if len(empty_keys) > 3:
-            print(f"    └─ ... and {len(empty_keys) - 3} more")
+            print(f"    └─ ... dan {len(empty_keys) - 3} lainnya")
         print()
     
-    print(f"Total empty translations to move: {total_empty_count}")
+    print(f"Total terjemahan kosong yang akan dipindah: {total_empty_count}")
     
     # Confirm separation
-    confirm = input(f"Do you want to separate empty translations in all language files? (y/N): ").strip().lower()
+    confirm = input(f"Apakah Anda ingin memisahkan terjemahan kosong di semua file bahasa? (y/N): ").strip().lower()
     
     if confirm in ['y', 'yes']:
-        print(f"\nSeparating empty translations...")
+        print(f"\nMemisahkan terjemahan kosong...")
         
         for lang_file, plan in separation_plan.items():
             # Create new ordered dictionary: filled first, then empty
@@ -300,24 +300,24 @@ def separate_empty_translations():
             with open(lang_file, 'w', encoding='utf-8') as json_file:
                 json.dump(reordered_translations, json_file, ensure_ascii=False, indent=4)
             
-            print(f"  - Separated {len(plan['empty'])} empty translations in {os.path.basename(lang_file)}")
+            print(f"  - Memisahkan {len(plan['empty'])} terjemahan kosong di {os.path.basename(lang_file)}")
         
-        print(f"\nSuccessfully separated empty translations in {len(separation_plan)} language files.")
+        print(f"\nBerhasil memisahkan terjemahan kosong di {len(separation_plan)} file bahasa.")
     else:
-        print("Operation cancelled.")
+        print("Operasi dibatalkan.")
 
 def sync_translations():
     print("\n" + "="*60)
-    print("              SYNCING TRANSLATIONS")
+    print("              SINKRONISASI TERJEMAHAN")
     print("="*60)
     
     # Get all language files
     language_files = get_language_files()
     if not language_files:
-        print("No language files found in lang/ directory.")
+        print("Tidak ada file bahasa yang ditemukan di direktori lang/.")
         return
     
-    print(f"\nFound {len(language_files)} language files:")
+    print(f"\nDitemukan {len(language_files)} file bahasa:")
     for lang_file in language_files:
         print(f"  - {os.path.basename(lang_file)}")
     
@@ -325,14 +325,14 @@ def sync_translations():
     all_translations = {}
     all_unique_keys = set()
     
-    print(f"\nAnalyzing translation files...")
+    print(f"\nMenganalisis file terjemahan...")
     for lang_file in language_files:
         translations = load_existing_translations(lang_file)
         all_translations[lang_file] = translations
         all_unique_keys.update(translations.keys())
-        print(f"  - {os.path.basename(lang_file)}: {len(translations)} keys")
+        print(f"  - {os.path.basename(lang_file)}: {len(translations)} kunci")
     
-    print(f"\nTotal unique keys across all files: {len(all_unique_keys)}")
+    print(f"\nTotal kunci unik di semua file: {len(all_unique_keys)}")
     
     # Calculate what needs to be added to each file
     sync_plan = {}
@@ -346,27 +346,27 @@ def sync_translations():
             total_keys_to_add += len(missing_keys)
     
     if not sync_plan:
-        print("\nAll language files are already synchronized!")
+        print("\nSemua file bahasa sudah tersinkronisasi!")
         return
     
     # Show sync preview
-    print(f"\nSync Preview:")
+    print(f"\nPratinjau Sinkronisasi:")
     print("-" * 60)
     for lang_file, missing_keys in sync_plan.items():
-        print(f"{os.path.basename(lang_file)}: {len(missing_keys)} missing keys")
+        print(f"{os.path.basename(lang_file)}: {len(missing_keys)} kunci hilang")
         for key in missing_keys[:5]:  # Show first 5 keys
             print(f"  + {key}")
         if len(missing_keys) > 5:
-            print(f"  ... and {len(missing_keys) - 5} more")
+            print(f"  ... dan {len(missing_keys) - 5} lainnya")
         print()
     
-    print(f"Total keys to add: {total_keys_to_add}")
+    print(f"Total kunci yang akan ditambahkan: {total_keys_to_add}")
     
     # Confirm sync
-    confirm = input(f"Do you want to sync all language files? (y/N): ").strip().lower()
+    confirm = input(f"Apakah Anda ingin mensinkronkan semua file bahasa? (y/N): ").strip().lower()
     
     if confirm in ['y', 'yes']:
-        print(f"\nSyncing translations...")
+        print(f"\nMensinkronkan terjemahan...")
         
         for lang_file, missing_keys in sync_plan.items():
             # Add missing keys with empty string values
@@ -377,32 +377,32 @@ def sync_translations():
             with open(lang_file, 'w', encoding='utf-8') as json_file:
                 json.dump(all_translations[lang_file], json_file, ensure_ascii=False, indent=4)
             
-            print(f"  - Added {len(missing_keys)} keys to {os.path.basename(lang_file)}")
+            print(f"  - Menambahkan {len(missing_keys)} kunci ke {os.path.basename(lang_file)}")
         
-        print(f"\nSuccessfully synchronized {len(sync_plan)} language files.")
+        print(f"\nBerhasil mensinkronkan {len(sync_plan)} file bahasa.")
     else:
-        print("Operation cancelled.")
+        print("Operasi dibatalkan.")
 
 def sort_translations():
     print("\n" + "="*60)
-    print("               SORTING TRANSLATIONS")
+    print("               MENGURUTKAN TERJEMAHAN")
     print("="*60)
     
     # Get all language files
     language_files = get_language_files()
     if not language_files:
-        print("No language files found in lang/ directory.")
+        print("Tidak ada file bahasa yang ditemukan di direktori lang/.")
         return
     
-    print(f"\nFound {len(language_files)} language files:")
+    print(f"\nDitemukan {len(language_files)} file bahasa:")
     for lang_file in language_files:
         print(f"  - {os.path.basename(lang_file)}")
     
-    confirm = input(f"\nDo you want to sort all {len(language_files)} language files alphabetically? (y/N): ").strip().lower()
+    confirm = input(f"\nApakah Anda ingin mengurutkan semua {len(language_files)} file bahasa secara alfabetis? (y/N): ").strip().lower()
     
     if confirm in ['y', 'yes']:
         sorted_count = 0
-        print(f"\nSorting translations...")
+        print(f"\nMengurutkan terjemahan...")
         
         for lang_file in language_files:
             existing_translations = load_existing_translations(lang_file)
@@ -414,27 +414,27 @@ def sort_translations():
                 with open(lang_file, 'w', encoding='utf-8') as json_file:
                     json.dump(sorted_translations, json_file, ensure_ascii=False, indent=4)
                 
-                print(f"  - Sorted {len(sorted_translations)} translations in {os.path.basename(lang_file)}")
+                print(f"  - Mengurutkan {len(sorted_translations)} terjemahan di {os.path.basename(lang_file)}")
                 sorted_count += 1
         
-        print(f"\nSuccessfully sorted {sorted_count} language files.")
+        print(f"\nBerhasil mengurutkan {sorted_count} file bahasa.")
     else:
-        print("Operation cancelled.")
+        print("Operasi dibatalkan.")
 
 def main():
     print_header()
     
     while True:
-        print("Please select an option:")
-        print("1. Extract new translations")
-        print("2. Remove unused translations")
-        print("3. Sort translations alphabetically")
-        print("4. Sync translations across all languages")
-        print("5. Separate empty translations to bottom")
-        print("6. Exit")
+        print("Silakan pilih opsi:")
+        print("1. Ekstrak terjemahan baru")
+        print("2. Hapus terjemahan yang tidak digunakan")
+        print("3. Urutkan terjemahan secara alfabetis")
+        print("4. Sinkronkan terjemahan di semua bahasa")
+        print("5. Pisahkan terjemahan kosong ke bawah")
+        print("6. Keluar")
         print()
         
-        choice = input("Enter your choice (1-6): ").strip()
+        choice = input("Masukkan pilihan Anda (1-6): ").strip()
         
         if choice == '1':
             extract_translations()
@@ -447,13 +447,13 @@ def main():
         elif choice == '5':
             separate_empty_translations()
         elif choice == '6':
-            print("\nGoodbye!")
+            print("\nSelamat tinggal!")
             sys.exit(0)
         else:
-            print("Invalid choice. Please enter 1, 2, 3, 4, 5, or 6.")
+            print("Pilihan tidak valid. Silakan masukkan 1, 2, 3, 4, 5, atau 6.")
         
         print("\n" + "="*60)
-        input("Press Enter to continue...")
+        input("Tekan Enter untuk melanjutkan...")
         print()
 
 if __name__ == "__main__":

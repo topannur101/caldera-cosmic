@@ -1,0 +1,29 @@
+# Core web framework
+Flask==2.3.3
+flask-cors==4.0.0
+
+# Computer vision and image processing
+opencv-python==4.8.1.78
+numpy<2.0.0
+
+# HTTP requests
+requests==2.31.0
+
+# Serial communication
+pyserial==3.5
+
+# Windows system API access
+pywin32==306
+
+# Standard library modules (included with Python, listed for reference)
+# - json (built-in)
+# - logging (built-in)
+# - os (built-in)
+# - shutil (built-in)
+# - sqlite3 (built-in)
+# - sys (built-in)
+# - threading (built-in)
+# - time (built-in)
+# - datetime (built-in)
+# - io (built-in)
+# - urllib.parse (built-in)

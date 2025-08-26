@@ -1,7 +1,5 @@
-curl -X POST http://127.0.0.1:32998/add_statinfo \
--H "Host: 127.0.0.1:32998" \
--H "Accept-Encoding: deflate, gzip" \
--H "Accept: application/cbon, application/json" \
--H "Content-Type: application/json" \
--H "Transfer-Encoding: chunked" \
--d '[{"_sc":4469234,"_ts":1739774254564,"data":[23,1,"XC20869","1588362.5","809.00","203.00","2516.00","1549.00"],"event_id":10,"hw_key":17258,"session_id":"94dca30f17ce384e8c40cdb5397c706a","tsdelta":78906},{"_sc":4469671,"_ts":1739774255005,"data":[9,3,1588362.5,0,"XC20869",1707,1346,0,0,0,0,0,0,"","",false,"",""],"event_id":11,"hw_key":17258,"session_id":"94dca30f17ce384e8c40cdb5397c706a","tsdelta":78469},{"_sc":4476390,"_ts":1739774261722,"data":[14,9,"XC20869",1588362.5,0,"S",0,0,"","",false,3,"LAYER 0",4,"QUALITY 0",1545937.25,0,1,"QUALITY 1",0,0,0,"QUALITY 2",0,0,0,"QUALITY 3",42348.25,0,2,"LAYER 1",1,"QUALITY 0",1588327.25,0,1,"LAYER 2",1,"QUALITY 0",1588327.25,0,1,"",0,0,0,0,0,false,"",""],"event_id":12,"hw_key":17258,"session_id":"94dca30f17ce384e8c40cdb5397c706a","tsdelta":71750}]'
+fastapi==0.115.8
+uvicorn[standard]==0.34.0
+scapy==2.6.1
+websockets==14.2
+pydantic==2.10.6
