@@ -1,192 +1,164 @@
 <?php
 
-use App\Models\InsDwpAuth;
-use App\Models\User;
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
+
+use App\Models\InsDwpAuth;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
+use Illuminate\Database\Eloquent\Builder;
 
 new #[Layout("layouts.app")] class extends Component {
     use WithPagination;
 
     #[Url]
-    public $q = "";
+    public $q;
     public $perPage = 10;
 
     #[On("updated")]
     public function with(): array
     {
-        $query = InsDwpAuth::with('user')
-            ->when($this->q, function ($query) {
-                $query->whereHas('user', function ($userQuery) {
-                    $userQuery->where('name', 'like', '%' . $this->q . '%')
-                             ->orWhere('emp_id', 'like', '%' . $this->q . '%');
-                });
+        $q = trim($this->q);
+        $auths = InsDwpAuth::join("users", "ins_dwp_auths.user_id", "=", "users.id")
+            ->select("ins_dwp_auths.*", "users.name as user_name", "users.emp_id as user_emp_id", "users.photo as user_photo")
+
+            ->orderBy("ins_dwp_auths.user_id", "desc");
+
+        if ($q) {
+            $auths->where(function (Builder $query) use ($q) {
+                $query->orWhere("users.name", "LIKE", "%" . $q . "%")->orWhere("users.emp_id", "LIKE", "%" . $q . "%");
             });
+        }
 
         return [
-            "auths" => $query->paginate($this->perPage),
-            "available_actions" => InsDwpAuth::availableActions(),
+            "auths" => $auths->paginate($this->perPage),
         ];
-    }
-
-    public function updated($property)
-    {
-        if ($property == "q") {
-            $this->resetPage();
-        }
     }
 
     public function loadMore()
     {
         $this->perPage += 10;
     }
-
-    public function deleteAuth($authId)
-    {
-        try {
-            InsDwpAuth::findOrFail($authId)->delete();
-            session()->flash('message', 'Authorization deleted successfully.');
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error deleting authorization: ' . $e->getMessage());
-        }
-    }
 };
 
 ?>
 
-<x-slot name="title">{{ __("Wewenang") . " — " . __("Pemantauan proses DWP") }}</x-slot>
+<x-slot name="title">{{ __("Wewenang") . " — " . __("Pemantuan deep well press") }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-dwp-sub />
 </x-slot>
 
 <div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
-        <!-- Flash Messages -->
-        @if (session()->has('message'))
-            <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
-                {{ session('message') }}
-            </div>
-        @endif
-
-        @if (session()->has('error'))
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-                {{ session('error') }}
-            </div>
-        @endif
-
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __("Wewenang") }}</h1>
             <div x-data="{ open: false }" class="flex justify-end gap-x-2">
                 @can("superuser")
-                    <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'auth-create')">
-                        <i class="icon-plus"></i>
-                    </x-secondary-button>
+                    <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'auth-create')"><i class="icon-plus"></i></x-secondary-button>
                 @endcan
 
                 <x-secondary-button type="button" x-on:click="open = true; setTimeout(() => $refs.search.focus(), 100)" x-show="!open">
                     <i class="icon-search"></i>
                 </x-secondary-button>
                 <div class="w-40" x-show="open" x-cloak>
-                    <x-text-input wire:model.live.debounce.300ms="q" x-ref="search" 
-                                  x-on:blur="open = false" x-on:keydown.escape.window="open = false" 
-                                  placeholder="{{ __('Cari...') }}" class="w-full" />
+                    <x-text-input-search wire:model.live="q" id="dwp-q" x-ref="search" placeholder="{{ __('CARI') }}"></x-text-input-search>
                 </div>
             </div>
         </div>
-
-        <div class="my-8">
-            @if($auths->count() > 0)
-                @foreach($auths as $auth)
-                    <div class="bg-white dark:bg-neutral-800 shadow rounded-lg mb-4 p-6">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center space-x-4">
-                                @if($auth->user->photo)
-                                    <img class="h-12 w-12 rounded-full object-cover" 
-                                         src="{{ Storage::url('public/user-photos/' . $auth->user->photo) }}" 
-                                         alt="{{ $auth->user->name }}">
-                                @else
-                                    <div class="h-12 w-12 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center">
-                                        <i class="icon-user text-neutral-500 dark:text-neutral-400"></i>
+        <div wire:key="auth-create">
+            <x-modal name="auth-create">
+                <livewire:insights.dwp.manage.auth-create />
+            </x-modal>
+        </div>
+        <div wire:key="auth-edit">
+            <x-modal name="auth-edit">
+                <livewire:insights.dwp.manage.auth-edit />
+            </x-modal>
+        </div>
+        <div class="overflow-auto w-full my-8">
+            <div class="p-0 sm:p-1">
+                <div class="bg-white dark:bg-neutral-800 shadow table sm:rounded-lg">
+                    <table wire:key="auths-table" class="table">
+                        <tr>
+                            <th>{{ __("Nama") }}</th>
+                            <th>{{ __("Tindakan") }}</th>
+                        </tr>
+                        @foreach ($auths as $auth)
+                            <tr
+                                wire:key="auth-tr-{{ $auth->id . $loop->index }}"
+                                tabindex="0"
+                                x-on:click="
+                                    $dispatch('open-modal', 'auth-edit')
+                                    $dispatch('auth-edit', { id: '{{ $auth->id }}' })
+                                "
+                            >
+                                <td>
+                                    <div class="flex">
+                                        <div>
+                                            <div class="w-8 h-8 my-auto mr-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                                @if ($auth->user_photo)
+                                                    <img class="w-full h-full object-cover dark:brightness-75" src="{{ "/storage/users/" . $auth->user_photo }}" />
+                                                @else
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        class="block fill-current text-neutral-800 dark:text-neutral-200 opacity-25"
+                                                        viewBox="0 0 1000 1000"
+                                                        xmlns:v="https://vecta.io/nano"
+                                                    >
+                                                        <path
+                                                            d="M621.4 609.1c71.3-41.8 119.5-119.2 119.5-207.6-.1-132.9-108.1-240.9-240.9-240.9s-240.8 108-240.8 240.8c0 88.5 48.2 165.8 119.5 207.6-147.2 50.1-253.3 188-253.3 350.4v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c0-174.9 144.1-317.3 321.1-317.3S821 784.4 821 959.3v3.8a26.63 26.63 0 0 0 26.7 26.7c14.8 0 26.7-12 26.7-26.7v-3.8c.2-162.3-105.9-300.2-253-350.2zM312.7 401.4c0-103.3 84-187.3 187.3-187.3s187.3 84 187.3 187.3-84 187.3-187.3 187.3-187.3-84.1-187.3-187.3z"
+                                                        />
+                                                    </svg>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div>{{ $auth->user_name }}</div>
+                                            <div class="text-xs text-neutral-400 dark:text-neutral-600">{{ $auth->user_emp_id }}</div>
+                                        </div>
                                     </div>
-                                @endif
-                                
-                                <div>
-                                    <h3 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                                        {{ $auth->user->name }}
-                                    </h3>
-                                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
-                                        {{ $auth->user->emp_id }}
-                                    </p>
-                                </div>
+                                </td>
+                                <td>
+                                    {{ $auth->countActions() . " " . __("tindakan") }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                    <div wire:key="auths-none">
+                        @if (! $auths->count())
+                            <div class="text-center py-12">
+                                {{ __("Tak ada wewenang ditemukan") }}
                             </div>
-                            
-                            <div class="flex space-x-2">
-                                @can("superuser")
-                                    <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'auth-edit-{{ $auth->id }}')">
-                                        <i class="icon-edit"></i>
-                                    </x-secondary-button>
-                                    <x-danger-button type="button" 
-                                                   wire:click="deleteAuth({{ $auth->id }})" 
-                                                   onclick="return confirm('{{ __('Are you sure you want to delete this authorization?') }}')">
-                                        <i class="icon-trash"></i>
-                                    </x-danger-button>
-                                @endcan
-                            </div>
-                        </div>
-                        
-                        <div class="mt-4">
-                            <h4 class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                {{ __("Permissions") }} ({{ count($auth->actions ?? []) }})
-                            </h4>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($auth->actions ?? [] as $action)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                        {{ $available_actions[$action] ?? $action }}
-                                    </span>
-                                @endforeach
-                                @if(empty($auth->actions))
-                                    <span class="text-sm text-neutral-500 dark:text-neutral-400 italic">
-                                        {{ __("No permissions assigned") }}
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-
-                <!-- Load More -->
-                @if($auths->hasMorePages())
-                    <div class="text-center mt-6">
-                        <x-secondary-button wire:click="loadMore" type="button">
-                            {{ __("Load more") }}
-                        </x-secondary-button>
-                    </div>
-                @endif
-            @else
-                <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-8 text-center">
-                    <div class="text-neutral-400 dark:text-neutral-600 text-4xl mb-4">
-                        <i class="icon-users"></i>
-                    </div>
-                    <h3 class="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
-                        {{ __("No authorizations found") }}
-                    </h3>
-                    <p class="text-neutral-500 dark:text-neutral-400">
-                        @if($this->q)
-                            {{ __("No authorizations match your search.") }}
-                        @else
-                            {{ __("No user authorizations have been created yet.") }}
                         @endif
-                    </p>
+                    </div>
                 </div>
+            </div>
+        </div>
+        <div wire:key="observer" class="flex items-center relative h-16">
+            @if (! $auths->isEmpty())
+                @if ($auths->hasMorePages())
+                    <div
+                        wire:key="more"
+                        x-data="{
+                        observe() {
+                            const observer = new IntersectionObserver((auths) => {
+                                auths.forEach(auth => {
+                                    if (auth.isIntersecting) {
+                                        @this.loadMore()
+                                    }
+                                })
+                            })
+                            observer.observe(this.$el)
+                        }
+                    }"
+                        x-init="observe"
+                    ></div>
+                    <x-spinner class="sm" />
+                @else
+                    <div class="mx-auto">{{ __("Tidak ada lagi") }}</div>
+                @endif
             @endif
         </div>
-
-        <!-- Create Modal would go here -->
-        @can("superuser")
-            <!-- Create and Edit modals would be implemented here following the same pattern as CTC -->
-        @endcan
     </div>
 </div>

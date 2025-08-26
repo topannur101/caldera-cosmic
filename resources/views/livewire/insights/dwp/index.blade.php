@@ -9,14 +9,14 @@ new #[Layout("layouts.app")] class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __("Pemantauan proses DWP") }}</x-slot>
+<x-slot name="title">{{ __("Pemantuan deep well press") }}</x-slot>
 
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white dark:bg-neutral-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6 text-neutral-900 dark:text-neutral-100">
                 <div class="mb-6">
-                    <h2 class="text-2xl font-semibold">{{ __("Pemantauan proses DWP") }}</h2>
+                    <h2 class="text-2xl font-semibold">{{ __("Pemantuan deep well press") }}</h2>
                     <p class="text-neutral-600 dark:text-neutral-400 mt-2">
                         {{ __("Sistem monitoring Deep-Well Press untuk proses assembly") }}
                     </p>

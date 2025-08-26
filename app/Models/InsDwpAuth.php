@@ -41,7 +41,7 @@ class InsDwpAuth extends Model
      */
     public function canManageDevices(): bool
     {
-        return $this->hasAction('manage-devices');
+        return $this->hasAction('device-manage');
     }
 
     /**
@@ -80,7 +80,16 @@ class InsDwpAuth extends Model
     public static function availableActions(): array
     {
         return [
-            'manage-devices' => 'Manage Devices',
+            'device-manage' => 'Mengelola perangkat',
         ];
+    }
+
+    /**
+     * Count number of actions for this auth
+     */
+    public function countActions()
+    {
+        $actions = is_string($this->actions) ? json_decode($this->actions ?? '[]', true) : ($this->actions ?? []);
+        return count($actions);
     }
 }

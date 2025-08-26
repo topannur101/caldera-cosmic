@@ -124,31 +124,40 @@ new class extends Component {
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         
-        <div class="flex gap-x-3">
-            <div class="mt-6 grow">
+        <div class="flex mt-6 gap-x-3 items-end">
+            <div>
                 <label for="device-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Nama") }}</label>
                 <x-text-input id="device-name" wire:model="name" type="text" />
                 @error("name")
                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                 @enderror
             </div>
-            <div class="mt-6">
+            <div>
                 <label for="device-ip" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("IP Address") }}</label>
                 <x-text-input id="device-ip" wire:model="ip_address" type="text" />
                 @error("ip_address")
                     <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                 @enderror
             </div>
-        </div>
-
-        <div class="mt-6">
-            <x-toggle id="area_multiple_toggle" wire:model="is_active" ::checked="is_active">
-                {{ __('Aktif') }}
-            </x-toggle>
+            <div class="py-1">
+                <x-toggle id="area_multiple_toggle" wire:model="is_active" ::checked="is_active" :disabled="Gate::denies('manage', InsDwpDevice::class)">
+                    {{ __('Aktif') }}
+                </x-toggle>
+            </div>
         </div>
 
         <div class="my-6">
-            <label class="block mb-4 uppercase text-xs text-center text-neutral-500">{{ __("Konfigurasi line") }}</label>
+            <div class="grid grid-cols-1 text-neutral-500">
+                <div class="flex gap-x-3 items-center">
+                    <i class="icon-grip-horizontal opacity-0"></i>
+                    <div class="grow grid grid-cols-3 gap-x-3 text-center">
+                        <div class="text-xs uppercase">{{ __('Line') }}</div>
+                        <div class="text-xs uppercase">{{ __('Counter') }}</div>
+                        <div class="text-xs uppercase">{{ __('Reset') }}</div>
+                    </div>
+                    <i class="icon-x opacity-0"></i>
+                </div>                
+            </div>
             @foreach ($lines as $index => $line)
                 <div
                     class="mt-2"
@@ -161,9 +170,9 @@ new class extends Component {
                     <div class="grid grid-cols-1 gap-y-2">
                         <div class="flex gap-x-3 items-center">
                             <i class="icon-grip-horizontal cursor-move" draggable="true"></i>
-                            <x-text-input type="text" wire:model="lines.{{ $index }}.line" placeholder="{{ __('Line') }}" />
-                            <x-text-input type="number" wire:model="lines.{{ $index }}.addr_counter" placeholder="{{ __('Counter Addr') }}" />
-                            <x-text-input type="number" wire:model="lines.{{ $index }}.addr_reset" placeholder="{{ __('Reset Addr') }}" />
+                            <x-text-input type="text" wire:model="lines.{{ $index }}.line" />
+                            <x-text-input type="number" wire:model="lines.{{ $index }}.addr_counter" placeholder="0" />
+                            <x-text-input type="number" wire:model="lines.{{ $index }}.addr_reset" placeholder="0" />
                             <x-text-button type="button" wire:click="removeLine({{ $index }})"><i class="icon-x"></i></x-text-button>
                         </div>
                     </div>

@@ -6,7 +6,7 @@
                     <i class="icon-arrow-left"></i>
                 </x-link>
                 <div>
-                    <span class="hidden sm:inline">{{ __('Pemantauan proses DWP') }}</span>
+                    <span class="hidden sm:inline">{{ __('Pemantuan deep well press') }}</span>
                     <span class="sm:hidden inline">{{ __('DWP') }}</span>
                 </div>
             </h2>

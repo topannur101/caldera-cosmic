@@ -281,7 +281,7 @@ new #[Layout("layouts.app")] class extends Component {
                                     <img src="/ink-dwp.svg" class="w-16 h-16 dark:invert" />
                                 </div>
                                 <div class="grow">
-                                    <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Pemantauan proses DWP") }}</div>
+                                    <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Pemantuan deep well press") }}</div>
                                     <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                         <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                             <div class="w-2 h-2 {{ $dwp_lines_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
