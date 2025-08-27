@@ -224,11 +224,83 @@
             margin-top: 5px;
             margin-bottom: 20px;
         }
+        
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            page-break-after: always;
+            padding: 40px 20px;
+        }
+        
+        .cover-page .logo {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 40px;
+            object-fit: contain;
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            background-color: white;
+            padding: 10px;
+            border: 2px solid rgba(119, 94, 150, 0.2);
+        }
+        
+        .cover-page h1 {
+            color: rgb(119, 94, 150);
+            font-size: 3em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .cover-page .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 60px;
+            max-width: 600px;
+            line-height: 1.4;
+        }
+        
+        .cover-page .company-info {
+            font-size: 1em;
+            color: #888;
+            text-align: center;
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+        
+        .cover-page .company-info .company-name {
+            font-weight: bold;
+            color: rgb(119, 94, 150);
+        }
+        
+        .blank-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            page-break-after: always;
+            font-style: italic;
+            color: #888;
+            font-size: 1.1em;
+        }
 
         @media print {
             body {
                 font-size: 12pt;
                 line-height: 1.4;
+            }
+            
+            .cover-page {
+                page-break-after: always;
+            }
+            
+            .blank-page {
+                page-break-after: always;
             }
             
             .toc {
@@ -247,9 +319,18 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Dokumentasi Sistem Caldera</h1>
-        <p>Panduan lengkap untuk bekerja dengan platform manufacturing insights Caldera</p>
+    <div class="cover-page">
+        <img src="/android-chrome-512x512.png" alt="Caldera Logo" class="logo">
+        <h1>Dokumentasi Caldera</h1>
+        <p class="subtitle">Panduan teknis lengkap untuk mengembangkan platform Caldera</p>
+        <div class="company-info">
+            <div class="company-name">PT. TKG Taekwang Indonesia</div>
+            <div>2025</div>
+        </div>
+    </div>
+
+    <div class="blank-page">
+        <p>Halaman ini sengaja dikosongkan</p>
     </div>
 
     <div class="toc">
@@ -278,6 +359,7 @@
                     <li><a href="#current-workflow">3.1 Alur Deployment Saat Ini</a></li>
                     <li><a href="#commands">3.2 Perintah Deployment</a></li>
                     <li><a href="#future-workflow">3.3 Alur Deployment Masa Depan</a></li>
+                    <li><a href="#github-repo">3.4 Repository GitHub & Akses</a></li>
                 </ul>
             </li>
             <li><a href="#python-utilities">4. Python Utilities</a>
@@ -745,6 +827,12 @@ git push origin main</div>
         <h4>Perintah Langkah B (GitHub ke PC Pak Khafit):</h4>
         <div class="command-box">git pull origin main</div>
         
+        <div class="note-box">
+            <strong>Troubleshooting - PC Pak Khafit:</strong> Jika <code>git pull origin main</code> gagal dengan error "fatal: detected dubious ownership in repository", jalankan perintah berikut:
+            <div class="command-box">takeown /f "Z:\. TIM DGT\_REPOS\caldera-cosmic" /r</div>
+            <p>Proses ini akan memakan waktu lama, tetapi Anda dapat menghentikan dengan aman menggunakan <strong>Ctrl+C</strong> setelah beberapa saat dan mencoba ulang <code>git pull origin main</code>.</p>
+        </div>
+        
         <h4>Perintah Langkah C (PC Pak Khafit ke Server Caldera):</h4>
         <div class="command-box">git pull mm main
 php artisan config:cache
@@ -821,6 +909,54 @@ php artisan migrate:status</div>
         
         <div class="note-box">
             <strong>Pertimbangan Masa Depan:</strong> Konektivitas internet langsung akan menghilangkan kebutuhan untuk PC perantara (PC Pak Khafit) dan memungkinkan proses deployment yang lebih efisien, berpotensi termasuk pipeline CI/CD otomatis.
+        </div>
+
+        <h3 id="github-repo">3.4 Repository GitHub & Akses</h3>
+        <p>Sistem Caldera menggunakan GitHub sebagai version control dan repository pusat untuk manajemen kode sumber.</p>
+        
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h4>Informasi Repository</h4>
+                <ul>
+                    <li><strong>Organisasi:</strong> ttmmdgt</li>
+                    <li><strong>Repository:</strong> caldera-cosmic</li>
+                    <li><strong>URL:</strong> <a href="https://github.com/ttmmdgt/caldera-cosmic" target="_blank">https://github.com/ttmmdgt/caldera-cosmic</a></li>
+                    <li><strong>Branch utama:</strong> main</li>
+                </ul>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Tim Akses Saat Ini</h4>
+                <ul>
+                    <li><strong>nrlamalias</strong> - Member aktif</li>
+                    <li><strong>mamprat</strong> - Member aktif</li>
+                    <li><strong>andimendunia</strong> - Mantan member (resigned)</li>
+                </ul>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Manajemen Akses</h4>
+                <ul>
+                    <li>Member baru bergabung melalui organisasi ttmmdgt</li>
+                    <li>Akses langsung ke branch main (no protection rules)</li>
+                    <li>Tidak ada requirement pull request atau code review</li>
+                    <li>Workflow sederhana dengan commit langsung</li>
+                </ul>
+            </div>
+            
+            <div class="architecture-card">
+                <h4>Workflow Repository</h4>
+                <ul>
+                    <li><strong>Branch strategy:</strong> Single main branch</li>
+                    <li><strong>Contribution:</strong> Direct commits ke main</li>
+                    <li><strong>Release management:</strong> Belum ada proses formal</li>
+                    <li><strong>Issue tracking:</strong> Tidak menggunakan GitHub Issues</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="note-box">
+            <strong>Onboarding Developer Baru:</strong> Untuk menambahkan developer baru, invite mereka sebagai member organisasi ttmmdgt di GitHub. Setelah bergabung, mereka akan memiliki akses penuh untuk clone, commit, dan push ke repository caldera-cosmic.
         </div>
     </div>
 
