@@ -26,7 +26,7 @@ new #[Layout("layouts.app")] class extends Component {
 
 ?>
 
-<x-slot name="title">{{ __("Perangkat") . " — " . __("Pemantuan deep well press") }}</x-slot>
+<x-slot name="title">{{ __("Perangkat") . " — " . __("Pemantauan deep well press") }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-dwp-sub />
 </x-slot>

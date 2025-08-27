@@ -3,7 +3,7 @@
        <div>
            <h2 class="font-semibold text-xl text-neutral-800 dark:text-neutral-200 leading-tight">
                <x-link href="{{ route('insights.dwp.manage.index') }}" class="inline-block px-3 py-6" wire:navigate><i
-                       class="icon-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Pemantuan deep well press') }}</span><span class="sm:hidden inline">{{ __('DWP') }}</span></span>
+                       class="icon-arrow-left"></i></x-link><span class="ml-4"><span class="hidden sm:inline">{{ __('Pemantauan deep well press') }}</span><span class="sm:hidden inline">{{ __('DWP') }}</span></span>
            </h2>
        </div>
    </div>

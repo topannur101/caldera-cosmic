@@ -19,5 +19,12 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
+        // DWP (Deep-Well Press) seeders
+        if (app()->environment(['local', 'testing'])) {
+            $this->call([
+                InsDwpDeviceSeeder::class,
+                InsDwpCountSeeder::class,
+            ]);
+        }
     }
 }
