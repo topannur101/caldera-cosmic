@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
+use App\Models\InsCtcMachine;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\On;
@@ -9,61 +10,42 @@ new class extends Component {
     public int $id;
     public string $line;
     public string $ip_address;
-    public string $name;
-    public bool $is_active;
+
+    // Simple status only
+    public bool $isOnline = false;
 
     public function rules()
     {
         return [
-            "line" => ["required", "integer", "min:1", "max:99"],
-            "ip_address" => ["required", "ipv4"],
-            "name" => ["required", "string", "min:1", "max:50"],
-            "is_active" => ["boolean"],
+            "line" => ["required", "integer", "min:1", "max:99", Rule::unique("ins_ctc_machines", "line")->ignore($this->id ?? null)],
+            "ip_address" => ["required", "ipv4", Rule::unique("ins_ctc_machines", "ip_address")->ignore($this->id ?? null)],
         ];
-        // TODO: Add uniqueness validation when database is ready
-        // Rule::unique('ins_ctc_devices', 'line')->ignore($this->id ?? null)
-        // Rule::unique('ins_ctc_devices', 'ip_address')->ignore($this->id ?? null)
     }
 
-    #[On("device-edit")]
-    public function loadDevice(int $id)
+    public function messages()
     {
-        // TODO: Replace with actual InsCtcMachine model when backend is ready
-        // $device = InsCtcMachine::find($id);
-
-        // Mock data for development
-        $mockDevices = [
-            1 => [
-                "id" => 1,
-                "line" => 3,
-                "ip_address" => "172.70.86.13",
-                "name" => "CTC Line 3",
-                "is_active" => true,
-            ],
-            2 => [
-                "id" => 2,
-                "line" => 4,
-                "ip_address" => "172.70.86.14",
-                "name" => "CTC Line 4",
-                "is_active" => true,
-            ],
-            3 => [
-                "id" => 3,
-                "line" => 5,
-                "ip_address" => "172.70.86.15",
-                "name" => "CTC Line 5",
-                "is_active" => false,
-            ],
+        return [
+            "line.unique" => "Line sudah digunakan oleh mesin lain.",
+            "ip_address.unique" => "Alamat IP sudah digunakan oleh mesin lain.",
+            "line.required" => "Line harus diisi.",
+            "ip_address.required" => "Alamat IP harus diisi.",
+            "ip_address.ipv4" => "Format alamat IP tidak valid.",
         ];
+    }
 
-        $device = $mockDevices[$id] ?? null;
+    #[On("machine-edit")]
+    public function loadMachine(int $id)
+    {
+        $machine = InsCtcMachine::find($id);
 
-        if ($device) {
-            $this->id = $device["id"];
-            $this->line = $device["line"];
-            $this->ip_address = $device["ip_address"];
-            $this->name = $device["name"];
-            $this->is_active = $device["is_active"];
+        if ($machine) {
+            $this->id = $machine->id;
+            $this->line = (string) $machine->line;
+            $this->ip_address = $machine->ip_address;
+
+            // Hanya load status online
+            $this->isOnline = $machine->is_online();
+
             $this->resetValidation();
         } else {
             $this->handleNotFound();
@@ -72,53 +54,59 @@ new class extends Component {
 
     public function save()
     {
-        // TODO: Replace with actual InsCtcMachine model when backend is ready
-        // $device = InsCtcMachine::find($this->id);
-        // Gate::authorize('manage', $device);
-
         Gate::authorize("superuser");
-        $validated = $this->validate();
 
-        // Mock device update
-        // if($device) {
-        //     $device->update($validated);
-        //     // ... success handling
-        // }
+        $machine = InsCtcMachine::find($this->id);
 
-        $this->js('$dispatch("close")');
-        $this->js('toast("' . __("Perangkat diperbarui") . '", { type: "success" })');
-        $this->dispatch("updated");
+        if ($machine) {
+            $validated = $this->validate();
+
+            $machine->update([
+                "line" => (int) $validated["line"],
+                "ip_address" => $validated["ip_address"],
+            ]);
+
+            $this->js('$dispatch("close")');
+            $this->js('toast("' . __("Mesin berhasil diperbarui") . '", { type: "success" })');
+            $this->dispatch("updated");
+        } else {
+            $this->handleNotFound();
+        }
     }
 
     public function delete()
     {
-        // TODO: Replace with actual InsCtcMachine model when backend is ready
-        // $device = InsCtcMachine::find($this->id);
-        // Gate::authorize('manage', $device);
-
         Gate::authorize("superuser");
 
-        // Mock device deletion
-        // if($device) {
-        //     $device->delete();
-        //     // ... success handling
-        // }
+        $machine = InsCtcMachine::find($this->id);
 
-        $this->js('$dispatch("close")');
-        $this->js('toast("' . __("Perangkat dihapus") . '", { type: "success" })');
-        $this->dispatch("updated");
-        $this->customReset();
+        if ($machine) {
+            // Check if machine has metrics before deleting
+            if ($machine->ins_ctc_metrics()->exists()) {
+                $this->js('toast("' . __("Tidak dapat menghapus mesin yang memiliki data metrics") . '", { type: "danger" })');
+                return;
+            }
+
+            $machine->delete();
+
+            $this->js('$dispatch("close")');
+            $this->js('toast("' . __("Mesin berhasil dihapus") . '", { type: "success" })');
+            $this->dispatch("updated");
+            $this->customReset();
+        } else {
+            $this->handleNotFound();
+        }
     }
 
     public function customReset()
     {
-        $this->reset(["id", "line", "ip_address", "name", "is_active"]);
+        $this->reset(["id", "line", "ip_address", "isOnline"]);
     }
 
     public function handleNotFound()
     {
         $this->js('$dispatch("close")');
-        $this->js('toast("' . __("Tidak ditemukan") . '", { type: "danger" })');
+        $this->js('toast("' . __("Mesin tidak ditemukan") . '", { type: "danger" })');
         $this->dispatch("updated");
     }
 };
@@ -128,40 +116,60 @@ new class extends Component {
     <form wire:submit="save" class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __("Perangkat ") }}
+                {{ __("Edit Mesin") }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
-        <div>
-            <div class="mt-6">
+
+        <!-- Machine Info -->
+        <div class="mt-6 grid grid-cols-2 gap-4">
+            <div>
                 <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("ID") }}</label>
-                <div class="px-3">{{ $id ?? "?" }}</div>
+                <div class="px-3 py-2 bg-neutral-50 dark:bg-neutral-700 rounded">{{ $id ?? "?" }}</div>
             </div>
-            <div class="mt-6">
-                <label for="device-line" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
-                <x-text-input id="device-line" wire:model="line" :disabled="Gate::denies('superuser')" type="number" min="1" max="99" />
-                @error("line")
-                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                @enderror
-            </div>
-            <div class="mt-6">
-                <label for="device-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Nama") }}</label>
-                <x-text-input id="device-name" wire:model="name" :disabled="Gate::denies('superuser')" type="text" />
-                @error("name")
-                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                @enderror
-            </div>
-            <div class="mt-6">
-                <label for="device-ip-address" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Alamat IP") }}</label>
-                <x-text-input id="device-ip-address" wire:model="ip_address" :disabled="Gate::denies('superuser')" type="text" />
-                @error("ip_address")
-                    <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-                @enderror
-            </div>
-            <div class="mt-6">
-                <x-checkbox id="device-is-active" wire:model="is_active" :disabled="Gate::denies('superuser')">{{ __("Aktif") }}</x-checkbox>
+            <div>
+                <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Nama") }}</label>
+                <div class="px-3 py-2 bg-neutral-50 dark:bg-neutral-700 rounded">{{ $line ? "Line " . $line : "-" }}</div>
             </div>
         </div>
+
+        <!-- Simple Status -->
+        <div class="mt-6">
+            <h3 class="font-medium text-neutral-900 dark:text-neutral-100 mb-3">{{ __("Status") }}</h3>
+            <div class="px-3 py-2 bg-neutral-50 dark:bg-neutral-700 rounded w-fit">
+                <div class="flex items-center">
+                    @if ($isOnline)
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        <span class="text-green-600">Online</span>
+                    @else
+                        <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                        <span class="text-red-600">Offline</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Editable Fields -->
+        <div class="mt-6">
+            <h3 class="font-medium text-neutral-900 dark:text-neutral-100 mb-3">{{ __("Pengaturan") }}</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="device-line" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
+                    <x-text-input id="device-line" wire:model="line" :disabled="Gate::denies('superuser')" type="number" min="1" max="99" />
+                    @error("line")
+                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                    @enderror
+                </div>
+                <div>
+                    <label for="device-ip-address" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Alamat IP") }}</label>
+                    <x-text-input id="device-ip-address" wire:model="ip_address" :disabled="Gate::denies('superuser')" type="text" />
+                    @error("ip_address")
+                        <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
+                    @enderror
+                </div>
+            </div>
+        </div>
+
         @can("superuser")
             <div class="flex justify-between items-end mt-6">
                 <div>
