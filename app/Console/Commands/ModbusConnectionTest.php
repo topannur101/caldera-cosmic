@@ -473,7 +473,6 @@ class ModbusConnectionTest extends Command
     private function testHoldingRegisters()
     {
         $this->info("🔍 Testing Holding Registers");
-
         try {
             $request = ReadRegistersBuilder::newReadHoldingRegisters(
                 "tcp://{$this->config['ip']}:{$this->config['port']}", 
