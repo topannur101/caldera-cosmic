@@ -1,48 +1,52 @@
 <?php
 
 use Livewire\Volt\Component;
+use App\Models\InsCtcMachine;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
 
 new class extends Component {
     public string $line = "";
     public string $ip_address = "";
-    public string $name = "";
     public bool $is_active = true;
 
     public function rules()
     {
         return [
-            "line" => ["required", "integer", "min:1", "max:99"],
-            "ip_address" => ["required", "ipv4"],
-            "name" => ["required", "string", "min:1", "max:50"],
+            "line" => ["required", "integer", "min:1", "max:99", "unique:ins_ctc_machines"],
+            "ip_address" => ["required", "ipv4", "unique:ins_ctc_machines"],
             "is_active" => ["boolean"],
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            "line.unique" => "Line sudah digunakan oleh mesin lain.",
+            "ip_address.unique" => "Alamat IP sudah digunakan oleh mesin lain.",
+            "line.required" => "Line harus diisi.",
+            "ip_address.required" => "Alamat IP harus diisi.",
+            "ip_address.ipv4" => "Format alamat IP tidak valid.",
         ];
     }
 
     public function save()
     {
-        // TODO: Replace with actual InsCtcMachine model when backend is ready
-        // $device = new InsCtcMachine;
-        // Gate::authorize('manage', $device);
-
         Gate::authorize("superuser");
 
-        $this->validate();
+        $validated = $this->validate();
 
-        // TODO: Add uniqueness validation when database is ready
-        // 'line' => ['required', 'integer', 'min:1', 'max:99', 'unique:ins_ctc_devices'],
-        // 'ip_address' => ['required', 'ipv4', 'unique:ins_ctc_devices']
+        $machine = new InsCtcMachine();
+        $machine->fill([
+            "line" => (int) $validated["line"],
+            "ip_address" => $validated["ip_address"],
+            "is_active" => $validated["is_active"],
+        ]);
 
-        // Mock device creation
-        // $device->line           = $this->line;
-        // $device->ip_address     = $this->ip_address;
-        // $device->name           = $this->name;
-        // $device->is_active      = $this->is_active;
-        // $device->save();
+        $machine->save();
 
         $this->js('$dispatch("close")');
-        $this->js('toast("' . __("Perangkat dibuat") . '", { type: "success" })');
+        $this->js('toast("' . __("Mesin CTC berhasil dibuat") . '", { type: "success" })');
         $this->dispatch("updated");
 
         $this->customReset();
@@ -50,7 +54,8 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(["line", "ip_address", "name", "is_active"]);
+        $this->reset(["line", "ip_address", "is_active"]);
+        $this->is_active = true; // Reset ke default aktif
     }
 };
 ?>
@@ -59,7 +64,7 @@ new class extends Component {
     <form wire:submit="save" class="p-6">
         <div class="flex justify-between items-start">
             <h2 class="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-                {{ __("Perangkat baru") }}
+                {{ __("Mesin baru") }}
             </h2>
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
@@ -71,13 +76,6 @@ new class extends Component {
             @enderror
         </div>
         <div class="mt-6">
-            <label for="device-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Nama") }}</label>
-            <x-text-input id="device-name" wire:model="name" type="text" placeholder="CTC Line X" />
-            @error("name")
-                <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
-            @enderror
-        </div>
-        <div class="mt-6">
             <label for="device-ip-address" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Alamat IP") }}</label>
             <x-text-input id="device-ip-address" wire:model="ip_address" type="text" placeholder="192.168.1.100" />
             @error("ip_address")
@@ -85,7 +83,15 @@ new class extends Component {
             @enderror
         </div>
         <div class="mt-6">
-            <x-checkbox id="device-is-active" wire:model="is_active">{{ __("Aktif") }}</x-checkbox>
+            <x-toggle id="device-is-active" wire:model="is_active" ::checked="is_active">
+                {{ __("Aktif") }}
+            </x-toggle>
+        </div>
+        <div class="mt-6">
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">
+                <strong>{{ __("Nama mesin") }}:</strong>
+                {{ $line ? "Line " . $line : "-" }}
+            </p>
         </div>
         <div class="mt-6 flex justify-end items-end">
             <x-primary-button type="submit">

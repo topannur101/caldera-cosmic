@@ -14,10 +14,12 @@ class InsCtcMachine extends Model
     protected $fillable = [
         'line',
         'ip_address',
+        'is_active',
     ];
 
     protected $casts = [
         'line' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     /**

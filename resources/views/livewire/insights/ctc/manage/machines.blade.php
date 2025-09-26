@@ -6,6 +6,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\InsCtcMachine;
 
 new #[Layout("layouts.app")] class extends Component {
     use WithPagination;
@@ -20,49 +21,16 @@ new #[Layout("layouts.app")] class extends Component {
     {
         $q = trim($this->q);
 
-        // Mock data for development - will be replaced with actual InsCtcMachine model
-        $allMachines = [
-            [
-                "id" => 1,
-                "line" => 3,
-                "ip_address" => "172.70.86.13",
-                "name" => "CTC Line 3",
-                "is_active" => true,
-            ],
-            [
-                "id" => 2,
-                "line" => 4,
-                "ip_address" => "172.70.86.14",
-                "name" => "CTC Line 4",
-                "is_active" => true,
-            ],
-            [
-                "id" => 3,
-                "line" => 5,
-                "ip_address" => "172.70.86.15",
-                "name" => "CTC Line 5",
-                "is_active" => false,
-            ],
-        ];
-
-        // Apply search filter
-        if ($q) {
-            $allMachines = array_filter($allMachines, function ($machine) use ($q) {
-                return stripos($machine["line"], $q) !== false || stripos($machine["ip_address"], $q) !== false || stripos($machine["name"], $q) !== false;
-            });
-        }
-
-        // TODO: Replace with actual database query when backend is ready
-        // $machines = InsCtcMachine::where(function (Builder $query) use ($q) {
-        //     $query->orWhere('line', 'LIKE', '%' . $q . '%')
-        //           ->orWhere('ip_address', 'LIKE', '%' . $q . '%')
-        //           ->orWhere('name', 'LIKE', '%' . $q . '%');
-        // })
-        // ->orderBy('line')
-        // ->paginate($this->perPage);
+        $machines = InsCtcMachine::where(function (Builder $query) use ($q) {
+            if ($q) {
+                $query->where("line", "like", "%" . $q . "%")->orWhere("ip_address", "like", "%" . $q . "%");
+            }
+        })
+            ->orderBy("line")
+            ->paginate($this->perPage);
 
         return [
-            "machines" => collect($allMachines)->take($this->perPage),
+            "machines" => $machines,
         ];
     }
 
@@ -84,7 +52,7 @@ new #[Layout("layouts.app")] class extends Component {
 <x-slot name="header">
     <x-nav-insights-ctc-sub />
 </x-slot>
-<div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="py-12 max-w-5xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __("Mesin") }}</h1>
@@ -121,33 +89,53 @@ new #[Layout("layouts.app")] class extends Component {
                             <th>{{ __("Nama") }}</th>
                             <th>{{ __("Alamat IP") }}</th>
                             <th>{{ __("Status") }}</th>
+                            <th>{{ __("Perangkat") }}</th>
                         </tr>
                         @foreach ($machines as $machine)
                             <tr
-                                wire:key="machine-tr-{{ $machine["id"] . $loop->index }}"
+                                wire:key="machine-tr-{{ $machine->id . $loop->index }}"
                                 tabindex="0"
                                 x-on:click="
                                     $dispatch('open-modal', 'machine-edit')
-                                    $dispatch('machine-edit', { id: {{ $machine["id"] }} })
+                                    $dispatch('machine-edit', { id: {{ $machine->id }} })
                                 "
                             >
                                 <td>
-                                    {{ $machine["id"] }}
+                                    {{ $machine->id }}
                                 </td>
                                 <td>
-                                    {{ $machine["line"] }}
+                                    {{ $machine->line }}
                                 </td>
                                 <td>
-                                    {{ $machine["name"] }}
+                                    {{ $machine->name }}
                                 </td>
                                 <td>
-                                    {{ $machine["ip_address"] }}
+                                    {{ $machine->ip_address }}
                                 </td>
                                 <td>
-                                    @if ($machine["is_active"])
-                                        <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{{ __("Aktif") }}</span>
+                                    @if ($machine->is_online())
+                                        <span
+                                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                        >
+                                            {{ __("Online") }}
+                                        </span>
                                     @else
-                                        <span class="inline-flex px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">{{ __("Nonaktif") }}</span>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                            {{ __("Offline") }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($machine->is_active)
+                                        <span
+                                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                        >
+                                            {{ __("Aktif") }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                            {{ __("Nonaktif") }}
+                                        </span>
                                     @endif
                                 </td>
                             </tr>
@@ -165,7 +153,7 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
         <div wire:key="observer" class="flex items-center relative h-16">
             @if (! $machines->isEmpty())
-                @if ($machines->count() >= $this->perPage)
+                @if ($machines->hasMorePages())
                     <div
                         wire:key="more"
                         x-data="{
