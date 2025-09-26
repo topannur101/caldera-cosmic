@@ -10,6 +10,7 @@ new class extends Component {
     public int $id;
     public string $line;
     public string $ip_address;
+    public bool $is_active = false;
 
     // Simple status only
     public bool $isOnline = false;
@@ -19,6 +20,7 @@ new class extends Component {
         return [
             "line" => ["required", "integer", "min:1", "max:99", Rule::unique("ins_ctc_machines", "line")->ignore($this->id ?? null)],
             "ip_address" => ["required", "ipv4", Rule::unique("ins_ctc_machines", "ip_address")->ignore($this->id ?? null)],
+            "is_active" => ["boolean"],
         ];
     }
 
@@ -42,6 +44,7 @@ new class extends Component {
             $this->id = $machine->id;
             $this->line = (string) $machine->line;
             $this->ip_address = $machine->ip_address;
+            $this->is_active = $machine->is_active;
 
             // Hanya load status online
             $this->isOnline = $machine->is_online();
@@ -64,6 +67,7 @@ new class extends Component {
             $machine->update([
                 "line" => (int) $validated["line"],
                 "ip_address" => $validated["ip_address"],
+                "is_active" => $validated["is_active"],
             ]);
 
             $this->js('$dispatch("close")');
@@ -100,7 +104,7 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(["id", "line", "ip_address", "isOnline"]);
+        $this->reset(["id", "line", "ip_address", "is_active", "isOnline"]);
     }
 
     public function handleNotFound()
@@ -136,15 +140,30 @@ new class extends Component {
         <!-- Simple Status -->
         <div class="mt-6">
             <h3 class="font-medium text-neutral-900 dark:text-neutral-100 mb-3">{{ __("Status") }}</h3>
-            <div class="px-3 py-2 bg-neutral-50 dark:bg-neutral-700 rounded w-fit">
-                <div class="flex items-center">
-                    @if ($isOnline)
-                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                        <span class="text-green-600">Online</span>
-                    @else
-                        <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                        <span class="text-red-600">Offline</span>
-                    @endif
+            <div class="grid grid-cols-2 gap-4">
+                <div class="px-3 py-2 bg-neutral-50 dark:bg-neutral-700 rounded">
+                    <div class="text-xs uppercase text-neutral-500 mb-1">{{ __("Koneksi") }}</div>
+                    <div class="flex items-center">
+                        @if ($isOnline)
+                            <span class="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
+                            <span class="text-green-800 dark:text-green-200 font-medium">Online</span>
+                        @else
+                            <span class="w-2 h-2 bg-red-600 rounded-full mr-2"></span>
+                            <span class="text-red-800 dark:text-red-200 font-medium">Offline</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="px-3 py-2 bg-neutral-50 dark:bg-neutral-700 rounded">
+                    <div class="text-xs uppercase text-neutral-500 mb-1">{{ __("Perangkat") }}</div>
+                    <div class="flex items-center">
+                        @if ($is_active)
+                            <span class="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
+                            <span class="text-green-800 dark:text-green-200 font-medium">Aktif</span>
+                        @else
+                            <span class="w-2 h-2 bg-red-600 rounded-full mr-2"></span>
+                            <span class="text-red-800 dark:text-red-200 font-medium">Nonaktif</span>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -167,6 +186,11 @@ new class extends Component {
                         <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
                     @enderror
                 </div>
+            </div>
+            <div class="mt-4">
+                <x-toggle id="device-is-active" wire:model="is_active" ::checked="is_active" :disabled="Gate::denies('superuser')">
+                    {{ __("Aktif") }}
+                </x-toggle>
             </div>
         </div>
 

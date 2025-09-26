@@ -52,7 +52,7 @@ new #[Layout("layouts.app")] class extends Component {
 <x-slot name="header">
     <x-nav-insights-ctc-sub />
 </x-slot>
-<div id="content" class="py-12 max-w-2xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
+<div id="content" class="py-12 max-w-5xl mx-auto sm:px-3 text-neutral-800 dark:text-neutral-200">
     <div>
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
             <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __("Mesin") }}</h1>
@@ -89,6 +89,7 @@ new #[Layout("layouts.app")] class extends Component {
                             <th>{{ __("Nama") }}</th>
                             <th>{{ __("Alamat IP") }}</th>
                             <th>{{ __("Status") }}</th>
+                            <th>{{ __("Perangkat") }}</th>
                         </tr>
                         @foreach ($machines as $machine)
                             <tr
@@ -113,9 +114,28 @@ new #[Layout("layouts.app")] class extends Component {
                                 </td>
                                 <td>
                                     @if ($machine->is_online())
-                                        <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{{ __("Online") }}</span>
+                                        <span
+                                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                        >
+                                            {{ __("Online") }}
+                                        </span>
                                     @else
-                                        <span class="inline-flex px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">{{ __("Offline") }}</span>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                            {{ __("Offline") }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($machine->is_active)
+                                        <span
+                                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                        >
+                                            {{ __("Aktif") }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                            {{ __("Nonaktif") }}
+                                        </span>
                                     @endif
                                 </td>
                             </tr>

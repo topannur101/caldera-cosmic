@@ -8,12 +8,14 @@ use Illuminate\Support\Facades\Gate;
 new class extends Component {
     public string $line = "";
     public string $ip_address = "";
+    public bool $is_active = true;
 
     public function rules()
     {
         return [
             "line" => ["required", "integer", "min:1", "max:99", "unique:ins_ctc_machines"],
             "ip_address" => ["required", "ipv4", "unique:ins_ctc_machines"],
+            "is_active" => ["boolean"],
         ];
     }
 
@@ -38,6 +40,7 @@ new class extends Component {
         $machine->fill([
             "line" => (int) $validated["line"],
             "ip_address" => $validated["ip_address"],
+            "is_active" => $validated["is_active"],
         ]);
 
         $machine->save();
@@ -51,7 +54,8 @@ new class extends Component {
 
     public function customReset()
     {
-        $this->reset(["line", "ip_address"]);
+        $this->reset(["line", "ip_address", "is_active"]);
+        $this->is_active = true; // Reset ke default aktif
     }
 };
 ?>
@@ -77,6 +81,11 @@ new class extends Component {
             @error("ip_address")
                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
             @enderror
+        </div>
+        <div class="mt-6">
+            <x-toggle id="device-is-active" wire:model="is_active" ::checked="is_active">
+                {{ __("Aktif") }}
+            </x-toggle>
         </div>
         <div class="mt-6">
             <p class="text-sm text-neutral-600 dark:text-neutral-400">
