@@ -157,6 +157,7 @@ new #[Layout("layouts.app")] class extends Component {
                 ];
 
                 $columns = [
+                    __("Tanggal Dibuat"),
                     __("Batch"),
                     __("Line"),
                     __("Resep"),
@@ -182,6 +183,7 @@ new #[Layout("layouts.app")] class extends Component {
                     $this->getMetricsQuery()->chunk(1000, function ($metrics) use ($file) {
                         foreach ($metrics as $metric) {
                             fputcsv($file, [
+                                $metric->created_at->format('Y-m-d H:i:s'),  // ← TAMBAH INI
                                 $metric->batch_code,
                                 $metric->machine_line,
                                 $metric->recipe_name,
