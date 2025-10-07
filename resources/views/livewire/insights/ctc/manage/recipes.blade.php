@@ -20,92 +20,22 @@ new #[Layout("layouts.app")] class extends Component {
     {
         $q = trim($this->q);
 
-        // Mock recipes data for development
-        $mockRecipes = [
-            [
-                "id" => 1,
-                "name" => "AF1 GS (ONE COLOR)",
-                "og_rs" => "GS",
-                "std_min" => 3.0,
-                "std_max" => 3.1,
-                "std_mid" => 3.05,
-                "scale" => 1.0,
-                "pfc_min" => 3.4,
-                "pfc_max" => 3.6,
-                "recommended_for_models" => ["AF1"],
-                "priority" => 1,
-                "is_active" => true,
-            ],
-            [
-                "id" => 2,
-                "name" => "AF1 WS (TWO COLOR)",
-                "og_rs" => "WS",
-                "std_min" => 3.0,
-                "std_max" => 3.1,
-                "std_mid" => 3.05,
-                "scale" => 1.0,
-                "pfc_min" => 3.2,
-                "pfc_max" => 3.4,
-                "recommended_for_models" => ["AF1"],
-                "priority" => 2,
-                "is_active" => true,
-            ],
-            [
-                "id" => 3,
-                "name" => "AM 270 (CENTER)",
-                "og_rs" => "RS",
-                "std_min" => 2.7,
-                "std_max" => 2.9,
-                "std_mid" => 2.8,
-                "scale" => 1.0,
-                "pfc_min" => 2.7,
-                "pfc_max" => 2.9,
-                "recommended_for_models" => ["AM270"],
-                "priority" => 1,
-                "is_active" => true,
-            ],
-            [
-                "id" => 4,
-                "name" => "AM 95 (HEEL)",
-                "og_rs" => "RS",
-                "std_min" => 2.8,
-                "std_max" => 3.0,
-                "std_mid" => 2.9,
-                "scale" => 1.0,
-                "pfc_min" => 2.8,
-                "pfc_max" => 3.0,
-                "recommended_for_models" => ["AM95"],
-                "priority" => 1,
-                "is_active" => true,
-            ],
-            [
-                "id" => 5,
-                "name" => "ALPHA 5",
-                "og_rs" => "RS",
-                "std_min" => 3.2,
-                "std_max" => 3.4,
-                "std_mid" => 3.3,
-                "scale" => 1.0,
-                "pfc_min" => 3.2,
-                "pfc_max" => 3.4,
-                "recommended_for_models" => ["ALPHA"],
-                "priority" => 1,
-                "is_active" => false,
-            ],
-        ];
+        $query = \App\Models\InsCtcRecipe::query();
 
-        // Apply search filter if provided
         if ($q) {
-            $mockRecipes = array_filter($mockRecipes, function ($recipe) use ($q) {
-                return stripos($recipe["name"], $q) !== false || stripos($recipe["og_rs"], $q) !== false || in_array($q, $recipe["recommended_for_models"]);
+            $query->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('og_rs', 'like', "%{$q}%")
+                    ->orWhereJsonContains('recommended_for_models', $q);
             });
         }
 
-        // Apply pagination
-        $recipes = collect($mockRecipes)->take($this->perPage);
+        $recipes = $query->orderBy('priority')
+                        ->orderBy('name')
+                        ->paginate($this->perPage);
 
         return [
-            "recipes" => $recipes,
+            'recipes' => $recipes,
         ];
     }
 
@@ -165,32 +95,32 @@ new #[Layout("layouts.app")] class extends Component {
                             <th>{{ __("Min") }}</th>
                             <th>{{ __("Maks") }}</th>
                             <th>{{ __("Tengah") }}</th>
-                            <th>{{ __("Prioritas") }}</th>
-                            <th>{{ __("Model") }}</th>
+                            <!-- <th>{{ __("Prioritas") }}</th> -->
+                            <!-- <th>{{ __("Model") }}</th> -->
                             <th>{{ __("Status") }}</th>
                         </tr>
                         @foreach ($recipes as $recipe)
                             <tr
-                                wire:key="recipe-tr-{{ $recipe["id"] . $loop->index }}"
+                                wire:key="recipe-tr-{{ $recipe->id }}"
                                 tabindex="0"
                                 x-on:click="
-                                    $dispatch('open-modal', 'recipe-edit')
-                                    $dispatch('recipe-edit', { id: {{ $recipe["id"] }} })
+                                    $dispatch('open-modal', 'recipe-edit');
+                                    $dispatch('recipe-edit', { id: {{ $recipe->id }} });
                                 "
                             >
-                                <td>{{ $recipe["id"] }}</td>
-                                <td>{{ $recipe["name"] }}</td>
-                                <td>{{ $recipe["og_rs"] }}</td>
-                                <td>{{ $recipe["std_min"] }}</td>
-                                <td>{{ $recipe["std_max"] }}</td>
-                                <td>{{ $recipe["std_mid"] }}</td>
-                                <td>{{ $recipe["priority"] }}</td>
-                                <td>{{ implode(", ", $recipe["recommended_for_models"]) }}</td>
+                                <td>{{ $recipe->id }}</td>
+                                <td>{{ $recipe->name }}</td>
+                                <td>{{ $recipe->og_rs }}</td>
+                                <td>{{ $recipe->std_min }}</td>
+                                <td>{{ $recipe->std_max }}</td>
+                                <td>{{ $recipe->std_mid }}</td>
+                                <!-- <td>{{ $recipe->priority }}</td> -->
+                                <!-- <td>{{ implode(', ', $recipe->recommended_for_models ?? []) }}</td> -->
                                 <td>
-                                    @if ($recipe["is_active"])
-                                        <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{{ __("Aktif") }}</span>
+                                    @if ($recipe->is_active)
+                                        <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aktif</span>
                                     @else
-                                        <span class="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">{{ __("Nonaktif") }}</span>
+                                        <span class="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Nonaktif</span>
                                     @endif
                                 </td>
                             </tr>

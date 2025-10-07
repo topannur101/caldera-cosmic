@@ -19,6 +19,9 @@ class InsCtcRecipe extends Model
         'scale',
         'pfc_min',
         'pfc_max',
+        'priority',
+        'is_active',
+        'recommended_for_models',
     ];
 
     protected $casts = [
@@ -27,6 +30,9 @@ class InsCtcRecipe extends Model
         'scale' => 'decimal:2',
         'pfc_min' => 'decimal:2',
         'pfc_max' => 'decimal:2',
+        'priority' => 'integer',
+        'is_active' => 'boolean',
+        'recommended_for_models' => 'array',
     ];
 
     protected $appends = [

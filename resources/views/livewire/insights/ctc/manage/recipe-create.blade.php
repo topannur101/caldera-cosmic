@@ -48,17 +48,15 @@ new class extends Component {
 
         $validated = $this->validate();
 
-        // TODO: Replace with actual InsCtcRecipe model when backend is ready
-        // $recipe = new InsCtcRecipe;
-        // $recipe->fill($validated);
-        // $recipe->recommended_for_models = json_encode($this->recommended_for_models);
-        // $recipe->save();
+        // Simpan ke database
+        $recipe = new \App\Models\InsCtcRecipe();
+        $recipe->fill($validated);
+        $recipe->save();
 
-        // Mock successful creation for development
+        // Feedback
         $this->js('$dispatch("close")');
         $this->js('toast("' . __("Resep dibuat") . '", { type: "success" })');
         $this->dispatch("updated");
-
         $this->customReset();
     }
 
