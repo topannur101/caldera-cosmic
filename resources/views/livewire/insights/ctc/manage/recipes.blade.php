@@ -23,19 +23,21 @@ new #[Layout("layouts.app")] class extends Component {
         $query = \App\Models\InsCtcRecipe::query();
 
         if ($q) {
-            $query->where(function ($query) use ($q) {
-                $query->where('name', 'like', "%{$q}%")
-                    ->orWhere('og_rs', 'like', "%{$q}%")
-                    ->orWhereJsonContains('recommended_for_models', $q);
+            $query->where(function ($subQuery) use ($q) {
+                $subQuery
+                    ->where("name", "like", "%" . $q . "%")
+                    ->orWhere("component_model", "like", "%" . $q . "%")
+                    ->orWhere("og_rs", "like", "%" . $q . "%");
             });
         }
 
-        $recipes = $query->orderBy('priority')
-                        ->orderBy('name')
-                        ->paginate($this->perPage);
+        $recipes = $query
+            ->orderBy("component_model")
+            ->orderBy("name")
+            ->paginate($this->perPage);
 
         return [
-            'recipes' => $recipes,
+            "recipes" => $recipes,
         ];
     }
 
@@ -53,7 +55,7 @@ new #[Layout("layouts.app")] class extends Component {
 };
 ?>
 
-<x-slot name="title">{{ __("Resep") . " — " . __("Kendali tebal calendar") }}</x-slot>
+<x-slot name="title">{{ __("Resep") . " - " . __("Kendali tebal calendar") }}</x-slot>
 <x-slot name="header">
     <x-nav-insights-ctc-sub />
 </x-slot>
@@ -91,12 +93,11 @@ new #[Layout("layouts.app")] class extends Component {
                         <tr>
                             <th>{{ __("ID") }}</th>
                             <th>{{ __("Nama") }}</th>
+                            <th>{{ __("Model") }}</th>
                             <th>{{ __("OG/RS") }}</th>
                             <th>{{ __("Min") }}</th>
                             <th>{{ __("Maks") }}</th>
                             <th>{{ __("Tengah") }}</th>
-                            <!-- <th>{{ __("Prioritas") }}</th> -->
-                            <!-- <th>{{ __("Model") }}</th> -->
                             <th>{{ __("Status") }}</th>
                         </tr>
                         @foreach ($recipes as $recipe)
@@ -104,23 +105,28 @@ new #[Layout("layouts.app")] class extends Component {
                                 wire:key="recipe-tr-{{ $recipe->id }}"
                                 tabindex="0"
                                 x-on:click="
-                                    $dispatch('open-modal', 'recipe-edit');
-                                    $dispatch('recipe-edit', { id: {{ $recipe->id }} });
+                                    $dispatch('open-modal', 'recipe-edit')
+                                    $dispatch('recipe-edit', { id: {{ $recipe->id }} })
                                 "
                             >
                                 <td>{{ $recipe->id }}</td>
                                 <td>{{ $recipe->name }}</td>
+                                <td>
+                                    @if ($recipe->component_model)
+                                        <x-pill color="blue">{{ $recipe->component_model }}</x-pill>
+                                    @else
+                                        <span class="text-neutral-400">-</span>
+                                    @endif
+                                </td>
                                 <td>{{ $recipe->og_rs }}</td>
                                 <td>{{ $recipe->std_min }}</td>
                                 <td>{{ $recipe->std_max }}</td>
                                 <td>{{ $recipe->std_mid }}</td>
-                                <!-- <td>{{ $recipe->priority }}</td> -->
-                                <!-- <td>{{ implode(', ', $recipe->recommended_for_models ?? []) }}</td> -->
                                 <td>
                                     @if ($recipe->is_active)
-                                        <span class="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aktif</span>
+                                        <x-pill color="green">{{ __("Aktif") }}</x-pill>
                                     @else
-                                        <span class="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Nonaktif</span>
+                                        <x-pill color="red">{{ __("Nonaktif") }}</x-pill>
                                     @endif
                                 </td>
                             </tr>
