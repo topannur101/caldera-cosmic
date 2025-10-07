@@ -92,8 +92,8 @@ new #[Layout("layouts.app")] class extends Component {
                     <table wire:key="recipes-table" class="table">
                         <tr>
                             <th>{{ __("ID") }}</th>
-                            <th>{{ __("Nama") }}</th>
-                            <th>{{ __("Model") }}</th>
+                            <th>{{ __("Nama Model") }}</th>
+                            <th>{{ __("Komponen") }}</th>
                             <th>{{ __("OG/RS") }}</th>
                             <th>{{ __("Min") }}</th>
                             <th>{{ __("Maks") }}</th>
