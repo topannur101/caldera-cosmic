@@ -32,8 +32,10 @@ new #[Layout("layouts.app")] class extends Component {
         }
 
         $recipes = $query
-            ->orderBy("component_model")
-            ->orderBy("name")
+            // ->orderByRaw("CASE WHEN component_model IS NULL THEN 1 ELSE 0 END") 
+            // ->orderBy("component_model")
+            ->orderBy("id", "asc") 
+            // ->orderBy("name")
             ->paginate($this->perPage);
 
         return [

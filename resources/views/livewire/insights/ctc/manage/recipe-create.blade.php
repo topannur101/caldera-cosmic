@@ -35,7 +35,7 @@ new class extends Component {
     public function messages()
     {
         return [
-            "name.required" => "Nama resep harus diisi",
+            "name.required" => "Nama model harus diisi",
             "component_model.required" => "Model komponen harus diisi",
             "og_rs.required" => "OG/RS harus diisi",
         ];
@@ -104,7 +104,7 @@ new class extends Component {
 
         {{-- Basic Information --}}
         <div class="mt-6">
-            <label for="recipe-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Nama Resep") }}</label>
+            <label for="recipe-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Nama Model") }}</label>
             <x-text-input id="recipe-name" wire:model="name" type="text" placeholder="Contoh: AF1 GS" />
             @error("name")
                 <x-input-error messages="{{ $message }}" class="px-3 mt-2" />
