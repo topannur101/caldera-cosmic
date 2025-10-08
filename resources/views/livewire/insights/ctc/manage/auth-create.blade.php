@@ -1,10 +1,8 @@
 <?php
-
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
-use Illuminate\Validation\Rule;
-
 use App\Models\User;
+use App\Models\InsCtcAuth;
 use Livewire\Attributes\Renderless;
 use Illuminate\Support\Facades\Gate;
 
@@ -16,7 +14,7 @@ new class extends Component {
     public function rules()
     {
         return [
-            "user_id" => ["required", "gt:0", "integer"],
+            "user_id" => ["required", "gt:0", "integer", "unique:ins_ctc_auths"],
             "actions" => ["array"],
             "actions.*" => ["string"],
         ];
@@ -32,21 +30,18 @@ new class extends Component {
     public function save()
     {
         Gate::authorize("superuser");
-
         $this->userq = trim($this->userq);
         $user = $this->userq ? User::where("emp_id", $this->userq)->first() : null;
-        $this->user_id = $user->id ?? 0;
+        $this->user_id = $user?->id ?? 0;
         $this->validate();
 
         if ($this->user_id == 1) {
             $this->js('toast("' . __("Superuser sudah memiliki wewenang penuh") . '", { type: "danger" })');
         } else {
-            // TODO: Replace with actual InsCtcAuth model when backend is ready
-            // InsCtcAuth::create([
-            //     'user_id' => $this->user_id,
-            //     'actions' => json_encode($this->actions)
-            // ]);
-
+            InsCtcAuth::create([
+                'user_id' => $this->user_id,
+                'actions' => json_encode($this->actions),
+            ]);
             $this->js('$dispatch("close")');
             $this->js('toast("' . __("Wewenang dibuat") . '", { type: "success" })');
             $this->dispatch("updated");
@@ -65,7 +60,6 @@ new class extends Component {
         $this->reset(["userq", "user_id", "actions"]);
     }
 };
-
 ?>
 
 <div>
@@ -77,7 +71,7 @@ new class extends Component {
             <x-text-button type="button" x-on:click="$dispatch('close')"><i class="icon-x"></i></x-text-button>
         </div>
         <div class="grid grid-cols-1 gap-y-3 mt-3">
-            <div wire:key="user-select" x-data="{ open: false, userq: @entangle("userq").live }" x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
+            <div wire:key="user-select" x-data="{ open: false, userq: @entangle('userq').live }" x-on:user-selected="userq = $event.detail.user_emp_id; open = false">
                 <div x-on:click.away="open = false">
                     <x-text-input-icon
                         x-model="userq"

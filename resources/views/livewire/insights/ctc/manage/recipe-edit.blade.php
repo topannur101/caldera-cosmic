@@ -102,6 +102,11 @@ new class extends Component {
         Gate::authorize('superuser');
 
         $recipe = \App\Models\InsCtcRecipe::findOrFail($this->id);
+
+        // Hapus semua metric yang terkait
+        $recipe->ins_ctc_metrics()->delete();
+
+        // Baru hapus resep
         $recipe->delete();
 
         $this->js('$dispatch("close")');
