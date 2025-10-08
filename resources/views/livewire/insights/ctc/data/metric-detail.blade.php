@@ -71,6 +71,8 @@ new class extends Component {
         $this->metric = InsCtcMetric::with(["ins_ctc_machine", "ins_ctc_recipe", "ins_rubber_batch"])->find($id);
 
         if ($this->metric) {
+            $correctionsByType = $this->countCorrectionsByType($this->metric->data);
+            
             $this->batch = [
                 "id" => $this->metric->id,
                 "rubber_batch_code" => $this->metric->ins_rubber_batch->code ?? "N/A",
@@ -115,6 +117,12 @@ new class extends Component {
                 "corrections_left" => $this->countCorrections($this->metric->data, "left"),
                 "corrections_right" => $this->countCorrections($this->metric->data, "right"),
                 "corrections_total" => $this->countCorrections($this->metric->data, "total"),
+                
+                // TAMBAHAN: Correction counts by type
+                "thick_left" => $correctionsByType['thick_left'],
+                "thick_right" => $correctionsByType['thick_right'],
+                "thin_left" => $correctionsByType['thin_left'],
+                "thin_right" => $correctionsByType['thin_right'],
             ];
 
             $this->generateChart();
@@ -298,32 +306,64 @@ new class extends Component {
                 }
             };
 
-            // Show ▲ or ▼ labels on action points
-            chartOptions.plugins.datalabels.display = function(ctx) {
-                return ctx.raw && (ctx.raw.action === 1 || ctx.raw.action === 2);
-            };
-            chartOptions.plugins.datalabels.formatter = function(value, ctx) {
-                if (!ctx.raw) return '';
-                if (ctx.raw.action === 2) return '\u25B2';
-                if (ctx.raw.action === 1) return '\u25BC';
-                return '';
-            };
-            chartOptions.plugins.datalabels.color = function(ctx) {
-                return ctx.dataset.borderColor;
+            // Configure datalabels plugin untuk menampilkan ▲/▼
+            chartOptions.plugins.datalabels = {
+                display: function(context) {
+                    const point = context.dataset.data[context.dataIndex];
+                    return point && point.action && (point.action === 1 || point.action === 2);
+                },
+                formatter: function(value, context) {
+                    const point = context.dataset.data[context.dataIndex];
+                    if (!point || !point.action) return '';
+                    
+                    if (point.action === 2) return '\u25B2';
+                    if (point.action === 1) return '\u25BC';
+                    return '';
+                },
+                color: function(context) {
+                    return context.dataset.borderColor;
+                },
+                align: function(context) {
+                    const point = context.dataset.data[context.dataIndex];
+                    return point && point.action === 2 ? 'top' : 'bottom';
+                },
+                offset: 6,
+                font: {
+                    size: 16,
+                    weight: 'bold'
+                }
             };
 
             // Render chart
             const chartContainer = \$wire.\$el.querySelector('#batch-chart-container');
+            if (!chartContainer) {
+                console.error('Chart container not found');
+                return;
+            }
+            
             chartContainer.innerHTML = '';
             const canvas = document.createElement('canvas');
             canvas.id = 'batch-chart';
             chartContainer.appendChild(canvas);
 
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded');
+                return;
+            }
+            
+            if (typeof ChartDataLabels === 'undefined') {
+                console.error('ChartDataLabels plugin not loaded');
+                return;
+            }
+
             const chart = new Chart(canvas, {
                 type: 'line',
                 data: chartData,
-                options: chartOptions
+                options: chartOptions,
+                plugins: [ChartDataLabels]
             });
+            
+            console.log('Chart rendered successfully');
         ",
         );
     }
@@ -509,6 +549,50 @@ new class extends Component {
                     ],
                 ],
             ],
+        ];
+    }
+
+    private function countCorrectionsByType($data): array
+    {
+        if (! $data || ! is_array($data)) {
+            return [
+                'thick_left' => 0,
+                'thick_right' => 0,
+                'thin_left' => 0,
+                'thin_right' => 0,
+            ];
+        }
+
+        $thickLeft = 0;
+        $thickRight = 0;
+        $thinLeft = 0;
+        $thinRight = 0;
+
+        foreach ($data as $point) {
+            // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, ...]
+            $actionLeft = isset($point[2]) ? (int)$point[2] : 0;
+            $actionRight = isset($point[3]) ? (int)$point[3] : 0;
+
+            // Left side corrections
+            if ($actionLeft === 2) { // thick = menebalkan
+                $thickLeft++;
+            } elseif ($actionLeft === 1) { // thin = menipiskan
+                $thinLeft++;
+            }
+
+            // Right side corrections
+            if ($actionRight === 2) { // thick = menebalkan
+                $thickRight++;
+            } elseif ($actionRight === 1) { // thin = menipiskan
+                $thinRight++;
+            }
+        }
+
+        return [
+            'thick_left' => $thickLeft,
+            'thick_right' => $thickRight,
+            'thin_left' => $thinLeft,
+            'thin_right' => $thinRight,
         ];
     }
 
