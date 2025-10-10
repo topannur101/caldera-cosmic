@@ -55,7 +55,7 @@ Route::prefix('insights')->group(function () {
         Volt::route('/ctc/data/realtime', 'insights.ctc.data.realtime')->name('data.realtime');
         Volt::route('/ctc/data/batch', 'insights.ctc.data.batch')->name('data.batch');
         Volt::route('/ctc/data', 'insights.ctc.data.index')->name('data.index');
-        Volt::route('/ctc/slideshows', 'insights.ctc.slideshows')->name('slideshows');
+        Volt::route('/ctc/slideshows', 'insights.ctc.slides.slideshows')->name('slideshows');
         Route::get('/ctc', function () {
             return redirect()->route('insights.ctc.data.index');
         })->name('index');

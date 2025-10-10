@@ -261,11 +261,13 @@ new class extends Component {
         if (empty($this->batch["data"])) {
             return;
         }
-
-        // Prepare data for Chart.js
+    
         $chartData = $this->prepareChartData($this->batch["data"]);
         $chartOptions = $this->getChartOptions();
-
+        
+        // Pass raw data ke JavaScript
+        $rawDataJson = json_encode($this->batch["data"]);
+    
         $this->js(
             "
             const chartData = " .
@@ -274,8 +276,51 @@ new class extends Component {
             const chartOptions = " .
                 json_encode($chartOptions) .
                 ";
-
-            // Configure time formatting with callback for en-US locale
+            const rawData = " . $rawDataJson . ";
+    
+            // Fungsi untuk mencari data point berdasarkan timestamp
+            function findDataPointIndex(timestamp) {
+                for (let i = 0; i < rawData.length; i++) {
+                    const pointTimestamp = new Date(rawData[i][0]);
+                    const targetTimestamp = new Date(timestamp);
+                    if (Math.abs(pointTimestamp - targetTimestamp) < 1000) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+    
+            // Fungsi untuk menghitung perubahan efektif setelah trigger
+            function calculateEffectiveChange(dataIndex, side) {
+                if (dataIndex < 0 || dataIndex >= rawData.length) return null;
+                
+                const currentPoint = rawData[dataIndex];
+                const currentValue = side === 'left' ? currentPoint[4] : currentPoint[5];
+                
+                // Cari nilai 3-8 point ke depan untuk melihat efek dari trigger
+                let futureValue = null;
+                let searchRange = Math.min(8, rawData.length - dataIndex - 1);
+                
+                for (let i = 3; i <= searchRange; i++) {
+                    const futurePoint = rawData[dataIndex + i];
+                    const futureAction = side === 'left' ? futurePoint[2] : futurePoint[3];
+                    const futureVal = side === 'left' ? futurePoint[4] : futurePoint[5];
+                    
+                    // Ambil nilai saat tidak ada trigger baru atau di point ke-5
+                    if (futureAction === 0 || i === 5) {
+                        futureValue = futureVal;
+                        break;
+                    }
+                }
+                
+                if (futureValue === null) return null;
+                
+                // Hitung perubahan absolut
+                const change = Math.abs(futureValue - currentValue);
+                return change;
+            }
+    
+            // Configure time formatting
             chartOptions.scales.x.ticks = {
                 callback: function(value, index, values) {
                     const date = new Date(value);
@@ -286,7 +331,7 @@ new class extends Component {
                     });
                 }
             };
-
+    
             // Add tooltip configuration
             chartOptions.plugins.tooltip = {
                 callbacks: {
@@ -305,8 +350,8 @@ new class extends Component {
                     }
                 }
             };
-
-            // Configure datalabels plugin untuk menampilkan ▲/▼
+    
+            // Label di chart: Symbol + Nilai Perubahan (SIMPLE)
             chartOptions.plugins.datalabels = {
                 display: function(context) {
                     const point = context.dataset.data[context.dataIndex];
@@ -316,9 +361,23 @@ new class extends Component {
                     const point = context.dataset.data[context.dataIndex];
                     if (!point || !point.action) return '';
                     
-                    if (point.action === 2) return '\u25B2';
-                    if (point.action === 1) return '\u25BC';
-                    return '';
+                    const side = point.side;
+                    const dataIndex = findDataPointIndex(point.x);
+                    
+                    const symbol = point.action === 2 ? '▲' : '▼';
+                    
+                    // Hitung perubahan efektif
+                    if (dataIndex >= 0) {
+                        const effectiveChange = calculateEffectiveChange(dataIndex, side);
+                        
+                        if (effectiveChange !== null && effectiveChange > 0) {
+                            // Format: ▲ 0.12 atau ▼ 0.08
+                            return symbol + ' ' + effectiveChange.toFixed(2);
+                        }
+                    }
+                    
+                    // Jika tidak bisa hitung, tampilkan symbol saja
+                    return symbol;
                 },
                 color: function(context) {
                     return context.dataset.borderColor;
@@ -329,11 +388,11 @@ new class extends Component {
                 },
                 offset: 6,
                 font: {
-                    size: 16,
+                    size: 12,
                     weight: 'bold'
                 }
             };
-
+    
             // Render chart
             const chartContainer = \$wire.\$el.querySelector('#batch-chart-container');
             if (!chartContainer) {
@@ -345,7 +404,7 @@ new class extends Component {
             const canvas = document.createElement('canvas');
             canvas.id = 'batch-chart';
             chartContainer.appendChild(canvas);
-
+    
             if (typeof Chart === 'undefined') {
                 console.error('Chart.js not loaded');
                 return;
@@ -355,7 +414,7 @@ new class extends Component {
                 console.error('ChartDataLabels plugin not loaded');
                 return;
             }
-
+    
             const chart = new Chart(canvas, {
                 type: 'line',
                 data: chartData,
@@ -363,7 +422,7 @@ new class extends Component {
                 plugins: [ChartDataLabels]
             });
             
-            console.log('Chart rendered successfully');
+            console.log('Chart rendered successfully with change values');
         ",
         );
     }
