@@ -131,6 +131,7 @@ new class extends Component {
             <x-checkbox id="recipe-manage" :disabled="!$is_superuser" wire:model="actions" value="recipe-manage">{{ __("Kelola resep") }}</x-checkbox>
             <x-checkbox id="batch-manage" :disabled="!$is_superuser" wire:model="actions" value="batch-manage">{{ __("Kelola gilingan") }}</x-checkbox>
             <x-checkbox id="csv-download" :disabled="!$is_superuser" wire:model="actions" value="csv-download">{{ __("Unduh CSV") }}</x-checkbox>
+            <x-checkbox id="batch-detail-download" :disabled="!$is_superuser" wire:model="actions" value="batch-detail-download">{{ __("Unduh rincian batch") }}</x-checkbox>
         </div>
         @can("superuser")
             <div class="mt-6 flex justify-between items-end">

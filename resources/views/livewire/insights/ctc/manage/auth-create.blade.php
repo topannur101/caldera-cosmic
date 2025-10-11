@@ -103,6 +103,7 @@ new class extends Component {
             <x-checkbox id="new-recipe-manage" wire:model="actions" value="recipe-manage">{{ __("Kelola resep") }}</x-checkbox>
             <x-checkbox id="new-batch-manage" wire:model="actions" value="batch-manage">{{ __("Kelola gilingan") }}</x-checkbox>
             <x-checkbox id="new-csv-download" wire:model="actions" value="csv-download">{{ __("Unduh CSV") }}</x-checkbox>
+            <x-checkbox id="new-batch-detail-download" wire:model="actions" value="batch-detail-download">{{ __("Unduh rincian batch") }}</x-checkbox>
         </div>
         <div class="mt-6 flex justify-end items-end">
             <x-primary-button type="submit">

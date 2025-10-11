@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\On;
 use App\Models\InsCtcMetric;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Response;
 
 new class extends Component {
     public int $id = 0;
@@ -55,6 +56,33 @@ new class extends Component {
     ];
 
     public $metric = null;
+    // Computed property untuk check download permission
+    public function getCanDownloadBatchCsvProperty(): bool
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return false;
+        }
+        
+        // Superuser selalu bisa
+        if ($user->id === 1) {
+            return true;
+        }
+        
+        try {
+            $auth = \App\Models\InsCtcAuth::where('user_id', $user->id)->first();
+            
+            if ($auth) {
+                $actions = json_decode($auth->actions ?? '[]', true);
+                return in_array('batch-detail-download', $actions);
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 
     public function mount()
     {
@@ -256,28 +284,208 @@ new class extends Component {
         }
     }
 
+    private function calculateEffectiveChange($data, $dataIndex, $side): ?float
+    {
+        if ($dataIndex < 0 || $dataIndex >= count($data)) {
+            return null;
+        }
+        
+        $currentPoint = $data[$dataIndex];
+        $currentValue = $side === 'left' ? ($currentPoint[4] ?? 0) : ($currentPoint[5] ?? 0);
+        
+        // Cari nilai 3-8 point ke depan untuk melihat efek dari trigger
+        $futureValue = null;
+        $searchRange = min(8, count($data) - $dataIndex - 1);
+        
+        for ($i = 3; $i <= $searchRange; $i++) {
+            $futurePoint = $data[$dataIndex + $i];
+            $futureAction = $side === 'left' ? ($futurePoint[2] ?? 0) : ($futurePoint[3] ?? 0);
+            $futureVal = $side === 'left' ? ($futurePoint[4] ?? 0) : ($futurePoint[5] ?? 0);
+            
+            // Ambil nilai saat tidak ada trigger baru atau di point ke-5
+            if ($futureAction == 0 || $i == 5) {
+                $futureValue = $futureVal;
+                break;
+            }
+        }
+        
+        if ($futureValue === null) {
+            return null;
+        }
+        
+        // Hitung perubahan absolut
+        $change = abs($futureValue - $currentValue);
+        return $change;
+    }
+
+    public function downloadCsv()
+    {
+        if (!$this->canDownloadBatchCsv) {
+            $this->js('toast("' . __("Anda tidak memiliki akses untuk mengunduh rincian batch") . '", { type: "danger" })');
+            return;
+        }
+    
+        if (!$this->metric) {
+            $this->js('toast("' . __("Data tidak ditemukan") . '", { type: "danger" })');
+            return;
+        }
+
+        $batchCode = $this->batch["rubber_batch_code"];
+        $line = $this->batch["machine_line"];
+
+        $safeBatchCode = preg_replace('/[^A-Za-z0-9_\-]/', '_', $batchCode);
+        $safeLine = preg_replace('/[^A-Za-z0-9_\-]/', '_', $line);
+
+        $timestamp = now()->format('Ymd_His');
+        $filename = "batch_{$safeBatchCode}_line{$safeLine}_{$timestamp}.csv";
+
+        $data = $this->metric->data;
+        $batchInfo = $this->batch;
+        
+        return Response::streamDownload(function () use ($data, $batchInfo) {
+            $file = fopen('php://output', 'w');
+            
+            // BOM untuk Excel UTF-8 support
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Header CSV
+            fputcsv($file, [
+                'No',
+                'Timestamp',
+                'Waktu',
+                'Sensor_Kiri_mm',
+                'Sensor_Kanan_mm',
+                'Trigger_Kiri',
+                'Trigger_Kanan',
+                'Trigger_Kiri_Jenis',
+                'Trigger_Kanan_Jenis',
+                'Perubahan_Kiri_mm',     
+                'Perubahan_Kanan_mm',     
+                'Dampak_Kiri_Persen',     
+                'Dampak_Kanan_Persen',    
+                'Std_Min',
+                'Std_Max',
+                'Std_Mid',
+                'Is_Correcting',
+                'Batch_Code',
+                'Line',
+                'MCS',
+                'Recipe_ID',
+                'Recipe_Name',
+                'Shift',
+            ]);
+            
+            // Data rows
+            foreach ($data as $index => $point) {
+                // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, recipe_id, std_min, std_max, std_mid]
+                $timestamp = $point[0] ?? '';
+                $isCorrecting = $point[1] ?? 0;
+                $actionLeft = $point[2] ?? 0;
+                $actionRight = $point[3] ?? 0;
+                $sensorLeft = $point[4] ?? 0;
+                $sensorRight = $point[5] ?? 0;
+                $recipeId = $point[6] ?? 0;
+                $stdMin = $point[7] ?? 0;
+                $stdMax = $point[8] ?? 0;
+                $stdMid = $point[9] ?? 0;
+                
+                // Parse waktu
+                $waktu = '';
+                try {
+                    $waktu = \Carbon\Carbon::parse($timestamp)->format('H:i:s');
+                } catch (\Exception $e) {
+                    $waktu = '';
+                }
+                
+                // Convert action code to label
+                $triggerLeftLabel = $this->getActionLabel($actionLeft);
+                $triggerRightLabel = $this->getActionLabel($actionRight);
+
+                // Hitung perubahan efektif untuk kiri
+                $changeLeft = 0;
+                $percentLeft = 0;
+                if ($actionLeft == 1 || $actionLeft == 2) {
+                    $effectiveChange = $this->calculateEffectiveChange($data, $index, 'left');
+                    if ($effectiveChange !== null && $effectiveChange > 0) {
+                        $changeLeft = $effectiveChange;
+                        $percentLeft = $sensorLeft > 0 ? ($effectiveChange / $sensorLeft) * 100 : 0;
+                    }
+                }
+                // Hitung perubahan efektif untuk kanan
+                $changeRight = 0;
+                $percentRight = 0;
+                if ($actionRight == 1 || $actionRight == 2) {
+                    $effectiveChange = $this->calculateEffectiveChange($data, $index, 'right');
+                    if ($effectiveChange !== null && $effectiveChange > 0) {
+                        $changeRight = $effectiveChange;
+                        $percentRight = $sensorRight > 0 ? ($effectiveChange / $sensorRight) * 100 : 0;
+                    }
+                }
+                
+                fputcsv($file, [
+                    $index + 1, // No
+                    $timestamp, // Timestamp full
+                    $waktu, // Waktu HH:mm:ss
+                    number_format($sensorLeft, 2, '.', ''), // Sensor Kiri
+                    number_format($sensorRight, 2, '.', ''), // Sensor Kanan
+                    $actionLeft, // Trigger Kiri (code)
+                    $actionRight, // Trigger Kanan (code)
+                    $triggerLeftLabel, // Trigger Kiri (label)
+                    $triggerRightLabel, // Trigger Kanan (label)
+                    number_format($changeLeft, 2, '.', ''),     
+                    number_format($changeRight, 2, '.', ''),     
+                    number_format($percentLeft, 1, '.', ''),     
+                    number_format($percentRight, 1, '.', ''),    
+                    number_format($stdMin, 2, '.', ''), // Std Min
+                    number_format($stdMax, 2, '.', ''), // Std Max
+                    number_format($stdMid, 2, '.', ''), // Std Mid
+                    $isCorrecting, // Is Correcting
+                    $batchInfo['rubber_batch_code'], // Batch Code
+                    $batchInfo['machine_line'], // Line
+                    $batchInfo['mcs'], // MCS
+                    $recipeId, // Recipe ID
+                    $batchInfo['recipe_name'], // Recipe Name
+                    $batchInfo['shift'], // Shift
+                ]);
+            }
+            
+            fclose($file);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    // Helper method untuk convert action code ke label
+    private function getActionLabel($actionCode): string
+    {
+        switch ($actionCode) {
+            case 1:
+                return 'Menipiskan';
+            case 2:
+                return 'Menebalkan';
+            default:
+                return '-';
+        }
+    }
+
     private function generateChart(): void
     {
         if (empty($this->batch["data"])) {
             return;
         }
-    
+
         $chartData = $this->prepareChartData($this->batch["data"]);
         $chartOptions = $this->getChartOptions();
         
-        // Pass raw data ke JavaScript
         $rawDataJson = json_encode($this->batch["data"]);
-    
+
         $this->js(
             "
-            const chartData = " .
-                json_encode($chartData) .
-                ";
-            const chartOptions = " .
-                json_encode($chartOptions) .
-                ";
+            const chartData = " . json_encode($chartData) . ";
+            const chartOptions = " . json_encode($chartOptions) . ";
             const rawData = " . $rawDataJson . ";
-    
+
             // Fungsi untuk mencari data point berdasarkan timestamp
             function findDataPointIndex(timestamp) {
                 for (let i = 0; i < rawData.length; i++) {
@@ -289,7 +497,7 @@ new class extends Component {
                 }
                 return -1;
             }
-    
+
             // Fungsi untuk menghitung perubahan efektif setelah trigger
             function calculateEffectiveChange(dataIndex, side) {
                 if (dataIndex < 0 || dataIndex >= rawData.length) return null;
@@ -319,39 +527,78 @@ new class extends Component {
                 const change = Math.abs(futureValue - currentValue);
                 return change;
             }
-    
+
             // Configure time formatting
             chartOptions.scales.x.ticks = {
                 callback: function(value, index, values) {
                     const date = new Date(value);
-                    return date.toLocaleTimeString('en-US', {
+                    return date.toLocaleTimeString('id-ID', {
                         hour: '2-digit',
                         minute: '2-digit',
                         hour12: false
                     });
                 }
             };
-    
-            // Add tooltip configuration
+
+            // TOOLTIP CONFIGURATION - Dengan Info Detail
             chartOptions.plugins.tooltip = {
                 callbacks: {
-                    label: function(context) {
-                        return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' mm';
-                    },
                     title: function(context) {
                         if (!context[0]) return '';
                         const date = new Date(context[0].parsed.x);
-                        return date.toLocaleTimeString('en-US', {
+                        return date.toLocaleTimeString('id-ID', {
                             hour: '2-digit',
                             minute: '2-digit',
                             second: '2-digit',
                             hour12: false
                         });
+                    },
+                    label: function(context) {
+                        const point = context.raw;
+                        let lines = [];
+                        
+                        // Baris 1: Nilai sensor
+                        lines.push(context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' mm');
+                        
+                        // Jika ada trigger, tampilkan detail
+                        if (point && point.action && (point.action === 1 || point.action === 2)) {
+                            const side = point.side;
+                            const dataIndex = findDataPointIndex(point.x);
+                            
+                            // Jenis trigger
+                            const emoji = point.action === 2 ? '▲' : '▼';
+                            const actionType = point.action === 2 ? 'Menebalkan' : 'Menipiskan';
+                            
+                            lines.push(''); // Empty line untuk spacing
+                            lines.push(emoji + actionType);
+                            
+                            // Hitung perubahan efektif
+                            if (dataIndex >= 0) {
+                                const effectiveChange = calculateEffectiveChange(dataIndex, side);
+                                if (effectiveChange !== null && effectiveChange > 0) {
+                                    lines.push('📊 ' + effectiveChange.toFixed(2) + ' mm');
+                                    
+                                    // Persentase perubahan
+                                    const percentChange = ((effectiveChange / context.parsed.y) * 100).toFixed(1);
+                                    lines.push('📈 ' + percentChange + '%');
+                                }
+                            }
+                        }
+                        
+                        return lines;
+                    },
+                    labelColor: function(context) {
+                        // Warna kotak sesuai dataset (biru untuk kiri, merah untuk kanan)
+                        return {
+                            borderColor: context.dataset.borderColor,
+                            backgroundColor: context.dataset.borderColor,
+                            borderWidth: 2
+                        };
                     }
                 }
             };
-    
-            // Label di chart: Symbol + Nilai Perubahan (SIMPLE)
+
+            // DATALABELS - Hanya Simbol Tanpa Angka
             chartOptions.plugins.datalabels = {
                 display: function(context) {
                     const point = context.dataset.data[context.dataIndex];
@@ -361,26 +608,11 @@ new class extends Component {
                     const point = context.dataset.data[context.dataIndex];
                     if (!point || !point.action) return '';
                     
-                    const side = point.side;
-                    const dataIndex = findDataPointIndex(point.x);
-                    
-                    const symbol = point.action === 2 ? '▲' : '▼';
-                    
-                    // Hitung perubahan efektif
-                    if (dataIndex >= 0) {
-                        const effectiveChange = calculateEffectiveChange(dataIndex, side);
-                        
-                        if (effectiveChange !== null && effectiveChange > 0) {
-                            // Format: ▲ 0.12 atau ▼ 0.08
-                            return symbol + ' ' + effectiveChange.toFixed(2);
-                        }
-                    }
-                    
-                    // Jika tidak bisa hitung, tampilkan symbol saja
-                    return symbol;
+                    // HANYA SIMBOL, TANPA ANGKA
+                    return point.action === 2 ? '▲' : '▼';
                 },
                 color: function(context) {
-                    return context.dataset.borderColor;
+                    return context.dataset.borderColor;  // Warna sesuai dataset
                 },
                 align: function(context) {
                     const point = context.dataset.data[context.dataIndex];
@@ -392,7 +624,7 @@ new class extends Component {
                     weight: 'bold'
                 }
             };
-    
+
             // Render chart
             const chartContainer = \$wire.\$el.querySelector('#batch-chart-container');
             if (!chartContainer) {
@@ -400,11 +632,20 @@ new class extends Component {
                 return;
             }
             
+            // Destroy existing chart if any
+            const existingCanvas = chartContainer.querySelector('#batch-chart');
+            if (existingCanvas) {
+                const existingChart = Chart.getChart('batch-chart');
+                if (existingChart) {
+                    existingChart.destroy();
+                }
+            }
+            
             chartContainer.innerHTML = '';
             const canvas = document.createElement('canvas');
             canvas.id = 'batch-chart';
             chartContainer.appendChild(canvas);
-    
+
             if (typeof Chart === 'undefined') {
                 console.error('Chart.js not loaded');
                 return;
@@ -414,7 +655,7 @@ new class extends Component {
                 console.error('ChartDataLabels plugin not loaded');
                 return;
             }
-    
+
             const chart = new Chart(canvas, {
                 type: 'line',
                 data: chartData,
@@ -422,10 +663,11 @@ new class extends Component {
                 plugins: [ChartDataLabels]
             });
             
-            console.log('Chart rendered successfully with change values');
+            console.log('Chart rendered successfully');
         ",
         );
     }
+   
 
     private function prepareChartData($data): array
     {
@@ -840,6 +1082,16 @@ new class extends Component {
             </div>
         </div>
     </div>
+    @if ($this->canDownloadBatchCsv)
+        <div class="pt-6 mt-6">
+            <div class="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
+                <x-secondary-button wire:click="downloadCsv" class="whitespace-nowrap">
+                    <i class="icon-download"></i>
+                    <span class="ml-2">{{ __("Download CSV") }}</span>
+                </x-secondary-button>
+            </div>
+        </div>
+    @endif
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
 </div>
