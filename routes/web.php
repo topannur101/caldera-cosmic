@@ -56,42 +56,101 @@ Route::prefix('insights')->group(function () {
         Volt::route('/ctc/data/batch', 'insights.ctc.data.batch')->name('data.batch');
         Volt::route('/ctc/data', 'insights.ctc.data.index')->name('data.index');
         Volt::route('/ctc/slideshows', 'insights.ctc.slides.slideshows')->name('slideshows');
+        Volt::route('/ctc/slides/realtime', 'insights.ctc.slides.sliderealtime')->name('slides.realtime');
+    
         Route::get('/ctc', function () {
             return redirect()->route('insights.ctc.data.index');
         })->name('index');
 
         // API routes for CTC (similar to RTC pattern)
         Route::get('/ctc/metric/{device_id}', function (string $device_id) {
-            // TODO: Replace with actual CTC model when backend is ready
-            // $metric = InsCtcMetric::join('ins_ctc_batches', 'ins_ctc_batches.id', '=', 'ins_ctc_metrics.ins_ctc_batch_id')
-            //     ->where('ins_ctc_batches.ins_ctc_device_id', $device_id)
-            //     ->latest('dt_client')
-            //     ->first();
-            // return $metric ? new InsCtcMetricResource($metric) : abort(404);
-
-            // Mock response for development
-            return response()->json([
-                'device_id' => $device_id,
-                'sensor_left' => 3.05,
-                'sensor_right' => 3.02,
-                'is_correcting' => true,
-                'dt_client' => now()->toISOString(),
-            ]);
+            // Wrap dengan cache 5 detik
+            return Cache::remember("ctc_metric_{$device_id}", 5, function () use ($device_id) {
+                $metric = \App\Models\InsCtcMetric::where('ins_ctc_machine_id', $device_id)
+                ->with(['ins_ctc_recipe', 'ins_ctc_machine', 'ins_rubber_batch'])
+                ->latest('created_at')
+                ->first();
+        
+                // Jika tidak ada data
+                if (!$metric || !$metric->data || !is_array($metric->data) || count($metric->data) === 0) {
+                    return response()->json([
+                        'device_id' => $device_id,
+                        'sensor_left' => 0,
+                        'sensor_right' => 0,
+                        'recipe_id' => 0,
+                        'dt_client' => now()->toISOString(),
+                        'is_correcting' => false,
+                        'batch_code' => 'N/A',
+                    ]);
+                }
+                
+                // Ambil data point terakhir
+                $lastPoint = end($metric->data);
+                
+                return response()->json([
+                    'device_id' => $device_id,
+                    'sensor_left' => round($lastPoint[4] ?? 0, 2),
+                    'sensor_right' => round($lastPoint[5] ?? 0, 2),
+                    'recipe_id' => $lastPoint[6] ?? $metric->ins_ctc_recipe_id ?? 0,
+                    'dt_client' => $lastPoint[0] ?? $metric->created_at->toISOString(),
+                    'is_correcting' => (bool) ($lastPoint[1] ?? false),
+                    'action_left' => (int) ($lastPoint[2] ?? 0),
+                    'action_right' => (int) ($lastPoint[3] ?? 0),
+                    'batch_code' => $metric->ins_rubber_batch->code ?? 'N/A',
+                ]);
+            });
         })->name('metric');
-
+        
         Route::get('/ctc/recipe/{recipe_id}', function (string $recipe_id) {
-            // TODO: Replace with actual CTC recipe model when backend is ready
-            // return new InsCtcRecipeResource(InsCtcRecipe::findOrFail($recipe_id));
+            // Wrap dengan cache 30 detik (recipe jarang berubah)
+            return Cache::remember("ctc_recipe_{$recipe_id}", 30, function () use ($recipe_id) {
+                $recipe = \App\Models\InsCtcRecipe::find($recipe_id);
+                
+                if (!$recipe) {
+                    return response()->json([
+                        'id' => $recipe_id,
+                        'name' => 'Unknown Recipe',
+                        'og_rs' => '000',
+                        'std_min' => 0,
+                        'std_max' => 0,
+                        'std_mid' => 0,
+                    ]);
+                }
+                
+                return response()->json([
+                    'id' => $recipe->id,
+                    'name' => $recipe->name,
+                    'og_rs' => str_pad($recipe->og_rs ?? '0', 3, '0', STR_PAD_LEFT),
+                    'std_min' => round($recipe->std_min, 2),
+                    'std_max' => round($recipe->std_max, 2),
+                    'std_mid' => round($recipe->std_mid, 2),
+                ]);
+            });
+        })->name('recipe');
 
-            // Mock response for development
+    Route::get('/ctc/recipe/{recipe_id}', function (string $recipe_id) {
+        $recipe = \App\Models\InsCtcRecipe::find($recipe_id);
+        
+        if (!$recipe) {
             return response()->json([
                 'id' => $recipe_id,
-                'name' => 'AF1 GS (ONE COLOR)',
-                'std_min' => 3.0,
-                'std_max' => 3.1,
-                'std_mid' => 3.05,
+                'name' => 'Unknown Recipe',
+                'og_rs' => '000',
+                'std_min' => 0,
+                'std_max' => 0,
+                'std_mid' => 0,
             ]);
-        })->name('recipe');
+        }
+        
+        return response()->json([
+            'id' => $recipe->id,
+            'name' => $recipe->name,
+            'og_rs' => str_pad($recipe->og_rs ?? '0', 3, '0', STR_PAD_LEFT),
+            'std_min' => round($recipe->std_min, 2),
+            'std_max' => round($recipe->std_max, 2),
+            'std_mid' => round($recipe->std_mid, 2),
+        ]);
+    })->name('recipe');
 
     });
 
