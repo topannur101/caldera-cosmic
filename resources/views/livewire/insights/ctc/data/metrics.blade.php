@@ -60,6 +60,7 @@ new #[Layout("layouts.app")] class extends Component {
                 "ins_ctc_metrics.created_at as metric_created_at",
                 "ins_ctc_machines.line as machine_line",
                 "ins_ctc_recipes.name as recipe_name",
+                "ins_ctc_recipes.component_model",
                 "ins_ctc_recipes.std_min",
                 "ins_ctc_recipes.std_max",
                 "ins_rubber_batches.code as batch_code",
@@ -450,7 +451,16 @@ new #[Layout("layouts.app")] class extends Component {
                         >
                             <td>{{ $metric->batch_code ?? "N/A" }}</td>
                             <td>{{ $metric->machine_line ?? "N/A" }}</td>
-                            <td class="max-w-32 truncate" title="{{ $metric->recipe_name }}">{{ $metric->recipe_name ?? "N/A" }}</td>
+                            <td class="max-w-32 truncate" title="{{ $metric->recipe_name }} {{ $metric->component_model }}">
+                                <span class="inline-flex items-center gap-1">
+                                    {{ $metric->recipe_name ?? "N/A" }}
+                                    @if ($metric->component_model)
+                                        <span class="inline-flex items-center px-2 py-0.5 bg-indigo-100 text-indigo-800 text-sm rounded-full font-medium leading-none">
+                                            {{ $metric->component_model }}
+                                        </span>
+                                    @endif
+                                </span>
+                            </td>
                             <td>{{ $metric->batch_mcs ?? "N/A" }}</td>
                             @php
                                 $avgEval = $metric->avg_evaluation;

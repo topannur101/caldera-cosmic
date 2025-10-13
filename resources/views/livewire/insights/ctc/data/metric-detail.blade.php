@@ -22,6 +22,7 @@ new class extends Component {
         "recipe_std_min" => 0,
         "recipe_std_max" => 0,
         "recipe_scale" => 0,
+        "recipe_component" => "",
 
         // Performance metrics
         "t_avg_left" => 0,
@@ -114,6 +115,7 @@ new class extends Component {
                 "recipe_std_min" => $this->metric->ins_ctc_recipe->std_min ?? 0,
                 "recipe_std_max" => $this->metric->ins_ctc_recipe->std_max ?? 0,
                 "recipe_scale" => $this->metric->ins_ctc_recipe->scale ?? 0,
+                "recipe_component" => $this->metric->ins_ctc_recipe->component_model ?? "N/A",
 
                 // Performance metrics
                 "t_avg_left" => $this->metric->t_avg_left,
@@ -1073,10 +1075,18 @@ new class extends Component {
                     <div>
                         <span class="text-neutral-500">{{ __("ID:") }}</span>
                         <span class="font-medium">{{ $batch["recipe_id"] }}</span>
+                        
                     </div>
                     <div>
                         <span class="text-neutral-500">{{ __("Nama:") }}</span>
-                        <span class="font-medium">{{ $batch["recipe_name"] }}</span>
+                        <span class="font-medium flex items-center gap-1">
+                            {{ $batch["recipe_name"] }}
+                            @if ($batch["recipe_component"] && $batch["recipe_component"] !== "N/A")
+                                <span class="ml-1 px-2 py-0.5 bg-indigo-100 text-indigo-800 text-sm rounded-full font-medium">
+                                    {{ $batch["recipe_component"] }}
+                                </span>
+                            @endif
+                        </span>
                     </div>
                 </div>
             </div>
