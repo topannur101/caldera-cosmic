@@ -349,6 +349,12 @@ new class extends Component {
             
             // BOM untuk Excel UTF-8 support
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Gabungkan recipe_name dengan component_model
+            $recipeFullName = $batchInfo['recipe_name'];
+            if (!empty($batchInfo['recipe_component']) && $batchInfo['recipe_component'] !== 'N/A') {
+                $recipeFullName .= ' - ' . $batchInfo['recipe_component'];
+            }
             
             // Header CSV
             fputcsv($file, [
@@ -446,7 +452,7 @@ new class extends Component {
                     $batchInfo['machine_line'], // Line
                     $batchInfo['mcs'], // MCS
                     $recipeId, // Recipe ID
-                    $batchInfo['recipe_name'], // Recipe Name
+                    $recipeFullName, // Recipe Name
                     $batchInfo['shift'], // Shift
                 ]);
             }
@@ -1075,18 +1081,13 @@ new class extends Component {
                     <div>
                         <span class="text-neutral-500">{{ __("ID:") }}</span>
                         <span class="font-medium">{{ $batch["recipe_id"] }}</span>
-                        
                     </div>
-                    <div>
-                        <span class="text-neutral-500">{{ __("Nama:") }}</span>
-                        <span class="font-medium flex items-center gap-1">
-                            {{ $batch["recipe_name"] }}
-                            @if ($batch["recipe_component"] && $batch["recipe_component"] !== "N/A")
-                                <span class="ml-1 px-2 py-0.5 bg-indigo-100 text-indigo-800 text-sm rounded-full font-medium">
-                                    {{ $batch["recipe_component"] }}
-                                </span>
-                            @endif
-                        </span>
+                    <div class="space-y-1">
+                        <div class="text-neutral-500">{{ __("Nama:") }}</div>
+                        <div class="font-medium">{{ $batch["recipe_name"] }}</div>
+                        @if ($batch["recipe_component"] && $batch["recipe_component"] !== "N/A")
+                            <div class="font-medium">{{ $batch["recipe_component"] }}</div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -1094,10 +1095,13 @@ new class extends Component {
     </div>
     @if ($this->canDownloadBatchCsv)
         <div class="pt-6 mt-6">
-            <div class="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
-                <x-secondary-button wire:click="downloadCsv" class="whitespace-nowrap">
-                    <i class="icon-download"></i>
-                    <span class="ml-2">{{ __("Download CSV") }}</span>
+            <div class="flex justify-end">
+                <x-secondary-button 
+                    wire:click="downloadCsv" 
+                    class="px-4 py-2 text-sm whitespace-nowrap rounded-md"
+                >
+                    <i class="icon-download mr-2"></i>
+                    {{ __("Download CSV") }}
                 </x-secondary-button>
             </div>
         </div>
