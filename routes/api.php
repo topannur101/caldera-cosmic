@@ -6,6 +6,7 @@ use App\Models\InsOmvRecipe;
 use App\Models\InsRubberBatch;
 use App\Models\InvTag;
 use App\Models\User;
+use App\Models\InsCtcRecipe;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -258,4 +259,126 @@ Route::post('/omv-metric', function (Request $request) {
         'status' => 'valid',
         'msg' => $responseMessage,
     ], 200);
+});
+
+// ========================================
+// CTC RECIPES API - untuk HMI Weintek
+// ========================================
+
+// ENDPOINT 1: Get List Model (untuk Page 1 HMI)
+Route::get('/ctc-recipes/models', function () {
+    $models = InsCtcRecipe::where('is_active', true)
+        ->distinct()
+        ->orderBy('name')
+        ->pluck('name')
+        ->values()
+        ->toArray();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $models
+    ]);
+});
+
+// ENDPOINT 2: Get Components & Recommendations by Model (untuk Page 2 HMI)
+Route::get('/ctc-recipes/details/{modelName}', function ($modelName) {
+    // Decode URL encoding jika ada spasi (AF1%20GS -> AF1 GS)
+    $modelName = urldecode($modelName);
+    
+    // Get all recipes for this model yang aktif
+    $recipes = InsCtcRecipe::where('name', $modelName)
+        ->where('is_active', true)
+        ->orderBy('component_model')
+        ->orderBy('og_rs')
+        ->get();
+
+    if ($recipes->isEmpty()) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Model tidak ditemukan'
+        ], 404);
+    }
+
+    // Group by component untuk list components
+    $components = $recipes->pluck('component_model')
+        ->unique()
+        ->filter() // Remove null values
+        ->values()
+        ->toArray();
+
+    // Format detail recommendations
+    $recommendations = $recipes->map(function ($recipe) {
+        return [
+            'id' => $recipe->id,
+            'component_model' => $recipe->component_model ?? 'RESEP',
+            'og_rs' => $recipe->og_rs,
+            'std_min' => (float) $recipe->std_min,
+            'std_max' => (float) $recipe->std_max,
+            'std_mid' => (float) $recipe->std_mid,
+            'scale' => $recipe->scale ? (float) $recipe->scale : null,
+            'pfc_min' => $recipe->pfc_min ? (float) $recipe->pfc_min : null,
+            'pfc_max' => $recipe->pfc_max ? (float) $recipe->pfc_max : null,
+        ];
+    });
+
+    return response()->json([
+        'status' => 'success',
+        'data' => [
+            'model' => $modelName,
+            'components' => $components,
+            'recommendations' => $recommendations
+        ]
+    ]);
+});
+
+// ENDPOINT 3 (OPTIONAL): Get Specific Recommendation
+Route::get('/ctc-recipes/recommendation', function (Request $request) {
+    $validator = Validator::make($request->all(), [
+        'model' => 'required|string',
+        'component' => 'nullable|string',
+        'og_rs' => 'nullable|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $validator->errors()->first()
+        ], 400);
+    }
+
+    $query = InsCtcRecipe::where('name', $request->model)
+        ->where('is_active', true);
+
+    if ($request->component) {
+        $query->where('component_model', $request->component);
+    }
+
+    if ($request->og_rs) {
+        $query->where('og_rs', $request->og_rs);
+    }
+
+    $recipe = $query->first();
+
+    if (!$recipe) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Resep tidak ditemukan'
+        ], 404);
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'data' => [
+            'id' => $recipe->id,
+            'model' => $recipe->name,
+            'component_model' => $recipe->component_model ?? 'RESEP',
+            'og_rs' => $recipe->og_rs,
+            'std_min' => (float) $recipe->std_min,
+            'std_max' => (float) $recipe->std_max,
+            'std_mid' => (float) $recipe->std_mid,
+            'scale' => $recipe->scale ? (float) $recipe->scale : null,
+            'pfc_min' => $recipe->pfc_min ? (float) $recipe->pfc_min : null,
+            'pfc_max' => $recipe->pfc_max ? (float) $recipe->pfc_max : null,
+        ]
+    ]);
 });
