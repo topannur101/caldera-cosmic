@@ -739,21 +739,21 @@ new class extends Component {
                     {{-- Evaluasi Section --}}
                     <thead>
                         <tr class="uppercase text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900/50 border-b border-neutral-200 dark:border-neutral-700">
-                            <th class="py-1.5 px-2 text-left font-semibold">METRIK</th>
-                            <th class="py-1.5 px-2 text-center font-semibold">KI</th>
-                            <th class="py-1.5 px-2 text-center font-semibold">KA</th>
-                            <th class="py-1.5 px-2 text-center font-semibold">±</th>
-                            <th class="py-1.5 px-2 text-left font-semibold">EVALUASI</th>
+                            <th class="py-3 px-2 text-left font-semibold">METRIK</th>
+                            <th class="py-3 px-2 text-center font-semibold">KI</th>
+                            <th class="py-3 px-2 text-center font-semibold">KA</th>
+                            <th class="py-3 px-2 text-center font-semibold">±</th>
+                            <th class="py-3 px-2 text-left font-semibold">EVALUASI</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
                         {{-- AVG --}}
                         <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900/30">
-                            <td class="py-1.5 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">AVG</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["t_avg_left"], 2) }}</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["t_avg_right"], 2) }}</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["t_avg"], 2) }}</td>
-                            <td class="py-1.5 px-2">
+                            <td class="py-2 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">AVG</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["t_avg_left"], 2) }}</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["t_avg_right"], 2) }}</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["t_avg"], 2) }}</td>
+                            <td class="py-2 px-2">
                                 @php $avgEval = $metric?->avg_evaluation; @endphp
                                 <div class="flex items-center gap-1">
                                     <i class="{{ $avgEval['is_good'] ?? false ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }} text-xs flex-shrink-0"></i>
@@ -764,11 +764,11 @@ new class extends Component {
 
                         {{-- MAE --}}
                         <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900/30">
-                            <td class="py-1.5 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">MAE</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["t_mae_left"], 2) }}</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["t_mae_right"], 2) }}</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["t_mae"], 2) }}</td>
-                            <td class="py-1.5 px-2">
+                            <td class="py-2 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">MAE</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["t_mae_left"], 2) }}</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["t_mae_right"], 2) }}</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["t_mae"], 2) }}</td>
+                            <td class="py-2 px-2">
                                 @php $maeEval = $metric?->mae_evaluation; @endphp
                                 <div class="flex items-center gap-1">
                                     <i class="{{ $maeEval['is_good'] ?? false ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }} text-xs flex-shrink-0"></i>
@@ -779,11 +779,11 @@ new class extends Component {
 
                         {{-- SSD --}}
                         <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900/30">
-                            <td class="py-1.5 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">SSD</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["t_ssd_left"], 2) }}</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["t_ssd_right"], 2) }}</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["t_ssd"], 2) }}</td>
-                            <td class="py-1.5 px-2">
+                            <td class="py-2 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">SSD</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["t_ssd_left"], 2) }}</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["t_ssd_right"], 2) }}</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["t_ssd"], 2) }}</td>
+                            <td class="py-2 px-2">
                                 @php $ssdEval = $metric?->ssd_evaluation; @endphp
                                 <div class="flex items-center gap-1">
                                     <i class="{{ $ssdEval['is_good'] ?? false ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }} text-xs flex-shrink-0"></i>
@@ -794,11 +794,11 @@ new class extends Component {
 
                         {{-- KOREKSI --}}
                         <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900/30">
-                            <td class="py-1.5 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">KOREKSI</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ $batch["corrections_left"] }}</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ $batch["corrections_right"] }}</td>
-                            <td class="py-1.5 px-2 text-center font-mono">{{ $batch["corrections_total"] }}</td>
-                            <td class="py-1.5 px-2">
+                            <td class="py-2 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">KOREKSI</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ $batch["corrections_left"] }}</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ $batch["corrections_right"] }}</td>
+                            <td class="py-2 px-2 text-center font-mono">{{ $batch["corrections_total"] }}</td>
+                            <td class="py-2 px-2">
                                 @php $correctionEval = $metric?->correction_evaluation; @endphp
                                 <div class="flex items-center gap-1">
                                     <i class="{{ $correctionEval['is_good'] ?? false ? 'icon-circle-check text-green-500' : 'icon-circle-x text-red-500' }} text-xs flex-shrink-0"></i>
@@ -812,21 +812,21 @@ new class extends Component {
                     @if ($batch["recipe_std_min"] !== null && $batch["actual_std_min"] !== null)
                         <thead>
                             <tr class="uppercase text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900/50 border-t-2 border-neutral-300 dark:border-neutral-600 border-b border-neutral-200 dark:border-neutral-700">
-                                <th class="py-1.5 px-2 text-left font-semibold">STANDAR</th>
-                                <th class="py-1.5 px-2 text-center font-semibold">REC</th>
-                                <th class="py-1.5 px-2 text-center font-semibold">ACT</th>
-                                <th class="py-1.5 px-2"></th>
-                                <th class="py-1.5 px-2"></th>
+                                <th class="py-3 px-2 text-left font-semibold">STANDAR</th>
+                                <th class="py-3 px-2 text-center font-semibold">REC</th>
+                                <th class="py-3 px-2 text-center font-semibold">ACT</th>
+                                <th class="py-3 px-2"></th>
+                                <th class="py-3 px-2"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
                         {{-- Max --}}
                             <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900/30">
-                                <td class="py-1.5 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">MAX</td>
-                                <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["recipe_std_max"], 2) }}</td>
-                                <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["actual_std_max"], 2) }}</td>
-                                <td class="py-1.5 px-2"></td>
-                                <td class="py-1.5 px-2" rowspan="2" style="vertical-align: middle;">
+                                <td class="py-2 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">MAX</td>
+                                <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["recipe_std_max"], 2) }}</td>
+                                <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["actual_std_max"], 2) }}</td>
+                                <td class="py-2 px-2"></td>
+                                <td class="py-2 px-2" rowspan="2" style="vertical-align: middle;">
                                     @if ($this->metric && $this->metric->deviation)
                                         @php $deviation = $this->metric->deviation; @endphp
                                         <div class="inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded-md {{ $deviation['bg_color'] ?? 'bg-green-50' }} min-w-[70px] text-center whitespace-nowrap overflow-hidden">
@@ -840,10 +840,10 @@ new class extends Component {
 
                             {{-- Min --}}
                             <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900/30">
-                                <td class="py-1.5 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">MIN</td>
-                                <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["recipe_std_min"], 2) }}</td>
-                                <td class="py-1.5 px-2 text-center font-mono">{{ number_format($batch["actual_std_min"], 2) }}</td>
-                                <td class="py-1.5 px-2"></td>
+                                <td class="py-2 px-2 font-semibold uppercase text-neutral-600 dark:text-neutral-400">MIN</td>
+                                <td class="py-2px-2 text-center font-mono">{{ number_format($batch["recipe_std_min"], 2) }}</td>
+                                <td class="py-2 px-2 text-center font-mono">{{ number_format($batch["actual_std_min"], 2) }}</td>
+                                <td class="py-2 px-2"></td>
                             </tr> 
                         </tbody>
                     @endif
