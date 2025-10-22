@@ -60,6 +60,7 @@ new #[Layout("layouts.app")] class extends Component {
                 "ins_ctc_metrics.created_at as metric_created_at",
                 "ins_ctc_machines.line as machine_line",
                 "ins_ctc_recipes.name as recipe_name",
+                "ins_ctc_recipes.component_model",
                 "ins_ctc_recipes.std_min",
                 "ins_ctc_recipes.std_max",
                 "ins_rubber_batches.code as batch_code",
@@ -157,6 +158,7 @@ new #[Layout("layouts.app")] class extends Component {
                 ];
 
                 $columns = [
+                    __("Tanggal Dibuat"),
                     __("Batch"),
                     __("Line"),
                     __("Resep"),
@@ -181,10 +183,17 @@ new #[Layout("layouts.app")] class extends Component {
 
                     $this->getMetricsQuery()->chunk(1000, function ($metrics) use ($file) {
                         foreach ($metrics as $metric) {
+                            // Gabungkan recipe_name dan component_model
+                            $recipeFull = $metric->recipe_name ?? 'N/A';
+                            if ($metric->component_model && $metric->component_model !== '-') {
+                                $recipeFull .= ' - ' . $metric->component_model;
+                            }
+
                             fputcsv($file, [
+                                $metric->created_at->format('Y-m-d H:i:s'),  // ← TAMBAH INI
                                 $metric->batch_code,
                                 $metric->machine_line,
-                                $metric->recipe_name,
+                                $recipeFull,
                                 $metric->batch_mcs,
                                 number_format($metric->t_avg_left, 2),
                                 number_format($metric->t_avg_right, 2),
@@ -448,7 +457,16 @@ new #[Layout("layouts.app")] class extends Component {
                         >
                             <td>{{ $metric->batch_code ?? "N/A" }}</td>
                             <td>{{ $metric->machine_line ?? "N/A" }}</td>
-                            <td class="max-w-32 truncate" title="{{ $metric->recipe_name }}">{{ $metric->recipe_name ?? "N/A" }}</td>
+                            <td class="max-w-32 truncate" title="{{ $metric->recipe_name }} {{ $metric->component_model }}">
+                                <span>
+                                    {{ $metric->recipe_name ??"N/A" }}
+                                    @if ($metric->component_model)
+                                        <span class="ml-1"> 
+                                            {{ $metric->component_model }}
+                                        </span>                  
+                                    @endif
+                                </span>
+                            </td>
                             <td>{{ $metric->batch_mcs ?? "N/A" }}</td>
                             @php
                                 $avgEval = $metric->avg_evaluation;

@@ -13,12 +13,14 @@ class InsCtcRecipe extends Model
 
     protected $fillable = [
         'name',
+        'component_model',  // BARU: Ditambahkan
         'og_rs',
         'std_min',
         'std_max',
         'scale',
         'pfc_min',
         'pfc_max',
+        'is_active',
     ];
 
     protected $casts = [
@@ -27,10 +29,11 @@ class InsCtcRecipe extends Model
         'scale' => 'decimal:2',
         'pfc_min' => 'decimal:2',
         'pfc_max' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 
     protected $appends = [
-        'std_mid', // Add computed attribute to JSON output
+        'std_mid',
         'target_thickness',
     ];
 
@@ -53,7 +56,6 @@ class InsCtcRecipe extends Model
 
     /**
      * Computed attribute: std_mid (target thickness)
-     * Automatically calculates the middle point between std_min and std_max
      */
     public function getStdMidAttribute(): float
     {
@@ -61,7 +63,7 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Alias for std_mid - more descriptive name
+     * Alias for std_mid
      */
     public function getTargetThicknessAttribute(): float
     {
@@ -69,7 +71,7 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Get the thickness tolerance (std_max - std_min)
+     * Get the thickness tolerance
      */
     public function getToleranceAttribute(): float
     {
@@ -77,7 +79,7 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Get the PFC (Pre-Final Check) target thickness
+     * Get the PFC target thickness
      */
     public function getPfcTargetAttribute(): float
     {
@@ -93,7 +95,7 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Check if a thickness value is within standard range
+     * Check if thickness is within standard range
      */
     public function isWithinStandardRange(float $thickness): bool
     {
@@ -101,7 +103,7 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Check if a thickness value is within PFC range
+     * Check if thickness is within PFC range
      */
     public function isWithinPfcRange(float $thickness): bool
     {
@@ -109,14 +111,13 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Get quality rating based on how close the thickness is to target
+     * Get quality rating based on thickness
      */
     public function getQualityRating(float $thickness): string
     {
         $target = $this->target_thickness;
         $tolerance = $this->tolerance;
 
-        // Calculate deviation from target as percentage of tolerance
         $deviation = abs($thickness - $target);
         $deviation_percentage = $tolerance > 0 ? ($deviation / ($tolerance / 2)) * 100 : 0;
 
@@ -134,7 +135,7 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Calculate Mean Absolute Error for a set of measurements
+     * Calculate Mean Absolute Error
      */
     public function calculateMae(array $measurements): float
     {
@@ -149,7 +150,7 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Get recent performance metrics for this recipe
+     * Get recent performance metrics
      */
     public function getRecentPerformance(int $days = 7): array
     {
@@ -178,7 +179,7 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Calculate overall quality score for a collection of metrics
+     * Calculate quality score
      */
     private function calculateQualityScore($metrics): float
     {
@@ -191,21 +192,16 @@ class InsCtcRecipe extends Model
         $avg_balance = abs($metrics->avg('t_balance'));
 
         $tolerance = $this->tolerance;
-
-        // Quality score calculation (0-100)
         $quality_score = 100;
 
-        // Penalize high MAE relative to tolerance
         if ($avg_mae > ($tolerance * 0.1)) {
             $quality_score -= (($avg_mae - ($tolerance * 0.1)) / $tolerance) * 30;
         }
 
-        // Penalize high SSD relative to tolerance
         if ($avg_ssd > ($tolerance * 0.05)) {
             $quality_score -= (($avg_ssd - ($tolerance * 0.05)) / $tolerance) * 40;
         }
 
-        // Penalize imbalance
         if ($avg_balance > ($tolerance * 0.1)) {
             $quality_score -= (($avg_balance - ($tolerance * 0.1)) / $tolerance) * 30;
         }
@@ -214,7 +210,7 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Get machines currently using this recipe
+     * Get active machines using this recipe
      */
     public function activeMachines()
     {
@@ -225,13 +221,14 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Get summary statistics for this recipe
+     * Get summary statistics
      */
     public function getSummaryStats(): array
     {
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'component_model' => $this->component_model,
             'target_thickness' => $this->target_thickness,
             'tolerance' => $this->tolerance,
             'std_range' => "{$this->std_min} - {$this->std_max}",
@@ -242,37 +239,19 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Validation rules for recipe data
-     */
-    public static function validationRules(): array
-    {
-        return [
-            'name' => 'required|string|max:255|unique:ins_ctc_recipes,name',
-            'og_rs' => 'required|string|max:255',
-            'std_min' => 'required|numeric|min:0|max:99.99',
-            'std_max' => 'required|numeric|min:0|max:99.99|gte:std_min',
-            'scale' => 'required|numeric|min:0|max:99.99',
-            'pfc_min' => 'required|numeric|min:0|max:99.99',
-            'pfc_max' => 'required|numeric|min:0|max:99.99|gte:pfc_min',
-        ];
-    }
-
-    /**
-     * Boot method to add model validation
+     * Boot method untuk validasi
      */
     protected static function boot()
     {
         parent::boot();
 
         static::saving(function ($recipe) {
-            // Ensure std_min <= std_max
             if ($recipe->std_min > $recipe->std_max) {
                 throw ValidationException::withMessages([
                     'std_max' => 'Standard maximum must be greater than or equal to standard minimum.',
                 ]);
             }
 
-            // Ensure pfc_min <= pfc_max
             if ($recipe->pfc_min > $recipe->pfc_max) {
                 throw ValidationException::withMessages([
                     'pfc_max' => 'PFC maximum must be greater than or equal to PFC minimum.',
@@ -282,7 +261,15 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Scope for recipes within a thickness range
+     * Scope: Filter by component model
+     */
+    public function scopeByComponentModel($query, string $model)
+    {
+        return $query->where('component_model', $model);
+    }
+
+    /**
+     * Scope: Filter by thickness range
      */
     public function scopeForThicknessRange($query, float $min, float $max)
     {
@@ -297,7 +284,7 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Scope for recipes by OG_RS value
+     * Scope: Filter by OG_RS
      */
     public function scopeByOgRs($query, string $og_rs)
     {
@@ -305,12 +292,20 @@ class InsCtcRecipe extends Model
     }
 
     /**
-     * Scope for active recipes (used in recent metrics)
+     * Scope: Active recipes
      */
     public function scopeActive($query, int $days = 30)
     {
         return $query->whereHas('ins_ctc_metrics', function ($subQuery) use ($days) {
             $subQuery->where('created_at', '>=', now()->subDays($days));
         });
+    }
+
+    /**
+     * Scope: Only active status recipes
+     */
+    public function scopeIsActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

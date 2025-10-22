@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\On;
 use App\Models\InsCtcMetric;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Response;
 
 new class extends Component {
     public int $id = 0;
@@ -21,6 +22,7 @@ new class extends Component {
         "recipe_std_min" => 0,
         "recipe_std_max" => 0,
         "recipe_scale" => 0,
+        "recipe_component" => "",
 
         // Performance metrics
         "t_avg_left" => 0,
@@ -55,6 +57,33 @@ new class extends Component {
     ];
 
     public $metric = null;
+    // Computed property untuk check download permission
+    public function getCanDownloadBatchCsvProperty(): bool
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return false;
+        }
+        
+        // Superuser selalu bisa
+        if ($user->id === 1) {
+            return true;
+        }
+        
+        try {
+            $auth = \App\Models\InsCtcAuth::where('user_id', $user->id)->first();
+            
+            if ($auth) {
+                $actions = json_decode($auth->actions ?? '[]', true);
+                return in_array('batch-detail-download', $actions);
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 
     public function mount()
     {
@@ -71,6 +100,8 @@ new class extends Component {
         $this->metric = InsCtcMetric::with(["ins_ctc_machine", "ins_ctc_recipe", "ins_rubber_batch"])->find($id);
 
         if ($this->metric) {
+            $correctionsByType = $this->countCorrectionsByType($this->metric->data);
+            
             $this->batch = [
                 "id" => $this->metric->id,
                 "rubber_batch_code" => $this->metric->ins_rubber_batch->code ?? "N/A",
@@ -84,6 +115,7 @@ new class extends Component {
                 "recipe_std_min" => $this->metric->ins_ctc_recipe->std_min ?? 0,
                 "recipe_std_max" => $this->metric->ins_ctc_recipe->std_max ?? 0,
                 "recipe_scale" => $this->metric->ins_ctc_recipe->scale ?? 0,
+                "recipe_component" => $this->metric->ins_ctc_recipe->component_model ?? "N/A",
 
                 // Performance metrics
                 "t_avg_left" => $this->metric->t_avg_left,
@@ -115,6 +147,12 @@ new class extends Component {
                 "corrections_left" => $this->countCorrections($this->metric->data, "left"),
                 "corrections_right" => $this->countCorrections($this->metric->data, "right"),
                 "corrections_total" => $this->countCorrections($this->metric->data, "total"),
+                
+                // TAMBAHAN: Correction counts by type
+                "thick_left" => $correctionsByType['thick_left'],
+                "thick_right" => $correctionsByType['thick_right'],
+                "thin_left" => $correctionsByType['thin_left'],
+                "thin_right" => $correctionsByType['thin_right'],
             ];
 
             $this->generateChart();
@@ -248,30 +286,261 @@ new class extends Component {
         }
     }
 
+    private function calculateEffectiveChange($data, $dataIndex, $side): ?float
+    {
+        if ($dataIndex < 0 || $dataIndex >= count($data)) {
+            return null;
+        }
+        
+        $currentPoint = $data[$dataIndex];
+        $currentValue = $side === 'left' ? ($currentPoint[4] ?? 0) : ($currentPoint[5] ?? 0);
+        
+        // Cari nilai 3-8 point ke depan untuk melihat efek dari trigger
+        $futureValue = null;
+        $searchRange = min(8, count($data) - $dataIndex - 1);
+        
+        for ($i = 3; $i <= $searchRange; $i++) {
+            $futurePoint = $data[$dataIndex + $i];
+            $futureAction = $side === 'left' ? ($futurePoint[2] ?? 0) : ($futurePoint[3] ?? 0);
+            $futureVal = $side === 'left' ? ($futurePoint[4] ?? 0) : ($futurePoint[5] ?? 0);
+            
+            // Ambil nilai saat tidak ada trigger baru atau di point ke-5
+            if ($futureAction == 0 || $i == 5) {
+                $futureValue = $futureVal;
+                break;
+            }
+        }
+        
+        if ($futureValue === null) {
+            return null;
+        }
+        
+        // Hitung perubahan absolut
+        $change = abs($futureValue - $currentValue);
+        return $change;
+    }
+
+    public function downloadCsv()
+    {
+        if (!$this->canDownloadBatchCsv) {
+            $this->js('toast("' . __("Anda tidak memiliki akses untuk mengunduh rincian batch") . '", { type: "danger" })');
+            return;
+        }
+    
+        if (!$this->metric) {
+            $this->js('toast("' . __("Data tidak ditemukan") . '", { type: "danger" })');
+            return;
+        }
+
+        $batchCode = $this->batch["rubber_batch_code"];
+        $line = $this->batch["machine_line"];
+
+        $safeBatchCode = preg_replace('/[^A-Za-z0-9_\-]/', '_', $batchCode);
+        $safeLine = preg_replace('/[^A-Za-z0-9_\-]/', '_', $line);
+
+        $timestamp = now()->format('Ymd_His');
+        $filename = "batch_{$safeBatchCode}_line{$safeLine}_{$timestamp}.csv";
+
+        $data = $this->metric->data;
+        $batchInfo = $this->batch;
+        
+        return Response::streamDownload(function () use ($data, $batchInfo) {
+            $file = fopen('php://output', 'w');
+            
+            // BOM untuk Excel UTF-8 support
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Gabungkan recipe_name dengan component_model
+            $recipeFullName = $batchInfo['recipe_name'];
+            if (!empty($batchInfo['recipe_component']) && $batchInfo['recipe_component'] !== 'N/A') {
+                $recipeFullName .= ' - ' . $batchInfo['recipe_component'];
+            }
+            
+            // Header CSV
+            fputcsv($file, [
+                'No',
+                'Timestamp',
+                'Waktu',
+                'Sensor_Kiri_mm',
+                'Sensor_Kanan_mm',
+                'Trigger_Kiri',
+                'Trigger_Kanan',
+                'Trigger_Kiri_Jenis',
+                'Trigger_Kanan_Jenis',
+                'Perubahan_Kiri_mm',     
+                'Perubahan_Kanan_mm',     
+                'Dampak_Kiri_Persen',     
+                'Dampak_Kanan_Persen',    
+                'Std_Min',
+                'Std_Max',
+                'Std_Mid',
+                'Is_Correcting',
+                'Batch_Code',
+                'Line',
+                'MCS',
+                'Recipe_ID',
+                'Recipe_Name',
+                'Shift',
+            ]);
+            
+            // Data rows
+            foreach ($data as $index => $point) {
+                // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, recipe_id, std_min, std_max, std_mid]
+                $timestamp = $point[0] ?? '';
+                $isCorrecting = $point[1] ?? 0;
+                $actionLeft = $point[2] ?? 0;
+                $actionRight = $point[3] ?? 0;
+                $sensorLeft = $point[4] ?? 0;
+                $sensorRight = $point[5] ?? 0;
+                $recipeId = $point[6] ?? 0;
+                $stdMin = $point[7] ?? 0;
+                $stdMax = $point[8] ?? 0;
+                $stdMid = $point[9] ?? 0;
+                
+                // Parse waktu
+                $waktu = '';
+                try {
+                    $waktu = \Carbon\Carbon::parse($timestamp)->format('H:i:s');
+                } catch (\Exception $e) {
+                    $waktu = '';
+                }
+                
+                // Convert action code to label
+                $triggerLeftLabel = $this->getActionLabel($actionLeft);
+                $triggerRightLabel = $this->getActionLabel($actionRight);
+
+                // Hitung perubahan efektif untuk kiri
+                $changeLeft = 0;
+                $percentLeft = 0;
+                if ($actionLeft == 1 || $actionLeft == 2) {
+                    $effectiveChange = $this->calculateEffectiveChange($data, $index, 'left');
+                    if ($effectiveChange !== null && $effectiveChange > 0) {
+                        $changeLeft = $effectiveChange;
+                        $percentLeft = $sensorLeft > 0 ? ($effectiveChange / $sensorLeft) * 100 : 0;
+                    }
+                }
+                // Hitung perubahan efektif untuk kanan
+                $changeRight = 0;
+                $percentRight = 0;
+                if ($actionRight == 1 || $actionRight == 2) {
+                    $effectiveChange = $this->calculateEffectiveChange($data, $index, 'right');
+                    if ($effectiveChange !== null && $effectiveChange > 0) {
+                        $changeRight = $effectiveChange;
+                        $percentRight = $sensorRight > 0 ? ($effectiveChange / $sensorRight) * 100 : 0;
+                    }
+                }
+                
+                fputcsv($file, [
+                    $index + 1, // No
+                    $timestamp, // Timestamp full
+                    $waktu, // Waktu HH:mm:ss
+                    number_format($sensorLeft, 2, '.', ''), // Sensor Kiri
+                    number_format($sensorRight, 2, '.', ''), // Sensor Kanan
+                    $actionLeft, // Trigger Kiri (code)
+                    $actionRight, // Trigger Kanan (code)
+                    $triggerLeftLabel, // Trigger Kiri (label)
+                    $triggerRightLabel, // Trigger Kanan (label)
+                    number_format($changeLeft, 2, '.', ''),     
+                    number_format($changeRight, 2, '.', ''),     
+                    number_format($percentLeft, 1, '.', ''),     
+                    number_format($percentRight, 1, '.', ''),    
+                    number_format($stdMin, 2, '.', ''), // Std Min
+                    number_format($stdMax, 2, '.', ''), // Std Max
+                    number_format($stdMid, 2, '.', ''), // Std Mid
+                    $isCorrecting, // Is Correcting
+                    $batchInfo['rubber_batch_code'], // Batch Code
+                    $batchInfo['machine_line'], // Line
+                    $batchInfo['mcs'], // MCS
+                    $recipeId, // Recipe ID
+                    $recipeFullName, // Recipe Name
+                    $batchInfo['shift'], // Shift
+                ]);
+            }
+            
+            fclose($file);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    // Helper method untuk convert action code ke label
+    private function getActionLabel($actionCode): string
+    {
+        switch ($actionCode) {
+            case 1:
+                return 'Menipiskan';
+            case 2:
+                return 'Menebalkan';
+            default:
+                return '-';
+        }
+    }
+
     private function generateChart(): void
     {
         if (empty($this->batch["data"])) {
             return;
         }
 
-        // Prepare data for Chart.js
         $chartData = $this->prepareChartData($this->batch["data"]);
         $chartOptions = $this->getChartOptions();
+        
+        $rawDataJson = json_encode($this->batch["data"]);
 
         $this->js(
             "
-            const chartData = " .
-                json_encode($chartData) .
-                ";
-            const chartOptions = " .
-                json_encode($chartOptions) .
-                ";
+            const chartData = " . json_encode($chartData) . ";
+            const chartOptions = " . json_encode($chartOptions) . ";
+            const rawData = " . $rawDataJson . ";
 
-            // Configure time formatting with callback for en-US locale
+            // Fungsi untuk mencari data point berdasarkan timestamp
+            function findDataPointIndex(timestamp) {
+                for (let i = 0; i < rawData.length; i++) {
+                    const pointTimestamp = new Date(rawData[i][0]);
+                    const targetTimestamp = new Date(timestamp);
+                    if (Math.abs(pointTimestamp - targetTimestamp) < 1000) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+
+            // Fungsi untuk menghitung perubahan efektif setelah trigger
+            function calculateEffectiveChange(dataIndex, side) {
+                if (dataIndex < 0 || dataIndex >= rawData.length) return null;
+                
+                const currentPoint = rawData[dataIndex];
+                const currentValue = side === 'left' ? currentPoint[4] : currentPoint[5];
+                
+                // Cari nilai 3-8 point ke depan untuk melihat efek dari trigger
+                let futureValue = null;
+                let searchRange = Math.min(8, rawData.length - dataIndex - 1);
+                
+                for (let i = 3; i <= searchRange; i++) {
+                    const futurePoint = rawData[dataIndex + i];
+                    const futureAction = side === 'left' ? futurePoint[2] : futurePoint[3];
+                    const futureVal = side === 'left' ? futurePoint[4] : futurePoint[5];
+                    
+                    // Ambil nilai saat tidak ada trigger baru atau di point ke-5
+                    if (futureAction === 0 || i === 5) {
+                        futureValue = futureVal;
+                        break;
+                    }
+                }
+                
+                if (futureValue === null) return null;
+                
+                // Hitung perubahan absolut
+                const change = Math.abs(futureValue - currentValue);
+                return change;
+            }
+
+            // Configure time formatting
             chartOptions.scales.x.ticks = {
                 callback: function(value, index, values) {
                     const date = new Date(value);
-                    return date.toLocaleTimeString('en-US', {
+                    return date.toLocaleTimeString('id-ID', {
                         hour: '2-digit',
                         minute: '2-digit',
                         hour12: false
@@ -279,54 +548,134 @@ new class extends Component {
                 }
             };
 
-            // Add tooltip configuration
+            // TOOLTIP CONFIGURATION - Dengan Info Detail
             chartOptions.plugins.tooltip = {
                 callbacks: {
-                    label: function(context) {
-                        return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' mm';
-                    },
                     title: function(context) {
                         if (!context[0]) return '';
                         const date = new Date(context[0].parsed.x);
-                        return date.toLocaleTimeString('en-US', {
+                        return date.toLocaleTimeString('id-ID', {
                             hour: '2-digit',
                             minute: '2-digit',
                             second: '2-digit',
                             hour12: false
                         });
+                    },
+                    label: function(context) {
+                        const point = context.raw;
+                        let lines = [];
+                        
+                        // Baris 1: Nilai sensor
+                        lines.push(context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' mm');
+                        
+                        // Jika ada trigger, tampilkan detail
+                        if (point && point.action && (point.action === 1 || point.action === 2)) {
+                            const side = point.side;
+                            const dataIndex = findDataPointIndex(point.x);
+                            
+                            // Jenis trigger
+                            const emoji = point.action === 2 ? '▲' : '▼';
+                            const actionType = point.action === 2 ? 'Menebalkan' : 'Menipiskan';
+                            
+                            lines.push(''); // Empty line untuk spacing
+                            lines.push(emoji + actionType);
+                            
+                            // Hitung perubahan efektif
+                            if (dataIndex >= 0) {
+                                const effectiveChange = calculateEffectiveChange(dataIndex, side);
+                                if (effectiveChange !== null && effectiveChange > 0) {
+                                    lines.push('📊 ' + effectiveChange.toFixed(2) + ' mm');
+                                    
+                                    // Persentase perubahan
+                                    const percentChange = ((effectiveChange / context.parsed.y) * 100).toFixed(1);
+                                    lines.push('📈 ' + percentChange + '%');
+                                }
+                            }
+                        }
+                        
+                        return lines;
+                    },
+                    labelColor: function(context) {
+                        // Warna kotak sesuai dataset (biru untuk kiri, merah untuk kanan)
+                        return {
+                            borderColor: context.dataset.borderColor,
+                            backgroundColor: context.dataset.borderColor,
+                            borderWidth: 2
+                        };
                     }
                 }
             };
 
-            // Show ▲ or ▼ labels on action points
-            chartOptions.plugins.datalabels.display = function(ctx) {
-                return ctx.raw && (ctx.raw.action === 1 || ctx.raw.action === 2);
-            };
-            chartOptions.plugins.datalabels.formatter = function(value, ctx) {
-                if (!ctx.raw) return '';
-                if (ctx.raw.action === 2) return '\u25B2';
-                if (ctx.raw.action === 1) return '\u25BC';
-                return '';
-            };
-            chartOptions.plugins.datalabels.color = function(ctx) {
-                return ctx.dataset.borderColor;
+            // DATALABELS - Hanya Simbol Tanpa Angka
+            chartOptions.plugins.datalabels = {
+                display: function(context) {
+                    const point = context.dataset.data[context.dataIndex];
+                    return point && point.action && (point.action === 1 || point.action === 2);
+                },
+                formatter: function(value, context) {
+                    const point = context.dataset.data[context.dataIndex];
+                    if (!point || !point.action) return '';
+                    
+                    // HANYA SIMBOL, TANPA ANGKA
+                    return point.action === 2 ? '▲' : '▼';
+                },
+                color: function(context) {
+                    return context.dataset.borderColor;  // Warna sesuai dataset
+                },
+                align: function(context) {
+                    const point = context.dataset.data[context.dataIndex];
+                    return point && point.action === 2 ? 'top' : 'bottom';
+                },
+                offset: 6,
+                font: {
+                    size: 12,
+                    weight: 'bold'
+                }
             };
 
             // Render chart
             const chartContainer = \$wire.\$el.querySelector('#batch-chart-container');
+            if (!chartContainer) {
+                console.error('Chart container not found');
+                return;
+            }
+            
+            // Destroy existing chart if any
+            const existingCanvas = chartContainer.querySelector('#batch-chart');
+            if (existingCanvas) {
+                const existingChart = Chart.getChart('batch-chart');
+                if (existingChart) {
+                    existingChart.destroy();
+                }
+            }
+            
             chartContainer.innerHTML = '';
             const canvas = document.createElement('canvas');
             canvas.id = 'batch-chart';
             chartContainer.appendChild(canvas);
 
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded');
+                return;
+            }
+            
+            if (typeof ChartDataLabels === 'undefined') {
+                console.error('ChartDataLabels plugin not loaded');
+                return;
+            }
+
             const chart = new Chart(canvas, {
                 type: 'line',
                 data: chartData,
-                options: chartOptions
+                options: chartOptions,
+                plugins: [ChartDataLabels]
             });
+            
+            console.log('Chart rendered successfully');
         ",
         );
     }
+   
 
     private function prepareChartData($data): array
     {
@@ -512,6 +861,50 @@ new class extends Component {
         ];
     }
 
+    private function countCorrectionsByType($data): array
+    {
+        if (! $data || ! is_array($data)) {
+            return [
+                'thick_left' => 0,
+                'thick_right' => 0,
+                'thin_left' => 0,
+                'thin_right' => 0,
+            ];
+        }
+
+        $thickLeft = 0;
+        $thickRight = 0;
+        $thinLeft = 0;
+        $thinRight = 0;
+
+        foreach ($data as $point) {
+            // Data format: [timestamp, is_correcting, action_left, action_right, sensor_left, sensor_right, ...]
+            $actionLeft = isset($point[2]) ? (int)$point[2] : 0;
+            $actionRight = isset($point[3]) ? (int)$point[3] : 0;
+
+            // Left side corrections
+            if ($actionLeft === 2) { // thick = menebalkan
+                $thickLeft++;
+            } elseif ($actionLeft === 1) { // thin = menipiskan
+                $thinLeft++;
+            }
+
+            // Right side corrections
+            if ($actionRight === 2) { // thick = menebalkan
+                $thickRight++;
+            } elseif ($actionRight === 1) { // thin = menipiskan
+                $thinRight++;
+            }
+        }
+
+        return [
+            'thick_left' => $thickLeft,
+            'thick_right' => $thickRight,
+            'thin_left' => $thinLeft,
+            'thin_right' => $thinRight,
+        ];
+    }
+
     private function handleNotFound(): void
     {
         $this->js('toast("' . __("Data metrik tidak ditemukan") . '", { type: "danger" })');
@@ -689,14 +1082,30 @@ new class extends Component {
                         <span class="text-neutral-500">{{ __("ID:") }}</span>
                         <span class="font-medium">{{ $batch["recipe_id"] }}</span>
                     </div>
-                    <div>
-                        <span class="text-neutral-500">{{ __("Nama:") }}</span>
-                        <span class="font-medium">{{ $batch["recipe_name"] }}</span>
+                    <div class="space-y-1">
+                        <div class="text-neutral-500">{{ __("Nama:") }}</div>
+                        <div class="font-medium">{{ $batch["recipe_name"] }}</div>
+                        @if ($batch["recipe_component"] && $batch["recipe_component"] !== "N/A")
+                            <div class="font-medium">{{ $batch["recipe_component"] }}</div>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    @if ($this->canDownloadBatchCsv)
+        <div class="pt-6 mt-6">
+            <div class="flex justify-end">
+                <x-secondary-button 
+                    wire:click="downloadCsv" 
+                    class="px-4 py-2 text-sm whitespace-nowrap rounded-md"
+                >
+                    <i class="icon-download mr-2"></i>
+                    {{ __("Download CSV") }}
+                </x-secondary-button>
+            </div>
+        </div>
+    @endif
     <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
     <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
 </div>

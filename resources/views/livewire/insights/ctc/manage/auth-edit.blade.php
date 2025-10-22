@@ -1,10 +1,8 @@
 <?php
-
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
-use Illuminate\Validation\Rule;
-
 use App\Models\User;
+use App\Models\InsCtcAuth;
 use Livewire\Attributes\Renderless;
 use Illuminate\Support\Facades\Gate;
 
@@ -26,42 +24,13 @@ new class extends Component {
     #[On("auth-edit")]
     public function loadAuth(int $id)
     {
-        // TODO: Replace with actual InsCtcAuth model when backend is ready
-        // $auth = InsCtcAuth::find($id);
-
-        // Mock data for development
-        $mockAuth = [
-            1 => [
-                "id" => 1,
-                "user_name" => "John Doe",
-                "user_emp_id" => "EMP001",
-                "user_photo" => null,
-                "actions" => ["device-manage", "recipe-manage", "csv-download"],
-            ],
-            2 => [
-                "id" => 2,
-                "user_name" => "Jane Smith",
-                "user_emp_id" => "EMP002",
-                "user_photo" => "jane.jpg",
-                "actions" => ["csv-download"],
-            ],
-            3 => [
-                "id" => 3,
-                "user_name" => "Bob Wilson",
-                "user_emp_id" => "EMP003",
-                "user_photo" => null,
-                "actions" => ["device-manage", "recipe-manage"],
-            ],
-        ];
-
-        $auth = $mockAuth[$id] ?? null;
-
+        $auth = InsCtcAuth::find($id);
         if ($auth) {
-            $this->id = $auth["id"];
-            $this->user_name = $auth["user_name"];
-            $this->user_emp_id = $auth["user_emp_id"];
-            $this->user_photo = $auth["user_photo"] ?? "";
-            $this->actions = $auth["actions"];
+            $this->id = $auth->id;
+            $this->user_name = $auth->user->name;
+            $this->user_emp_id = $auth->user->emp_id;
+            $this->user_photo = $auth->user->photo ?? "";
+            $this->actions = json_decode($auth->actions ?? "[]", true);
             $this->resetValidation();
         } else {
             $this->handleNotFound();
@@ -79,36 +48,31 @@ new class extends Component {
     {
         Gate::authorize("superuser");
         $this->validate();
-
-        // TODO: Replace with actual InsCtcAuth model when backend is ready
-        // $auth = InsCtcAuth::find($this->id);
-        // if ($auth) {
-        //     $auth->actions = json_encode($this->actions, true);
-        //     $auth->update();
-        //     // ... success handling
-        // }
-
-        // Mock successful update for development
-        $this->js('$dispatch("close")');
-        $this->js('toast("' . __("Wewenang diperbarui") . '", { type: "success" })');
-        $this->dispatch("updated");
+        $auth = InsCtcAuth::find($this->id);
+        if ($auth) {
+            $auth->actions = json_encode($this->actions, true);
+            $auth->update();
+            $this->js('$dispatch("close")');
+            $this->js('toast("' . __("Wewenang diperbarui") . '", { type: "success" })');
+            $this->dispatch("updated");
+        } else {
+            $this->handleNotFound();
+            $this->customReset();
+        }
     }
 
     public function delete()
     {
         Gate::authorize("superuser");
-
-        // TODO: Replace with actual InsCtcAuth model when backend is ready
-        // $auth = InsCtcAuth::find($this->id);
-        // if ($auth) {
-        //     $auth->delete();
-        //     // ... success handling
-        // }
-
-        // Mock successful deletion for development
-        $this->js('$dispatch("close")');
-        $this->js('toast("' . __("Wewenang dicabut") . '", { type: "success" })');
-        $this->dispatch("updated");
+        $auth = InsCtcAuth::find($this->id);
+        if ($auth) {
+            $auth->delete();
+            $this->js('$dispatch("close")');
+            $this->js('toast("' . __("Wewenang dicabut") . '", { type: "success" })');
+            $this->dispatch("updated");
+        } else {
+            $this->handleNotFound();
+        }
         $this->customReset();
     }
 
@@ -124,7 +88,6 @@ new class extends Component {
         $this->dispatch("updated");
     }
 };
-
 ?>
 
 <div>
@@ -168,6 +131,7 @@ new class extends Component {
             <x-checkbox id="recipe-manage" :disabled="!$is_superuser" wire:model="actions" value="recipe-manage">{{ __("Kelola resep") }}</x-checkbox>
             <x-checkbox id="batch-manage" :disabled="!$is_superuser" wire:model="actions" value="batch-manage">{{ __("Kelola gilingan") }}</x-checkbox>
             <x-checkbox id="csv-download" :disabled="!$is_superuser" wire:model="actions" value="csv-download">{{ __("Unduh CSV") }}</x-checkbox>
+            <x-checkbox id="batch-detail-download" :disabled="!$is_superuser" wire:model="actions" value="batch-detail-download">{{ __("Unduh rincian batch") }}</x-checkbox>
         </div>
         @can("superuser")
             <div class="mt-6 flex justify-between items-end">
