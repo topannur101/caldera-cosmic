@@ -28,6 +28,19 @@ class InsCtcMetric extends Model
         't_ssd',
         't_avg',
         'data',
+
+        'correction_uptime',
+        'correction_rate',
+        'correction_left',
+        'correction_right',
+        
+        // 🆕 Tambahan baru
+        'recipe_std_min',
+        'recipe_std_mid',
+        'recipe_std_max',
+        'actual_std_min',
+        'actual_std_mid',
+        'actual_std_max',
     ];
 
     protected $casts = [
@@ -45,6 +58,14 @@ class InsCtcMetric extends Model
         't_avg_right' => 'decimal:2',
         't_avg' => 'decimal:2',
         't_balance' => 'decimal:2',
+
+        // 🆕 Tambahan baru
+        'recipe_std_min' => 'decimal:2',
+        'recipe_std_mid' => 'decimal:2',
+        'recipe_std_max' => 'decimal:2',
+        'actual_std_min' => 'decimal:2',
+        'actual_std_mid' => 'decimal:2',
+        'actual_std_max' => 'decimal:2',
     ];
 
     /**
@@ -71,6 +92,51 @@ class InsCtcMetric extends Model
         return $this->belongsTo(InsRubberBatch::class);
     }
 
+    /**
+ * Get deviation between recipe and actual standards
+ */
+    public function getDeviationAttribute(): ?array
+    {
+        // Check if we have both recipe and actual standards
+        if ($this->recipe_std_mid === null || $this->actual_std_mid === null) {
+            return null;
+        }
+
+        // Calculate deviation
+        $deviation_mm = $this->actual_std_mid - $this->recipe_std_mid;
+        $deviation_percent = $this->recipe_std_mid > 0 
+            ? ($deviation_mm / $this->recipe_std_mid) * 100 
+            : 0;
+
+        // Determine severity based on percentage
+        $abs_percent = abs($deviation_percent);
+        
+        if ($abs_percent <= 5) {
+            $severity = 'success';
+            $color = 'text-green-500';
+            $bg_color = 'bg-green-50 dark:bg-green-900/20';
+            $icon = 'icon-circle-check';
+        } elseif ($abs_percent <= 15) {
+            $severity = 'warning';
+            $color = 'text-yellow-500';
+            $bg_color = 'bg-yellow-50 dark:bg-yellow-900/20';
+            $icon = 'icon-alert-triangle';
+        } else {
+            $severity = 'danger';
+            $color = 'text-red-500';
+            $bg_color = 'bg-red-50 dark:bg-red-900/20';
+            $icon = 'icon-alert-circle';
+        }
+
+        return [
+            'mm' => round($deviation_mm, 2),
+            'percent' => round($deviation_percent, 1),
+            'severity' => $severity,
+            'color' => $color,
+            'bg_color' => $bg_color,
+            'icon' => $icon,
+        ];
+    }
     /**
      * Check if this batch passed quality control
      * Based on MAE threshold of 1.0
