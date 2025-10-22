@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 use ModbusTcpClient\Composer\Read\ReadCoilsBuilder;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
 use ModbusTcpClient\Network\NonBlockingClient;
+use Illuminate\Support\Facades\Cache;
 
 class InsCtcPoll extends Command
 {
@@ -842,6 +843,25 @@ class InsCtcPoll extends Command
                         'std_mid' => $fc3_data['std_mid'],     // NEW
                     ];
 
+                    // Update cache untuk grafik real-time
+                    $cacheKey = "ctc_realtime_{$machine->id}";
+                    Cache::put($cacheKey, [
+                        'sensor_left' => $this->convertToDecimal($metric['sensor_left']),
+                        'sensor_right' => $this->convertToDecimal($metric['sensor_right']),
+                        'recipe_id' => $metric['recipe_id'],
+                        'is_correcting' => $metric['is_correcting'],
+                        'std_min' => $this->convertToDecimal($metric['std_min']),
+                        'std_max' => $this->convertToDecimal($metric['std_max']),
+                        'std_mid' => $this->convertToDecimal($metric['std_mid']),
+                        'timestamp' => now()->toISOString(),
+                    ], 5); // Cache expires after 5 seconds
+                    
+                    // Verbose output untuk cache update
+                    if ($this->option('v')) {
+                        $this->line("  ✓ Cache updated: Machine {$machine->id} | L:{$this->convertToDecimal($metric['sensor_left'])} R:{$this->convertToDecimal($metric['sensor_right'])}");
+                    }  // ← TAMBAH CLOSING BRACE INI!
+
+                    // Debug output (tabel detail)
                     if ($this->option('d')) {
                         $this->line('');
                         $this->line("Raw data from {$machine->name}");
@@ -855,13 +875,13 @@ class InsCtcPoll extends Command
                             ['Push Thick L', $metric['push_thick_left']],
                             ['Push Thin R', $metric['push_thin_right']],
                             ['Push Thick R', $metric['push_thick_right']],
-                            ['Std Min', $metric['std_min']],        // NEW
-                            ['Std Max', $metric['std_max']],        // NEW
-                            ['Std Mid', $metric['std_mid']],        // NEW
+                            ['Std Min', $metric['std_min']],
+                            ['Std Max', $metric['std_max']],
+                            ['Std Mid', $metric['std_mid']],
                         ]);
                     }
 
-                    // Add to batch buffer
+                    // Add to batch buffer untuk historical data
                     $this->addToBatch($machine->id, $metric);
 
                 } catch (\Throwable $th) {

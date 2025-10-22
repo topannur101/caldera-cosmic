@@ -6,6 +6,7 @@ use App\Http\Resources\InsRtcRecipeResource;
 use App\Models\InsRtcMetric;
 use App\Models\InsRtcRecipe;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Cache;  // ← TAMBAHAN: Import Cache
 use Livewire\Volt\Volt;
 
 Volt::route('/', 'home')->name('home');
@@ -46,6 +47,9 @@ Route::prefix('insights')->group(function () {
 
     });
 
+    // ============================================================
+    // CTC ROUTES - FIXED VERSION
+    // ============================================================
     Route::name('insights.ctc.')->group(function () {
 
         Volt::route('/ctc/manage/authorizations', 'insights.ctc.manage.auths')->name('manage.auths');
@@ -62,48 +66,94 @@ Route::prefix('insights')->group(function () {
             return redirect()->route('insights.ctc.data.index');
         })->name('index');
 
-        // API routes for CTC (similar to RTC pattern)
+        // ============================================================
+        // ROUTE METRIC - FIXED: Baca dari Cache Real-time
+        // ============================================================
         Route::get('/ctc/metric/{device_id}', function (string $device_id) {
-            // Wrap dengan cache 5 detik
-            return Cache::remember("ctc_metric_{$device_id}", 5, function () use ($device_id) {
-                $metric = \App\Models\InsCtcMetric::where('ins_ctc_machine_id', $device_id)
+            
+            // PRIORITAS 1: Coba ambil dari cache real-time (diisi oleh InsCtcPoll)
+            $cacheKey = "ctc_realtime_{$device_id}";
+            $cachedData = Cache::get($cacheKey);
+            
+            if ($cachedData) {
+                // Data real-time dari cache tersedia
+                return response()->json([
+                    'device_id' => $device_id,
+                    'sensor_left' => $cachedData['sensor_left'] ?? 0,
+                    'sensor_right' => $cachedData['sensor_right'] ?? 0,
+                    'recipe_id' => $cachedData['recipe_id'] ?? 0,
+                    'dt_client' => $cachedData['timestamp'] ?? now()->toISOString(),
+                    'is_correcting' => $cachedData['is_correcting'] ?? false,
+                    'std_min' => $cachedData['std_min'] ?? 0,
+                    'std_max' => $cachedData['std_max'] ?? 0,
+                    'std_mid' => $cachedData['std_mid'] ?? 0,
+                    'action_left' => 0,
+                    'action_right' => 0,
+                    'batch_code' => 'N/A',
+                    'source' => 'cache', // Debug: menandakan data dari cache
+                ]);
+            }
+            
+            // PRIORITAS 2: Fallback ke database jika cache kosong
+            $metric = \App\Models\InsCtcMetric::where('ins_ctc_machine_id', $device_id)
                 ->with(['ins_ctc_recipe', 'ins_ctc_machine', 'ins_rubber_batch'])
                 ->latest('created_at')
                 ->first();
-        
-                // Jika tidak ada data
-                if (!$metric || !$metric->data || !is_array($metric->data) || count($metric->data) === 0) {
-                    return response()->json([
-                        'device_id' => $device_id,
-                        'sensor_left' => 0,
-                        'sensor_right' => 0,
-                        'recipe_id' => 0,
-                        'dt_client' => now()->toISOString(),
-                        'is_correcting' => false,
-                        'batch_code' => 'N/A',
-                    ]);
-                }
-                
-                // Ambil data point terakhir
-                $lastPoint = end($metric->data);
-                
+    
+            // Jika tidak ada data sama sekali
+            if (!$metric) {
                 return response()->json([
                     'device_id' => $device_id,
-                    'sensor_left' => round($lastPoint[4] ?? 0, 2),
-                    'sensor_right' => round($lastPoint[5] ?? 0, 2),
-                    'recipe_id' => $lastPoint[6] ?? $metric->ins_ctc_recipe_id ?? 0,
-                    'dt_client' => $lastPoint[0] ?? $metric->created_at->toISOString(),
-                    'is_correcting' => (bool) ($lastPoint[1] ?? false),
-                    'action_left' => (int) ($lastPoint[2] ?? 0),
-                    'action_right' => (int) ($lastPoint[3] ?? 0),
-                    'batch_code' => $metric->ins_rubber_batch->code ?? 'N/A',
+                    'sensor_left' => 0,
+                    'sensor_right' => 0,
+                    'recipe_id' => 0,
+                    'dt_client' => now()->toISOString(),
+                    'is_correcting' => false,
+                    'batch_code' => 'N/A',
+                    'source' => 'none',
+                    'message' => 'Waiting for data...'
                 ]);
-            });
+            }
+            
+            // FIX: Ambil data array dengan cara yang aman
+            $dataArray = $metric->data; // Get array copy
+            
+            if (!$dataArray || !is_array($dataArray) || count($dataArray) === 0) {
+                return response()->json([
+                    'device_id' => $device_id,
+                    'sensor_left' => 0,
+                    'sensor_right' => 0,
+                    'recipe_id' => $metric->ins_ctc_recipe_id ?? 0,
+                    'dt_client' => now()->toISOString(),
+                    'is_correcting' => false,
+                    'batch_code' => $metric->ins_rubber_batch->code ?? 'N/A',
+                    'source' => 'database',
+                ]);
+            }
+            
+            // Ambil data point terakhir dengan aman (tanpa end())
+            $lastPoint = $dataArray[count($dataArray) - 1];
+            
+            return response()->json([
+                'device_id' => $device_id,
+                'sensor_left' => round($lastPoint[4] ?? 0, 2),
+                'sensor_right' => round($lastPoint[5] ?? 0, 2),
+                'recipe_id' => $lastPoint[6] ?? $metric->ins_ctc_recipe_id ?? 0,
+                'dt_client' => $lastPoint[0] ?? $metric->created_at->toISOString(),
+                'is_correcting' => (bool) ($lastPoint[1] ?? false),
+                'action_left' => (int) ($lastPoint[2] ?? 0),
+                'action_right' => (int) ($lastPoint[3] ?? 0),
+                'batch_code' => $metric->ins_rubber_batch->code ?? 'N/A',
+                'source' => 'database', // Debug: menandakan data dari database (delay 60s)
+            ]);
         })->name('metric');
         
+        // ============================================================
+        // ROUTE RECIPE - FIXED: Hapus duplikat, optimasi cache
+        // ============================================================
         Route::get('/ctc/recipe/{recipe_id}', function (string $recipe_id) {
-            // Wrap dengan cache 30 detik (recipe jarang berubah)
-            return Cache::remember("ctc_recipe_{$recipe_id}", 30, function () use ($recipe_id) {
+            // Cache 60 detik (recipe jarang berubah)
+            return Cache::remember("ctc_recipe_{$recipe_id}", 60, function () use ($recipe_id) {
                 $recipe = \App\Models\InsCtcRecipe::find($recipe_id);
                 
                 if (!$recipe) {
@@ -120,7 +170,7 @@ Route::prefix('insights')->group(function () {
                 return response()->json([
                     'id' => $recipe->id,
                     'name' => $recipe->name,
-                    'og_rs' => str_pad($recipe->og_rs ?? '0', 3, '0', STR_PAD_LEFT),
+                    'og_rs' => str_pad($recipe->og_rs ?? $recipe->id, 3, '0', STR_PAD_LEFT),
                     'std_min' => round($recipe->std_min, 2),
                     'std_max' => round($recipe->std_max, 2),
                     'std_mid' => round($recipe->std_mid, 2),
@@ -128,31 +178,10 @@ Route::prefix('insights')->group(function () {
             });
         })->name('recipe');
 
-    Route::get('/ctc/recipe/{recipe_id}', function (string $recipe_id) {
-        $recipe = \App\Models\InsCtcRecipe::find($recipe_id);
-        
-        if (!$recipe) {
-            return response()->json([
-                'id' => $recipe_id,
-                'name' => 'Unknown Recipe',
-                'og_rs' => '000',
-                'std_min' => 0,
-                'std_max' => 0,
-                'std_mid' => 0,
-            ]);
-        }
-        
-        return response()->json([
-            'id' => $recipe->id,
-            'name' => $recipe->name,
-            'og_rs' => str_pad($recipe->og_rs ?? '0', 3, '0', STR_PAD_LEFT),
-            'std_min' => round($recipe->std_min, 2),
-            'std_max' => round($recipe->std_max, 2),
-            'std_mid' => round($recipe->std_mid, 2),
-        ]);
-    })->name('recipe');
-
     });
+    // ============================================================
+    // END CTC ROUTES
+    // ============================================================
 
     Route::name('insights.ldc.')->group(function () {
 
@@ -168,22 +197,7 @@ Route::prefix('insights')->group(function () {
 
             return redirect()->route('insights.ldc.data.index');
         })->name('index');
-    });
 
-    Route::name('insights.omv.')->group(function () {
-
-        Volt::route('/omv/manage/authorizations', 'insights.omv.manage.auths')->name('manage.auths');
-        Volt::route('/omv/manage/recipes', 'insights.omv.manage.recipes')->name('manage.recipes');
-        Volt::route('/omv/manage', 'insights.omv.manage.index')->name('manage.index');
-        Volt::route('/omv/data', 'insights.omv.data.index')->name('data.index');
-        Volt::route('/omv/create', 'insights.omv.create.index')->name('create.index');
-        Route::get('/omv', function () {
-            if (auth()->check()) {
-                return redirect()->route('insights.omv.create.index');
-            }
-
-            return redirect()->route('insights.omv.data.index');
-        })->name('index');
     });
 
     Route::name('insights.rdc.')->group(function () {
