@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ins_ctc_recipes', function (Blueprint $table) {
-            // Update length dari 20 ke 100 dan set NULLABLE
-            $table->string('component_model', 100)->nullable()->change();
+            $table->string('component_model', 30)->nullable();
         });
     }
 
@@ -23,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('ins_ctc_recipes', function (Blueprint $table) {
-            // Kembalikan ke 20
-            $table->string('component_model', 20)->change();
+            $table->dropColumn('component_model');
         });
     }
 };

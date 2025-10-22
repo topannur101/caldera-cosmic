@@ -1,1 +1,0 @@
-"Estimated data size: ~" . round(strlen(json_encode($metric- / 1024, 2) . " KB\n";
