@@ -12,15 +12,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ins_ctc_metrics', function (Blueprint $table) {
-            // Recipe reference (rekomendasi dari database)
-            $table->decimal('recipe_std_min', 4, 2)->nullable()->after('t_balance');
-            $table->decimal('recipe_std_mid', 4, 2)->nullable()->after('recipe_std_min');
-            $table->decimal('recipe_std_max', 4, 2)->nullable()->after('recipe_std_mid');
-            
-            // Actual operator input (dari Modbus - yang dipakai auto correction)
-            $table->decimal('actual_std_min', 4, 2)->nullable()->after('recipe_std_max');
-            $table->decimal('actual_std_mid', 4, 2)->nullable()->after('actual_std_min');
-            $table->decimal('actual_std_max', 4, 2)->nullable()->after('actual_std_mid');
+            if (!Schema::hasColumn('ins_ctc_metrics', 'recipe_std_min')) {
+                $table->decimal('recipe_std_min', 4, 2)->nullable()->after('t_balance');
+            }
+            if (!Schema::hasColumn('ins_ctc_metrics', 'recipe_std_mid')) {
+                $table->decimal('recipe_std_mid', 4, 2)->nullable();
+            }
+            if (!Schema::hasColumn('ins_ctc_metrics', 'recipe_std_max')) {
+                $table->decimal('recipe_std_max', 4, 2)->nullable();
+            }
+            if (!Schema::hasColumn('ins_ctc_metrics', 'actual_std_min')) {
+                $table->decimal('actual_std_min', 4, 2)->nullable();
+            }
+            if (!Schema::hasColumn('ins_ctc_metrics', 'actual_std_mid')) {
+                $table->decimal('actual_std_mid', 4, 2)->nullable();
+            }
+            if (!Schema::hasColumn('ins_ctc_metrics', 'actual_std_max')) {
+                $table->decimal('actual_std_max', 4, 2)->nullable();
+            }
         });
     }
 
