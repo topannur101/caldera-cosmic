@@ -7,24 +7,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class InsDwpCount extends Model
+class InsDwpTimeAlarmCount extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'line',
-        'mechine',
-        'position',
-        'count',
+        'cumulative',
         'incremental',
         'duration',
-        'pv',
-        'part',
-        'std_error'
+        'status'
     ];
 
     protected $casts = [
-        'count' => 'integer',
+        'cumulative' => 'integer',
         'incremental' => 'integer',
     ];
 
@@ -167,4 +163,6 @@ class InsDwpCount extends Model
     {
         return $query->whereBetween('created_at', [$from, $to]);
     }
+
+    // update long duration 
 }

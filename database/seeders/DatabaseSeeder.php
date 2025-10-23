@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             $this->call([
                 InsDwpDeviceSeeder::class,
                 InsDwpCountSeeder::class,
+                InsDwpTimeAlarmCountSeeder::class
             ]);
         }
     }
