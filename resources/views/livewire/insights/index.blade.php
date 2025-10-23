@@ -213,7 +213,7 @@ new #[Layout("layouts.app")] class extends Component {
                 <div>
                     <h1 class="uppercase text-sm text-neutral-500 mb-4 px-8">{{ __("Sistem Rubber Terintegrasi") }}</h1>
                     <div class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
-                        <a href="{{ route("insights.omv.index") }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
+                        <a href="{{ route('insights.omv.index') }}" class="block hover:bg-caldy-500 hover:bg-opacity-10" wire:navigate>
                             <div class="flex items-center">
                                 <div class="px-6 py-3">
                                     <img src="/ink-omv.svg" class="w-16 h-16 dark:invert" />

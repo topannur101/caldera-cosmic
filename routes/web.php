@@ -47,9 +47,6 @@ Route::prefix('insights')->group(function () {
 
     });
 
-    // ============================================================
-    // CTC ROUTES - FIXED VERSION
-    // ============================================================
     Route::name('insights.ctc.')->group(function () {
 
         Volt::route('/ctc/manage/authorizations', 'insights.ctc.manage.auths')->name('manage.auths');
@@ -59,9 +56,8 @@ Route::prefix('insights')->group(function () {
         Volt::route('/ctc/data/realtime', 'insights.ctc.data.realtime')->name('data.realtime');
         Volt::route('/ctc/data/batch', 'insights.ctc.data.batch')->name('data.batch');
         Volt::route('/ctc/data', 'insights.ctc.data.index')->name('data.index');
-        Volt::route('/ctc/slideshows', 'insights.ctc.slides.slideshows')->name('slideshows');
+        Volt::route('/ctc/slideshows', 'insights.ctc.slideshows')->name('slideshows');
         Volt::route('/ctc/slides/realtime', 'insights.ctc.slides.sliderealtime')->name('slides.realtime');
-    
         Route::get('/ctc', function () {
             return redirect()->route('insights.ctc.data.index');
         })->name('index');
@@ -197,7 +193,22 @@ Route::prefix('insights')->group(function () {
 
             return redirect()->route('insights.ldc.data.index');
         })->name('index');
+    });
 
+    Route::name('insights.omv.')->group(function () {
+
+        Volt::route('/omv/manage/authorizations', 'insights.omv.manage.auths')->name('manage.auths');
+        Volt::route('/omv/manage/recipes', 'insights.omv.manage.recipes')->name('manage.recipes');
+        Volt::route('/omv/manage', 'insights.omv.manage.index')->name('manage.index');
+        Volt::route('/omv/data', 'insights.omv.data.index')->name('data.index');
+        Volt::route('/omv/create', 'insights.omv.create.index')->name('create.index');
+        Route::get('/omv', function () {
+            if (auth()->check()) {
+                return redirect()->route('insights.omv.create.index');
+            }
+
+            return redirect()->route('insights.omv.data.index');
+        })->name('index');
     });
 
     Route::name('insights.rdc.')->group(function () {
