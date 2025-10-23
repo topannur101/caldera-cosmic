@@ -3,10 +3,11 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\On;
 
 new #[Layout("layouts.app")] class extends Component {
     #[Url]
-    public $view = "raw";
+    public $view = "dashboard";
 
     public array $view_titles = [];
     public array $view_icons = [];
@@ -14,13 +15,15 @@ new #[Layout("layouts.app")] class extends Component {
     public function mount()
     {
         $this->view_titles = [
-            "raw" => __("Raw Data"),
-            "summary" => __("Summary"),
+            "dashboard" => __("Dashboard"),
+            "time-alarm" => __("DWP Time Constraint Alarm"),
+            "pressure" => __("DWP Pressure"),
         ];
 
         $this->view_icons = [
-            "raw" => "icon-database",
-            "summary" => "icon-chart-bar",
+            "dashboard" => "icon-layout-dashboard",
+            "time-alarm" => "icon-alarm-clock",
+            "pressure" => "icon-database",
         ];
     }
 
@@ -33,6 +36,54 @@ new #[Layout("layouts.app")] class extends Component {
     {
         return $this->view_icons[$this->view] ?? "";
     }
+
+    #[On('update-menu')]
+    public function updateMenu($view){
+        // Condition Menu
+        if ($view === "dashboard"){
+             $this->view_titles = [
+                "dashboard" => __("Dashboard"),
+                "time-alarm" => __("DWP Time Constraint Alarm"),
+                "pressure" => __("DWP Pressure"),
+            ];
+
+            $this->view_icons = [
+                "dashboard" => "icon-layout-dashboard",
+                "time-alarm" => "icon-alarm-clock",
+                "pressure" => "icon-database",
+            ];
+        }
+
+        if ($view === "time-alarm" || $view === "summary-time-alarm"){
+            $this->view_titles = [
+                "dashboard" => __("Dashboard"),
+                "time-alarm" => __("Raw Data Time Constraint Alarm"),
+                "summary-time-alarm" => __("Sumarry Time Alarm"),
+            ];
+
+            $this->view_icons = [
+                "dashboard" => "icon-layout-dashboard",
+                "time-alarm" => "icon-alarm-clock",
+                "summary-time-alarm" => "icon-notebook-text",
+            ];
+        }
+
+        if ($view === "raw" || $view === "summary" || $view === "pressure"){
+            $this->view_titles = [
+                "dashboard" => __("Dashboard"),
+                "pressure" => __("Machine Performance"),
+                "raw" => __("Raw Data"),
+                "summary" => __("Summary DWP Pressure")
+            ];
+
+            $this->view_icons = [
+                "dashboard" => "icon-layout-dashboard",
+                "pressure" => "icon-database",
+                "raw" => "icon-database",
+                "summary" => "icon-notebook-text",
+            ];
+        }
+    }
 };
 
 ?>
@@ -43,8 +94,8 @@ new #[Layout("layouts.app")] class extends Component {
     <x-nav-insights-dwp></x-nav-insights-dwp>
 </x-slot>
 
-<div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
-    <div wire:key="dwp-data-nav" class="flex px-8 mb-6">
+<div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 gap-4">
+    <div wire:key="dwp-data-nav" class="flex mb-6">
         <x-dropdown align="left" width="60">
             <x-slot name="trigger">
                 <x-text-button type="button" class="flex gap-2 items-center ml-1">
@@ -73,11 +124,23 @@ new #[Layout("layouts.app")] class extends Component {
 
     <div wire:key="dwp-data-container" wire:loading.class="hidden">
         @switch($view)
+            @case("pressure")
+                <livewire:insights.dwp.data.pressure />
+                @break
             @case("raw")
                 <livewire:insights.dwp.data.raw />
                 @break
+            @case("dashboard")
+                <livewire:insights.dwp.data.dashboard />
+                @break
             @case("summary")
                 <livewire:insights.dwp.data.summary />
+                @break
+            @case("time-alarm")
+                <livewire:insights.dwp.data.time-alarm />
+                @break
+            @case("summary-time-alarm")
+                <livewire:insights.dwp.data.summary-time-alarm />
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">

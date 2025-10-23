@@ -26,9 +26,23 @@ new #[Layout("layouts.app")] class extends Component {
 
     #[Url]
     public string $line = "";
+    
+    #[Url]
+    public string $mechine = "";
+
 
     public array $devices = [];
     public int $perPage = 20;
+    public string $view = "raw";
+    public array $position    = ['Left', 'Right'];
+    public array $stdTh       = [30, 40];
+    public array $stdSide     = [30, 40];
+    public array $compareData = [
+            'actual'       => "",
+            'closest_standard' => "",
+            'difference'   => "",
+            'direction'    => "",
+    ];
 
     public function mount()
     {
@@ -40,6 +54,9 @@ new #[Layout("layouts.app")] class extends Component {
             ->get()
             ->pluck("name", "id")
             ->toArray();
+
+        // update menu
+        $this->dispatch("update-menu", $this->view);
     }
 
     private function getCountsQuery()
@@ -65,6 +82,10 @@ new #[Layout("layouts.app")] class extends Component {
             $query->where("ins_dwp_counts.line", "like", "%" . strtoupper(trim($this->line)) . "%");
         }
 
+        if ($this->mechine) {
+            $query->where("ins_dwp_counts.mechine", "like", "%" . strtoupper(trim($this->mechine)) . "%");
+        }
+
         return $query->orderBy("ins_dwp_counts.created_at", "DESC");
     }
 
@@ -79,7 +100,6 @@ new #[Layout("layouts.app")] class extends Component {
     public function with(): array
     {
         $counts = $this->getCountsQuery()->paginate($this->perPage);
-
         return [
             "counts" => $counts,
         ];
@@ -136,6 +156,47 @@ new #[Layout("layouts.app")] class extends Component {
                 return new StreamedResponse($callback, 200, $headers);
         }
     }
+
+    public function compareWithStandards($actual, array $standards) {
+        if (empty($standards)) {
+            throw new InvalidArgumentException("Standards array cannot be empty.");
+        }
+        
+        $closest = null;
+        $minDistance = PHP_INT_MAX;
+        
+        foreach ($standards as $standard) {
+            $distance = abs($actual - $standard);
+            if ($distance < $minDistance) {
+                $minDistance = $distance;
+                $closest = $standard;
+            }
+        }
+        
+        $difference = $actual - $closest;
+        $direction = $difference > 0 ? 'Up' : ($difference < 0 ? 'Down' : 'Equal');
+        
+        // Check if actual is between any two consecutive standards
+        sort($standards);
+        $isStandard = in_array($actual, $standards, true);
+        
+        if (!$isStandard && count($standards) > 1) {
+            for ($i = 0; $i < count($standards) - 1; $i++) {
+                if ($actual > $standards[$i] && $actual < $standards[$i + 1]) {
+                    $isStandard = true;
+                    break;
+                }
+            }
+        }
+        
+        return [
+            'actual'           => $actual,
+            'closest_standard' => $closest,
+            'difference'       => $difference,
+            'direction'        => $direction,
+            'is_standard'      => $isStandard,
+        ];
+    }
 };
 
 ?>
@@ -186,18 +247,22 @@ new #[Layout("layouts.app")] class extends Component {
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grid grid-cols-2 lg:flex gap-3">
                 <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Device") }}</label>
-                    <x-select wire:model.live="device_id" class="w-full lg:w-32">
-                        <option value=""></option>
-                        @foreach ($devices as $id => $deviceName)
-                            <option value="{{ $id }}">{{ $deviceName }}</option>
-                        @endforeach
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
+                    <x-select wire:model.live="line" class="w-full lg:w-32">
+                            <option value=""></option>
+                            <option value="a1">A1</option>
+                            <option value="g5">G5</option>
                     </x-select>
                 </div>
-
                 <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
-                    <x-text-input wire:model.live="line" class="w-full lg:w-32" />
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Machine") }}</label>
+                    <x-select wire:model.live="mechine" class="w-full lg:w-32">
+                            <option value=""></option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                    </x-select>
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
@@ -225,6 +290,12 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
     </div>
 
+    <div wire:key="modals">
+        <x-modal name="detail-pressure" maxWidth="3xl">
+            <livewire:insights.dwp.data.detail.pressure />
+        </x-modal>
+    </div>
+
     @if (! $counts->count())
         @if (! $start_at || ! $end_at)
             <div wire:key="no-range" class="py-20">
@@ -242,34 +313,109 @@ new #[Layout("layouts.app")] class extends Component {
             </div>
         @endif
     @else
-        <div wire:key="raw-counts" class="overflow-auto p-0 sm:p-1">
-            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
-                <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
-                    <tr class="uppercase text-xs">
-                        <th>{{ __("Line") }}</th>
-                        <th>{{ __("Device") }}</th>
-                        <th>{{ __("Cumulative") }}</th>
-                        <th>{{ __("Incremental") }}</th>
-                        <th>{{ __("Timestamp") }}</th>
-                    </tr>
-                    @foreach ($counts as $count)
-                        @php
-                            $device = $this->getDeviceForLine($count->line);
-                        @endphp
-                        <tr wire:key="count-tr-{{ $count->id }}" class="hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                            <td>{{ $count->line }}</td>
-                            <td class="max-w-32 truncate" title="{{ $device?->name }}">{{ $device?->name ?? "N/A" }}</td>
-                            <td class="font-mono">{{ number_format($count->cumulative) }}</td>
-                            <td class="font-mono">
-                                @if($count->incremental > 0)
-                                    <span class="text-green-600 dark:text-green-400">+{{ number_format($count->incremental) }}</span>
-                                @else
-                                    {{ number_format($count->incremental) }}
-                                @endif
-                            </td>
-                            <td class="font-mono">{{ $count->created_at }}</td>
+        <div key="raw-counts" class="overflow-x-auto overflow-y-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
+            <div class="min-w-full bg-white dark:bg-neutral-800 shadow-sm">
+                <table class="min-w-full text-sm text-neutral-600 dark:text-neutral-400">
+                    <thead class="sticky top-0 z-10 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+                        <tr class="uppercase text-xs text-left">
+                            <th class="py-3 px-4 font-medium">Line</th>
+                            <th class="py-3 px-4 font-medium">Machine</th>
+                            <th class="py-3 px-4 font-medium text-right">Count</th>
+                            <th class="py-3 px-4 font-medium">Duration</th>
+                            <th class="py-3 px-4 font-medium">Position</th>
+                            <th class="py-3 px-4 font-medium">Range STD</th>
+                            <th class="py-3 px-4 font-medium">Toe/Heel</th>
+                            <th class="py-3 px-4 font-medium">Side</th>
+                            <th class="py-3 px-4 font-medium">Timestamp</th>
                         </tr>
-                    @endforeach
+                    </thead>
+                    <tbody>
+                        @foreach ($counts as $count)
+                            @php
+                                $pv = json_decode($count->pv, true);
+                                $toeHeelValue = $pv[0] ?? null;
+                                $sideValue = $pv[1] ?? null;
+
+                                $toeHeelComparison = $toeHeelValue ? $this->compareWithStandards($toeHeelValue, $this->stdTh) : null;
+                                $sideComparison = $sideValue ? $this->compareWithStandards($sideValue, $this->stdSide) : null;
+                            @endphp
+
+                            <tr
+                                wire:key="count-tr-{{ $count->id }}"
+                                tabindex="0"
+                                x-on:click="
+                                    $dispatch('open-modal', 'detail-pressure');
+                                    $dispatch('pressure-detail-load', { id: '{{ $count->id }}' });
+                                "
+                                class="hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors cursor-pointer border-b border-neutral-100 dark:border-neutral-700/50"
+                            >
+                                <td class="py-3 px-4">{{ $count->line }}</td>
+                                <td class="py-3 px-4">{{ $count->mechine }}</td>
+                                <td class="py-3 px-4 font-mono text-right">{{ number_format($count->count) }}</td>
+                                <td class="py-3 px-4">
+                                    {{ Carbon::parse($count->duration)->format('i:s') }}
+                                </td>
+                                <td class="py-3 px-4">
+                                    {{ ($count->position ?? '') === 'R' ? 'Right' : 'Left' }}
+                                </td>
+                                <td class="py-3 px-4">
+                                    <!-- You likely don't want to show raw std arrays here -->
+                                    <!-- Consider removing or showing a meaningful label -->
+                                    <span>{{$this->stdTh[0]}} - {{$this->stdTh[1]}}</span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    @if($toeHeelValue)
+                                        <span class="{{$toeHeelComparison['is_standard'] === false ? 'text-red-500 font-bold' : 'text-green-500'}}">
+                                            {{ $toeHeelValue }}
+                                        </span>
+                                        @if($toeHeelComparison && $toeHeelComparison['is_standard'] == false)
+                                            <span class="ml-1 inline-flex items-center">
+                                                <i class="icon {{
+                                                    $toeHeelComparison['direction'] === 'Down'
+                                                        ? 'icon-chevron-down text-red-500'
+                                                        : 'icon-chevron-up text-green-500'
+                                                }}"></i>
+                                                <span class="ml-1 text-xs {{
+                                                    $toeHeelComparison['direction'] === 'Down' ? 'text-red-500' : 'text-green-500'
+                                                }}">
+                                                    {{ $toeHeelComparison['difference'] }}
+                                                </span>
+                                            </span>
+                                        @endif
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td class="py-3 px-4">
+                                    @if($sideValue)
+                                        <span class="{{$sideComparison['is_standard'] === false ? 'text-red-500 font-bold' : 'text-green-500'}}">
+                                            {{ $sideValue }}
+                                        </span>
+                                        @if($sideComparison && $sideComparison['is_standard'] == false)
+                                            <span class="ml-1 inline-flex items-center">
+                                                <i class="icon {{
+                                                    $sideComparison['direction'] === 'Down'
+                                                        ? 'icon-chevron-down text-red-500'
+                                                        : 'icon-chevron-up text-green-500'
+                                                }}"></i>
+                                                <span class="ml-1 text-xs {{
+                                                    $sideComparison['direction'] === 'Down' ? 'text-red-500' : 'text-green-500'
+                                                }}">
+                                                    {{ $sideComparison['difference'] }}
+                                                </span>
+                                            </span>
+                                        @endif
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+
+                                <td class="py-3 px-4 font-mono text-xs">
+                                    {{ $count->created_at->format('M j, Y g:i A') }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
                 </table>
             </div>
         </div>

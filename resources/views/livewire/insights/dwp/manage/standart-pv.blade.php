@@ -1,30 +1,11 @@
 <?php
 
-use App\Models\InsDwpDevice;
-use App\Models\InsDwpAuth;
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Rule;
-use Livewire\Attributes\On;
 
 new #[Layout("layouts.app")] class extends Component {
-    public $devices;
-
-    public function mount()
-    {
-        $this->loadDevices();
-    }
-
-
-    #[On("updated")]
-    public function loadDevices()
-    {
-        $this->devices = InsDwpDevice::orderBy('name')->get();
-    }
-
-};
-
-?>
+    //
+}; ?>
 
 <x-slot name="title">{{ __("Perangkat") . " — " . __("Pemantauan deep well press") }}</x-slot>
 <x-slot name="header">
@@ -72,7 +53,6 @@ new #[Layout("layouts.app")] class extends Component {
                             <th>{{ __("Lines") }}</th>
                             <th>{{ __("Status") }}</th>
                         </tr>
-                        @foreach ($devices as $device)
                             <tr
                                 wire:key="device-tr-{{ $device->id . $loop->index }}"
                                 tabindex="0"
@@ -82,16 +62,16 @@ new #[Layout("layouts.app")] class extends Component {
                                 "
                             >
                                 <td>
-                                    {{ $device->id }}
+                                    1
                                 </td>
                                 <td>
-                                    {{ $device->name }}
+                                   2
                                 </td>
                                 <td>
-                                    {{ $device->ip_address }}
+                                   3
                                 </td>
                                 <td>
-                                    {{ count($device->getLines()) }}
+                                    30
                                 </td>
                                 <td>
                                     @if($device->is_active)
@@ -105,7 +85,6 @@ new #[Layout("layouts.app")] class extends Component {
                                     @endif
                                 </td>
                             </tr>
-                        @endforeach
                     </table>
                     <div wire:key="devices-none">
                         @if (!$devices->count())

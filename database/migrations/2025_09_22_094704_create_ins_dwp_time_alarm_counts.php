@@ -11,20 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ins_dwp_counts', function (Blueprint $table) {
+        Schema::create('ins_dwp_time_alarm_counts', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
-            
             $table->string('line'); // Line identifier (globally unique, uppercase)
-            $table->integer('mechine'); // Machine
-            $table->integer('count'); // Total cumulative count from device
-            $table->integer('incremental');
-            $table->string('position');
-            $table->json('pv'); //for pv toeheel and side
-            $table->integer('duration');
-            $table->json('std_error'); // array of 2 up and down
+            $table->integer('cumulative'); // Total cumulative count from device
+            $table->integer('incremental'); // Point-in-time incremental count
+            $table->integer('duration')->nullable(); //duration conveyor off
+            $table->enum('status', ['0', '1'])->default('0');
+            
             $table->index(['line', 'created_at']);
             $table->index('created_at');
+            $table->timestamps();
         });
     }
 
@@ -33,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ins_dwp_counts');
+        Schema::dropIfExists('ins_dwp_time_alarm_counts');
     }
 };

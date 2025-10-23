@@ -720,3 +720,17 @@ input[type="checkbox"]:checked + label.custom-checkbox {
         opacity: 0.4;
     }
 }
+
+
+/* in resources/css/app.css */
+@keyframes blink-effect {
+  50% {
+    border-color: #f21313; /* Tailwind's red-400 */
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+  }
+}
+
+/* This class is added and removed by JavaScript */
+.is-blinking {
+  animation: blink-effect 1.5s ease-in-out 2; /* Blinks twice over 3 seconds */
+}

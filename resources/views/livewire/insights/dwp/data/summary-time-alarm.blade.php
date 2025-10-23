@@ -4,7 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\On;
-use App\Models\InsDwpCount;
+use App\Models\InsDwpTimeAlarmCount;
 use App\Models\InsDwpDevice;
 use Carbon\Carbon;
 use App\Traits\HasDateRangeFilter;
@@ -24,12 +24,14 @@ new #[Layout("layouts.app")] class extends Component {
     #[Url]
     public string $line = "";
 
-    public $view = "summary";
+    public $view = "summary-time-alarm";
 
     public array $devices = [];
     public array $summaryStats = [];
     public array $lineChartData = [];
     public array $dailyChartData = [];
+    public array $count = [];
+    public array $cumulativeData = [];
 
     public function mount()
     {
@@ -42,6 +44,8 @@ new #[Layout("layouts.app")] class extends Component {
             ->pluck("name", "id")
             ->toArray();
 
+        $this->cumulativeData = $this->getDataSummaryLine();
+        
         // update menu
         $this->dispatch("update-menu", $this->view);
     }
@@ -49,9 +53,9 @@ new #[Layout("layouts.app")] class extends Component {
     private function getCountsQuery()
     {
         $start = Carbon::parse($this->start_at);
-        $end = Carbon::parse($this->end_at)->endOfDay();
+        $end   = Carbon::parse($this->end_at)->endOfDay();
 
-        $query = InsDwpCount::whereBetween("created_at", [$start, $end]);
+        $query = InsDwpTimeAlarmCount::whereBetween("created_at", [$start, $end]);
 
         if ($this->device_id) {
             $device = InsDwpDevice::find($this->device_id);
@@ -172,9 +176,65 @@ new #[Layout("layouts.app")] class extends Component {
     private function generateCharts()
     {
         $this->dispatch('refresh-charts', [
-            'lineChartData' => $this->lineChartData,
-            'dailyChartData' => $this->dailyChartData,
-        ]);
+                    'lineChartData' => $this->lineChartData,
+                    'dailyChartData' => $this->dailyChartData,
+                ]);
+    }
+
+    /**
+     * GET DATA LINE
+     * Description : This code for get data line on database ins_dwp_device
+     */            
+    private function getDataLine($line=null)
+    {
+        $lines = [];
+        $dataRaws = InsDwpDevice::orderBy("name")
+            ->select("name", "id", "config")
+            ->get()->toArray();
+        foreach($dataRaws as $dataRaw){
+            if (!empty($line)){
+                if ($dataRaw['config'][0]['line'] == strtoupper($line)){
+                    $lines[] = $dataRaw['config'][0];
+                    break;
+                }
+            }else {
+                $lines[] = $dataRaw['config'][0];
+            }
+        }
+        return $lines;
+    }
+
+     /**
+     * GET DATA SUMMARY ALL LINE
+     * Description : This code for get data line on database ins_dwp_device
+     */ 
+    private function getDataSummaryLine($line=null)
+    {
+        $lines = [];
+        $dataRaws = InsDwpDevice::orderBy("name")
+            ->select("name", "id", "config", "created_at")
+            ->get()->toArray();
+        foreach($dataRaws as $dataRaw){
+            if (!empty($line)){
+                if ($dataRaw['config'][0]['line'] == strtoupper($line)){
+                    $lines[] = [
+                        "id" => $dataRaw['id'],
+                        "line" => $dataRaw['name'],
+                        "cumulative" => 100,
+                        "created_at" => $dataRaw["created_at"],
+                    ];
+                    break;
+                }
+            }else {
+                $lines[] = [
+                    "id" => $dataRaw['id'],
+                    "line" => $dataRaw['name'],
+                    "cumulative" => 100,
+                    "created_at" => $dataRaw["created_at"],
+                ];
+            }
+        }
+        return $lines;
     }
 
     public function updated()
@@ -230,19 +290,18 @@ new #[Layout("layouts.app")] class extends Component {
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grid grid-cols-2 lg:flex gap-3">
-                <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Device") }}</label>
-                    <x-select wire:model.live="device_id" class="w-full lg:w-32">
-                        <option value=""></option>
-                        @foreach ($devices as $id => $deviceName)
-                            <option value="{{ $id }}">{{ $deviceName }}</option>
+                <div class="mt-6">
+                    <x-slot name="trigger">
+                                <x-text-button class="uppercase ml-3">
+                                    {{ __("Rentang") }}
+                                    <i class="icon-chevron-down ms-1"></i>
+                                </x-text-button>
+                    </x-slot>
+                    <x-select wire:model.live="line" class="w-full lg:w-32">
+                        @foreach($this->getDataLine() as $lineData)
+                            <option value="{{$lineData['line']}}">{{$lineData['line']}}</option>
                         @endforeach
                     </x-select>
-                </div>
-
-                <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
-                    <x-text-input wire:model.live.debounce.500ms="line" class="w-full lg:w-32" />
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
@@ -259,38 +318,8 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __("Total Lines") }}</div>
-            <div class="text-2xl font-bold">{{ number_format($summaryStats["total_lines"] ?? 0) }}</div>
-        </div>
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __("Total Records") }}</div>
-            <div class="text-2xl font-bold">{{ number_format($summaryStats["total_records"] ?? 0) }}</div>
-        </div>
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __("Total Incremental") }}</div>
-            <div class="text-2xl font-bold">{{ number_format($summaryStats["total_incremental"] ?? 0) }}</div>
-        </div>
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <div class="text-sm text-neutral-500 mb-1">{{ __("Avg per Line") }}</div>
-            <div class="text-2xl font-bold">{{ number_format($summaryStats["avg_incremental_per_line"] ?? 0, 2) }}</div>
-        </div>
-    </div>
-
     <!-- Charts Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Line Summary Chart -->
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <h3 class="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">
-                {{ __("Summary by Line") }}
-            </h3>
-            <div class="h-96">
-                <canvas id="lineChart" wire:ignore></canvas>
-            </div>
-        </div>
-
+    <div class="grid grid-cols- lg:grid-cols-1 gap-6">
         <!-- Daily Trend Chart -->
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <h3 class="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">
@@ -301,6 +330,34 @@ new #[Layout("layouts.app")] class extends Component {
             </div>
         </div>
     </div>
+
+    <!-- table -->
+     <div key="raw-counts" class="mt-5 overflow-x-auto overflow-y-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
+            <div class="min-w-full bg-white dark:bg-neutral-800 shadow-sm">
+                <table class="min-w-full text-sm text-neutral-600 dark:text-neutral-400">
+                    <thead class="sticky top-0 z-10 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+                        <tr class="uppercase text-xs text-left">
+                            <th class="py-3 px-4 font-medium">Line</th>
+                            <th class="py-3 px-4 font-medium">Machine</th>
+                            <th class="py-3 px-4 font-medium text-right">Count</th>
+                            <th class="py-3 px-4 font-medium">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($this->cumulativeData as $cumulative)
+                            <tr
+                                wire:key="count-tr-{{$cumulative['id']}}"
+                                tabindex="0"
+                                class="hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors cursor-pointer border-b border-neutral-100 dark:border-neutral-700/50"
+                            >
+                                <td class="py-3 px-4"></td>
+                                <td class="py-3 px-4"></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
 </div>
 
 @script

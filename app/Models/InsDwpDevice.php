@@ -102,7 +102,6 @@ class InsDwpDevice extends Model
     public function getLineConfig(string $line): ?array
     {
         $line = strtoupper(trim($line));
-        
         if (!$this->config) {
             return null;
         }
