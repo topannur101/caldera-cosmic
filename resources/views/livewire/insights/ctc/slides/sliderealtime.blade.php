@@ -77,7 +77,10 @@ new #[Layout("layouts.app")] class extends Component {
         <div class="w-full h-full flex flex-col px-8 py-6 bg-white text-neutral-600 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
                 <div class="text-4xl text-neutral-400 uppercase">{{ __("Kiri") }}</div>
-                <div class="text-6xl font-bold" id="act-left"></div>
+                <div class="flex items-baseline gap-2">
+                    <div class="text-6xl font-bold" id="act-left"></div>
+                    <div class="text-3xl text-neutral-400">mm</div>
+                </div>
             </div>
             <div class="flex-1">
                 <div id="chart-left"></div>
@@ -87,7 +90,10 @@ new #[Layout("layouts.app")] class extends Component {
         <div class="w-full h-full flex flex-col px-8 py-6 bg-white text-neutral-600 shadow-md overflow-hidden sm:rounded-lg">
             <div class="flex-none w-full flex justify-between">
                 <div class="text-4xl text-neutral-400 uppercase">{{ __("Kanan") }}</div>
-                <div class="text-6xl font-bold" id="act-right"></div>
+                <div class="flex items-baseline gap-2">
+                    <div class="text-6xl font-bold" id="act-right"></div>
+                    <div class="text-3xl text-neutral-400">mm</div>
+                </div>
             </div>
             <div class="flex-1">
                 <div id="chart-right"></div>
@@ -258,7 +264,7 @@ new #[Layout("layouts.app")] class extends Component {
         const rightMax = oRight.series[2].data;
         const rightMid = oRight.series[3].data;
 
-        const maxDataPoints = 100;
+        const maxDataPoints = 60;
 
         function updateSeriesData(seriesData, x, y) {
             if (seriesData.length >= maxDataPoints) {
@@ -414,6 +420,6 @@ new #[Layout("layouts.app")] class extends Component {
                     },
                 ]);
             }
-        }, 10000);
+        }, 1000);
     </script>
 @endscript
