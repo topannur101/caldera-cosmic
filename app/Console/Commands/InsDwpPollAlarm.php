@@ -156,20 +156,25 @@ class InsDwpPollAlarm extends Command
         // Only send if the long duration is LESS than last sent value
         if($longDurationData['duration'] < $this->lastDurationValues){
             // REQUEST DATA COUNTER AND RESPONSE COUNTER
-            $connection = BinaryStreamConnection::getBuilder()
+            try {
+                $connection = BinaryStreamConnection::getBuilder()
                 ->setHost($device->ip_address)
                 ->setPort($this->modbusPort)
                 ->build();
                 
-            $packet = new WriteSingleRegisterRequest(
-                $addrDwpAlarm['addr_long_duration'],    // Register address
-                $longDurationData['duration'],   // Value
-                1       // Unit ID
-            );
+                $packet = new WriteSingleRegisterRequest(
+                    509,    // Register address
+                    $longDurationData['duration'],   // Value
+                    1       // Unit ID
+                );
 
-            $connection->connect();
-            $connection->send($packet);
-            $connection->close();
+                $connection->connect();
+                $connection->send($packet);
+                $connection->close();
+            } catch (\Exception $e) {
+                $this->error("    ✗ Error sending long duration to {$device->name} ({$device->ip_address}): " . $e->getMessage(). $e->getLine());
+                return false;
+            }
         }
     }
 
@@ -203,7 +208,7 @@ class InsDwpPollAlarm extends Command
                 $requestLongDuration = ReadRegistersBuilder::newReadInputRegisters(
                         'tcp://' . $device->ip_address . ':' . $this->modbusPort, 
                         $unit_id)
-                        ->int16($lineConfig['dwp_alarm']['addr_long_duration'], 'duration')
+                        ->int16('554', 'duration')
                         ->build();
                         // Execute Modbus request
                 $responseLongDuration = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))
