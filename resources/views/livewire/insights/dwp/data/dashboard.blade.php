@@ -146,24 +146,37 @@ new class extends Component {
             $leftLast = $latestCounts->where('mechine', $machineName)->where('position', 'L')->first();
             $rightLast = $latestCounts->where('mechine', $machineName)->where('position', 'R')->first();
 
-            $leftPv = $leftLast ? (json_decode($leftLast->pv, true) ?? [0, 0]) : [0, 0];
-            $rightPv = $rightLast ? (json_decode($rightLast->pv, true) ?? [0, 0]) : [0, 0];
+            $leftPv = $leftLast ? (json_decode($leftLast->pv, true) ?? [[0], [0]]) : [[0], [0]];
+            $rightPv = $rightLast ? (json_decode($rightLast->pv, true) ?? [[0], [0]]) : [[0], [0]];
 
-            $leftData = ['side' => $leftPv[1] ?? 0, 'toeHeel' => $leftPv[0] ?? 0];
-            $rightData = ['side' => $rightPv[1] ?? 0, 'toeHeel' => $rightPv[0] ?? 0];
+            // Get medians from the arrays and round them
+            $leftToesHeels = $leftPv[0] ?? [0];
+            $leftSides = $leftPv[1] ?? [0];
+            $rightToesHeels = $rightPv[0] ?? [0];
+            $rightSides = $rightPv[1] ?? [0];
+
+            $leftData = [
+                'side' => round($this->getMedian($leftSides)), 
+                'toeHeel' => round($this->getMedian($leftToesHeels))
+            ];
+            $rightData = [
+                'side' => round($this->getMedian($rightSides)), 
+                'toeHeel' => round($this->getMedian($rightToesHeels))
+            ];
 
             // --- FIXED: Correctly calculate average from all recent records ---
             $allPvs = [];
             if (isset($recentRecords[$machineName])) {
                 foreach ($recentRecords[$machineName] as $record) {
                     $decodedPvs = json_decode($record->pv, true) ?? [];
-                    if (is_array($decodedPvs)) {
-                        $allPvs = array_merge($allPvs, $decodedPvs);
+                    if (is_array($decodedPvs) && count($decodedPvs) >= 2) {
+                        // Add all values from both toe_heel and side arrays
+                        $allPvs = array_merge($allPvs, $decodedPvs[0] ?? [], $decodedPvs[1] ?? []);
                     }
                 }
             }
             $nonZeroValues = array_filter($allPvs, fn($v) => is_numeric($v) && $v > 0);
-            $averagePressure = !empty($nonZeroValues) ? array_sum($nonZeroValues) / count($nonZeroValues) : 0;
+            $averagePressure = !empty($nonZeroValues) ? round(array_sum($nonZeroValues) / count($nonZeroValues)) : 0;
 
             $statuses = [
                 'leftToeHeel'  => $this->getStatus($leftData['toeHeel']),
@@ -347,8 +360,20 @@ new class extends Component {
         foreach ($records as $record) {
             $pvValues = json_decode($record->pv, true);
 
-            if (is_array($pvValues)) {
-                foreach ($pvValues as $value) {
+            if (is_array($pvValues) && count($pvValues) >= 2) {
+                // Process toe_heel values (index 0)
+                foreach ($pvValues[0] as $value) {
+                    if (is_numeric($value)) {
+                        if ($value >= $minStd && $value <= $maxStd) {
+                            $standardReadings++;
+                        } else {
+                            $notStandardReadings++;
+                        }
+                    }
+                }
+                
+                // Process side values (index 1)
+                foreach ($pvValues[1] as $value) {
                     if (is_numeric($value)) {
                         if ($value >= $minStd && $value <= $maxStd) {
                             $standardReadings++;
@@ -385,12 +410,22 @@ new class extends Component {
                 // Return a random value if DB is empty to simulate live data
                 return ["side" => 0, "toeHeel" => 0];
             }
-            $dataSide = $records->pluck('pv')->map(fn($pv) => json_decode($pv, true)[1] ?? 0);
-            $dataToeHeel = $records->pluck('pv')->map(fn($pv) => json_decode($pv, true)[0] ?? 0);
+            
+            // Collect all toe_heel and side values from the arrays
+            $allSideValues = [];
+            $allToeHeelValues = [];
+            
+            foreach ($records as $record) {
+                $pvArray = json_decode($record->pv, true) ?? [[0], [0]];
+                if (isset($pvArray[0]) && isset($pvArray[1])) {
+                    $allToeHeelValues = array_merge($allToeHeelValues, $pvArray[0]);
+                    $allSideValues = array_merge($allSideValues, $pvArray[1]);
+                }
+            }
 
             return [
-                "side" => $this->getMedian($dataSide->all()),
-                "toeHeel" => $this->getMedian($dataToeHeel->all())
+                "side" => round($this->getMedian($allSideValues)),
+                "toeHeel" => round($this->getMedian($allToeHeelValues))
             ];
         } catch (\Exception $e) {
             return ["side" => 0, "toeHeel" => 0];
@@ -420,10 +455,16 @@ new class extends Component {
     private function getMedian(array $array)
     {
         if (empty($array)) return 0;
-        sort($array);
-        $count = count($array);
+        // Filter out non-numeric values
+        $numericArray = array_filter($array, 'is_numeric');
+        if (empty($numericArray)) return 0;
+        
+        sort($numericArray);
+        $count = count($numericArray);
         $middle = floor(($count - 1) / 2);
-        return ($count % 2) ? $array[$middle] : ($array[$middle] + $array[$middle + 1]) / 2;
+        $median = ($count % 2) ? $numericArray[$middle] : ($numericArray[$middle] + $numericArray[$middle + 1]) / 2;
+        
+        return round($median);
     }
 
     public function with(): array
@@ -561,7 +602,7 @@ new class extends Component {
 
     <!-- Charts section -->
     <div class="relative">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" wire:poll.15s="updateData">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" wire:poll.10s="updateData">
             <div class="lg:col-span-1 flex flex-col gap-9">
                 <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md mb-2">
                     <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Performance Machine</h2>
