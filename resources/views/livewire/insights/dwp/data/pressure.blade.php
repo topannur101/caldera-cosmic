@@ -105,6 +105,24 @@ new #[Layout("layouts.app")] class extends Component {
     }
 
     /**
+     * Helper function to calculate median
+     */
+    private function getMedian(array $array)
+    {
+        if (empty($array)) return 0;
+        // Filter out non-numeric values
+        $numericArray = array_filter($array, 'is_numeric');
+        if (empty($numericArray)) return 0;
+        
+        sort($numericArray);
+        $count = count($numericArray);
+        $middle = floor(($count - 1) / 2);
+        $median = ($count % 2) ? $numericArray[$middle] : ($numericArray[$middle] + $numericArray[$middle + 1]) / 2;
+        
+        return round($median);
+    }
+
+    /**
      * Calculates the 5-point summary (min, q1, median, q3, max) for a boxplot.
      */
     private function getBoxplotSummary(array $data): ?array
@@ -193,7 +211,8 @@ new #[Layout("layouts.app")] class extends Component {
 
         $presureData = $dataRaw->whereNotNull('pv')->get()->toArray();
         $counts = collect($presureData);
-        // Prepare arrays to hold data for each of the 4 sensors
+        
+        // Prepare arrays to hold median values for each of the 4 sensors
         $toeheel_left_data = [];
         $toeheel_right_data = [];
         $side_left_data = [];
@@ -204,12 +223,19 @@ new #[Layout("layouts.app")] class extends Component {
             $arrayPv = json_decode($count['pv'], true);
             // Check if pv data is valid
             if (isset($arrayPv[0]) && isset($arrayPv[1])) {
+                $toeHeelArray = $arrayPv[0];
+                $sideArray = $arrayPv[1];
+                
+                // Calculate median for each sensor array
+                $toeHeelMedian = $this->getMedian($toeHeelArray);
+                $sideMedian = $this->getMedian($sideArray);
+                
                 if ($count['position'] === 'L') {
-                    $toeheel_left_data[] = $arrayPv[0];
-                    $side_left_data[] = $arrayPv[1];
+                    $toeheel_left_data[] = $toeHeelMedian;
+                    $side_left_data[] = $sideMedian;
                 } elseif ($count['position'] === 'R') {
-                    $toeheel_right_data[] = $arrayPv[0];
-                    $side_right_data[] = $arrayPv[1];
+                    $toeheel_right_data[] = $toeHeelMedian;
+                    $side_right_data[] = $sideMedian;
                 }
             }
         }
