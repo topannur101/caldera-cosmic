@@ -474,20 +474,47 @@ class InsCtcPoll extends Command
         }
         $correction_uptime = $batch_size > 0 ? (int) round(($correcting_count / $batch_size) * 100) : 0;
 
+        //===============================================================================================
+        // Determine is_auto based on correction uptime (must be done before counting corrections)
+        $is_auto = $correction_uptime > 50;
+
         // Count actual corrections by side
+    
         $correction_left = 0;
         $correction_right = 0;
-        foreach ($batch_data as $record) {
-            if ($record[2] > 0) $correction_left++;  // action_left > 0
-            if ($record[3] > 0) $correction_right++; // action_right > 0
+        
+        if ($is_auto) {
+            // Mode AUTO: hitung semua trigger yang terbaca
+            foreach ($batch_data as $record) {
+                if ($record[2] > 0) $correction_left++;  // action_left > 0
+                if ($record[3] > 0) $correction_right++; // action_right > 0
+            }
+            
+            if ($this->option('v')) {
+                $this->comment("→ AUTO MODE: Counted {$correction_left} left + {$correction_right} right = " . ($correction_left + $correction_right) . " total corrections");
+            }
+        } else {
+            // Mode MANUAL: jangan hitung trigger
+            // Koreksi dianggap 0 karena dilakukan manual oleh operator
+            // (meskipun ada momentary is_correcting=true)
+            $correction_left = 0;
+            $correction_right = 0;
+            
+            if ($this->option('v')) {
+                $this->comment("→ MANUAL MODE: Corrections set to 0 (operator-driven corrections not counted)");
+            }
+        //===============================================================================================
         }
 
         // Calculate correction rate percentage
         $total_corrections = $correction_left + $correction_right;
         $correction_rate = $batch_size > 0 ? (int) round(($total_corrections / ($batch_size * 2)) * 100) : 0;
 
+        // Final determination: Auto only if high uptime AND has corrections
+        //$is_auto = $is_auto_check && ($total_corrections > 0);
+
         // Determine is_auto based on correction uptime
-        $is_auto = $correction_uptime > 50;
+        //$is_auto = $correction_uptime > 50;
 
         // Debug statistics if requested
         if ($this->option('d')) {
