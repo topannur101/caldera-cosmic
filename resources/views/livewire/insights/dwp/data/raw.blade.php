@@ -96,6 +96,22 @@ new #[Layout("layouts.app")] class extends Component {
         });
     }
 
+    // NEW: Helper function to calculate median
+    private function getMedian(array $array)
+    {
+        if (empty($array)) return 0;
+        // Filter out non-numeric values
+        $numericArray = array_filter($array, 'is_numeric');
+        if (empty($numericArray)) return 0;
+        
+        sort($numericArray);
+        $count = count($numericArray);
+        $middle = floor(($count - 1) / 2);
+        $median = ($count % 2) ? $numericArray[$middle] : ($numericArray[$middle] + $numericArray[$middle + 1]) / 2;
+        
+        return round($median);
+    }
+
     #[On("updated")]
     public function with(): array
     {
@@ -333,8 +349,11 @@ new #[Layout("layouts.app")] class extends Component {
                         @foreach ($counts as $count)
                             @php
                                 $pv = json_decode($count->pv, true);
-                                $toeHeelValue = $pv[0] ?? null;
-                                $sideValue = $pv[1] ?? null;
+                                $toeHeelArray = $pv[0] ?? null;
+                                $sideArray = $pv[1] ?? null;
+
+                                $toeHeelValue = $toeHeelArray ? $this->getMedian($toeHeelArray) : null;
+                                $sideValue = $sideArray ? $this->getMedian($sideArray) : null;
 
                                 $toeHeelComparison = $toeHeelValue ? $this->compareWithStandards($toeHeelValue, $this->stdTh) : null;
                                 $sideComparison = $sideValue ? $this->compareWithStandards($sideValue, $this->stdSide) : null;
@@ -359,16 +378,14 @@ new #[Layout("layouts.app")] class extends Component {
                                     {{ ($count->position ?? '') === 'R' ? 'Right' : 'Left' }}
                                 </td>
                                 <td class="py-3 px-4">
-                                    <!-- You likely don't want to show raw std arrays here -->
-                                    <!-- Consider removing or showing a meaningful label -->
                                     <span>{{$this->stdTh[0]}} - {{$this->stdTh[1]}}</span>
                                 </td>
                                 <td class="py-3 px-4">
-                                    @if($toeHeelValue)
-                                        <span class="{{$toeHeelComparison['is_standard'] === false ? 'text-red-500 font-bold' : 'text-green-500'}}">
+                                    @if($toeHeelValue !== null && $toeHeelComparison !== null)
+                                        <span class="{{ $toeHeelComparison['is_standard'] === false ? 'text-red-500 font-bold' : 'text-green-500' }}">
                                             {{ $toeHeelValue }}
                                         </span>
-                                        @if($toeHeelComparison && $toeHeelComparison['is_standard'] == false)
+                                        @if($toeHeelComparison['is_standard'] === false)
                                             <span class="ml-1 inline-flex items-center">
                                                 <i class="icon {{
                                                     $toeHeelComparison['direction'] === 'Down'
@@ -387,11 +404,11 @@ new #[Layout("layouts.app")] class extends Component {
                                     @endif
                                 </td>
                                 <td class="py-3 px-4">
-                                    @if($sideValue)
-                                        <span class="{{$sideComparison['is_standard'] === false ? 'text-red-500 font-bold' : 'text-green-500'}}">
+                                    @if($sideValue !== null && $sideComparison !== null)
+                                        <span class="{{ $sideComparison['is_standard'] === false ? 'text-red-500 font-bold' : 'text-green-500' }}">
                                             {{ $sideValue }}
                                         </span>
-                                        @if($sideComparison && $sideComparison['is_standard'] == false)
+                                        @if($sideComparison['is_standard'] === false)
                                             <span class="ml-1 inline-flex items-center">
                                                 <i class="icon {{
                                                     $sideComparison['direction'] === 'Down'
@@ -409,7 +426,6 @@ new #[Layout("layouts.app")] class extends Component {
                                         —
                                     @endif
                                 </td>
-
                                 <td class="py-3 px-4 font-mono text-xs">
                                     {{ $count->created_at->format('M j, Y g:i A') }}
                                 </td>
