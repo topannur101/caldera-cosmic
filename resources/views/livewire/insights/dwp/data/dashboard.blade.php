@@ -41,6 +41,7 @@ new class extends Component {
     {
         $this->dispatch("update-menu", $this->view);
         $this->updateData();
+        $this->generateChartsClient();
     }
 
     private function getDataLine($line=null)
@@ -198,7 +199,6 @@ new class extends Component {
                 ],
                 'overallStatus' => in_array('alert', $statuses) ? 'alert' : 'normal',
                 'average' => $averagePressure,
-                // --- OPTIMIZED: Use the pre-fetched output counts ---
                 'output' => [
                     'left'  => $outputCounts[$machineName]['L'] ?? 0,
                     'right' => $outputCounts[$machineName]['R'] ?? 0,
@@ -488,7 +488,7 @@ new class extends Component {
         }
     }
 
-    #[On("updated")]
+    #[On("data-updated")]
     public function update()
     {
         // Use server-side JS injection to render charts (pattern similar to metric-detail)
@@ -551,7 +551,8 @@ new class extends Component {
             ->whereIn('line', $lines)
             ->whereBetween('created_at', [$start, $end])
             ->selectRaw('DATE(created_at) as date, line, SUM(cumulative) as total_value')
-            ->groupBy('date', 'line')
+            ->groupByRaw('DATE(created_at), line')
+            ->orderByRaw('DATE(created_at)')
             ->get()
             ->keyBy(function ($item) {
                 // Create a '2025-10-27_G1' key for easy lookup
@@ -575,28 +576,18 @@ new class extends Component {
 
         // 5. Iterate over the date range, day by day, to fill in data
         // This ensures days with "0" data are still included in the chart
-        $period = Carbon::parse($start)->daysUntil(Carbon::parse($end));
+        $period = Carbon::parse($start)->daysUntil(Carbon::parse($end)->addDay());
 
         foreach ($period as $date) {
-            $formattedDate = $date->format('d Sep'); // "15 Sep"
+            $formattedDate = $date->format('d M'); // "15 Sep"
             $queryDate = $date->format('Y-m-d');     // "2025-09-15"
             $labels[] = $formattedDate;
 
             // For this day, find the value for each line
             foreach ($lines as $line) {
                 $key = $queryDate . '_' . $line;
-                $value = $results->get($key)->total_value ?? 0;
-                $datasets[$line]['data'][] = $value;
-            }
-        }
-        
-        // Handle case where start and end are the same day
-        if (empty($labels) && $start->isSameDay($end)) {
-             $labels[] = $start->format('d Sep');
-             $queryDate = $start->format('Y-m-d');
-             foreach ($lines as $line) {
-                $key = $queryDate . '_' . $line;
-                $value = $results->get($key)->total_value ?? 0;
+                $result = $results->get($key);
+                $value = $result ? $result->total_value : 0;
                 $datasets[$line]['data'][] = $value;
             }
         }
@@ -887,7 +878,7 @@ new class extends Component {
             <h1 class="text-xl font-bold text-center">DWP Time Constraint</h1>
             <!-- You can replace this with your actual chart or component -->
             <div class="h-64 bg-gray-100 dark:bg-neutral-700 rounded mt-4 flex items-center justify-center">
-                <canvas id="dwpTimeConstraintChart"></canvas>
+                <canvas id="dwpTimeConstraintChart" wire:ignore></canvas>
             </div>
         </div>
 
@@ -972,214 +963,4 @@ new class extends Component {
 
         </div>
     </div>
-    <!-- @script
-    <script>
-        let dailyPerformanceChart, onlineSystemMonitoringChart, dwpTimeConstraintChart;
-        // store last data so we can re-init when theme toggles
-        let __lastDaily  = null;
-        let __lastAvg    = null;
-        let __lastOnline = null;
-        let __lastDwp    = null;
-
-        function isDarkMode() {
-            try {
-                return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches || document.documentElement.classList.contains('dark');
-            } catch (e) { return false; }
-        }
-
-        function chartOptionsForTheme() {
-            const dark = isDarkMode();
-            return {
-                textColor: dark ? '#e6edf3' : '#0f172a',
-                gridColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)'
-            };
-        }
-
-        function initCharts(dailyPerformanceData, onlineData, dwpData = null) {
-            __lastDaily  = dailyPerformanceData;
-            __lastOnline = onlineData;
-            __lastDwp    = dwpData;
-
-            const theme = chartOptionsForTheme();
-            // Daily Performance Chart
-            const dailyCanvas = document.getElementById('dailyPerformanceChart');
-            if (!dailyCanvas) {
-                console.warn('[DWP Dashboard] dailyPerformanceChart canvas not found in DOM — skipping init');
-            } else {
-                try {
-                    const ctx = dailyCanvas.getContext && dailyCanvas.getContext('2d');
-                    if (!ctx) {
-                        console.warn('[DWP Dashboard] cannot acquire 2D context from dailyPerformanceChart canvas — skipping init');
-                        return;
-                    }
-
-                    if (dailyPerformanceChart) {
-                        dailyPerformanceChart.destroy();
-                    }
-
-                    dailyPerformanceChart = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Standart', 'Out Of Standart'],
-                            datasets: [{
-                                data: [dailyPerformanceData.standard, dailyPerformanceData.outOfStandard],
-                                backgroundColor: ['#22c55e', '#ef4444'],
-                                textColor: theme.textColor,
-                                hoverOffset: 30,
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            cutout: '70%',
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: { bodyColor: theme.textColor, titleColor: theme.textColor }
-                            }
-                        }
-                    });
-                } catch (e) {
-                    console.error('[DWP Dashboard] daily chart init error:', e);
-                    return;
-                }
-
-                try {
-                    // Online System Monitoring Chart PIE
-                    const onlineSystemMonitoringCtx = document.getElementById('onlineSystemMonitoring');
-                    if (!onlineSystemMonitoringCtx) {
-                        console.warn('[DWP Dashboard] onlineSystemMonitoring canvas not found — skipping init');
-                        return;
-                    }
-
-                    if (onlineSystemMonitoringChart) {
-                        onlineSystemMonitoringChart.destroy();
-                    }
-
-                    onlineSystemMonitoringChart = new Chart(onlineSystemMonitoringCtx, {
-                        type: 'pie',
-                        data: {
-                            labels: ['Online', 'Offline'],
-                            datasets: [{
-                                label: 'System Online Monitoring',
-                                data: [onlineData.online, onlineData.offline],
-                                borderWidth: 1,
-                                backgroundColor: ['#22c55e', '#d1d5db'],
-                                borderRadius: 5
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            let label = context.label || '';
-                                            if (label) label += ': ';
-                                            if (context.parsed !== null) {
-                                                label += context.parsed.toFixed(2) + '%';
-                                            }
-                                            return label;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                } catch (e) {
-                    console.error('[DWP Dashboard] online monitoring chart init error:', e);
-                }
-
-                // DWP Time Constraint Chart (if data provided)
-                if (dwpData) {
-                    try {
-                        const dwpCtx = document.getElementById('dwpTimeConstraintChart');
-                        if (!dwpCtx) {
-                            console.warn('[DWP Dashboard] dwpTimeConstraintChart canvas not found — skipping init');
-                            return;
-                        }
-                        if (dwpTimeConstraintChart) {
-                            dwpTimeConstraintChart.destroy();
-                        }
-                        dwpTimeConstraintChart = new Chart(dwpCtx, {
-                            type: 'line',
-                            data: dwpData,
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                    x: {
-                                        grid: { color: theme.gridColor },
-                                        ticks: { color: theme.textColor }
-                                    },
-                                    y: {
-                                        grid: { color: theme.gridColor },
-                                        ticks: { color: theme.textColor }
-                                    }
-                                },
-                                plugins: {
-                                    legend: {
-                                        labels: { color: theme.textColor }
-                                    },
-                                    tooltip: {
-                                        bodyColor: theme.textColor,
-                                        titleColor: theme.textColor
-                                    }
-                                }
-                            }
-                        });
-                    } catch (e) {
-                        console.error('[DWP Dashboard] DWP Time Constraint chart init error:', e);
-                    }
-                }
-            }
-
-        // Listen for refresh event
-        $wire.on('refresh-charts', function(payload) {
-            // Normalize payload: Livewire may pass the data directly, or inside .detail, or as the first array item
-            let data = payload;
-            if (payload && payload.detail) data = payload.detail;
-            if (Array.isArray(payload) && payload.length) data = payload[0];
-            if (payload && payload[0] && (payload[0].avgPressures || payload[0].dailyChartData)) data = payload[0];
-
-            const onlineData = data?.onlineMonitoringData ?? null;
-            const dailyChartData = data?.dailyChartData ?? data?.daily ?? data?.performance?.daily ?? null;
-            const dwpData = data?.dwpData ?? null;
-
-            if (!dailyChartData && !onlineData) {
-                console.warn('[DWP Dashboard] refresh-charts payload missing expected properties', data);
-                return;
-            }
-
-            try {
-                initCharts(dailyChartData ?? { standard: 100, outOfStandard: 0 }, onlineData ?? { online: 100, offline: 0 }, dwpData ?? {  });
-            } catch (e) {
-                console.error('[DWP Dashboard] error re-initializing charts on refresh-charts event', e);
-            }
-        });
-
-        // watch for theme changes: prefers-color-scheme and document class toggles
-        try {
-            if (window.matchMedia) {
-                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                    if (__lastDaily && __lastOnline) initCharts(__lastDaily, __lastOnline);
-                });
-            }
-        } catch (e) {
-            console.error(e);
-        }
-
-        // If your app toggles .dark on <html>, observe it and re-init charts
-        try {
-            const obs = new MutationObserver(() => { if (__lastDaily && __lastOnline) initCharts(__lastDaily, __lastOnline); });
-            obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-        } catch (e) {
-            console.error(e);
-        }
-        // If your app toggles .dark on <html>, observe it and re-init charts
-
-        // Initial load
-        $wire.$dispatch('updated');
-    </script>
-    @endscript -->
 </div>
