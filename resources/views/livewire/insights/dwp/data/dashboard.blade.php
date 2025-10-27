@@ -491,7 +491,8 @@ new class extends Component {
     #[On("updated")]
     public function update()
     {
-        $this->generateCharts();
+        // Use server-side JS injection to render charts (pattern similar to metric-detail)
+        $this->generateChartsClient();
     }
 
     // Livewire lifecycle hooks: when these public properties change, recompute data & charts
@@ -516,20 +517,262 @@ new class extends Component {
         $this->updateData();
     }
 
-    private function generateCharts()
+    /**
+     * NEW: Helper function to get colors for the chart lines
+     */
+    private function getLineColor($line)
     {
-        $this->dispatch('refresh-charts', [
-                    'avgPressures' => $this->getPerformanceData($this->machineData)['avgPressures'],
-                    'dailyChartData' => $this->getPerformanceData($this->machineData)['daily'],
-                    // === NEW: Pass the online monitoring data to the chart ===
-                    'onlineMonitoringData' => $this->onlineMonitoringData,
-                ]);
+        switch (strtoupper($line)) {
+            case 'G1': return '#ef4444'; // red
+            case 'G2': return '#3b82f6'; // blue
+            case 'G3': return '#22c55e'; // green
+            case 'G4': return '#f97316'; // orange
+            case 'G5': return '#a855f7'; // purple
+            default: return '#6b7280'; // gray
+        }
+    }
+
+    /**
+     * NEW: Get data for the DWP Time Constraint line chart
+     */
+    private function getDwpTimeConstraintData()
+    {
+        // 1. Set date range from public properties, default to last 5 days
+        $start = ($this->start_at) ? Carbon::parse($this->start_at)->startOfDay() : now()->subDays(4)->startOfDay();
+        $end = ($this->end_at) ? Carbon::parse($this->end_at)->endOfDay() : now()->endOfDay();
+        
+        // 2. Define the lines to show on the chart
+        $lines = ['G1', 'G2', 'G3', 'G4', 'G5'];
+
+        // 3. Query the data
+        // NOTE: I'm using SUM(cumulative) based on your other code.
+        // Change this to SUM(duration) or COUNT(*) if that is the correct value to plot.
+        $results = InsDwpTimeAlarmCount::query()
+            ->whereIn('line', $lines)
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw('DATE(created_at) as date, line, SUM(cumulative) as total_value')
+            ->groupBy('date', 'line')
+            ->get()
+            ->keyBy(function ($item) {
+                // Create a '2025-10-27_G1' key for easy lookup
+                return $item->date . '_' . $item->line;
+            });
+
+        $labels = [];
+        $datasets = [];
+
+        // 4. Initialize datasets for all 5 lines
+        foreach ($lines as $line) {
+            $datasets[$line] = [
+                'label' => $line,
+                'data' => [],
+                'borderColor' => $this->getLineColor($line),
+                'backgroundColor' => $this->getLineColor($line), // For points
+                'tension' => 0.3, // For curved lines
+                'fill' => false,
+            ];
+        }
+
+        // 5. Iterate over the date range, day by day, to fill in data
+        // This ensures days with "0" data are still included in the chart
+        $period = Carbon::parse($start)->daysUntil(Carbon::parse($end));
+
+        foreach ($period as $date) {
+            $formattedDate = $date->format('d Sep'); // "15 Sep"
+            $queryDate = $date->format('Y-m-d');     // "2025-09-15"
+            $labels[] = $formattedDate;
+
+            // For this day, find the value for each line
+            foreach ($lines as $line) {
+                $key = $queryDate . '_' . $line;
+                $value = $results->get($key)->total_value ?? 0;
+                $datasets[$line]['data'][] = $value;
+            }
+        }
+        
+        // Handle case where start and end are the same day
+        if (empty($labels) && $start->isSameDay($end)) {
+             $labels[] = $start->format('d Sep');
+             $queryDate = $start->format('Y-m-d');
+             foreach ($lines as $line) {
+                $key = $queryDate . '_' . $line;
+                $value = $results->get($key)->total_value ?? 0;
+                $datasets[$line]['data'][] = $value;
+            }
+        }
+
+        // 6. Return data in Chart.js format
+        return [
+            'labels' => $labels,
+            'datasets' => array_values($datasets)
+        ];
+    }
+
+    /**
+     * Render charts by injecting client-side JS with embedded data (similar to metric-detail.generateChart)
+     */
+    private function generateChartsClient()
+    {
+        // Get data for all charts
+        $perf = $this->getPerformanceData($this->machineData);
+        $daily = $perf['daily'] ?? ['standard' => 100, 'outOfStandard' => 0];
+        $online = $this->onlineMonitoringData ?? ['online' => 100, 'offline' => 0];
+        
+        // === NEW: Get DWP Time Constraint Chart Data ===
+        $dwpData = $this->getDwpTimeConstraintData();
+
+        // Encode all data for JavaScript
+        $dailyJson = json_encode($daily);
+        $onlineJson = json_encode($online);
+        $dwpJson = json_encode($dwpData); // === NEW ===
+
+        $this->js(
+            "
+            (function(){
+                try {
+                    // --- 1. Get Data from PHP ---
+                    const dailyData = " . $dailyJson . ";
+                    const onlineData = " . $onlineJson . ";
+                    const dwpData = " . $dwpJson . "; // === NEW ===
+
+                    // --- 2. Theme Helpers ---
+                    function isDarkModeLocal(){
+                        try{ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches || document.documentElement.classList.contains('dark'); }catch(e){return false}
+                    }
+                    const theme = {
+                        textColor: isDarkModeLocal() ? '#e6edf3' : '#0f172a',
+                        gridColor: isDarkModeLocal() ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)'
+                    };
+
+                    // --- 3. DAILY PERFORMANCE (doughnut) ---
+                    const dailyCanvas = document.getElementById('dailyPerformanceChart');
+                    if (dailyCanvas) {
+                        try {
+                            const ctx = dailyCanvas.getContext('2d');
+                            if (window.__dailyPerformanceChart instanceof Chart) {
+                                try { window.__dailyPerformanceChart.destroy(); } catch(e){}
+                            }
+                            window.__dailyPerformanceChart = new Chart(ctx, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['Standart', 'Out Of Standart'],
+                                    datasets: [{
+                                        data: [dailyData.standard || 0, dailyData.outOfStandard || 0],
+                                        backgroundColor: ['#22c55e', '#ef4444'],
+                                        hoverOffset: 30,
+                                        borderWidth: 0
+                                    }]
+                                },
+                                options: {
+                                    cutout: '70%',
+                                    plugins: {
+                                        legend: { display: false },
+                                        tooltip: { bodyColor: theme.textColor, titleColor: theme.textColor }
+                                    },
+                                    responsive: true,
+                                    maintainAspectRatio: false
+                                }
+                            });
+                        } catch (e) { console.error('[DWP Dashboard] injected daily chart error', e); }
+                    } else {
+                        console.warn('[DWP Dashboard] dailyPerformanceChart canvas not found');
+                    }
+
+                    // --- 4. ONLINE SYSTEM MONITORING (pie) ---
+                    const onlineCanvas = document.getElementById('onlineSystemMonitoring');
+                    if (onlineCanvas) {
+                        try {
+                            const ctx2 = onlineCanvas.getContext && onlineCanvas.getContext('2d');
+                            if (window.__onlineSystemMonitoringChart instanceof Chart) {
+                                try { window.__onlineSystemMonitoringChart.destroy(); } catch(e){}
+                            }
+                            window.__onlineSystemMonitoringChart = new Chart(ctx2, {
+                                type: 'pie',
+                                data: {
+                                    labels: ['Online', 'Offline'],
+                                    datasets: [{
+                                        data: [onlineData.online || 0, onlineData.offline || 0],
+                                        borderWidth: 1,
+                                        backgroundColor: ['#22c55e', '#d1d5db'],
+                                        borderRadius: 5
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: false },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context){
+                                                    let label = context.label || '';
+                                                    if (label) label += ': ';
+                                                    if (context.parsed !== null) label += context.parsed.toFixed(2) + '%';
+                                                    return label;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        } catch (e) { console.error('[DWP Dashboard] injected online chart error', e); }
+                    } else {
+                        console.warn('[DWP Dashboard] onlineSystemMonitoring canvas not found');
+                    }
+                    
+                    // --- 5. === NEW: DWP TIME CONSTRAINT CHART (line) === ---
+                    const dwpCtx = document.getElementById('dwpTimeConstraintChart');
+                    if (dwpCtx) {
+                        try {
+                            const ctx3 = dwpCtx.getContext('2d');
+                            if (window.__dwpTimeConstraintChart instanceof Chart) {
+                                try { window.__dwpTimeConstraintChart.destroy(); } catch(e){}
+                            }
+                            window.__dwpTimeConstraintChart = new Chart(ctx3, {
+                                type: 'line',
+                                data: dwpData, // Use the injected data
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        x: {
+                                            grid: { color: theme.gridColor },
+                                            ticks: { color: theme.textColor }
+                                        },
+                                        y: {
+                                            beginAtZero: true,
+                                            grid: { color: theme.gridColor },
+                                            ticks: { color: theme.textColor }
+                                        }
+                                    },
+                                    plugins: {
+                                        legend: {
+                                            position: 'bottom', // Matches your image
+                                            labels: { color: theme.textColor }
+                                        },
+                                        tooltip: {
+                                            bodyColor: theme.textColor,
+                                            titleColor: theme.textColor
+                                        }
+                                    }
+                                }
+                            });
+                        } catch (e) { console.error('[DWP Dashboard] injected dwp chart error', e); }
+                    } else {
+                        console.warn('[DWP Dashboard] dwpTimeConstraintChart canvas not found');
+                    }
+
+                } catch (e) {
+                    console.error('[DWP Dashboard] generateChartsClient error', e);
+                }
+            })();
+            "
+        );
     }
 }; ?>
 
 <div>
-    <!-- filter section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
     <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 flex items-center">
             <div>
                 <div class="flex mb-2 text-xs text-neutral-500">
@@ -579,155 +822,164 @@ new class extends Component {
                 </x-select>
             </div>
         </div>
-        
-        <div class="grid grid-cols-1 gap-6">
-            <div class="grid grid-cols-3 bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
-                <div class="flex flex-col w-10 font-semibold text-neutral-700 dark:text-neutral-200 text-sm">
-                    Time
-                    Constraint
-                    Alarm
-                </div>
-                <div class="flex flex-col font-semibold text-neutral-700 dark:text-neutral-200 text-sm">
-                    <p>Long Queue time</p>
-                    <p class="text-3xl">{{ $this->longestQueueTime }}</p>
-                </div>
-                <div class="flex flex-col font-semibold text-neutral-700 dark:text-neutral-200 text-sm">
-                    <p>Alarm Active</p>
-                    <p class="text-3xl">{{ $this->alarmsActive }}</p>
-                </div>
-            </div>
-        </div>
     </div>
     <!-- end filter section -->
 
-    <!-- Charts section -->
-    <div class="relative">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" wire:poll.10s="updateData">
-            <div class="lg:col-span-1 flex flex-col gap-9">
-                <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md mb-2">
-                    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Performance Machine</h2>
-                    <div class="flex items-center justify-around gap-4">
-                        <div class="relative h-40 w-40">
-                            <canvas id="dailyPerformanceChart" wire:ignore></canvas>
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <div class="flex items-center gap-2">
-                                <span class="w-4 h-4 rounded bg-green-500"></span>
-                                <span>Standart</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-4 h-4 rounded bg-red-500"></span>
-                                <span>Out Of Standart</span>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Content Section -->
+    <div class="grid grid-cols-1 gap-6">
+        <!-- Top Row: 3 Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Card 59: Performance Machine -->
+            <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Performance Machine</h2>
+                <div class="relative">
+                    <canvas id="dailyPerformanceChart"></canvas>
                 </div>
-    
-                <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
-                    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
-                        Online System Monitoring
-                        <span class="text-sm text-neutral-600 dark:text-neutral-400">8 hours online</span>
-                    </h2>
-                    <div class="flex items-center justify-around gap-4">
-                    <div class="relative h-40 w-40">
-                        <canvas id="onlineSystemMonitoring" wire:ignore></canvas>
+                <div class="flex flex-col gap-2 mt-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded bg-green-500"></span>
+                        <span>Standart</span>
                     </div>
-                    <div class="flex flex-col gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded bg-green-500"></span>
-                            <span>Online</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded bg-gray-300"></span>
-                            <span>Offline</span>
-                        </div>
-                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded bg-red-300"></span>
+                        <span>Out Of Standart</span>
                     </div>
                 </div>
             </div>
-    
-            <div class="lg:col-span-2 relative">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    @forelse ($machineData as $machine)
-                        <div class="relative p-6 bg-white dark:bg-neutral-800 border-4 shadow-md rounded-xl ml-8 mb-8
-                            @if($machine['overallStatus'] == 'alert') border-red-500 @else border-transparent @endif">
-                            <div class="absolute top-[40px] -left-5 px-2 py-2 bg-white dark:bg-neutral-800
-                                border-4 rounded-lg text-2xl font-bold
-                                @if($machine['overallStatus'] == 'alert') border-red-500 @else bg-green-500 @endif">
-                                #{{ $machine['name'] }}
-                            </div>
-                            <div class="rounded-lg transition-colors duration-300">
-                                <div class="grid grid-cols-2 gap-2 text-center">
-                                    <div>
-                                        <h4 class="font-semibold text-neutral-700 dark:text-neutral-200">LEFT</h4>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Toe/Hell</p>
-                                        <div class="p-2 rounded-md text-white font-bold text-lg mb-2 @if($machine['sensors']['left']['toeHeel']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
-                                            {{ $machine['sensors']['left']['toeHeel']['value'] }}
-                                        </div>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Side</p>
-                                        <div class="p-2 rounded-md text-white font-bold text-lg @if($machine['sensors']['left']['side']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
-                                            {{ $machine['sensors']['left']['side']['value'] }}
-                                        </div>
+
+            <!-- Card 60: Online System Monitoring -->
+            <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
+                    Online System Monitoring
+                    <span class="text-sm text-neutral-600 dark:text-neutral-400">8 hours online</span>
+                </h2>
+                <div class="relative">
+                    <canvas id="onlineSystemMonitoring" wire:ignore></canvas>
+                </div>
+                <div class="flex flex-col gap-2 mt-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded bg-green-500"></span>
+                        <span>Online</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded bg-gray-300"></span>
+                        <span>Offline</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md gap-4 flex flex-col">
+                <div class="flex flex-col w-full font-semibold text-neutral-700 dark:text-neutral-200 text-xl">
+                    Time Constraint Alarm
+                </div>
+                <div class="mt-4 space-y-2">
+                    <p class="text-md">Long Queue time</p>
+                    <p class="text-3xl font-bold">{{ $this->longestQueueTime }}</p>
+                </div>
+                <div class="mt-4 space-y-2">
+                    <p class="text-md">Alarm Active</p>
+                    <p class="text-3xl font-bold">{{ $this->alarmsActive }}</p>
+                </div>
+            </div>
+        </div>
+        <!-- Middle Section: Chart Placeholder -->
+        <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
+            <h1 class="text-xl font-bold text-center">DWP Time Constraint</h1>
+            <!-- You can replace this with your actual chart or component -->
+            <div class="h-64 bg-gray-100 dark:bg-neutral-700 rounded mt-4 flex items-center justify-center">
+                <canvas id="dwpTimeConstraintChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+            <!-- Row 1: Two Cards (51 & 52) -->
+            <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                    Standart Mechine #1, #2 : <span>30 ~ 40 kg</span>
+                </h2>
+            </div>
+
+            <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                    Standart Mechine #3, #4 : <span>30 ~ 40 kg</span>
+                </h2>
+            </div>
+
+            <!-- Note: We use a nested grid inside the col-span-2 -->
+            <div class="col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                @forelse ($machineData as $machine)
+                    <div class="relative p-6 bg-white dark:bg-neutral-800 border-4 shadow-md rounded-xl
+                        @if($machine['overallStatus'] == 'alert') border-red-500 @else border-transparent @endif">
+                        <div class="absolute top-[40px] -left-5 px-2 py-2 bg-white dark:bg-neutral-800
+                            border-4 rounded-lg text-2xl font-bold
+                            @if($machine['overallStatus'] == 'alert') border-red-500 @else bg-green-500 @endif">
+                            #{{ $machine['name'] }}
+                        </div>
+                        <div class="rounded-lg transition-colors duration-300">
+                            <div class="grid grid-cols-2 gap-2 text-center">
+                                <div>
+                                    <h4 class="font-semibold text-neutral-700 dark:text-neutral-200">LEFT</h4>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Toe/Hell</p>
+                                    <div class="p-2 rounded-md text-white font-bold text-lg mb-2
+                                        @if($machine['sensors']['left']['toeHeel']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
+                                        {{ $machine['sensors']['left']['toeHeel']['value'] }}
                                     </div>
-                                    <div>
-                                        <h4 class="font-semibold text-neutral-700 dark:text-neutral-200">RIGHT</h4>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Toe/Hell</p>
-                                        <div class="p-2 rounded-md text-white font-bold text-lg mb-2 @if($machine['sensors']['right']['toeHeel']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
-                                            {{ $machine['sensors']['right']['toeHeel']['value'] }}
-                                        </div>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Side</p>
-                                        <div class="p-2 rounded-md text-white font-bold text-lg @if($machine['sensors']['right']['side']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
-                                            {{ $machine['sensors']['right']['side']['value'] }}
-                                        </div>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Side</p>
+                                    <div class="p-2 rounded-md text-white font-bold text-lg
+                                        @if($machine['sensors']['left']['side']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
+                                        {{ $machine['sensors']['left']['side']['value'] }}
                                     </div>
                                 </div>
-                                <!-- make output section -->
-                                <div class="grid grid-cols-2 gap-2 text-center mt-4">
-                                    <div>
-                                        <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
-                                        <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
-                                            {{ $machine['output']['left'] ?? 0 }}
-                                        </div>
+                                <div>
+                                    <h4 class="font-semibold text-neutral-700 dark:text-neutral-200">RIGHT</h4>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Toe/Hell</p>
+                                    <div class="p-2 rounded-md text-white font-bold text-lg mb-2
+                                        @if($machine['sensors']['right']['toeHeel']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
+                                        {{ $machine['sensors']['right']['toeHeel']['value'] }}
                                     </div>
-                                    <div>
-                                        <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
-                                        <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
-                                            {{ $machine['output']['right'] ?? 0 }}
-                                        </div>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Side</p>
+                                    <div class="p-2 rounded-md text-white font-bold text-lg
+                                        @if($machine['sensors']['right']['side']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
+                                        {{ $machine['sensors']['right']['side']['value'] }}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Output Section -->
+                            <div class="grid grid-cols-2 gap-2 text-center mt-4">
+                                <div>
+                                    <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
+                                    <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
+                                        {{ $machine['output']['left'] ?? 0 }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
+                                    <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
+                                        {{ $machine['output']['right'] ?? 0 }}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    @empty
-                        <p class="md:col-span-2 text-center text-neutral-500">No machine data available for the selected line.</p>
-                    @endforelse
-                </div>
+                    </div>
+                @empty
+                    <div class="col-span-4 text-center text-neutral-500 p-6">
+                        No machine data available for the selected line.
+                    </div>
+                @endforelse
             </div>
+
         </div>
-    <div class="absolute top-[150px] -translate-y-2/3 right-0 translate-x-1/2 bg-white dark:bg-neutral-900 p-2 rounded-lg shadow-lg flex flex-col items-center justify-center w-10 border">
-            <h3 class="text-lg font-semibold text-slate-800">STD</h3>
-            <div class="text-xl font-bold text-blue-700 my-2">
-                <p>{{ $stdRange[0] }} ~ {{ $stdRange[1] }}</p>
-            </div>
-            <p class="text-sm text-slate-500">kg</p>
-        </div>
-        @if(count($machineData) > 2)
-    <div class="absolute top-[450px] -translate-y-2/3 right-0 translate-x-1/2 bg-white dark:bg-neutral-900 p-2 rounded-lg shadow-lg flex flex-col items-center justify-center w-10 border">
-            <h3 class="text-lg font-semibold text-slate-800">STD</h3>
-            <div class="text-xl font-bold text-blue-700 my-2">
-                <p>{{ $stdRange[0] }} ~ {{ $stdRange[1] }}</p>
-            </div>
-            <p class="text-sm text-slate-500">kg</p>
-        </div>
-        @endif
     </div>
-    @script
+    <!-- @script
     <script>
-        let dailyPerformanceChart, onlineSystemMonitoringChart;
+        let dailyPerformanceChart, onlineSystemMonitoringChart, dwpTimeConstraintChart;
         // store last data so we can re-init when theme toggles
-        let __lastDaily = null;
-        let __lastAvg = null;
+        let __lastDaily  = null;
+        let __lastAvg    = null;
         let __lastOnline = null;
+        let __lastDwp    = null;
 
         function isDarkMode() {
             try {
@@ -743,88 +995,156 @@ new class extends Component {
             };
         }
 
-        function initCharts(dailyPerformanceData, onlineData) {
-            __lastDaily = dailyPerformanceData;
+        function initCharts(dailyPerformanceData, onlineData, dwpData = null) {
+            __lastDaily  = dailyPerformanceData;
             __lastOnline = onlineData;
+            __lastDwp    = dwpData;
 
             const theme = chartOptionsForTheme();
             // Daily Performance Chart
-            const dailyPerformanceCtx = document.getElementById('dailyPerformanceChart');
-            if (dailyPerformanceChart) dailyPerformanceChart.destroy();
-            dailyPerformanceChart = new Chart(dailyPerformanceCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Standart', 'Out Of Standart'],
-                    datasets: [{
-                        data: [dailyPerformanceData.standard, dailyPerformanceData.outOfStandard],
-                        backgroundColor: ['#22c55e', '#ef4444'],
-                        textColor: theme.textColor,
-                        hoverOffset: 30,
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    cutout: '70%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { bodyColor: theme.textColor, titleColor: theme.textColor }
+            const dailyCanvas = document.getElementById('dailyPerformanceChart');
+            if (!dailyCanvas) {
+                console.warn('[DWP Dashboard] dailyPerformanceChart canvas not found in DOM — skipping init');
+            } else {
+                try {
+                    const ctx = dailyCanvas.getContext && dailyCanvas.getContext('2d');
+                    if (!ctx) {
+                        console.warn('[DWP Dashboard] cannot acquire 2D context from dailyPerformanceChart canvas — skipping init');
+                        return;
                     }
-                }
-            });
 
-            // Online System Monitoring Chart PIE
-            const onlineSystemMonitoringCtx = document.getElementById('onlineSystemMonitoring');
-        if (onlineSystemMonitoringChart) onlineSystemMonitoringChart.destroy();
-            onlineSystemMonitoringChart = new Chart(onlineSystemMonitoringCtx, {
-            type: 'pie', // You can also use 'doughnut' here if you prefer
-            data: {
-                // === NEW: Use dynamic labels ===
-                labels: ['Online', 'Offline'],
-                datasets: [{
-                    label: 'System Online Monitoring',
-                    // === NEW: Use dynamic data from the `onlineData` argument ===
-                    data: [onlineData.online, onlineData.offline],
-                    borderWidth: 1,
-                    backgroundColor: ['#22c55e', '#d1d5db'], // Green (Online), Gray (Offline)
-                    borderRadius: 5,
-                }]
-            },
-            // === NEW: Added options for tooltips ===
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }, // Your HTML already has a legend
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                // Add a '%' sign
-                                if (context.parsed !== null) {
-                                    label += context.parsed.toFixed(2) + '%';
-                                }
-                                return label;
+                    if (dailyPerformanceChart) {
+                        dailyPerformanceChart.destroy();
+                    }
+
+                    dailyPerformanceChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Standart', 'Out Of Standart'],
+                            datasets: [{
+                                data: [dailyPerformanceData.standard, dailyPerformanceData.outOfStandard],
+                                backgroundColor: ['#22c55e', '#ef4444'],
+                                textColor: theme.textColor,
+                                hoverOffset: 30,
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            cutout: '70%',
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: { bodyColor: theme.textColor, titleColor: theme.textColor }
                             }
                         }
+                    });
+                } catch (e) {
+                    console.error('[DWP Dashboard] daily chart init error:', e);
+                    return;
+                }
+
+                try {
+                    // Online System Monitoring Chart PIE
+                    const onlineSystemMonitoringCtx = document.getElementById('onlineSystemMonitoring');
+                    if (!onlineSystemMonitoringCtx) {
+                        console.warn('[DWP Dashboard] onlineSystemMonitoring canvas not found — skipping init');
+                        return;
+                    }
+
+                    if (onlineSystemMonitoringChart) {
+                        onlineSystemMonitoringChart.destroy();
+                    }
+
+                    onlineSystemMonitoringChart = new Chart(onlineSystemMonitoringCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Online', 'Offline'],
+                            datasets: [{
+                                label: 'System Online Monitoring',
+                                data: [onlineData.online, onlineData.offline],
+                                borderWidth: 1,
+                                backgroundColor: ['#22c55e', '#d1d5db'],
+                                borderRadius: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.label || '';
+                                            if (label) label += ': ';
+                                            if (context.parsed !== null) {
+                                                label += context.parsed.toFixed(2) + '%';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.error('[DWP Dashboard] online monitoring chart init error:', e);
+                }
+
+                // DWP Time Constraint Chart (if data provided)
+                if (dwpData) {
+                    try {
+                        const dwpCtx = document.getElementById('dwpTimeConstraintChart');
+                        if (!dwpCtx) {
+                            console.warn('[DWP Dashboard] dwpTimeConstraintChart canvas not found — skipping init');
+                            return;
+                        }
+                        if (dwpTimeConstraintChart) {
+                            dwpTimeConstraintChart.destroy();
+                        }
+                        dwpTimeConstraintChart = new Chart(dwpCtx, {
+                            type: 'line',
+                            data: dwpData,
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: {
+                                        grid: { color: theme.gridColor },
+                                        ticks: { color: theme.textColor }
+                                    },
+                                    y: {
+                                        grid: { color: theme.gridColor },
+                                        ticks: { color: theme.textColor }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: { color: theme.textColor }
+                                    },
+                                    tooltip: {
+                                        bodyColor: theme.textColor,
+                                        titleColor: theme.textColor
+                                    }
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        console.error('[DWP Dashboard] DWP Time Constraint chart init error:', e);
                     }
                 }
             }
-        });
-        }
+
         // Listen for refresh event
         $wire.on('refresh-charts', function(payload) {
             // Normalize payload: Livewire may pass the data directly, or inside .detail, or as the first array item
             let data = payload;
-            console.log('[DWP Dashboard] refresh-charts payload received', payload);
             if (payload && payload.detail) data = payload.detail;
             if (Array.isArray(payload) && payload.length) data = payload[0];
             if (payload && payload[0] && (payload[0].avgPressures || payload[0].dailyChartData)) data = payload[0];
 
             const onlineData = data?.onlineMonitoringData ?? null;
             const dailyChartData = data?.dailyChartData ?? data?.daily ?? data?.performance?.daily ?? null;
+            const dwpData = data?.dwpData ?? null;
 
             if (!dailyChartData && !onlineData) {
                 console.warn('[DWP Dashboard] refresh-charts payload missing expected properties', data);
@@ -832,9 +1152,9 @@ new class extends Component {
             }
 
             try {
-                initCharts(dailyChartData ?? { standard: 100, outOfStandard: 0 }, onlineData ?? { online: 100, offline: 0 });
+                initCharts(dailyChartData ?? { standard: 100, outOfStandard: 0 }, onlineData ?? { online: 100, offline: 0 }, dwpData ?? {  });
             } catch (e) {
-                console.error('[DWP Dashboard] error while initializing charts', e, data);
+                console.error('[DWP Dashboard] error re-initializing charts on refresh-charts event', e);
             }
         });
 
@@ -845,16 +1165,21 @@ new class extends Component {
                     if (__lastDaily && __lastOnline) initCharts(__lastDaily, __lastOnline);
                 });
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error(e);
+        }
 
         // If your app toggles .dark on <html>, observe it and re-init charts
         try {
             const obs = new MutationObserver(() => { if (__lastDaily && __lastOnline) initCharts(__lastDaily, __lastOnline); });
             obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-        } catch (e) {}
+        } catch (e) {
+            console.error(e);
+        }
+        // If your app toggles .dark on <html>, observe it and re-init charts
 
         // Initial load
         $wire.$dispatch('updated');
     </script>
-    @endscript
+    @endscript -->
 </div>
