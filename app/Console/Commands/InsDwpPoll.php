@@ -17,9 +17,9 @@ class InsDwpPoll extends Command
     protected $modbusPort = 503;
 
     // Cycle detection configuration - now with independent thresholds for each sensor
-    protected $cycleStartThreshold = 1; // Value to detect the start of a cycle
-    protected $toeHeelEndThreshold = 2; // Value to detect end of toe/heel cycle
-    protected $sideEndThreshold = 2;    // Value to detect end of side cycle
+    protected $cycleStartThreshold = 10; // Value to detect the start of a cycle
+    protected $toeHeelEndThreshold = 0; // Value to detect end of toe/heel cycle
+    protected $sideEndThreshold = 0;    // Value to detect end of side cycle
     protected $goodValueMin = 30;       // Min value for a good reading
     protected $goodValueMax = 40;       // Max value for a good reading
     protected $cycleTimeoutSeconds = 30; // Failsafe to reset a stuck cycle
