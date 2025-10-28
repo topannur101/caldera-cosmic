@@ -823,8 +823,8 @@ new class extends Component {
             <!-- Card 59: Performance Machine -->
             <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
                 <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Performance Machine</h2>
-                <div class="relative">
-                    <canvas id="dailyPerformanceChart"></canvas>
+                <div class="">
+                    <canvas class="h-[150px]" id="dailyPerformanceChart"></canvas>
                 </div>
                 <div class="flex flex-col gap-2 mt-4">
                     <div class="flex items-center gap-2">
@@ -845,7 +845,7 @@ new class extends Component {
                     <span class="text-sm text-neutral-600 dark:text-neutral-400">8 hours online</span>
                 </h2>
                 <div class="relative">
-                    <canvas id="onlineSystemMonitoring" wire:ignore></canvas>
+                    <canvas class="h-[150px]" id="onlineSystemMonitoring" wire:ignore></canvas>
                 </div>
                 <div class="flex flex-col gap-2 mt-4">
                     <div class="flex items-center gap-2">
@@ -887,13 +887,13 @@ new class extends Component {
 
             <!-- Row 1: Two Cards (51 & 52) -->
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
-                <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                <h2 class="text-lg font-semibold text-center text-slate-800 dark:text-slate-200">
                     Standart Mechine #1, #2 : <span>30 ~ 40 kg</span>
                 </h2>
             </div>
 
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
-                <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                <h2 class="text-lg font-semibold text-center text-slate-800 dark:text-slate-200">
                     Standart Mechine #3, #4 : <span>30 ~ 40 kg</span>
                 </h2>
             </div>
