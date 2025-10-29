@@ -16,12 +16,13 @@ class InsDwpPoll extends Command
     protected $modbusTimeoutSeconds = 2;
     protected $modbusPort = 503;
 
-    // Cycle detection configuration - now with independent thresholds for each sensor
-    protected $cycleStartThreshold = 10; // Value to detect the start of a cycle
+    // Cycle detection configuration
+    protected $cycleStartThreshold = 10; // Value to detect the start of a cycle (now used by 'capturing' state)
     protected $toeHeelEndThreshold = 0; // Value to detect end of toe/heel cycle
-    protected $sideEndThreshold = 0;    // Value to detect end of side cycle
-    protected $goodValueMin = 30;       // Min value for a good reading
-    protected $goodValueMax = 40;       // Max value for a good reading
+    // Note: sideEndThreshold is no longer needed in the new logic but left for context
+    protected $sideEndThreshold = 0;
+    protected $goodValueMin = 30;        // Min value for a good reading
+    protected $goodValueMax = 40;        // Max value for a good reading
     protected $cycleTimeoutSeconds = 30; // Failsafe to reset a stuck cycle
     
     /**
@@ -41,8 +42,10 @@ class InsDwpPoll extends Command
     // In-memory buffer to track last cumulative values per line
     protected $lastCumulativeValues = [];
     
-    // State machine for cycle detection - tracks both positions together for each machine
-    // Example entry: ['LINEA-mc1' => ['state' => 'capturing', 'L' => [...], 'R' => [...], 'start_time' => 167...]]
+    // State machine for cycle detection
+    // NEW: Tracks each position (L/R) independently.
+    // Example: ['LINEA-mc1-L' => ['state' => 'idle']]
+    // Example: ['LINEA-mc1-R' => ['state' => 'capturing', 'start_time' => 167...]]
     protected $cycleStates = [];
     
     // Memory optimization counters
@@ -131,7 +134,7 @@ class InsDwpPoll extends Command
     }
 
     /**
-     * Poll a single device and process all its lines using the new state machine logic
+     * Poll a single device and process all its lines
      */
     private function pollDevice(InsDwpDevice $device)
     {
@@ -177,172 +180,117 @@ class InsDwpPoll extends Command
     }
 
     /**
-     * Core state machine logic to process a complete cycle for both positions of a machine
-     * Now waits for both L and R to complete before saving any data
+     * MODIFIED: This function now processes L and R positions independently
+     * by delegating to the new processPositionCycle method.
      */
     private function processMachineCycle(string $line, string $machineName, array $positionsData)
     {
-        $cycleKey = "{$line}-{$machineName}";
-        $currentState = $this->cycleStates[$cycleKey] ?? ['state' => 'idle', 'L' => [], 'R' => []];
+        $savedCount = 0;
+
+        // Process Left position cycle independently
+        $savedCount += $this->processPositionCycle(
+            $line,
+            $machineName,
+            'L',
+            $positionsData['L'] // ['toe_heel' => value, 'side' => value]
+        );
+
+        // Process Right position cycle independently
+        $savedCount += $this->processPositionCycle(
+            $line,
+            $machineName,
+            'R',
+            $positionsData['R'] // ['toe_heel' => value, 'side' => value]
+        );
+
+        return $savedCount;
+    }
+
+    /**
+     * NEW: Core state machine logic for a *single position* (L or R).
+     * This logic implements your requested flow:
+     * 1. Wait for a "good" value.
+     * 2. When a "good" value is seen, save it immediately.
+     * 3. Change state to 'capturing' to avoid saving more data.
+     * 4. Wait for the value to return to 0 (or timeout) to reset the state.
+     */
+    private function processPositionCycle(string $line, string $machineName, string $position, array $data)
+    {
+        $toeHeelValue = $data['toe_heel'];
+        $sideValue = $data['side'];
+        $cycleKey = "{$line}-{$machineName}-{$position}";
+
+        $currentState = $this->cycleStates[$cycleKey] ?? ['state' => 'idle'];
+        $savedCount = 0;
 
         // Failsafe timeout logic
         if ($currentState['state'] === 'capturing' && (time() - $currentState['start_time']) > $this->cycleTimeoutSeconds) {
-            if($this->option('d')) {
-                $this->warn("Cycle for {$cycleKey} timed out. Resetting.");
+            if ($this->option('d')) {
+                $this->warn("Cycle for {$cycleKey} timed out. Resetting to 'idle'.");
             }
-            unset($this->cycleStates[$cycleKey]);
-            $currentState = ['state' => 'idle', 'L' => [], 'R' => []];
+            $this->cycleStates[$cycleKey] = ['state' => 'idle'];
+            $currentState = $this->cycleStates[$cycleKey]; // Update local var
         }
 
-        $toeHeelL = $positionsData['L']['toe_heel'];
-        $sideL = $positionsData['L']['side'];
-        $toeHeelR = $positionsData['R']['toe_heel'];
-        $sideR = $positionsData['R']['side'];
+        // STATE: IDLE -> Looking for a good value
+        if ($currentState['state'] === 'idle') {
+            
+            // ---
+            // **THIS IS THE CORRECTED LOGIC**
+            // We now check that toe_heel is in the good range (30-40)
+            // AND that side is also active (e.g., above the start threshold of 10)
+            // ---
+            if (
+                ($toeHeelValue >= $this->goodValueMin && $toeHeelValue <= $this->goodValueMax) &&
+                ($sideValue >= $this->cycleStartThreshold) 
+            ) {
+                
+                // --- SAVE TO DATABASE ---
+                // Both values are good, save them.
+                $collectedData = [
+                    [$toeHeelValue], // toe_heel_values
+                    [$sideValue]     // side_values
+                ];
 
-        // STATE: IDLE -> CAPTURING
-        // Start capturing when at least one position starts a cycle
-        if ($currentState['state'] === 'idle' && 
-            (($toeHeelL >= $this->cycleStartThreshold || $sideL >= $this->cycleStartThreshold) || 
-             ($toeHeelR >= $this->cycleStartThreshold || $sideR >= $this->cycleStartThreshold))) {
-            
-            $this->cycleStates[$cycleKey] = [
-                'state' => 'capturing',
-                'L' => [
-                    'toe_heel_values' => [$toeHeelL],
-                    'side_values' => [$sideL],
-                    'toe_heel_ended' => false,
-                    'side_ended' => false,
-                    'active' => false,
-                ],
-                'R' => [
-                    'toe_heel_values' => [$toeHeelR],
-                    'side_values' => [$sideR],
-                    'toe_heel_ended' => false,
-                    'side_ended' => false,
-                    'active' => false,
-                ],
-                'start_time' => time(),
-            ];
-            
-            if($this->option('d')) {
-                $this->line("Cycle started for {$cycleKey}. Initial values L: [{$toeHeelL}, {$sideL}] R: [{$toeHeelR}, {$sideR}]");
+                // Save with a duration of 0
+                $savedCount = $this->saveSuccessfulCycle($line, $machineName, $position, $collectedData, 0);
+
+                // --- CHANGE STATE ---
+                // Move to 'capturing' state to prevent saving again until this cycle ends.
+                $this->cycleStates[$cycleKey] = [
+                    'state' => 'capturing',
+                    'start_time' => time()
+                ];
+
+                if ($this->option('d')) {
+                    $this->line("Valid peak found for {$cycleKey}. Toe/Heel: {$toeHeelValue}, Side: {$sideValue}. Saving and moving to 'capturing'.");
+                }
             }
-            return 0;
-        }
+        } 
         
-        // STATE: CAPTURING
+        // STATE: CAPTURING -> Waiting for cycle to end
         elseif ($currentState['state'] === 'capturing') {
             
-            // Update Left position data
-            $this->cycleStates[$cycleKey]['L']['toe_heel_values'][] = $toeHeelL;
-            $this->cycleStates[$cycleKey]['L']['side_values'][] = $sideL;
-            
-            // Check if L position has started
-            if (!$this->cycleStates[$cycleKey]['L']['active'] && 
-                ($toeHeelL >= $this->cycleStartThreshold || $sideL >= $this->cycleStartThreshold)) {
-                $this->cycleStates[$cycleKey]['L']['active'] = true;
-                if($this->option('d')) {
-                    $this->line("Left position active for {$cycleKey}");
-                }
-            }
-            
-            // Check if L toe/heel cycle has ended
-            if (!$this->cycleStates[$cycleKey]['L']['toe_heel_ended'] && $toeHeelL <= $this->toeHeelEndThreshold) {
-                $this->cycleStates[$cycleKey]['L']['toe_heel_ended'] = true;
-                if($this->option('d')) {
-                    $this->line("Toe/heel cycle ended for L-{$cycleKey}");
-                }
-            }
-            
-            // Check if L side cycle has ended
-            if (!$this->cycleStates[$cycleKey]['L']['side_ended'] && $sideL <= $this->sideEndThreshold) {
-                $this->cycleStates[$cycleKey]['L']['side_ended'] = true;
-                if($this->option('d')) {
-                    $this->line("Side cycle ended for L-{$cycleKey}");
-                }
-            }
-            
-            // Update Right position data
-            $this->cycleStates[$cycleKey]['R']['toe_heel_values'][] = $toeHeelR;
-            $this->cycleStates[$cycleKey]['R']['side_values'][] = $sideR;
-            
-            // Check if R position has started
-            if (!$this->cycleStates[$cycleKey]['R']['active'] && 
-                ($toeHeelR >= $this->cycleStartThreshold || $sideR >= $this->cycleStartThreshold)) {
-                $this->cycleStates[$cycleKey]['R']['active'] = true;
-                if($this->option('d')) {
-                    $this->line("Right position active for {$cycleKey}");
-                }
-            }
-            
-            // Check if R toe/heel cycle has ended
-            if (!$this->cycleStates[$cycleKey]['R']['toe_heel_ended'] && $toeHeelR <= $this->toeHeelEndThreshold) {
-                $this->cycleStates[$cycleKey]['R']['toe_heel_ended'] = true;
-                if($this->option('d')) {
-                    $this->line("Toe/heel cycle ended for R-{$cycleKey}");
-                }
-            }
-            
-            // Check if R side cycle has ended
-            if (!$this->cycleStates[$cycleKey]['R']['side_ended'] && $sideR <= $this->sideEndThreshold) {
-                $this->cycleStates[$cycleKey]['R']['side_ended'] = true;
-                if($this->option('d')) {
-                    $this->line("Side cycle ended for R-{$cycleKey}");
-                }
-            }
-
-            // A complete machine cycle ends when BOTH positions have ended their cycles
-            $lComplete = $this->cycleStates[$cycleKey]['L']['toe_heel_ended'] && $this->cycleStates[$cycleKey]['L']['side_ended'];
-            $rComplete = $this->cycleStates[$cycleKey]['R']['toe_heel_ended'] && $this->cycleStates[$cycleKey]['R']['side_ended'];
-            
-            if ($lComplete && $rComplete) {
-                $lToeHeelValues = $this->cycleStates[$cycleKey]['L']['toe_heel_values'];
-                $lSideValues = $this->cycleStates[$cycleKey]['L']['side_values'];
-                $rToeHeelValues = $this->cycleStates[$cycleKey]['R']['toe_heel_values'];
-                $rSideValues = $this->cycleStates[$cycleKey]['R']['side_values'];
+            // Wait for BOTH values to drop to 0 to be safe
+            if ($toeHeelValue <= $this->toeHeelEndThreshold && $sideValue <= $this->sideEndThreshold) {
                 
-                // Calculate duration dynamically from the cycle start time
-                $cycleDuration = time() - $this->cycleStates[$cycleKey]['start_time'];
+                // Cycle ended. Reset to 'idle' to look for the next peak.
+                $this->cycleStates[$cycleKey] = ['state' => 'idle'];
                 
                 if ($this->option('d')) {
-                    $this->line("Complete cycle ended for {$cycleKey}. Duration: {$cycleDuration}s. L: [" . 
-                                implode(',', $lToeHeelValues) . "] [" . 
-                                implode(',', $lSideValues) . "] R: [" .
-                                implode(',', $rToeHeelValues) . "] [" .
-                                implode(',', $rSideValues) . "]");
+                    $this->line("Cycle ended for {$cycleKey}. Resetting to 'idle'.");
                 }
-
-                // Validate both positions have good values
-                $peakToeHeelL = max($lToeHeelValues);
-                $peakToeHeelR = max($rToeHeelValues);
-                
-                $bothGood = ($peakToeHeelL >= $this->goodValueMin && $peakToeHeelL <= $this->goodValueMax) &&
-                            ($peakToeHeelR >= $this->goodValueMin && $peakToeHeelR <= $this->goodValueMax);
-
-                if ($bothGood) {
-                    // Save both positions with calculated duration
-                    $savedCount = 0;
-                    $savedCount += $this->saveSuccessfulCycle($line, $machineName, 'L', [$lToeHeelValues, $lSideValues], $cycleDuration);
-                    $savedCount += $this->saveSuccessfulCycle($line, $machineName, 'R', [$rToeHeelValues, $rSideValues], $cycleDuration);
-                    unset($this->cycleStates[$cycleKey]);
-                    return $savedCount;
-                } else {
-                    if ($this->option('v')) {
-                        $this->warn("Peak values for {$cycleKey} are outside the good range ({$this->goodValueMin}-{$this->goodValueMax}). L: {$peakToeHeelL}, R: {$peakToeHeelR}. Discarding cycle.");
-                    }
-                }
-                
-                // Reset the state whether it was good or not.
-                unset($this->cycleStates[$cycleKey]);
             }
         }
-        
-        return 0;
+
+        return $savedCount;
     }
+
 
     /**
      * Function to handle database insertion and incrementing counts
      * Returns 1 if saved successfully, 0 otherwise
+     * NO CHANGES NEEDED HERE - This function works with the new logic.
      */
     private function saveSuccessfulCycle(string $line, string $machineName, string $position, array $collectedData, int $duration)
     {
@@ -357,7 +305,7 @@ class InsDwpPoll extends Command
             'count' => $newCumulative, // The new total count
             'pv' => json_encode($collectedData), // Store the collected arrays
             'position' => $position,
-            'duration' => $duration, // Dynamic duration from cycle
+            'duration' => $duration, // Will be 0 with the new logic
             'incremental' => 1, // This represents one successful cycle
             'std_error' => json_encode([0,0]),
         ]);
@@ -368,7 +316,7 @@ class InsDwpPoll extends Command
 
         if ($this->option('v')) {
             $toeHeelValues = $collectedData[0];
-            $peakValue = max($toeHeelValues);
+            $peakValue = max($toeHeelValues); // This will just be the single value we saved
             $this->line("✓ Saved good cycle for {$line}-{$machineName}-{$position}. Peak: {$peakValue}. New total count: {$newCumulative}");
         }
         
@@ -392,6 +340,27 @@ class InsDwpPoll extends Command
             array_flip($activeLines)
         );
         
+        // Clean up cycleStates for machines that are no longer active
+        // (Though the timeout should handle most of this)
+        $activeCycleKeys = InsDwpDevice::active()->get()->flatMap(function ($device) {
+            $keys = [];
+            foreach ($device->config as $lineConfig) {
+                $line = strtoupper(trim($lineConfig['line']));
+                foreach($lineConfig['list_mechine'] as $listMachine){
+                    $machineName = $listMachine['name'];
+                    $keys[] = "{$line}-{$machineName}-L";
+                    $keys[] = "{$line}-{$machineName}-R";
+                }
+            }
+            return $keys;
+        })->unique()->toArray();
+
+        $this->cycleStates = array_intersect_key(
+            $this->cycleStates,
+            array_flip($activeCycleKeys)
+        );
+
+
         if (function_exists('gc_collect_cycles')) {
             gc_collect_cycles();
         }
