@@ -215,6 +215,91 @@ new class extends Component {
         $this->dispatch('data-updated', performance: $performanceData);
     }
 
+    public function updateMachinePressures()
+    {
+        if (empty($this->machineData)) {
+            return;
+        }
+
+        $machineNames = array_column($this->machineData, 'name');
+
+        // Fetch only the latest sensor readings (pv) for each machine & position
+        $latestReadings = InsDwpCount::select('mechine', 'position', 'pv')
+            ->whereIn('id', function ($query) use ($machineNames) {
+                $query->selectRaw('MAX(id)')
+                    ->from('ins_dwp_counts')
+                    ->whereIn('mechine', $machineNames)
+                    ->groupBy('mechine', 'position');
+            })
+            ->get()
+            ->groupBy('mechine');
+
+        // Fetch recent records for average pressure (last 24 hours)
+        $recentRecords = InsDwpCount::whereIn('mechine', $machineNames)
+            ->where('created_at', '>=', now()->subDay())
+            ->select('mechine', 'pv')
+            ->get()
+            ->groupBy('mechine');
+
+        // Update each machine's pressure data in place
+        foreach ($this->machineData as &$machine) {
+            $name = $machine['name'];
+
+            // Get latest PVs
+            $leftRecord = ($latestReadings[$name] ?? collect())
+                ->firstWhere('position', 'L');
+            $rightRecord = ($latestReadings[$name] ?? collect())
+                ->firstWhere('position', 'R');
+
+            $leftPv = $leftRecord ? json_decode($leftRecord->pv, true) : [[0], [0]];
+            $rightPv = $rightRecord ? json_decode($rightRecord->pv, true) : [[0], [0]];
+
+            // Extract and round medians
+            $leftToeHeel = round($this->getMedian($leftPv[0] ?? [0]));
+            $leftSide     = round($this->getMedian($leftPv[1] ?? [0]));
+            $rightToeHeel = round($this->getMedian($rightPv[0] ?? [0]));
+            $rightSide    = round($this->getMedian($rightPv[1] ?? [0]));
+
+            // Update sensor values and statuses
+            $machine['sensors']['left']['toeHeel']['value']  = $leftToeHeel;
+            $machine['sensors']['left']['side']['value']     = $leftSide;
+            $machine['sensors']['right']['toeHeel']['value'] = $rightToeHeel;
+            $machine['sensors']['right']['side']['value']    = $rightSide;
+
+            $machine['sensors']['left']['toeHeel']['status']  = $this->getStatus($leftToeHeel);
+            $machine['sensors']['left']['side']['status']     = $this->getStatus($leftSide);
+            $machine['sensors']['right']['toeHeel']['status'] = $this->getStatus($rightToeHeel);
+            $machine['sensors']['right']['side']['status']    = $this->getStatus($rightSide);
+
+            // Recalculate average pressure
+            $allPvs = [];
+            if (isset($recentRecords[$name])) {
+                foreach ($recentRecords[$name] as $record) {
+                    $decoded = json_decode($record->pv, true);
+                    if (is_array($decoded) && count($decoded) >= 2) {
+                        $allPvs = array_merge($allPvs, $decoded[0] ?? [], $decoded[1] ?? []);
+                    }
+                }
+            }
+            $nonZero = array_filter($allPvs, fn($v) => is_numeric($v) && $v > 0);
+            $machine['average'] = !empty($nonZero) 
+                ? round(array_sum($nonZero) / count($nonZero)) 
+                : 0;
+
+            // Update overall status
+            $statuses = [
+                $machine['sensors']['left']['toeHeel']['status'],
+                $machine['sensors']['left']['side']['status'],
+                $machine['sensors']['right']['toeHeel']['status'],
+                $machine['sensors']['right']['side']['status'],
+            ];
+            $machine['overallStatus'] = in_array('alert', $statuses) ? 'alert' : 'normal';
+        }
+
+        // Optional: dispatch event if needed
+        // $this->dispatch('pressures-updated');
+    }
+
     // === NEW: Add this entire function to calculate online/offline status ===
     private function getOnlineMonitoringStats(array $machineNames)
     {
@@ -443,15 +528,6 @@ new class extends Component {
         return 'normal';
     }
 
-    private function getOutPutByMechineId($machineId, $position = "L")
-    {
-        $totalData = InsDwpCount::where("mechine", $machineId)
-            ->where('position', $position)
-            ->get()
-            ->count();
-        return $totalData;
-    }
-
     private function getMedian(array $array)
     {
         if (empty($array)) return 0;
@@ -467,6 +543,16 @@ new class extends Component {
         return round($median);
     }
 
+    private function getLongestDuration(){
+        // GET LONG DURATION DATA from database
+        $longDurationData = InsDwpTimeAlarmCount::orderBy('duration', 'desc')->first();
+        if (empty($longDurationData)){
+            return [];
+        }else {
+            return $longDurationData->toArray();
+        }
+    }
+
     public function with(): array
     {
         $longestDuration = $this->getLongestDuration();
@@ -478,43 +564,12 @@ new class extends Component {
         ];
     }
 
-    private function getLongestDuration(){
-        // GET LONG DURATION DATA from database
-        $longDurationData = InsDwpTimeAlarmCount::orderBy('duration', 'desc')->first();
-        if (empty($longDurationData)){
-            return [];
-        }else {
-            return $longDurationData->toArray();
-        }
-    }
-
+    #[On("update")]
     #[On("data-updated")]
     public function update()
     {
         // Use server-side JS injection to render charts (pattern similar to metric-detail)
         $this->generateChartsClient();
-    }
-
-    // Livewire lifecycle hooks: when these public properties change, recompute data & charts
-    public function updatedStdRange($value)
-    {
-        // stdRange changed — recompute machine data and charts
-        $this->updateData();
-    }
-
-    public function updatedStartAt($value)
-    {
-        $this->updateData();
-    }
-
-    public function updatedEndAt($value)
-    {
-        $this->updateData();
-    }
-
-    public function updatedLine($value)
-    {
-        $this->updateData();
     }
 
     /**
@@ -533,66 +588,61 @@ new class extends Component {
     }
 
     /**
-     * NEW: Get data for the DWP Time Constraint line chart
+     * NEW: Get data for the DWP Time Constraint line chart - HOURLY for one day
      */
     private function getDwpTimeConstraintData()
     {
-        // 1. Set date range from public properties, default to last 5 days
-        $start = ($this->start_at) ? Carbon::parse($this->start_at)->startOfDay() : now()->subDays(4)->startOfDay();
-        $end = ($this->end_at) ? Carbon::parse($this->end_at)->endOfDay() : now()->endOfDay();
-        
-        // 2. Define the lines to show on the chart
-        $lines = ['G1', 'G2', 'G3', 'G4', 'G5'];
+        // 1. Set date to a single day (use start_at or default to today)
+        $date = ($this->start_at) ? Carbon::parse($this->start_at)->startOfDay() : now()->startOfDay();
+        // End is same day (we only care about one day)
+        $startOfDay = $date->copy();
+        $endOfDay = $date->copy()->endOfDay();
 
-        // 3. Query the data
-        // NOTE: I'm using SUM(cumulative) based on your other code.
-        // Change this to SUM(duration) or COUNT(*) if that is the correct value to plot.
+        // 2. Define lines (still supports multiple, but usually one)
+        $lines = [$this->line ? strtoupper($this->line) : 'G5'];
+
+        // 3. Query hourly data for the selected day
         $results = InsDwpTimeAlarmCount::query()
             ->whereIn('line', $lines)
-            ->whereBetween('created_at', [$start, $end])
-            ->selectRaw('DATE(created_at) as date, line, SUM(cumulative) as total_value')
-            ->groupByRaw('DATE(created_at), line')
-            ->orderByRaw('DATE(created_at)')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->selectRaw('HOUR(created_at) as hour, line, SUM(cumulative) as total_value')
+            ->groupByRaw('HOUR(created_at), line')
             ->get()
             ->keyBy(function ($item) {
-                // Create a '2025-10-27_G1' key for easy lookup
-                return $item->date . '_' . $item->line;
+                return $item->hour . '_' . $item->line;
             });
+
+        // 4. Define working hours: 8 AM to 3 PM (8 hours: 8,9,10,11,12,13,14,15)
+        // You can adjust this range as needed (e.g., 8–16 = 8 hours)
+        $workingHours = range(8, 15); // 8:00 to 15:00 (inclusive) → 8 data points
 
         $labels = [];
         $datasets = [];
 
-        // 4. Initialize datasets for all 5 lines
+        // 5. Initialize datasets
         foreach ($lines as $line) {
             $datasets[$line] = [
                 'label' => $line,
                 'data' => [],
                 'borderColor' => $this->getLineColor($line),
-                'backgroundColor' => $this->getLineColor($line), // For points
-                'tension' => 0.3, // For curved lines
+                'backgroundColor' => $this->getLineColor($line),
+                'tension' => 0.3,
                 'fill' => false,
             ];
         }
 
-        // 5. Iterate over the date range, day by day, to fill in data
-        // This ensures days with "0" data are still included in the chart
-        $period = Carbon::parse($start)->daysUntil(Carbon::parse($end)->addDay());
+        // 6. Fill data for each working hour
+        foreach ($workingHours as $hour) {
+            // Format label as "08:00", "09:00", etc.
+            $labels[] = str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00';
 
-        foreach ($period as $date) {
-            $formattedDate = $date->format('d M'); // "15 Sep"
-            $queryDate = $date->format('Y-m-d');     // "2025-09-15"
-            $labels[] = $formattedDate;
-
-            // For this day, find the value for each line
             foreach ($lines as $line) {
-                $key = $queryDate . '_' . $line;
-                $result = $results->get($key);
-                $value = $result ? $result->total_value : 0;
+                $key = $hour . '_' . $line;
+                $value = $results->get($key) ? $results->get($key)->total_value : 0;
                 $datasets[$line]['data'][] = $value;
             }
         }
 
-        // 6. Return data in Chart.js format
         return [
             'labels' => $labels,
             'datasets' => array_values($datasets)
@@ -865,7 +915,7 @@ new class extends Component {
                 </div>
                 <div class="mt-4 space-y-2">
                     <p class="text-md">Long Queue time</p>
-                    <p class="text-3xl font-bold">{{ $this->longestQueueTime }}</p>
+                    <p class="text-3xl font-bold">{{ $this->longestQueueTime }} <span>sec</span></p>
                 </div>
                 <div class="mt-4 space-y-2">
                     <p class="text-md">Alarm Active</p>
@@ -883,21 +933,31 @@ new class extends Component {
         </div>
 
         <!-- Bottom Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
             <!-- Row 1: Two Cards (51 & 52) -->
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
-                <h2 class="text-lg font-semibold text-center text-slate-800 dark:text-slate-200">
-                    Standart Mechine #1, #2 : <span>30 ~ 40 kg</span>
+                <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
+                    Standart Mechine #1: <span>30 ~ 40 kg</span>
                 </h2>
             </div>
 
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
-                <h2 class="text-lg font-semibold text-center text-slate-800 dark:text-slate-200">
-                    Standart Mechine #3, #4 : <span>30 ~ 40 kg</span>
+                <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
+                    Standart Mechine #2 : <span>30 ~ 40 kg</span>
                 </h2>
             </div>
-
+            <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
+                <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
+                    Standart Mechine #3: <span>30 ~ 40 kg</span>
+                </h2>
+            </div>
+            <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
+                <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
+                    Standart Mechine #4 : <span>30 ~ 40 kg</span>
+                </h2>
+            </div>
+        </div>
+        <div wire:key="machine-data" wire:poll.5s="updateData" class="grid grid-cols-1 md:grid-cols-2 gap-2">
             <!-- Note: We use a nested grid inside the col-span-2 -->
             <div class="col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @forelse ($machineData as $machine)
@@ -960,7 +1020,6 @@ new class extends Component {
                     </div>
                 @endforelse
             </div>
-
         </div>
     </div>
 </div>
