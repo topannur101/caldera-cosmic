@@ -22,7 +22,7 @@ class InsDwpPoll extends Command
     // Note: sideEndThreshold is no longer needed in the new logic but left for context
     protected $sideEndThreshold = 0;
     protected $goodValueMin = 30;        // Min value for a good reading
-    protected $goodValueMax = 40;        // Max value for a good reading
+    protected $goodValueMax = 45;        // Max value for a good reading
     protected $cycleTimeoutSeconds = 30; // Failsafe to reset a stuck cycle
     
     /**
