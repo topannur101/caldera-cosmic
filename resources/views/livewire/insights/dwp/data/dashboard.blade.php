@@ -14,7 +14,7 @@ new class extends Component {
     use WithPagination;
     use HasDateRangeFilter;
     public array $machineData = [];
-    public array $stdRange = [30, 40];
+    public array $stdRange = [30, 45];
     public $lastRecord = null;
     public $view = "dashboard";
 
@@ -29,6 +29,10 @@ new class extends Component {
 
     public string $lines = "";
 
+    public int $totalStandart = 0;
+    public int $totalOutStandart = 0;
+    public int $onlineTime = 0;
+
     // Add new properties for the top summary boxes
     public int $timeConstraintAlarm = 0;
     public int $longestQueueTime = 0;
@@ -39,9 +43,16 @@ new class extends Component {
 
     public function mount()
     {
+        // today for init start and end date
+        $this->start_at = Carbon::today()->toDateString();
+        $this->end_at = Carbon::today()->toDateString();
+
         $this->dispatch("update-menu", $this->view);
         $this->updateData();
         $this->generateChartsClient();
+        $dataReads = $this->getPressureReadingStats();
+        $this->totalStandart = $dataReads['standard_count'] ?? 0;
+        $this->totalOutStandart = $dataReads['not_standard_count'] ?? 0;
     }
 
     private function getDataLine($line=null)
@@ -100,6 +111,7 @@ new class extends Component {
 
         // === NEW: Calculate Online Monitoring Stats ===
         $this->onlineMonitoringData = $this->getOnlineMonitoringStats($machineNames);
+        $this->onlineTime = $this->onlineMonitoringData['online'] ?? 0;
 
         // --- Step 1: Get latest sensor reading for each machine (Your query is already efficient) ---
         $latestCountsQuery = InsDwpCount::select('mechine', 'position', 'pv', 'created_at')
@@ -211,7 +223,7 @@ new class extends Component {
 
         // update alarm and summary data
         $this->longestQueueTime = $this->getLongestDuration()['duration'] ?? 0;
-        $this->alarmsActive = $this->getLongestDuration()['cumulative'] ?? 0;
+        $this->alarmsActive = $this->getAlarmActiveCount();
         $this->dispatch('data-updated', performance: $performanceData);
     }
 
@@ -298,80 +310,6 @@ new class extends Component {
 
         // Optional: dispatch event if needed
         // $this->dispatch('pressures-updated');
-    }
-
-    // === NEW: Add this entire function to calculate online/offline status ===
-    private function getOnlineMonitoringStats(array $machineNames)
-    {
-        // Define the period based on filters, or default to last 24h
-        $start = ($this->start_at) ? Carbon::parse($this->start_at) : now()->subDay();
-        $start = $start->startOfDay();
-        $end = ($this->end_at) ? Carbon::parse($this->end_at)->endOfDay() : now();
-        $end = $end->endOfDay();
-
-
-        $totalPeriodInSeconds = $end->diffInSeconds($start);
-        if ($totalPeriodInSeconds <= 0) {
-            return ['online' => 100, 'offline' => 0]; // Avoid division by zero
-        }
-        // If no machines, entire period is offline
-        if (empty($machineNames)) {
-            return ['online' => 0, 'offline' => 100];
-        }
-
-        // Define how long a gap must be to be considered "Downtime"
-        $downtimeThresholdInSeconds = 120; // 2 minutes
-        $totalDowntimeInSeconds = 0;
-        $lastTimestamp = null;
-        $hasRecords = false;
-
-        // Use a cursor to avoid loading all records into memory
-        $records = InsDwpCount::whereIn('mechine', $machineNames)
-            ->whereBetween('created_at', [$start, $end])
-            ->orderBy('created_at', 'asc')
-            ->select('created_at')
-            ->cursor();
-            
-        foreach ($records as $record) {
-            $hasRecords = true;
-            if ($lastTimestamp === null) {
-                // First record. Check gap from the start of the period.
-                $gap = $record->created_at->diffInSeconds($start);
-                if ($gap > $downtimeThresholdInSeconds) {
-                    $totalDowntimeInSeconds += $gap;
-                }
-            } else {
-                // Subsequent record. Check gap from the last one.
-                $gap = $record->created_at->diffInSeconds($lastTimestamp);
-                if ($gap > $downtimeThresholdInSeconds) {
-                    $totalDowntimeInSeconds += $gap;
-                }
-            }
-            $lastTimestamp = $record->created_at;
-        }
-
-        if (!$hasRecords) {
-            // No records at all in the period. The whole period is downtime.
-            $totalDowntimeInSeconds = $totalPeriodInSeconds;
-        } else {
-            // After the loop, check the gap from the last record to the end of the period.
-            $gap = $end->diffInSeconds($lastTimestamp);
-            if ($gap > $downtimeThresholdInSeconds) {
-                $totalDowntimeInSeconds += $gap;
-            }
-        }
-
-        // Calculate percentages
-        $onlineSeconds = $totalPeriodInSeconds - $totalDowntimeInSeconds;
-        $onlineSeconds = max(0, $onlineSeconds); // Ensure it's not negative
-
-        $onlinePercent = ($onlineSeconds / $totalPeriodInSeconds) * 100;
-        $offlinePercent = 100 - $onlinePercent;
-
-        return [
-            'online' => round($onlinePercent, 2),
-            'offline' => round($offlinePercent, 2),
-        ];
     }
 
     // NEW: A function to calculate data for the new charts
@@ -545,12 +483,26 @@ new class extends Component {
 
     private function getLongestDuration(){
         // GET LONG DURATION DATA from database
-        $longDurationData = InsDwpTimeAlarmCount::orderBy('duration', 'desc')->first();
+        $longDurationData = InsDwpTimeAlarmCount::orderBy('duration', 'desc')
+            ->whereBetween('created_at', [
+                Carbon::parse($this->start_at)->startOfDay(),
+                Carbon::parse($this->end_at)->endOfDay()
+            ])
+            ->first();
         if (empty($longDurationData)){
             return [];
         }else {
             return $longDurationData->toArray();
         }
+    }
+
+    function getAlarmActiveCount(){
+        // GET ALARM ACTIVE COUNT from database
+        $alarmActiveCount = InsDwpTimeAlarmCount::whereBetween('created_at', [
+                Carbon::parse($this->start_at)->startOfDay(),
+                Carbon::parse($this->end_at)->endOfDay()
+            ])->orderBy('created_at', 'desc')->first()->cumulative ?? 0;
+        return $alarmActiveCount;
     }
 
     public function with(): array
@@ -564,7 +516,6 @@ new class extends Component {
         ];
     }
 
-    #[On("update")]
     #[On("data-updated")]
     public function update()
     {
@@ -666,7 +617,6 @@ new class extends Component {
         $dailyJson = json_encode($daily);
         $onlineJson = json_encode($online);
         $dwpJson = json_encode($dwpData); // === NEW ===
-
         $this->js(
             "
             (function(){
@@ -696,7 +646,7 @@ new class extends Component {
                             window.__dailyPerformanceChart = new Chart(ctx, {
                                 type: 'doughnut',
                                 data: {
-                                    labels: ['Standart', 'Out Of Standart'],
+                                    labels: ['Standard', 'Out Of Standard'],
                                     datasets: [{
                                         data: [dailyData.standard || 0, dailyData.outOfStandard || 0],
                                         backgroundColor: ['#22c55e', '#ef4444'],
@@ -810,6 +760,117 @@ new class extends Component {
             "
         );
     }
+
+    private function getOnlineMonitoringStats(array $machineNames): array
+    {
+        $period = $this->calculatePeriod();
+        if ($period->totalDuration <= 0) {
+            return ['online' => 100, 'offline' => 0];
+        }
+        if (empty($machineNames)) {
+            return ['online' => 0, 'offline' => 100];
+        }
+        $activityTimestamps = $this->getActivityTimestamps($machineNames, Carbon::parse($period->start), Carbon::parse($period->end));
+        $totalDowntime = $this->calculateTotalDowntime($activityTimestamps, Carbon::parse($period->start), Carbon::parse($period->end));
+        return [
+            'percentages' => $this->calculatePercentages($period->totalDuration, $totalDowntime),
+            'online' => $period->totalDuration - $totalDowntime,
+        ];
+    }
+
+    private function calculatePeriod(): object
+    {
+        $start = InsDwpTimeAlarmCount::where('created_at', '>=', now()->startOfDay())
+            ->where('created_at', '<=', now()->endOfDay())
+            ->min('created_at');
+
+        $end = now()->format('Y-m-d H:i:s');
+        $diff = Carbon::parse($start)->diffInDays(Carbon::parse($end));
+        return (object) [
+            'start' => $start,
+            'end' => $end,
+            'totalDuration' => $diff * 24 * 60 * 60
+        ];
+    }
+
+    private function parseStartDateTime(): Carbon
+    {
+        $start = $this->start_at ? Carbon::parse($this->start_at) : now()->subDay();
+        return $start->startOfDay();
+    }
+
+    private function parseEndDateTime(): Carbon
+    {
+        $end = $this->end_at ? Carbon::parse($this->end_at) : now();
+        return $end->endOfDay();
+    }
+
+    private function getActivityTimestamps(array $machineNames, Carbon $start, Carbon $end): array
+    {
+        return InsDwpCount::whereIn('mechine', $machineNames)
+            ->whereBetween('created_at', [$start, $end])
+            ->orderBy('created_at', 'asc')
+            ->pluck('created_at')
+            ->toArray();
+    }
+
+    private function calculateTotalDowntime(array $timestamps, Carbon $periodStart, Carbon $periodEnd): int
+    {
+        $downtimeThreshold = $this->getDowntimeThresholdInSeconds();
+
+        // If no timestamps, entire period is downtime (if it exceeds threshold)
+        if (empty($timestamps)) {
+            $totalGap = $periodStart->diffInSeconds($periodEnd);
+            return $totalGap > $downtimeThreshold ? $totalGap : 0;
+        }
+
+        $totalDowntime = 0;
+
+        // 1. Initial gap: from periodStart to first timestamp
+        $initialGap = Carbon::parse($timestamps[0])->diffInSeconds($periodStart);
+        if ($initialGap > $downtimeThreshold) {
+            $totalDowntime += $initialGap;
+        }
+
+        // 2. Middle gaps: between consecutive timestamps
+        for ($i = 1; $i < count($timestamps); $i++) {
+            $gap = Carbon::parse($timestamps[$i])->diffInSeconds(Carbon::parse($timestamps[$i - 1]));
+            if ($gap > $downtimeThreshold) {
+                $totalDowntime += $gap;
+            }
+        }
+
+        // 3. Final gap: from last timestamp to periodEnd
+        $finalGap = $periodEnd->diffInSeconds(Carbon::parse(end($timestamps)));
+        if ($finalGap > $downtimeThreshold) {
+            $totalDowntime += $finalGap;
+        }
+
+        return $totalDowntime;
+    }
+
+    private function calculateInitialGap(Carbon $firstTimestamp, Carbon $periodStart): int
+    {
+        $gap = $firstTimestamp->diffInSeconds($periodStart);
+        return $gap > $this->getDowntimeThresholdInSeconds() ? $gap : 0;
+    }
+
+    private function getDowntimeThresholdInSeconds(): int
+    {
+        return 120; // 2 minutes
+    }
+
+    private function calculatePercentages(int $totalDuration, int $totalDowntime): array
+    {
+        $onlineSeconds = max(0, $totalDuration - $totalDowntime);
+        $onlinePercent = ($onlineSeconds / $totalDuration) * 100;
+        $offlinePercent = 100 - $onlinePercent;
+
+        return [
+            'online' => round($onlinePercent, 2),
+            'offline' => round($offlinePercent, 2),
+        ];
+    }
 }; ?>
 
 <div>
@@ -879,11 +940,11 @@ new class extends Component {
                 <div class="flex flex-col gap-2 mt-4">
                     <div class="flex items-center gap-2">
                         <span class="w-4 h-4 rounded bg-green-500"></span>
-                        <span>Standart</span>
+                        <span>Standart : {{ $this->totalStandart }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="w-4 h-4 rounded bg-red-300"></span>
-                        <span>Out Of Standart</span>
+                        <span class="w-4 h-4 rounded bg-red-600"></span>
+                        <span>Out Of Standart : {{ $this->totalOutStandart }}</span>
                     </div>
                 </div>
             </div>
@@ -892,7 +953,7 @@ new class extends Component {
             <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
                 <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
                     Online System Monitoring
-                    <span class="text-sm text-neutral-600 dark:text-neutral-400">8 hours online</span>
+                    <span class="text-sm text-neutral-600 dark:text-neutral-400">6 hours online</span>
                 </h2>
                 <div class="relative">
                     <canvas class="h-[150px]" id="onlineSystemMonitoring" wire:ignore></canvas>
@@ -937,23 +998,23 @@ new class extends Component {
             <!-- Row 1: Two Cards (51 & 52) -->
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
                 <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
-                    Standart Mechine #1: <span>30 ~ 40 kg</span>
+                    Standard Machine #1: <span>30 ~ 40 kg</span>
                 </h2>
             </div>
 
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
                 <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
-                    Standart Mechine #2 : <span>30 ~ 40 kg</span>
+                    Standard Machine #2 : <span>30 ~ 40 kg</span>
                 </h2>
             </div>
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
                 <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
-                    Standart Mechine #3: <span>30 ~ 40 kg</span>
+                    Standard Machine #3: <span>30 ~ 40 kg</span>
                 </h2>
             </div>
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
                 <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
-                    Standart Mechine #4 : <span>30 ~ 40 kg</span>
+                    Standard Machine #4 : <span>30 ~ 40 kg</span>
                 </h2>
             </div>
         </div>
