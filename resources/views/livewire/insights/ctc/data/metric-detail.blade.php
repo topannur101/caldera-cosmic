@@ -497,16 +497,15 @@ new class extends Component {
                 return;
             }
             
-            if (typeof ChartDataLabels === 'undefined') {
-                console.error('ChartDataLabels plugin not loaded');
-                return;
-            }
+            // if (typeof datalabelsPlugin === 'undefined') {
+            //     console.error('ChartDataLabels plugin not loaded');
+            //     return;
+            // }
 
             const chart = new Chart(canvas, {
                 type: 'line',
                 data: chartData,
                 options: chartOptions,
-                plugins: [ChartDataLabels]
             });
             
             console.log('Chart rendered successfully');
