@@ -43,26 +43,20 @@ new #[Layout("layouts.app")] class extends Component {
         if ($view === "dashboard"){
              $this->view_titles = [
                 "dashboard" => __("Dashboard"),
-                "time-alarm" => __("DWP Time Constraint Alarm"),
-                "pressure" => __("DWP Pressure"),
             ];
 
             $this->view_icons = [
                 "dashboard" => "icon-layout-dashboard",
-                "time-alarm" => "icon-alarm-clock",
-                "pressure" => "icon-database",
             ];
         }
 
         if ($view === "time-alarm" || $view === "summary-time-alarm"){
             $this->view_titles = [
-                "dashboard" => __("Dashboard"),
                 "time-alarm" => __("Raw Data Time Constraint Alarm"),
                 "summary-time-alarm" => __("Sumarry Time Alarm"),
             ];
 
             $this->view_icons = [
-                "dashboard" => "icon-layout-dashboard",
                 "time-alarm" => "icon-alarm-clock",
                 "summary-time-alarm" => "icon-notebook-text",
             ];
@@ -70,14 +64,12 @@ new #[Layout("layouts.app")] class extends Component {
 
         if ($view === "raw" || $view === "summary" || $view === "pressure"){
             $this->view_titles = [
-                "dashboard" => __("Dashboard"),
                 "pressure" => __("Machine Performance"),
                 "raw" => __("Raw Data"),
                 "summary" => __("Summary DWP Pressure")
             ];
 
             $this->view_icons = [
-                "dashboard" => "icon-layout-dashboard",
                 "pressure" => "icon-database",
                 "raw" => "icon-database",
                 "summary" => "icon-notebook-text",

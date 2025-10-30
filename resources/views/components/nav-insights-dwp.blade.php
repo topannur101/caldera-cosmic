@@ -12,8 +12,14 @@
             </h2>
         </div>
         <div class="space-x-8 -my-px ml-10 flex">
-            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.dwp.data.index') }}" :active="request()->routeIs('insights.dwp.data.*')" wire:navigate>
-                <i class="icon-database text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
+            <x-nav-link class="text-sm px-1 uppercase" href="/insights/dwp/data" :active="request()->routeIs('insights.dwp.data.index') && !request()->query('view')" wire:navigate>
+                <i class="icon-layout-dashboard text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Dashboard') }}</span>
+            </x-nav-link>
+            <x-nav-link class="text-sm px-1 uppercase" href="/insights/dwp/data?view=pressure" :active="request()->routeIs('insights.dwp.data.index') && request()->query('view') === 'pressure'" wire:navigate>
+                <i class="icon-circle-gauge text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('DWP Pressure') }}</span>
+            </x-nav-link>
+            <x-nav-link class="text-sm px-1 uppercase" href="/insights/dwp/data?view=time-alarm" :active="request()->routeIs('insights.dwp.data.index') && request()->query('view') === 'time-alarm'" wire:navigate>
+                <i class="icon-alarm-clock text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('DWP Alarm Constraint') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.dwp.manage.index') }}" :active="request()->routeIs('insights.dwp.manage.*')" wire:navigate>
                 <i class="icon-settings text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Kelola') }}</span>
