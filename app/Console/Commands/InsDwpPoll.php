@@ -207,119 +207,140 @@ class InsDwpPoll extends Command
     }
 
     /**
-     * NEW: Core state machine logic for a *single position* (L or R).
-     * This logic implements your requested flow:
-     * 1. Wait for a "good" value.
-     * 2. When a "good" value is seen, save it immediately.
-     * 3. Change state to 'capturing' to avoid saving more data.
-     * 4. Wait for the value to return to 0 (or timeout) to reset the state.
+     * Process a single position (L/R) with dual-buffer logic.
+     * Starts when either sensor ≥ 10, ends when both ≤ 0.
+     * Saves full waveform arrays if both peaks are in [30,45].
      */
     private function processPositionCycle(string $line, string $machineName, string $position, array $data)
     {
-        $toeHeelValue = $data['toe_heel'];
-        $sideValue = $data['side'];
+        $toeHeelValue = (int) $data['toe_heel'];
+        $sideValue = (int) $data['side'];
         $cycleKey = "{$line}-{$machineName}-{$position}";
 
-        $currentState = $this->cycleStates[$cycleKey] ?? ['state' => 'idle'];
-        $savedCount = 0;
-
-        // Failsafe timeout logic
-        if ($currentState['state'] === 'capturing' && (time() - $currentState['start_time']) > $this->cycleTimeoutSeconds) {
-            if ($this->option('d')) {
-                $this->warn("Cycle for {$cycleKey} timed out. Resetting to 'idle'.");
-            }
+        // Initialize or load state
+        if (!isset($this->cycleStates[$cycleKey])) {
             $this->cycleStates[$cycleKey] = ['state' => 'idle'];
-            $currentState = $this->cycleStates[$cycleKey]; // Update local var
+        }
+        $state = &$this->cycleStates[$cycleKey]; // reference for in-place update
+
+        // Failsafe timeout
+        if ($state['state'] !== 'idle' && (time() - ($state['start_time'] ?? 0)) > $this->cycleTimeoutSeconds) {
+            if ($this->option('d')) {
+                $this->warn("Cycle {$cycleKey} timed out. Discarding.");
+            }
+            $state = ['state' => 'idle'];
         }
 
-        // STATE: IDLE -> Looking for a good value
-        if ($currentState['state'] === 'idle') {
-            
-            // ---
-            // **THIS IS THE CORRECTED LOGIC**
-            // We now check that toe_heel is in the good range (30-40)
-            // AND that side is also active (e.g., above the start threshold of 10)
-            // ---
-            if (
-                ($toeHeelValue >= $this->goodValueMin && $toeHeelValue <= $this->goodValueMax) &&
-                ($sideValue >= $this->cycleStartThreshold) 
-            ) {
-                
-                // --- SAVE TO DATABASE ---
-                // Both values are good, save them.
-                $collectedData = [
-                    [$toeHeelValue], // toe_heel_values
-                    [$sideValue]     // side_values
+        // ----------------------------
+        // STATE: IDLE
+        // ----------------------------
+        if ($state['state'] === 'idle') {
+            // Start cycle if EITHER sensor crosses threshold (≥10)
+            if ($toeHeelValue >= $this->cycleStartThreshold || $sideValue >= $this->cycleStartThreshold) {
+                $state = [
+                    'state' => 'active',
+                    'start_time' => time(),
+                    'th_buffer' => [$toeHeelValue],
+                    'side_buffer' => [$sideValue],
                 ];
-
-                // Save with a duration of 0
-                $savedCount = $this->saveSuccessfulCycle($line, $machineName, $position, $collectedData, 0);
-
-                // --- CHANGE STATE ---
-                // Move to 'capturing' state to prevent saving again until this cycle ends.
-                $this->cycleStates[$cycleKey] = [
-                    'state' => 'capturing',
-                    'start_time' => time()
-                ];
-
                 if ($this->option('d')) {
-                    $this->line("Valid peak found for {$cycleKey}. Toe/Heel: {$toeHeelValue}, Side: {$sideValue}. Saving and moving to 'capturing'.");
+                    $this->line("Cycle started for {$cycleKey}: TH={$toeHeelValue}, Side={$sideValue}");
                 }
             }
-        } 
-        
-        // STATE: CAPTURING -> Waiting for cycle to end
-        elseif ($currentState['state'] === 'capturing') {
-            
-            // Wait for BOTH values to drop to 0 to be safe
-            if ($toeHeelValue <= $this->toeHeelEndThreshold && $sideValue <= $this->sideEndThreshold) {
-                
-                // Cycle ended. Reset to 'idle' to look for the next peak.
-                $this->cycleStates[$cycleKey] = ['state' => 'idle'];
-                
-                if ($this->option('d')) {
-                    $this->line("Cycle ended for {$cycleKey}. Resetting to 'idle'.");
-                }
-            }
+            return 0; // nothing saved yet
         }
 
-        return $savedCount;
+        // ----------------------------
+        // STATE: ACTIVE (buffering)
+        // ----------------------------
+        if ($state['state'] === 'active') {
+            // Append current values
+            $state['th_buffer'][] = $toeHeelValue;
+            $state['side_buffer'][] = $sideValue;
+
+            // Check if cycle should end: both signals ≤ 0 (or very low)
+            $endThreshold = 0; // or 2 if you want hysteresis
+            $shouldEnd = ($toeHeelValue <= $endThreshold && $sideValue <= $endThreshold);
+
+            if ($shouldEnd) {
+                // Extract peaks
+                $maxTh = max($state['th_buffer']);
+                $maxSide = max($state['side_buffer']);
+
+                // Validate: both peaks must be in [30, 45]
+                $isValid = (
+                    $maxTh >= $this->goodValueMin && $maxTh <= $this->goodValueMax &&
+                    $maxSide >= $this->goodValueMin && $maxSide <= $this->goodValueMax
+                );
+
+                if ($isValid) {
+                    // Save full buffers as pv
+                    $collectedData = [
+                        $state['th_buffer'],
+                        $state['side_buffer']
+                    ];
+
+                    // Save to DB (returns 1 on success)
+                    $saved = $this->saveSuccessfulCycle($line, $machineName, $position, $collectedData, 0);
+
+                    if ($this->option('d')) {
+                        $this->line("✅ Valid cycle saved for {$cycleKey}. TH peak: {$maxTh}, Side peak: {$maxSide}");
+                    }
+
+                    // Reset state
+                    $state = ['state' => 'idle'];
+                    return $saved;
+                } else {
+                    // Invalid cycle (e.g., noise, partial press)
+                    if ($this->option('d')) {
+                        $this->line("❌ Invalid cycle for {$cycleKey}. TH peak: {$maxTh}, Side peak: {$maxSide} → discarded.");
+                    }
+                    $state = ['state' => 'idle'];
+                    return 0;
+                }
+            }
+
+            // Optional: prevent infinite buffering (e.g., max 100 samples)
+            $maxBufferSize = 100;
+            if (count($state['th_buffer']) > $maxBufferSize) {
+                if ($this->option('d')) {
+                    $this->warn("Buffer overflow for {$cycleKey}. Resetting.");
+                }
+                $state = ['state' => 'idle'];
+            }
+
+            return 0; // still buffering
+        }
+
+        return 0;
     }
 
 
-    /**
-     * Function to handle database insertion and incrementing counts
-     * Returns 1 if saved successfully, 0 otherwise
-     * NO CHANGES NEEDED HERE - This function works with the new logic.
-     */
     private function saveSuccessfulCycle(string $line, string $machineName, string $position, array $collectedData, int $duration)
     {
-        // 1. Get the current cumulative count and increment it for the new record.
         $lastCumulative = $this->lastCumulativeValues[$line] ?? 0;
         $newCumulative = $lastCumulative + 1;
 
-        // 2. Prepare data and save to database.
         $count = new InsDwpCount([
             'mechine' => (int) trim($machineName, "mc"),
             'line' => $line,
-            'count' => $newCumulative, // The new total count
-            'pv' => json_encode($collectedData), // Store the collected arrays
+            'count' => $newCumulative,
+            'pv' => json_encode($collectedData), // e.g., [[10,20,34,...], [10,15,30,...]]
             'position' => $position,
-            'duration' => $duration, // Will be 0 with the new logic
-            'incremental' => 1, // This represents one successful cycle
-            'std_error' => json_encode([0,0]),
+            'duration' => $duration,
+            'incremental' => 1,
+            'std_error' => json_encode([0, 0]),
         ]);
         $count->save();
 
-        // 3. Update the in-memory cumulative value for the next cycle.
         $this->lastCumulativeValues[$line] = $newCumulative;
 
         if ($this->option('v')) {
-            $toeHeelValues = $collectedData[0];
-            $peakValue = max($toeHeelValues); // This will just be the single value we saved
-            $this->line("✓ Saved good cycle for {$line}-{$machineName}-{$position}. Peak: {$peakValue}. New total count: {$newCumulative}");
+            $thPeak = max($collectedData[0]);
+            $sidePeak = max($collectedData[1]);
+            $this->line("✓ Saved cycle for {$line}-{$machineName}-{$position}. TH peak: {$thPeak}, Side peak: {$sidePeak}. Total: {$newCumulative}");
         }
-        
+
         return 1;
     }
 
