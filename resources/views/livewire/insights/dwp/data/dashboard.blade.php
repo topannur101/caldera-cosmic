@@ -247,7 +247,7 @@ new class extends Component {
         }
 
         $dataReads = $this->getPressureReadingStats();
-        $outOfStandard = $dataReads['not_standard_count'] ?? $outOfStandard;
+        $outOfStandard = $dataReads['not_standard_count'] ?? 0;
         $standardReads = $dataReads['standard_count'] ?? 0;
         $totalReads = $dataReads['total_count'] ?? 1;
         //prevent division by zero
@@ -270,47 +270,64 @@ new class extends Component {
 
     public function getPressureReadingStats()
     {
-        // Define standard range for clarity
         [$minStd, $maxStd] = $this->stdRange;
-
         $standardReadings = 0;
         $notStandardReadings = 0;
 
-        // Get machine names for the current line
         $machineConfigs = $this->getDataMachines($this->line);
         $machineNames = array_column($machineConfigs, 'name');
 
         if (empty($machineNames)) {
-            return ['standard_counts' => 0, 'not_standard_counts' => 0];
+            return [
+                'total_count' => 0,
+                'standard_count' => 0,
+                'not_standard_count' => 0,
+            ];
         }
-        
-        // Use a cursor to process records one by one to save memory
-        $records = InsDwpCount::whereIn('mechine', $machineNames)
-            ->select('pv');
+
+        // Fetch ALL records (L and R) without grouping
+        $query = InsDwpCount::whereIn('mechine', $machineNames)
+            ->whereIn('position', ['L', 'R'])
+            ->select('mechine', 'pv', 'position', 'created_at');
 
         if ($this->start_at && $this->end_at) {
             $start = Carbon::parse($this->start_at);
             $end = Carbon::parse($this->end_at)->endOfDay();
-            $records->whereBetween('created_at', [$start, $end]);
+            $query->whereBetween('created_at', [$start, $end]);
         }
-        $records = $records->cursor();
-        foreach ($records as $record) {
-            $pvValues = json_decode($record->pv, true);
 
-            if (is_array($pvValues) && count($pvValues) >= 2) {
-                // Process toe_heel values (index 0)
-                foreach ($pvValues[0] as $value) {
-                    if (is_numeric($value)) {
-                        if ($value >= $minStd && $value <= $maxStd) {
-                            $standardReadings++;
-                        } else {
-                            $notStandardReadings++;
-                        }
-                    }
-                }
-                
-                // Process side values (index 1)
-                foreach ($pvValues[1] as $value) {
+        // Group records into cycles by rounding created_at to nearest 5 seconds
+        $cycles = [];
+
+        foreach ($query->cursor() as $record) {
+            // Round timestamp to nearest 5 seconds to group near-simultaneous L/R
+            $roundedTime = Carbon::parse($record->created_at)
+                ->floorSeconds(5)
+                ->format('Y-m-d H:i:s');
+
+            $key = $record->mechine . '|' . $roundedTime;
+
+            if (!isset($cycles[$key])) {
+                $cycles[$key] = ['L' => null, 'R' => null];
+            }
+
+            if (in_array($record->position, ['L', 'R'])) {
+                $cycles[$key][$record->position] = json_decode($record->pv, true);
+            }
+        }
+
+        // Now process only complete cycles (both L and R present)
+        foreach ($cycles as $cycle) {
+            if (
+                is_array($cycle['L']) && count($cycle['L']) >= 2 &&
+                is_array($cycle['R']) && count($cycle['R']) >= 2
+            ) {
+                $allValues = array_merge(
+                    $cycle['L'][0] ?? [], $cycle['L'][1] ?? [],
+                    $cycle['R'][0] ?? [], $cycle['R'][1] ?? []
+                );
+
+                foreach ($allValues as $value) {
                     if (is_numeric($value)) {
                         if ($value >= $minStd && $value <= $maxStd) {
                             $standardReadings++;
@@ -926,7 +943,7 @@ new class extends Component {
                 @forelse ($machineData as $machine)
                     <div class="relative p-6 bg-white dark:bg-neutral-800 border-4 shadow-md rounded-xl
                         @if($machine['overallStatus'] == 'alert') border-red-500 @else border-transparent @endif">
-                        <div class="absolute top-[40px] -left-5 px-2 py-2 bg-white dark:bg-neutral-800
+                        <div class="absolute top-[20px] -left-5 px-2 py-2 bg-white dark:bg-neutral-800
                             border-4 rounded-lg text-2xl font-bold
                             @if($machine['overallStatus'] == 'alert') border-red-500 @else bg-green-500 @endif">
                             #{{ $machine['name'] }}

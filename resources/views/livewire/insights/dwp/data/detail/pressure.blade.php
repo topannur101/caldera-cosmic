@@ -305,11 +305,10 @@ new class extends Component {
                 Pressure Monitoring: {{ $this->mechine }} ({{ $this->position }})
             </h1>
         </div>
-        <div wire:loading class="flex items-center justify-center bg-white/70 dark:bg-gray-800/70 z-10 rounded-lg">
-            <h1>Lading Data Chart ..</h1>
-        </div>
     </div>
     <div class="h-80 relative">
         <canvas id="pressureChart"></canvas>
     </div>
+    <x-spinner-bg wire:loading.class.remove="hidden" wire:target.except="userq"></x-spinner-bg>
+    <x-spinner wire:loading.class.remove="hidden" wire:target.except="userq" class="hidden"></x-spinner>
 </div>
