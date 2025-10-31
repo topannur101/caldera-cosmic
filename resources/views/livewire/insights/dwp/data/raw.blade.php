@@ -96,20 +96,22 @@ new #[Layout("layouts.app")] class extends Component {
         });
     }
 
-    // NEW: Helper function to calculate median
-    private function getMedian(array $array)
+    // NEW: Helper function to calculate max
+    private function getMax(array $array)
     {
-        if (empty($array)) return 0;
+        if (empty($array)) {
+            return 0;
+        }
+        
         // Filter out non-numeric values
         $numericArray = array_filter($array, 'is_numeric');
-        if (empty($numericArray)) return 0;
         
-        sort($numericArray);
-        $count = count($numericArray);
-        $middle = floor(($count - 1) / 2);
-        $median = ($count % 2) ? $numericArray[$middle] : ($numericArray[$middle] + $numericArray[$middle + 1]) / 2;
+        if (empty($numericArray)) {
+            return 0;
+        }
         
-        return round($median);
+        // Get max value from the numeric array
+        return max($numericArray);
     }
 
     #[On("updated")]
@@ -352,8 +354,8 @@ new #[Layout("layouts.app")] class extends Component {
                                 $toeHeelArray = $pv[0] ?? null;
                                 $sideArray = $pv[1] ?? null;
 
-                                $toeHeelValue = $toeHeelArray ? $this->getMedian($toeHeelArray) : null;
-                                $sideValue = $sideArray ? $this->getMedian($sideArray) : null;
+                                $toeHeelValue = $toeHeelArray ? $this->getMax($toeHeelArray) : null;
+                                $sideValue = $sideArray ? $this->getMax($sideArray) : null;
 
                                 $toeHeelComparison = $toeHeelValue ? $this->compareWithStandards($toeHeelValue, $this->stdTh) : null;
                                 $sideComparison = $sideValue ? $this->compareWithStandards($sideValue, $this->stdSide) : null;
