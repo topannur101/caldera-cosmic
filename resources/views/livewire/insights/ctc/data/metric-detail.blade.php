@@ -412,8 +412,11 @@ new class extends Component {
                             const dataIndex = findDataPointIndex(point.x);
                             
                             // Jenis trigger
-                            const emoji = point.action === 2 ? '▲' : '▼';
-                            const actionType = point.action === 2 ? 'Menebalkan' : 'Menipiskan';
+                            //const emoji = point.action === 2 ? '▲' : '▼';
+                            //const actionType = point.action === 2 ? 'Menebalkan' : 'Menipiskan';
+
+                            const emoji = point.action === 1 ? '▼' : '▲';
+                            const actionType = point.action === 1 ? 'Menipiskan' : 'Menebalkan';
                             
                             lines.push(''); // Empty line untuk spacing
                             lines.push(emoji + actionType);
@@ -455,14 +458,16 @@ new class extends Component {
                     if (!point || !point.action) return '';
                     
                     // HANYA SIMBOL, TANPA ANGKA
-                    return point.action === 2 ? '▲' : '▼';
+                    //return point.action === 2 ? '▲' : '▼';
+                    return point.action === 1 ? '▼' : '▲';
                 },
                 color: function(context) {
                     return context.dataset.borderColor;  // Warna sesuai dataset
                 },
                 align: function(context) {
                     const point = context.dataset.data[context.dataIndex];
-                    return point && point.action === 2 ? 'top' : 'bottom';
+                    //return point && point.action === 2 ? 'top' : 'bottom';
+                    return point && point.action === 1 ? 'bottom' : 'top';
                 },
                 offset: 6,
                 font: {
