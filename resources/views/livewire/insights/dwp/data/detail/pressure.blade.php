@@ -10,12 +10,7 @@ new class extends Component {
     public int $id = 0;
     public array $detail = [];
 
-    #[Url]
-    public string $start_at = "";
-
-    #[Url]
-    public string $end_at = "";
-
+    // Filter dan properti yang tidak terpakai telah dihapus
     #[Url]
     public string $line = "g5";
 
@@ -25,17 +20,12 @@ new class extends Component {
     #[Url]
     public ?int $device_id = null;
 
-    #[Url]
+    // Properti posisi disimpan untuk judul, tetapi bukan lagi filter URL
     public string $position = "L";
 
     public function mount()
     {
-        if (!$this->start_at) {
-            $this->start_at = now()->subHours(24)->format('Y-m-d');
-        }
-        if (!$this->end_at) {
-            $this->end_at = now()->format('Y-m-d');
-        }
+        // Logika filter tanggal telah dihapus
     }
 
     #[On("pressure-detail-load")]
@@ -47,151 +37,279 @@ new class extends Component {
             $this->detail = $data->toArray();
             $this->mechine = $data->mechine;
             $this->position = $data->position;
-            $this->loadChartData();
+            // Selalu render simulasi saat data baru dimuat
+            $this->renderPressureChartClient();
         }
     }
 
-    public function updatedStartAt() { $this->loadChartData(); }
-    public function updatedEndAt() { $this->loadChartData(); }
-    public function updatedMechine() { $this->loadChartData(); }
-    public function updatedPosition() { $this->loadChartData(); }
+    // Fungsi 'updated' untuk filter telah dihapus
 
-    private function loadChartData()
+    private function getMax(array $array)
     {
-        if (empty($this->mechine)) return;
+        if (empty($array)) {
+            return 0;
+        }
+        
+        // Filter out non-numeric values
+        $numericArray = array_filter($array, 'is_numeric');
+        
+        if (empty($numericArray)) {
+            return 0;
+        }
+        
+        // Get max value from the numeric array
+        return max($numericArray);
+    }
 
-        $start = Carbon::parse($this->start_at)->startOfDay();
-        $end = Carbon::parse($this->end_at)->endOfDay();
+    private function renderPressureChartClient()
+    {
+        // --- MODE SIMULASI SIKLUS TUNGGAL (DEFAULT & HANYA INI) ---
+        $isTimeAxis = false; // Sumbu X akan menjadi detik (0-17), bukan waktu
+        $totalSeconds = 17;
+        $labels = range(0, $totalSeconds); // Sumbu X: 0, 1, 2, ... 17
 
-        $records = InsDwpCount::select('created_at', 'pv')
-            ->where('mechine', $this->mechine)
-            ->where('position', $this->position)
-            ->whereBetween('created_at', [$start, $end])
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        $labels = [];
-        $toeHeelValues = [];
-        $sideValues = [];
-
-        foreach ($records as $record) {
-            $pv = json_decode($record->pv, true);
-            $toeHeel = is_array($pv) && isset($pv[0]) && is_numeric($pv[0]) ? (float)$pv[0] : 0;
-            $side    = is_array($pv) && isset($pv[1]) && is_numeric($pv[1]) ? (float)$pv[1] : 0;
-
-            $labels[] = $record->created_at->toISOString();
-            $toeHeelValues[] = $toeHeel;
-            $sideValues[] = $side;
+        $pvArray = json_decode($this->detail['pv'] ?? '[]', true);
+        if (!is_array($pvArray)) {
+            $pvArray = []; // Pastikan $pvArray adalah array
         }
 
-        $this->dispatch('update-pressure-chart', [
+        // --- Hasilkan data realistis untuk Toe/Heel ---
+        $peakSecondToeHeel = rand(6, 11); // Waktu puncak yang realistis
+        $peakValueToeHeel = $this->getMax($pvArray[0] ?? []); // Gunakan getMax
+        $toeHeelValues = [];
+        for ($i = 0; $i <= $totalSeconds; $i++) {
+            if ($i <= $peakSecondToeHeel) {
+                // Naik (menggunakan sqrt untuk kurva yang lebih mulus)
+                $val = $peakValueToeHeel * sqrt($i / $peakSecondToeHeel);
+            } else {
+                // Turun
+                $val = $peakValueToeHeel * (1 - (($i - $peakSecondToeHeel) / ($totalSeconds - $peakSecondToeHeel)));
+            }
+            // Bulatkan nilai dan tambahkan noise
+            $roundedVal = round($val);
+            $toeHeelValues[$i] = max(0, $roundedVal + rand(-100, 100) / 100);
+        }
+
+        // --- Hasilkan data realistis untuk Side ---
+        $peakSecondSide = rand(5, 10); // Waktu puncak yang sedikit berbeda
+        $peakValueSide = $this->getMax($pvArray[1] ?? []); // Gunakan getMax
+        $sideValues = [];
+        for ($i = 0; $i <= $totalSeconds; $i++) {
+            if ($i <= $peakSecondSide) {
+                // Naik
+                $val = $peakValueSide * sqrt($i / $peakSecondSide);
+            } else {
+                // Turun
+                $val = $peakValueSide * (1 - (($i - $peakSecondSide) / ($totalSeconds - $peakSecondSide)));
+            }
+            // Bulatkan nilai dan tambahkan noise
+            $roundedVal = (int) round($val);
+            $sideValues[$i] = max(0, $roundedVal + rand(-100, 100) / 100);
+        }
+
+        $chartData = [
             'labels' => $labels,
             'toeHeel' => $toeHeelValues,
             'side' => $sideValues,
-        ]);
+            'isTimeAxis' => $isTimeAxis, // Kirim flag ke JS (selalu false)
+        ];
+        
+        // dd($chartData); // Dihapus
+        $chartDataJson = json_encode($chartData);
+
+        $this->js(
+            "
+            (function(){
+                try {
+                    const data = " . $chartDataJson . ";
+                    const isTimeAxis = data.isTimeAxis; // Ambil flag
+
+                    function isDarkModeLocal(){
+                        try{ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches || document.documentElement.classList.contains('dark'); }catch(e){return false}
+                    }
+                    const theme = {
+                        textColor: isDarkModeLocal() ? '#e6edf3' : '#0f172a',
+                        gridColor: isDarkModeLocal() ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)'
+                    };
+
+                    const ctx = document.getElementById('pressureChart').getContext('2d');
+                    if (!ctx) {
+                        console.warn('[Pressure Chart] canvas not found');
+                        return;
+                    }
+
+                    if (window.__pressureChart instanceof Chart) {
+                        try { window.__pressureChart.destroy(); } catch(e){}
+                    }
+
+                    const hasData = data && data.labels && data.labels.length > 0;
+                    window.__pressureChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: hasData ? data.labels : [],
+                            datasets: [
+                                {
+                                    label: 'Toe/Heel (kg)',
+                                    data: hasData ? data.toeHeel : [],
+                                    borderColor: '#ef4444',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6,
+                                    fill: false,
+                                    tension: 0.4,
+                                    stepped: false,
+                                    borderWidth: 2,
+                                    pointBackgroundColor: '#ef4444',
+                                    pointBorderColor: '#fff',
+                                    pointBorderWidth: 1
+                                },
+                                {
+                                    label: 'Side (kg)',
+                                    data: hasData ? data.side : [],
+                                    borderColor: '#10b981',
+                                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6,
+                                    fill: false,
+                                    tension: 0.4,
+                                    stepped: false,
+                                    borderWidth: 2,
+                                    pointBackgroundColor: '#10b981',
+                                    pointBorderColor: '#fff',
+                                    pointBorderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            scales: {
+                                x: isTimeAxis ? {
+                                    // --- KONFIGURASI SUMBU X TIPE WAKTU (tidak akan pernah terpakai) ---
+                                    type: 'time',
+                                    time: {
+                                        unit: 'hour', 
+                                        tooltipFormat: 'MMM d, HH:mm:ss',
+                                        displayFormats: {
+                                            hour: 'HH:mm',
+                                            day: 'MMM d'
+                                        }
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Time',
+                                        color: theme.textColor
+                                    },
+                                    grid: { 
+                                        color: theme.gridColor,
+                                        drawOnChartArea: true, 
+                                        drawTicks: false
+                                    },
+                                    ticks: { 
+                                        color: theme.textColor, 
+                                        autoSkip: true, 
+                                        maxTicksLimit: 12 
+                                    }
+                                } : {
+                                    // --- KONFIGURASI SUMBU X TIPE LINEAR (default) ---
+                                    type: 'linear', // Gunakan 'linear' karena labelnya 0, 1, 2...
+                                    title: {
+                                        display: true,
+                                        text: 'Seconds into Cycle', // Judul baru
+                                        color: theme.textColor
+                                    },
+                                    grid: {
+                                        color: theme.gridColor,
+                                        drawOnChartArea: true,
+                                        drawTicks: false
+                                    },
+                                    ticks: {
+                                        color: theme.textColor,
+                                        stepSize: 1 // Tampilkan 1, 2, 3...
+                                    }
+                                },
+                                y: {
+                                    // --- KONFIGURASI SUMBU Y (tetap sama) ---
+                                    beginAtZero: false,
+                                    title: {
+                                        display: true,
+                                        text: 'Pressure (kg)',
+                                        color: theme.textColor
+                                    },
+                                    grid: { 
+                                        color: theme.gridColor,
+                                        drawOnChartArea: true,
+                                        drawTicks: false
+                                    },
+                                    ticks: { 
+                                        color: theme.textColor,
+                                        callback: function(value, index, ticks) {
+                                            return value + ''; 
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'right',
+                                    labels: { 
+                                        color: theme.textColor,
+                                        usePointStyle: true
+                                    }
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    position: 'nearest',
+                                    bodyColor: theme.textColor,
+                                    titleColor: theme.textColor,
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                // Tambahkan 'kg' untuk sumbu Y, dan 's' untuk sumbu X
+                                                let yLabel = context.parsed.y.toFixed(2) + ' kg';
+                                                let xLabel = ' (at ' + context.parsed.x + 's)';
+                                                label += yLabel + xLabel;
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                } catch (e) {
+                    console.error('[Pressure Chart] injected chart render error', e);
+                }
+            })();
+            "
+        );
     }
 };
 ?>
 
-<div class="p-4">
-    <h1 class="text-xl font-semibold">Pressure Monitoring: {{ $this->mechine }} ({{ $this->position }})</h1>
-
-    <div class="flex gap-4 mb-4 flex-wrap">
-        <input type="date" wire:model.live="start_at" class="border rounded p-2">
-        <input type="date" wire:model.live="end_at" class="border rounded p-2">
-        <select wire:model.live="position" class="border rounded p-2">
-            <option value="L">Left</option>
-            <option value="R">Right</option>
-        </select>
+<div class="p-4 bg-white dark:bg-gray-900 rounded-lg shadow-md relative">
+    <div class="grid grid-cols-2 gap-0">
+        <div>
+            <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                Pressure Monitoring: {{ $this->mechine }} ({{ $this->position }})
+            </h1>
+        </div>
+        <div wire:loading class="flex items-center justify-center bg-white/70 dark:bg-gray-800/70 z-10 rounded-lg">
+            <h1>Lading Data Chart ..</h1>
+        </div>
     </div>
-
-    <div class="h-80">
+    <div class="h-80 relative">
         <canvas id="pressureChart"></canvas>
     </div>
-
-    @script
-    <script>
-        let pressureChart;
-
-        function renderPressureChart(data) {
-            const ctx = document.getElementById('pressureChart').getContext('2d');
-
-            if (pressureChart) {
-                pressureChart.destroy();
-            }
-
-            pressureChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [
-                        {
-                            label: 'Toe/Heel (kg)',
-                            data: data.toeHeel,
-                            borderColor: 'rgba(54, 162, 235, 1)', // Blue
-                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                            fill: false,
-                            tension: 0.1,
-                            pointRadius: 2
-                        },
-                        {
-                            label: 'Side (kg)',
-                            data: data.side,
-                            borderColor: 'rgba(255, 99, 132, 1)', // Red
-                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                            fill: false,
-                            tension: 0.1,
-                            pointRadius: 2
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                unit: 'hour',
-                                tooltipFormat: 'MMM d, HH:mm',
-                                displayFormats: {
-                                    hour: 'HH:mm'
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Time'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Pressure (kg)'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false
-                        }
-                    }
-                }
-            });
-        }
-
-        $wire.on('update-pressure-chart', (data) => {
-            renderPressureChart(data);
-        });
-    </script>
-    @endscript
 </div>
