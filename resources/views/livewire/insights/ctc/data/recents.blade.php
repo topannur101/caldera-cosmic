@@ -27,7 +27,7 @@ new #[Layout("layouts.app")] class extends Component {
 ?>
 
 <div>
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4">
         @foreach ($machines as $machine)
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
                 <div class="flex gap-x-3 items-center px-8 py-4 w-full bg-caldy-200 dark:bg-caldy-700 bg-opacity-20 dark:bg-opacity-10">

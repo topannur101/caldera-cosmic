@@ -14,7 +14,7 @@ new class extends Component {
     use WithPagination;
     use HasDateRangeFilter;
     public array $machineData = [];
-    public array $stdRange = [30, 40];
+    public array $stdRange = [30, 45];
     public $lastRecord = null;
     public $view = "dashboard";
 
@@ -29,6 +29,10 @@ new class extends Component {
 
     public string $lines = "";
 
+    public int $totalStandart = 0;
+    public int $totalOutStandart = 0;
+    public int $onlineTime = 0;
+
     // Add new properties for the top summary boxes
     public int $timeConstraintAlarm = 0;
     public int $longestQueueTime = 0;
@@ -39,8 +43,16 @@ new class extends Component {
 
     public function mount()
     {
+        // today for init start and end date
+        $this->start_at = Carbon::today()->toDateString();
+        $this->end_at = Carbon::today()->toDateString();
+
         $this->dispatch("update-menu", $this->view);
         $this->updateData();
+        $this->generateChartsClient();
+        $dataReads = $this->getPressureReadingStats();
+        $this->totalStandart = $dataReads['standard_count'] ?? 0;
+        $this->totalOutStandart = $dataReads['not_standard_count'] ?? 0;
     }
 
     private function getDataLine($line=null)
@@ -98,7 +110,9 @@ new class extends Component {
         }
 
         // === NEW: Calculate Online Monitoring Stats ===
-        $this->onlineMonitoringData = $this->getOnlineMonitoringStats($machineNames);
+        $dataOnlineMonitoring = $this->getOnlineMonitoringStats($machineNames);
+        $this->onlineMonitoringData = $dataOnlineMonitoring['percentages'];
+        $this->onlineTime = $dataOnlineMonitoring['total_hours'] ?? 0;
 
         // --- Step 1: Get latest sensor reading for each machine (Your query is already efficient) ---
         $latestCountsQuery = InsDwpCount::select('mechine', 'position', 'pv', 'created_at')
@@ -154,16 +168,14 @@ new class extends Component {
             $leftSides = $leftPv[1] ?? [0];
             $rightToesHeels = $rightPv[0] ?? [0];
             $rightSides = $rightPv[1] ?? [0];
-
             $leftData = [
-                'side' => round($this->getMedian($leftSides)), 
-                'toeHeel' => round($this->getMedian($leftToesHeels))
+                'side' => round($this->getMax($leftSides)), 
+                'toeHeel' => round($this->getMax($leftToesHeels))
             ];
             $rightData = [
-                'side' => round($this->getMedian($rightSides)), 
-                'toeHeel' => round($this->getMedian($rightToesHeels))
+                'side' => round($this->getMax($rightSides)), 
+                'toeHeel' => round($this->getMax($rightToesHeels))
             ];
-
             // --- FIXED: Correctly calculate average from all recent records ---
             $allPvs = [];
             if (isset($recentRecords[$machineName])) {
@@ -198,7 +210,6 @@ new class extends Component {
                 ],
                 'overallStatus' => in_array('alert', $statuses) ? 'alert' : 'normal',
                 'average' => $averagePressure,
-                // --- OPTIMIZED: Use the pre-fetched output counts ---
                 'output' => [
                     'left'  => $outputCounts[$machineName]['L'] ?? 0,
                     'right' => $outputCounts[$machineName]['R'] ?? 0,
@@ -211,82 +222,8 @@ new class extends Component {
 
         // update alarm and summary data
         $this->longestQueueTime = $this->getLongestDuration()['duration'] ?? 0;
-        $this->alarmsActive = $this->getLongestDuration()['cumulative'] ?? 0;
+        $this->alarmsActive = $this->getAlarmActiveCount();
         $this->dispatch('data-updated', performance: $performanceData);
-    }
-
-    // === NEW: Add this entire function to calculate online/offline status ===
-    private function getOnlineMonitoringStats(array $machineNames)
-    {
-        // Define the period based on filters, or default to last 24h
-        $start = ($this->start_at) ? Carbon::parse($this->start_at) : now()->subDay();
-        $start = $start->startOfDay();
-        $end = ($this->end_at) ? Carbon::parse($this->end_at)->endOfDay() : now();
-        $end = $end->endOfDay();
-
-
-        $totalPeriodInSeconds = $end->diffInSeconds($start);
-        if ($totalPeriodInSeconds <= 0) {
-            return ['online' => 100, 'offline' => 0]; // Avoid division by zero
-        }
-        // If no machines, entire period is offline
-        if (empty($machineNames)) {
-            return ['online' => 0, 'offline' => 100];
-        }
-
-        // Define how long a gap must be to be considered "Downtime"
-        $downtimeThresholdInSeconds = 120; // 2 minutes
-        $totalDowntimeInSeconds = 0;
-        $lastTimestamp = null;
-        $hasRecords = false;
-
-        // Use a cursor to avoid loading all records into memory
-        $records = InsDwpCount::whereIn('mechine', $machineNames)
-            ->whereBetween('created_at', [$start, $end])
-            ->orderBy('created_at', 'asc')
-            ->select('created_at')
-            ->cursor();
-            
-        foreach ($records as $record) {
-            $hasRecords = true;
-            if ($lastTimestamp === null) {
-                // First record. Check gap from the start of the period.
-                $gap = $record->created_at->diffInSeconds($start);
-                if ($gap > $downtimeThresholdInSeconds) {
-                    $totalDowntimeInSeconds += $gap;
-                }
-            } else {
-                // Subsequent record. Check gap from the last one.
-                $gap = $record->created_at->diffInSeconds($lastTimestamp);
-                if ($gap > $downtimeThresholdInSeconds) {
-                    $totalDowntimeInSeconds += $gap;
-                }
-            }
-            $lastTimestamp = $record->created_at;
-        }
-
-        if (!$hasRecords) {
-            // No records at all in the period. The whole period is downtime.
-            $totalDowntimeInSeconds = $totalPeriodInSeconds;
-        } else {
-            // After the loop, check the gap from the last record to the end of the period.
-            $gap = $end->diffInSeconds($lastTimestamp);
-            if ($gap > $downtimeThresholdInSeconds) {
-                $totalDowntimeInSeconds += $gap;
-            }
-        }
-
-        // Calculate percentages
-        $onlineSeconds = $totalPeriodInSeconds - $totalDowntimeInSeconds;
-        $onlineSeconds = max(0, $onlineSeconds); // Ensure it's not negative
-
-        $onlinePercent = ($onlineSeconds / $totalPeriodInSeconds) * 100;
-        $offlinePercent = 100 - $onlinePercent;
-
-        return [
-            'online' => round($onlinePercent, 2),
-            'offline' => round($offlinePercent, 2),
-        ];
     }
 
     // NEW: A function to calculate data for the new charts
@@ -397,41 +334,6 @@ new class extends Component {
         $this->lastRecord = InsDwpCount::latest()->first();
     }
 
-    private function getDataPVByMachine($machineId, $position = "L", $limit = 20)
-    {
-        try {
-            $records = InsDwpCount::where("mechine", $machineId)
-                ->where('position', $position)
-                ->limit($limit)
-                ->orderBy('created_at', "desc")
-                ->get();
-
-            if ($records->isEmpty()) {
-                // Return a random value if DB is empty to simulate live data
-                return ["side" => 0, "toeHeel" => 0];
-            }
-            
-            // Collect all toe_heel and side values from the arrays
-            $allSideValues = [];
-            $allToeHeelValues = [];
-            
-            foreach ($records as $record) {
-                $pvArray = json_decode($record->pv, true) ?? [[0], [0]];
-                if (isset($pvArray[0]) && isset($pvArray[1])) {
-                    $allToeHeelValues = array_merge($allToeHeelValues, $pvArray[0]);
-                    $allSideValues = array_merge($allSideValues, $pvArray[1]);
-                }
-            }
-
-            return [
-                "side" => round($this->getMedian($allSideValues)),
-                "toeHeel" => round($this->getMedian($allToeHeelValues))
-            ];
-        } catch (\Exception $e) {
-            return ["side" => 0, "toeHeel" => 0];
-        }
-    }
-
     private function getStatus($value)
     {
         if ($value > $this->stdRange[1] || $value < $this->stdRange[0]) {
@@ -441,15 +343,6 @@ new class extends Component {
             return 'warning';
         }
         return 'normal';
-    }
-
-    private function getOutPutByMechineId($machineId, $position = "L")
-    {
-        $totalData = InsDwpCount::where("mechine", $machineId)
-            ->where('position', $position)
-            ->get()
-            ->count();
-        return $totalData;
     }
 
     private function getMedian(array $array)
@@ -467,6 +360,47 @@ new class extends Component {
         return round($median);
     }
 
+    private function getMax(array $array)
+    {
+        if (empty($array)) {
+            return 0;
+        }
+        
+        // Filter out non-numeric values
+        $numericArray = array_filter($array, 'is_numeric');
+        
+        if (empty($numericArray)) {
+            return 0;
+        }
+        
+        // Get max value from the numeric array
+        return max($numericArray);
+    }
+
+    private function getLongestDuration(){
+        // GET LONG DURATION DATA from database
+        $longDurationData = InsDwpTimeAlarmCount::orderBy('duration', 'desc')
+            ->whereBetween('created_at', [
+                Carbon::parse($this->start_at)->startOfDay(),
+                Carbon::parse($this->end_at)->endOfDay()
+            ])
+            ->first();
+        if (empty($longDurationData)){
+            return [];
+        }else {
+            return $longDurationData->toArray();
+        }
+    }
+
+    function getAlarmActiveCount(){
+        // GET ALARM ACTIVE COUNT from database
+        $alarmActiveCount = InsDwpTimeAlarmCount::whereBetween('created_at', [
+                Carbon::parse($this->start_at)->startOfDay(),
+                Carbon::parse($this->end_at)->endOfDay()
+            ])->orderBy('created_at', 'desc')->first()->cumulative ?? 0;
+        return $alarmActiveCount;
+    }
+
     public function with(): array
     {
         $longestDuration = $this->getLongestDuration();
@@ -478,58 +412,371 @@ new class extends Component {
         ];
     }
 
-    private function getLongestDuration(){
-        // GET LONG DURATION DATA from database
-        $longDurationData = InsDwpTimeAlarmCount::orderBy('duration', 'desc')->first();
-        if (empty($longDurationData)){
-            return [];
-        }else {
-            return $longDurationData->toArray();
+    #[On("data-updated")]
+    public function update()
+    {
+        // Use server-side JS injection to render charts (pattern similar to metric-detail)
+        $this->generateChartsClient();
+    }
+
+    /**
+     * NEW: Helper function to get colors for the chart lines
+     */
+    private function getLineColor($line)
+    {
+        switch (strtoupper($line)) {
+            case 'G1': return '#ef4444'; // red
+            case 'G2': return '#3b82f6'; // blue
+            case 'G3': return '#22c55e'; // green
+            case 'G4': return '#f97316'; // orange
+            case 'G5': return '#a855f7'; // purple
+            default: return '#6b7280'; // gray
         }
     }
 
-    #[On("updated")]
-    public function update()
+    /**
+     * NEW: Get data for the DWP Time Constraint line chart - HOURLY for one day
+     */
+    private function getDwpTimeConstraintData()
     {
-        $this->generateCharts();
+        // 1. Set date to a single day (use start_at or default to today)
+        $date = ($this->start_at) ? Carbon::parse($this->start_at)->startOfDay() : now()->startOfDay();
+        // End is same day (we only care about one day)
+        $startOfDay = $date->copy();
+        $endOfDay = $date->copy()->endOfDay();
+
+        // 2. Define lines (still supports multiple, but usually one)
+        $lines = [$this->line ? strtoupper($this->line) : 'G5'];
+
+        // 3. Query hourly data for the selected day
+        $results = InsDwpTimeAlarmCount::query()
+            ->whereIn('line', $lines)
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->selectRaw('HOUR(created_at) as hour, line, SUM(cumulative) as total_value')
+            ->groupByRaw('HOUR(created_at), line')
+            ->get()
+            ->keyBy(function ($item) {
+                return $item->hour . '_' . $item->line;
+            });
+
+        // 4. Define working hours: 8 AM to 3 PM (8 hours: 8,9,10,11,12,13,14,15)
+        // You can adjust this range as needed (e.g., 8–16 = 8 hours)
+        $workingHours = range(7, 16); // 7:00 to 16:00 (inclusive) → 10 data points
+
+        $labels = [];
+        $datasets = [];
+
+        // 5. Initialize datasets
+        foreach ($lines as $line) {
+            $datasets[$line] = [
+                'label' => $line,
+                'data' => [],
+                'borderColor' => $this->getLineColor($line),
+                'backgroundColor' => $this->getLineColor($line),
+                'tension' => 0.3,
+                'fill' => false,
+            ];
+        }
+
+        // 6. Fill data for each working hour
+        foreach ($workingHours as $hour) {
+            // Format label as "08:00", "09:00", etc.
+            $labels[] = str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00';
+
+            foreach ($lines as $line) {
+                $key = $hour . '_' . $line;
+                $value = $results->get($key) ? $results->get($key)->total_value : 0;
+                $datasets[$line]['data'][] = $value;
+            }
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => array_values($datasets)
+        ];
     }
 
-    // Livewire lifecycle hooks: when these public properties change, recompute data & charts
-    public function updatedStdRange($value)
+    /**
+     * Render charts by injecting client-side JS with embedded data (similar to metric-detail.generateChart)
+     */
+    private function generateChartsClient()
     {
-        // stdRange changed — recompute machine data and charts
-        $this->updateData();
+        // Get data for all charts
+        $perf = $this->getPerformanceData($this->machineData);
+        $daily = $perf['daily'] ?? ['standard' => 100, 'outOfStandard' => 0];
+        $online = $this->onlineMonitoringData ?? ['online' => 100, 'offline' => 0];
+        
+        // === NEW: Get DWP Time Constraint Chart Data ===
+        $dwpData = $this->getDwpTimeConstraintData();
+
+        // Encode all data for JavaScript
+        $dailyJson = json_encode($daily);
+        $onlineJson = json_encode($online);
+        $dwpJson = json_encode($dwpData); // === NEW ===
+        $this->js(
+            "
+            (function(){
+                try {
+                    // --- 1. Get Data from PHP ---
+                    const dailyData = " . $dailyJson . ";
+                    const onlineData = " . $onlineJson . ";
+                    const dwpData = " . $dwpJson . "; // === NEW ===
+
+                    // --- 2. Theme Helpers ---
+                    function isDarkModeLocal(){
+                        try{ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches || document.documentElement.classList.contains('dark'); }catch(e){return false}
+                    }
+                    const theme = {
+                        textColor: isDarkModeLocal() ? '#e6edf3' : '#0f172a',
+                        gridColor: isDarkModeLocal() ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)'
+                    };
+
+                    // --- 3. DAILY PERFORMANCE (doughnut) ---
+                    const dailyCanvas = document.getElementById('dailyPerformanceChart');
+                    if (dailyCanvas) {
+                        try {
+                            const ctx = dailyCanvas.getContext('2d');
+                            if (window.__dailyPerformanceChart instanceof Chart) {
+                                try { window.__dailyPerformanceChart.destroy(); } catch(e){}
+                            }
+                            window.__dailyPerformanceChart = new Chart(ctx, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['Standard', 'Out Of Standard'],
+                                    datasets: [{
+                                        data: [dailyData.standard || 0, dailyData.outOfStandard || 0],
+                                        backgroundColor: ['#22c55e', '#ef4444'],
+                                        hoverOffset: 30,
+                                        borderWidth: 0
+                                    }]
+                                },
+                                options: {
+                                    cutout: '70%',
+                                    plugins: {
+                                        legend: { display: false },
+                                        tooltip: { bodyColor: theme.textColor, titleColor: theme.textColor }
+                                    },
+                                    responsive: true,
+                                    maintainAspectRatio: false
+                                }
+                            });
+                        } catch (e) { console.error('[DWP Dashboard] injected daily chart error', e); }
+                    } else {
+                        console.warn('[DWP Dashboard] dailyPerformanceChart canvas not found');
+                    }
+
+                    // --- 4. ONLINE SYSTEM MONITORING (pie) ---
+                    const onlineCanvas = document.getElementById('onlineSystemMonitoring');
+                    if (onlineCanvas) {
+                        try {
+                            const ctx2 = onlineCanvas.getContext && onlineCanvas.getContext('2d');
+                            if (window.__onlineSystemMonitoringChart instanceof Chart) {
+                                try { window.__onlineSystemMonitoringChart.destroy(); } catch(e){}
+                            }
+                            window.__onlineSystemMonitoringChart = new Chart(ctx2, {
+                                type: 'pie',
+                                data: {
+                                    labels: ['Online', 'Offline'],
+                                    datasets: [{
+                                        data: [onlineData.online || 0, onlineData.offline || 0],
+                                        borderWidth: 1,
+                                        backgroundColor: ['#22c55e', '#d1d5db'],
+                                        borderRadius: 5
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: false },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context){
+                                                    let label = context.label || '';
+                                                    if (label) label += ': ';
+                                                    if (context.parsed !== null) label += context.parsed.toFixed(2) + '%';
+                                                    return label;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        } catch (e) { console.error('[DWP Dashboard] injected online chart error', e); }
+                    } else {
+                        console.warn('[DWP Dashboard] onlineSystemMonitoring canvas not found');
+                    }
+                    
+                    // --- 5. === NEW: DWP TIME CONSTRAINT CHART (line) === ---
+                    const dwpCtx = document.getElementById('dwpTimeConstraintChart');
+                    if (dwpCtx) {
+                        try {
+                            const ctx3 = dwpCtx.getContext('2d');
+                            if (window.__dwpTimeConstraintChart instanceof Chart) {
+                                try { window.__dwpTimeConstraintChart.destroy(); } catch(e){}
+                            }
+                            window.__dwpTimeConstraintChart = new Chart(ctx3, {
+                                type: 'line',
+                                data: dwpData, // Use the injected data
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        x: {
+                                            grid: { color: theme.gridColor },
+                                            ticks: { color: theme.textColor }
+                                        },
+                                        y: {
+                                            beginAtZero: true,
+                                            grid: { color: theme.gridColor },
+                                            ticks: { color: theme.textColor }
+                                        }
+                                    },
+                                    plugins: {
+                                        legend: {
+                                            position: 'bottom', // Matches your image
+                                            labels: { color: theme.textColor }
+                                        },
+                                        tooltip: {
+                                            bodyColor: theme.textColor,
+                                            titleColor: theme.textColor
+                                        }
+                                    }
+                                }
+                            });
+                        } catch (e) { console.error('[DWP Dashboard] injected dwp chart error', e); }
+                    } else {
+                        console.warn('[DWP Dashboard] dwpTimeConstraintChart canvas not found');
+                    }
+
+                } catch (e) {
+                    console.error('[DWP Dashboard] generateChartsClient error', e);
+                }
+            })();
+            "
+        );
     }
 
-    public function updatedStartAt($value)
+    private function getOnlineMonitoringStats(array $machineNames): array
     {
-        $this->updateData();
+        $period = $this->calculatePeriod();
+        if ($period->totalDuration <= 0) {
+            return [
+                'percentages' => ['online' => 0, 'offline' => 100],
+                'total_hours' => 0, // in hours
+            ];
+        }
+        if (empty($machineNames)) {
+            return [
+                'percentages' => ['online' => 0, 'offline' => 100],
+                'total_hours' => 0, // in hours
+            ];
+        }
+        $activityTimestamps = $this->getActivityTimestamps($machineNames, Carbon::parse($period->start), Carbon::parse($period->end));
+        $totalDowntime = $this->calculateTotalDowntime($activityTimestamps, Carbon::parse($period->start), Carbon::parse($period->end));
+        return [
+            'percentages' => $this->calculatePercentages($period->totalDuration, $totalDowntime),
+            'total_hours' => ($period->totalDuration - $totalDowntime) / 3600, // in hours
+        ];
     }
 
-    public function updatedEndAt($value)
+    private function calculatePeriod(): object
     {
-        $this->updateData();
+        $start = InsDwpTimeAlarmCount::where('created_at', '>=', now()->startOfDay())
+            ->where('created_at', '<=', now()->endOfDay())
+            ->min('created_at');
+
+        $end = now()->format('Y-m-d H:i:s');
+        $diff = Carbon::parse($start)->diffInDays(Carbon::parse($end));
+        return (object) [
+            'start' => $start,
+            'end' => $end,
+            'totalDuration' => $diff * 24 * 60 * 60
+        ];
     }
 
-    public function updatedLine($value)
+    private function parseStartDateTime(): Carbon
     {
-        $this->updateData();
+        $start = $this->start_at ? Carbon::parse($this->start_at) : now()->subDay();
+        return $start->startOfDay();
     }
 
-    private function generateCharts()
+    private function parseEndDateTime(): Carbon
     {
-        $this->dispatch('refresh-charts', [
-                    'avgPressures' => $this->getPerformanceData($this->machineData)['avgPressures'],
-                    'dailyChartData' => $this->getPerformanceData($this->machineData)['daily'],
-                    // === NEW: Pass the online monitoring data to the chart ===
-                    'onlineMonitoringData' => $this->onlineMonitoringData,
-                ]);
+        $end = $this->end_at ? Carbon::parse($this->end_at) : now();
+        return $end->endOfDay();
+    }
+
+    private function getActivityTimestamps(array $machineNames, Carbon $start, Carbon $end): array
+    {
+        return InsDwpCount::whereIn('mechine', $machineNames)
+            ->whereBetween('created_at', [$start, $end])
+            ->orderBy('created_at', 'asc')
+            ->pluck('created_at')
+            ->toArray();
+    }
+
+    private function calculateTotalDowntime(array $timestamps, Carbon $periodStart, Carbon $periodEnd): int
+    {
+        $downtimeThreshold = $this->getDowntimeThresholdInSeconds();
+
+        // If no timestamps, entire period is downtime (if it exceeds threshold)
+        if (empty($timestamps)) {
+            $totalGap = $periodStart->diffInSeconds($periodEnd);
+            return $totalGap > $downtimeThreshold ? $totalGap : 0;
+        }
+
+        $totalDowntime = 0;
+
+        // 1. Initial gap: from periodStart to first timestamp
+        $initialGap = Carbon::parse($timestamps[0])->diffInSeconds($periodStart);
+        if ($initialGap > $downtimeThreshold) {
+            $totalDowntime += $initialGap;
+        }
+
+        // 2. Middle gaps: between consecutive timestamps
+        for ($i = 1; $i < count($timestamps); $i++) {
+            $gap = Carbon::parse($timestamps[$i])->diffInSeconds(Carbon::parse($timestamps[$i - 1]));
+            if ($gap > $downtimeThreshold) {
+                $totalDowntime += $gap;
+            }
+        }
+
+        // 3. Final gap: from last timestamp to periodEnd
+        $finalGap = $periodEnd->diffInSeconds(Carbon::parse(end($timestamps)));
+        if ($finalGap > $downtimeThreshold) {
+            $totalDowntime += $finalGap;
+        }
+
+        return $totalDowntime;
+    }
+
+    private function calculateInitialGap(Carbon $firstTimestamp, Carbon $periodStart): int
+    {
+        $gap = $firstTimestamp->diffInSeconds($periodStart);
+        return $gap > $this->getDowntimeThresholdInSeconds() ? $gap : 0;
+    }
+
+    private function getDowntimeThresholdInSeconds(): int
+    {
+        return 120; // 2 minutes
+    }
+
+    private function calculatePercentages(int $totalDuration, int $totalDowntime): array
+    {
+        $onlineSeconds = max(0, $totalDuration - $totalDowntime);
+        $onlinePercent = ($onlineSeconds / $totalDuration) * 100;
+        $offlinePercent = 100 - $onlinePercent;
+
+        return [
+            'online' => round($onlinePercent, 2),
+            'offline' => round($offlinePercent, 2),
+        ];
     }
 }; ?>
 
 <div>
-    <!-- filter section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
     <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 flex items-center">
             <div>
                 <div class="flex mb-2 text-xs text-neutral-500">
@@ -579,282 +826,163 @@ new class extends Component {
                 </x-select>
             </div>
         </div>
-        
-        <div class="grid grid-cols-1 gap-6">
-            <div class="grid grid-cols-3 bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
-                <div class="flex flex-col w-10 font-semibold text-neutral-700 dark:text-neutral-200 text-sm">
-                    Time
-                    Constraint
-                    Alarm
-                </div>
-                <div class="flex flex-col font-semibold text-neutral-700 dark:text-neutral-200 text-sm">
-                    <p>Long Queue time</p>
-                    <p class="text-3xl">{{ $this->longestQueueTime }}</p>
-                </div>
-                <div class="flex flex-col font-semibold text-neutral-700 dark:text-neutral-200 text-sm">
-                    <p>Alarm Active</p>
-                    <p class="text-3xl">{{ $this->alarmsActive }}</p>
-                </div>
-            </div>
-        </div>
     </div>
     <!-- end filter section -->
 
-    <!-- Charts section -->
-    <div class="relative">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" wire:poll.10s="updateData">
-            <div class="lg:col-span-1 flex flex-col gap-9">
-                <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md mb-2">
-                    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Performance Machine</h2>
-                    <div class="flex items-center justify-around gap-4">
-                        <div class="relative h-40 w-40">
-                            <canvas id="dailyPerformanceChart" wire:ignore></canvas>
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <div class="flex items-center gap-2">
-                                <span class="w-4 h-4 rounded bg-green-500"></span>
-                                <span>Standart</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-4 h-4 rounded bg-red-500"></span>
-                                <span>Out Of Standart</span>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Content Section -->
+    <div class="grid grid-cols-1 gap-6">
+        <!-- Top Row: 3 Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Card 59: Performance Machine -->
+            <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Performance Machine</h2>
+                <div class="">
+                    <canvas class="h-[150px]" id="dailyPerformanceChart"></canvas>
                 </div>
-    
-                <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
-                    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
-                        Online System Monitoring
-                        <span class="text-sm text-neutral-600 dark:text-neutral-400">8 hours online</span>
-                    </h2>
-                    <div class="flex items-center justify-around gap-4">
-                    <div class="relative h-40 w-40">
-                        <canvas id="onlineSystemMonitoring" wire:ignore></canvas>
+                <div class="flex flex-col gap-2 mt-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded bg-green-500"></span>
+                        <span>Standard : {{ $this->totalStandart }}</span>
                     </div>
-                    <div class="flex flex-col gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded bg-green-500"></span>
-                            <span>Online</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded bg-gray-300"></span>
-                            <span>Offline</span>
-                        </div>
-                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded bg-red-600"></span>
+                        <span>Out Of Standard : {{ $this->totalOutStandart }}</span>
                     </div>
                 </div>
             </div>
-    
-            <div class="lg:col-span-2 relative">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    @forelse ($machineData as $machine)
-                        <div class="relative p-6 bg-white dark:bg-neutral-800 border-4 shadow-md rounded-xl ml-8 mb-8
-                            @if($machine['overallStatus'] == 'alert') border-red-500 @else border-transparent @endif">
-                            <div class="absolute top-[40px] -left-5 px-2 py-2 bg-white dark:bg-neutral-800
-                                border-4 rounded-lg text-2xl font-bold
-                                @if($machine['overallStatus'] == 'alert') border-red-500 @else bg-green-500 @endif">
-                                #{{ $machine['name'] }}
-                            </div>
-                            <div class="rounded-lg transition-colors duration-300">
-                                <div class="grid grid-cols-2 gap-2 text-center">
-                                    <div>
-                                        <h4 class="font-semibold text-neutral-700 dark:text-neutral-200">LEFT</h4>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Toe/Hell</p>
-                                        <div class="p-2 rounded-md text-white font-bold text-lg mb-2 @if($machine['sensors']['left']['toeHeel']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
-                                            {{ $machine['sensors']['left']['toeHeel']['value'] }}
-                                        </div>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Side</p>
-                                        <div class="p-2 rounded-md text-white font-bold text-lg @if($machine['sensors']['left']['side']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
-                                            {{ $machine['sensors']['left']['side']['value'] }}
-                                        </div>
+
+            <!-- Card 60: Online System Monitoring -->
+            <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
+                    Online System Monitoring
+                    <span class="text-sm text-neutral-600 dark:text-neutral-400">{{ $this->onlineTime }} hours online</span>
+                </h2>
+                <div class="relative">
+                    <canvas class="h-[150px]" id="onlineSystemMonitoring" wire:ignore></canvas>
+                </div>
+                <div class="flex flex-col gap-2 mt-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded bg-green-500"></span>
+                        <span>Online</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded bg-gray-300"></span>
+                        <span>Offline</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md gap-4 flex flex-col">
+                <div class="flex flex-col w-full font-semibold text-neutral-700 dark:text-neutral-200 text-xl">
+                    Time Constraint Alarm
+                </div>
+                <div class="mt-4 space-y-2">
+                    <p class="text-md">Long Queue time</p>
+                    <p class="text-3xl font-bold">{{ $this->longestQueueTime }} <span>sec</span></p>
+                </div>
+                <div class="mt-4 space-y-2">
+                    <p class="text-md">Alarm Active</p>
+                    <p class="text-3xl font-bold">{{ $this->alarmsActive }}</p>
+                </div>
+            </div>
+        </div>
+        <!-- Middle Section: Chart Placeholder -->
+        <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
+            <h1 class="text-xl font-bold text-center">DWP Time Constraint</h1>
+            <!-- You can replace this with your actual chart or component -->
+            <div class="h-64 bg-gray-100 dark:bg-neutral-700 rounded mt-4 flex items-center justify-center">
+                <canvas id="dwpTimeConstraintChart" wire:ignore></canvas>
+            </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <!-- Row 1: Two Cards (51 & 52) -->
+            <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
+                <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
+                    Standard Machine #1: <span>{{ $this->stdRange[0]}} ~ {{$this->stdRange[1]}} kg</span>
+                </h2>
+            </div>
+
+            <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
+                <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
+                    Standard Machine #2 : <span>{{ $this->stdRange[0]}} ~ {{$this->stdRange[1]}} kg</span>
+                </h2>
+            </div>
+            <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
+                <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
+                    Standard Machine #3: <span>{{ $this->stdRange[0]}} ~ {{$this->stdRange[1]}} kg</span>
+                </h2>
+            </div>
+            <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
+                <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
+                    Standard Machine #4 : <span>{{ $this->stdRange[0]}} ~ {{$this->stdRange[1]}} kg</span>
+                </h2>
+            </div>
+        </div>
+        <div wire:key="machine-data" wire:poll.20s="updateData" class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <!-- Note: We use a nested grid inside the col-span-2 -->
+            <div class="col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                @forelse ($machineData as $machine)
+                    <div class="relative p-6 bg-white dark:bg-neutral-800 border-4 shadow-md rounded-xl
+                        @if($machine['overallStatus'] == 'alert') border-red-500 @else border-transparent @endif">
+                        <div class="absolute top-[40px] -left-5 px-2 py-2 bg-white dark:bg-neutral-800
+                            border-4 rounded-lg text-2xl font-bold
+                            @if($machine['overallStatus'] == 'alert') border-red-500 @else bg-green-500 @endif">
+                            #{{ $machine['name'] }}
+                        </div>
+                        <div class="rounded-lg transition-colors duration-300">
+                            <div class="grid grid-cols-2 gap-2 text-center">
+                                <div>
+                                    <h4 class="font-semibold text-neutral-700 dark:text-neutral-200">LEFT</h4>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Toe/Hell</p>
+                                    <div class="p-2 rounded-md text-white font-bold text-lg mb-2
+                                        @if($machine['sensors']['left']['toeHeel']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
+                                        {{ $machine['sensors']['left']['toeHeel']['value'] }}
                                     </div>
-                                    <div>
-                                        <h4 class="font-semibold text-neutral-700 dark:text-neutral-200">RIGHT</h4>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Toe/Hell</p>
-                                        <div class="p-2 rounded-md text-white font-bold text-lg mb-2 @if($machine['sensors']['right']['toeHeel']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
-                                            {{ $machine['sensors']['right']['toeHeel']['value'] }}
-                                        </div>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Side</p>
-                                        <div class="p-2 rounded-md text-white font-bold text-lg @if($machine['sensors']['right']['side']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
-                                            {{ $machine['sensors']['right']['side']['value'] }}
-                                        </div>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Side</p>
+                                    <div class="p-2 rounded-md text-white font-bold text-lg
+                                        @if($machine['sensors']['left']['side']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
+                                        {{ $machine['sensors']['left']['side']['value'] }}
                                     </div>
                                 </div>
-                                <!-- make output section -->
-                                <div class="grid grid-cols-2 gap-2 text-center mt-4">
-                                    <div>
-                                        <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
-                                        <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
-                                            {{ $machine['output']['left'] ?? 0 }}
-                                        </div>
+                                <div>
+                                    <h4 class="font-semibold text-neutral-700 dark:text-neutral-200">RIGHT</h4>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Toe/Hell</p>
+                                    <div class="p-2 rounded-md text-white font-bold text-lg mb-2
+                                        @if($machine['sensors']['right']['toeHeel']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
+                                        {{ $machine['sensors']['right']['toeHeel']['value'] }}
                                     </div>
-                                    <div>
-                                        <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
-                                        <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
-                                            {{ $machine['output']['right'] ?? 0 }}
-                                        </div>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Side</p>
+                                    <div class="p-2 rounded-md text-white font-bold text-lg
+                                        @if($machine['sensors']['right']['side']['status'] == 'alert') bg-red-500 @else bg-green-500 @endif">
+                                        {{ $machine['sensors']['right']['side']['value'] }}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Output Section -->
+                            <div class="grid grid-cols-2 gap-2 text-center mt-4">
+                                <div>
+                                    <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
+                                    <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
+                                        {{ $machine['output']['left'] ?? 0 }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
+                                    <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
+                                        {{ $machine['output']['right'] ?? 0 }}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    @empty
-                        <p class="md:col-span-2 text-center text-neutral-500">No machine data available for the selected line.</p>
-                    @endforelse
-                </div>
+                    </div>
+                @empty
+                    <div class="col-span-4 text-center text-neutral-500 p-6">
+                        No machine data available for the selected line.
+                    </div>
+                @endforelse
             </div>
         </div>
-    <div class="absolute top-[150px] -translate-y-2/3 right-0 translate-x-1/2 bg-white dark:bg-neutral-900 p-2 rounded-lg shadow-lg flex flex-col items-center justify-center w-10 border">
-            <h3 class="text-lg font-semibold text-slate-800">STD</h3>
-            <div class="text-xl font-bold text-blue-700 my-2">
-                <p>{{ $stdRange[0] }} ~ {{ $stdRange[1] }}</p>
-            </div>
-            <p class="text-sm text-slate-500">kg</p>
-        </div>
-        @if(count($machineData) > 2)
-    <div class="absolute top-[450px] -translate-y-2/3 right-0 translate-x-1/2 bg-white dark:bg-neutral-900 p-2 rounded-lg shadow-lg flex flex-col items-center justify-center w-10 border">
-            <h3 class="text-lg font-semibold text-slate-800">STD</h3>
-            <div class="text-xl font-bold text-blue-700 my-2">
-                <p>{{ $stdRange[0] }} ~ {{ $stdRange[1] }}</p>
-            </div>
-            <p class="text-sm text-slate-500">kg</p>
-        </div>
-        @endif
     </div>
-    @script
-    <script>
-        let dailyPerformanceChart, onlineSystemMonitoringChart;
-        // store last data so we can re-init when theme toggles
-        let __lastDaily = null;
-        let __lastAvg = null;
-        let __lastOnline = null;
-
-        function isDarkMode() {
-            try {
-                return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches || document.documentElement.classList.contains('dark');
-            } catch (e) { return false; }
-        }
-
-        function chartOptionsForTheme() {
-            const dark = isDarkMode();
-            return {
-                textColor: dark ? '#e6edf3' : '#0f172a',
-                gridColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)'
-            };
-        }
-
-        function initCharts(dailyPerformanceData, onlineData) {
-            __lastDaily = dailyPerformanceData;
-            __lastOnline = onlineData;
-
-            const theme = chartOptionsForTheme();
-            // Daily Performance Chart
-            const dailyPerformanceCtx = document.getElementById('dailyPerformanceChart');
-            if (dailyPerformanceChart) dailyPerformanceChart.destroy();
-            dailyPerformanceChart = new Chart(dailyPerformanceCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Standart', 'Out Of Standart'],
-                    datasets: [{
-                        data: [dailyPerformanceData.standard, dailyPerformanceData.outOfStandard],
-                        backgroundColor: ['#22c55e', '#ef4444'],
-                        textColor: theme.textColor,
-                        hoverOffset: 30,
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    cutout: '70%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { bodyColor: theme.textColor, titleColor: theme.textColor }
-                    }
-                }
-            });
-
-            // Online System Monitoring Chart PIE
-            const onlineSystemMonitoringCtx = document.getElementById('onlineSystemMonitoring');
-        if (onlineSystemMonitoringChart) onlineSystemMonitoringChart.destroy();
-            onlineSystemMonitoringChart = new Chart(onlineSystemMonitoringCtx, {
-            type: 'pie', // You can also use 'doughnut' here if you prefer
-            data: {
-                // === NEW: Use dynamic labels ===
-                labels: ['Online', 'Offline'],
-                datasets: [{
-                    label: 'System Online Monitoring',
-                    // === NEW: Use dynamic data from the `onlineData` argument ===
-                    data: [onlineData.online, onlineData.offline],
-                    borderWidth: 1,
-                    backgroundColor: ['#22c55e', '#d1d5db'], // Green (Online), Gray (Offline)
-                    borderRadius: 5,
-                }]
-            },
-            // === NEW: Added options for tooltips ===
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }, // Your HTML already has a legend
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                // Add a '%' sign
-                                if (context.parsed !== null) {
-                                    label += context.parsed.toFixed(2) + '%';
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        }
-        // Listen for refresh event
-        $wire.on('refresh-charts', function(payload) {
-            // Normalize payload: Livewire may pass the data directly, or inside .detail, or as the first array item
-            let data = payload;
-            console.log('[DWP Dashboard] refresh-charts payload received', payload);
-            if (payload && payload.detail) data = payload.detail;
-            if (Array.isArray(payload) && payload.length) data = payload[0];
-            if (payload && payload[0] && (payload[0].avgPressures || payload[0].dailyChartData)) data = payload[0];
-
-            const onlineData = data?.onlineMonitoringData ?? null;
-            const dailyChartData = data?.dailyChartData ?? data?.daily ?? data?.performance?.daily ?? null;
-
-            if (!dailyChartData && !onlineData) {
-                console.warn('[DWP Dashboard] refresh-charts payload missing expected properties', data);
-                return;
-            }
-
-            try {
-                initCharts(dailyChartData ?? { standard: 100, outOfStandard: 0 }, onlineData ?? { online: 100, offline: 0 });
-            } catch (e) {
-                console.error('[DWP Dashboard] error while initializing charts', e, data);
-            }
-        });
-
-        // watch for theme changes: prefers-color-scheme and document class toggles
-        try {
-            if (window.matchMedia) {
-                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                    if (__lastDaily && __lastOnline) initCharts(__lastDaily, __lastOnline);
-                });
-            }
-        } catch (e) {}
-
-        // If your app toggles .dark on <html>, observe it and re-init charts
-        try {
-            const obs = new MutationObserver(() => { if (__lastDaily && __lastOnline) initCharts(__lastDaily, __lastOnline); });
-            obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-        } catch (e) {}
-
-        // Initial load
-        $wire.$dispatch('updated');
-    </script>
-    @endscript
 </div>
