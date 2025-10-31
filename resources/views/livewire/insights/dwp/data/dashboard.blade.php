@@ -110,8 +110,9 @@ new class extends Component {
         }
 
         // === NEW: Calculate Online Monitoring Stats ===
-        $this->onlineMonitoringData = $this->getOnlineMonitoringStats($machineNames);
-        $this->onlineTime = $this->onlineMonitoringData['online'] ?? 0;
+        $dataOnlineMonitoring = $this->getOnlineMonitoringStats($machineNames);
+        $this->onlineMonitoringData = $dataOnlineMonitoring['percentages'];
+        $this->onlineTime = $dataOnlineMonitoring['total_hours'] ?? 0;
 
         // --- Step 1: Get latest sensor reading for each machine (Your query is already efficient) ---
         $latestCountsQuery = InsDwpCount::select('mechine', 'position', 'pv', 'created_at')
@@ -167,16 +168,14 @@ new class extends Component {
             $leftSides = $leftPv[1] ?? [0];
             $rightToesHeels = $rightPv[0] ?? [0];
             $rightSides = $rightPv[1] ?? [0];
-
             $leftData = [
-                'side' => round($this->getMedian($leftSides)), 
-                'toeHeel' => round($this->getMedian($leftToesHeels))
+                'side' => round($this->getMax($leftSides)), 
+                'toeHeel' => round($this->getMax($leftToesHeels))
             ];
             $rightData = [
-                'side' => round($this->getMedian($rightSides)), 
-                'toeHeel' => round($this->getMedian($rightToesHeels))
+                'side' => round($this->getMax($rightSides)), 
+                'toeHeel' => round($this->getMax($rightToesHeels))
             ];
-
             // --- FIXED: Correctly calculate average from all recent records ---
             $allPvs = [];
             if (isset($recentRecords[$machineName])) {
@@ -225,91 +224,6 @@ new class extends Component {
         $this->longestQueueTime = $this->getLongestDuration()['duration'] ?? 0;
         $this->alarmsActive = $this->getAlarmActiveCount();
         $this->dispatch('data-updated', performance: $performanceData);
-    }
-
-    public function updateMachinePressures()
-    {
-        if (empty($this->machineData)) {
-            return;
-        }
-
-        $machineNames = array_column($this->machineData, 'name');
-
-        // Fetch only the latest sensor readings (pv) for each machine & position
-        $latestReadings = InsDwpCount::select('mechine', 'position', 'pv')
-            ->whereIn('id', function ($query) use ($machineNames) {
-                $query->selectRaw('MAX(id)')
-                    ->from('ins_dwp_counts')
-                    ->whereIn('mechine', $machineNames)
-                    ->groupBy('mechine', 'position');
-            })
-            ->get()
-            ->groupBy('mechine');
-
-        // Fetch recent records for average pressure (last 24 hours)
-        $recentRecords = InsDwpCount::whereIn('mechine', $machineNames)
-            ->where('created_at', '>=', now()->subDay())
-            ->select('mechine', 'pv')
-            ->get()
-            ->groupBy('mechine');
-
-        // Update each machine's pressure data in place
-        foreach ($this->machineData as &$machine) {
-            $name = $machine['name'];
-
-            // Get latest PVs
-            $leftRecord = ($latestReadings[$name] ?? collect())
-                ->firstWhere('position', 'L');
-            $rightRecord = ($latestReadings[$name] ?? collect())
-                ->firstWhere('position', 'R');
-
-            $leftPv = $leftRecord ? json_decode($leftRecord->pv, true) : [[0], [0]];
-            $rightPv = $rightRecord ? json_decode($rightRecord->pv, true) : [[0], [0]];
-
-            // Extract and round medians
-            $leftToeHeel = round($this->getMedian($leftPv[0] ?? [0]));
-            $leftSide     = round($this->getMedian($leftPv[1] ?? [0]));
-            $rightToeHeel = round($this->getMedian($rightPv[0] ?? [0]));
-            $rightSide    = round($this->getMedian($rightPv[1] ?? [0]));
-
-            // Update sensor values and statuses
-            $machine['sensors']['left']['toeHeel']['value']  = $leftToeHeel;
-            $machine['sensors']['left']['side']['value']     = $leftSide;
-            $machine['sensors']['right']['toeHeel']['value'] = $rightToeHeel;
-            $machine['sensors']['right']['side']['value']    = $rightSide;
-
-            $machine['sensors']['left']['toeHeel']['status']  = $this->getStatus($leftToeHeel);
-            $machine['sensors']['left']['side']['status']     = $this->getStatus($leftSide);
-            $machine['sensors']['right']['toeHeel']['status'] = $this->getStatus($rightToeHeel);
-            $machine['sensors']['right']['side']['status']    = $this->getStatus($rightSide);
-
-            // Recalculate average pressure
-            $allPvs = [];
-            if (isset($recentRecords[$name])) {
-                foreach ($recentRecords[$name] as $record) {
-                    $decoded = json_decode($record->pv, true);
-                    if (is_array($decoded) && count($decoded) >= 2) {
-                        $allPvs = array_merge($allPvs, $decoded[0] ?? [], $decoded[1] ?? []);
-                    }
-                }
-            }
-            $nonZero = array_filter($allPvs, fn($v) => is_numeric($v) && $v > 0);
-            $machine['average'] = !empty($nonZero) 
-                ? round(array_sum($nonZero) / count($nonZero)) 
-                : 0;
-
-            // Update overall status
-            $statuses = [
-                $machine['sensors']['left']['toeHeel']['status'],
-                $machine['sensors']['left']['side']['status'],
-                $machine['sensors']['right']['toeHeel']['status'],
-                $machine['sensors']['right']['side']['status'],
-            ];
-            $machine['overallStatus'] = in_array('alert', $statuses) ? 'alert' : 'normal';
-        }
-
-        // Optional: dispatch event if needed
-        // $this->dispatch('pressures-updated');
     }
 
     // NEW: A function to calculate data for the new charts
@@ -420,41 +334,6 @@ new class extends Component {
         $this->lastRecord = InsDwpCount::latest()->first();
     }
 
-    private function getDataPVByMachine($machineId, $position = "L", $limit = 20)
-    {
-        try {
-            $records = InsDwpCount::where("mechine", $machineId)
-                ->where('position', $position)
-                ->limit($limit)
-                ->orderBy('created_at', "desc")
-                ->get();
-
-            if ($records->isEmpty()) {
-                // Return a random value if DB is empty to simulate live data
-                return ["side" => 0, "toeHeel" => 0];
-            }
-            
-            // Collect all toe_heel and side values from the arrays
-            $allSideValues = [];
-            $allToeHeelValues = [];
-            
-            foreach ($records as $record) {
-                $pvArray = json_decode($record->pv, true) ?? [[0], [0]];
-                if (isset($pvArray[0]) && isset($pvArray[1])) {
-                    $allToeHeelValues = array_merge($allToeHeelValues, $pvArray[0]);
-                    $allSideValues = array_merge($allSideValues, $pvArray[1]);
-                }
-            }
-
-            return [
-                "side" => round($this->getMedian($allSideValues)),
-                "toeHeel" => round($this->getMedian($allToeHeelValues))
-            ];
-        } catch (\Exception $e) {
-            return ["side" => 0, "toeHeel" => 0];
-        }
-    }
-
     private function getStatus($value)
     {
         if ($value > $this->stdRange[1] || $value < $this->stdRange[0]) {
@@ -479,6 +358,23 @@ new class extends Component {
         $median = ($count % 2) ? $numericArray[$middle] : ($numericArray[$middle] + $numericArray[$middle + 1]) / 2;
         
         return round($median);
+    }
+
+    private function getMax(array $array)
+    {
+        if (empty($array)) {
+            return 0;
+        }
+        
+        // Filter out non-numeric values
+        $numericArray = array_filter($array, 'is_numeric');
+        
+        if (empty($numericArray)) {
+            return 0;
+        }
+        
+        // Get max value from the numeric array
+        return max($numericArray);
     }
 
     private function getLongestDuration(){
@@ -565,7 +461,7 @@ new class extends Component {
 
         // 4. Define working hours: 8 AM to 3 PM (8 hours: 8,9,10,11,12,13,14,15)
         // You can adjust this range as needed (e.g., 8–16 = 8 hours)
-        $workingHours = range(8, 15); // 8:00 to 15:00 (inclusive) → 8 data points
+        $workingHours = range(7, 16); // 7:00 to 16:00 (inclusive) → 10 data points
 
         $labels = [];
         $datasets = [];
@@ -765,16 +661,22 @@ new class extends Component {
     {
         $period = $this->calculatePeriod();
         if ($period->totalDuration <= 0) {
-            return ['online' => 100, 'offline' => 0];
+            return [
+                'percentages' => ['online' => 0, 'offline' => 100],
+                'total_hours' => 0, // in hours
+            ];
         }
         if (empty($machineNames)) {
-            return ['online' => 0, 'offline' => 100];
+            return [
+                'percentages' => ['online' => 0, 'offline' => 100],
+                'total_hours' => 0, // in hours
+            ];
         }
         $activityTimestamps = $this->getActivityTimestamps($machineNames, Carbon::parse($period->start), Carbon::parse($period->end));
         $totalDowntime = $this->calculateTotalDowntime($activityTimestamps, Carbon::parse($period->start), Carbon::parse($period->end));
         return [
             'percentages' => $this->calculatePercentages($period->totalDuration, $totalDowntime),
-            'online' => $period->totalDuration - $totalDowntime,
+            'total_hours' => ($period->totalDuration - $totalDowntime) / 3600, // in hours
         ];
     }
 
@@ -940,11 +842,11 @@ new class extends Component {
                 <div class="flex flex-col gap-2 mt-4">
                     <div class="flex items-center gap-2">
                         <span class="w-4 h-4 rounded bg-green-500"></span>
-                        <span>Standart : {{ $this->totalStandart }}</span>
+                        <span>Standard : {{ $this->totalStandart }}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="w-4 h-4 rounded bg-red-600"></span>
-                        <span>Out Of Standart : {{ $this->totalOutStandart }}</span>
+                        <span>Out Of Standard : {{ $this->totalOutStandart }}</span>
                     </div>
                 </div>
             </div>
@@ -953,7 +855,7 @@ new class extends Component {
             <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
                 <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
                     Online System Monitoring
-                    <span class="text-sm text-neutral-600 dark:text-neutral-400">6 hours online</span>
+                    <span class="text-sm text-neutral-600 dark:text-neutral-400">{{ $this->onlineTime }} hours online</span>
                 </h2>
                 <div class="relative">
                     <canvas class="h-[150px]" id="onlineSystemMonitoring" wire:ignore></canvas>
@@ -998,27 +900,27 @@ new class extends Component {
             <!-- Row 1: Two Cards (51 & 52) -->
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
                 <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
-                    Standard Machine #1: <span>30 ~ 40 kg</span>
+                    Standard Machine #1: <span>{{ $this->stdRange[0]}} ~ {{$this->stdRange[1]}} kg</span>
                 </h2>
             </div>
 
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
                 <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
-                    Standard Machine #2 : <span>30 ~ 40 kg</span>
+                    Standard Machine #2 : <span>{{ $this->stdRange[0]}} ~ {{$this->stdRange[1]}} kg</span>
                 </h2>
             </div>
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
                 <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
-                    Standard Machine #3: <span>30 ~ 40 kg</span>
+                    Standard Machine #3: <span>{{ $this->stdRange[0]}} ~ {{$this->stdRange[1]}} kg</span>
                 </h2>
             </div>
             <div class="bg-white dark:bg-neutral-800 p-2 rounded-lg shadow-md">
                 <h2 class="text-md text-center text-slate-800 dark:text-slate-200">
-                    Standard Machine #4 : <span>30 ~ 40 kg</span>
+                    Standard Machine #4 : <span>{{ $this->stdRange[0]}} ~ {{$this->stdRange[1]}} kg</span>
                 </h2>
             </div>
         </div>
-        <div wire:key="machine-data" wire:poll.5s="updateData" class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div wire:key="machine-data" wire:poll.20s="updateData" class="grid grid-cols-1 md:grid-cols-2 gap-2">
             <!-- Note: We use a nested grid inside the col-span-2 -->
             <div class="col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @forelse ($machineData as $machine)
