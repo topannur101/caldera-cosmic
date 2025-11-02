@@ -222,25 +222,119 @@ new class extends Component {
         return ['thick_left' => $thickLeft, 'thick_right' => $thickRight, 'thin_left' => $thinLeft, 'thin_right' => $thinRight];
     }
 
-    private function calculateEffectiveChange($data, $dataIndex, $side): ?float
+    // private function calculateEffectiveChange($data, $dataIndex, $side): ?float
+    // {
+    //     if ($dataIndex < 0 || $dataIndex >= count($data)) return null;
+    //     $currentPoint = $data[$dataIndex];
+    //     $currentValue = $side === 'left' ? ($currentPoint[4] ?? 0) : ($currentPoint[5] ?? 0);
+    //     $futureValue = null;
+    //     $searchRange = min(8, count($data) - $dataIndex - 1);
+    //     for ($i = 5; $i <= $searchRange; $i++) {
+    //         $futurePoint = $data[$dataIndex + $i];
+    //         $futureAction = $side === 'left' ? ($futurePoint[2] ?? 0) : ($futurePoint[3] ?? 0);
+    //         $futureVal = $side === 'left' ? ($futurePoint[4] ?? 0) : ($futurePoint[5] ?? 0);
+    //         if ($futureAction == 0 || $i == 5) {
+    //             $futureValue = $futureVal;
+    //             break;
+    //         }
+    //     }
+    //     if ($futureValue === null) return null;
+    //     // $change = abs($futureValue - $currentValue);
+    //     $change = $futureValue - $currentValue;
+    //     return $change;
+    // }
+
+    private function calculateEffectiveChange($data, $dataIndex, $side): ?array
     {
-        if ($dataIndex < 0 || $dataIndex >= count($data)) return null;
+        // Validasi index
+        if ($dataIndex < 0 || $dataIndex >= count($data)) {
+            return null;
+        }
+        
         $currentPoint = $data[$dataIndex];
         $currentValue = $side === 'left' ? ($currentPoint[4] ?? 0) : ($currentPoint[5] ?? 0);
+        $currentAction = $side === 'left' ? ($currentPoint[2] ?? 0) : ($currentPoint[3] ?? 0);
+        
+        // Jika tidak ada action, return null
+        if ($currentAction == 0) {
+            return null;
+        }
+        
+        // ✅ FIX #1: Perluas search range untuk stabilized value
+        $searchRange = min(15, count($data) - $dataIndex - 1);
+        
+        // Jika search range terlalu kecil, return null
+        if ($searchRange < 5) {
+            return null;
+        }
+        
+        // ✅ FIX #2: Cari nilai yang sudah stabil (skip transition period)
         $futureValue = null;
-        $searchRange = min(8, count($data) - $dataIndex - 1);
-        for ($i = 3; $i <= $searchRange; $i++) {
+        $foundIndex = -1;
+        
+        // Mulai dari point ke-5 (skip 1-4 untuk transition)
+        for ($i = 5; $i <= $searchRange; $i++) {
             $futurePoint = $data[$dataIndex + $i];
             $futureAction = $side === 'left' ? ($futurePoint[2] ?? 0) : ($futurePoint[3] ?? 0);
             $futureVal = $side === 'left' ? ($futurePoint[4] ?? 0) : ($futurePoint[5] ?? 0);
-            if ($futureAction == 0 || $i == 5) {
+            
+            // Ambil nilai saat:
+            // 1. Tidak ada trigger baru (sudah stabil), ATAU
+            // 2. Sudah di point ke-10 (cukup waktu untuk stabilize)
+            if ($futureAction == 0 || $i >= 10) {
                 $futureValue = $futureVal;
+                $foundIndex = $i;
                 break;
             }
         }
-        if ($futureValue === null) return null;
-        $change = abs($futureValue - $currentValue);
-        return $change;
+        
+        // Jika tidak ketemu future value yang valid
+        if ($futureValue === null || $futureValue == 0) {
+            return null;
+        }
+        
+        // ✅ FIX #3: Hitung perubahan DENGAN ARAH (signed change)
+        $change = $futureValue - $currentValue; // TIDAK PAKAI abs()
+        
+        // ✅ FIX #4: Validasi konsistensi antara action dan arah perubahan
+        $expectedDirection = null;
+        $actualDirection = null;
+        $isConsistent = true;
+        
+        if ($currentAction == 1) { // Menipiskan
+            $expectedDirection = 'turun';
+            $actualDirection = $change < 0 ? 'turun' : 'naik';
+            $isConsistent = ($change < 0); // Seharusnya negatif (turun)
+            
+        } elseif ($currentAction == 2) { // Menebalkan
+            $expectedDirection = 'naik';
+            $actualDirection = $change > 0 ? 'naik' : 'turun';
+            $isConsistent = ($change > 0); // Seharusnya positif (naik)
+        }
+        
+        // ✅ FIX #5: Log anomaly untuk debugging
+        if (!$isConsistent && abs($change) > 0.1) { // Threshold 0.01mm untuk noise
+            \Log::warning('CTC Trigger Anomaly Detected', [
+                'side' => $side,
+                'action' => $currentAction == 1 ? 'Menipiskan' : 'Menebalkan',
+                'current_value' => $currentValue,
+                'future_value' => $futureValue,
+                'change' => $change,
+                'expected' => $expectedDirection,
+                'actual' => $actualDirection,
+                'data_index' => $dataIndex,
+                'found_at_index' => $foundIndex,
+            ]);
+        }
+        
+        // ✅ FIX #6: Return array dengan info lengkap
+        return [
+            'change' => $change,                    // Signed value (bisa ± )
+            'abs_change' => abs($change),           // Absolute value untuk display
+            'direction' => $actualDirection,        // 'naik' atau 'turun'
+            'is_consistent' => $isConsistent,       // true/false
+            'expected_direction' => $expectedDirection,
+        ];
     }
 
     public function downloadCsv()
@@ -370,7 +464,7 @@ new class extends Component {
                 if (futureValue === null) return null;
                 
                 // Hitung perubahan absolut
-                const change = Math.abs(futureValue - currentValue);
+                const change = futureValue - currentValue;
                 return change;
             }
 
@@ -411,24 +505,39 @@ new class extends Component {
                             const side = point.side;
                             const dataIndex = findDataPointIndex(point.x);
                             
-                            // Jenis trigger
-                            //const emoji = point.action === 2 ? '▲' : '▼';
-                            //const actionType = point.action === 2 ? 'Menebalkan' : 'Menipiskan';
-
                             const emoji = point.action === 1 ? '▼' : '▲';
                             const actionType = point.action === 1 ? 'Menipiskan' : 'Menebalkan';
                             
-                            lines.push(''); // Empty line untuk spacing
+                            lines.push('');
                             lines.push(emoji + actionType);
                             
                             // Hitung perubahan efektif
                             if (dataIndex >= 0) {
                                 const effectiveChange = calculateEffectiveChange(dataIndex, side);
-                                if (effectiveChange !== null && effectiveChange > 0) {
-                                    lines.push('📊 ' + effectiveChange.toFixed(2) + ' mm');
+                                if (effectiveChange !== null) {
+                                    const absChange = Math.abs(effectiveChange);
+                                    let dirText = '';
+                                    
+                                    if (effectiveChange > 0) {
+                                        // dirText = 'NAIK';
+                                        isConsistent = (point.action === 2); // Harusnya menebalkan
+                                    } else if (effectiveChange < 0) {
+                                        // dirText = 'TURUN';
+                                        isConsistent = (point.action === 1); // Harusnya menipiskan
+                                    } else {
+                                        // dirText = 'STABIL';
+                                        isConsistent = true;
+                                    }
+
+                                    // Tambahkan label inkonsisten jika perlu
+                                    if (!isConsistent) {
+                                        lines.push('⚠️ INKONSISTEN');
+                                    }
+                                    
+                                    lines.push('📊 ' + absChange.toFixed(2) + ' mm ');
                                     
                                     // Persentase perubahan
-                                    const percentChange = ((effectiveChange / context.parsed.y) * 100).toFixed(1);
+                                    const percentChange = ((absChange / context.parsed.y) * 100).toFixed(1);
                                     lines.push('📈 ' + percentChange + '%');
                                 }
                             }
@@ -538,25 +647,37 @@ new class extends Component {
                         return '△';  // Outline up (di bawah target, adjustment naik)
                     }
                 },
-                
+
                 color: function(context) {
                     const point = context.dataset.data[context.dataIndex];
                     const dataIndex = findDataPointIndex(point.x);
                     if (dataIndex < 0) return context.dataset.borderColor;
-                    
+
                     const rawPoint = rawData[dataIndex];
                     const thickness = point.y;
                     const stdMin = rawPoint[7] || 0;
                     const stdMax = rawPoint[8] || 0;
-                    
-                    // KRITIS: Warna merah terang
+
+                    // Dapatkan warna dasar berdasarkan sisi (biru untuk kiri, merah untuk kanan)
+                    const baseColor = context.dataset.borderColor;
+
+                    // Jika di luar range → gunakan warna dasar penuh (kritis)
                     if (thickness > stdMax || thickness < stdMin) {
-                        return '#EF4444'; // Red-500
+                        return baseColor;
                     }
-                    
-                    // PREVENTIF: Warna abu-abu
-                    return '#9CA3AF'; // Gray-400
+
+                    // Jika di dalam range → redupkan (preventif)
+                    // Konversi hex ke RGBA dengan opacity
+                    if (baseColor === '#3B82F6') {
+                        return 'rgba(59, 130, 246, 0.6)'; // Biru redup
+                    } else if (baseColor === '#EF4444') {
+                        return 'rgba(239, 68, 68, 0.6)';  // Merah redup
+                    }
+
+                    return 'rgba(156, 163, 175, 0.6)'; // Abu-abu redup sebagai fallback
                 },
+
+
                 
                 font: function(context) {
                     const point = context.dataset.data[context.dataIndex];
@@ -669,7 +790,6 @@ new class extends Component {
         ",
         );
     }
-   
 
     private function prepareChartData($data): array
     {
