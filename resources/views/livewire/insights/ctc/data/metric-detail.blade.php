@@ -446,33 +446,185 @@ new class extends Component {
                     }
                 }
             };
-
-            // DATALABELS - Hanya Simbol Tanpa Angka
+// //===============================================
+//             // DATALABELS - Hanya Simbol luar
+//             chartOptions.plugins.datalabels = {
+//             display: function(context) {
+//                 const point = context.dataset.data[context.dataIndex];
+                
+//                 // Cek apakah ada action
+//                 if (!point || !point.action || (point.action !== 1 && point.action !== 2)) {
+//                     return false;
+//                 }
+                
+//                 // TAMBAHAN BARU: Ambil data mentah untuk cek range
+//                 const dataIndex = findDataPointIndex(point.x);
+//                 if (dataIndex < 0) return false;
+                
+//                 const rawPoint = rawData[dataIndex];
+//                 const thickness = point.y;
+//                 const stdMin = rawPoint[7] || 0;  // std_min di index 7
+//                 const stdMax = rawPoint[8] || 0;  // std_max di index 8
+                
+//                 // FILTER: Hanya tampilkan jika DI LUAR RANGE
+//                 if (thickness >= stdMin && thickness <= stdMax) {
+//                     return false;  // Dalam range, jangan tampilkan simbol
+//                 }
+                
+//                 return true;  // Di luar range, tampilkan simbol
+//             },
+//                 formatter: function(value, context) {
+//                     const point = context.dataset.data[context.dataIndex];
+//                     if (!point || !point.action) return '';
+                    
+//                     // HANYA SIMBOL, TANPA ANGKA
+//                     //return point.action === 2 ? '▲' : '▼';
+//                     return point.action === 1 ? '▼' : '▲';
+//                 },
+//                 color: function(context) {
+//                     return context.dataset.borderColor;  // Warna sesuai dataset
+//                 },
+//                 align: function(context) {
+//                     const point = context.dataset.data[context.dataIndex];
+//                     //return point && point.action === 2 ? 'top' : 'bottom';
+//                     return point && point.action === 1 ? 'bottom' : 'top';
+//                 },
+//                 offset: 6,
+//                 font: {
+//                     size: 12,
+//                     weight: 'bold'
+//                 }
+//             };
+// //===============================================
+            // DATALABELS - Simbol Berbeda untuk Kritis vs Preventif
             chartOptions.plugins.datalabels = {
                 display: function(context) {
                     const point = context.dataset.data[context.dataIndex];
+                    // Tampilkan SEMUA trigger (baik kritis maupun preventif)
                     return point && point.action && (point.action === 1 || point.action === 2);
                 },
+                
                 formatter: function(value, context) {
                     const point = context.dataset.data[context.dataIndex];
                     if (!point || !point.action) return '';
                     
-                    // HANYA SIMBOL, TANPA ANGKA
-                    //return point.action === 2 ? '▲' : '▼';
-                    return point.action === 1 ? '▼' : '▲';
+                    // Ambil data mentah untuk menentukan kondisi
+                    const dataIndex = findDataPointIndex(point.x);
+                    if (dataIndex < 0) return '';
+                    
+                    const rawPoint = rawData[dataIndex];
+                    const thickness = point.y;
+                    const stdMin = rawPoint[7] || 0;
+                    const stdMax = rawPoint[8] || 0;
+                    
+                    // Tentukan jenis koreksi dan simbol yang sesuai
+                    const needsToDecrease = thickness > stdMax;
+                    const needsToIncrease = thickness < stdMin;
+                    
+                    // KRITIS (di luar range): Solid triangle
+                    if (needsToDecrease) {
+                        return '▼';  // Solid down (terlalu tebal, perlu turunkan)
+                    } else if (needsToIncrease) {
+                        return '▲';  // Solid up (terlalu tipis, perlu naikkan)
+                    }
+                    
+                    // PREVENTIF (dalam range): Outline triangle
+                    // Tentukan arah berdasarkan posisi terhadap target
+                    const stdMid = rawPoint[9] || ((stdMin + stdMax) / 2);
+                    
+                    if (thickness > stdMid) {
+                        return '▽';  // Outline down (di atas target, adjustment turun)
+                    } else {
+                        return '△';  // Outline up (di bawah target, adjustment naik)
+                    }
                 },
+                
                 color: function(context) {
-                    return context.dataset.borderColor;  // Warna sesuai dataset
+                    const point = context.dataset.data[context.dataIndex];
+                    const dataIndex = findDataPointIndex(point.x);
+                    if (dataIndex < 0) return context.dataset.borderColor;
+                    
+                    const rawPoint = rawData[dataIndex];
+                    const thickness = point.y;
+                    const stdMin = rawPoint[7] || 0;
+                    const stdMax = rawPoint[8] || 0;
+                    
+                    // KRITIS: Warna merah terang
+                    if (thickness > stdMax || thickness < stdMin) {
+                        return '#EF4444'; // Red-500
+                    }
+                    
+                    // PREVENTIF: Warna abu-abu
+                    return '#9CA3AF'; // Gray-400
                 },
+                
+                font: function(context) {
+                    const point = context.dataset.data[context.dataIndex];
+                    const dataIndex = findDataPointIndex(point.x);
+                    if (dataIndex < 0) return { size: 12, weight: 'normal' };
+                    
+                    const rawPoint = rawData[dataIndex];
+                    const thickness = point.y;
+                    const stdMin = rawPoint[7] || 0;
+                    const stdMax = rawPoint[8] || 0;
+                    
+                    // KRITIS: Besar dan tebal
+                    if (thickness > stdMax || thickness < stdMin) {
+                        return {
+                            size: 14,
+                            weight: 'bold'
+                        };
+                    }
+                    
+                    // PREVENTIF: Kecil dan normal
+                    return {
+                        size: 10,
+                        weight: 'normal'
+                    };
+                },
+                
                 align: function(context) {
                     const point = context.dataset.data[context.dataIndex];
-                    //return point && point.action === 2 ? 'top' : 'bottom';
-                    return point && point.action === 1 ? 'bottom' : 'top';
+                    if (!point) return 'center';
+                    
+                    const dataIndex = findDataPointIndex(point.x);
+                    if (dataIndex < 0) return 'center';
+                    
+                    const rawPoint = rawData[dataIndex];
+                    const thickness = point.y;
+                    const stdMin = rawPoint[7] || 0;
+                    const stdMax = rawPoint[8] || 0;
+                    const stdMid = rawPoint[9] || ((stdMin + stdMax) / 2);
+                    
+                    // Simbol naik (▲ △) di bawah point
+                    // Simbol turun (▼ ▽) di atas point
+                    if (thickness > stdMax || thickness > stdMid) {
+                        return 'top';    // ▼ atau ▽ di atas
+                    } else {
+                        return 'bottom'; // ▲ atau △ di bawah
+                    }
                 },
+                
                 offset: 6,
-                font: {
-                    size: 12,
-                    weight: 'bold'
+                
+                // TAMBAHAN BARU: opacity untuk membedakan lebih jelas
+                opacity: function(context) {
+                    const point = context.dataset.data[context.dataIndex];
+                    const dataIndex = findDataPointIndex(point.x);
+                    if (dataIndex < 0) return 1.0;
+                    
+                    const rawPoint = rawData[dataIndex];
+                    const thickness = point.y;
+                    const stdMin = rawPoint[7] || 0;
+                    const stdMax = rawPoint[8] || 0;
+                    
+                    // KRITIS: Opacity penuh
+                    if (thickness > stdMax || thickness < stdMin) {
+                        return 1.0;
+                    }
+                    
+                    // PREVENTIF: Sedikit transparan
+                    return 0.7;
                 }
             };
 
