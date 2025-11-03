@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Schema::table('ins_ctc_recipes', function (Blueprint $table) {
-        //     $table->string('component_model', 30)->nullable();
-        // });
+        Schema::table('ins_ctc_recipes', function (Blueprint $table) {
+            $table->string('component_model', 30)->nullable();
+        });
     }
 
     /**
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Schema::table('ins_ctc_recipes', function (Blueprint $table) {
-        //     $table->dropColumn('component_model');
-        // });
+        Schema::table('ins_ctc_recipes', function (Blueprint $table) {
+            $table->dropColumn('component_model');
+        });
     }
 };
