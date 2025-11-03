@@ -978,17 +978,11 @@ new class extends Component {
                                 </div>
                             </div>
                             <!-- Output Section -->
-                            <div class="grid grid-cols-2 gap-2 text-center mt-4">
+                            <div class="grid grid-cols-1 gap-2 text-center mt-4">
                                 <div>
                                     <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
                                     <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
                                         {{ $machine['output']['left'] ?? 0 }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
-                                    <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
-                                        {{ $machine['output']['right'] ?? 0 }}
                                     </div>
                                 </div>
                             </div>
