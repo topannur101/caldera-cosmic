@@ -32,6 +32,7 @@ new class extends Component {
     public int $totalStandart = 0;
     public int $totalOutStandart = 0;
     public int $onlineTime = 0;
+    public string $fullTimeFormat = "";
 
     // Add new properties for the top summary boxes
     public int $timeConstraintAlarm = 0;
@@ -113,6 +114,7 @@ new class extends Component {
         $dataOnlineMonitoring = $this->getOnlineMonitoringStats($machineNames);
         $this->onlineMonitoringData = $dataOnlineMonitoring['percentages'];
         $this->onlineTime = $dataOnlineMonitoring['total_hours'] ?? 0;
+        $this->fullTimeFormat = $dataOnlineMonitoring['full_time_format'] ?? "";
 
         // --- Step 1: Get latest sensor reading for each machine (Your query is already efficient) ---
         $latestCountsQuery = InsDwpCount::select('mechine', 'position', 'pv', 'created_at')
@@ -466,19 +468,19 @@ new class extends Component {
         $lines = [$this->line ? strtoupper($this->line) : 'G5'];
 
         // 3. Query hourly data for the selected day
+        // Use SUM(incremental) to get actual alarm count per hour (not cumulative)
         $results = InsDwpTimeAlarmCount::query()
             ->whereIn('line', $lines)
             ->whereBetween('created_at', [$startOfDay, $endOfDay])
-            ->selectRaw('HOUR(created_at) as hour, line, SUM(cumulative) as total_value')
+            ->selectRaw('HOUR(created_at) as hour, line, SUM(incremental) as alarm_count')
             ->groupByRaw('HOUR(created_at), line')
             ->get()
             ->keyBy(function ($item) {
                 return $item->hour . '_' . $item->line;
             });
 
-        // 4. Define working hours: 8 AM to 3 PM (8 hours: 8,9,10,11,12,13,14,15)
-        // You can adjust this range as needed (e.g., 8–16 = 8 hours)
-        $workingHours = range(7, 16); // 7:00 to 16:00 (inclusive) → 10 data points
+        // 4. Define working hours: 7 AM to 4 PM (7:00 to 16:00 inclusive = 10 hours)
+        $workingHours = range(7, 16);
 
         $labels = [];
         $datasets = [];
@@ -497,12 +499,12 @@ new class extends Component {
 
         // 6. Fill data for each working hour
         foreach ($workingHours as $hour) {
-            // Format label as "08:00", "09:00", etc.
+            // Format label as "07:00", "08:00", ..., "16:00"
             $labels[] = str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00';
 
             foreach ($lines as $line) {
                 $key = $hour . '_' . $line;
-                $value = $results->get($key) ? $results->get($key)->total_value : 0;
+                $value = $results->get($key) ? (int) $results->get($key)->alarm_count : 0;
                 $datasets[$line]['data'][] = $value;
             }
         }
@@ -681,19 +683,25 @@ new class extends Component {
             return [
                 'percentages' => ['online' => 0, 'offline' => 100],
                 'total_hours' => 0, // in hours
+                'full_time_format' => "0 hours 0 minutes 0 seconds"
             ];
         }
         if (empty($machineNames)) {
             return [
                 'percentages' => ['online' => 0, 'offline' => 100],
                 'total_hours' => 0, // in hours
+                'full_time_format' => "0 hours 0 minutes 0 seconds"
             ];
         }
         $activityTimestamps = $this->getActivityTimestamps($machineNames, Carbon::parse($period->start), Carbon::parse($period->end));
         $totalDowntime = $this->calculateTotalDowntime($activityTimestamps, Carbon::parse($period->start), Carbon::parse($period->end));
+        
+        $onlineDuration = $period->totalDuration - $totalDowntime;
+        
         return [
             'percentages' => $this->calculatePercentages($period->totalDuration, $totalDowntime),
-            'total_hours' => ($period->totalDuration - $totalDowntime) / 3600, // in hours
+            'total_hours' => $onlineDuration / 3600, // in hours
+            'full_time_format' => $this->formatDuration($onlineDuration)
         ];
     }
 
@@ -704,11 +712,21 @@ new class extends Component {
             ->min('created_at');
 
         $end = now()->format('Y-m-d H:i:s');
-        $diff = Carbon::parse($start)->diffInDays(Carbon::parse($end));
+        
+        if (!$start) {
+            return (object) [
+                'start' => now()->format('Y-m-d H:i:s'),
+                'end' => $end,
+                'totalDuration' => 0
+            ];
+        }
+        
+        $totalDuration = Carbon::parse($start)->diffInSeconds(Carbon::parse($end));
+        
         return (object) [
             'start' => $start,
             'end' => $end,
-            'totalDuration' => $diff * 24 * 60 * 60
+            'totalDuration' => $totalDuration
         ];
     }
 
@@ -768,27 +786,48 @@ new class extends Component {
         return $totalDowntime;
     }
 
-    private function calculateInitialGap(Carbon $firstTimestamp, Carbon $periodStart): int
+    private function formatDuration(int $seconds): string
     {
-        $gap = $firstTimestamp->diffInSeconds($periodStart);
-        return $gap > $this->getDowntimeThresholdInSeconds() ? $gap : 0;
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $remainingSeconds = $seconds % 60;
+        
+        $parts = [];
+        
+        if ($hours > 0) {
+            $parts[] = $hours . ' hour' . ($hours !== 1 ? 's' : '');
+        }
+        
+        if ($minutes > 0) {
+            $parts[] = $minutes . ' minute' . ($minutes !== 1 ? 's' : '');
+        }
+        
+        if ($remainingSeconds > 0 || empty($parts)) { // Always show seconds if no other units, or if there are remaining seconds
+            $parts[] = $remainingSeconds . ' second' . ($remainingSeconds !== 1 ? 's' : '');
+        }
+        
+        return implode(' ', $parts);
+    }
+
+    private function calculatePercentages(int $totalDuration, int $totalDowntime): array
+    {
+        if ($totalDuration <= 0) {
+            return ['online' => 0, 'offline' => 100];
+        }
+        
+        $onlineDuration = $totalDuration - $totalDowntime;
+        $onlinePercentage = ($onlineDuration / $totalDuration) * 100;
+        $offlinePercentage = ($totalDowntime / $totalDuration) * 100;
+        
+        return [
+            'online' => round($onlinePercentage, 2),
+            'offline' => round($offlinePercentage, 2)
+        ];
     }
 
     private function getDowntimeThresholdInSeconds(): int
     {
         return 120; // 2 minutes
-    }
-
-    private function calculatePercentages(int $totalDuration, int $totalDowntime): array
-    {
-        $onlineSeconds = max(0, $totalDuration - $totalDowntime);
-        $onlinePercent = ($onlineSeconds / $totalDuration) * 100;
-        $offlinePercent = 100 - $onlinePercent;
-
-        return [
-            'online' => round($onlinePercent, 2),
-            'offline' => round($offlinePercent, 2),
-        ];
     }
 }; ?>
 
@@ -870,10 +909,12 @@ new class extends Component {
 
             <!-- Card 60: Online System Monitoring -->
             <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
-                <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
-                    Online System Monitoring
-                    <span class="text-sm text-neutral-600 dark:text-neutral-400">{{ $this->onlineTime }} hours online</span>
-                </h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                        Online System Monitoring
+                    </h2>
+                    <span class="text-sm text-neutral-600 dark:text-neutral-400">{{ $this->fullTimeFormat }}</span>
+                </div>
                 <div class="relative">
                     <canvas class="h-[150px]" id="onlineSystemMonitoring" wire:ignore></canvas>
                 </div>
