@@ -35,8 +35,8 @@ new #[Layout("layouts.app")] class extends Component {
     public int $perPage = 20;
     public string $view = "raw";
     public array $position    = ['Left', 'Right'];
-    public array $stdTh       = [30, 40];
-    public array $stdSide     = [30, 40];
+    public array $stdTh       = [30, 45];
+    public array $stdSide     = [30, 45];
     public array $compareData = [
             'actual'       => "",
             'closest_standard' => "",
