@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Schema::table('ins_ctc_recipes', function (Blueprint $table) {
-        //     // Drop unique constraint pada name saja
-        //     $table->dropUnique('ins_ctc_recipes_name_unique');
+        Schema::table('ins_ctc_recipes', function (Blueprint $table) {
+            // Drop unique constraint pada name saja
+            $table->dropUnique('ins_ctc_recipes_name_unique');
             
-        //     // Tambah composite unique constraint
-        //     // Kombinasi name + component_model + og_rs harus unique
-        //     $table->unique(['name', 'component_model', 'og_rs'], 'recipe_unique_combination');
-        // });
+            // Tambah composite unique constraint
+            // Kombinasi name + component_model + og_rs harus unique
+            $table->unique(['name', 'component_model', 'og_rs'], 'recipe_unique_combination');
+        });
     }
 
     /**
