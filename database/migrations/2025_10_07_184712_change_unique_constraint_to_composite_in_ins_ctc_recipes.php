@@ -26,12 +26,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Schema::table('ins_ctc_recipes', function (Blueprint $table) {
-        //     // Drop composite unique
-        //     $table->dropUnique('recipe_unique_combination');
+        Schema::table('ins_ctc_recipes', function (Blueprint $table) {
+            // Drop composite unique
+            $table->dropUnique('recipe_unique_combination');
             
-        //     // Kembalikan unique pada name saja
-        //     $table->unique('name');
-        // });
+            // Kembalikan unique pada name saja
+            $table->unique('name');
+        });
     }
 };
