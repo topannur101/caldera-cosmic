@@ -222,28 +222,6 @@ new class extends Component {
         return ['thick_left' => $thickLeft, 'thick_right' => $thickRight, 'thin_left' => $thinLeft, 'thin_right' => $thinRight];
     }
 
-    // private function calculateEffectiveChange($data, $dataIndex, $side): ?float
-    // {
-    //     if ($dataIndex < 0 || $dataIndex >= count($data)) return null;
-    //     $currentPoint = $data[$dataIndex];
-    //     $currentValue = $side === 'left' ? ($currentPoint[4] ?? 0) : ($currentPoint[5] ?? 0);
-    //     $futureValue = null;
-    //     $searchRange = min(8, count($data) - $dataIndex - 1);
-    //     for ($i = 5; $i <= $searchRange; $i++) {
-    //         $futurePoint = $data[$dataIndex + $i];
-    //         $futureAction = $side === 'left' ? ($futurePoint[2] ?? 0) : ($futurePoint[3] ?? 0);
-    //         $futureVal = $side === 'left' ? ($futurePoint[4] ?? 0) : ($futurePoint[5] ?? 0);
-    //         if ($futureAction == 0 || $i == 5) {
-    //             $futureValue = $futureVal;
-    //             break;
-    //         }
-    //     }
-    //     if ($futureValue === null) return null;
-    //     // $change = abs($futureValue - $currentValue);
-    //     $change = $futureValue - $currentValue;
-    //     return $change;
-    // }
-
     private function calculateEffectiveChange($data, $dataIndex, $side): ?array
     {
         // Validasi index
@@ -381,17 +359,21 @@ new class extends Component {
                 $changeLeft = 0; $percentLeft = 0;
                 if ($actionLeft == 1 || $actionLeft == 2) {
                     $effectiveChange = $this->calculateEffectiveChange($data, $index, 'left');
-                    if ($effectiveChange !== null && $effectiveChange > 0) {
-                        $changeLeft = $effectiveChange;
-                        $percentLeft = $sensorLeft > 0 ? ($effectiveChange / $sensorLeft) * 100 : 0;
+                    if ($effectiveChange !== null) {
+                        $changeValue = is_array($effectiveChange) ? ($effectiveChange['change'] ?? 0) : $effectiveChange;
+                        
+                        $changeLeft = $changeValue;
+                        $percentLeft = $sensorLeft > 0 ? (abs($changeValue) / $sensorLeft) * 100 : 0;
                     }
                 }
                 $changeRight = 0; $percentRight = 0;
                 if ($actionRight == 1 || $actionRight == 2) {
                     $effectiveChange = $this->calculateEffectiveChange($data, $index, 'right');
-                    if ($effectiveChange !== null && $effectiveChange > 0) {
-                        $changeRight = $effectiveChange;
-                        $percentRight = $sensorRight > 0 ? ($effectiveChange / $sensorRight) * 100 : 0;
+                    if ($effectiveChange !== null) {
+                        $changeValue = is_array($effectiveChange) ? ($effectiveChange['change'] ?? 0) : $effectiveChange;
+                        
+                        $changeRight = $changeValue;
+                        $percentRight = $sensorRight > 0 ? (abs($changeValue) / $sensorRight) * 100 : 0;
                     }
                 }
                 fputcsv($file, [$index + 1, $timestamp, $waktu, number_format($sensorLeft, 2, '.', ''), number_format($sensorRight, 2, '.', ''), $actionLeft, $actionRight, $triggerLeftLabel, $triggerRightLabel, number_format($changeLeft, 2, '.', ''), number_format($changeRight, 2, '.', ''), number_format($percentLeft, 1, '.', ''), number_format($percentRight, 1, '.', ''), number_format($stdMin, 2, '.', ''), number_format($stdMax, 2, '.', ''), number_format($stdMid, 2, '.', ''), $isCorrecting, $batchInfo['rubber_batch_code'], $batchInfo['machine_line'], $batchInfo['mcs'], $recipeId, $recipeFullName, $batchInfo['shift']]);
@@ -555,56 +537,7 @@ new class extends Component {
                     }
                 }
             };
-// //===============================================
-//             // DATALABELS - Hanya Simbol luar
-//             chartOptions.plugins.datalabels = {
-//             display: function(context) {
-//                 const point = context.dataset.data[context.dataIndex];
-                
-//                 // Cek apakah ada action
-//                 if (!point || !point.action || (point.action !== 1 && point.action !== 2)) {
-//                     return false;
-//                 }
-                
-//                 // TAMBAHAN BARU: Ambil data mentah untuk cek range
-//                 const dataIndex = findDataPointIndex(point.x);
-//                 if (dataIndex < 0) return false;
-                
-//                 const rawPoint = rawData[dataIndex];
-//                 const thickness = point.y;
-//                 const stdMin = rawPoint[7] || 0;  // std_min di index 7
-//                 const stdMax = rawPoint[8] || 0;  // std_max di index 8
-                
-//                 // FILTER: Hanya tampilkan jika DI LUAR RANGE
-//                 if (thickness >= stdMin && thickness <= stdMax) {
-//                     return false;  // Dalam range, jangan tampilkan simbol
-//                 }
-                
-//                 return true;  // Di luar range, tampilkan simbol
-//             },
-//                 formatter: function(value, context) {
-//                     const point = context.dataset.data[context.dataIndex];
-//                     if (!point || !point.action) return '';
-                    
-//                     // HANYA SIMBOL, TANPA ANGKA
-//                     //return point.action === 2 ? '▲' : '▼';
-//                     return point.action === 1 ? '▼' : '▲';
-//                 },
-//                 color: function(context) {
-//                     return context.dataset.borderColor;  // Warna sesuai dataset
-//                 },
-//                 align: function(context) {
-//                     const point = context.dataset.data[context.dataIndex];
-//                     //return point && point.action === 2 ? 'top' : 'bottom';
-//                     return point && point.action === 1 ? 'bottom' : 'top';
-//                 },
-//                 offset: 6,
-//                 font: {
-//                     size: 12,
-//                     weight: 'bold'
-//                 }
-//             };
-// //===============================================
+
             // DATALABELS - Simbol Berbeda untuk Kritis vs Preventif
             chartOptions.plugins.datalabels = {
                 display: function(context) {
@@ -774,11 +707,6 @@ new class extends Component {
                 console.error('Chart.js not loaded');
                 return;
             }
-            
-            // if (typeof datalabelsPlugin === 'undefined') {
-            //     console.error('ChartDataLabels plugin not loaded');
-            //     return;
-            // }
 
             const chart = new Chart(canvas, {
                 type: 'line',
