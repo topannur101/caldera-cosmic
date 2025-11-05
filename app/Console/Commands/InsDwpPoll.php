@@ -17,7 +17,7 @@ class InsDwpPoll extends Command
     protected $modbusPort = 503;
 
     // Cycle detection configuration
-    protected $cycleStartThreshold = 10; // Value to detect the start of a cycle (now used by 'capturing' state)
+    protected $cycleStartThreshold = 2; // Value to detect the start of a cycle (now used by 'capturing' state)
     protected $toeHeelEndThreshold = 0; // Value to detect end of toe/heel cycle
     // Note: sideEndThreshold is no longer needed in the new logic but left for context
     protected $sideEndThreshold = 0;
@@ -235,8 +235,8 @@ class InsDwpPoll extends Command
                 $state = [
                     'state' => 'active',
                     'start_time' => time(),
-                    'th_buffer' => [$toeHeelValue],
-                    'side_buffer' => [$sideValue],
+                    'th_buffer' => [$toeHeelValue], // Buffer the *first* active value
+                    'side_buffer' => [$sideValue], // Buffer the *first* active value
                     'end_count' => 0,
                 ];
                 if ($this->option('d')) {
@@ -247,14 +247,18 @@ class InsDwpPoll extends Command
         }
 
         if ($state['state'] === 'active') {
-            $state['th_buffer'][] = $toeHeelValue;
-            $state['side_buffer'][] = $sideValue;
+            $shouldEnd = false; // <-- NEW: Initialize
 
             // Debounced end condition
             if ($toeHeelValue <= $endThreshold && $sideValue <= $endThreshold) {
+                // Value is at or near zero, increment end counter
                 $state['end_count']++;
                 $shouldEnd = $state['end_count'] >= 2;
             } else {
+                // Value is active, buffer it
+                $state['th_buffer'][] = $toeHeelValue;     // <-- CHANGED: Moved inside else
+                $state['side_buffer'][] = $sideValue;     // <-- CHANGED: Moved inside else
+                // And reset the end counter
                 $state['end_count'] = 0;
                 $shouldEnd = false;
             }
@@ -267,7 +271,11 @@ class InsDwpPoll extends Command
                     $state = ['state' => 'idle'];
                     return 0;
                 }
-
+                
+                // <-- NEW: Add a single zero to the end for a clean cutoff
+                $state['th_buffer'][] = 0;
+                $state['side_buffer'][] = 0;
+                
                 $maxTh = max($state['th_buffer']);
                 $maxSide = max($state['side_buffer']);
                 $isValid = (
@@ -276,13 +284,16 @@ class InsDwpPoll extends Command
                 );
 
                 if ($isValid) {
+                    // Calculate duration *before* resetting state
+                    $durationInSeconds = time() - $state['start_time']; // <-- Using your duration logic
+
                     // Normalize to fixed length (e.g., 64)
                     $collectedData = [
                         $this->normalizeWaveform($state['th_buffer']),
                         $this->normalizeWaveform($state['side_buffer'])
                     ];
 
-                    $saved = $this->saveSuccessfulCycle($line, $machineName, $position, $collectedData, 0);
+                    $saved = $this->saveSuccessfulCycle($line, $machineName, $position, $collectedData, $durationInSeconds); // <-- Pass duration
                     if ($this->option('d')) {
                         $this->line("✅ Valid cycle saved for {$cycleKey}. Peaks: TH={$maxTh}, Side={$maxSide}");
                     }
@@ -308,7 +319,7 @@ class InsDwpPoll extends Command
         return 0;
     }
 
-    private function normalizeWaveform(array $buffer, int $targetLength = 64): array
+    private function normalizeWaveform(array $buffer, int $targetLength = 30): array
     {
         $currentLength = count($buffer);
         if ($currentLength === $targetLength) {
