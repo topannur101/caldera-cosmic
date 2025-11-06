@@ -52,8 +52,8 @@ new class extends Component {
         $this->updateData();
         $this->generateChartsClient();
         $dataReads = $this->getPressureReadingStats();
-        $this->totalStandart = $dataReads['standard_count'] ?? 0;
-        $this->totalOutStandart = $dataReads['not_standard_count'] ?? 0;
+        $this->totalStandart = $dataReads['standard_cycles'] ?? 0;
+        $this->totalOutStandart = $dataReads['not_standard_cycles'] ?? 0;
     }
 
     private function getDataLine($line=null)
@@ -249,9 +249,9 @@ new class extends Component {
         }
 
         $dataReads = $this->getPressureReadingStats();
-        $outOfStandard = $dataReads['not_standard_count'] ?? 0;
-        $standardReads = $dataReads['standard_count'] ?? 0;
-        $totalReads = $dataReads['total_count'] ?? 1;
+        $outOfStandard = $dataReads['not_standard_cycles'] ?? 0;
+        $standardReads = $dataReads['standard_cycles'] ?? 0;
+        $totalReads = $dataReads['total_cycles'] ?? 1;
         //prevent division by zero
         if ($totalReads == 0) {
             $totalReads = 1;
@@ -273,84 +273,113 @@ new class extends Component {
     public function getPressureReadingStats()
     {
         [$minStd, $maxStd] = $this->stdRange;
-        $standardReadings = 0;
-        $notStandardReadings = 0;
+        $maxPairingSeconds = 5; 
 
         $machineConfigs = $this->getDataMachines($this->line);
         $machineNames = array_column($machineConfigs, 'name');
 
         if (empty($machineNames)) {
             return [
-                'total_count' => 0,
-                'standard_count' => 0,
-                'not_standard_count' => 0,
+                'total_cycles' => 0,
+                'standard_cycles' => 0,
+                'not_standard_cycles' => 0,
             ];
         }
 
-        // Fetch ALL records (L and R) without grouping
-        $query = InsDwpCount::whereIn('mechine', $machineNames)
+        // 1. Ambil SEMUA rekaman L/R, DIURUTKAN berdasarkan waktu
+        $records = InsDwpCount::whereIn('mechine', $machineNames)
             ->whereIn('position', ['L', 'R'])
-            ->select('mechine', 'pv', 'position', 'created_at');
+            ->whereBetween('created_at', [$this->parseStartDateTime(), $this->parseEndDateTime()])
+            ->select('mechine', 'pv', 'position', 'created_at')
+            ->orderBy('created_at', 'asc') 
+            ->get();
 
-        if ($this->start_at && $this->end_at) {
-            $start = Carbon::parse($this->start_at);
-            $end = Carbon::parse($this->end_at)->endOfDay();
-            $query->whereBetween('created_at', [$start, $end]);
-        }
+        // 2. Kelompokkan rekaman berdasarkan mesin
+        $recordsByMachine = $records->groupBy('mechine');
+        
+        // Ini akan menyimpan hasil sementara, per mesin
+        $machineStats = []; 
 
-        // Group records into cycles by rounding created_at to nearest 5 seconds
-        $cycles = [];
-
-        foreach ($query->cursor() as $record) {
-            // Round timestamp to nearest 5 seconds to group near-simultaneous L/R
-            $roundedTime = Carbon::parse($record->created_at)
-                ->floorSeconds(5)
-                ->format('Y-m-d H:i:s');
-
-            $key = $record->mechine . '|' . $roundedTime;
-
-            if (!isset($cycles[$key])) {
-                $cycles[$key] = ['L' => null, 'R' => null];
+        // 3. Buat helper function untuk getMax
+        $getMax = function($cycle) {
+            $allValues = array_merge(
+                $cycle['L'][0] ?? [], $cycle['L'][1] ?? [],
+                $cycle['R'][0] ?? [], $cycle['R'][1] ?? []
+            );
+            $numericValues = array_filter($allValues, 'is_numeric');
+            if (empty($numericValues)) {
+                return null;
             }
+            return max($numericValues);
+        };
 
-            if (in_array($record->position, ['L', 'R'])) {
-                $cycles[$key][$record->position] = json_decode($record->pv, true);
-            }
-        }
+        // 4. Proses setiap mesin SECARA INDIVIDUAL
+        foreach ($recordsByMachine as $machineName => $machineRecords) {
+            
+            $standardCycles = 0;
+            $notStandardCycles = 0;
+            $pendingL = null; 
+            $pendingR = null;
 
-        // Now process only complete cycles (both L and R present)
-        foreach ($cycles as $cycle) {
-            if (
-                is_array($cycle['L']) && count($cycle['L']) >= 2 &&
-                is_array($cycle['R']) && count($cycle['R']) >= 2
-            ) {
-                $allValues = array_merge(
-                    $cycle['L'][0] ?? [], $cycle['L'][1] ?? [],
-                    $cycle['R'][0] ?? [], $cycle['R'][1] ?? []
-                );
+            foreach ($machineRecords as $record) {
+                $recordTime = Carbon::parse($record->created_at);
+                $recordPV = json_decode($record->pv, true);
 
-                foreach ($allValues as $value) {
-                    if (is_numeric($value)) {
-                        if ($value >= $minStd && $value <= $maxStd) {
-                            $standardReadings++;
-                        } else {
-                            $notStandardReadings++;
-                        }
+                if (!is_array($recordPV) || count($recordPV) < 2) {
+                    continue;
+                }
+
+                $foundPair = null; 
+
+                if ($record->position == 'L') {
+                    if ($pendingR && $recordTime->diffInSeconds($pendingR['time']) <= $maxPairingSeconds) {
+                        $foundPair = ['L' => $recordPV, 'R' => $pendingR['pv']];
+                        $pendingR = null; $pendingL = null;
+                    } else {
+                        $pendingL = ['pv' => $recordPV, 'time' => $recordTime]; 
+                        $pendingR = null; 
+                    }
+                } 
+                elseif ($record->position == 'R') {
+                    if ($pendingL && $recordTime->diffInSeconds($pendingL['time']) <= $maxPairingSeconds) {
+                        $foundPair = ['L' => $pendingL['pv'], 'R' => $recordPV];
+                        $pendingL = null; $pendingR = null;
+                    } else {
+                        $pendingR = ['pv' => $recordPV, 'time' => $recordTime]; 
+                        $pendingL = null; 
                     }
                 }
-            }
-        }
 
-        return [
-            'total_count' => $standardReadings + $notStandardReadings,
-            'standard_count' => $standardReadings,
-            'not_standard_count' => $notStandardReadings,
+                if ($foundPair) {
+                    $maxPressure = $getMax($foundPair);
+                    
+                    if ($maxPressure === null) {
+                        continue; 
+                    }
+
+                    if ($maxPressure >= $minStd && $maxPressure <= $maxStd) {
+                        $standardCycles++;
+                    } else {
+                        $notStandardCycles++;
+                    }
+                }
+            } 
+
+            // 5. Simpan total sementara untuk mesin ini
+            $machineStats[$machineName] = [
+                'total_cycles' => $standardCycles + $notStandardCycles,
+                'standard_cycles' => $standardCycles,
+                'not_standard_cycles' => $notStandardCycles,
+            ];
+        } 
+        // 6. Agregasi (Jumlahkan) semua hasil dari $machineStats
+        $finalTotal = [
+            'total_cycles' => array_sum(array_column($machineStats, 'total_cycles')),
+            'standard_cycles' => array_sum(array_column($machineStats, 'standard_cycles')),
+            'not_standard_cycles' => array_sum(array_column($machineStats, 'not_standard_cycles')),
         ];
-    }
 
-    public function checkLastData()
-    {
-        $this->lastRecord = InsDwpCount::latest()->first();
+        return $finalTotal;
     }
 
     private function getStatus($value)
@@ -647,12 +676,8 @@ new class extends Component {
                                             color: '#e5e7eb',
                                             drawBorder: true,
                                             drawOnChartArea: true,
-                                            drawTicks: true
+                                            drawTicks: true,
                                         },
-                                        ticks: { 
-                                            color: '#000000',
-                                            font: { size: 11 }
-                                        }
                                     },
                                     y: {
                                         beginAtZero: true,
@@ -665,16 +690,10 @@ new class extends Component {
                                         },
                                         ticks: { 
                                             color: '#000000',
-                                            font: { size: 17 }
+                                            font: { size: 16 }
                                         }
                                     }
                                 },
-                                plugins: {
-                                    legend: {
-                                        position: 'bottom',
-                                        labels: { color: '#1c1b1bff' }
-                                    },
-                                }
                             },
                             plugins: [{
                                 afterDatasetsDraw: function(chart) {
@@ -687,7 +706,7 @@ new class extends Component {
                                                 ctx.font = 'bold 15px sans-serif';
                                                 ctx.fillStyle = dataset.borderColor;
                                                 ctx.textAlign = 'center';
-                                                ctx.fillText(value, element.x, element.y - 10);
+                                                ctx.fillText(value, element.x, element.y - (-15));
                                             }
                                         });
                                     });
@@ -784,7 +803,7 @@ new class extends Component {
 
     private function calculateTotalDowntime(array $timestamps, Carbon $periodStart, Carbon $periodEnd): int
     {
-        $downtimeThreshold = $this->getDowntimeThresholdInSeconds();
+        $downtimeThreshold = (int)120;
 
         // If no timestamps, entire period is downtime (if it exceeds threshold)
         if (empty($timestamps)) {
@@ -855,19 +874,13 @@ new class extends Component {
             'offline' => round($offlinePercentage, 2)
         ];
     }
-
-    private function getDowntimeThresholdInSeconds(): int
-    {
-        return 120; // 2 minutes
-    }
 }; ?>
 
 <div>
+    <!-- Filter Section -->
     <div class="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 flex items-center justify-between">
-            
             <div class="flex items-center">
-                
                 <div>
                     <div class="flex mb-2 text-xs text-neutral-500">
                         <x-dropdown align="left" width="48">
@@ -906,9 +919,7 @@ new class extends Component {
                         <x-text-input wire:model.live="end_at" type="date" class="w-40" />
                     </div>
                 </div>
-
                 <div class="border-l border-neutral-300 dark:border-neutral-700 mx-4 h-16"></div>
-
                 <div>
                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
                     <x-select wire:model.live="line" class="w-full lg:w-32">
@@ -918,7 +929,7 @@ new class extends Component {
                     </x-select>
                 </div>
             </div>
-            <div class="">
+            <div>
                 <a href="/insights/dwp/data/fullscreen">
                     <span class="icon-expand font-bold text-2xl">
                     </span>
@@ -927,7 +938,6 @@ new class extends Component {
         </div>
     </div>
     <!-- end filter section -->
-
     <!-- Content Section -->
     <div class="grid grid-cols-1 gap-6">
         <!-- Top Row: 3 Cards -->
@@ -1061,6 +1071,16 @@ new class extends Component {
                                     </div>
                                 </div>
                             </div>
+                            <div class="grid grid-cols-2 gap-2 text-center mt-4">
+                                <div>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Avg Pres Time</p> 
+                                    <span>20 sec</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Avg Pres Time</p> 
+                                    <span>20 sec</span>
+                                </div>
+                            </div>
                             <!-- Output Section -->
                             <div class="grid grid-cols-1 gap-2 text-center mt-4">
                                 <div>
@@ -1080,4 +1100,5 @@ new class extends Component {
             </div>
         </div>
     </div>
+    <!-- end content section -->
 </div>

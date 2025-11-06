@@ -53,8 +53,8 @@ new #[Layout("layouts.app")] class extends Component {
         $this->updateData();
         $this->generateChartsClient();
         $dataReads = $this->getPressureReadingStats();
-        $this->totalStandart = $dataReads['standard_count'] ?? 0;
-        $this->totalOutStandart = $dataReads['not_standard_count'] ?? 0;
+        $this->totalStandart = $dataReads['standard_cycles'] ?? 0;
+        $this->totalOutStandart = $dataReads['not_standard_cycles'] ?? 0;
     }
 
     private function getDataLine($line=null)
@@ -250,9 +250,9 @@ new #[Layout("layouts.app")] class extends Component {
         }
 
         $dataReads = $this->getPressureReadingStats();
-        $outOfStandard = $dataReads['not_standard_count'] ?? 0;
-        $standardReads = $dataReads['standard_count'] ?? 0;
-        $totalReads = $dataReads['total_count'] ?? 1;
+        $outOfStandard = $dataReads['not_standard_cycles'] ?? 0;
+        $standardReads = $dataReads['standard_cycles'] ?? 0;
+        $totalReads = $dataReads['total_cycles'] ?? 1;
         //prevent division by zero
         if ($totalReads == 0) {
             $totalReads = 1;
@@ -274,79 +274,117 @@ new #[Layout("layouts.app")] class extends Component {
     public function getPressureReadingStats()
     {
         [$minStd, $maxStd] = $this->stdRange;
-        $standardReadings = 0;
-        $notStandardReadings = 0;
+        $maxPairingSeconds = 5; 
 
         $machineConfigs = $this->getDataMachines($this->line);
         $machineNames = array_column($machineConfigs, 'name');
 
         if (empty($machineNames)) {
             return [
-                'total_count' => 0,
-                'standard_count' => 0,
-                'not_standard_count' => 0,
+                'total_cycles' => 0,
+                'standard_cycles' => 0,
+                'not_standard_cycles' => 0,
             ];
         }
 
-        // Fetch ALL records (L and R) without grouping
-        $query = InsDwpCount::whereIn('mechine', $machineNames)
+        // 1. Ambil SEMUA rekaman L/R, DIURUTKAN berdasarkan waktu
+        $records = InsDwpCount::whereIn('mechine', $machineNames)
             ->whereIn('position', ['L', 'R'])
-            ->select('mechine', 'pv', 'position', 'created_at');
+            ->whereBetween('created_at', [$this->parseStartDateTime(), $this->parseEndDateTime()])
+            ->select('mechine', 'pv', 'position', 'created_at')
+            ->orderBy('created_at', 'asc') 
+            ->get();
 
-        if ($this->start_at && $this->end_at) {
-            $start = Carbon::parse($this->start_at);
-            $end = Carbon::parse($this->end_at)->endOfDay();
-            $query->whereBetween('created_at', [$start, $end]);
-        }
+        // 2. Kelompokkan rekaman berdasarkan mesin
+        $recordsByMachine = $records->groupBy('mechine');
+        
+        // Ini akan menyimpan hasil sementara, per mesin
+        $machineStats = []; 
 
-        // Group records into cycles by rounding created_at to nearest 5 seconds
-        $cycles = [];
-
-        foreach ($query->cursor() as $record) {
-            // Round timestamp to nearest 5 seconds to group near-simultaneous L/R
-            $roundedTime = Carbon::parse($record->created_at)
-                ->floorSeconds(5)
-                ->format('Y-m-d H:i:s');
-
-            $key = $record->mechine . '|' . $roundedTime;
-
-            if (!isset($cycles[$key])) {
-                $cycles[$key] = ['L' => null, 'R' => null];
+        // 3. Buat helper function untuk getMax
+        $getMax = function($cycle) {
+            $allValues = array_merge(
+                $cycle['L'][0] ?? [], $cycle['L'][1] ?? [],
+                $cycle['R'][0] ?? [], $cycle['R'][1] ?? []
+            );
+            $numericValues = array_filter($allValues, 'is_numeric');
+            if (empty($numericValues)) {
+                return null;
             }
+            return max($numericValues);
+        };
 
-            if (in_array($record->position, ['L', 'R'])) {
-                $cycles[$key][$record->position] = json_decode($record->pv, true);
-            }
-        }
+        // 4. Proses setiap mesin SECARA INDIVIDUAL
+        foreach ($recordsByMachine as $machineName => $machineRecords) {
+            
+            $standardCycles = 0;
+            $notStandardCycles = 0;
+            $pendingL = null; 
+            $pendingR = null;
 
-        // Now process only complete cycles (both L and R present)
-        foreach ($cycles as $cycle) {
-            if (
-                is_array($cycle['L']) && count($cycle['L']) >= 2 &&
-                is_array($cycle['R']) && count($cycle['R']) >= 2
-            ) {
-                $allValues = array_merge(
-                    $cycle['L'][0] ?? [], $cycle['L'][1] ?? [],
-                    $cycle['R'][0] ?? [], $cycle['R'][1] ?? []
-                );
+            foreach ($machineRecords as $record) {
+                $recordTime = Carbon::parse($record->created_at);
+                $recordPV = json_decode($record->pv, true);
 
-                foreach ($allValues as $value) {
-                    if (is_numeric($value)) {
-                        if ($value >= $minStd && $value <= $maxStd) {
-                            $standardReadings++;
-                        } else {
-                            $notStandardReadings++;
-                        }
+                if (!is_array($recordPV) || count($recordPV) < 2) {
+                    continue;
+                }
+
+                $foundPair = null; 
+
+                if ($record->position == 'L') {
+                    if ($pendingR && $recordTime->diffInSeconds($pendingR['time']) <= $maxPairingSeconds) {
+                        $foundPair = ['L' => $recordPV, 'R' => $pendingR['pv']];
+                        $pendingR = null; $pendingL = null;
+                    } else {
+                        $pendingL = ['pv' => $recordPV, 'time' => $recordTime]; 
+                        $pendingR = null; 
+                    }
+                } 
+                elseif ($record->position == 'R') {
+                    if ($pendingL && $recordTime->diffInSeconds($pendingL['time']) <= $maxPairingSeconds) {
+                        $foundPair = ['L' => $pendingL['pv'], 'R' => $recordPV];
+                        $pendingL = null; $pendingR = null;
+                    } else {
+                        $pendingR = ['pv' => $recordPV, 'time' => $recordTime]; 
+                        $pendingL = null; 
                     }
                 }
-            }
-        }
 
-        return [
-            'total_count' => $standardReadings + $notStandardReadings,
-            'standard_count' => $standardReadings,
-            'not_standard_count' => $notStandardReadings,
+                if ($foundPair) {
+                    $maxPressure = $getMax($foundPair);
+                    
+                    if ($maxPressure === null) {
+                        continue; 
+                    }
+
+                    if ($maxPressure >= $minStd && $maxPressure <= $maxStd) {
+                        $standardCycles++;
+                    } else {
+                        $notStandardCycles++;
+                    }
+                }
+            } 
+
+            // 5. Simpan total sementara untuk mesin ini
+            $machineStats[$machineName] = [
+                'total_cycles' => $standardCycles + $notStandardCycles,
+                'standard_cycles' => $standardCycles,
+                'not_standard_cycles' => $notStandardCycles,
+            ];
+        } 
+
+        // --- PERUBAHAN DI SINI ---
+        
+        // 6. Agregasi (Jumlahkan) semua hasil dari $machineStats
+        $finalTotal = [
+            'total_cycles' => array_sum(array_column($machineStats, 'total_cycles')),
+            'standard_cycles' => array_sum(array_column($machineStats, 'standard_cycles')),
+            'not_standard_cycles' => array_sum(array_column($machineStats, 'not_standard_cycles')),
         ];
+
+        // Ganti dd() Anda dengan ini agar mengembalikan format yang Anda inginkan        
+        return $finalTotal; // (Gunakan ini saat sudah tidak di-debug)
     }
 
     public function checkLastData()

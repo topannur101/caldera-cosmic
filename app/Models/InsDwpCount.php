@@ -69,7 +69,7 @@ class InsDwpCount extends Model
     public static function dailySummaryForLine(string $line, Carbon $from, Carbon $to): array
     {
         $line = strtoupper(trim($line));
-        
+
         return static::where('line', $line)
             ->whereBetween('created_at', [$from, $to])
             ->selectRaw('
@@ -139,6 +139,16 @@ class InsDwpCount extends Model
             Carbon::today(),
             Carbon::tomorrow()
         );
+    }
+
+    /**
+     * Get today's incremental count for a specific line
+     */
+    public static function todayCountForLine(string $line): int
+    {
+        return static::where('line', strtoupper(trim($line)))
+            ->whereDate('created_at', Carbon::today())
+            ->sum('incremental');
     }
 
     /**
