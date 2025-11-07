@@ -46,8 +46,10 @@ new #[Layout("layouts.app")] class extends Component {
     public function mount()
     {
         // today for init start and end date
-        $this->start_at = Carbon::today()->toDateString();
-        $this->end_at = Carbon::today()->toDateString();
+        if (empty($this->start_at) && empty($this->end_at)) {
+            $this->start_at = Carbon::today()->toDateString();
+            $this->end_at = Carbon::today()->toDateString();
+        }
 
         $this->dispatch("update-menu", $this->view);
         $this->updateData();
@@ -1004,6 +1006,22 @@ new #[Layout("layouts.app")] class extends Component {
                         </div>
                     @endforelse
                 </div>
+            </div>
+            <!-- Standard Machine Labels -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                @for($i = 1; $i <= 4; $i++)
+                    <div class="bg-white dark:bg-neutral-800 p-3 rounded-lg shadow-md text-center">
+                        <h3 class="text-md font-bold text-slate-800 dark:text-slate-200">Avg Pressure Time</h3>
+                        <div class="grid grid-cols-2 gap-2 text-center">
+                            <p>Left</p>
+                            <p>Right</p>
+                        </div>
+                         <div class="grid grid-cols-2 gap-2 text-center">
+                            <p>{{ rand(16,20)}}Sec</p>
+                            <p>{{ rand(16,20)}}Sec</p>
+                        </div>
+                    </div>
+                @endfor
             </div>
         </div>
     </div>
