@@ -919,7 +919,7 @@ new class extends Component {
                 </div>
             </div>
             <div class="">
-                <a href="/insights/dwp/data/fullscreen">
+                <a href="/insights/dwp/data/fullscreen?start_at={{ $this->start_at }}&end_at={{ $this->start_at }}">
                     <span class="icon-expand font-bold text-2xl">
                     </span>
                 </a>
