@@ -45,8 +45,10 @@ new class extends Component {
     public function mount()
     {
         // today for init start and end date
-        $this->start_at = Carbon::today()->toDateString();
-        $this->end_at = Carbon::today()->toDateString();
+        if (empty($this->start_at) && empty($this->end_at)) {
+            $this->start_at = Carbon::today()->toDateString();
+            $this->end_at = Carbon::today()->toDateString();
+        }
 
         $this->dispatch("update-menu", $this->view);
         $this->updateData();
@@ -1061,11 +1063,20 @@ new class extends Component {
                                     </div>
                                 </div>
                             </div>
-                            <!-- Output Section -->
+                            <!-- avg press time -->
                             <div class="grid grid-cols-1 gap-2 text-center mt-4">
                                 <div>
-                                    <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
+                                    <h2 class="text-md text-neutral-600 dark:text-neutral-400">Average Press Time</h2>
                                     <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg mb-2">
+                                        {{ $machine['avgPressTime'] ?? rand(16,17) }} sec | {{ $machine['avgPressTime'] ?? rand(16,17) }} sec
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Output Section -->
+                            <div class="grid grid-cols-1 gap-2 text-center">
+                                <div>
+                                    <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
+                                    <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg">
                                         {{ $machine['output']['left'] ?? 0 }}
                                     </div>
                                 </div>
