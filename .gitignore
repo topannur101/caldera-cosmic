@@ -46,3 +46,4 @@ yarn-error.log
 /py/daemon-manager/gui/__pycache__
 /py/translation-extract/env/*
 
+examples/README_PRESS_SIMULATION.md
