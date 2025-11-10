@@ -48,6 +48,8 @@ class InsDwpPoll extends Command
     // Example: ['LINEA-mc1-R' => ['state' => 'capturing', 'start_time' => 167...]]
     protected $cycleStates = [];
 
+    protected $nonPersistedCycleTypes = ['SHORT_CYCLE', 'OVERFLOW', 'TIMEOUT'];
+
     // Memory optimization counters
     protected $pollCycleCount = 0;
     protected $memoryCleanupInterval = 1000; // Clean memory every 1000 cycles
@@ -268,10 +270,15 @@ class InsDwpPoll extends Command
                     if ($this->option('d')) {
                         $this->line("Cycle {$cycleKey} too short (" . count($state['th_buffer']) . " samples). Discarded.");
                     }
-                    $saved = $this->saveEnhancedCycle($line, $machineName, $position, $state, 'SHORT_CYCLE');
-                    if ($this->option('d')) {
-                        $this->line("⚠️ Short cycle saved for {$cycleKey} (" . count($state['th_buffer']) . " samples)");
-                    }
+                    $saved = $this->saveEnhancedCycle(
+                        $line,
+                        $machineName,
+                        $position,
+                        $state,
+                        'SHORT_CYCLE',
+                        0,
+                        $this->shouldPersistCycle('SHORT_CYCLE')
+                    );
                     $state = ['state' => 'idle'];
                     return $saved;
                 }
@@ -280,7 +287,15 @@ class InsDwpPoll extends Command
                 $state['side_buffer'][] = 0;
 
                 $durationInSeconds = time() - $state['start_time'];
-                $saved = $this->saveEnhancedCycle($line, $machineName, $position, $state, 'COMPLETE', $durationInSeconds);
+                $saved = $this->saveEnhancedCycle(
+                    $line,
+                    $machineName,
+                    $position,
+                    $state,
+                    'COMPLETE',
+                    $durationInSeconds,
+                    $this->shouldPersistCycle('COMPLETE')
+                );
 
                 $state = ['state' => 'idle'];
                 return $saved;
@@ -288,7 +303,15 @@ class InsDwpPoll extends Command
 
             // Prevent buffer overflow
             if (count($state['th_buffer']) > 100) {
-                $saved = $this->saveEnhancedCycle($line, $machineName, $position, $state, 'OVERFLOW');
+                $saved = $this->saveEnhancedCycle(
+                    $line,
+                    $machineName,
+                    $position,
+                    $state,
+                    'OVERFLOW',
+                    0,
+                    $this->shouldPersistCycle('OVERFLOW')
+                );
                 $state = ['state' => 'idle'];
                 return $saved;
             }
@@ -325,10 +348,17 @@ class InsDwpPoll extends Command
         return $normalized;
     }
 
-    private function saveEnhancedCycle(string $line, string $machineName, string $position, array $state, string $cycleType, int $duration = 0)
+    private function saveEnhancedCycle(string $line, string $machineName, string $position, array $state, string $cycleType, int $duration = 0, bool $shouldPersist = true)
     {
+        if (!$shouldPersist) {
+            if ($this->option('d')) {
+                $this->line("Cycle {$line}-{$machineName}-{$position} ({$cycleType}) ignored from persistence.");
+            }
+            return 0;
+        }
+
         $lastCumulative = $this->lastCumulativeValues[$line] ?? 0;
-        $newCumulative = $lastCumulative + 1; // Always increment - every cycle counts!
+        $newCumulative = $lastCumulative + 1;
 
         // Calculate quality metrics from buffers
         $thBuffer = $state['th_buffer'] ?? [];
@@ -363,7 +393,7 @@ class InsDwpPoll extends Command
         $stdErrorBooleanArray = [[$thQuality], [$sideQuality]];
 
         $count = new InsDwpCount([
-            'mechine' => (int) trim($machineName, "mc"),
+            'mechine' => $this->parseMachineNumber($machineName),
             'line' => $line,
             'count' => $newCumulative,
             'pv' => json_encode($enhancedPvData),
@@ -384,6 +414,20 @@ class InsDwpPoll extends Command
         }
 
         return 1;
+    }
+
+    private function shouldPersistCycle(string $cycleType): bool
+    {
+        return !in_array($cycleType, $this->nonPersistedCycleTypes, true);
+    }
+
+    private function parseMachineNumber(string $machineName): int
+    {
+        if (preg_match('/(\d+)(?!.*\d)/', $machineName, $matches)) {
+            return (int) $matches[1];
+        }
+
+        return 0;
     }
 
     private function determineQualityGrade(int $maxTh, int $maxSide, string $cycleType): string
