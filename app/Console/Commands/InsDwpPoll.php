@@ -17,7 +17,7 @@ class InsDwpPoll extends Command
     protected $modbusPort = 503;
 
     // Cycle detection configuration
-    protected $cycleStartThreshold = 2; // Value to detect the start of a cycle (now used by 'capturing' state)
+    protected $cycleStartThreshold = 1; // Value to detect the start of a cycle (now used by 'capturing' state)
     protected $toeHeelEndThreshold = 0; // Value to detect end of toe/heel cycle
     // Note: sideEndThreshold is no longer needed in the new logic but left for context
     protected $sideEndThreshold = 0;
@@ -299,7 +299,7 @@ class InsDwpPoll extends Command
         return 0;
     }
 
-    private function normalizeWaveform(array $buffer, int $targetLength = 30): array
+    private function normalizeWaveform(array $buffer, int $targetLength = 15): array
     {
         $currentLength = count($buffer);
         if ($currentLength === $targetLength) {
@@ -355,7 +355,7 @@ class InsDwpPoll extends Command
                 'grade' => $qualityGrade,
                 'peaks' => ['th' => $maxTh, 'side' => $maxSide],
                 'cycle_type' => $cycleType,
-                'sample_count' => count($thBuffer)
+                'sample_count' => count($thBuffer),
             ]
         ];
 

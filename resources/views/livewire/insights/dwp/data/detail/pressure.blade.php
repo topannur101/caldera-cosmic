@@ -63,58 +63,35 @@ new class extends Component {
 
     private function renderPressureChartClient()
     {
-        // --- MODE SIMULASI SIKLUS TUNGGAL (DEFAULT & HANYA INI) ---
-        $isTimeAxis = false; // Sumbu X akan menjadi detik (0-17), bukan waktu
-        $totalSeconds = 17;
-        $labels = range(0, $totalSeconds); // Sumbu X: 0, 1, 2, ... 17
+        $isTimeAxis = false; // Sumbu X akan menjadi detik (0, 1, 2...), bukan waktu
 
-        $pvArray = json_decode($this->detail['pv'] ?? '[]', true)['waveforms'];
+        // 1. Decode PV JSON dan ambil 'waveforms'
+        $pvArray = json_decode($this->detail['pv'] ?? '[]', true)['waveforms'] ?? [];
         if (!is_array($pvArray)) {
             $pvArray = []; // Pastikan $pvArray adalah array
         }
 
-        // --- Hasilkan data realistis untuk Toe/Heel ---
-        $peakSecondToeHeel = rand(6, 11); // Waktu puncak yang realistis
-        $peakValueToeHeel = $this->getMax($pvArray[0] ?? []); // Gunakan getMax
-        $toeHeelValues = [];
-        for ($i = 0; $i <= $totalSeconds; $i++) {
-            if ($i <= $peakSecondToeHeel) {
-                // Naik (menggunakan sqrt untuk kurva yang lebih mulus)
-                $val = $peakValueToeHeel * sqrt($i / $peakSecondToeHeel);
-            } else {
-                // Turun
-                $val = $peakValueToeHeel * (1 - (($i - $peakSecondToeHeel) / ($totalSeconds - $peakSecondToeHeel)));
-            }
-            // Bulatkan nilai dan tambahkan noise
-            $roundedVal = round($val);
-            $toeHeelValues[$i] = max(0, $roundedVal + rand(-100, 100) / 100);
-        }
+        // 2. Ambil data "apa adanya" dari $pvArray
+        // $pvArray[0] adalah 'Toe/Heel', $pvArray[1] adalah 'Side'
+        $toeHeelValues = $pvArray[0] ?? [];
+        $sideValues = $pvArray[1] ?? [];
 
-        // --- Hasilkan data realistis untuk Side ---
-        $peakSecondSide = rand(5, 10); // Waktu puncak yang sedikit berbeda
-        $peakValueSide = $this->getMax($pvArray[1] ?? []); // Gunakan getMax
-        $sideValues = [];
-        for ($i = 0; $i <= $totalSeconds; $i++) {
-            if ($i <= $peakSecondSide) {
-                // Naik
-                $val = $peakValueSide * sqrt($i / $peakSecondSide);
-            } else {
-                // Turun
-                $val = $peakValueSide * (1 - (($i - $peakSecondSide) / ($totalSeconds - $peakSecondSide)));
-            }
-            // Bulatkan nilai dan tambahkan noise
-            $roundedVal = (int) round($val);
-            $sideValues[$i] = max(0, $roundedVal + rand(-100, 100) / 100);
-        }
+        // 3. Buat label berdasarkan $this->detail['duration'] (sesuai permintaan)
+        $totalSeconds = (int) ($this->detail['duration'] ?? 0);
+        
+        // Buat labels [0, 1, 2, ... N (duration)]
+        // Misal: jika duration = 27, labels akan menjadi [0, 1, ..., 27] (total 28 elemen)
+        $labels = range(0, $totalSeconds);
 
+        // 4. Siapkan data untuk Chart.js
         $chartData = [
             'labels' => $labels,
-            'toeHeel' => $toeHeelValues,
-            'side' => $sideValues,
-            'isTimeAxis' => $isTimeAxis, // Kirim flag ke JS (selalu false)
+            'toeHeel' => $toeHeelValues, // Data asli
+            'side' => $sideValues,       // Data asli
+            'isTimeAxis' => $isTimeAxis, 
         ];
 
-        // dd($chartData); // Dihapus
+        // 5. Encode JSON dan kirim ke JS
         $chartDataJson = json_encode($chartData);
 
         $this->js(
@@ -230,7 +207,7 @@ new class extends Component {
                                     ticks: {
                                         color: theme.textColor,
                                         stepSize: 1 // Tampilkan 1, 2, 3...
-                                    }
+                                    },
                                 },
                                 y: {
                                     // --- KONFIGURASI SUMBU Y (tetap sama) ---
