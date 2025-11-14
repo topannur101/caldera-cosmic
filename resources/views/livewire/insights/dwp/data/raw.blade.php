@@ -7,6 +7,7 @@ use Livewire\Attributes\Url;
 use Livewire\Attributes\On;
 use App\Models\InsDwpCount;
 use App\Models\InsDwpDevice;
+use App\Helpers\GlobalHelpers;
 use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Traits\HasDateRangeFilter;
@@ -348,14 +349,17 @@ new #[Layout("layouts.app")] class extends Component {
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                        $helpers = new GlobalHelpers();
+                        @endphp
                         @foreach ($counts as $count)
                             @php
                                 $pv = json_decode($count->pv, true)['waveforms'];
                                 $toeHeelArray = $pv[0] ?? null;
                                 $sideArray = $pv[1] ?? null;
 
-                                $toeHeelValue = $toeHeelArray ? $this->getMax($toeHeelArray) : null;
-                                $sideValue = $sideArray ? $this->getMax($sideArray) : null;
+                                $toeHeelValue = $toeHeelArray ? $helpers->getMedian($toeHeelArray) : null;
+                                $sideValue = $sideArray ? $helpers->getMedian($sideArray) : null;
 
                                 $toeHeelComparison = $toeHeelValue ? $this->compareWithStandards($toeHeelValue, $this->stdTh) : null;
                                 $sideComparison = $sideValue ? $this->compareWithStandards($sideValue, $this->stdSide) : null;
