@@ -73,45 +73,23 @@ new class extends Component {
             $pvArray = []; // Pastikan $pvArray adalah array
         }
 
-        // --- Hasilkan data realistis untuk Toe/Heel ---
-        $peakSecondToeHeel = rand(6, 11); // Waktu puncak yang realistis
-        $peakValueToeHeel = $this->getMax($pvArray[0] ?? []); // Gunakan getMax
-        $toeHeelValues = [];
-        for ($i = 0; $i <= $totalSeconds; $i++) {
-            if ($i <= $peakSecondToeHeel) {
-                // Naik (menggunakan sqrt untuk kurva yang lebih mulus)
-                $val = $peakValueToeHeel * sqrt($i / $peakSecondToeHeel);
-            } else {
-                // Turun
-                $val = $peakValueToeHeel * (1 - (($i - $peakSecondToeHeel) / ($totalSeconds - $peakSecondToeHeel)));
-            }
-            // Bulatkan nilai dan tambahkan noise
-            $roundedVal = round($val);
-            $toeHeelValues[$i] = max(0, $roundedVal + rand(-100, 100) / 100);
-        }
+        // 2. Ambil data "apa adanya" dari $pvArray
+        // $pvArray[0] adalah 'Toe/Heel', $pvArray[1] adalah 'Side'
+        $toeHeelValues = $pvArray['th'] ?? [];
+        $sideValues = $pvArray['side'] ?? [];
 
-        // --- Hasilkan data realistis untuk Side ---
-        $peakSecondSide = rand(5, 10); // Waktu puncak yang sedikit berbeda
-        $peakValueSide = $this->getMax($pvArray[1] ?? []); // Gunakan getMax
-        $sideValues = [];
-        for ($i = 0; $i <= $totalSeconds; $i++) {
-            if ($i <= $peakSecondSide) {
-                // Naik
-                $val = $peakValueSide * sqrt($i / $peakSecondSide);
-            } else {
-                // Turun
-                $val = $peakValueSide * (1 - (($i - $peakSecondSide) / ($totalSeconds - $peakSecondSide)));
-            }
-            // Bulatkan nilai dan tambahkan noise
-            $roundedVal = (int) round($val);
-            $sideValues[$i] = max(0, $roundedVal + rand(-100, 100) / 100);
-        }
+        // 3. Buat label berdasarkan $this->detail['duration'] (sesuai permintaan)
+        $totalSeconds = (int) ($this->detail['duration'] ?? 0);
 
+        // Buat labels [0, 1, 2, ... N (duration)]
+        $labels = range(0, $totalSeconds);
+
+        // 4. Siapkan data untuk Chart.js
         $chartData = [
             'labels' => $labels,
-            'toeHeel' => $toeHeelValues,
-            'side' => $sideValues,
-            'isTimeAxis' => $isTimeAxis, // Kirim flag ke JS (selalu false)
+            'toeHeel' => $toeHeelValues, // Data asli
+            'side' => $sideValues,       // Data asli
+            'isTimeAxis' => $isTimeAxis,
         ];
 
         // dd($chartData); // Dihapus

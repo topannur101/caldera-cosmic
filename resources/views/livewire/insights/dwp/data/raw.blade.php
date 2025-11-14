@@ -351,8 +351,8 @@ new #[Layout("layouts.app")] class extends Component {
                         @foreach ($counts as $count)
                             @php
                                 $pv = json_decode($count->pv, true)['waveforms'];
-                                $toeHeelArray = $pv[0] ?? null;
-                                $sideArray = $pv[1] ?? null;
+                                $toeHeelArray = $pv['th'] ?? null;
+                                $sideArray = $pv['side'] ?? null;
 
                                 $toeHeelValue = $toeHeelArray ? $this->getMax($toeHeelArray) : null;
                                 $sideValue = $sideArray ? $this->getMax($sideArray) : null;
