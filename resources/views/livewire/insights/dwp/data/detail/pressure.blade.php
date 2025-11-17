@@ -65,8 +65,6 @@ new class extends Component {
     {
         // --- MODE SIMULASI SIKLUS TUNGGAL (DEFAULT & HANYA INI) ---
         $isTimeAxis = false; // Sumbu X akan menjadi detik (0-17), bukan waktu
-        $totalSeconds = 17;
-        $labels = range(0, $totalSeconds); // Sumbu X: 0, 1, 2, ... 17
 
         $pvArray = json_decode($this->detail['pv'] ?? '[]', true)['waveforms'];
         if (!is_array($pvArray)) {
@@ -76,13 +74,20 @@ new class extends Component {
         // 2. Ambil data "apa adanya" dari $pvArray
         // $pvArray[0] adalah 'Toe/Heel', $pvArray[1] adalah 'Side'
         $toeHeelValues = $pvArray['th'] ?? [];
-        $sideValues = $pvArray['side'] ?? [];
+        $sideValues = $pvArray['side']?? [];
 
         // 3. Buat label berdasarkan $this->detail['duration'] (sesuai permintaan)
         $totalSeconds = (int) ($this->detail['duration'] ?? 0);
-
-        // Buat labels [0, 1, 2, ... N (duration)]
         $labels = range(0, $totalSeconds);
+
+        // Pastikan jumlah label sesuai dengan jumlah data (ambil yang lebih kecil)
+        $maxDataPoints = max(count($toeHeelValues), count($sideValues));
+        if (count($labels) < $maxDataPoints) {
+            $labels = range(0, $maxDataPoints - 1);
+        } elseif (count($labels) > $maxDataPoints) {
+            // Jika labels lebih banyak dari data, potong labels atau isi data kosong
+            $labels = array_slice($labels, 0, $maxDataPoints);
+        }
 
         // 4. Siapkan data untuk Chart.js
         $chartData = [
@@ -92,7 +97,6 @@ new class extends Component {
             'isTimeAxis' => $isTimeAxis,
         ];
 
-        // dd($chartData); // Dihapus
         $chartDataJson = json_encode($chartData);
 
         $this->js(
@@ -131,8 +135,6 @@ new class extends Component {
                                     data: hasData ? data.toeHeel : [],
                                     borderColor: '#ef4444',
                                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                    pointRadius: 4,
-                                    pointHoverRadius: 6,
                                     fill: false,
                                     tension: 0.4,
                                     stepped: false,
@@ -197,7 +199,7 @@ new class extends Component {
                                     type: 'linear', // Gunakan 'linear' karena labelnya 0, 1, 2...
                                     title: {
                                         display: true,
-                                        text: 'Seconds into Cycle', // Judul baru
+                                        text: 'Time (seconds)',
                                         color: theme.textColor
                                     },
                                     grid: {
