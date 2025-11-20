@@ -114,6 +114,21 @@ new #[Layout("layouts.app")] class extends Component {
         return max($numericArray);
     }
 
+     private function getMedian(array $array)
+    {
+        if (empty($array)) return 0;
+        // Filter out non-numeric values
+        $numericArray = array_filter($array, 'is_numeric');
+        if (empty($numericArray)) return 0;
+
+        sort($numericArray);
+        $count = count($numericArray);
+        $middle = floor(($count - 1) / 2);
+        $median = ($count % 2) ? $numericArray[$middle] : ($numericArray[$middle] + $numericArray[$middle + 1]) / 2;
+
+        return round($median);
+    }
+
     #[On("updated")]
     public function with(): array
     {
@@ -351,11 +366,11 @@ new #[Layout("layouts.app")] class extends Component {
                         @foreach ($counts as $count)
                             @php
                                 $pv = json_decode($count->pv, true)['waveforms'];
-                                $toeHeelArray = $pv['th'] ?? null;
-                                $sideArray = $pv['side'] ?? null;
+                                $toeHeelArray = $pv[0] ?? null;
+                                $sideArray = $pv[1] ?? null;
 
-                                $toeHeelValue = $toeHeelArray ? $this->getMax($toeHeelArray) : null;
-                                $sideValue = $sideArray ? $this->getMax($sideArray) : null;
+                                $toeHeelValue = $toeHeelArray ? $this->getMedian($toeHeelArray) : null;
+                                $sideValue = $sideArray ? $this->getMedian($sideArray) : null;
 
                                 $toeHeelComparison = $toeHeelValue ? $this->compareWithStandards($toeHeelValue, $this->stdTh) : null;
                                 $sideComparison = $sideValue ? $this->compareWithStandards($sideValue, $this->stdSide) : null;

@@ -90,8 +90,8 @@ class InsDwpPollTest extends Command
                 }
                 try {
                     $readings = $this->pollDevice($device);
-                    $cycleReadings += $readings;
-                    $this->updateDeviceStats($device->name, true);
+                    // $cycleReadings += $readings;
+                    // $this->updateDeviceStats($device->name, true);
                 } catch (\Throwable $th) {
                     $this->error("✗ Error polling {$device->name} ({$device->ip_address}): " . $th->getMessage(). $th->getLine());
                     $cycleErrors++;
@@ -139,44 +139,56 @@ class InsDwpPollTest extends Command
     private function pollDevice(InsDwpDevice $device)
     {
         $unit_id = 1;
-        $savedReadingsCount = 0;
+        $responses = [];
 
         foreach ($device->config as $lineConfig) {
             $line = strtoupper(trim($lineConfig['line']));
-
-            foreach($lineConfig['list_mechine'] as $listMachine){
+            foreach ($lineConfig['list_mechine'] as $listMachine) {
+                $machineName = $listMachine['name'];
+                $ip = $device->ip_address;
                 try {
-                    $machineName = $listMachine['name'];
+                    // Build separate requests for each metric (like InsStcPoll)
+                    $th_l_req = ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$this->modbusPort}", $unit_id)
+                        ->int16($listMachine['addr_th_l'], 'toe_heel_left')->build();
+                    $th_r_req = ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$this->modbusPort}", $unit_id)
+                        ->int16($listMachine['addr_th_r'], 'toe_heel_right')->build();
+                    $side_l_req = ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$this->modbusPort}", $unit_id)
+                        ->int16($listMachine['addr_side_l'], 'side_left')->build();
+                    $side_r_req = ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$this->modbusPort}", $unit_id)
+                        ->int16($listMachine['addr_side_r'], 'side_right')->build();
 
-                    // We can optimize by reading all 4 registers in one request
-                    $request = ReadRegistersBuilder::newReadInputRegisters('tcp://' . $device->ip_address . ':' . $this->modbusPort, $unit_id)
-                        ->int16($listMachine['addr_th_l'], 'toe_heel_left')
-                        ->int16($listMachine['addr_th_r'], 'toe_heel_right')
-                        ->int16($listMachine['addr_side_l'], 'side_left')
-                        ->int16($listMachine['addr_side_r'], 'side_right')
-                        ->build();
+                    $th_l_resp = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))->sendRequests($th_l_req)->getData();
+                    $th_r_resp = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))->sendRequests($th_r_req)->getData();
+                    $side_l_resp = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))->sendRequests($side_l_req)->getData();
+                    $side_r_resp = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))->sendRequests($side_r_req)->getData();
 
-                    $response = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))
-                        ->sendRequests($request)->getData();
-
-                    // Process Left and Right positions together as one machine cycle
-                    $savedReadingsCount += $this->processMachineCycle(
-                        $line,
-                        $machineName,
-                        [
-                            'L' => ['toe_heel' => $response['toe_heel_left'], 'side' => $response['side_left']],
-                            'R' => ['toe_heel' => $response['toe_heel_right'], 'side' => $response['side_right']]
-                        ]
+                    // Merge all metric data into one array
+                    $data = array_merge(
+                        $th_l_resp,
+                        $th_r_resp,
+                        $side_l_resp,
+                        $side_r_resp
                     );
 
-                } catch (\Exception $e) {
+                    $positionsData = [
+                        'L' => [
+                            'toe_heel' => $data['toe_heel_left'] ?? 0,
+                            'side' => $data['side_left'] ?? 0,
+                        ],
+                        'R' => [
+                            'toe_heel' => $data['toe_heel_right'] ?? 0,
+                            'side' => $data['side_right'] ?? 0,
+                        ],
+                    ];
+                    $savedCount = $this->processMachineCycle($line, $machineName, $positionsData);
+                } catch (\Throwable $e) {
                     $this->error("    ✗ Error reading machine {$machineName} on line {$line}: " . $e->getMessage());
                     continue;
                 }
             }
         }
 
-        return $savedReadingsCount;
+        return $savedCount;
     }
 
     /**

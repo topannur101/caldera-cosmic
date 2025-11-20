@@ -63,37 +63,26 @@ new class extends Component {
 
     private function renderPressureChartClient()
     {
-        // --- MODE SIMULASI SIKLUS TUNGGAL (DEFAULT & HANYA INI) ---
-        $isTimeAxis = false; // Sumbu X akan menjadi detik (0-17), bukan waktu
+        $isTimeAxis = false;
+        $pvRaw = json_decode($this->detail['pv'] ?? '[]', true);
+        $waveforms = $pvRaw['waveforms'] ?? [];
+        $duration = (int) ($this->detail['duration'] ?? 0);
+        // Get values and timestamps
+        $toeHeelValuesRaw = $waveforms[0] ?? [];
+        $sideValuesRaw = $waveforms[1] ?? [];
+        $timestampsRaw = $pvRaw['timestamps'] ?? [];
 
-        $pvArray = json_decode($this->detail['pv'] ?? '[]', true)['waveforms'];
-        if (!is_array($pvArray)) {
-            $pvArray = []; // Pastikan $pvArray adalah array
-        }
+        // Repeat/hold values for each second
+        $toeHeelValues = $this->repeatWaveform($toeHeelValuesRaw, $timestampsRaw, $duration);
+        $sideValues = $this->repeatWaveform($sideValuesRaw, $timestampsRaw, $duration);
 
-        // 2. Ambil data "apa adanya" dari $pvArray
-        // $pvArray[0] adalah 'Toe/Heel', $pvArray[1] adalah 'Side'
-        $toeHeelValues = $pvArray['th'] ?? [];
-        $sideValues = $pvArray['side']?? [];
+        // X axis: seconds from 0 to duration
+        $labels = range(1, $duration);
 
-        // 3. Buat label berdasarkan $this->detail['duration'] (sesuai permintaan)
-        $totalSeconds = (int) ($this->detail['duration'] ?? 0);
-        $labels = range(0, $totalSeconds);
-
-        // Pastikan jumlah label sesuai dengan jumlah data (ambil yang lebih kecil)
-        $maxDataPoints = max(count($toeHeelValues), count($sideValues));
-        if (count($labels) < $maxDataPoints) {
-            $labels = range(0, $maxDataPoints - 1);
-        } elseif (count($labels) > $maxDataPoints) {
-            // Jika labels lebih banyak dari data, potong labels atau isi data kosong
-            $labels = array_slice($labels, 0, $maxDataPoints);
-        }
-
-        // 4. Siapkan data untuk Chart.js
         $chartData = [
             'labels' => $labels,
-            'toeHeel' => $toeHeelValues, // Data asli
-            'side' => $sideValues,       // Data asli
+            'toeHeel' => $toeHeelValues,
+            'side' => $sideValues,
             'isTimeAxis' => $isTimeAxis,
         ];
 
@@ -274,6 +263,32 @@ new class extends Component {
             })();
             "
         );
+    }
+
+    private function repeatWaveform(array $valuesRaw, array $timestampsRaw, int $duration): array {
+        $count = count($valuesRaw);
+        if ($count === 0 || count($timestampsRaw) !== $count) {
+            return [];
+        }
+        // Normalize timestamps to seconds from start
+        $startTs = (int)($timestampsRaw[0] / 1000);
+        $secValueMap = [];
+        $maxSec = 0;
+        for ($i = 0; $i < $count; $i++) {
+            $sec = (int)($timestampsRaw[$i] / 1000) - $startTs;
+            $secValueMap[$sec] = $valuesRaw[$i];
+            if ($sec > $maxSec) $maxSec = $sec;
+        }
+        // Build result array with repeated/held values
+        $result = [];
+        $lastValue = 0;
+        for ($sec = 0; $sec <= $maxSec; $sec++) {
+            if (isset($secValueMap[$sec])) {
+                $lastValue = $secValueMap[$sec];
+            }
+            $result[] = $lastValue;
+        }
+        return $result;
     }
 };
 ?>
