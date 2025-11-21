@@ -114,7 +114,7 @@ new #[Layout("layouts.app")] class extends Component {
         return max($numericArray);
     }
 
-     private function getMedian(array $array)
+    private function getMedian(array $array)
     {
         if (empty($array)) return 0;
         // Filter out non-numeric values
@@ -160,9 +160,8 @@ new #[Layout("layouts.app")] class extends Component {
 
                 $columns = [
                     __("Line"),
-                    __("Device"),
                     __("Cumulative"),
-                    __("Incremental"),
+                    __("Duration"),
                     __("Created At"),
                 ];
 
@@ -175,9 +174,8 @@ new #[Layout("layouts.app")] class extends Component {
                             $device = $this->getDeviceForLine($count->line);
                             fputcsv($file, [
                                 $count->line,
-                                $device ? $device->name : "N/A",
                                 $count->cumulative,
-                                $count->incremental,
+                                $count->duration,
                                 $count->created_at,
                             ]);
                         }

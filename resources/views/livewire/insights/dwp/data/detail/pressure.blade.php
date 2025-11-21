@@ -288,6 +288,25 @@ new class extends Component {
             }
             $result[] = $lastValue;
         }
+        // add 0 for lasting seconds up to duration
+        for ($sec = $maxSec + 1; $sec < $duration; $sec++) {
+            $result[] = 0;
+        }
+
+        // Ensure result has exactly $duration elements (labels are 1..$duration)
+        // - pad with trailing zeros if too short
+        // - trim if longer
+        if (count($result) < $duration) {
+            $result = array_pad($result, $duration, 0);
+        } elseif (count($result) > $duration) {
+            $result = array_slice($result, 0, $duration);
+        }
+
+        // Always set the last duration slot to zero so the chart ends at 0
+        if ($duration > 0) {
+            $result[$duration - 1] = 0;
+        }
+
         return $result;
     }
 };
