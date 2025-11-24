@@ -50,7 +50,15 @@ CYCLE_START_THRESHOLD = 1
 CYCLE_END_THRESHOLD = 2
 MIN_CYCLE_DURATION_MS = 200
 MAX_BUFFER_LENGTH = 500
-CYCLE_TIMEOUT_SEC = 60
+CYCLE_TIMEOUT_SEC = 30
+
+# Minimum accepted cycle duration (seconds). Cycles shorter than this are ignored.
+MIN_DURATION_S = 10
+
+# Split / peak tuning (tweak these for your machine)
+SPLIT_MIN_SAMPLES = 5
+SPLIT_MIN_ZERO_GAP = 3
+SPLIT_PEAK_DISTANCE = 3
 
 # Quality thresholds
 GOOD_MIN, GOOD_MAX = 30, 45
@@ -247,8 +255,8 @@ class DWPPoller:
                     "G5": [
                         MachineConfig("mc1", 199, 201, 200, 202),
                         MachineConfig("mc2", 203, 205, 204, 206),
-                        MachineConfig("mc3", 309, 310, 311, 312),
-                        MachineConfig("mc4", 313, 314, 315, 316),
+                        MachineConfig("mc3", 309, 311, 310, 312),
+                        MachineConfig("mc4", 313, 315, 314, 316),
                     ]
                 },
             )
@@ -322,12 +330,18 @@ class DWPPoller:
         now = time.time()
         state = self.cycle_states.setdefault(key, {"state": "idle"})
 
-        # Timeout reset
+        # Timeout reset — if a cycle runs too long, save as TIMEOUT (best-effort)
         if (
             state["state"] != "idle"
             and (now - state.get("start_time", 0)) > CYCLE_TIMEOUT_SEC
         ):
-            logger.warning(f"⏱️  Cycle {key} timed out — resetting")
+            logger.warning(f"⏱️  Cycle {key} timed out — saving as TIMEOUT and resetting")
+            # try to save whatever we have as a TIMEOUT cycle
+            try:
+                elapsed_ms = int((now - state.get("start_time", now)) * 1000)
+                await self.save_cycle_to_db(line, machine_name, pos, state, elapsed_ms, "TIMEOUT")
+            except Exception as e:
+                logger.error(f"❌ Failed to save TIMEOUT cycle {key}: {e}")
             state["state"] = "idle"
 
         # State machine
@@ -527,18 +541,51 @@ class DWPPoller:
         th_buf = state["th_buf"]
         side_buf = state["side_buf"]
         t_buf = state.get("t_buf", [])
+        # Convert per-sample timestamps to epoch-ms for duration / sanity checks
+        timestamps_ms = [int(ts * 1000) for ts in t_buf] if t_buf else []
 
-        # Detect peaks in Toe/Heel
-        peaks, _ = find_peaks(th_buf, height=CYCLE_START_THRESHOLD, distance=3)
-        if len(peaks) > 1:
-            # In some setups small secondary bumps or minor oscillations inside a
-            # single physical cycle cause multiple local peaks being detected.
-            # For your system we prefer to store the entire buffer as a single
-            # cycle rather than splitting into sub-cycles which can be incorrect.
+        # Prefer duration computed from timestamps (more accurate); fall back to provided duration_ms
+        if len(timestamps_ms) > 1:
+            duration_ms_field = int(timestamps_ms[-1] - timestamps_ms[0])
+        else:
+            duration_ms_field = int(duration_ms)
+
+        duration_s = duration_ms_field / 1000.0
+
+        # If the entire buffer is shorter than MIN_DURATION_S, skip saving/splitting
+        if duration_s < MIN_DURATION_S:
             logger.info(
-                f"ℹ️ Multiple peaks ({len(peaks)}) in {line}-{machine_name}-{pos} — saving merged cycle (no split)"
+                f"⏭️ Skipping {line}-{machine_name}-{pos}: total duration {duration_s:.1f}s < MIN_DURATION_S ({MIN_DURATION_S}s) - not saving or splitting"
             )
-            # continue and save the merged cycle below
+            return
+
+        # Build combined signal (element-wise max) to detect physical cycle peaks
+        combined = [max(a, b) for a, b in zip(th_buf, side_buf)] if th_buf and side_buf else th_buf or side_buf
+
+        # Detect peaks on combined signal so we catch cycles where TH and Side
+        # peak at different times or where only one channel is active.
+        peaks, _ = find_peaks(combined, height=CYCLE_START_THRESHOLD, distance=SPLIT_PEAK_DISTANCE)
+        if len(peaks) > 1:
+            logger.info(
+                f"ℹ️ Multiple peaks ({len(peaks)}) in {line}-{machine_name}-{pos} — attempting split"
+            )
+            try:
+                saved_count = await self.split_and_save_cycles(
+                    line,
+                    machine_name,
+                    pos,
+                    th_buf,
+                    side_buf,
+                    list(peaks),
+                    duration_ms,
+                    t_buf,
+                )
+            except Exception as e:
+                logger.error(f"❌ Error splitting cycles: {e}")
+                saved_count = 0
+            if saved_count and saved_count > 0:
+                logger.info(f"✅ Saved {saved_count} split sub-cycles for {line}-{machine_name}-{pos}")
+                return
 
         max_th = max(th_buf) if th_buf else 0
         max_side = max(side_buf) if side_buf else 0
@@ -558,6 +605,13 @@ class DWPPoller:
 
         # Convert to seconds for storage/visualization (float seconds)
         duration_s = duration_ms_field / 1000.0
+
+        # Skip cycles that are too short to be meaningful
+        if duration_s < MIN_DURATION_S:
+            logger.info(
+                f"⏭️ Skipping {line}-{machine_name}-{pos}: duration {duration_s:.1f}s < MIN_DURATION_S ({MIN_DURATION_S}s)"
+            )
+            return
 
         # 🆕 WAVEFORM SANITY CHECK
         is_sane, reason = self.validate_waveform_sanity(
@@ -661,20 +715,47 @@ class DWPPoller:
         t_buf: List[float],
     ):
         """Split multi-peak buffer into individual cycles"""
+        # element-wise max of TH/Side to reason about physical gaps
+        combined = [max(a, b) for a, b in zip(th_buf, side_buf)] if th_buf and side_buf else th_buf or side_buf
+
+        # helper: check for a run of N consecutive "low" samples in combined between i..j
+        def has_min_zero_gap(start_idx: int, end_idx: int, min_gap: int) -> bool:
+            if end_idx < start_idx:
+                return False
+            run = 0
+            for k in range(start_idx, end_idx + 1):
+                if combined[k] <= CYCLE_END_THRESHOLD:
+                    run += 1
+                    if run >= min_gap:
+                        return True
+                else:
+                    run = 0
+            return False
+
+        saved_count = 0
+        prev_peak = None
         for i, peak_idx in enumerate(peaks):
-            # Find start (first non-zero before peak)
+            # If there was a previous peak, require a zero-gap between them to split
+            if prev_peak is not None:
+                if not has_min_zero_gap(prev_peak + 1, peak_idx - 1, SPLIT_MIN_ZERO_GAP):
+                    logger.info(
+                        f"⏭️ Peaks {prev_peak} and {peak_idx} too close (no zero-gap) — treating as same cycle"
+                    )
+                    prev_peak = peak_idx
+                    continue
+            prev_peak = peak_idx
+
+            # Find start (first above-threshold before peak)
             start_idx = peak_idx
-            while start_idx > 0 and th_buf[start_idx - 1] <= CYCLE_END_THRESHOLD:
+            while start_idx > 0 and combined[start_idx - 1] > CYCLE_END_THRESHOLD:
                 start_idx -= 1
             start_idx = max(0, start_idx)
 
-            # Find end (first zero after peak)
+            # Find end (first below-threshold after peak)
             end_idx = peak_idx
-            while (
-                end_idx < len(th_buf) - 1 and th_buf[end_idx + 1] > CYCLE_END_THRESHOLD
-            ):
+            while end_idx < len(combined) - 1 and combined[end_idx + 1] > CYCLE_END_THRESHOLD:
                 end_idx += 1
-            end_idx = min(len(th_buf) - 1, end_idx)
+            end_idx = min(len(combined) - 1, end_idx)
 
             # Extract sub-cycle
             th_sub = th_buf[start_idx : end_idx + 1]
@@ -692,6 +773,23 @@ class DWPPoller:
 
             # store seconds for DB/visualization
             sub_duration_s = sub_duration_ms / 1000.0
+
+            # Skip very short sub-cycles
+            if sub_duration_s < MIN_DURATION_S:
+                logger.info(
+                    f"⏭️ Skipping split sub-cycle {i+1}/{len(peaks)} for {line}-{machine_name}-{pos}: duration {sub_duration_s:.1f}s < {MIN_DURATION_S}s"
+                )
+                continue
+
+            # Validate sub-cycle waveform sanity; skip invalid ones
+            is_sane, reason = self.validate_waveform_sanity(
+                th_sub, side_sub, len(th_sub), sub_duration_ms, pos, sub_timestamps_ms
+            )
+            if not is_sane:
+                logger.info(
+                    f"⏭️ Skipping split sub-cycle {i+1}/{len(peaks)} for {line}-{machine_name}-{pos}: invalid waveform ({reason})"
+                )
+                continue
 
             # Save as individual cycle
             max_th = max(th_sub) if th_sub else 0
@@ -725,7 +823,8 @@ class DWPPoller:
                 logger.info(
                     f"✅ SPLIT Cycle {i + 1}/{len(peaks)} saved for {line}-{machine_name}-{pos}"
                 )
-
+                saved_count += 1
+        return saved_count
 
 # ----------------------------
 # ENTRY POINT
