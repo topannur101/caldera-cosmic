@@ -6,9 +6,17 @@ import logging
 import signal
 import time
 import argparse
+import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load environment variables from .env file in project root
+project_root = Path(__file__).resolve().parent.parent.parent
+dotenv_path = project_root / '.env'
+load_dotenv(dotenv_path=dotenv_path)
 
 # Async MySQL & Modbus
 import aiomysql
@@ -35,11 +43,11 @@ MODBUS_UNIT_ID = 1
 
 # MySQL
 DB_CONFIG = {
-    "host": "127.0.0.1",
-    "port": 3306,
-    "user": "root",
-    "password": "",
-    "db": "caldera_cosmic",
+    "host": os.getenv("DB_HOST", "127.0.0.1"),
+    "port": int(os.getenv("DB_PORT", "3306")),
+    "user": os.getenv("DB_USERNAME"),
+    "password": os.getenv("DB_PASSWORD"),
+    "db": os.getenv("DB_DATABASE"),
     "charset": "utf8mb4",
     "autocommit": True,  # Critical for performance!
     "maxsize": 10,  # Connection pool size
@@ -53,7 +61,7 @@ MAX_BUFFER_LENGTH = 500
 CYCLE_TIMEOUT_SEC = 30
 
 # Minimum accepted cycle duration (seconds). Cycles shorter than this are ignored.
-MIN_DURATION_S = 10
+MIN_DURATION_S = 8
 
 # Split / peak tuning (tweak these for your machine)
 SPLIT_MIN_SAMPLES = 5
