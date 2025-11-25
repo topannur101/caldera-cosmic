@@ -113,12 +113,12 @@ new #[Layout("layouts.app")] class extends Component {
         // Filter out non-numeric values
         $numericArray = array_filter($array, 'is_numeric');
         if (empty($numericArray)) return 0;
-        
+
         sort($numericArray);
         $count = count($numericArray);
         $middle = floor(($count - 1) / 2);
         $median = ($count % 2) ? $numericArray[$middle] : ($numericArray[$middle] + $numericArray[$middle + 1]) / 2;
-        
+
         return round($median);
     }
 
@@ -154,7 +154,7 @@ new #[Layout("layouts.app")] class extends Component {
         } else {
             $q1 = $min;
         }
-        
+
         // Q3 (Median of upper half)
         $upper_half = array_slice($data, ($count % 2 === 0) ? $mid_index : $mid_index + 1);
         $q3 = 0;
@@ -167,7 +167,7 @@ new #[Layout("layouts.app")] class extends Component {
         } else {
              $q3 = $max;
         }
-        
+
         // Return the 5-point summary, rounded
         return array_map(fn($v) => round($v, 2), [$min, $q1, $median, $q3, $max]);
     }
@@ -211,7 +211,7 @@ new #[Layout("layouts.app")] class extends Component {
 
         $presureData = $dataRaw->whereNotNull('pv')->get()->toArray();
         $counts = collect($presureData);
-        
+
         // Prepare arrays to hold median values for each of the 4 sensors
         $toeheel_left_data = [];
         $toeheel_right_data = [];
@@ -221,22 +221,32 @@ new #[Layout("layouts.app")] class extends Component {
         // Loop through each database record
         foreach ($counts as $count) {
             $arrayPv = json_decode($count['pv'], true);
-            // Check if pv data is valid
-            if (isset($arrayPv[0]) && isset($arrayPv[1])) {
+
+            // Check for enhanced PV structure first
+            if (isset($arrayPv['waveforms']) && is_array($arrayPv['waveforms'])) {
+                // Enhanced format: extract waveforms
+                $waveforms = $arrayPv['waveforms'];
+                $toeHeelArray = $waveforms[0] ?? [];
+                $sideArray = $waveforms[1] ?? [];
+            } elseif (isset($arrayPv[0]) && isset($arrayPv[1])) {
+                // Legacy format: direct array access
                 $toeHeelArray = $arrayPv[0];
                 $sideArray = $arrayPv[1];
-                
-                // Calculate median for each sensor array
-                $toeHeelMedian = $this->getMedian($toeHeelArray);
-                $sideMedian = $this->getMedian($sideArray);
-                
-                if ($count['position'] === 'L') {
-                    $toeheel_left_data[] = $toeHeelMedian;
-                    $side_left_data[] = $sideMedian;
-                } elseif ($count['position'] === 'R') {
-                    $toeheel_right_data[] = $toeHeelMedian;
-                    $side_right_data[] = $sideMedian;
-                }
+            } else {
+                // Invalid format, skip this record
+                continue;
+            }
+
+            // Calculate median for each sensor array
+            $toeHeelMedian = $this->getMedian($toeHeelArray);
+            $sideMedian = $this->getMedian($sideArray);
+
+            if ($count['position'] === 'L') {
+                $toeheel_left_data[] = $toeHeelMedian;
+                $side_left_data[] = $sideMedian;
+            } elseif ($count['position'] === 'R') {
+                $toeheel_right_data[] = $toeHeelMedian;
+                $side_right_data[] = $sideMedian;
             }
         }
 

@@ -6,6 +6,7 @@ use App\Models\InsDwpDevice;
 use Illuminate\Console\Command;
 use ModbusTcpClient\Composer\Write\WriteRegistersBuilder;
 use ModbusTcpClient\Network\NonBlockingClient;
+use ModbusTcpClient\Composer\Write\WriteCoilsBuilder;
 
 class InsDwpReset extends Command
 {
@@ -69,25 +70,23 @@ class InsDwpReset extends Command
         
         foreach ($device->config as $lineConfig) {
             $line = strtoupper(trim($lineConfig['line']));
-            $resetAddr = $lineConfig['addr_reset'];
-            
+            $resetAddr = $lineConfig['dwp_alarm']['addr_reset'];
             if ($this->option('d')) {
                 $this->line("  Resetting line {$line} at address {$resetAddr}");
             }
 
             try {
-                // Build Modbus write request to trigger reset
-                $request = WriteRegistersBuilder::newWriteMultipleRegisters(
-                    'tcp://' . $device->ip_address . ':502', 
+                // Build Modbus coils
+                $request = WriteCoilsBuilder::newWriteMultipleCoils(
+                    'tcp://' . $device->ip_address . ':503', 
                     $unit_id,
-                    $resetAddr
+                    1
                 )
-                ->int16(1) // Write value 1 to trigger reset
+                ->coil($resetAddr,1) // <-- Write a single 'true' (1) value
                 ->build();
 
                 // Execute Modbus write request
                 $response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($request);
-
                 if ($this->option('v')) {
                     $this->info("  ✓ Reset signal sent to line {$line}");
                 }

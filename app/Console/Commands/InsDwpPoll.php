@@ -16,14 +16,15 @@ class InsDwpPoll extends Command
     protected $modbusTimeoutSeconds = 2;
     protected $modbusPort = 503;
 
-    // Cycle detection configuration - now with independent thresholds for each sensor
-    protected $cycleStartThreshold = 1; // Value to detect the start of a cycle
-    protected $toeHeelEndThreshold = 2; // Value to detect end of toe/heel cycle
-    protected $sideEndThreshold = 2;    // Value to detect end of side cycle
-    protected $goodValueMin = 30;       // Min value for a good reading
-    protected $goodValueMax = 40;       // Max value for a good reading
+    // Cycle detection configuration
+    protected $cycleStartThreshold = 2; // Value to detect the start of a cycle (now used by 'capturing' state)
+    protected $toeHeelEndThreshold = 0; // Value to detect end of toe/heel cycle
+    // Note: sideEndThreshold is no longer needed in the new logic but left for context
+    protected $sideEndThreshold = 0;
+    protected $goodValueMin = 30;        // Min value for a good reading
+    protected $goodValueMax = 45;        // Max value for a good reading
     protected $cycleTimeoutSeconds = 30; // Failsafe to reset a stuck cycle
-    
+
     /**
      * The name and signature of the console command.
      *
@@ -40,15 +41,17 @@ class InsDwpPoll extends Command
 
     // In-memory buffer to track last cumulative values per line
     protected $lastCumulativeValues = [];
-    
-    // State machine for cycle detection - now tracks each sensor independently
-    // Example entry: ['LINEA-mc1-L' => ['state' => 'capturing', 'toe_heel_values' => [], 'side_values' => [], 'toe_heel_ended' => false, 'side_ended' => false, 'start_time' => 167...]]
+
+    // State machine for cycle detection
+    // NEW: Tracks each position (L/R) independently.
+    // Example: ['LINEA-mc1-L' => ['state' => 'idle']]
+    // Example: ['LINEA-mc1-R' => ['state' => 'capturing', 'start_time' => 167...]]
     protected $cycleStates = [];
-    
+
     // Memory optimization counters
     protected $pollCycleCount = 0;
     protected $memoryCleanupInterval = 1000; // Clean memory every 1000 cycles
-    
+
     // Statistics tracking
     protected $deviceStats = [];
     protected $totalReadings = 0;
@@ -73,14 +76,14 @@ class InsDwpPoll extends Command
                 $this->comment("  → {$device->name} ({$device->ip_address}) - Lines: {$lines}");
             }
         }
-        
+
         $this->initializeLastValues($devices);
 
         while (true) {
             $cycleStartTime = microtime(true);
             $cycleReadings = 0;
             $cycleErrors = 0;
-            
+
             foreach ($devices as $device) {
                 if ($this->option('v')) {
                     $this->comment("→ Polling {$device->name} ({$device->ip_address})");
@@ -95,19 +98,19 @@ class InsDwpPoll extends Command
                     $this->updateDeviceStats($device->name, false);
                 }
             }
-            
+
             $this->totalReadings += $cycleReadings;
             $this->totalErrors += $cycleErrors;
-            
+
             if ($this->option('v') && ($cycleReadings > 0 || $cycleErrors > 0)) {
                 $cycleTime = microtime(true) - $cycleStartTime;
-                $this->info("Cycle #{$this->pollCycleCount}: {$cycleReadings} new readings saved, {$cycleErrors} errors, " . 
+                $this->info("Cycle #{$this->pollCycleCount}: {$cycleReadings} new readings saved, {$cycleErrors} errors, " .
                             number_format($cycleTime * 1000, 2) . "ms");
             }
 
             sleep($this->pollIntervalSeconds);
             $this->pollCycleCount++;
-            
+
             if ($this->pollCycleCount % $this->memoryCleanupInterval === 0) {
                 $this->cleanupMemory();
             }
@@ -131,7 +134,7 @@ class InsDwpPoll extends Command
     }
 
     /**
-     * Poll a single device and process all its lines using the new state machine logic
+     * Poll a single device and process all its lines
      */
     private function pollDevice(InsDwpDevice $device)
     {
@@ -140,7 +143,7 @@ class InsDwpPoll extends Command
 
         foreach ($device->config as $lineConfig) {
             $line = strtoupper(trim($lineConfig['line']));
-            
+
             foreach($lineConfig['list_mechine'] as $listMachine){
                 try {
                     $machineName = $listMachine['name'];
@@ -152,13 +155,19 @@ class InsDwpPoll extends Command
                         ->int16($listMachine['addr_side_l'], 'side_left')
                         ->int16($listMachine['addr_side_r'], 'side_right')
                         ->build();
-                    
+
                     $response = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))
                         ->sendRequests($request)->getData();
 
-                    // Process Left and Right positions independently
-                    $savedReadingsCount += $this->processMachineCycle($line, $machineName, 'L', $response['toe_heel_left'], $response['side_left']);
-                    $savedReadingsCount += $this->processMachineCycle($line, $machineName, 'R', $response['toe_heel_right'], $response['side_right']);
+                    // Process Left and Right positions together as one machine cycle
+                    $savedReadingsCount += $this->processMachineCycle(
+                        $line,
+                        $machineName,
+                        [
+                            'L' => ['toe_heel' => $response['toe_heel_left'], 'side' => $response['side_left']],
+                            'R' => ['toe_heel' => $response['toe_heel_right'], 'side' => $response['side_right']]
+                        ]
+                    );
 
                 } catch (\Exception $e) {
                     $this->error("    ✗ Error reading machine {$machineName} on line {$line}: " . $e->getMessage());
@@ -166,129 +175,257 @@ class InsDwpPoll extends Command
                 }
             }
         }
-        
+
         return $savedReadingsCount;
     }
 
     /**
-     * Core state machine logic to process a single cycle for one machine position
-     * Now tracks toe/heel and side sensors independently
+     * MODIFIED: This function now processes L and R positions independently
+     * by delegating to the new processPositionCycle method.
      */
-    private function processMachineCycle(string $line, string $machineName, string $position, int $toeHeelValue, int $sideValue)
+    private function processMachineCycle(string $line, string $machineName, array $positionsData)
     {
-        $cycleKey = "{$line}-{$machineName}-{$position}";
-        $currentState = $this->cycleStates[$cycleKey] ?? ['state' => 'idle'];
+        $savedCount = 0;
 
-        // Failsafe timeout logic
-        if ($currentState['state'] === 'capturing' && (time() - $currentState['start_time']) > $this->cycleTimeoutSeconds) {
-            if($this->option('d')) {
-                $this->warn("Cycle for {$cycleKey} timed out. Resetting.");
-            }
-            unset($this->cycleStates[$cycleKey]);
-            $currentState['state'] = 'idle';
-        }
+        // Process Left position cycle independently
+        $savedCount += $this->processPositionCycle(
+            $line,
+            $machineName,
+            'L',
+            $positionsData['L'] // ['toe_heel' => value, 'side' => value]
+        );
 
-        // STATE: IDLE -> CAPTURING
-        if ($currentState['state'] === 'idle' && ($toeHeelValue >= $this->cycleStartThreshold || $sideValue >= $this->cycleStartThreshold)) {
-            $this->cycleStates[$cycleKey] = [
-                'state' => 'capturing',
-                'toe_heel_values' => [$toeHeelValue],
-                'side_values' => [$sideValue],
-                'toe_heel_ended' => false,
-                'side_ended' => false,
-                'start_time' => time(),
-            ];
-            if($this->option('d')) {
-                $this->line("Cycle started for {$cycleKey}. Initial values: [{$toeHeelValue}, {$sideValue}]");
-            }
-        } 
-        // STATE: CAPTURING
-        elseif ($currentState['state'] === 'capturing') {
-            
-            // Add current values to the collection arrays
-            $this->cycleStates[$cycleKey]['toe_heel_values'][] = $toeHeelValue;
-            $this->cycleStates[$cycleKey]['side_values'][] = $sideValue;
+        // Process Right position cycle independently
+        $savedCount += $this->processPositionCycle(
+            $line,
+            $machineName,
+            'R',
+            $positionsData['R'] // ['toe_heel' => value, 'side' => value]
+        );
 
-            // Check if toe/heel cycle has ended (dropped below threshold)
-            if (!$this->cycleStates[$cycleKey]['toe_heel_ended'] && $toeHeelValue <= $this->toeHeelEndThreshold) {
-                $this->cycleStates[$cycleKey]['toe_heel_ended'] = true;
-                if($this->option('d')) {
-                    $this->line("Toe/heel cycle ended for {$cycleKey}");
-                }
-            }
-
-            // Check if side cycle has ended (dropped below threshold)
-            if (!$this->cycleStates[$cycleKey]['side_ended'] && $sideValue <= $this->sideEndThreshold) {
-                $this->cycleStates[$cycleKey]['side_ended'] = true;
-                if($this->option('d')) {
-                    $this->line("Side cycle ended for {$cycleKey}");
-                }
-            }
-
-            // A complete cycle ends when BOTH sensors have ended their cycles
-            if ($this->cycleStates[$cycleKey]['toe_heel_ended'] && $this->cycleStates[$cycleKey]['side_ended']) {
-                $toeHeelValues = $this->cycleStates[$cycleKey]['toe_heel_values'];
-                $sideValues = $this->cycleStates[$cycleKey]['side_values'];
-                
-                // Combine the collected values into one array for saving
-                $collectedData = [$toeHeelValues, $sideValues];
-
-                if ($this->option('d')) {
-                    $this->line("Complete cycle ended for {$cycleKey}. Collected data: [" . 
-                                implode(',', $toeHeelValues) . "] [" . 
-                                implode(',', $sideValues) . "]");
-                }
-
-                // Only save if the cycle has good values (e.g., peak toe/heel is in the good range)
-                $peakToeHeel = max($toeHeelValues);
-                if ($peakToeHeel >= $this->goodValueMin && $peakToeHeel <= $this->goodValueMax) {
-                    $this->saveSuccessfulCycle($line, $machineName, $position, $collectedData);
-                    unset($this->cycleStates[$cycleKey]);
-                    return 1;
-                } else {
-                    if ($this->option('v')) {
-                        $this->warn("Peak value {$peakToeHeel} for {$cycleKey} is outside the good range ({$this->goodValueMin}-{$this->goodValueMax}). Discarding cycle.");
-                    }
-                }
-                
-                // Reset the state whether it was good or not.
-                unset($this->cycleStates[$cycleKey]);
-            }
-        }
-        
-        return 0;
+        return $savedCount;
     }
 
     /**
-     * Function to handle database insertion and incrementing counts
+     * Process a single position (L/R) with dual-buffer logic.
+     * Starts when either sensor ≥ 10, ends when both ≤ 0.
+     * Saves full waveform arrays if both peaks are in [30,45].
      */
-    private function saveSuccessfulCycle(string $line, string $machineName, string $position, array $collectedData)
+    private function processPositionCycle(string $line, string $machineName, string $position, array $data)
     {
-        // 1. Get the current cumulative count and increment it for the new record.
-        $lastCumulative = $this->lastCumulativeValues[$line] ?? 0;
-        $newCumulative = $lastCumulative + 1;
+        $toeHeelValue = (int) $data['toe_heel'];
+        $sideValue = (int) $data['side'];
+        $cycleKey = "{$line}-{$machineName}-{$position}";
+        $endThreshold = 2; // hysteresis
+        $minSamples = 3;
 
-        // 2. Prepare data and save to database.
+        if (!isset($this->cycleStates[$cycleKey])) {
+            $this->cycleStates[$cycleKey] = ['state' => 'idle'];
+        }
+        $state = &$this->cycleStates[$cycleKey];
+
+        // Failsafe timeout
+        if ($state['state'] !== 'idle' && (time() - ($state['start_time'] ?? 0)) > $this->cycleTimeoutSeconds) {
+            if ($this->option('d')) $this->warn("Cycle {$cycleKey} timed out.");
+            $state = ['state' => 'idle'];
+        }
+
+        if ($state['state'] === 'idle') {
+            if ($toeHeelValue >= $this->cycleStartThreshold || $sideValue >= $this->cycleStartThreshold) {
+                $state = [
+                    'state' => 'active',
+                    'start_time' => time(),
+                    'th_buffer' => [$toeHeelValue], // Buffer the *first* active value
+                    'side_buffer' => [$sideValue], // Buffer the *first* active value
+                    'end_count' => 0,
+                ];
+                if ($this->option('d')) {
+                    $this->line("Cycle started for {$cycleKey}: TH={$toeHeelValue}, Side={$sideValue}");
+                }
+            }
+            return 0;
+        }
+
+        if ($state['state'] === 'active') {
+            $shouldEnd = false; // <-- NEW: Initialize
+
+            // Debounced end condition
+            if ($toeHeelValue <= $endThreshold && $sideValue <= $endThreshold) {
+                // Value is at or near zero, increment end counter
+                $state['end_count']++;
+                $shouldEnd = $state['end_count'] >= 2;
+            } else {
+                // Value is active, buffer it
+                $state['th_buffer'][] = $toeHeelValue;     // <-- CHANGED: Moved inside else
+                $state['side_buffer'][] = $sideValue;     // <-- CHANGED: Moved inside else
+                // And reset the end counter
+                $state['end_count'] = 0;
+                $shouldEnd = false;
+            }
+
+            if ($shouldEnd) {
+                if (count($state['th_buffer']) < $minSamples) {
+                    if ($this->option('d')) {
+                        $this->line("Cycle {$cycleKey} too short (" . count($state['th_buffer']) . " samples). Discarded.");
+                    }
+                    $saved = $this->saveEnhancedCycle($line, $machineName, $position, $state, 'SHORT_CYCLE');
+                    if ($this->option('d')) {
+                        $this->line("⚠️ Short cycle saved for {$cycleKey} (" . count($state['th_buffer']) . " samples)");
+                    }
+                    $state = ['state' => 'idle'];
+                    return $saved;
+                }
+
+                $state['th_buffer'][] = 0;
+                $state['side_buffer'][] = 0;
+
+                $durationInSeconds = time() - $state['start_time'];
+                $saved = $this->saveEnhancedCycle($line, $machineName, $position, $state, 'COMPLETE', $durationInSeconds);
+
+                $state = ['state' => 'idle'];
+                return $saved;
+            }
+
+            // Prevent buffer overflow
+            if (count($state['th_buffer']) > 100) {
+                $saved = $this->saveEnhancedCycle($line, $machineName, $position, $state, 'OVERFLOW');
+                $state = ['state' => 'idle'];
+                return $saved;
+            }
+
+            return 0;
+        }
+
+        return 0;
+    }
+
+    private function normalizeWaveform(array $buffer, int $targetLength = 30): array
+    {
+        $currentLength = count($buffer);
+        if ($currentLength === $targetLength) {
+            return $buffer;
+        }
+
+        $normalized = [];
+        for ($i = 0; $i < $targetLength; $i++) {
+            $ratio = $i / ($targetLength - 1);
+            $index = $ratio * ($currentLength - 1);
+            $floor = (int) floor($index);
+            $ceil = min($floor + 1, $currentLength - 1);
+            $weight = $index - $floor;
+
+            if ($floor === $ceil) {
+                $normalized[] = $buffer[$floor];
+            } else {
+                $normalized[] = (int) round(
+                    $buffer[$floor] * (1 - $weight) + $buffer[$ceil] * $weight
+                );
+            }
+        }
+        return $normalized;
+    }
+
+    private function saveEnhancedCycle(string $line, string $machineName, string $position, array $state, string $cycleType, int $duration = 0)
+    {
+        $lastCumulative = $this->lastCumulativeValues[$line] ?? 0;
+        $newCumulative = $lastCumulative + 1; // Always increment - every cycle counts!
+
+        // Calculate quality metrics from buffers
+        $thBuffer = $state['th_buffer'] ?? [];
+        $sideBuffer = $state['side_buffer'] ?? [];
+
+        $maxTh = !empty($thBuffer) ? max($thBuffer) : 0;
+        $maxSide = !empty($sideBuffer) ? max($sideBuffer) : 0;
+
+        // Determine quality grade and boolean quality for each sensor
+        $qualityGrade = $this->determineQualityGrade($maxTh, $maxSide, $cycleType);
+
+        // Boolean quality indicators: 1 = good, 0 = bad
+        $thQuality = ($maxTh >= $this->goodValueMin && $maxTh <= $this->goodValueMax) ? 1 : 0;
+        $sideQuality = ($maxSide >= $this->goodValueMin && $maxSide <= $this->goodValueMax) ? 1 : 0;
+
+        // Normalize waveforms (empty arrays for short cycles)
+        $normalizedTh = !empty($thBuffer) ? $this->normalizeWaveform($thBuffer) : array_fill(0, 30, 0);
+        $normalizedSide = !empty($sideBuffer) ? $this->normalizeWaveform($sideBuffer) : array_fill(0, 30, 0);
+
+        // Enhanced PV field - include waveforms AND quality metadata
+        $enhancedPvData = [
+            'waveforms' => [$normalizedTh, $normalizedSide], // Original waveform data
+            'quality' => [
+                'grade' => $qualityGrade,
+                'peaks' => ['th' => $maxTh, 'side' => $maxSide],
+                'cycle_type' => $cycleType,
+                'sample_count' => count($thBuffer)
+            ]
+        ];
+
+        // STD_ERROR field with boolean array format [[th_quality],[side_quality]]
+        $stdErrorBooleanArray = [[$thQuality], [$sideQuality]];
+
         $count = new InsDwpCount([
             'mechine' => (int) trim($machineName, "mc"),
             'line' => $line,
-            'count' => $newCumulative, // The new total count
-            'pv' => json_encode($collectedData), // Store the collected arrays
+            'count' => $newCumulative,
+            'pv' => json_encode($enhancedPvData),
             'position' => $position,
-            'duration' => 17, // Static value as requested
-            'incremental' => 1, // This represents one successful cycle
-            'std_error' => json_encode([0,0]),
+            'duration' => $duration ?: 1,
+            'incremental' => 1, // Always count as a cycle
+            'std_error' => json_encode($stdErrorBooleanArray), // [[th_quality],[side_quality]]
         ]);
-        $count->save();
 
-        // 3. Update the in-memory cumulative value for the next cycle.
+        $count->save();
         $this->lastCumulativeValues[$line] = $newCumulative;
 
+        // Enhanced logging
+        $statusIcon = ($thQuality && $sideQuality) ? '✅' : ($qualityGrade === 'DEFECTIVE' ? '❌' : '⚠️');
         if ($this->option('v')) {
-            $toeHeelValues = $collectedData[0];
-            $peakValue = max($toeHeelValues);
-            $this->line("✓ Saved good cycle for {$line}-{$machineName}-{$position}. Peak: {$peakValue}. New total count: {$newCumulative}");
+            $this->line("{$statusIcon} Saved {$qualityGrade} cycle for {$line}-{$machineName}-{$position}. " .
+                       "Peaks: TH={$maxTh}({$thQuality}), Side={$maxSide}({$sideQuality}). Total: {$newCumulative}");
         }
+
+        return 1;
+    }
+
+    private function determineQualityGrade(int $maxTh, int $maxSide, string $cycleType): string
+    {
+        // Handle special cycle types first
+        if ($cycleType === 'SHORT_CYCLE') return 'SHORT_CYCLE';
+        if ($cycleType === 'OVERFLOW') return 'OVERFLOW';
+        if ($cycleType === 'TIMEOUT') return 'TIMEOUT';
+
+        // Perfect quality range
+        if ($maxTh >= $this->goodValueMin && $maxTh <= $this->goodValueMax &&
+            $maxSide >= $this->goodValueMin && $maxSide <= $this->goodValueMax) {
+            return 'EXCELLENT';
+        }
+
+        // Good range (slightly extended)
+        $goodMin = $this->goodValueMin - 5; // 25
+        $goodMax = $this->goodValueMax + 10; // 55
+
+        if ($maxTh >= $goodMin && $maxTh <= $goodMax &&
+            $maxSide >= $goodMin && $maxSide <= $goodMax) {
+            return 'GOOD';
+        }
+
+        // Marginal - one sensor good, one acceptable
+        $marginalMin = 15;
+        $marginalMax = 70;
+
+        $thGood = ($maxTh >= $this->goodValueMin && $maxTh <= $this->goodValueMax);
+        $sideGood = ($maxSide >= $this->goodValueMin && $maxSide <= $this->goodValueMax);
+        $thMarginal = ($maxTh >= $marginalMin && $maxTh <= $marginalMax);
+        $sideMarginal = ($maxSide >= $marginalMin && $maxSide <= $marginalMax);
+
+        if (($thGood && $sideMarginal) || ($sideGood && $thMarginal)) {
+            return 'MARGINAL';
+        }
+
+        // Sensor issues
+        if ($maxTh < 10 && $maxSide < 10) return 'SENSOR_LOW';
+        if ($maxTh > 80 || $maxSide > 80) return 'PRESSURE_HIGH';
+
+        return 'DEFECTIVE';
     }
 
     /**
@@ -298,20 +435,41 @@ class InsDwpPoll extends Command
     {
         // This function can also be used to clean up stale cycleStates if needed,
         // but the current logic of unsetting keys should be efficient.
-        
+
         $activeLines = InsDwpDevice::active()->get()->flatMap(function ($device) {
             return $device->getLines();
         })->unique()->toArray();
-        
+
         $this->lastCumulativeValues = array_intersect_key(
-            $this->lastCumulativeValues, 
+            $this->lastCumulativeValues,
             array_flip($activeLines)
         );
-        
+
+        // Clean up cycleStates for machines that are no longer active
+        // (Though the timeout should handle most of this)
+        $activeCycleKeys = InsDwpDevice::active()->get()->flatMap(function ($device) {
+            $keys = [];
+            foreach ($device->config as $lineConfig) {
+                $line = strtoupper(trim($lineConfig['line']));
+                foreach($lineConfig['list_mechine'] as $listMachine){
+                    $machineName = $listMachine['name'];
+                    $keys[] = "{$line}-{$machineName}-L";
+                    $keys[] = "{$line}-{$machineName}-R";
+                }
+            }
+            return $keys;
+        })->unique()->toArray();
+
+        $this->cycleStates = array_intersect_key(
+            $this->cycleStates,
+            array_flip($activeCycleKeys)
+        );
+
+
         if (function_exists('gc_collect_cycles')) {
             gc_collect_cycles();
         }
-        
+
         if ($this->option('d')) {
             $memoryUsage = memory_get_usage(true);
             $this->line("Memory cleanup performed. Current usage: " . number_format($memoryUsage / 1024 / 1024, 2) . " MB");
@@ -339,7 +497,7 @@ class InsDwpPoll extends Command
             $stats = $this->deviceStats[$deviceName];
             $total = $stats['success_count'] + $stats['error_count'];
             $successRate = $total > 0 ? round(($stats['success_count'] / $total) * 100, 1) : 0;
-            
+
             $this->comment("Device {$deviceName} stats: {$successRate}% success rate ({$stats['success_count']}/{$total})");
         }
     }

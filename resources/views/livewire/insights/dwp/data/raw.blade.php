@@ -26,7 +26,7 @@ new #[Layout("layouts.app")] class extends Component {
 
     #[Url]
     public string $line = "";
-    
+
     #[Url]
     public string $mechine = "";
 
@@ -35,8 +35,8 @@ new #[Layout("layouts.app")] class extends Component {
     public int $perPage = 20;
     public string $view = "raw";
     public array $position    = ['Left', 'Right'];
-    public array $stdTh       = [30, 40];
-    public array $stdSide     = [30, 40];
+    public array $stdTh       = [30, 45];
+    public array $stdSide     = [30, 45];
     public array $compareData = [
             'actual'       => "",
             'closest_standard' => "",
@@ -96,20 +96,22 @@ new #[Layout("layouts.app")] class extends Component {
         });
     }
 
-    // NEW: Helper function to calculate median
-    private function getMedian(array $array)
+    // NEW: Helper function to calculate max
+    private function getMax(array $array)
     {
-        if (empty($array)) return 0;
+        if (empty($array)) {
+            return 0;
+        }
+
         // Filter out non-numeric values
         $numericArray = array_filter($array, 'is_numeric');
-        if (empty($numericArray)) return 0;
-        
-        sort($numericArray);
-        $count = count($numericArray);
-        $middle = floor(($count - 1) / 2);
-        $median = ($count % 2) ? $numericArray[$middle] : ($numericArray[$middle] + $numericArray[$middle + 1]) / 2;
-        
-        return round($median);
+
+        if (empty($numericArray)) {
+            return 0;
+        }
+
+        // Get max value from the numeric array
+        return max($numericArray);
     }
 
     #[On("updated")]
@@ -177,10 +179,10 @@ new #[Layout("layouts.app")] class extends Component {
         if (empty($standards)) {
             throw new InvalidArgumentException("Standards array cannot be empty.");
         }
-        
+
         $closest = null;
         $minDistance = PHP_INT_MAX;
-        
+
         foreach ($standards as $standard) {
             $distance = abs($actual - $standard);
             if ($distance < $minDistance) {
@@ -188,14 +190,14 @@ new #[Layout("layouts.app")] class extends Component {
                 $closest = $standard;
             }
         }
-        
+
         $difference = $actual - $closest;
         $direction = $difference > 0 ? 'Up' : ($difference < 0 ? 'Down' : 'Equal');
-        
+
         // Check if actual is between any two consecutive standards
         sort($standards);
         $isStandard = in_array($actual, $standards, true);
-        
+
         if (!$isStandard && count($standards) > 1) {
             for ($i = 0; $i < count($standards) - 1; $i++) {
                 if ($actual > $standards[$i] && $actual < $standards[$i + 1]) {
@@ -204,7 +206,7 @@ new #[Layout("layouts.app")] class extends Component {
                 }
             }
         }
-        
+
         return [
             'actual'           => $actual,
             'closest_standard' => $closest,
@@ -348,12 +350,12 @@ new #[Layout("layouts.app")] class extends Component {
                     <tbody>
                         @foreach ($counts as $count)
                             @php
-                                $pv = json_decode($count->pv, true);
+                                $pv = json_decode($count->pv, true)['waveforms'];
                                 $toeHeelArray = $pv[0] ?? null;
                                 $sideArray = $pv[1] ?? null;
 
-                                $toeHeelValue = $toeHeelArray ? $this->getMedian($toeHeelArray) : null;
-                                $sideValue = $sideArray ? $this->getMedian($sideArray) : null;
+                                $toeHeelValue = $toeHeelArray ? $this->getMax($toeHeelArray) : null;
+                                $sideValue = $sideArray ? $this->getMax($sideArray) : null;
 
                                 $toeHeelComparison = $toeHeelValue ? $this->compareWithStandards($toeHeelValue, $this->stdTh) : null;
                                 $sideComparison = $sideValue ? $this->compareWithStandards($sideValue, $this->stdSide) : null;
