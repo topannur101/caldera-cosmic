@@ -79,6 +79,7 @@ new class extends Component {
         // X axis: seconds from 0 to duration
         $labels = range(1, $duration);
 
+        // 4. Siapkan data untuk Chart.js
         $chartData = [
             'labels' => $labels,
             'toeHeel' => $toeHeelValues,
@@ -199,7 +200,7 @@ new class extends Component {
                                     ticks: {
                                         color: theme.textColor,
                                         stepSize: 1 // Tampilkan 1, 2, 3...
-                                    }
+                                    },
                                 },
                                 y: {
                                     // --- KONFIGURASI SUMBU Y (tetap sama) ---

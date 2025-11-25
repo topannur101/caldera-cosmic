@@ -7,6 +7,7 @@ use Livewire\Attributes\Url;
 use Livewire\Attributes\On;
 use App\Models\InsDwpCount;
 use App\Models\InsDwpDevice;
+use App\Helpers\GlobalHelpers;
 use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Traits\HasDateRangeFilter;
@@ -408,6 +409,9 @@ new #[Layout("layouts.app")] class extends Component {
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                        $helpers = new GlobalHelpers();
+                        @endphp
                         @foreach ($counts as $count)
                             @php
                                 $pv = json_decode($count->pv, true)['waveforms'];

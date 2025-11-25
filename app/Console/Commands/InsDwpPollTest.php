@@ -6,6 +6,7 @@ use App\Models\InsDwpDevice;
 use App\Models\InsDwpCount;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
 use ModbusTcpClient\Network\NonBlockingClient;
 
