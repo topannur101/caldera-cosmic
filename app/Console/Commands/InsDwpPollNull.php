@@ -6,14 +6,13 @@ use App\Models\InsDwpDevice;
 use App\Models\InsDwpCount;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
 use ModbusTcpClient\Network\NonBlockingClient;
 
-class InsDwpPollTest extends Command
+class InsDwpPollNull extends Command
 {
     // Configuration variables
-    protected $pollIntervalSeconds = 1;
+    protected $pollIntervalSeconds = 0.01;
     protected $modbusTimeoutSeconds = 2;
     protected $modbusPort = 503;
 
@@ -31,7 +30,7 @@ class InsDwpPollTest extends Command
      *
      * @var string
      */
-    protected $signature = 'app:ins-dwp-poll-test {--v : Verbose output} {--d : Debug output}';
+    protected $signature = 'app:ins-dwp-poll-null {--v : Verbose output} {--d : Debug output}';
 
     /**
      * The console command description.
@@ -68,18 +67,6 @@ class InsDwpPollTest extends Command
             $this->error('✗ No active DWP devices found');
             return 1;
         }
-
-        $this->info('✓ InsDwpPoll started - monitoring ' . count($devices) . ' devices');
-        if ($this->option('v')) {
-            $this->comment('Devices:');
-            foreach ($devices as $device) {
-                $lines = implode(', ', $device->getLines());
-                $this->comment("  → {$device->name} ({$device->ip_address}) - Lines: {$lines}");
-            }
-        }
-
-        $this->initializeLastValues($devices);
-
         while (true) {
             $cycleStartTime = microtime(true);
             $cycleReadings = 0;
@@ -91,44 +78,11 @@ class InsDwpPollTest extends Command
                 }
                 try {
                     $readings = $this->pollDevice($device);
-                    // $cycleReadings += $readings;
-                    // $this->updateDeviceStats($device->name, true);
+                    print_r($readings);
                 } catch (\Throwable $th) {
-                    $this->error("✗ Error polling {$device->name} ({$device->ip_address}): " . $th->getMessage(). $th->getLine());
+                    $this->error("✗ Error polling {$device->name} ({$device->ip_address}): " . $th->getMessage());
                     $cycleErrors++;
                     $this->updateDeviceStats($device->name, false);
-                }
-            }
-
-            $this->totalReadings += $cycleReadings;
-            $this->totalErrors += $cycleErrors;
-
-            if ($this->option('v') && ($cycleReadings > 0 || $cycleErrors > 0)) {
-                $cycleTime = microtime(true) - $cycleStartTime;
-                $this->info("Cycle #{$this->pollCycleCount}: {$cycleReadings} new readings saved, {$cycleErrors} errors, " .
-                            number_format($cycleTime * 1000, 2) . "ms");
-            }
-
-            sleep($this->pollIntervalSeconds);
-            $this->pollCycleCount++;
-
-            if ($this->pollCycleCount % $this->memoryCleanupInterval === 0) {
-                $this->cleanupMemory();
-            }
-        }
-    }
-
-    /**
-     * Initialize last cumulative values from database
-     */
-    private function initializeLastValues($devices)
-    {
-        foreach ($devices as $device) {
-            foreach ($device->getLines() as $line) {
-                $lastCount = InsDwpCount::latestForLine($line);
-                $this->lastCumulativeValues[$line] = $lastCount ? $lastCount->count : 0;
-                if ($this->option('d')) {
-                    $this->line("Initialized line {$line} with last cumulative: {$this->lastCumulativeValues[$line]}");
                 }
             }
         }
@@ -140,56 +94,50 @@ class InsDwpPollTest extends Command
     private function pollDevice(InsDwpDevice $device)
     {
         $unit_id = 1;
-        $responses = [];
+        $savedReadingsCount = 0;
 
         foreach ($device->config as $lineConfig) {
             $line = strtoupper(trim($lineConfig['line']));
-            foreach ($lineConfig['list_mechine'] as $listMachine) {
-                $machineName = $listMachine['name'];
-                $ip = $device->ip_address;
+            $responses = [];
+            foreach($lineConfig['list_mechine'] as $listMachine){
                 try {
-                    // Build separate requests for each metric (like InsStcPoll)
-                    $th_l_req = ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$this->modbusPort}", $unit_id)
-                        ->int16($listMachine['addr_th_l'], 'toe_heel_left')->build();
-                    $th_r_req = ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$this->modbusPort}", $unit_id)
-                        ->int16($listMachine['addr_th_r'], 'toe_heel_right')->build();
-                    $side_l_req = ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$this->modbusPort}", $unit_id)
-                        ->int16($listMachine['addr_side_l'], 'side_left')->build();
-                    $side_r_req = ReadRegistersBuilder::newReadInputRegisters("tcp://{$ip}:{$this->modbusPort}", $unit_id)
-                        ->int16($listMachine['addr_side_r'], 'side_right')->build();
+                    $machineName = $listMachine['name'];
 
-                    $th_l_resp = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))->sendRequests($th_l_req)->getData();
-                    $th_r_resp = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))->sendRequests($th_r_req)->getData();
-                    $side_l_resp = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))->sendRequests($side_l_req)->getData();
-                    $side_r_resp = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))->sendRequests($side_r_req)->getData();
+                    // We can optimize by reading all 4 registers in one request
+                    $request = ReadRegistersBuilder::newReadInputRegisters('tcp://' . $device->ip_address . ':' . $this->modbusPort, $unit_id)
+                        ->int16($listMachine['addr_th_l'], 'toe_heel_left')
+                        ->int16($listMachine['addr_th_r'], 'toe_heel_right')
+                        ->int16($listMachine['addr_side_l'], 'side_left')
+                        ->int16($listMachine['addr_side_r'], 'side_right')
+                        ->build();
 
-                    // Merge all metric data into one array
-                    $data = array_merge(
-                        $th_l_resp,
-                        $th_r_resp,
-                        $side_l_resp,
-                        $side_r_resp
-                    );
+                    $response = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))
+                        ->sendRequests($request)->getData();
 
-                    $positionsData = [
-                        'L' => [
-                            'toe_heel' => $data['toe_heel_left'] ?? 0,
-                            'side' => $data['side_left'] ?? 0,
-                        ],
-                        'R' => [
-                            'toe_heel' => $data['toe_heel_right'] ?? 0,
-                            'side' => $data['side_right'] ?? 0,
-                        ],
+                    // Process Left and Right positions together as one machine cycle
+                    // $savedReadingsCount += $this->processMachineCycle(
+                    //     $line,
+                    //     $machineName,
+                    //     [
+                    //         'L' => ['toe_heel' => $response['toe_heel_left'], 'side' => $response['side_left']],
+                    //         'R' => ['toe_heel' => $response['toe_heel_right'], 'side' => $response['side_right']]
+                    //     ]
+                    // );
+
+                    $responses[] = [
+                        'Machine' => $machineName,
+                        'L' => ['toe_heel' => $response['toe_heel_left'], 'side' => $response['side_left']],
+                        'R' => ['toe_heel' => $response['toe_heel_right'], 'side' => $response['side_right']]
                     ];
-                    $savedCount = $this->processMachineCycle($line, $machineName, $positionsData);
-                } catch (\Throwable $e) {
+
+                } catch (\Exception $e) {
                     $this->error("    ✗ Error reading machine {$machineName} on line {$line}: " . $e->getMessage());
                     continue;
                 }
             }
         }
 
-        return $savedCount;
+        return $responses;
     }
 
     /**
@@ -220,50 +168,38 @@ class InsDwpPollTest extends Command
     }
 
     /**
-     * Process a single position (L/R) with change-of-state sampling.
-     * Samples are recorded only when the value changes, using seconds as timestamp.
-     * Starts when either sensor ≥ 10, ends when both ≤ 2 for 2 consecutive polls.
+     * Process a single position (L/R) with dual-buffer logic.
+     * Starts when either sensor ≥ 10, ends when both ≤ 0.
+     * Saves full waveform arrays if both peaks are in [30,45].
      */
     private function processPositionCycle(string $line, string $machineName, string $position, array $data)
     {
         $toeHeelValue = (int) $data['toe_heel'];
         $sideValue = (int) $data['side'];
         $cycleKey = "{$line}-{$machineName}-{$position}";
-        $endThreshold = 0;
+        $endThreshold = 2;
         $minSamples = 3;
 
-        // Initialize state if not exists
         if (!isset($this->cycleStates[$cycleKey])) {
-            $this->cycleStates[$cycleKey] = [
-                'state' => 'idle',
-                'last_saved_th_value' => null, // Track last saved TH value
-                'last_saved_side_value' => null, // Track last saved Side value
-                'last_saved_th_time' => null, // Track time of last saved TH sample
-                'last_saved_side_time' => null, // Track time of last saved Side sample
-            ];
+            $this->cycleStates[$cycleKey] = ['state' => 'idle'];
         }
         $state = &$this->cycleStates[$cycleKey];
 
         // Failsafe timeout
         if ($state['state'] !== 'idle' && (time() - ($state['start_time'] ?? 0)) > $this->cycleTimeoutSeconds) {
             if ($this->option('d')) $this->warn("Cycle {$cycleKey} timed out.");
-            $state = ['state' => 'idle']; // Reset state completely
-            return 0;
+            $state = ['state' => 'idle'];
         }
 
         if ($state['state'] === 'idle') {
             if ($toeHeelValue >= $this->cycleStartThreshold || $sideValue >= $this->cycleStartThreshold) {
-                $now = time(); // Use seconds for simplicity
+                $now = (int) (microtime(true) * 1000);
                 $state = [
                     'state' => 'active',
-                    'start_time' => $now,
-                    'th_buffer' => [['value' => $toeHeelValue, 'ts' => $now]], // Start with current value
-                    'side_buffer' => [['value' => $sideValue, 'ts' => $now]], // Start with current value
+                    'start_time' => time(),
+                    'th_buffer' => [['value' => $toeHeelValue, 'ts' => $now]],
+                    'side_buffer' => [['value' => $sideValue, 'ts' => $now]],
                     'end_count' => 0,
-                    'last_saved_th_value' => $toeHeelValue, // Initialize tracking
-                    'last_saved_side_value' => $sideValue,
-                    'last_saved_th_time' => $now,
-                    'last_saved_side_time' => $now,
                 ];
                 if ($this->option('d')) {
                     $this->line("Cycle started for {$cycleKey}: TH={$toeHeelValue}, Side={$sideValue} @ {$now}");
@@ -275,33 +211,19 @@ class InsDwpPollTest extends Command
         if ($state['state'] === 'active') {
             $shouldEnd = false;
 
-            // Debounced end condition (both sensors <= threshold for 2 polls)
+            // Debounced end condition
             if ($toeHeelValue <= $endThreshold && $sideValue <= $endThreshold) {
                 $state['end_count']++;
                 $shouldEnd = $state['end_count'] >= 2;
             } else {
-                $now = time(); // Current time in seconds
-
-                // Check for Toe/Heel change
-                if ($toeHeelValue !== $state['last_saved_th_value']) {
-                    $state['th_buffer'][] = ['value' => $toeHeelValue, 'ts' => $now];
-                    $state['last_saved_th_value'] = $toeHeelValue;
-                    $state['last_saved_th_time'] = $now;
-                }
-
-                // Check for Side change
-                if ($sideValue !== $state['last_saved_side_value']) {
-                    $state['side_buffer'][] = ['value' => $sideValue, 'ts' => $now];
-                    $state['last_saved_side_value'] = $sideValue;
-                    $state['last_saved_side_time'] = $now;
-                }
-
-                $state['end_count'] = 0; // Reset counter if not at end
+                $now = (int) (microtime(true) * 1000);
+                $state['th_buffer'][] = ['value' => $toeHeelValue, 'ts' => $now];
+                $state['side_buffer'][] = ['value' => $sideValue, 'ts' => $now];
+                $state['end_count'] = 0;
                 $shouldEnd = false;
             }
 
             if ($shouldEnd) {
-                // Ensure we have enough samples
                 if (count($state['th_buffer']) < $minSamples) {
                     if ($this->option('d')) {
                         $this->line("Cycle {$cycleKey} too short (" . count($state['th_buffer']) . " samples). Discarded.");
@@ -310,32 +232,25 @@ class InsDwpPollTest extends Command
                     if ($this->option('d')) {
                         $this->line("⚠️ Short cycle saved for {$cycleKey} (" . count($state['th_buffer']) . " samples)");
                     }
-                    $state = ['state' => 'idle']; // Reset state
+                    $state = ['state' => 'idle'];
                     return $saved;
                 }
 
-                // Append final zero ONLY if different from last saved value
-                $now = time();
-                $finalThValue = 0;
-                $finalSideValue = 0;
-
-                if ($finalThValue !== $state['last_saved_th_value']) {
-                    $state['th_buffer'][] = ['value' => $finalThValue, 'ts' => $now];
-                }
-                if ($finalSideValue !== $state['last_saved_side_value']) {
-                    $state['side_buffer'][] = ['value' => $finalSideValue, 'ts' => $now];
-                }
+                // Append final zero with timestamp
+                $now = (int) (microtime(true) * 1000);
+                $state['th_buffer'][] = ['value' => 0, 'ts' => $now];
+                $state['side_buffer'][] = ['value' => 0, 'ts' => $now];
 
                 $durationInSeconds = time() - $state['start_time'];
                 $saved = $this->saveEnhancedCycle($line, $machineName, $position, $state, 'COMPLETE', $durationInSeconds);
 
-                $state = ['state' => 'idle']; // Reset state
+                $state = ['state' => 'idle'];
                 return $saved;
             }
 
-            // Prevent buffer overflow (optional, can be removed if not needed)
+            // Prevent buffer overflow
             if (count($state['th_buffer']) > 100) {
-                $now = time();
+                $now = (int) (microtime(true) * 1000);
                 $state['th_buffer'][] = ['value' => 0, 'ts' => $now];
                 $state['side_buffer'][] = ['value' => 0, 'ts' => $now];
                 $saved = $this->saveEnhancedCycle($line, $machineName, $position, $state, 'OVERFLOW');
@@ -349,49 +264,54 @@ class InsDwpPollTest extends Command
         return 0;
     }
 
-    private function resampleAndRepeatWaveform(array $waveform, int $totalDurationSec = 100): array
+    private function resampleWaveformTimeBased(array $waveform, int $totalDurationSec = 15, int $samplesPerSecond = 1): array
     {
-        if (count($waveform) < 2) {
-            return array_fill(0, $totalDurationSec, $waveform[0]['value'] ?? 0);
-        }
-
         // Extract timestamps and values
-        $ts = array_column($waveform, 'ts'); // Now in SECONDS
+        $ts = array_column($waveform, 'ts');
         $vals = array_column($waveform, 'value');
+
+        if (count($waveform) < 2) {
+            // Degenerate case: return constant or padded
+            return array_fill(0, $totalDurationSec * $samplesPerSecond, $vals[0] ?? 0);
+        }
 
         $startTs = $ts[0];
         $endTs = $ts[count($ts) - 1];
-        $cycleDurationSec = $endTs - $startTs; // Already in seconds
+        $actualDurationSec = ($endTs - $startTs) / 1000.0;
+
+        // Optional: warn if mismatch
+        // error_log("Expected $totalDurationSec sec, got " . $actualDurationSec . " sec");
 
         $output = [];
+        $numPoints = $totalDurationSec * $samplesPerSecond; // e.g., 15 for 1 Hz over 15 sec
 
-        for ($sec = 0; $sec < $totalDurationSec; $sec++) {
-            // Map current second to position within cycle
-            $timeInCycleSec = fmod($sec, $cycleDurationSec); // 0 to cycleDurationSec
-            $absoluteTimeSec = $startTs + $timeInCycleSec;
+        for ($i = 0; $i < $numPoints; $i++) {
+            // Target time: evenly spaced from start to end (linear in time)
+            // We map i ∈ [0, numPoints-1] → t ∈ [startTs, endTs]
+            $t = $startTs + ($i / ($numPoints - 1)) * ($endTs - $startTs);
 
-            // Find which segment of the cycle we're in
+            // Find segment where t falls: ts[j] ≤ t < ts[j+1]
             $j = 0;
-            while ($j < count($ts) - 2 && $absoluteTimeSec >= $ts[$j + 1]) {
+            while ($j < count($ts) - 2 && $t >= $ts[$j + 1]) {
                 $j++;
             }
 
-            // If at end of cycle, use last value
-            if ($absoluteTimeSec >= $ts[count($ts) - 1]) {
+            // Clamp to last segment if t == endTs
+            if ($t >= $ts[count($ts) - 1]) {
                 $output[] = $vals[count($vals) - 1];
                 continue;
             }
 
-            // Linear interpolation between ts[j] and ts[j+1]
             $t0 = $ts[$j];
             $t1 = $ts[$j + 1];
             $v0 = $vals[$j];
             $v1 = $vals[$j + 1];
 
+            // Linear interpolation
             if ($t1 == $t0) {
                 $value = $v0;
             } else {
-                $alpha = ($absoluteTimeSec - $t0) / ($t1 - $t0);
+                $alpha = ($t - $t0) / ($t1 - $t0);
                 $value = $v0 + $alpha * ($v1 - $v0);
             }
 
@@ -406,24 +326,13 @@ class InsDwpPollTest extends Command
         $lastCumulative = $this->lastCumulativeValues[$line] ?? 0;
         $newCumulative = $lastCumulative + 1;
 
-        // Calculate actual duration from timestamps in buffer
-        $actualDuration = 0;
-        if (!empty($state['th_buffer'])) {
-            $firstTs = $state['th_buffer'][0]['ts'];
-            $lastTs = $state['th_buffer'][count($state['th_buffer']) - 1]['ts'];
-            $actualDuration = max(1, $lastTs - $firstTs); // Ensure at least 1 second
-        }
-
-        // Use actual duration from timestamps
-        $targetDuration = $actualDuration;
-
-        // Extract buffers and resample to actual duration
-        $thBuffer = $this->resampleAndRepeatWaveform($state['th_buffer'], $targetDuration) ?? [];
-        $sideBuffer = $this->resampleAndRepeatWaveform($state['side_buffer'], $targetDuration) ?? [];
+        // Extract buffers (already in [{value, ts}, ...] format)
+        $thBuffer = $state['th_buffer'] ?? [];
+        $sideBuffer = $state['side_buffer'] ?? [];
 
         // Get peak values
-        $maxTh = !empty($thBuffer) ? max($thBuffer) : 0;
-        $maxSide = !empty($sideBuffer) ? max($sideBuffer) : 0;
+        $maxTh = !empty($thBuffer) ? max(array_column($thBuffer, 'value')) : 0;
+        $maxSide = !empty($sideBuffer) ? max(array_column($sideBuffer, 'value')) : 0;
 
         // Determine quality grade
         $qualityGrade = $this->determineQualityGrade($maxTh, $maxSide, $cycleType);
@@ -436,8 +345,8 @@ class InsDwpPollTest extends Command
         $enhancedPvData = [
             'cycle_type' => $cycleType,
             'waveforms' => [
-                'th'   => $thBuffer,
-                'side' => $sideBuffer,
+                'th'   => $this->resampleWaveformTimeBased($thBuffer, $duration, 1),   // [{value:34, ts:1731709388.123}, ...]
+                'side' => $this->resampleWaveformTimeBased($sideBuffer, $duration, 1), // same
             ]
         ];
 
@@ -450,7 +359,7 @@ class InsDwpPollTest extends Command
             'count' => $newCumulative,
             'pv' => json_encode($enhancedPvData, JSON_UNESCAPED_SLASHES),
             'position' => $position,
-            'duration' => $targetDuration, // Use actual duration
+            'duration' => $duration ?: 1,
             'incremental' => 1,
             'std_error' => json_encode($stdErrorBooleanArray),
         ]);
@@ -462,7 +371,7 @@ class InsDwpPollTest extends Command
         $statusIcon = ($thQuality && $sideQuality) ? '✅' : ($qualityGrade === 'DEFECTIVE' ? '❌' : '⚠️');
         if ($this->option('v')) {
             $this->line("{$statusIcon} Saved {$qualityGrade} cycle for {$line}-{$machineName}-{$position}. " .
-                       "Peaks: TH={$maxTh}({$thQuality}), Side={$maxSide}({$sideQuality}). Duration: {$targetDuration}s. Total: {$newCumulative}");
+                       "Peaks: TH={$maxTh}({$thQuality}), Side={$maxSide}({$sideQuality}). Total: {$newCumulative}");
         }
 
         return 1;

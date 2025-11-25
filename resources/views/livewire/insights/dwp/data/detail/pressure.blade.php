@@ -63,35 +63,30 @@ new class extends Component {
 
     private function renderPressureChartClient()
     {
-        $isTimeAxis = false; // Sumbu X akan menjadi detik (0, 1, 2...), bukan waktu
+        $isTimeAxis = false;
+        $pvRaw = json_decode($this->detail['pv'] ?? '[]', true);
+        $waveforms = $pvRaw['waveforms'] ?? [];
+        $duration = (int) ($this->detail['duration'] ?? 0);
+        // Get values and timestamps
+        $toeHeelValuesRaw = $waveforms[0] ?? [];
+        $sideValuesRaw = $waveforms[1] ?? [];
+        $timestampsRaw = $pvRaw['timestamps'] ?? [];
 
-        // 1. Decode PV JSON dan ambil 'waveforms'
-        $pvArray = json_decode($this->detail['pv'] ?? '[]', true)['waveforms'] ?? [];
-        if (!is_array($pvArray)) {
-            $pvArray = []; // Pastikan $pvArray adalah array
-        }
+        // Repeat/hold values for each second
+        $toeHeelValues = $this->repeatWaveform($toeHeelValuesRaw, $timestampsRaw, $duration);
+        $sideValues = $this->repeatWaveform($sideValuesRaw, $timestampsRaw, $duration);
 
-        // 2. Ambil data "apa adanya" dari $pvArray
-        // $pvArray[0] adalah 'Toe/Heel', $pvArray[1] adalah 'Side'
-        $toeHeelValues = $pvArray[0] ?? [];
-        $sideValues = $pvArray[1] ?? [];
-
-        // 3. Buat label berdasarkan $this->detail['duration'] (sesuai permintaan)
-        $totalSeconds = (int) ($this->detail['duration'] ?? 0);
-        
-        // Buat labels [0, 1, 2, ... N (duration)]
-        // Misal: jika duration = 27, labels akan menjadi [0, 1, ..., 27] (total 28 elemen)
-        $labels = range(0, $totalSeconds);
+        // X axis: seconds from 0 to duration
+        $labels = range(1, $duration);
 
         // 4. Siapkan data untuk Chart.js
         $chartData = [
             'labels' => $labels,
-            'toeHeel' => $toeHeelValues, // Data asli
-            'side' => $sideValues,       // Data asli
-            'isTimeAxis' => $isTimeAxis, 
+            'toeHeel' => $toeHeelValues,
+            'side' => $sideValues,
+            'isTimeAxis' => $isTimeAxis,
         ];
 
-        // 5. Encode JSON dan kirim ke JS
         $chartDataJson = json_encode($chartData);
 
         $this->js(
@@ -130,8 +125,6 @@ new class extends Component {
                                     data: hasData ? data.toeHeel : [],
                                     borderColor: '#ef4444',
                                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                    pointRadius: 4,
-                                    pointHoverRadius: 6,
                                     fill: false,
                                     tension: 0.4,
                                     stepped: false,
@@ -196,7 +189,7 @@ new class extends Component {
                                     type: 'linear', // Gunakan 'linear' karena labelnya 0, 1, 2...
                                     title: {
                                         display: true,
-                                        text: 'Seconds into Cycle', // Judul baru
+                                        text: 'Time (seconds)',
                                         color: theme.textColor
                                     },
                                     grid: {
@@ -271,6 +264,51 @@ new class extends Component {
             })();
             "
         );
+    }
+
+    private function repeatWaveform(array $valuesRaw, array $timestampsRaw, int $duration): array {
+        $count = count($valuesRaw);
+        if ($count === 0 || count($timestampsRaw) !== $count) {
+            return [];
+        }
+        // Normalize timestamps to seconds from start
+        $startTs = (int)($timestampsRaw[0] / 1000);
+        $secValueMap = [];
+        $maxSec = 0;
+        for ($i = 0; $i < $count; $i++) {
+            $sec = (int)($timestampsRaw[$i] / 1000) - $startTs;
+            $secValueMap[$sec] = $valuesRaw[$i];
+            if ($sec > $maxSec) $maxSec = $sec;
+        }
+        // Build result array with repeated/held values
+        $result = [];
+        $lastValue = 0;
+        for ($sec = 0; $sec <= $maxSec; $sec++) {
+            if (isset($secValueMap[$sec])) {
+                $lastValue = $secValueMap[$sec];
+            }
+            $result[] = $lastValue;
+        }
+        // add 0 for lasting seconds up to duration
+        for ($sec = $maxSec + 1; $sec < $duration; $sec++) {
+            $result[] = 0;
+        }
+
+        // Ensure result has exactly $duration elements (labels are 1..$duration)
+        // - pad with trailing zeros if too short
+        // - trim if longer
+        if (count($result) < $duration) {
+            $result = array_pad($result, $duration, 0);
+        } elseif (count($result) > $duration) {
+            $result = array_slice($result, 0, $duration);
+        }
+
+        // Always set the last duration slot to zero so the chart ends at 0
+        if ($duration > 0) {
+            $result[$duration - 1] = 0;
+        }
+
+        return $result;
     }
 };
 ?>
