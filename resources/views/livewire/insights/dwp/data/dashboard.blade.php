@@ -508,7 +508,7 @@ new class extends Component {
                     // --- 1. Get Data from PHP ---
                     const dailyData = " . $dailyJson . ";
                     const onlineData = " . $onlineJson . ";
-                    const dwpData = " . $dwpJson . "; // === NEW ===
+                    const dwpData = " . $dwpJson . ";
 
                     // --- 2. Theme Helpers ---
                     function isDarkModeLocal(){
@@ -542,7 +542,16 @@ new class extends Component {
                                     cutout: '70%',
                                     plugins: {
                                         legend: { display: false },
-                                        tooltip: { bodyColor: theme.textColor, titleColor: theme.textColor }
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context){
+                                                    let label = context.label || '';
+                                                    if (label) label += ': ';
+                                                    if (context.parsed !== null) label += context.parsed.toFixed(2) + '%';
+                                                    return label;
+                                                }
+                                            }
+                                        }
                                     },
                                     responsive: true,
                                     maintainAspectRatio: false
@@ -903,7 +912,7 @@ new class extends Component {
     <!-- Content Section -->
     <div class="grid grid-cols-1 gap-6">
         <!-- Top Row: 3 Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <!-- Performance Machine -->
             <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md">
                 <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Performance Machine DWP Pressure</h2>
@@ -914,11 +923,19 @@ new class extends Component {
                     <div class="flex flex-col gap-2 mt-4">
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded bg-green-500"></span>
-                            <span>Standard: {{ $this->totalStandart }}</span>
+                            <span>Standard</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4"></span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ $this->totalStandart }} EA</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded bg-red-600"></span>
-                            <span>Out Of Standard: {{ $this->totalOutStandart }}</span>
+                            <span>Out Of Standard</span>
+                        </div>
+                         <div class="flex items-center gap-2">
+                            <span class="w-4 h-4"></span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ $this->totalOutStandart }} EA</span>
                         </div>
                     </div>
                 </div>
