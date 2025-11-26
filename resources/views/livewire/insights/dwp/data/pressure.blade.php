@@ -30,6 +30,10 @@ new #[Layout("layouts.app")] class extends Component {
     #[Url]
     public string $machine = "";
 
+    // Selected position filter (L for Left, R for Right)
+    #[Url]
+    public string $position = "L";
+
     public array $devices = [];
     public int $perPage = 20;
     public string $view = "pressure";
@@ -209,6 +213,13 @@ new #[Layout("layouts.app")] class extends Component {
             $dataRaw->where('ins_dwp_counts.mechine', $this->machine); // Make sure 'mechine' matches your actual DB column name
         }
 
+        if (!empty($this->position)) {
+            $dataRaw->where('ins_dwp_counts.position', $this->position);
+        }
+
+        // Generate duration chart data
+        $this->generateDurationChart($dataRaw);
+
         $presureData = $dataRaw->whereNotNull('pv')->get()->toArray();
         $counts = collect($presureData);
 
@@ -282,6 +293,94 @@ new #[Layout("layouts.app")] class extends Component {
             'performanceData' => $performanceData,
         ]);
     }
+
+    /**
+     * Generate Duration Chart Data
+     * Categorizes batch processing times by machine
+     */
+    private function generateDurationChart($query)
+    {
+        // Get data with duration information
+        $durationData = clone $query;
+        $durationData = $durationData->whereNotNull('duration')
+            ->whereNotNull('mechine')
+            ->get();
+
+        // Initialize counters for each machine (1-4)
+        $machines = [1 => [], 2 => [], 3 => [], 4 => []];
+
+        foreach ($durationData as $record) {
+            $duration = floatval($record->duration);
+            $machine = intval($record->mechine);
+
+            if (!isset($machines[$machine])) {
+                continue;
+            }
+
+            // Categorize based on duration
+            if ($duration < 10) {
+                $machines[$machine]['too_early_max'] = ($machines[$machine]['too_early_max'] ?? 0) + 1;
+            } elseif ($duration < 13) {
+                $machines[$machine]['too_early_min'] = ($machines[$machine]['too_early_min'] ?? 0) + 1;
+            } elseif ($duration >= 13 && $duration <= 16) {
+                $machines[$machine]['on_time'] = ($machines[$machine]['on_time'] ?? 0) + 1;
+            } else { // > 16
+                $machines[$machine]['on_time_manual'] = ($machines[$machine]['on_time_manual'] ?? 0) + 1;
+            }
+        }
+
+        // Prepare data for chart
+        $chartData = [
+            'categories' => ['Machine 1', 'Machine 2', 'Machine 3', 'Machine 4'],
+            'series' => [
+                [
+                    'name' => 'Too early (< 10s)',
+                    'data' => [
+                        $machines[1]['too_early_max'] ?? 0,
+                        $machines[2]['too_early_max'] ?? 0,
+                        $machines[3]['too_early_max'] ?? 0,
+                        $machines[4]['too_early_max'] ?? 0,
+                    ],
+                    'color' => '#ef4444' // Red
+                ],
+                [
+                    'name' => 'Too early (10-13s)',
+                    'data' => [
+                        $machines[1]['too_early_min'] ?? 0,
+                        $machines[2]['too_early_min'] ?? 0,
+                        $machines[3]['too_early_min'] ?? 0,
+                        $machines[4]['too_early_min'] ?? 0,
+                    ],
+                    'color' => '#ef4444' // Red
+                ],
+                [
+                    'name' => 'On time (13-16s)',
+                    'data' => [
+                        $machines[1]['on_time'] ?? 0,
+                        $machines[2]['on_time'] ?? 0,
+                        $machines[3]['on_time'] ?? 0,
+                        $machines[4]['on_time'] ?? 0,
+                    ],
+                    'color' => '#22c55e' // Green
+                ],
+                [
+                    'name' => 'On time (manual)',
+                    'data' => [
+                        $machines[1]['on_time_manual'] ?? 0,
+                        $machines[2]['on_time_manual'] ?? 0,
+                        $machines[3]['on_time_manual'] ?? 0,
+                        $machines[4]['on_time_manual'] ?? 0,
+                    ],
+                    'color' => '#f97316' // Orange
+                ],
+            ],
+        ];
+
+        // Dispatch the event to the frontend
+        $this->dispatch('refresh-duration-chart', [
+            'durationData' => $chartData,
+        ]);
+    }
 }; ?>
 
 <div>
@@ -338,10 +437,19 @@ new #[Layout("layouts.app")] class extends Component {
             <div>
                 <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Machine") }}</label>
                 <x-select wire:model.live="machine" wire:change="dispatch('updated')" class="w-full lg:w-32">
+                    <option value="">All</option>
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="4">4</option>
+                </x-select>
+            </div>
+            <div>
+                <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Position") }}</label>
+                <x-select wire:model.live="position" wire:change="dispatch('updated')" class="w-full lg:w-32">
+                    <option value="">All</option>
+                    <option value="L">Left</option>
+                    <option value="R">Right</option>
                 </x-select>
             </div>
         </div>
@@ -349,7 +457,7 @@ new #[Layout("layouts.app")] class extends Component {
   </div>
   <div class="overflow-hidden">
     <div class="grid grid-cols-1 gap-2 md:grid-cols-1 md:gap-2">
-        <!-- chart section type boxplot -->
+         <!-- chart section type boxplot -->
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <div
                 x-data="{
@@ -466,6 +574,125 @@ new #[Layout("layouts.app")] class extends Component {
                     $wire.$dispatch('updated');
                 " >
                 <div id="performanceChart" x-ref="chartContainer" wire:ignore></div>
+            </div>
+        </div>
+        <!-- Duration Chart - Stacked Bar Chart -->
+        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <div
+                x-data="{
+                    durationChart: null,
+
+                    initOrUpdateDurationChart(durationData) {
+                        const chartEl = this.$refs.durationChartContainer;
+                        if (!chartEl) {
+                            console.error('[DurationChart] Chart container not found.');
+                            return;
+                        }
+
+                        const series = durationData.series || [];
+                        const categories = durationData.categories || [];
+
+                        console.log('[DurationChart] Data:', { series, categories });
+
+                        // Destroy old chart if exists
+                        if (this.durationChart) {
+                            console.log('[DurationChart] Destroying old chart.');
+                            this.durationChart.destroy();
+                        }
+
+                        const options = {
+                            series: series,
+                            chart: {
+                                type: 'bar',
+                                height: 350,
+                                stacked: true,
+                                toolbar: { show: true },
+                                animations: {
+                                    enabled: true,
+                                    speed: 350
+                                }
+                            },
+                            plotOptions: {
+                                bar: {
+                                    horizontal: true,
+                                    dataLabels: {
+                                        total: {
+                                            enabled: true,
+                                            offsetX: 0,
+                                            style: {
+                                                fontSize: '13px',
+                                                fontWeight: 900
+                                            }
+                                        }
+                                    }
+                                },
+                            },
+                            stroke: {
+                                width: 1,
+                                colors: ['#fff']
+                            },
+                            title: {
+                                text: 'Batch Processing Time by Machine'
+                            },
+                            xaxis: {
+                                categories: categories,
+                                title: {
+                                    text: 'Cycle Count'
+                                }
+                            },
+                            yaxis: {
+                                title: {
+                                    text: 'Machine'
+                                }
+                            },
+                            tooltip: {
+                                y: {
+                                    formatter: function (val) {
+                                        return val + ' Cycles'
+                                    }
+                                }
+                            },
+                            fill: {
+                                opacity: 1
+                            },
+                            legend: {
+                                position: 'top',
+                                horizontalAlign: 'left',
+                                offsetX: 40
+                            },
+                            colors: series.map(s => s.color)
+                        };
+
+                        console.log('[DurationChart] Creating new chart.');
+                        this.durationChart = new ApexCharts(chartEl, options);
+                        this.durationChart.render();
+                    }
+                }"
+                x-init="
+                    $wire.on('refresh-duration-chart', function(payload) {
+                        let data = payload;
+                        if (payload && payload.detail) data = payload.detail;
+                        if (Array.isArray(payload) && payload.length) data = payload[0];
+                        if (payload && payload[0] && payload[0].durationData) data = payload[0];
+
+                        const durationData = data?.durationData;
+                        if (!durationData) {
+                            console.warn('[DurationChart] Missing durationData in payload', data);
+                            return;
+                        }
+                        console.log('[DurationChart] Received data:', durationData);
+
+                        try {
+                            initOrUpdateDurationChart(durationData);
+                        } catch (e) {
+                            console.error('[DurationChart] Error:', e);
+                        }
+                    });
+
+                    console.log('[DurationChart] Waiting for data...');
+                "
+            >
+                <div x-ref="durationChartContainer" wire:ignore></div>
             </div>
         </div>
     </div>
