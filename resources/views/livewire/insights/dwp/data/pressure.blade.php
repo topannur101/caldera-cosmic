@@ -344,14 +344,14 @@ new #[Layout("layouts.app")] class extends Component {
                     'color' => '#ef4444' // Red
                 ],
                 [
-                    'name' => 'Too early (10-13s)',
+                    'name' => 'Too early (<13s)',
                     'data' => [
                         $machines[1]['too_early_min'] ?? 0,
                         $machines[2]['too_early_min'] ?? 0,
                         $machines[3]['too_early_min'] ?? 0,
                         $machines[4]['too_early_min'] ?? 0,
                     ],
-                    'color' => '#ef4444' // Red
+                    'color' => '#e8e231ff' // Red
                 ],
                 [
                     'name' => 'On time (13-16s)',
@@ -364,7 +364,7 @@ new #[Layout("layouts.app")] class extends Component {
                     'color' => '#22c55e' // Green
                 ],
                 [
-                    'name' => 'On time (manual)',
+                    'name' => 'Too Late (> 16s)',
                     'data' => [
                         $machines[1]['on_time_manual'] ?? 0,
                         $machines[2]['on_time_manual'] ?? 0,
@@ -576,8 +576,124 @@ new #[Layout("layouts.app")] class extends Component {
                 <div id="performanceChart" x-ref="chartContainer" wire:ignore></div>
             </div>
         </div>
-        <!-- Duration Chart - Stacked Bar Chart -->
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+    </div>
+    <div class="grid grid-cols-6 gap-2 mt-2">
+        <!-- Duration Pie Chart - Percentage Distribution -->
+        <div class="col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <div
+                x-data="{
+                    pieChart: null,
+
+                    initOrUpdatePieChart(durationData) {
+                        const chartEl = this.$refs.pieChartContainer;
+                        if (!chartEl) {
+                            console.error('[PieChart] Chart container not found.');
+                            return;
+                        }
+
+                        const series = durationData.series || [];
+                        
+                        // Calculate totals for each category across all machines
+                        const categoryTotals = {};
+                        series.forEach(category => {
+                            const total = category.data.reduce((sum, val) => sum + val, 0);
+                            if (total > 0) {
+                                categoryTotals[category.name] = total;
+                            }
+                        });
+
+                        const labels = Object.keys(categoryTotals);
+                        const values = Object.values(categoryTotals);
+                        const colors = series.map(s => s.color);
+
+                        console.log('[PieChart] Data:', { labels, values, colors });
+
+                        // Destroy old chart if exists
+                        if (this.pieChart) {
+                            console.log('[PieChart] Destroying old chart.');
+                            this.pieChart.destroy();
+                        }
+
+                        const options = {
+                            series: values,
+                            chart: {
+                                type: 'pie',
+                                height: 350,
+                                animations: {
+                                    enabled: true,
+                                    speed: 350
+                                }
+                            },
+                            labels: labels,
+                            colors: colors,
+                            title: {
+                                text: 'Duration Summary (%)',
+                                align: 'center'
+                            },
+                            tooltip: {
+                                y: {
+                                    formatter: function (val) {
+                                        return val + ' Cycles'
+                                    }
+                                }
+                            },
+                            legend: {
+                                position: 'bottom',
+                                horizontalAlign: 'center'
+                            },
+                            dataLabels: {
+                                enabled: true,
+                                formatter: function (val) {
+                                    return val.toFixed(1) + '%'
+                                }
+                            },
+                            responsive: [{
+                                breakpoint: 480,
+                                options: {
+                                    chart: {
+                                        height: 300
+                                    },
+                                    legend: {
+                                        position: 'bottom'
+                                    }
+                                }
+                            }]
+                        };
+
+                        console.log('[PieChart] Creating new chart.');
+                        this.pieChart = new ApexCharts(chartEl, options);
+                        this.pieChart.render();
+                    }
+                }"
+                x-init="
+                    $wire.on('refresh-duration-chart', function(payload) {
+                        let data = payload;
+                        if (payload && payload.detail) data = payload.detail;
+                        if (Array.isArray(payload) && payload.length) data = payload[0];
+                        if (payload && payload[0] && payload[0].durationData) data = payload[0];
+
+                        const durationData = data?.durationData;
+                        if (!durationData) {
+                            console.warn('[PieChart] Missing durationData in payload', data);
+                            return;
+                        }
+                        console.log('[PieChart] Received data:', durationData);
+
+                        try {
+                            initOrUpdatePieChart(durationData);
+                        } catch (e) {
+                            console.error('[PieChart] Error:', e);
+                        }
+                    });
+
+                    console.log('[PieChart] Waiting for data...');
+                "
+            >
+                <div x-ref="pieChartContainer" wire:ignore></div>
+            </div>
+        </div>
+         <!-- Duration Chart - Stacked Bar Chart -->
+        <div class="col-span-4 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <div
                 x-data="{
                     durationChart: null,
@@ -632,7 +748,7 @@ new #[Layout("layouts.app")] class extends Component {
                                 colors: ['#fff']
                             },
                             title: {
-                                text: 'Batch Processing Time by Machine'
+                                text: 'Cycle Processing Time by Machine'
                             },
                             xaxis: {
                                 categories: categories,
