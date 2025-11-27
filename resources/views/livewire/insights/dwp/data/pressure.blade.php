@@ -219,6 +219,9 @@ new #[Layout("layouts.app")] class extends Component {
 
         // Generate duration chart data
         $this->generateDurationChart($dataRaw);
+        
+        // Generate pressure summary chart data
+        $this->generatePressureSummaryChart($dataRaw);
 
         $presureData = $dataRaw->whereNotNull('pv')->get()->toArray();
         $counts = collect($presureData);
@@ -379,6 +382,119 @@ new #[Layout("layouts.app")] class extends Component {
         // Dispatch the event to the frontend
         $this->dispatch('refresh-duration-chart', [
             'durationData' => $chartData,
+        ]);
+    }
+
+    /**
+     * Generate Pressure Summary Chart Data
+     * Categorizes pressure readings by machine
+     */
+    private function generatePressureSummaryChart($query)
+    {
+        // Get data with pressure information
+        $pressureData = clone $query;
+        $pressureData = $pressureData->whereNotNull('pv')
+            ->whereNotNull('mechine')
+            ->get();
+
+        // Initialize counters for each machine (1-4)
+        $machines = [1 => [], 2 => [], 3 => [], 4 => []];
+
+        foreach ($pressureData as $record) {
+            $machine = intval($record->mechine);
+
+            if (!isset($machines[$machine])) {
+                continue;
+            }
+
+            // Parse the PV data
+            $arrayPv = json_decode($record->pv, true);
+            
+            // Extract waveforms based on format
+            if (isset($arrayPv['waveforms']) && is_array($arrayPv['waveforms'])) {
+                // Enhanced format: extract waveforms
+                $waveforms = $arrayPv['waveforms'];
+                $toeHeelArray = $waveforms[0] ?? [];
+                $sideArray = $waveforms[1] ?? [];
+            } elseif (isset($arrayPv[0]) && isset($arrayPv[1])) {
+                // Legacy format: direct array access
+                $toeHeelArray = $arrayPv[0];
+                $sideArray = $arrayPv[1];
+            } else {
+                // Invalid format, skip this record
+                continue;
+            }
+
+            // Calculate median pressure for this record
+            $allPressureValues = array_merge($toeHeelArray, $sideArray);
+            $medianPressure = $this->getMedian($allPressureValues);
+
+            // Categorize based on pressure value
+            if ($medianPressure < 20) {
+                // Out of standard
+                $machines[$machine]['out_standard'] = ($machines[$machine]['out_standard'] ?? 0) + 1;
+            } elseif ($medianPressure < 30) {
+                // Warning
+                $machines[$machine]['warning'] = ($machines[$machine]['warning'] ?? 0) + 1;
+            } elseif ($medianPressure >= 30 && $medianPressure <= 45) {
+                // In standard
+                $machines[$machine]['in_standard'] = ($machines[$machine]['in_standard'] ?? 0) + 1;
+            } else { // > 45
+                // High pressure
+                $machines[$machine]['high_pressure'] = ($machines[$machine]['high_pressure'] ?? 0) + 1;
+            }
+        }
+
+        // Prepare data for chart
+        $chartData = [
+            'categories' => ['Machine 1', 'Machine 2', 'Machine 3', 'Machine 4'],
+            'series' => [
+                [
+                    'name' => 'Out Standard (< 20 kg)',
+                    'data' => [
+                        $machines[1]['out_standard'] ?? 0,
+                        $machines[2]['out_standard'] ?? 0,
+                        $machines[3]['out_standard'] ?? 0,
+                        $machines[4]['out_standard'] ?? 0,
+                    ],
+                    'color' => '#ef4444' // Red
+                ],
+                [
+                    'name' => 'Warning (< 30 kg)',
+                    'data' => [
+                        $machines[1]['warning'] ?? 0,
+                        $machines[2]['warning'] ?? 0,
+                        $machines[3]['warning'] ?? 0,
+                        $machines[4]['warning'] ?? 0,
+                    ],
+                    'color' => '#eab308' // Yellow
+                ],
+                [
+                    'name' => 'In Standard (30-45 kg)',
+                    'data' => [
+                        $machines[1]['in_standard'] ?? 0,
+                        $machines[2]['in_standard'] ?? 0,
+                        $machines[3]['in_standard'] ?? 0,
+                        $machines[4]['in_standard'] ?? 0,
+                    ],
+                    'color' => '#22c55e' // Green
+                ],
+                [
+                    'name' => 'High Pressure (> 45 kg)',
+                    'data' => [
+                        $machines[1]['high_pressure'] ?? 0,
+                        $machines[2]['high_pressure'] ?? 0,
+                        $machines[3]['high_pressure'] ?? 0,
+                        $machines[4]['high_pressure'] ?? 0,
+                    ],
+                    'color' => '#f97316' // Orange
+                ],
+            ],
+        ];
+
+        // Dispatch the event to the frontend
+        $this->dispatch('refresh-pressure-summary-chart', [
+            'pressureData' => $chartData,
         ]);
     }
 }; ?>
@@ -577,6 +693,242 @@ new #[Layout("layouts.app")] class extends Component {
             </div>
         </div>
     </div>
+    <!-- summary pressure  -->
+    <div class="grid grid-cols-6 gap-2 mt-2">
+        <!-- Pressure Stacked Bar Chart -->
+         <div class="col-span-4 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <div
+                x-data="{
+                    pressureSummaryChart: null,
+
+                    initOrUpdatePressureSummaryChart(pressureData) {
+                        const chartEl = this.$refs.pressureSummaryChartContainer;
+                        if (!chartEl) {
+                            console.error('[PressureSummaryChart] Chart container not found.');
+                            return;
+                        }
+
+                        const series = pressureData.series || [];
+                        const categories = pressureData.categories || [];
+
+                        console.log('[PressureSummaryChart] Data:', { series, categories });
+
+                        // Destroy old chart if exists
+                        if (this.pressureSummaryChart) {
+                            console.log('[PressureSummaryChart] Destroying old chart.');
+                            this.pressureSummaryChart.destroy();
+                        }
+
+                        const options = {
+                            series: series,
+                            chart: {
+                                type: 'bar',
+                                height: 350,
+                                stacked: true,
+                                toolbar: { show: true },
+                                animations: {
+                                    enabled: true,
+                                    speed: 350
+                                }
+                            },
+                            plotOptions: {
+                                bar: {
+                                    horizontal: true,
+                                    dataLabels: {
+                                        total: {
+                                            enabled: true,
+                                            offsetX: 0,
+                                            style: {
+                                                fontSize: '13px',
+                                                fontWeight: 900
+                                            }
+                                        }
+                                    }
+                                },
+                            },
+                            stroke: {
+                                width: 1,
+                                colors: ['#fff']
+                            },
+                            title: {
+                                text: 'Pressure Readings Summary by Machine'
+                            },
+                            xaxis: {
+                                categories: categories,
+                                title: {
+                                    text: 'Count Pressure Readings'
+                                }
+                            },
+                            yaxis: {
+                                title: {
+                                    text: 'Machine'
+                                }
+                            },
+                            tooltip: {
+                                y: {
+                                    formatter: function (val) {
+                                        return val + ' Readings'
+                                    }
+                                }
+                            },
+                            fill: {
+                                opacity: 1
+                            },
+                            legend: {
+                                position: 'top',
+                                horizontalAlign: 'left',
+                                offsetX: 40
+                            },
+                            colors: series.map(s => s.color)
+                        };
+
+                        console.log('[PressureSummaryChart] Creating new chart.');
+                        this.pressureSummaryChart = new ApexCharts(chartEl, options);
+                        this.pressureSummaryChart.render();
+                    }
+                }"
+                x-init="
+                    $wire.on('refresh-pressure-summary-chart', function(payload) {
+                        let data = payload;
+                        if (payload && payload.detail) data = payload.detail;
+                        if (Array.isArray(payload) && payload.length) data = payload[0];
+                        if (payload && payload[0] && payload[0].pressureData) data = payload[0];
+
+                        const pressureData = data?.pressureData;
+                        if (!pressureData) {
+                            console.warn('[PressureSummaryChart] Missing pressureData in payload', data);
+                            return;
+                        }
+                        console.log('[PressureSummaryChart] Received data:', pressureData);
+
+                        try {
+                            initOrUpdatePressureSummaryChart(pressureData);
+                        } catch (e) {
+                            console.error('[PressureSummaryChart] Error:', e);
+                        }
+                    });
+
+                    console.log('[PressureSummaryChart] Waiting for data...');
+                "
+            >
+                <div x-ref="pressureSummaryChartContainer" wire:ignore></div>
+            </div>
+         </div>
+        <!-- Pressure Pie Chart - Percentage Distribution -->
+         <div class="col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <div
+                x-data="{
+                    pressurePieChart: null,
+
+                    initOrUpdatePressurePieChart(pressureData) {
+                        const chartEl = this.$refs.pressurePieChartContainer;
+                        if (!chartEl) {
+                            console.error('[PressurePieChart] Chart container not found.');
+                            return;
+                        }
+
+                        const series = pressureData.series || [];
+                        
+                        // Calculate totals for each category across all machines
+                        const categoryTotals = {};
+                        series.forEach(category => {
+                            const total = category.data.reduce((sum, val) => sum + val, 0);
+                            if (total > 0) {
+                                categoryTotals[category.name] = total;
+                            }
+                        });
+
+                        const labels = Object.keys(categoryTotals);
+                        const values = Object.values(categoryTotals);
+                        const colors = series.map(s => s.color);
+
+                        console.log('[PressurePieChart] Data:', { labels, values, colors });
+
+                        // Destroy old chart if exists
+                        if (this.pressurePieChart) {
+                            console.log('[PressurePieChart] Destroying old chart.');
+                            this.pressurePieChart.destroy();
+                        }
+
+                        const options = {
+                            series: values,
+                            chart: {
+                                type: 'pie',
+                                height: 350,
+                                animations: {
+                                    enabled: true,
+                                    speed: 350
+                                }
+                            },
+                            labels: labels,
+                            colors: colors,
+                            title: {
+                                text: 'Pressure Summary (%)',
+                                align: 'center'
+                            },
+                            tooltip: {
+                                y: {
+                                    formatter: function (val) {
+                                        return val + ' Readings'
+                                    }
+                                }
+                            },
+                            legend: {
+                                position: 'bottom',
+                                horizontalAlign: 'center'
+                            },
+                            dataLabels: {
+                                enabled: true,
+                                formatter: function (val) {
+                                    return val.toFixed(1) + '%'
+                                }
+                            },
+                            responsive: [{
+                                breakpoint: 480,
+                                options: {
+                                    chart: {
+                                        height: 300
+                                    },
+                                    legend: {
+                                        position: 'bottom'
+                                    }
+                                }
+                            }]
+                        };
+
+                        console.log('[PressurePieChart] Creating new chart.');
+                        this.pressurePieChart = new ApexCharts(chartEl, options);
+                        this.pressurePieChart.render();
+                    }
+                }"
+                x-init="
+                    $wire.on('refresh-pressure-summary-chart', function(payload) {
+                        let data = payload;
+                        if (payload && payload.detail) data = payload.detail;
+                        if (Array.isArray(payload) && payload.length) data = payload[0];
+                        if (payload && payload[0] && payload[0].pressureData) data = payload[0];
+
+                        const pressureData = data?.pressureData;
+                        if (!pressureData) {
+                            console.warn('[PressurePieChart] Missing pressureData in payload', data);
+                            return;
+                        }
+                        console.log('[PressurePieChart] Received data:', pressureData);
+
+                        try {
+                            initOrUpdatePressurePieChart(pressureData);
+                        } catch (e) {
+                            console.error('[PressurePieChart] Error:', e);
+                        }
+                    });
+
+                    console.log('[PressurePieChart] Waiting for data...');
+                "
+            >
+                <div x-ref="pressurePieChartContainer" wire:ignore></div>
+            </div>
+         </div>
+    </div>
     <div class="grid grid-cols-6 gap-2 mt-2">
         <!-- Duration Pie Chart - Percentage Distribution -->
         <div class="col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
@@ -627,7 +979,7 @@ new #[Layout("layouts.app")] class extends Component {
                             labels: labels,
                             colors: colors,
                             title: {
-                                text: 'Duration Summary (%)',
+                                text: 'Press time Summary (%)',
                                 align: 'center'
                             },
                             tooltip: {
@@ -748,7 +1100,7 @@ new #[Layout("layouts.app")] class extends Component {
                                 colors: ['#fff']
                             },
                             title: {
-                                text: 'Cycle Processing Time by Machine'
+                                text: 'Press Time by Machine'
                             },
                             xaxis: {
                                 categories: categories,
