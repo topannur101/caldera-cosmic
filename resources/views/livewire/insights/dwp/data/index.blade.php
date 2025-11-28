@@ -75,6 +75,20 @@ new #[Layout("layouts.app")] class extends Component {
                 "summary" => "icon-notebook-text",
             ];
         }
+
+        if ($view === "loadcell"){
+            $this->view_titles = [
+                "loadcell" => __("DWP Loadcell"),
+                "raw-loadcell" => __("Raw Data"),
+                "summary-loadcell" => __("Summary Loadcell"),
+            ];
+
+            $this->view_icons = [
+                "loadcell" => "icon-circle-gauge",
+                "raw-loadcell" => "icon-database",
+                "summary-loadcell" => "icon-notebook-text",
+            ];
+        }
     }
 };
 
@@ -133,6 +147,15 @@ new #[Layout("layouts.app")] class extends Component {
                 @break
             @case("summary-time-alarm")
                 <livewire:insights.dwp.data.summary-time-alarm />
+                @break
+            @case("loadcell")
+                <livewire:insights.dwp.data.loadcell />
+                @break
+            @case("summary-loadcell")
+                <livewire:insights.dwp.data.summary-loadcell />
+                @break
+            @case("raw-loadcell")
+                <livewire:insights.dwp.data.raw-loadcell />
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">
