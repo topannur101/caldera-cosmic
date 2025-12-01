@@ -387,6 +387,7 @@ Route::get('/ctc-recipes/recommendation', function (Request $request) {
 Route::post('/loadcell-upload', function (Request $request) {
     $validator = Validator::make($request->all(), [
         'file' => 'required|file|mimes:json,txt|max:10240', // Max 10MB
+        'operator_name' => 'nullable|string|max:50',
     ]);
 
     if ($validator->fails()) {
@@ -401,6 +402,7 @@ Route::post('/loadcell-upload', function (Request $request) {
         $file = $request->file('file');
         $jsonContent = file_get_contents($file->getRealPath());
         $data = json_decode($jsonContent, true);
+        $operatorName = $request->input('operator_name', 'Operator');
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json([
@@ -446,7 +448,7 @@ Route::post('/loadcell-upload', function (Request $request) {
         $loadcellData->duration = $duration;
         $loadcellData->position = $metadata['position'] ?? null;
         $loadcellData->result = "std"; // Set based on your evaluation logic
-        $loadcellData->operator = null; // Set if available in metadata
+        $loadcellData->operator = $operatorName; // Set if available in metadata
         $loadcellData->recorded_at = isset($metadata['timestamp']) 
             ? Carbon::parse($metadata['timestamp']) 
             : Carbon::now();
@@ -454,7 +456,6 @@ Route::post('/loadcell-upload', function (Request $request) {
         // Store raw sensor data as JSON
         $loadcellData->loadcell_data = json_encode([
             'metadata' => $metadata,
-            'sensors' => $data['sensors']
         ]);
 
         $loadcellData->save();
@@ -528,7 +529,7 @@ Route::post('/api/loadcell-data', function (Request $request) {
         $loadcellData->toe_heel = null; // Set based on your logic
         $loadcellData->side = $metadata['position'] ?? null;
         $loadcellData->result = null; // Set based on your evaluation logic
-        $loadcellData->operator = null; // Set if available in metadata
+        $loadcellData->operator = "Operator"; // Set if available in metadata
         $loadcellData->recorded_at = isset($metadata['timestamp']) 
             ? Carbon::parse($metadata['timestamp']) 
             : Carbon::now();
@@ -536,7 +537,6 @@ Route::post('/api/loadcell-data', function (Request $request) {
         // Store raw sensor data as JSON
         $loadcellData->loadcell_data = json_encode([
             'metadata' => $metadata,
-            'sensors' => $data['sensors']
         ]);
 
         $loadcellData->save();

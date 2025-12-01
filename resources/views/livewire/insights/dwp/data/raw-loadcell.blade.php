@@ -50,7 +50,7 @@ new #[Layout("layouts.app")] class extends Component {
         }
 
         if ($this->mechine) {
-            $query->where("machine", "like", "%" . strtoupper(trim($this->mechine)) . "%");
+            $query->where("machine_name", "like", "%" . strtoupper(trim($this->mechine)) . "%");
         }
 
         return $query->orderBy("created_at", "DESC");
@@ -167,8 +167,8 @@ new #[Layout("layouts.app")] class extends Component {
     </div>
 
     <div wire:key="modals">
-        <x-modal name="detail-pressure" maxWidth="3xl">
-            <livewire:insights.dwp.data.detail.pressure />
+        <x-modal name="detail-loadcell" maxWidth="4xl">
+            <livewire:insights.dwp.data.detail.loadcell-result />
         </x-modal>
     </div>
 
@@ -194,18 +194,62 @@ new #[Layout("layouts.app")] class extends Component {
                 <table class="min-w-full text-sm text-neutral-600 dark:text-neutral-400">
                     <thead class="sticky top-0 z-10 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
                         <tr class="uppercase text-xs text-left">
+                            <th class="py-3 px-4 font-medium">Plant</th>
                             <th class="py-3 px-4 font-medium">Line</th>
                             <th class="py-3 px-4 font-medium">Machine</th>
                             <th class="py-3 px-4 font-medium">Position</th>
+                            <th class="py-3 px-4 font-medium">Recorded Time</th>
+                            <th class="py-3 px-4 font-medium">Latency</th>
+                            <th class="py-3 px-4 font-medium">Operator</th>
                             <th class="py-3 px-4 font-medium">Timestamp</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
                         @foreach ($counts as $count)
-                            <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+                            <tr wire:key="count-tr-{{ $count->id }}"
+                                tabindex="0"
+                                x-on:click="
+                                    $dispatch('open-modal', 'detail-loadcell');
+                                    $dispatch('loadcell-detail', { id: '{{ $count->id }}' });
+                                " class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+                                <td class="py-3 px-4">{{ strtoupper($count->plant ?? '-') }}</td>
                                 <td class="py-3 px-4">{{ strtoupper($count->line ?? '-') }}</td>
-                                <td class="py-3 px-4">{{ $count->machine ?? '-' }}</td>
+                                <td class="py-3 px-4">{{ $count->machine_name ?? '-' }}</td>
                                 <td class="py-3 px-4">{{ $count->position ?? '-' }}</td>
+                                <td class="py-3 px-4">
+                                    <div class="text-xs">
+                                        {{ $count->recorded_at ? Carbon::parse($count->recorded_at)->format('Y-m-d H:i:s') : '-' }}
+                                    </div>
+                                </td>
+                                <!-- latency calculate created_at - recorded_at make full 5 h 2m 1s -->
+                                <td class="py-3 px-4">
+                                    <div class="text-xs">
+                                        @if ($count->created_at && $count->recorded_at)
+                                            @php
+                                                $created = Carbon::parse($count->created_at);
+                                                $recorded = Carbon::parse($count->recorded_at);
+                                                $latency = $created->diff($recorded);
+                                                $latencyString = '';
+                                                if ($latency->d > 0) {
+                                                    $latencyString .= $latency->d . 'd ';
+                                                }
+                                                if ($latency->h > 0) {
+                                                    $latencyString .= $latency->h . 'h ';
+                                                }
+                                                if ($latency->i > 0) {
+                                                    $latencyString .= $latency->i . 'm ';
+                                                }
+                                                if ($latency->s > 0) {
+                                                    $latencyString .= $latency->s . 's';
+                                                }
+                                            @endphp
+                                            {{ trim($latencyString) }}
+                                        @else
+                                            -
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4">{{ $count->operator ?? '-' }}</td>
                                 <td class="py-3 px-4">
                                     <div class="text-xs">
                                         {{ $count->created_at ? $count->created_at->format('Y-m-d H:i:s') : '-' }}
