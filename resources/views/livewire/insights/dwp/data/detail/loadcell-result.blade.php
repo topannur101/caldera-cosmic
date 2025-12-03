@@ -17,6 +17,8 @@ new class extends Component {
     #[Url]
     public string $mechine = "";
 
+    public string $machineName = "";
+
     #[Url]
     public ?int $device_id = null;
 
@@ -47,7 +49,7 @@ new class extends Component {
         $data = InsDwpLoadcell::find($this->id);
         if ($data) {
             $this->detail = json_decode($data->loadcell_data, true) ?? [];
-            $this->mechine = $data->machine_name ?? "";
+            $this->machineName = $data->machine_name ?? "";
             $this->position = $data->position ?? "";
             $this->operator_name = $data->operator ?? "Operator";
             
@@ -103,11 +105,6 @@ new class extends Component {
         $cycles = $this->detail['metadata']['cycles'] ?? [];
         
         if (empty($cycles)) {
-            \Log::warning('No cycles data found for loadcell chart', [
-                'detail_empty' => empty($this->detail),
-                'has_metadata' => isset($this->detail['metadata']),
-                'detail_keys' => array_keys($this->detail)
-            ]);
             return;
         }
 
@@ -156,14 +153,6 @@ new class extends Component {
         } elseif ($isRightPosition) {
             $allLeftSensors = []; // Clear left sensors if position is Right
         }
-
-        \Log::info('Loadcell sensors grouped', [
-            'position' => $this->position,
-            'left_sensors' => array_keys($allLeftSensors),
-            'right_sensors' => array_keys($allRightSensors),
-            'left_count' => count($allLeftSensors),
-            'right_count' => count($allRightSensors)
-        ]);
 
         // Calculate median pressure for each sensor
         $sensorLabels = [];
@@ -227,12 +216,6 @@ new class extends Component {
         
         // If no sensor data after processing, don't render chart
         if (empty($sensorLabels)) {
-            \Log::warning('No sensor data to display after processing', [
-                'position' => $this->position,
-                'cycle_filter' => $this->cycleFilter,
-                'left_sensors_count' => count($allLeftSensors),
-                'right_sensors_count' => count($allRightSensors)
-            ]);
             return;
         }
 
@@ -468,7 +451,6 @@ new class extends Component {
                     // Get measurement information from metadata
                     $operatorName = $this->operator_name ?? 'Operator';
                     $lineName = $this->detail['metadata']['line_name'] ?? $this->line ?? '-';
-                    $machineName = $this->mechine ?? '-';
                     $plantName = $this->detail['metadata']['plant_name'] ?? $this->detail['metadata']['plant'] ?? '-';
                     
                     // Get time information
@@ -493,7 +475,7 @@ new class extends Component {
                             
                             <div class="flex justify-between items-center">
                                 <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Line Name:
+                                    Line:
                                 </dt>
                                 <dd class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                     {{ strtoupper($lineName) }}
@@ -502,16 +484,16 @@ new class extends Component {
                             
                             <div class="flex justify-between items-center">
                                 <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Machine Name:
+                                    Machine:
                                 </dt>
                                 <dd class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ $machineName ?? '-' }}
+                                    {{ $this->machineName }}
                                 </dd>
                             </div>
                             
                             <div class="flex justify-between items-center">
                                 <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Plant Name:
+                                    Plant:
                                 </dt>
                                 <dd class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                     {{ $plantName }}
@@ -734,7 +716,7 @@ new class extends Component {
                             </thead>
                             <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                                 @php
-                                    $metrics = ['max' => 'Max', 'median' => 'Median', 'min' => 'Min'];
+                                    $metrics = ['median' => 'Median','max' => 'Max', 'min' => 'Min'];
                                 @endphp
                                 
                                 @foreach($metrics as $metricKey => $metricLabel)

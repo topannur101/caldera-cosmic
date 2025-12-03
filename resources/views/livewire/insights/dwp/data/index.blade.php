@@ -76,7 +76,7 @@ new #[Layout("layouts.app")] class extends Component {
             ];
         }
 
-        if ($view === "loadcell"){
+        if ($view === "loadcell" || $view === "raw-loadcell" || $view === "summary-loadcell"){
             $this->view_titles = [
                 "loadcell" => __("DWP Loadcell"),
                 "raw-loadcell" => __("Raw Data"),

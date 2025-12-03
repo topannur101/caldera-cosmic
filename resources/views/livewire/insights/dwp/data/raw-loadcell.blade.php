@@ -8,6 +8,7 @@ use Livewire\Attributes\On;
 use App\Models\InsDwpLoadcell;
 use App\Traits\HasDateRangeFilter;
 use Carbon\Carbon;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 new #[Layout("layouts.app")] class extends Component {
     use WithPagination;
@@ -21,6 +22,9 @@ new #[Layout("layouts.app")] class extends Component {
 
     #[Url]
     public string $line = "";
+
+    #[Url]
+    public string $plant = "";
 
     #[Url]
     public string $mechine = "";
@@ -49,6 +53,10 @@ new #[Layout("layouts.app")] class extends Component {
             $query->where("line", "like", "%" . strtoupper(trim($this->line)) . "%");
         }
 
+        if ($this->plant) {
+            $query->where("plant", "like", "%" . strtoupper(trim($this->plant)) . "%");
+        }
+
         if ($this->mechine) {
             $query->where("machine_name", "like", "%" . strtoupper(trim($this->mechine)) . "%");
         }
@@ -72,8 +80,67 @@ new #[Layout("layouts.app")] class extends Component {
 
     public function download($type)
     {
-        // Implement CSV download logic here
-        // Similar to other components in the project
+        switch ($type) {
+            case "counts":
+                $this->js('toast("' . __("Unduhan dimulai...") . '", { type: "success" })');
+                $filename = "dwp_loadcell_export_" . now()->format("Y-m-d_His") . ".csv";
+
+                $headers = [
+                    "Content-type" => "text/csv",
+                    "Content-Disposition" => "attachment; filename=$filename",
+                    "Pragma" => "no-cache",
+                    "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+                    "Expires" => "0",
+                ];
+
+                $columns = [
+                    __("Plant"),
+                    __("Line"),
+                    __("Machine"),
+                    __("Position"),
+                    __("Recorded Time"),
+                    __("Latency"),
+                    __("Operator"),
+                    __("Timestamp"),
+                ];
+
+                $callback = function () use ($columns) {
+                    $file = fopen("php://output", "w");
+                    fputcsv($file, $columns);
+
+                    $this->getCountsQuery()->chunk(1000, function ($counts) use ($file) {
+                        foreach ($counts as $count) {
+                            $latency = '';
+                            if ($count->created_at && $count->recorded_at) {
+                                $created = Carbon::parse($count->created_at);
+                                $recorded = Carbon::parse($count->recorded_at);
+                                $diff = $created->diff($recorded);
+                                $latencyParts = [];
+                                if ($diff->d > 0) $latencyParts[] = $diff->d . 'd';
+                                if ($diff->h > 0) $latencyParts[] = $diff->h . 'h';
+                                if ($diff->i > 0) $latencyParts[] = $diff->i . 'm';
+                                if ($diff->s > 0) $latencyParts[] = $diff->s . 's';
+                                $latency = implode(' ', $latencyParts);
+                            }
+
+                            fputcsv($file, [
+                                strtoupper($count->plant ?? '-'),
+                                strtoupper($count->line ?? '-'),
+                                $count->machine_name ?? '-',
+                                $count->position ?? '-',
+                                $count->recorded_at ? Carbon::parse($count->recorded_at)->format('Y-m-d H:i:s') : '-',
+                                $latency ?: '-',
+                                $count->operator ?? '-',
+                                $count->created_at ? $count->created_at->format('Y-m-d H:i:s') : '-',
+                            ]);
+                        }
+                    });
+
+                    fclose($file);
+                };
+
+                return new StreamedResponse($callback, 200, $headers);
+        }
     }
 }; ?>
 
@@ -123,11 +190,22 @@ new #[Layout("layouts.app")] class extends Component {
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grid grid-cols-2 lg:flex gap-3">
                 <div>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Plant") }}</label>
+                    <x-select wire:model.live="plant" class="w-full lg:w-32">
+                            <option value=""></option>
+                            <option value="Plant G">G</option>
+                            <option value="Plant A">A</option>
+                    </x-select>
+                </div>
+                <div>
                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
                     <x-select wire:model.live="line" class="w-full lg:w-32">
                             <option value=""></option>
-                            <option value="a1">A1</option>
-                            <option value="g5">G5</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
                     </x-select>
                 </div>
                 <div>

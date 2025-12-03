@@ -633,7 +633,7 @@ new #[Layout("layouts.app")] class extends Component {
                                 }
                             },
                             title: {
-                                text: 'DWP Machine Performance Boxplot'
+                                text: 'DWP Machine Performance'
                             },
                             xaxis: {
                                 // --- FIX 4: Removed Redundant Categories ---
@@ -983,7 +983,7 @@ new #[Layout("layouts.app")] class extends Component {
                             labels: labels,
                             colors: colors,
                             title: {
-                                text: 'Press time Summary (%)',
+                                text: 'Press Time Summary (%)',
                                 align: 'center'
                             },
                             tooltip: {
