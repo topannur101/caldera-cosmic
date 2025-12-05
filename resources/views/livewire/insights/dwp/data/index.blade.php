@@ -62,17 +62,19 @@ new #[Layout("layouts.app")] class extends Component {
             ];
         }
 
-        if ($view === "raw" || $view === "summary" || $view === "pressure"){
+        if ($view === "raw" || $view === "summary" || $view === "pressure" || $view === "uptime-monitoring"){
             $this->view_titles = [
                 "pressure" => __("Machine Performance"),
                 "raw" => __("Raw Data"),
-                "summary" => __("Summary DWP Pressure")
+                "summary" => __("Summary DWP Pressure"),
+                "uptime-monitoring" => __("Uptime Monitoring"),
             ];
 
             $this->view_icons = [
                 "pressure" => "icon-database",
                 "raw" => "icon-database",
                 "summary" => "icon-notebook-text",
+                "uptime-monitoring" => "icon-activity",
             ];
         }
 
@@ -156,6 +158,9 @@ new #[Layout("layouts.app")] class extends Component {
                 @break
             @case("raw-loadcell")
                 <livewire:insights.dwp.data.raw-loadcell />
+                @break
+            @case("uptime-monitoring")
+                <livewire:insights.dwp.data.uptime-monitoring />
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">

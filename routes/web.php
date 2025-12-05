@@ -272,9 +272,11 @@ Route::prefix('insights')->group(function () {
         Volt::route('/dwp/data/fullscreen', 'insights.dwp.data.dashboard-fullscreen')->name('data.dashboard-fullscreen');
         Volt::route('/dwp/data/loadcell', 'insights.dwp.data.loadcell')->name('data.loadcell');
         Volt::route('/dwp/data', 'insights.dwp.data.index')->name('data.index');
+        Volt::route('/dwp/monitoring', 'insights.dwp.monitor.device-uptime')->name('monitoring.index');
         Route::get('/dwp', function () {
             return redirect()->route('insights.dwp.data.index');
         })->name('index');
+        // monitoring
 
     });
     Volt::route('/', 'insights.index')->name('insights');

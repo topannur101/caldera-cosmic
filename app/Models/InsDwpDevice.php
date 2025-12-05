@@ -83,6 +83,40 @@ class InsDwpDevice extends Model
     }
 
     /**
+     * Get uptime logs for this device
+     */
+    public function uptimeLogs(): HasMany
+    {
+        return $this->hasMany(LogDwpUptime::class, 'ins_dwp_device_id');
+    }
+
+    /**
+     * Get the latest uptime log
+     */
+    public function latestUptimeLog()
+    {
+        return $this->hasMany(LogDwpUptime::class, 'ins_dwp_device_id')
+            ->latest('logged_at')
+            ->first();
+    }
+
+    /**
+     * Get current status of the device
+     */
+    public function getCurrentStatus(): ?string
+    {
+        return LogDwpUptime::getLatestStatus($this->id);
+    }
+
+    /**
+     * Calculate uptime percentage
+     */
+    public function getUptimePercentage(int $hours = 24): float
+    {
+        return LogDwpUptime::calculateUptime($this->id, $hours);
+    }
+
+    /**
      * Get lines managed by this device
      */
     public function getLines(): array
