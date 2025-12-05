@@ -321,43 +321,43 @@ new #[Layout("layouts.app")] class extends Component {
                                 </g>
                                 
                                 <!-- Left side sensors -->
-                                <!-- M1_L -->
-                                <g class="sensor" data-sensor="M1_L">
-                                    <rect x="40" y="180" width="80" height="50" rx="8" 
-                                          class="fill-blue-500 dark:fill-blue-600" opacity="0.9"/>
-                                    <text x="80" y="200" text-anchor="middle" class="fill-white text-xs font-bold">M1_L</text>
-                                    <text x="80" y="218" text-anchor="middle" class="fill-white text-lg font-bold">
-                                        {{ number_format($sensorValues['M1_L'] ?? 0, 1) }}
-                                    </text>
-                                </g>
-                                
                                 <!-- L1_L -->
                                 <g class="sensor" data-sensor="L1_L">
-                                    <rect x="280" y="180" width="80" height="50" rx="8" 
+                                    <rect x="40" y="180" width="80" height="50" rx="8" 
                                           class="fill-blue-500 dark:fill-blue-600" opacity="0.9"/>
-                                    <text x="320" y="200" text-anchor="middle" class="fill-white text-xs font-bold">L1_L</text>
-                                    <text x="320" y="218" text-anchor="middle" class="fill-white text-lg font-bold">
+                                    <text x="80" y="200" text-anchor="middle" class="fill-white text-xs font-bold">L1_L</text>
+                                    <text x="80" y="218" text-anchor="middle" class="fill-white text-lg font-bold">
                                         {{ number_format($sensorValues['L1_L'] ?? 0, 1) }}
                                     </text>
                                 </g>
                                 
-                                <!-- M2_L -->
-                                <g class="sensor" data-sensor="M2_L">
-                                    <rect x="60" y="450" width="80" height="50" rx="8" 
+                                <!-- M1_L -->
+                                <g class="sensor" data-sensor="M1_L">
+                                    <rect x="280" y="180" width="80" height="50" rx="8" 
                                           class="fill-blue-500 dark:fill-blue-600" opacity="0.9"/>
-                                    <text x="100" y="470" text-anchor="middle" class="fill-white text-xs font-bold">M2_L</text>
-                                    <text x="100" y="488" text-anchor="middle" class="fill-white text-lg font-bold">
-                                        {{ number_format($sensorValues['M2_L'] ?? 0, 1) }}
+                                    <text x="320" y="200" text-anchor="middle" class="fill-white text-xs font-bold">M1_L</text>
+                                    <text x="320" y="218" text-anchor="middle" class="fill-white text-lg font-bold">
+                                        {{ number_format($sensorValues['M1_L'] ?? 0, 1) }}
                                     </text>
                                 </g>
                                 
                                 <!-- L2_L -->
                                 <g class="sensor" data-sensor="L2_L">
+                                    <rect x="60" y="450" width="80" height="50" rx="8" 
+                                          class="fill-blue-500 dark:fill-blue-600" opacity="0.9"/>
+                                    <text x="100" y="470" text-anchor="middle" class="fill-white text-xs font-bold">L2_L</text>
+                                    <text x="100" y="488" text-anchor="middle" class="fill-white text-lg font-bold">
+                                        {{ number_format($sensorValues['L2_L'] ?? 0, 1) }}
+                                    </text>
+                                </g>
+                                
+                                <!-- M2_L -->
+                                <g class="sensor" data-sensor="M2_L">
                                     <rect x="260" y="450" width="80" height="50" rx="8" 
                                           class="fill-blue-500 dark:fill-blue-600" opacity="0.9"/>
-                                    <text x="300" y="470" text-anchor="middle" class="fill-white text-xs font-bold">L2_L</text>
+                                    <text x="300" y="470" text-anchor="middle" class="fill-white text-xs font-bold">M2_L</text>
                                     <text x="300" y="488" text-anchor="middle" class="fill-white text-lg font-bold">
-                                        {{ number_format($sensorValues['L2_L'] ?? 0, 1) }}
+                                        {{ number_format($sensorValues['M2_L'] ?? 0, 1) }}
                                     </text>
                                 </g>
                             </svg>
