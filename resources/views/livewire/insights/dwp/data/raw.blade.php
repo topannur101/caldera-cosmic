@@ -31,6 +31,8 @@ new #[Layout("layouts.app")] class extends Component {
     #[Url]
     public string $mechine = "";
 
+    #[Url]
+    public string $presstime = "";
 
     public array $devices = [];
     public int $perPage = 20;
@@ -87,7 +89,35 @@ new #[Layout("layouts.app")] class extends Component {
             $query->where("ins_dwp_counts.mechine", "like", "%" . strtoupper(trim($this->mechine)) . "%");
         }
 
+        if ($this->presstime) {
+            $query->where(function ($q) {
+                $this->applyPressTimeFilter($q);
+            });
+        }
+
         return $query->orderBy("ins_dwp_counts.created_at", "DESC");
+    }
+
+    private function applyPressTimeFilter($query)
+    {
+        switch ($this->presstime) {
+            case '<10':
+                // Duration less than 10 seconds
+                $query->whereRaw("TIME_TO_SEC(duration) < 10");
+                break;
+            case '<13':
+                // Duration less than 13 seconds
+                $query->whereRaw("TIME_TO_SEC(duration) < 13");
+                break;
+            case '13-14':
+                // Duration between 13 and 14 seconds
+                $query->whereRaw("TIME_TO_SEC(duration) BETWEEN 13 AND 14");
+                break;
+            case '>16':
+                // Duration 16 seconds or more
+                $query->whereRaw("TIME_TO_SEC(duration) > 16");
+                break;
+        }
     }
 
     private function getDeviceForLine($line)
@@ -319,8 +349,8 @@ new #[Layout("layouts.app")] class extends Component {
                     </div>
                 </div>
                 <div class="flex gap-3">
-                    <x-text-input wire:model.live="start_at" type="date" class="w-40" />
-                    <x-text-input wire:model.live="end_at" type="date" class="w-40" />
+                    <x-text-input wire:model.live="start_at" type="datetime-local" class="w-40" />
+                    <x-text-input wire:model.live="end_at" type="datetime-local" class="w-40" />
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
@@ -341,6 +371,16 @@ new #[Layout("layouts.app")] class extends Component {
                             <option value="2">2</option>
                             <option value="3">3</option>
                             <option value="4">4</option>
+                    </x-select>
+                </div>
+                <div>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Press Time") }}</label>
+                    <x-select wire:model.live="presstime" class="w-full lg:w-32">
+                            <option value="">{{ __("All") }}</option>
+                            <option value="<10">{{ __("<10") }}</option>
+                            <option value="<13">{{ __("<13") }}</option>
+                            <option value="13-14">{{ __("13-14") }}</option>
+                            <option value=">16">{{ __(">16") }}</option>
                     </x-select>
                 </div>
             </div>

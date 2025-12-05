@@ -312,12 +312,83 @@ new #[Layout("layouts.app")] class extends Component {
         ];
     }
 
+    /**
+     * Get summary table data grouped by plant and line
+     */
+    private function getSummaryTableData(): array
+    {
+        $query = $this->getLoadcellQuery();
+
+        // Get latest record for each plant-line-machine-position combination
+        $records = $query->orderBy('created_at', 'DESC')->get();
+
+        $summary = [];
+
+        foreach ($records as $record) {
+            $plant = $record->plant ?? 'Unknown';
+            $line = $record->line ?? 'Unknown';
+            $machine = $record->machine_name ?? '0';
+            $position = $record->position ?? 'Unknown';
+            $result = $record->result ?? 'unknown';
+            $timestamp = $record->created_at;
+
+            // Create unique key for plant-line combination
+            $key = $plant . '-' . $line;
+
+            // Initialize if not exists
+            if (!isset($summary[$key])) {
+                $summary[$key] = [
+                    'plant' => $plant,
+                    'line' => $line,
+                    'latest_timestamp' => $timestamp,
+                    'machines' => [
+                        '1' => ['L' => null, 'R' => null],
+                        '2' => ['L' => null, 'R' => null],
+                        '3' => ['L' => null, 'R' => null],
+                        '4' => ['L' => null, 'R' => null],
+                    ]
+                ];
+            }
+
+            // Update latest timestamp
+            if ($timestamp > $summary[$key]['latest_timestamp']) {
+                $summary[$key]['latest_timestamp'] = $timestamp;
+            }
+
+            // Determine position key (L or R)
+            $posKey = strtoupper(substr($position, 0, 1));
+            if (!in_array($posKey, ['L', 'R'])) {
+                $posKey = 'L'; // default to Left if unclear
+            }
+
+            // Set result for this machine-position if not already set (we want latest)
+            if (!isset($summary[$key]['machines'][$machine])) {
+                $summary[$key]['machines'][$machine] = ['L' => null, 'R' => null];
+            }
+
+            if ($summary[$key]['machines'][$machine][$posKey] === null) {
+                $summary[$key]['machines'][$machine][$posKey] = ($result === 'std') ? 'OK' : 'NG';
+            }
+        }
+
+        // Sort by plant and line
+        usort($summary, function ($a, $b) {
+            if ($a['plant'] !== $b['plant']) {
+                return strcmp($a['plant'], $b['plant']);
+            }
+            return strcmp($a['line'], $b['line']);
+        });
+
+        return $summary;
+    }
+
     public function with(): array
     {
         $overview = $this->getOverviewStats();
         $pressureBoxplot = $this->getPressureBoxplotData();
         $qualityMetrics = $this->getQualityMetrics();
         $timeAnalysis = $this->getTimeBasedAnalysis();
+        $summaryTable = $this->getSummaryTableData();
 
         // Inject chart rendering script
         $this->dispatch('charts-data-ready', [
@@ -331,6 +402,7 @@ new #[Layout("layouts.app")] class extends Component {
             'pressureBoxplot' => $pressureBoxplot,
             'qualityMetrics' => $qualityMetrics,
             'timeAnalysis' => $timeAnalysis,
+            'summaryTable' => $summaryTable,
         ];
     }
 }; ?>
@@ -487,304 +559,101 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
     </div>
 
-    <!-- Top Operators Card -->
-    @if(count($overview['operator_counts']) > 0)
+    <!-- Summary Table -->
     <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6 mb-6">
-        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{{ __("Top Operators") }}</h3>
-        <div class="space-y-3">
-            @foreach($overview['operator_counts'] as $operator => $count)
-            <div class="flex items-center justify-between">
-                <span class="text-neutral-700 dark:text-neutral-300">{{ $operator }}</span>
-                <div class="flex items-center gap-3">
-                    <div class="w-32 bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
-                        <div class="bg-blue-600 h-2 rounded-full" style="width: {{ ($count / max($overview['operator_counts'])) * 100 }}%"></div>
+        <h2 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{{ __("Load Cell Test Summary") }}</h2>
+        
+        @if(count($summaryTable) > 0)
+            @php
+                // Group by plant for better organization
+                $groupedByPlant = [];
+                foreach ($summaryTable as $row) {
+                    $plantKey = $row['plant'];
+                    if (!isset($groupedByPlant[$plantKey])) {
+                        $groupedByPlant[$plantKey] = [];
+                    }
+                    $groupedByPlant[$plantKey][] = $row;
+                }
+            @endphp
+
+            @foreach($groupedByPlant as $plant => $rows)
+                <div class="mb-8">
+                    <div class="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
+                        <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+                            <thead class="bg-neutral-50 dark:bg-neutral-900">
+                                <tr>
+                                    <th rowspan="2" class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-r border-neutral-200 dark:border-neutral-700">
+                                        {{ __("Plant") }}
+                                    </th>
+                                    <th rowspan="2" class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-r border-neutral-200 dark:border-neutral-700">
+                                        {{ __("Line") }}
+                                    </th>
+                                    <th rowspan="2" class="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-r border-neutral-200 dark:border-neutral-700">
+                                        {{ __("Latest Timestamp") }}
+                                    </th>
+                                    <th colspan="2" class="px-4 py-3 text-center text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-r border-neutral-200 dark:border-neutral-700">
+                                        {{ __("Mc 1") }}
+                                    </th>
+                                    <th colspan="2" class="px-4 py-3 text-center text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-r border-neutral-200 dark:border-neutral-700">
+                                        {{ __("Mc 2") }}
+                                    </th>
+                                    <th colspan="2" class="px-4 py-3 text-center text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-r border-neutral-200 dark:border-neutral-700">
+                                        {{ __("Mc 3") }}
+                                    </th>
+                                    <th colspan="2" class="px-4 py-3 text-center text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                        {{ __("Mc 4") }}
+                                    </th>
+                                </tr>
+                                <tr>
+                                    @foreach(['1', '2', '3', '4'] as $mc)
+                                        <th class="px-2 py-2 text-center text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase border-r border-neutral-200 dark:border-neutral-700">L</th>
+                                        <th class="px-2 py-2 text-center text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase {{ $mc !== '4' ? 'border-r border-neutral-200 dark:border-neutral-700' : '' }}">R</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-700">
+                                @foreach($rows as $row)
+                                    <tr>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-neutral-100 border-r border-neutral-200 dark:border-neutral-700">
+                                            {{ $row['plant'] }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-100 border-r border-neutral-200 dark:border-neutral-700">
+                                            {{ $row['line'] }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-neutral-600 dark:text-neutral-400 font-mono border-r border-neutral-200 dark:border-neutral-700">
+                                            {{ \Carbon\Carbon::parse($row['latest_timestamp'])->format('Y-m-d H:i:s') }}
+                                        </td>
+                                        @foreach(['1', '2', '3', '4'] as $mc)
+                                            @foreach(['L', 'R'] as $pos)
+                                                @php
+                                                    $status = $row['machines'][$mc][$pos] ?? null;
+                                                    $bgClass = '';
+                                                    $textClass = '';
+                                                    if ($status === 'OK') {
+                                                        $bgClass = 'bg-green-500/20 dark:bg-green-500/30';
+                                                        $textClass = 'text-green-700 dark:text-green-300 font-semibold';
+                                                    } elseif ($status === 'NG') {
+                                                        $bgClass = 'bg-red-500 dark:bg-red-600';
+                                                        $textClass = 'text-white font-bold';
+                                                    }
+                                                @endphp
+                                                <td class="px-2 py-3 whitespace-nowrap text-sm text-center {{ $bgClass }} {{ $textClass }} {{ ($mc !== '4' || $pos !== 'R') ? 'border-r border-neutral-200 dark:border-neutral-700' : '' }}">
+                                                    {{ $status ?? '—' }}
+                                                </td>
+                                            @endforeach
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                    <span class="text-neutral-900 dark:text-neutral-100 font-semibold w-12 text-right">{{ $count }}</span>
                 </div>
-            </div>
             @endforeach
-        </div>
-    </div>
-    @endif
-
-    <!-- Option 3: Pressure Analysis - Boxplot -->
-    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6 mb-6">
-        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{{ __("Pressure Distribution by Sensor") }}</h3>
-        <div id="pressureBoxplot"></div>
-    </div>
-
-    <!-- Option 4: Quality Control Metrics -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <!-- Standard/Not Standard Distribution -->
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{{ __("Standard/Not Standard Distribution") }}</h3>
-            <div id="passFailChart"></div>
-        </div>
-
-        <!-- Tests by Position -->
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{{ __("Tests by Position") }}</h3>
-            <div id="positionChart"></div>
-        </div>
-    </div>
-
-    <!-- Tests by Machine -->
-    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6 mb-6">
-        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{{ __("Quality by Machine") }}</h3>
-        <div id="machineChart"></div>
-    </div>
-
-    <!-- Average Latency Card -->
-    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{{ __("Average Response Latency") }}</h3>
-                <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ number_format($timeAnalysis['avg_latency_seconds'], 2) }}s</p>
-                <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">{{ __("Time between recording and data arrival") }}</p>
+        @else
+            <div class="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                {{ __("No data available for the selected filters") }}
             </div>
-            <div class="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                <i class="icon-clock text-4xl text-blue-600 dark:text-blue-400"></i>
-            </div>
-        </div>
+        @endif
     </div>
-
-    <script>
-    // Store chart instances globally
-    window.__loadcellApexCharts = window.__loadcellApexCharts || {};
-
-    function destroyChart(chartName) {
-        if (window.__loadcellApexCharts[chartName]) {
-            try {
-                window.__loadcellApexCharts[chartName].destroy();
-            } catch(e) {
-                console.error('Error destroying chart:', chartName, e);
-            }
-        }
-    }
-
-    function renderAllCharts() {
-        if (typeof ApexCharts === 'undefined') {
-            console.error('ApexCharts is not loaded!');
-            setTimeout(renderAllCharts, 100);
-            return;
-        }
-
-        // Get fresh data from Livewire component
-        var pressureBoxplotData = @json($pressureBoxplot);
-        var qualityMetrics = @json($qualityMetrics);
-        var timeAnalysis = @json($timeAnalysis);
-
-            // Option 3: Pressure Bar Chart
-            destroyChart('boxplot');
-            var barChartOptions = {
-                series: [{
-                    name: 'Average Pressure',
-                    data: Object.keys(pressureBoxplotData).map(function(sensor) {
-                        return {
-                            x: sensor,
-                            y: pressureBoxplotData[sensor]
-                        };
-                    })
-                }],
-                chart: {
-                    type: 'bar',
-                    height: 400,
-                    toolbar: { show: true }
-                },
-                plotOptions: {
-                    bar: {
-                        borderRadius: 4,
-                        dataLabels: {
-                            position: 'top'
-                        },
-                        colors: {
-                            ranges: [{
-                                from: 0,
-                                to: 100,
-                                color: '#3b82f6'
-                            }]
-                        }
-                    }
-                },
-                dataLabels: {
-                    enabled: true,
-                    formatter: function (val) {
-                        return val.toFixed(2) + ' kPa';
-                    },
-                    offsetY: -20,
-                    style: {
-                        fontSize: '12px',
-                        colors: ["#304758"]
-                    }
-                },
-                title: {
-                    text: 'Average Sensor Pressure Distribution',
-                    align: 'left'
-                },
-                xaxis: {
-                    title: { text: 'Sensor Position' },
-                    labels: {
-                        style: {
-                            fontSize: '12px'
-                        }
-                    }
-                },
-                yaxis: {
-                    title: { text: 'Average Pressure (kPa)' },
-                    labels: {
-                        formatter: function (val) {
-                            return val.toFixed(2);
-                        }
-                    }
-                },
-                tooltip: {
-                    y: {
-                        formatter: function (val) {
-                            return val.toFixed(2) + ' kPa';
-                        }
-                    }
-                },
-                colors: ['#3b82f6']
-            };
-            window.__loadcellApexCharts.boxplot = new ApexCharts(document.querySelector("#pressureBoxplot"), barChartOptions);
-            window.__loadcellApexCharts.boxplot.render();
-
-            // Option 4: Standard/Not Standard Donut Chart
-            destroyChart('passFail');
-            var passFailData = qualityMetrics.pass_fail;
-            var passFailOptions = {
-                series: Object.values(passFailData),
-                chart: {
-                    type: 'donut',
-                    height: 300
-                },
-                labels: Object.keys(passFailData).map(function(key) {
-                    return key === 'std' ? 'Standard' : 'Not Standard';
-                }),
-                colors: ['#10b981', '#ef4444'],
-                legend: {
-                    position: 'bottom'
-                },
-                dataLabels: {
-                    enabled: true,
-                    formatter: function(val) {
-                        return val.toFixed(1) + '%';
-                    }
-                }
-            };
-            window.__loadcellApexCharts.passFail = new ApexCharts(document.querySelector("#passFailChart"), passFailOptions);
-            window.__loadcellApexCharts.passFail.render();
-
-            // Option 4: Position Bar Chart
-            destroyChart('position');
-            var positionData = qualityMetrics.by_position;
-            var positionOptions = {
-                series: [{
-                    name: 'Standard',
-                    data: positionData.map(function(p) { return p.passed; })
-                }, {
-                    name: 'Not Standard',
-                    data: positionData.map(function(p) { return p.failed; })
-                }],
-                chart: {
-                    type: 'bar',
-                    height: 300,
-                    stacked: true
-                },
-                plotOptions: {
-                    bar: {
-                        horizontal: false
-                    }
-                },
-                xaxis: {
-                    categories: positionData.map(function(p) { return p.position; })
-                },
-                colors: ['#10b981', '#ef4444'],
-                legend: {
-                    position: 'top'
-                },
-                yaxis: {
-                    title: { text: 'Number of Tests' }
-                }
-            };
-            window.__loadcellApexCharts.position = new ApexCharts(document.querySelector("#positionChart"), positionOptions);
-            window.__loadcellApexCharts.position.render();
-
-            // Option 4: Machine Bar Chart
-            destroyChart('machine');
-            var machineData = qualityMetrics.by_machine;
-            var machineOptions = {
-                series: [{
-                    name: 'Standard',
-                    data: machineData.map(function(m) { return m.passed; })
-                }, {
-                    name: 'Not Standard',
-                    data: machineData.map(function(m) { return m.failed; })
-                }],
-                chart: {
-                    type: 'bar',
-                    height: 350,
-                    stacked: false
-                },
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        dataLabels: {
-                            position: 'top'
-                        }
-                    }
-                },
-                dataLabels: {
-                    enabled: true,
-                    offsetY: -20,
-                    style: {
-                        fontSize: '12px',
-                        colors: ["#304758"]
-                    }
-                },
-                xaxis: {
-                    categories: machineData.map(function(m) { return 'Machine ' + m.machine; }),
-                    title: { text: 'Machine' }
-                },
-                yaxis: {
-                    title: { text: 'Number of Tests' }
-                },
-                colors: ['#10b981', '#ef4444'],
-                legend: {
-                    position: 'top'
-                }
-            };
-            window.__loadcellApexCharts.machine = new ApexCharts(document.querySelector("#machineChart"), machineOptions);
-            window.__loadcellApexCharts.machine.render();
-    }
-
-    // Initialize charts with delay to ensure DOM is ready
-    function initCharts() {
-        var allElementsExist = 
-            document.getElementById('pressureBoxplot') &&
-            document.getElementById('passFailChart') &&
-            document.getElementById('positionChart') &&
-            document.getElementById('machineChart');
-
-        if (allElementsExist && typeof ApexCharts !== 'undefined') {
-            renderAllCharts();
-        } else {
-            setTimeout(initCharts, 100);
-        }
-    }
-
-    // Initialize on DOM ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initCharts);
-    } else {
-        initCharts();
-    }
-
-    // Refresh charts on Livewire updates
-    document.addEventListener('livewire:init', function() {
-        Livewire.hook('morph.updated', function() {
-            setTimeout(renderAllCharts, 100);
-        });
-    });
-    </script>
+     
 </div>
