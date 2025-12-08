@@ -179,4 +179,87 @@ class InsDwpDevice extends Model
     {
         return $query->where('is_active', true);
     }
+
+    /**
+     * Get all machines from the config with their standard references
+     * Returns an array of machines from all lines with their standard addresses
+     */
+    public function getMachines(): array
+    {
+        if (!$this->config) {
+            return [];
+        }
+
+        $machines = [];
+        foreach ($this->config as $lineConfig) {
+            if (isset($lineConfig['list_mechine'])) {
+                foreach ($lineConfig['list_mechine'] as $machine) {
+                    $machines[] = array_merge($machine, [
+                        'line' => $lineConfig['line'],
+                    ]);
+                }
+            }
+        }
+
+        return $machines;
+    }
+
+    /**
+     * Get machine configuration for a specific machine name and line
+     */
+    public function getMachineConfig(string $line, string $machineName): ?array
+    {
+        $lineConfig = $this->getLineConfig($line);
+        if (!$lineConfig || !isset($lineConfig['list_mechine'])) {
+            return null;
+        }
+
+        return collect($lineConfig['list_mechine'])->first(function ($machine) use ($machineName) {
+            return $machine['name'] === $machineName;
+        });
+    }
+
+    /**
+     * Get standard values for a machine based on the standard address mapping
+     * This links the machine's standard addresses to InsDwpStandardPV records
+     */
+    public function getMachineStandards(string $line, string $machineName): array
+    {
+        $machine = $this->getMachineConfig($line, $machineName);
+        if (!$machine) {
+            return [];
+        }
+
+        $standards = [];
+        
+        // Map standard addresses to their corresponding InsDwpStandardPV records
+        // Based on the sample data, machines reference standards by address
+        $standardTypes = [
+            'th_max' => 'addr_std_th_max',
+            'th_min' => 'addr_std_th_min',
+            'side_max' => 'addr_std_side_max',
+            'side_min' => 'addr_std_side_min',
+        ];
+
+        foreach ($standardTypes as $type => $addressKey) {
+            if (isset($machine[$addressKey])) {
+                // You can extend this to lookup InsDwpStandardPV by address or name
+                $standards[$type] = [
+                    'address' => $machine[$addressKey],
+                    'type' => $type,
+                ];
+            }
+        }
+
+        return $standards;
+    }
+
+    /**
+     * Get DWP alarm configuration for a specific line
+     */
+    public function getDwpAlarmConfig(string $line): ?array
+    {
+        $lineConfig = $this->getLineConfig($line);
+        return $lineConfig['dwp_alarm'] ?? null;
+    }
 }

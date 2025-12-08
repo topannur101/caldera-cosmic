@@ -7,6 +7,7 @@ use Livewire\Attributes\Url;
 use Livewire\Attributes\On;
 use App\Models\InsDwpCount;
 use App\Models\InsDwpDevice;
+use App\Models\InsDwpStandardPV;
 use App\Helpers\GlobalHelpers;
 use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -58,8 +59,112 @@ new #[Layout("layouts.app")] class extends Component {
             ->pluck("name", "id")
             ->toArray();
 
+        // Load standards dynamically from database
+        $this->loadStandards();
+
         // update menu
         $this->dispatch("update-menu", $this->view);
+    }
+
+    /**
+     * Load standard values from database based on line and machine
+     * Falls back to default values if no standard found
+     */
+    private function loadStandards()
+    {
+        // Build standard name pattern based on current filters
+        $standardName = $this->buildStandardName();
+        
+        if ($standardName) {
+            $standard = InsDwpStandardPV::where('setting_name', $standardName)->first();
+            
+            if ($standard && is_array($standard->setting_value)) {
+                // Check if using new format with setting_std
+                if (isset($standard->setting_value['setting_std'])) {
+                    $this->stdTh = [
+                        $standard->setting_value['setting_std']['min_th'] ?? 30,
+                        $standard->setting_value['setting_std']['max_th'] ?? 45
+                    ];
+                    $this->stdSide = [
+                        $standard->setting_value['setting_std']['min_s'] ?? 30,
+                        $standard->setting_value['setting_std']['max_s'] ?? 45
+                    ];
+                } else {
+                    // Old format [min, max]
+                    $this->stdTh = [
+                        $standard->setting_value[0] ?? 30,
+                        $standard->setting_value[1] ?? 45
+                    ];
+                    $this->stdSide = [
+                        $standard->setting_value[0] ?? 30,
+                        $standard->setting_value[1] ?? 45
+                    ];
+                }
+            }
+        }
+    }
+
+    /**
+     * Build standard name from current filters
+     * Format: "DWP STATION BETA_{LINE}_Machine_{MACHINE}"
+     */
+    private function buildStandardName(): ?string
+    {
+        if (!$this->line || !$this->mechine) {
+            return null;
+        }
+
+        return sprintf(
+            "DWP STATION BETA_%s_Machine_%s",
+            strtoupper($this->line),
+            $this->mechine
+        );
+    }
+
+    /**
+     * Get standards for a specific line and machine
+     */
+    private function getStandardsForCount($line, $machine): array
+    {
+        $standardName = sprintf(
+            "DWP STATION BETA_%s_Machine_%s",
+            strtoupper($line),
+            $machine
+        );
+
+        $standard = InsDwpStandardPV::where('setting_name', $standardName)->first();
+        
+        if ($standard && is_array($standard->setting_value)) {
+            if (isset($standard->setting_value['setting_std'])) {
+                return [
+                    'th' => [
+                        $standard->setting_value['setting_std']['min_th'] ?? 30,
+                        $standard->setting_value['setting_std']['max_th'] ?? 45
+                    ],
+                    'side' => [
+                        $standard->setting_value['setting_std']['min_s'] ?? 30,
+                        $standard->setting_value['setting_std']['max_s'] ?? 45
+                    ]
+                ];
+            } else {
+                return [
+                    'th' => [
+                        $standard->setting_value[0] ?? 30,
+                        $standard->setting_value[1] ?? 45
+                    ],
+                    'side' => [
+                        $standard->setting_value[0] ?? 30,
+                        $standard->setting_value[1] ?? 45
+                    ]
+                ];
+            }
+        }
+
+        // Return default values if no standard found
+        return [
+            'th' => [30, 45],
+            'side' => [30, 45]
+        ];
     }
 
     private function getCountsQuery()
@@ -172,6 +277,19 @@ new #[Layout("layouts.app")] class extends Component {
     public function loadMore()
     {
         $this->perPage += 10;
+    }
+
+    /**
+     * Update standards when line or machine filter changes
+     */
+    public function updatedLine()
+    {
+        $this->loadStandards();
+    }
+
+    public function updatedMechine()
+    {
+        $this->loadStandards();
     }
 
     public function download($type)
@@ -461,8 +579,11 @@ new #[Layout("layouts.app")] class extends Component {
                                 $toeHeelValue = $toeHeelArray ? $this->getMedian($toeHeelArray) : null;
                                 $sideValue = $sideArray ? $this->getMedian($sideArray) : null;
 
-                                $toeHeelComparison = $toeHeelValue ? $this->compareWithStandards($toeHeelValue, $this->stdTh) : null;
-                                $sideComparison = $sideValue ? $this->compareWithStandards($sideValue, $this->stdSide) : null;
+                                // Get standards specific to this count's line and machine
+                                $standards = $this->getStandardsForCount($count->line, $count->mechine);
+                                
+                                $toeHeelComparison = $toeHeelValue ? $this->compareWithStandards($toeHeelValue, $standards['th']) : null;
+                                $sideComparison = $sideValue ? $this->compareWithStandards($sideValue, $standards['side']) : null;
                             @endphp
 
                             <tr
@@ -511,7 +632,11 @@ new #[Layout("layouts.app")] class extends Component {
                                     {{ ($count->position ?? '') === 'R' ? 'Right' : 'Left' }}
                                 </td>
                                 <td class="py-3 px-4">
-                                    <span>{{$this->stdTh[0]}} - {{$this->stdTh[1]}}</span>
+                                    <span class="text-xs">
+                                        <span class="text-neutral-500">TH:</span> {{$standards['th'][0]}} - {{$standards['th'][1]}}
+                                        <br>
+                                        <span class="text-neutral-500">S:</span> {{$standards['side'][0]}} - {{$standards['side'][1]}}
+                                    </span>
                                 </td>
                                 <td class="py-3 px-4">
                                     @if($toeHeelValue !== null && $toeHeelComparison !== null)

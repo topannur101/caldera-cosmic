@@ -6,6 +6,7 @@ use App\Traits\HasDateRangeFilter;
 use App\Models\InsDwpDevice;
 use App\Models\InsDwpCount;
 use App\Models\InsDwpTimeAlarmCount;
+use App\Models\LogDwpUptime;
 use Livewire\WithPagination;
 use Livewire\Attributes\Url;
 use Carbon\Carbon;
@@ -35,6 +36,7 @@ new #[Layout("layouts.app")] class extends Component {
     public int $onlineTime = 0;
     public string $offlineTime = "";
     public string $fullTimeFormat = "";
+    public string $timeoutTime = "";
 
     // Add new properties for the top summary boxes
     public int $timeConstraintAlarm = 0;
@@ -42,7 +44,7 @@ new #[Layout("layouts.app")] class extends Component {
     public int $alarmsActive = 0;
 
     // === NEW: Add property for online monitoring ===
-    public array $onlineMonitoringData = ['online' => 100, 'offline' => 0];
+    public array $onlineMonitoringData = ['online' => 100, 'offline' => 0, 'timeout' => 0];
 
     public function mount()
     {
@@ -114,12 +116,13 @@ new #[Layout("layouts.app")] class extends Component {
             return;
         }
 
-        // === NEW: Calculate Online Monitoring Stats ===
-        $dataOnlineMonitoring = $this->getOnlineMonitoringStats($machineNames);
-        $this->onlineMonitoringData = $dataOnlineMonitoring['percentages'];
-        $this->onlineTime = $dataOnlineMonitoring['total_hours'] ?? 0;
-        $this->fullTimeFormat = $dataOnlineMonitoring['full_time_format'] ?? "";
-        $this->offlineTime = $dataOnlineMonitoring['offline_time_format'] ?? 0;
+    // === NEW: Calculate Online Monitoring Stats (use LogDwpUptime) ===
+    $dataOnlineMonitoring = $this->getOnlineMonitoringStats($this->line);
+    $this->onlineMonitoringData = $dataOnlineMonitoring['percentages'];
+    $this->onlineTime = $dataOnlineMonitoring['total_hours'] ?? 0;
+    $this->fullTimeFormat = $dataOnlineMonitoring['full_time_format'] ?? "";
+    $this->offlineTime = $dataOnlineMonitoring['offline_time_format'] ?? "";
+    $this->timeoutTime = $dataOnlineMonitoring['timeout_time_format'] ?? "";
         // --- Step 1: Get latest sensor reading for each machine (Your query is already efficient) ---
         $latestCountsQuery = InsDwpCount::select('mechine', 'position', 'pv', 'created_at')
             ->whereIn('id', function ($query) use ($machineNames) {
@@ -616,11 +619,11 @@ new #[Layout("layouts.app")] class extends Component {
                             window.__onlineSystemMonitoringChart = new Chart(ctx2, {
                                 type: 'pie',
                                 data: {
-                                    labels: ['Online', 'Offline'],
+                                    labels: ['Online', 'Offline', 'Timeout'],
                                     datasets: [{
-                                        data: [onlineData.online || 0, onlineData.offline || 0],
+                                        data: [onlineData.online || 0, onlineData.offline || 0, onlineData.timeout || 0],
                                         borderWidth: 1,
-                                        backgroundColor: ['#22c55e', '#d1d5db'],
+                                        backgroundColor: ['#22c55e', '#d1d5db', '#f97316'],
                                         borderRadius: 5
                                     }]
                                 },
@@ -744,96 +747,112 @@ new #[Layout("layouts.app")] class extends Component {
     }
 
     /**
-     * Calculate online monitoring statistics
+     * Calculate online monitoring statistics from LogDwpUptime
      * 
      * Logic:
-     * - Online time: From first data entry today to current time
-     * - Offline time: Sum of all gaps > 50 seconds between timestamps
-     * - Downtime threshold: 50 seconds
+     * - Query LogDwpUptime for the device that owns the selected line
+     * - Calculate online, offline, and timeout durations
+     * - Return percentages and formatted time strings
      */
-    private function getOnlineMonitoringStats(array $machineNames): array
+    private function getOnlineMonitoringStats(string $line): array
     {
-        if (empty($machineNames)) {
+        // Get device ID for the selected line
+        $device = InsDwpDevice::whereJsonContains('config', [['line' => strtoupper($line)]])->select('id')->first();
+
+        if (!$device) {
             return [
-                'percentages' => ['online' => 0, 'offline' => 100],
+                'percentages' => ['online' => 0, 'offline' => 50, 'timeout' => 50],
                 'total_hours' => 0,
                 'full_time_format' => "0 hours 0 minutes 0 seconds",
-                'offline_time_format' => "0 hours 0 minutes 0 seconds"
+                'offline_time_format' => "0 hours 0 minutes 0 seconds",
+                'timeout_time_format' => "0 hours 0 minutes 0 seconds"
             ];
         }
 
-        // Get first and last timestamps for the selected date
-        $selectedDate = $this->start_at ? Carbon::parse($this->start_at) : Carbon::today();
-        $startOfDay = $selectedDate->copy()->startOfDay();
-        $endOfDay = $selectedDate->copy()->endOfDay();
+        // Get date range
+        $startDate = $this->start_at ? Carbon::parse($this->start_at)->startOfDay() : Carbon::today()->startOfDay();
+        $endDate = $this->end_at ? Carbon::parse($this->end_at)->endOfDay() : Carbon::today()->endOfDay();
         
-        // Get all activity timestamps for the day
-        $activityTimestamps = $this->getActivityTimestamps($machineNames, $startOfDay, $endOfDay);
-        
-        if (empty($activityTimestamps)) {
+        // Query all uptime logs for this device in the date range
+        $logs = LogDwpUptime::where('ins_dwp_device_id', $device->id)
+            ->whereBetween('logged_at', [$startDate, $endDate])
+            ->orderBy('logged_at', 'asc')
+            ->get();
+
+        if ($logs->isEmpty()) {
             return [
-                'percentages' => ['online' => 0, 'offline' => 100],
+                'percentages' => ['online' => 0, 'offline' => 50, 'timeout' => 50],
                 'total_hours' => 0,
                 'full_time_format' => "0 hours 0 minutes 0 seconds",
-                'offline_time_format' => "0 hours 0 minutes 0 seconds"
+                'offline_time_format' => "0 hours 0 minutes 0 seconds",
+                'timeout_time_format' => "0 hours 0 minutes 0 seconds"
             ];
         }
 
-        // Get first entry time and current time (or end of day if viewing past date)
-        $firstEntry = Carbon::parse($activityTimestamps[0]);
-        $currentTime = $selectedDate->isToday() ? Carbon::now() : $endOfDay;
-        
-        // Total duration from first entry to now
-        $totalDuration = $firstEntry->diffInSeconds($currentTime);
-        
-        // Calculate offline time (gaps > 50 seconds)
-        $totalDowntime = $this->calculateTotalDowntime($activityTimestamps, $firstEntry, $currentTime);
-        
-        // Online time = Total time - Offline time
-        $onlineDuration = max(0, $totalDuration - $totalDowntime);
+        // Calculate total duration from first log to end of period (or now if today)
+        $firstLogTime = Carbon::parse($logs->first()->logged_at);
+        $currentTime = $endDate->isToday() ? Carbon::now() : $endDate;
+        $totalDuration = $firstLogTime->diffInSeconds($currentTime);
 
-        return [
-            'percentages' => $this->calculatePercentages($totalDuration, $totalDowntime),
-            'total_hours' => $onlineDuration / 3600,
-            'full_time_format' => $this->formatDuration($onlineDuration),
-            'offline_time_format' => $this->formatDuration($totalDowntime)
-        ];
-    }
+        // Calculate durations for each status
+        $onlineDuration = 0;
+        $offlineDuration = 0;
+        $timeoutDuration = 0;
 
-    private function getActivityTimestamps(array $machineNames, Carbon $start, Carbon $end): array
-    {
-        return InsDwpCount::whereIn('mechine', $machineNames)
-            ->whereBetween('created_at', [$start, $end])
-            ->orderBy('created_at', 'asc')
-            ->pluck('created_at')
-            ->toArray();
-    }
-
-    private function calculateTotalDowntime(array $timestamps, Carbon $periodStart, Carbon $periodEnd): int
-    {
-        // Downtime threshold: 50 seconds
-        $downtimeThreshold = 50;
-
-        // If no timestamps, no downtime calculation needed
-        if (empty($timestamps)) {
-            return 0;
-        }
-
-        $totalDowntime = 0;
-
-        // Calculate gaps between consecutive timestamps
-        for ($i = 1; $i < count($timestamps); $i++) {
-            $prevTime = Carbon::parse($timestamps[$i - 1]);
-            $currentTime = Carbon::parse($timestamps[$i]);
-            $gap = $prevTime->diffInSeconds($currentTime);
+        foreach ($logs as $index => $log) {
+            $logTime = Carbon::parse($log->logged_at);
             
-            // If gap is more than 50 seconds, count it as downtime
-            if ($gap > $downtimeThreshold) {
-                $totalDowntime += $gap;
+            // Determine duration for this status
+            if ($index < $logs->count() - 1) {
+                // Duration until next log
+                $nextLogTime = Carbon::parse($logs[$index + 1]->logged_at);
+                $duration = $logTime->diffInSeconds($nextLogTime);
+            } else {
+                // Last log: duration until current time
+                $duration = $logTime->diffInSeconds($currentTime);
+            }
+
+            // Add to appropriate counter based on status
+            switch ($log->status) {
+                case 'online':
+                    $onlineDuration += $duration;
+                    break;
+                case 'offline':
+                    $offlineDuration += $duration;
+                    break;
+                case 'timeout':
+                    $timeoutDuration += $duration;
+                    break;
             }
         }
 
-        return $totalDowntime;
+        // Calculate percentages
+        $percentages = $this->calculateMonitoringPercentages($totalDuration, $onlineDuration, $offlineDuration, $timeoutDuration);
+
+        return [
+            'percentages' => $percentages,
+            'total_hours' => $onlineDuration / 3600,
+            'full_time_format' => $this->formatDuration($onlineDuration),
+            'offline_time_format' => $this->formatDuration($offlineDuration),
+            'timeout_time_format' => $this->formatDuration($timeoutDuration)
+        ];
+    }
+
+    private function calculateMonitoringPercentages(int $totalDuration, int $onlineDuration, int $offlineDuration, int $timeoutDuration): array
+    {
+        if ($totalDuration <= 0) {
+            return ['online' => 0, 'offline' => 50, 'timeout' => 50];
+        }
+
+        $onlinePercentage = ($onlineDuration / $totalDuration) * 100;
+        $offlinePercentage = ($offlineDuration / $totalDuration) * 100;
+        $timeoutPercentage = ($timeoutDuration / $totalDuration) * 100;
+
+        return [
+            'online' => round($onlinePercentage, 2),
+            'offline' => round($offlinePercentage, 2),
+            'timeout' => round($timeoutPercentage, 2)
+        ];
     }
 
     private function formatDuration(int $seconds): string
@@ -949,6 +968,14 @@ new #[Layout("layouts.app")] class extends Component {
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4"></span>
                             <span class="text-sm text-gray-500 dark:text-gray-400">{{ $this->offlineTime }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 rounded bg-orange-500"></span>
+                            <span>Timeout (RTO)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4"></span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">{{ $this->timeoutTime }}</span>
                         </div>
                     </div>
                 </div>
