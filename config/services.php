@@ -37,7 +37,6 @@ return [
             'unit_id' => env('MODBUS_DWP_UNIT_ID', 1),
             'timeout' => env('MODBUS_DWP_TIMEOUT', 3),
             'value_divisor' => env('MODBUS_DWP_VALUE_DIVISOR', 10), // Divide raw values by this to get decimal
-            'address_multiplier' => env('MODBUS_DWP_ADDRESS_MULTIPLIER', 4), // Multiply logical address by this (4x-410 → 1640)
         ],
     ],
 
