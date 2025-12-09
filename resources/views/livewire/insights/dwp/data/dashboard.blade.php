@@ -1054,10 +1054,10 @@ new class extends Component {
             <div class="col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @forelse ($machineData as $machine)
                         <div class="relative p-6 bg-white dark:bg-neutral-800 border-4 shadow-md rounded-xl
-                        @if($machine['overallStatus'] == 'alert') border-red-500 @else border-transparent @endif">
+                        @if($machine['overallStatus'] == 'alert') border-red-500 animate-pulse @else border-transparent @endif">
                         <div class="absolute top-[20px] -left-5 px-2 py-2 bg-white dark:bg-neutral-800
                             border-4 rounded-lg text-2xl font-bold text-neutral-700 dark:text-neutral-200
-                            @if($machine['overallStatus'] == 'alert') border-red-500 @else bg-green-500 @endif">
+                            @if($machine['overallStatus'] == 'alert') border-red-500 animate-pulse @else bg-green-500 @endif">
                             #{{ $machine['name'] }}
                         </div>
                         <div class="rounded-lg transition-colors duration-300">

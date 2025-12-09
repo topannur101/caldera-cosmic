@@ -1024,10 +1024,10 @@ new #[Layout("layouts.app")] class extends Component {
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     @forelse ($machineData as $machine)
                         <div class="relative p-6 bg-white dark:bg-neutral-800 border-4 shadow-md rounded-xl
-                            {{ $machine['overallStatus'] == 'alert' ? 'border-red-500' : 'border-transparent' }}">
+                            {{ $machine['overallStatus'] == 'alert' ? 'border-red-500 animate-pulse' : 'border-transparent' }}">
                             <div class="absolute top-[20px] -left-5 px-2 py-2 bg-white dark:bg-neutral-800
                                 border-4 rounded-lg text-slate-800 dark:text-slate-200 text-2xl font-bold
-                                {{ $machine['overallStatus'] == 'alert' ? 'border-red-500' : 'bg-green-500' }}">
+                                {{ $machine['overallStatus'] == 'alert' ? 'border-red-500 animate-pulse' : 'bg-green-500' }}">
                                 #{{ $machine['name'] }}
                             </div>
                             <div class="mt-8">
