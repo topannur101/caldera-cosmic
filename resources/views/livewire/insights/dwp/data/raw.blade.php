@@ -170,7 +170,7 @@ new #[Layout("layouts.app")] class extends Component {
     private function getCountsQuery()
     {
         $start = Carbon::parse($this->start_at);
-        $end = Carbon::parse($this->end_at)->endOfDay();
+        $end = Carbon::parse($this->end_at);
 
         $query = InsDwpCount::select(
                 "ins_dwp_counts.*",

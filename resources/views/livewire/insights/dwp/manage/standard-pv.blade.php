@@ -62,8 +62,8 @@ new #[Layout("layouts.app")] class extends Component {
                                 <th>{{ __("Nama Mesin") }}</th>
                                 <th>{{ __("Side Min") }}</th>
                                 <th>{{ __("Side Max") }}</th>
-                                <th>{{ __("Thread Min") }}</th>
-                                <th>{{ __("Thread Max") }}</th>
+                                <th>{{ __("Toe/Heel Min") }}</th>
+                                <th>{{ __("Toe/Heel Max") }}</th>
                                 <th>{{ __("Aksi") }}</th>
                             </tr>
                         </thead>

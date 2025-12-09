@@ -754,6 +754,10 @@ new #[Layout("layouts.app")] class extends Component {
      * - Calculate online, offline, and timeout durations
      * - Return percentages and formatted time strings
      */
+    /**
+     * Calculate online monitoring statistics from LogDwpUptime
+     * ONLY WITHIN WORKING HOURS (07:00 - 17:00)
+     */
     private function getOnlineMonitoringStats(string $line): array
     {
         // Get device ID for the selected line
@@ -772,10 +776,12 @@ new #[Layout("layouts.app")] class extends Component {
         // Get date range
         $startDate = $this->start_at ? Carbon::parse($this->start_at)->startOfDay() : Carbon::today()->startOfDay();
         $endDate = $this->end_at ? Carbon::parse($this->end_at)->endOfDay() : Carbon::today()->endOfDay();
+        $currentTime = Carbon::now();
         
-        // Query all uptime logs for this device in the date range
+        // Query all uptime logs for this device in the date range - ONLY WORKING HOURS (07:00-17:00)
         $logs = LogDwpUptime::where('ins_dwp_device_id', $device->id)
             ->whereBetween('logged_at', [$startDate, $endDate])
+            ->whereRaw('HOUR(logged_at) >= 7 AND HOUR(logged_at) < 17')
             ->orderBy('logged_at', 'asc')
             ->get();
 
@@ -789,12 +795,7 @@ new #[Layout("layouts.app")] class extends Component {
             ];
         }
 
-        // Calculate total duration from first log to end of period (or now if today)
-        $firstLogTime = Carbon::parse($logs->first()->logged_at);
-        $currentTime = $endDate->isToday() ? Carbon::now() : $endDate;
-        $totalDuration = $firstLogTime->diffInSeconds($currentTime);
-
-        // Calculate durations for each status
+        // === CALCULATE DURATIONS ONLY WITHIN WORKING HOURS (07:00 - 17:00) ===
         $onlineDuration = 0;
         $offlineDuration = 0;
         $timeoutDuration = 0;
@@ -802,29 +803,44 @@ new #[Layout("layouts.app")] class extends Component {
         foreach ($logs as $index => $log) {
             $logTime = Carbon::parse($log->logged_at);
             
-            // Determine duration for this status
-            if ($index < $logs->count() - 1) {
-                // Duration until next log
-                $nextLogTime = Carbon::parse($logs[$index + 1]->logged_at);
-                $duration = $logTime->diffInSeconds($nextLogTime);
+            // Get next log or end of working hours
+            $nextLog = $logs->get($index + 1);
+            if ($nextLog) {
+                $nextLogTime = Carbon::parse($nextLog->logged_at);
             } else {
-                // Last log: duration until current time
-                $duration = $logTime->diffInSeconds($currentTime);
+                // If this is the last log, calculate until now or end of working hours (17:00)
+                $endOfWorkingHours = Carbon::parse($log->logged_at)->setTime(17, 0, 0);
+                $nextLogTime = $currentTime->lt($endOfWorkingHours) ? $currentTime : $endOfWorkingHours;
             }
-
-            // Add to appropriate counter based on status
-            switch ($log->status) {
-                case 'online':
-                    $onlineDuration += $duration;
-                    break;
-                case 'offline':
-                    $offlineDuration += $duration;
-                    break;
-                case 'timeout':
-                    $timeoutDuration += $duration;
-                    break;
+            
+            // Calculate duration only within working hours
+            $duration = $logTime->diffInSeconds($nextLogTime);
+            
+            // Make sure we don't count beyond 17:00
+            $workEndTime = Carbon::parse($logTime->format('Y-m-d'))->setTime(17, 0, 0);
+            if ($nextLogTime->gt($workEndTime)) {
+                $nextLogTime = $workEndTime;
+                $duration = $logTime->diffInSeconds($nextLogTime);
+            }
+            
+            // Only count if duration is positive and within working hours
+            if ($duration > 0 && $logTime->hour >= 7 && $logTime->hour < 17) {
+                switch ($log->status) {
+                    case 'online':
+                        $onlineDuration += $duration;
+                        break;
+                    case 'offline':
+                        $offlineDuration += $duration;
+                        break;
+                    case 'timeout':
+                        $timeoutDuration += $duration;
+                        break;
+                }
             }
         }
+
+        // Calculate total tracked duration (maximum 10 hours per day in working hours)
+        $totalDuration = $onlineDuration + $offlineDuration + $timeoutDuration;
 
         // Calculate percentages
         $percentages = $this->calculateMonitoringPercentages($totalDuration, $onlineDuration, $offlineDuration, $timeoutDuration);
@@ -912,11 +928,11 @@ new #[Layout("layouts.app")] class extends Component {
                 <div class="space-y-4">
                     <div>
                         <p class="text-md text-neutral-600 dark:text-neutral-400">Long Queue time</p>
-                        <p class="text-3xl font-bold">{{ $this->longestQueueTime }} <span class="text-base">sec</span></p>
+                        <p class="text-3xl font-bold text-neutral-700 dark:text-neutral-200">{{ $this->longestQueueTime }} <span class="text-base">sec</span></p>
                     </div>
                     <div>
                         <p class="text-md text-neutral-600 dark:text-neutral-400">Alarm Active</p>
-                        <p class="text-3xl font-bold">{{ $this->alarmsActive }}</p>
+                        <p class="text-3xl font-bold text-neutral-700 dark:text-neutral-200">{{ $this->alarmsActive }}</p>
                     </div>
                 </div>
             </div>
@@ -931,11 +947,11 @@ new #[Layout("layouts.app")] class extends Component {
                     <div class="flex flex-col gap-2 mt-4">
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded bg-green-500"></span>
-                            <span>Standard: {{ $this->totalStandart }}</span>
+                            <span class="text-slate-800 dark:text-slate-200">Standard: {{ $this->totalStandart }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded bg-red-600"></span>
-                            <span>Out Of Standard: {{ $this->totalOutStandart }}</span>
+                            <span class="text-slate-800 dark:text-slate-200">Out Of Standard: {{ $this->totalOutStandart }}</span>
                         </div>
                     </div>
                 </div>
@@ -955,7 +971,7 @@ new #[Layout("layouts.app")] class extends Component {
                     <div class="flex flex-col gap-1 mt-4">
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded bg-green-500"></span>
-                            <span>Online</span>
+                            <span class="text-slate-800 dark:text-slate-200">Online</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4"></span>
@@ -963,7 +979,7 @@ new #[Layout("layouts.app")] class extends Component {
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded bg-gray-300 dark:bg-gray-600"></span>
-                            <span>Offline</span>
+                            <span class="text-slate-800 dark:text-slate-200">Offline</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4"></span>
@@ -971,7 +987,7 @@ new #[Layout("layouts.app")] class extends Component {
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded bg-orange-500"></span>
-                            <span>Timeout (RTO)</span>
+                            <span class="text-slate-800 dark:text-slate-200">Timeout (RTO)</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4"></span>
@@ -986,7 +1002,7 @@ new #[Layout("layouts.app")] class extends Component {
         <div class="lg:col-span-3 space-y-6">
             <!-- DWP Time Constraint Chart -->
             <div class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md h-[350px]">
-                <h1 class="text-xl font-bold text-center mb-4">DWP Time Constraint</h1>
+                <h1 class="text-xl font-bold text-center mb-4 text-neutral-700 dark:text-neutral-200">DWP Time Constraint</h1>
                 <div class="h-[250px]">
                     <canvas id="dwpTimeConstraintChart" wire:ignore></canvas>
                 </div>
@@ -1045,7 +1061,7 @@ new #[Layout("layouts.app")] class extends Component {
                                 </div>
                                 <div class="text-center mt-4">
                                     <h3 class="text-sm text-neutral-600 dark:text-neutral-400">Output</h3>
-                                    <div class="p-2 rounded-md dark:bg-neutral-900 font-bold text-lg">
+                                    <div class="p-2 rounded-md bg-gray-100 dark:bg-neutral-900 font-bold text-lg text-neutral-700 dark:text-neutral-200">
                                         {{ $machine['output']['left'] ?? 0 }} pairs
                                     </div>
                                 </div>
@@ -1064,12 +1080,12 @@ new #[Layout("layouts.app")] class extends Component {
                     <div class="bg-white dark:bg-neutral-800 p-3 rounded-lg shadow-md text-center">
                         <h3 class="text-md font-bold text-slate-800 dark:text-slate-200">Avg Pressure Time</h3>
                         <div class="grid grid-cols-2 gap-2 text-center">
-                            <p>Left</p>
-                            <p>Right</p>
+                            <p class="text-neutral-700 dark:text-neutral-200">Left</p>
+                            <p class="text-neutral-700 dark:text-neutral-200">Right</p>
                         </div>
                          <div class="grid grid-cols-2 gap-2 text-center">
-                            <p>{{ $machineData[$i-1]['avgPressTime'] ?? 16 }}Sec</p>
-                            <p>{{ $machineData[$i-1]['avgPressTime'] ?? 16 }}Sec</p>
+                            <p class="text-neutral-700 dark:text-neutral-200">{{ $machineData[$i-1]['avgPressTime'] ?? 16 }}Sec</p>
+                            <p class="text-neutral-700 dark:text-neutral-200">{{ $machineData[$i-1]['avgPressTime'] ?? 16 }}Sec</p>
                         </div>
                     </div>
                 @endfor

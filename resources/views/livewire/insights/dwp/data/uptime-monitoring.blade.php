@@ -44,6 +44,12 @@ new #[Layout("layouts.app")] class extends Component {
 
     public function mount()
     {
+        // Set default date filter to today if not set
+        if (empty($this->start_at) && empty($this->end_at)) {
+            $this->start_at = now()->format('Y-m-d');
+            $this->end_at = now()->format('Y-m-d');
+        }
+        
         $this->loadDevices();
         $this->calculateStats();
         $this->calculateTodaySummary();
@@ -61,8 +67,13 @@ new #[Layout("layouts.app")] class extends Component {
 
     public function calculateStats()
     {
-        $startDate = $this->start_at ? Carbon::parse($this->start_at) : now()->subHours($this->timeRange);
-        $endDate = $this->end_at ? Carbon::parse($this->end_at) : now();
+        // Parse dates properly - if date is set, use start/end of day
+        $startDate = $this->start_at 
+            ? Carbon::parse($this->start_at)->startOfDay() 
+            : now()->subHours($this->timeRange);
+        $endDate = $this->end_at 
+            ? Carbon::parse($this->end_at)->endOfDay() 
+            : now();
 
         $query = InsDwpDevice::where('is_active', true);
         
@@ -76,6 +87,7 @@ new #[Layout("layouts.app")] class extends Component {
         foreach ($devices as $device) {
             $logs = LogDwpUptime::where('ins_dwp_device_id', $device->id)
                 ->whereBetween('logged_at', [$startDate, $endDate])
+                ->whereRaw('HOUR(logged_at) >= 7 AND HOUR(logged_at) < 17')
                 ->orderBy('logged_at', 'asc')
                 ->get();
 
@@ -107,49 +119,46 @@ new #[Layout("layouts.app")] class extends Component {
                 continue;
             }
             
-            // === SUM ALL DURATIONS FROM DATABASE ===
+            // === CALCULATE DURATIONS ONLY WITHIN WORKING HOURS (07:00 - 17:00) ===
             $onlineSeconds = 0;
             $offlineSeconds = 0;
             $timeoutSeconds = 0;
             $downtimePeriods = [];
             
-            foreach ($logs as $log) {
-                $duration = $log->duration_seconds ?? 0;
+            foreach ($logs as $index => $log) {
+                $logTime = Carbon::parse($log->logged_at);
                 
-                // The duration represents time in PREVIOUS status
-                if ($log->status === 'offline' || $log->status === 'timeout') {
-                    // When switching TO offline/timeout, duration shows online time
-                    $onlineSeconds += $duration;
-                    if ($duration > 0) {
-                        $downtimePeriods[] = $duration; // Track this as a downtime event
-                    }
-                } elseif ($log->status === 'online') {
-                    // When switching TO online, duration shows offline/timeout time
-                    $prevLog = $logs->where('logged_at', '<', $log->logged_at)
-                                    ->sortByDesc('logged_at')
-                                    ->first();
-                    
-                    if ($prevLog) {
-                        if ($prevLog->status === 'timeout') {
-                            $timeoutSeconds += $duration;
-                        } else {
-                            $offlineSeconds += $duration;
-                        }
-                    }
+                // Get next log or end of working hours
+                $nextLog = $logs->get($index + 1);
+                if ($nextLog) {
+                    $nextLogTime = Carbon::parse($nextLog->logged_at);
+                } else {
+                    // If this is the last log, calculate until now or end of working hours (17:00)
+                    $endOfWorkingHours = Carbon::parse($log->logged_at)->setTime(17, 0, 0);
+                    $nextLogTime = $currentTime->lt($endOfWorkingHours) ? $currentTime : $endOfWorkingHours;
                 }
-            }
-            
-            // Add current ongoing status duration
-            $lastLog = $logs->last();
-            if ($lastLog) {
-                $ongoingDuration = Carbon::parse($lastLog->logged_at)->diffInSeconds($currentTime);
                 
-                if ($lastLog->status === 'online') {
-                    $onlineSeconds += $ongoingDuration;
-                } elseif ($lastLog->status === 'offline') {
-                    $offlineSeconds += $ongoingDuration;
-                } elseif ($lastLog->status === 'timeout') {
-                    $timeoutSeconds += $ongoingDuration;
+                // Calculate duration only within working hours
+                $duration = $logTime->diffInSeconds($nextLogTime);
+                
+                // Make sure we don't count beyond 17:00
+                $workEndTime = Carbon::parse($logTime->format('Y-m-d'))->setTime(17, 0, 0);
+                if ($nextLogTime->gt($workEndTime)) {
+                    $nextLogTime = $workEndTime;
+                    $duration = $logTime->diffInSeconds($nextLogTime);
+                }
+                
+                // Only count if duration is positive and within working hours
+                if ($duration > 0 && $logTime->hour >= 7 && $logTime->hour < 17) {
+                    if ($log->status === 'online') {
+                        $onlineSeconds += $duration;
+                    } elseif ($log->status === 'offline') {
+                        $offlineSeconds += $duration;
+                        $downtimePeriods[] = $duration;
+                    } elseif ($log->status === 'timeout') {
+                        $timeoutSeconds += $duration;
+                        $downtimePeriods[] = $duration;
+                    }
                 }
             }
             
@@ -190,8 +199,13 @@ new #[Layout("layouts.app")] class extends Component {
 
     public function calculateTodaySummary()
     {
-        $startOfDay = now()->startOfDay();
-        $endOfDay = now()->endOfDay();
+        // Use filtered date range instead of hardcoded today
+        $startOfDay = $this->start_at 
+            ? Carbon::parse($this->start_at)->startOfDay() 
+            : now()->startOfDay();
+        $endOfDay = $this->end_at 
+            ? Carbon::parse($this->end_at)->endOfDay() 
+            : now()->endOfDay();
         $currentTime = now();
 
         $query = InsDwpDevice::where('is_active', true);
@@ -214,6 +228,7 @@ new #[Layout("layouts.app")] class extends Component {
         foreach ($devices as $device) {
             $logs = LogDwpUptime::where('ins_dwp_device_id', $device->id)
                 ->whereBetween('logged_at', [$startOfDay, $endOfDay])
+                ->whereRaw('HOUR(logged_at) >= 7 AND HOUR(logged_at) < 17')
                 ->orderBy('logged_at', 'asc')
                 ->get();
 
@@ -221,50 +236,43 @@ new #[Layout("layouts.app")] class extends Component {
                 continue;
             }
 
-            // === SUM ALL DURATIONS FROM DATABASE ===
-            // duration_seconds represents time spent in PREVIOUS status before this log
-            // So when status changes to 'offline', duration_seconds shows how long it was 'online'
-            
+            // === CALCULATE DURATIONS ONLY WITHIN WORKING HOURS (07:00 - 17:00) ===
             $deviceOnlineSeconds = 0;
             $deviceOfflineSeconds = 0;
             $deviceTimeoutSeconds = 0;
             
-            foreach ($logs as $log) {
-                $duration = $log->duration_seconds ?? 0;
+            foreach ($logs as $index => $log) {
+                $logTime = Carbon::parse($log->logged_at);
                 
-                // The duration represents time in PREVIOUS status
-                // So we categorize by the CURRENT status to know what just ended
-                if ($log->status === 'offline' || $log->status === 'timeout') {
-                    // When switching TO offline/timeout, duration shows online time
-                    $deviceOnlineSeconds += $duration;
-                } elseif ($log->status === 'online') {
-                    // When switching TO online, duration shows offline/timeout time
-                    // Check the previous log to determine which
-                    $prevLog = $logs->where('logged_at', '<', $log->logged_at)
-                                    ->sortByDesc('logged_at')
-                                    ->first();
-                    
-                    if ($prevLog) {
-                        if ($prevLog->status === 'timeout') {
-                            $deviceTimeoutSeconds += $duration;
-                        } else {
-                            $deviceOfflineSeconds += $duration;
-                        }
-                    }
+                // Get next log or end of working hours
+                $nextLog = $logs->get($index + 1);
+                if ($nextLog) {
+                    $nextLogTime = Carbon::parse($nextLog->logged_at);
+                } else {
+                    // If this is the last log, calculate until now or end of working hours (17:00)
+                    $endOfWorkingHours = Carbon::parse($log->logged_at)->setTime(17, 0, 0);
+                    $nextLogTime = $currentTime->lt($endOfWorkingHours) ? $currentTime : $endOfWorkingHours;
                 }
-            }
-            
-            // Add current ongoing status duration
-            $lastLog = $logs->last();
-            if ($lastLog) {
-                $ongoingDuration = Carbon::parse($lastLog->logged_at)->diffInSeconds($currentTime);
                 
-                if ($lastLog->status === 'online') {
-                    $deviceOnlineSeconds += $ongoingDuration;
-                } elseif ($lastLog->status === 'offline') {
-                    $deviceOfflineSeconds += $ongoingDuration;
-                } elseif ($lastLog->status === 'timeout') {
-                    $deviceTimeoutSeconds += $ongoingDuration;
+                // Calculate duration only within working hours
+                $duration = $logTime->diffInSeconds($nextLogTime);
+                
+                // Make sure we don't count beyond 17:00
+                $workEndTime = Carbon::parse($logTime->format('Y-m-d'))->setTime(17, 0, 0);
+                if ($nextLogTime->gt($workEndTime)) {
+                    $nextLogTime = $workEndTime;
+                    $duration = $logTime->diffInSeconds($nextLogTime);
+                }
+                
+                // Only count if duration is positive and within working hours
+                if ($duration > 0 && $logTime->hour >= 7 && $logTime->hour < 17) {
+                    if ($log->status === 'online') {
+                        $deviceOnlineSeconds += $duration;
+                    } elseif ($log->status === 'offline') {
+                        $deviceOfflineSeconds += $duration;
+                    } elseif ($log->status === 'timeout') {
+                        $deviceTimeoutSeconds += $duration;
+                    }
                 }
             }
             
@@ -311,11 +319,11 @@ new #[Layout("layouts.app")] class extends Component {
 
     public function updatedTimeRange()
     {
-        if (!$this->start_at && !$this->end_at) {
-            $this->start_at = now()->subHours($this->timeRange)->format('Y-m-d H:i:s');
-            $this->end_at = now()->format('Y-m-d H:i:s');
-        }
+        // Clear manual date filters when using quick time range
+        $this->start_at = now()->subHours($this->timeRange)->format('Y-m-d');
+        $this->end_at = now()->format('Y-m-d');
         $this->calculateStats();
+        $this->calculateTodaySummary();
     }
 
     public function updatedDeviceId()
@@ -333,11 +341,55 @@ new #[Layout("layouts.app")] class extends Component {
     public function updatedStartAt()
     {
         $this->calculateStats();
+        $this->calculateTodaySummary();
     }
 
     public function updatedEndAt()
     {
         $this->calculateStats();
+        $this->calculateTodaySummary();
+    }
+
+    public function clearDateFilters()
+    {
+        $this->start_at = '';
+        $this->end_at = '';
+        $this->timeRange = 24;
+        $this->calculateStats();
+        $this->calculateTodaySummary();
+    }
+
+    public function setDateRange($range)
+    {
+        switch ($range) {
+            case 'today':
+                $this->start_at = now()->format('Y-m-d');
+                $this->end_at = now()->format('Y-m-d');
+                break;
+            case 'yesterday':
+                $this->start_at = now()->subDay()->format('Y-m-d');
+                $this->end_at = now()->subDay()->format('Y-m-d');
+                break;
+            case 'this_week':
+                $this->start_at = now()->startOfWeek()->format('Y-m-d');
+                $this->end_at = now()->endOfWeek()->format('Y-m-d');
+                break;
+            case 'last_week':
+                $this->start_at = now()->subWeek()->startOfWeek()->format('Y-m-d');
+                $this->end_at = now()->subWeek()->endOfWeek()->format('Y-m-d');
+                break;
+            case 'this_month':
+                $this->start_at = now()->startOfMonth()->format('Y-m-d');
+                $this->end_at = now()->endOfMonth()->format('Y-m-d');
+                break;
+            case 'last_month':
+                $this->start_at = now()->subMonth()->startOfMonth()->format('Y-m-d');
+                $this->end_at = now()->subMonth()->endOfMonth()->format('Y-m-d');
+                break;
+        }
+        
+        $this->calculateStats();
+        $this->calculateTodaySummary();
     }
 
     public function sortBy($field)
@@ -352,11 +404,17 @@ new #[Layout("layouts.app")] class extends Component {
 
     public function exportToCSV()
     {
-        $startDate = $this->start_at ? Carbon::parse($this->start_at) : now()->subHours($this->timeRange);
-        $endDate = $this->end_at ? Carbon::parse($this->end_at) : now();
+        // Parse dates properly - if date is set, use start/end of day
+        $startDate = $this->start_at 
+            ? Carbon::parse($this->start_at)->startOfDay() 
+            : now()->subHours($this->timeRange);
+        $endDate = $this->end_at 
+            ? Carbon::parse($this->end_at)->endOfDay() 
+            : now();
 
         $query = LogDwpUptime::with('device')
-            ->whereBetween('logged_at', [$startDate, $endDate]);
+            ->whereBetween('logged_at', [$startDate, $endDate])
+            ->whereRaw('HOUR(logged_at) >= 7 AND HOUR(logged_at) < 17');
 
         if ($this->device_id) {
             $query->where('ins_dwp_device_id', $this->device_id);
@@ -394,11 +452,17 @@ new #[Layout("layouts.app")] class extends Component {
 
     public function with(): array
     {
-        $startDate = $this->start_at ? Carbon::parse($this->start_at) : now()->subHours($this->timeRange);
-        $endDate = $this->end_at ? Carbon::parse($this->end_at) : now();
+        // Parse dates properly - if date is set, use start/end of day
+        $startDate = $this->start_at 
+            ? Carbon::parse($this->start_at)->startOfDay() 
+            : now()->subHours($this->timeRange);
+        $endDate = $this->end_at 
+            ? Carbon::parse($this->end_at)->endOfDay() 
+            : now();
 
         $query = LogDwpUptime::with('device')
-            ->whereBetween('logged_at', [$startDate, $endDate]);
+            ->whereBetween('logged_at', [$startDate, $endDate])
+            ->whereRaw('HOUR(logged_at) >= 7 AND HOUR(logged_at) < 17');
 
         if ($this->device_id) {
             $query->where('ins_dwp_device_id', $this->device_id);
@@ -441,7 +505,7 @@ new #[Layout("layouts.app")] class extends Component {
                 {{ __('DWP Uptime Monitoring') }}
             </h1>
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                {{ __('Monitor device online/offline status and request timeouts') }}
+                {{ __('Monitor device online/offline status and request timeouts') }} ({{ __('Working Hours: 07:00 - 17:00') }})
             </p>
         </div>
         <div class="flex items-center gap-3">
@@ -467,7 +531,80 @@ new #[Layout("layouts.app")] class extends Component {
 
     <!-- Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 space-y-4">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ __('Filters') }}</h3>
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ __('Filters') }}</h3>
+            
+            <!-- Date Range Dropdown -->
+            <div x-data="{ open: false }" class="relative">
+                <button 
+                    @click="open = !open"
+                    @click.away="open = false"
+                    class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span>{{ __('RANGE') }}</span>
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div 
+                    x-show="open"
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="transform opacity-0 scale-95"
+                    x-transition:enter-end="transform opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75"
+                    x-transition:leave-start="transform opacity-100 scale-100"
+                    x-transition:leave-end="transform opacity-0 scale-95"
+                    class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10">
+                    <button 
+                        wire:click="setDateRange('today')"
+                        @click="open = false"
+                        class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center justify-between">
+                        <span>{{ __('Today') }}</span>
+                        @if($start_at === now()->format('Y-m-d') && $end_at === now()->format('Y-m-d'))
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        @endif
+                    </button>
+                    <button 
+                        wire:click="setDateRange('yesterday')"
+                        @click="open = false"
+                        class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600">
+                        {{ __('Yesterday') }}
+                    </button>
+                    <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+                    <button 
+                        wire:click="setDateRange('this_week')"
+                        @click="open = false"
+                        class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600">
+                        {{ __('This week') }}
+                    </button>
+                    <button 
+                        wire:click="setDateRange('last_week')"
+                        @click="open = false"
+                        class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600">
+                        {{ __('Last week') }}
+                    </button>
+                    <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+                    <button 
+                        wire:click="setDateRange('this_month')"
+                        @click="open = false"
+                        class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600">
+                        {{ __('This month') }}
+                    </button>
+                    <button 
+                        wire:click="setDateRange('last_month')"
+                        @click="open = false"
+                        class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600">
+                        {{ __('Last month') }}
+                    </button>
+                </div>
+            </div>
+        </div>
         
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <!-- Device Filter -->
@@ -501,7 +638,13 @@ new #[Layout("layouts.app")] class extends Component {
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {{ __('Start Date') }}
                 </label>
-                <input type="datetime-local" wire:model.live="start_at" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <input 
+                    type="date" 
+                    wire:model.live="start_at" 
+                    wire:change="updatedStartAt"
+                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    max="{{ now()->format('Y-m-d') }}"
+                >
             </div>
 
             <!-- End Date -->
@@ -509,7 +652,13 @@ new #[Layout("layouts.app")] class extends Component {
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {{ __('End Date') }}
                 </label>
-                <input type="datetime-local" wire:model.live="end_at" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <input 
+                    type="date" 
+                    wire:model.live="end_at" 
+                    wire:change="updatedEndAt"
+                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    max="{{ now()->format('Y-m-d') }}"
+                >
             </div>
         </div>
 
@@ -530,6 +679,11 @@ new #[Layout("layouts.app")] class extends Component {
             <button wire:click="$set('timeRange', 720); updatedTimeRange()" class="px-3 py-1 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300">
                 {{ __('Last 30 Days') }}
             </button>
+            @if($start_at || $end_at)
+                <button wire:click="clearDateFilters" class="px-3 py-1 text-sm rounded-lg bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 text-red-700 dark:text-red-300 font-medium">
+                    {{ __('Clear Filters') }}
+                </button>
+            @endif
         </div>
     </div>
 
@@ -537,10 +691,28 @@ new #[Layout("layouts.app")] class extends Component {
     <div class="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-700 dark:to-blue-800 rounded-lg shadow-lg p-6 text-white">
         <div class="flex items-center justify-between mb-4">
             <div>
-                <h3 class="text-2xl font-bold">{{ __('Ringkasan Hari Ini') }}</h3>
-                <p class="text-blue-100 text-sm">{{ now()->format('l, d F Y') }}</p>
+                <h3 class="text-2xl font-bold">
+                    @if($start_at && $end_at)
+                        @if($start_at === $end_at)
+                            {{ __('Ringkasan') }} - {{ \Carbon\Carbon::parse($start_at)->format('d F Y') }}
+                        @else
+                            {{ __('Ringkasan Periode') }}
+                        @endif
+                    @else
+                        {{ __('Ringkasan Hari Ini') }}
+                    @endif
+                </h3>
+                <p class="text-blue-100 text-sm">
+                    @if($start_at && $end_at)
+                        @if($start_at !== $end_at)
+                            {{ \Carbon\Carbon::parse($start_at)->format('d M Y') }} - {{ \Carbon\Carbon::parse($end_at)->format('d M Y') }}
+                        @endif
+                    @else
+                        {{ now()->format('l, d F Y') }}
+                    @endif
+                </p>
                 @if(($todaySummary['total_tracked_seconds'] ?? 0) == 0)
-                    <p class="text-yellow-200 text-xs mt-1">⚠️ {{ __('Belum ada data tracking untuk hari ini') }}</p>
+                    <p class="text-yellow-200 text-xs mt-1">⚠️ {{ __('Belum ada data tracking untuk periode ini') }}</p>
                 @else
                     <p class="text-blue-100 text-xs mt-1">
                         📊 {{ __('Total Logs') }}: {{ ($todaySummary['online_count'] ?? 0) + ($todaySummary['offline_count'] ?? 0) + ($todaySummary['timeout_count'] ?? 0) }}
