@@ -133,9 +133,15 @@ new #[Layout("layouts.app")] class extends Component {
                 if ($nextLog) {
                     $nextLogTime = Carbon::parse($nextLog->logged_at);
                 } else {
-                    // If this is the last log, calculate until now or end of working hours (17:00)
-                    $endOfWorkingHours = Carbon::parse($log->logged_at)->setTime(17, 0, 0);
-                    $nextLogTime = $currentTime->lt($endOfWorkingHours) ? $currentTime : $endOfWorkingHours;
+                    // If this is the last log, only extend to current time if status is 'online'
+                    // For offline/timeout, don't extend duration (device is disconnected)
+                    if ($log->status === 'online') {
+                        $endOfWorkingHours = Carbon::parse($log->logged_at)->setTime(17, 0, 0);
+                        $nextLogTime = $currentTime->lt($endOfWorkingHours) ? $currentTime : $endOfWorkingHours;
+                    } else {
+                        // For offline/timeout as last log, no duration extension
+                        continue;
+                    }
                 }
                 
                 // Calculate duration only within working hours
@@ -249,9 +255,15 @@ new #[Layout("layouts.app")] class extends Component {
                 if ($nextLog) {
                     $nextLogTime = Carbon::parse($nextLog->logged_at);
                 } else {
-                    // If this is the last log, calculate until now or end of working hours (17:00)
-                    $endOfWorkingHours = Carbon::parse($log->logged_at)->setTime(17, 0, 0);
-                    $nextLogTime = $currentTime->lt($endOfWorkingHours) ? $currentTime : $endOfWorkingHours;
+                    // If this is the last log, only extend to current time if status is 'online'
+                    // For offline/timeout, don't extend duration (device is disconnected)
+                    if ($log->status === 'online') {
+                        $endOfWorkingHours = Carbon::parse($log->logged_at)->setTime(17, 0, 0);
+                        $nextLogTime = $currentTime->lt($endOfWorkingHours) ? $currentTime : $endOfWorkingHours;
+                    } else {
+                        // For offline/timeout as last log, no duration extension
+                        continue;
+                    }
                 }
                 
                 // Calculate duration only within working hours
