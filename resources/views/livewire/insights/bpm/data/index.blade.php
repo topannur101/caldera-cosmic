@@ -15,13 +15,13 @@ new #[Layout("layouts.app")] class extends Component {
     public function mount()
     {
         $this->view_titles = [
-            "summary" => __("Summary BPM"),
             "raw-data" => __("Raw Data BPM"),
+            "summary" => __("Summary BPM"),
         ];
 
         $this->view_icons = [
-            "summary" => "icon-layout-dashboard",
             "raw-data" => "icon-alarm-clock",
+            "summary" => "icon-layout-dashboard",
         ];
     }
 
@@ -38,15 +38,17 @@ new #[Layout("layouts.app")] class extends Component {
     #[On('update-menu')]
     public function updateMenu($view){
         // Condition Menu
-        if ($view === "raw" || $view === "summary"){
+        if ($view === "raw" || $view === "summary" || $view === "summary-line") {
             $this->view_titles = [
                 "raw" => __("Raw Data"),
-                "summary" => __("Summary BPM"),
+                "summary" => __("Summary Plant BPM"),
+                "summary-line" => __("Summary Line BPM"),
             ];
 
             $this->view_icons = [
                 "raw" => "icon-database",
                 "summary" => "icon-notebook-text",
+                "summary-line" => "icon-chart-line",
             ];
         }
     }
@@ -95,6 +97,9 @@ new #[Layout("layouts.app")] class extends Component {
                 @break
             @case("raw")
                 <livewire:insights.bpm.data.raw />
+                @break
+            @case("summary-line")
+                <livewire:insights.bpm.data.summary-line />
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">
