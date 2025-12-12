@@ -9,6 +9,7 @@ class InsBpmCount extends Model
     protected $fillable = [
         'incremental',
         'cumulative',
+        'plant',
         'line',
         'machine',
         'condition',

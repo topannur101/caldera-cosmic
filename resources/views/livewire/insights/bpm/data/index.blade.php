@@ -41,7 +41,7 @@ new #[Layout("layouts.app")] class extends Component {
         if ($view === "raw" || $view === "summary"){
             $this->view_titles = [
                 "raw" => __("Raw Data"),
-                "summary" => __("Summary BPM Emergency"),
+                "summary" => __("Summary BPM"),
             ];
 
             $this->view_icons = [
@@ -57,7 +57,7 @@ new #[Layout("layouts.app")] class extends Component {
 <x-slot name="title">{{ __("Data - Pemantauan deep well press") }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-insights-dwp></x-nav-insights-dwp>
+    <x-nav-insights-bpm></x-nav-insights-bpm>
 </x-slot>
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 gap-4">

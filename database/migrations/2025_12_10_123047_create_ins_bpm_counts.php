@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('incremental');
             $table->integer('cumulative');
+            $table->string('plant');
             $table->string('line');
             $table->string('machine');
             $table->enum('condition', ['hot', 'cold']);

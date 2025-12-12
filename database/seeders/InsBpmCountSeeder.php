@@ -14,8 +14,9 @@ class InsBpmCountSeeder extends Seeder
     public function run(): void
     {
         // Define lines and machines
-        $lines = ['G1', 'G2', 'G3', 'G4', 'G5'];
-        $machines = ['M01', 'M02', 'M03', 'M04', 'M05', 'M06', 'M07', 'M08'];
+        $plant = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J'];
+        $lines = ['1', '2', '3', '4', '5'];
+        $machines = ['M1', 'M2', 'M3', 'M4'];
         $conditions = ['hot', 'cold'];
 
         // Generate data for the last 30 days
@@ -34,7 +35,7 @@ class InsBpmCountSeeder extends Seeder
                     // Each machine can have both hot and cold conditions per day
                     foreach ($conditions as $condition) {
                         $key = "{$line}_{$machine}_{$condition}";
-                        
+                        $plantSelected = $plant[array_rand($plant)];
                         // Initialize cumulative if not exists
                         if (!isset($cumulatives[$key])) {
                             $cumulatives[$key] = rand(100, 500);
@@ -68,6 +69,7 @@ class InsBpmCountSeeder extends Seeder
 
                             InsBpmCount::create([
                                 'line' => $line,
+                                'plant' => $plantSelected,
                                 'machine' => $machine,
                                 'condition' => $condition,
                                 'incremental' => $incremental,

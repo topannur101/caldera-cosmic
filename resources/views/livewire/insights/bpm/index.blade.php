@@ -39,9 +39,9 @@ new #[Layout("layouts.app")] class extends Component {
                     <div class="bg-neutral-50 dark:bg-neutral-700 p-6 rounded-lg">
                         <h3 class="text-lg font-medium mb-4">{{ __("Kelola Perangkat") }}</h3>
                         <p class="text-neutral-600 dark:text-neutral-400 mb-4">
-                            {{ __("Konfigurasi perangkat DWP dan pengaturan line production") }}
+                            {{ __("Konfigurasi perangkat BPM dan pengaturan line production") }}
                         </p>
-                        <a href="{{ route('insights.dwp.manage.devices') }}" 
+                        <a href="{{ route('insights.bpm.manage.devices') }}" 
                            class="inline-flex items-center px-4 py-2 bg-neutral-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-neutral-700 focus:bg-neutral-700 active:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition ease-in-out duration-150"
                            wire:navigate>
                             {{ __("Kelola") }}

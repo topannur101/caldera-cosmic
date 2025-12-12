@@ -3,15 +3,24 @@
 use Livewire\Volt\Component;
 use App\Models\InsBpmCount;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Livewire\Attributes\Url;
+
 
 new class extends Component {
     public $view = "summary";
     public $dateFrom;
     public $dateTo;
+
+    #[Url]
     public $plant;
+
     public $lastUpdated;
     public $summaryCards = [];
     public $rankingData = [];
+    public $chartLabels = [];
+    public $chartData = [];
+    public $rankingDatav1 = [];
 
     public function mount()
     {
@@ -25,8 +34,6 @@ new class extends Component {
         
         // Load initial data
         $this->loadData();
-        
-        // Generate chart separately after data loaded
         $this->generateEmergencyChart();
     }
     
@@ -41,13 +48,16 @@ new class extends Component {
 
     public function loadData()
     {
+        $from = Carbon::parse($this->dateFrom)->startOfDay();
+        $to = Carbon::parse($this->dateTo)->endOfDay();
+
         // Calculate total emergency across all lines
-        $totalEmergency = InsBpmCount::whereBetween('created_at', [$this->dateFrom, $this->dateTo])
+        $totalEmergency = InsBpmCount::whereBetween('created_at', [$from, $to])
             ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
             ->sum('incremental');
 
         // Get emergency count per line
-        $emergencyPerLine = InsBpmCount::whereBetween('created_at', [$this->dateFrom, $this->dateTo])
+        $emergencyPerLine = InsBpmCount::whereBetween('created_at', [$from, $to])
             ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
             ->select('line', DB::raw('SUM(incremental) as total'))
             ->groupBy('line')
@@ -93,35 +103,37 @@ new class extends Component {
         ];
 
         // Load ranking data
-        $this->rankingData = InsBpmCount::whereBetween('created_at', [$this->dateFrom, $this->dateTo])
+        $this->loadRankingData();
+
+        $this->lastUpdated = now()->format('m/d/Y, H:i:s');
+    }
+
+    public function loadRankingData()
+    {
+        $from = Carbon::parse($this->dateFrom)->startOfDay();
+        $to = Carbon::parse($this->dateTo)->endOfDay();
+
+        // Get ranking data - grouped by line and machine
+        $this->rankingData = InsBpmCount::whereBetween('created_at', [$from, $to])
             ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
             ->select('line', 'machine', DB::raw('SUM(incremental) as total_counter'))
             ->groupBy('line', 'machine')
             ->orderByDesc('total_counter')
             ->limit(16)
             ->get();
-
-        \Log::info('[BPM Summary] Ranking data loaded', [
-            'count' => $this->rankingData->count(),
-            'sample' => $this->rankingData->take(3)->toArray()
-        ]);
-
-        $this->lastUpdated = now()->format('m/d/Y, H:i:s');
     }
 
-    private function generateEmergencyChart()
+    public function generateEmergencyChart()
     {
-        \Log::info('[BPM Chart] Starting generateEmergencyChart', [
-            'dateFrom' => $this->dateFrom,
-            'dateTo' => $this->dateTo,
-            'plant' => $this->plant
-        ]);
+        $from = Carbon::parse($this->dateFrom)->startOfDay();
+        $to = Carbon::parse($this->dateTo)->endOfDay();
 
         // Load Emergency Counter data (grouped by line and machine)
-        $emergencyData = InsBpmCount::whereBetween('created_at', [$this->dateFrom, $this->dateTo])
+        $emergencyData = InsBpmCount::whereBetween('created_at', [$from, $to])
             ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
             ->select(
-                DB::raw('CONCAT(line, " - Mesin ", machine) as line_machine'),
+                'line',
+                'machine',
                 DB::raw('SUM(incremental) as total_counter')
             )
             ->groupBy('line', 'machine')
@@ -129,40 +141,21 @@ new class extends Component {
             ->limit(20)
             ->get();
 
-        \Log::info('[BPM Chart] Query result', [
-            'count' => $emergencyData->count(),
-            'data' => $emergencyData->toArray()
-        ]);
-
-        $chartData = [
-            'labels' => $emergencyData->pluck('line_machine')->toArray(),
-            'data' => $emergencyData->pluck('total_counter')->toArray(),
-        ];
-
-        \Log::info('[BPM Chart] Prepared chart data', [
-            'labels_count' => count($chartData['labels']),
-            'data_count' => count($chartData['data']),
-            'labels' => $chartData['labels'],
-            'data' => $chartData['data']
-        ]);
-
-        // Dispatch the event to the frontend (this will work on updates)
-        $this->dispatch('refresh-emergency-chart', chartData: $chartData);
+        // Format labels and extract data
+        $labels = $emergencyData->map(function($item) {
+            return $item->line . ' - Mesin ' . $item->machine;
+        })->values()->toArray();
         
-        // Also use js() to ensure it triggers on mount
-        $this->js("
-            window.dispatchEvent(new CustomEvent('chart-data-ready', { 
-                detail: { chartData: " . json_encode($chartData) . " }
-            }));
-        ");
+        $data = $emergencyData->pluck('total_counter')->map(function($value) {
+            return (int) $value;
+        })->values()->toArray();
+
+        // Store in component properties
+        $this->chartLabels = $labels;
+        $this->chartData = $data;
         
-        \Log::info('[BPM Chart] Dispatch completed');
-    }
-    
-    // Public method that can be called from Alpine
-    public function triggerChartRefresh()
-    {
-        $this->generateEmergencyChart();
+        // Dispatch browser event to trigger chart refresh
+        $this->dispatch('chart-data-updated')->self();
     }
 
     public function updated($property)
@@ -189,8 +182,15 @@ new class extends Component {
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">PLANT</label>
                 <x-select wire:model.live="plant" class="mt-1 w-32">
                     <option value="">All</option>
-                    <option value="Plant 1">Plant 1</option>
-                    <option value="Plant 2">Plant 2</option>
+                    <option value="A">Plant A</option>
+                    <option value="B">Plant B</option>
+                    <option value="C">Plant C</option>
+                    <option value="D">Plant D</option>
+                    <option value="E">Plant E</option>
+                    <option value="F">Plant F</option>
+                    <option value="G">Plant G</option>
+                    <option value="H">Plant H</option>
+                    <option value="J">Plant J</option>
                 </x-select>
             </div>
         </div>
@@ -210,41 +210,50 @@ new class extends Component {
             <div
                 x-data="{
                     emergencyChart: null,
+                    isDestroying: false,
 
                     initOrUpdateEmergencyChart(chartData) {
+                        // Prevent multiple simultaneous operations
+                        if (this.isDestroying) {
+                            return;
+                        }
+
                         const canvasEl = this.$refs.emergencyChartCanvas;
                         if (!canvasEl) {
-                            console.error('[EmergencyChart] Canvas not found.');
                             return;
                         }
 
                         const labels = chartData.labels || [];
                         const data = chartData.data || [];
 
-                        console.log('[EmergencyChart] Initializing with data:', { labels, data });
-
                         // Check if Chart.js is loaded
                         if (typeof Chart === 'undefined') {
-                            console.error('[EmergencyChart] Chart.js is not loaded!');
+                            return;
+                        }
+
+                        // Check if we have data
+                        if (labels.length === 0 || data.length === 0) {
                             return;
                         }
 
                         // Destroy old chart if exists
                         if (this.emergencyChart) {
-                            console.log('[EmergencyChart] Destroying old chart.');
-                            this.emergencyChart.destroy();
+                            this.isDestroying = true;
+                            try {
+                                if (this.emergencyChart.ctx && this.emergencyChart.canvas) {
+                                    this.emergencyChart.destroy();
+                                }
+                            } catch (e) {
+                                // Silent fail
+                            }
                             this.emergencyChart = null;
-                        }
-
-                        // Check if we have data
-                        if (labels.length === 0 || data.length === 0) {
-                            console.warn('[EmergencyChart] No data to display');
-                            return;
+                            this.isDestroying = false;
                         }
 
                         const ctx = canvasEl.getContext('2d');
-                        
-                        console.log('[EmergencyChart] Creating new chart with Chart.js');
+                        if (!ctx) {
+                            return;
+                        }
                         
                         try {
                             this.emergencyChart = new Chart(ctx, {
@@ -292,62 +301,37 @@ new class extends Component {
                                     }
                                 }
                             });
-                            console.log('[EmergencyChart] Chart created successfully');
                         } catch (e) {
-                            console.error('[EmergencyChart] Creation error:', e);
+                            // Silent fail
                         }
                     }
                 }"
+                wire:ignore
                 x-init="
-                    console.log('[EmergencyChart] Alpine component initialized');
-                    console.log('[EmergencyChart] Chart.js available?', typeof Chart !== 'undefined');
-                    
-                    // Listen for custom window event (for mount)
-                    window.addEventListener('chart-data-ready', (event) => {
-                        console.log('[EmergencyChart] ✓ Window event received!', event.detail);
-                        $nextTick(() => {
-                            try {
-                                initOrUpdateEmergencyChart(event.detail.chartData);
-                            } catch (e) {
-                                console.error('[EmergencyChart] ✗ Error in window event update:', e);
-                            }
-                        });
+                    // Watch for data changes
+                    $watch('$wire.chartLabels', () => {
+                        const labels = $wire.chartLabels || [];
+                        const data = $wire.chartData || [];
+                        
+                        if (labels.length > 0 && data.length > 0) {
+                            $nextTick(() => {
+                                initOrUpdateEmergencyChart({ labels, data });
+                            });
+                        }
                     });
                     
-                    // Listen for Livewire event (for updates)
-                    $wire.on('refresh-emergency-chart', (payload) => {
-                        console.log('[EmergencyChart] ✓ Livewire event received!');
-                        console.log('[EmergencyChart] Raw payload:', payload);
+                    // Initial render if data already exists
+                    $nextTick(() => {
+                        const labels = $wire.chartLabels || [];
+                        const data = $wire.chartData || [];
                         
-                        $nextTick(() => {
-                            // Handle different payload structures
-                            let chartData = null;
-                            
-                            if (payload?.chartData) {
-                                chartData = payload.chartData;
-                            } else if (Array.isArray(payload) && payload[0]?.chartData) {
-                                chartData = payload[0].chartData;
-                            } else if (payload?.detail?.chartData) {
-                                chartData = payload.detail.chartData;
-                            }
-                            
-                            console.log('[EmergencyChart] Extracted chartData:', chartData);
-                            
-                            if (!chartData) {
-                                console.error('[EmergencyChart] ✗ Could not extract chartData from payload');
-                                return;
-                            }
-                            
-                            try {
-                                initOrUpdateEmergencyChart(chartData);
-                            } catch (e) {
-                                console.error('[EmergencyChart] ✗ Error in update:', e);
-                            }
-                        });
+                        if (labels.length > 0 && data.length > 0) {
+                            initOrUpdateEmergencyChart({ labels, data });
+                        }
                     });
                 "
             >
-                <div wire:ignore style="height: 500px;">
+                <div wire:ignore style="height: 500px; position: relative;">
                     <canvas x-ref="emergencyChartCanvas"></canvas>
                 </div>
             </div>
