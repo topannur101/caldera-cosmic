@@ -208,9 +208,9 @@ new #[Layout("layouts.app")] class extends Component {
                 // Duration less than 10 seconds
                 $query->whereRaw("TIME_TO_SEC(duration) < 10");
                 break;
-            case '<13':
-                // Duration less than 13 seconds
-                $query->whereRaw("TIME_TO_SEC(duration) < 13");
+            case '10-13':
+                // Duration greater than 10 and less than 13 seconds
+                $query->whereRaw("TIME_TO_SEC(duration) > 10 AND TIME_TO_SEC(duration) < 13");
                 break;
             case '13-14':
                 // Duration between 13 and 14 seconds
@@ -537,7 +537,7 @@ new #[Layout("layouts.app")] class extends Component {
                     <x-select wire:model.live="presstime" class="w-full lg:w-32">
                             <option value="">{{ __("All") }}</option>
                             <option value="<10">{{ __("<10") }}</option>
-                            <option value="<13">{{ __("<13") }}</option>
+                            <option value="10-13">{{ __("10-13") }}</option>
                             <option value="13-14">{{ __("13-14") }}</option>
                             <option value=">16">{{ __(">16") }}</option>
                     </x-select>
