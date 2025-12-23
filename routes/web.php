@@ -15,6 +15,9 @@ Volt::route('/inventory/help', 'inventory.help')->name('inventory.help');
 
 Volt::route('/announcements/{id}', 'announcements.show')->name('announcements.show');
 
+// Uptime Monitoring routes
+Volt::route('/uptime', 'uptime.monitor')->name('uptime.monitor');
+
 // Insights routes
 Route::prefix('insights')->group(function () {
 
