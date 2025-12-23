@@ -83,6 +83,7 @@ new #[Layout("layouts.app")] class extends Component {
             'online' => $logs->where('status', 'online')->count(),
             'offline' => $logs->where('status', 'offline')->count(),
             'idle' => $logs->where('status', 'idle')->count(),
+            'timeouts' => $logs->where('is_timeout', true)->count(),
             'uptime_percentage' => $logs->count() > 0 
                 ? round(($logs->where('status', 'online')->count() / $logs->count()) * 100, 2) 
                 : 0,
@@ -433,6 +434,7 @@ new #[Layout("layouts.app")] class extends Component {
                         <option value="online">Online</option>
                         <option value="offline">Offline</option>
                         <option value="idle">Idle</option>
+                        <option value="timeout">Timeout</option>
                     </select>
                 </div>
             </div>
@@ -454,7 +456,7 @@ new #[Layout("layouts.app")] class extends Component {
 
      <!-- Statistics Overview -->
     @if($project)
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
         <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800 shadow">
             <div class="flex items-center justify-between mb-2">
                 <div class="w-8 h-8 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -501,6 +503,18 @@ new #[Layout("layouts.app")] class extends Component {
             </div>
             <div class="text-2xl font-bold text-amber-700 dark:text-amber-400 mb-0.5">{{ number_format($statistics['idle']) }}</div>
             <div class="text-xs font-medium text-neutral-600 dark:text-neutral-300">Idle</div>
+        </div>
+
+        <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800 shadow">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-8 h-8 bg-orange-500/10 dark:bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="text-2xl font-bold text-orange-700 dark:text-orange-400 mb-0.5">{{ number_format($statistics['timeouts']) }}</div>
+            <div class="text-xs font-medium text-neutral-600 dark:text-neutral-300">Timeouts</div>
         </div>
 
         <div class="bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/20 rounded-xl p-4 border border-violet-200 dark:border-violet-800 shadow">
@@ -673,6 +687,8 @@ new #[Layout("layouts.app")] class extends Component {
                             <th class="px-4 py-3.5 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Project</th>
                             <th class="px-4 py-3.5 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">IP Address</th>
                             <th class="px-4 py-3.5 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3.5 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Timeout</th>
+                            <th class="px-4 py-3.5 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Error Type</th>
                             <th class="px-4 py-3.5 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Status Change</th>
                             <th class="px-4 py-3.5 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Response Time</th>
                             <th class="px-4 py-3.5 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Message</th>
@@ -711,6 +727,27 @@ new #[Layout("layouts.app")] class extends Component {
                                             <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
                                             Idle
                                         </span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3.5 text-sm text-center">
+                                    @if($log->is_timeout)
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Timeout
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-neutral-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3.5 text-sm">
+                                    @if($log->error_type)
+                                        <span class="px-2 py-1 rounded-md text-xs font-medium bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
+                                            {{ str_replace('_', ' ', ucwords($log->error_type, '_')) }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-neutral-400">-</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3.5 text-sm">

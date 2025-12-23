@@ -27,6 +27,8 @@ class UptimeMonitorService
         $status = 'offline';
         $message = '';
         $duration = null;
+        $isTimeout = false;
+        $errorType = null;
 
         try {
             if ($type === 'dwp') {
@@ -35,12 +37,16 @@ class UptimeMonitorService
                 $status = $result['status'];
                 $message = $result['message'];
                 $duration = $result['duration'];
+                $isTimeout = $result['is_timeout'] ?? false;
+                $errorType = $result['error_type'] ?? null;
             } elseif ($type === 'modbus') {
                 // Modbus TCP Connection Test
                 $result = $this->checkModbusConnection($ipAddress, $timeout, $modbusConfig);
                 $status = $result['status'];
                 $message = $result['message'];
                 $duration = $result['duration'];
+                $isTimeout = $result['is_timeout'] ?? false;
+                $errorType = $result['error_type'] ?? null;
             } else {
                 // HTTP Connection Test (default)
                 $response = Http::timeout($timeout)->get($ipAddress);
@@ -52,17 +58,42 @@ class UptimeMonitorService
                     $message = 'Project is running normally';
                 } elseif ($response->status() >= 500) {
                     $status = 'offline';
+                    $errorType = 'server_error';
                     $message = 'Server error: ' . $response->status();
                 } else {
                     $status = 'idle';
+                    $errorType = 'client_error';
                     $message = 'Unusual response: ' . $response->status();
                 }
             }
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            $duration = round((microtime(true) - $startTime) * 1000);
             $status = 'offline';
-            $message = 'Connection failed: ' . $e->getMessage();
+            
+            // Detect timeout vs other connection errors
+            $errorMessage = $e->getMessage();
+            if (str_contains($errorMessage, 'timed out') || 
+                str_contains($errorMessage, 'timeout') ||
+                str_contains($errorMessage, 'ETIMEDOUT')) {
+                $isTimeout = true;
+                $errorType = 'timeout';
+                $message = 'Request timed out after ' . $timeout . ' seconds';
+            } elseif (str_contains($errorMessage, 'Connection refused') || 
+                      str_contains($errorMessage, 'ECONNREFUSED')) {
+                $errorType = 'connection_refused';
+                $message = 'Connection refused: Service not available';
+            } elseif (str_contains($errorMessage, 'Could not resolve host') ||
+                      str_contains($errorMessage, 'getaddrinfo')) {
+                $errorType = 'dns_failure';
+                $message = 'DNS resolution failed: Cannot resolve hostname';
+            } else {
+                $errorType = 'connection_error';
+                $message = 'Connection failed: ' . $errorMessage;
+            }
         } catch (\Exception $e) {
+            $duration = round((microtime(true) - $startTime) * 1000);
             $status = 'offline';
+            $errorType = 'unknown_error';
             $message = 'Error: ' . $e->getMessage();
         }
 
@@ -93,6 +124,9 @@ class UptimeMonitorService
                 'previous_status' => $previousStatus,
                 'message' => $message,
                 'duration' => $duration,
+                'is_timeout' => $isTimeout,
+                'timeout_duration' => $timeout,
+                'error_type' => $errorType,
                 'checked_at' => Carbon::now(),
             ]);
             $logId = $log->id;
@@ -112,6 +146,9 @@ class UptimeMonitorService
             'status_changed' => $statusChanged,
             'message' => $message,
             'duration' => $duration,
+            'is_timeout' => $isTimeout,
+            'timeout_duration' => $timeout,
+            'error_type' => $errorType,
             'uptime_seconds' => $uptime,
             'log_id' => $logId,
             'logged' => $shouldLog,
@@ -160,23 +197,45 @@ class UptimeMonitorService
                 return [
                     'status' => 'online',
                     'message' => "Modbus connection successful (device responded, {$dataCount} data points)",
-                    'duration' => $duration
+                    'duration' => $duration,
+                    'is_timeout' => false,
+                    'error_type' => null,
                 ];
             } else {
                 return [
                     'status' => 'offline',
                     'message' => 'Modbus connection failed: No response from device',
-                    'duration' => $duration
+                    'duration' => $duration,
+                    'is_timeout' => false,
+                    'error_type' => 'modbus_no_response',
                 ];
             }
             
         } catch (\Exception $e) {
             $duration = round((microtime(true) - $startTime) * 1000);
+            $errorMessage = $e->getMessage();
+            $errorType = 'modbus_error';
+            $isTimeout = false;
+            
+            // Detect Modbus timeout
+            if (str_contains($errorMessage, 'timeout') || 
+                str_contains($errorMessage, 'timed out')) {
+                $isTimeout = true;
+                $errorType = 'modbus_timeout';
+                $message = "Modbus timeout after {$timeout} seconds";
+            } elseif (str_contains($errorMessage, 'Connection refused')) {
+                $errorType = 'modbus_connection_refused';
+                $message = 'Modbus connection refused: Device not responding on port ' . $port;
+            } else {
+                $message = 'Modbus connection failed: ' . $errorMessage;
+            }
             
             return [
                 'status' => 'offline',
-                'message' => 'Modbus connection failed: ' . $e->getMessage(),
-                'duration' => $duration
+                'message' => $message,
+                'duration' => $duration,
+                'is_timeout' => $isTimeout,
+                'error_type' => $errorType,
             ];
         }
     }

@@ -70,6 +70,17 @@ class CheckProjectsUptime extends Command
             $this->line("  Duration: {$result['duration']}ms");
             $this->line("  Message: {$result['message']}");
             
+            // Show timeout information if applicable
+            if ($result['is_timeout'] ?? false) {
+                $this->line("  <fg=red>⚠ TIMEOUT</> Request timed out after {$result['timeout_duration']}s");
+            }
+            
+            // Show error type if present
+            if (!empty($result['error_type'])) {
+                $errorTypeFormatted = str_replace('_', ' ', ucwords($result['error_type'], '_'));
+                $this->line("  Error Type: <fg=yellow>{$errorTypeFormatted}</>");
+            }
+            
             // Show status change information
             if ($result['status_changed']) {
                 $changeInfo = $result['previous_status'] 
@@ -94,6 +105,7 @@ class CheckProjectsUptime extends Command
         $online = count(array_filter($results, fn($r) => $r['status'] === 'online'));
         $offline = count(array_filter($results, fn($r) => $r['status'] === 'offline'));
         $idle = count(array_filter($results, fn($r) => $r['status'] === 'idle'));
+        $timeouts = count(array_filter($results, fn($r) => $r['is_timeout'] ?? false));
 
         $this->info("Check completed!");
         $this->table(
@@ -102,6 +114,7 @@ class CheckProjectsUptime extends Command
                 ['Online', $online],
                 ['Offline', $offline],
                 ['Idle', $idle],
+                ['Timeouts', "<fg=red>{$timeouts}</>"],
                 ['Total', count($results)],
             ]
         );
