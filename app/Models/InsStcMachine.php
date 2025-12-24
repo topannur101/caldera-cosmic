@@ -20,6 +20,7 @@ class InsStcMachine extends Model
         'at_adjust_strength',
         'section_limits_high',
         'section_limits_low',
+        'std_duration'
     ];
 
     protected $casts = [

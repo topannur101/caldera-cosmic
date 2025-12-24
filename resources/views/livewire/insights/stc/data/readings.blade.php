@@ -44,6 +44,7 @@ new class extends Component {
                 "ins_stc_d_sums.*",
                 "ins_stc_d_sums.created_at as d_sum_created_at",
                 "ins_stc_machines.line as machine_line",
+                "ins_stc_machines.std_duration as machine_std_duration",
                 "users.emp_id as user_emp_id",
                 "users.name as user_name",
                 "users.photo as user_photo",
@@ -109,7 +110,6 @@ new class extends Component {
     public function with(): array
     {
         $dSums = $this->getDSumsQuery()->paginate($this->perPage);
-
         return [
             "d_sums" => $dSums,
         ];
@@ -381,6 +381,7 @@ new class extends Component {
                         <th>{{ __("Integritas") }}</th>
                         <th>{{ __("Dibuat pada") }}</th>
                         <th>{{ __("Waktu mulai") }}</th>
+                        <th>{{ __("Std Duration")}} </th>
                         <th>{{ __("Durasi") }}</th>
                         <th>{{ __("Latensi") }}</th>
                         <th>{{ __("Operator") }}</th>
@@ -401,6 +402,29 @@ new class extends Component {
                             <td>{!! $d_sum->integrity_friendly() !!}</td>
                             <td>{{ $d_sum->d_sum_created_at }}</td>
                             <td>{{ $d_sum->started_at }}</td>
+                            <td>
+                                @php
+                                    $stdDuration = is_array($d_sum->machine_std_duration) ? $d_sum->machine_std_duration : json_decode($d_sum->machine_std_duration, true);
+                                    $stdMin = $stdDuration[0] ?? null;
+                                    $stdMax = $stdDuration[1] ?? null;
+                                    
+                                    if ($stdMin) {
+                                        $stdMinFormatted = $stdMin >= 60 
+                                            ? round($stdMin / 60) . 'm' 
+                                            : $stdMin . 's';
+                                    } else {
+                                        $stdMinFormatted = '-';
+                                    }
+                                    if ($stdMax) {
+                                        $stdMaxFormatted = $stdMax >= 60 
+                                            ? round($stdMax / 60) . 'm' 
+                                            : $stdMax . 's';
+                                    } else {
+                                        $stdMaxFormatted = '-';
+                                    }
+                                @endphp
+                                <p>{{ $stdMinFormatted }} - {{ $stdMaxFormatted }}</p>
+                            </td>
                             <td>{{ $d_sum->duration() }}</td>
                             <td>{{ $d_sum->latency() }}</td>
                             <td>
