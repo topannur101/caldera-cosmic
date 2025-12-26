@@ -32,9 +32,17 @@ new #[Layout("layouts.app")] class extends Component {
     public float|null $humidity_latest = null;
     public bool $climate_data_stale = false;
 
+    public bool $isLoading = true;
+
     public function mount()
     {
+        // Fast initial load - defer expensive operations
+    }
+
+    public function loadMetrics()
+    {
         $this->calculateMetrics();
+        $this->isLoading = false;
     }
 
     private function pingStcMachine(): int
@@ -59,7 +67,8 @@ new #[Layout("layouts.app")] class extends Component {
 
     private function getCachedStcMCount(): int
     {
-        return Cache::remember("stc_machines_count", now()->addMinutes(30), function () {
+        // Increase cache time to 2 hours for expensive ping operation
+        return Cache::remember("stc_machines_count", now()->addHours(2), function () {
             return $this->pingStcMachine();
         });
     }
@@ -148,18 +157,20 @@ new #[Layout("layouts.app")] class extends Component {
 
     private function getLatestClimateData(): void
     {
-        // Get the most recent climate record for IP location
-        $latestRecord = InsClmRecord::where("location", "ip")
-            ->orderBy("created_at", "desc")
-            ->first();
+        // Cache climate data for 5 minutes
+        $climateData = Cache::remember("climate_data_ip", now()->addMinutes(5), function () {
+            return InsClmRecord::where("location", "ip")
+                ->orderBy("created_at", "desc")
+                ->first();
+        });
 
-        if ($latestRecord) {
-            $this->temperature_latest = $latestRecord->temperature;
-            $this->humidity_latest = $latestRecord->humidity;
+        if ($climateData) {
+            $this->temperature_latest = $climateData->temperature;
+            $this->humidity_latest = $climateData->humidity;
 
             // Check if data is stale (older than 3 hours)
             $threeHoursAgo = Carbon::now()->subHours(3);
-            $this->climate_data_stale = $latestRecord->created_at->isBefore($threeHoursAgo);
+            $this->climate_data_stale = $climateData->created_at->isBefore($threeHoursAgo);
         } else {
             // No data available
             $this->temperature_latest = null;
@@ -204,13 +215,15 @@ new #[Layout("layouts.app")] class extends Component {
         Cache::forget("ldc_codes_recent");
         Cache::forget("dwp_lines_recent");
         Cache::forget("bpm_lines_recent");
-        $this->calculateMetrics();
+        Cache::forget("climate_data_ip");
+        $this->isLoading = true;
+        $this->loadMetrics();
     }
 };
 
 ?>
 
-<div wire:poll.900s id="content" class="py-12 text-neutral-800 dark:text-neutral-200">
+<div wire:init="loadMetrics" wire:poll.900s id="content" class="py-12 text-neutral-800 dark:text-neutral-200">
     <x-slot name="title">{{ __("Wawasan") }}</x-slot>
     <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
         <div class="relative text-neutral h-32 sm:rounded-lg overflow-hidden mb-12">
