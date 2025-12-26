@@ -425,7 +425,27 @@ new class extends Component {
                                 @endphp
                                 <p>{{ $stdMinFormatted }} - {{ $stdMaxFormatted }}</p>
                             </td>
-                            <td>{{ $d_sum->duration() }}</td>
+                            <td>
+                                @php
+                                    $duration = $d_sum->duration();
+                                    $durationSeconds = null;
+                                    
+                                    // Parse duration string to seconds for comparison
+                                    if (preg_match('/(\d+)m/', $duration, $matches)) {
+                                        $durationSeconds = (int)$matches[1] * 60;
+                                    } elseif (preg_match('/(\d+)s/', $duration, $matches)) {
+                                        $durationSeconds = (int)$matches[1];
+                                    }
+                                    
+                                    $isOverStd = false;
+                                    if ($durationSeconds !== null && $stdMax !== null) {
+                                        $isOverStd = $durationSeconds > $stdMax;
+                                    }
+                                @endphp
+                                <span class="{{ $isOverStd ? 'text-red-600 dark:text-red-400 font-semibold' : '' }}">
+                                    {{ $duration }}
+                                </span>
+                            </td>
                             <td>{{ $d_sum->latency() }}</td>
                             <td>
                                 <div class="flex items-center">
