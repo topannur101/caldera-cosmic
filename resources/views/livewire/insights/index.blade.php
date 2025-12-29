@@ -147,8 +147,8 @@ new #[Layout("layouts.app")] class extends Component {
 
     private function getCachedDwpLines(): int
     {
-        return Cache::remember("dwp_lines_recent", now()->addMinutes(30), function () {
-            $timeWindow = Carbon::now()->subHours(2);
+        return Cache::remember("dwp_lines_recent", now()->addMinutes(10), function () {
+            $timeWindow = Carbon::now()->subMinutes(1);
             return InsDwpCount::where("updated_at", ">=", $timeWindow)
                 ->distinct("line")
                 ->count("line");
@@ -311,7 +311,7 @@ new #[Layout("layouts.app")] class extends Component {
                                     <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Pemantauan deep well press") }}</div>
                                     <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                         <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
-                                            <div class="w-2 h-2 {{ $dwp_lines_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
+                                            <div class="w-2 h-2 {{ $dwp_lines_recent > 0 ? 'bg-green-500' : 'bg-red-500' }} rounded-full"></div>
                                             <div class="">{{ $dwp_lines_recent > 0 ? $dwp_lines_recent . " " . __("line ") : __("luring") }}</div>
                                         </div>
                                     </div>
