@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Schedule;
 //     $this->comment(Inspiring::quote());
 // })->purpose('Display an inspiring quote')->hourly();
 
-// Schedule::command('app:data-cleanup')->daily();
-// Schedule::command('app:sync-inv-query')->everyFiveMinutes();
+Schedule::command('app:data-cleanup')->daily();
+Schedule::command('app:sync-inv-query')->everyFiveMinutes();
 
 // Uptime monitoring - check every minute
 Schedule::command('uptime:check')->everyMinute();
