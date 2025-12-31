@@ -209,13 +209,13 @@ new class extends Component {
 
         <div class="mt-6">
             <h2 class="font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-                {{ __("Durasi Standar") }}
+                {{ __("Standard Durasi") }}
             </h2>
             <div class="mb-3 mt-2">
                 <label class="block text-xs uppercase text-neutral-500">{{ __("Durasi Standar Operasi (detik)") }}</label>
                 <div class="grid grid-cols-4 gap-2 mt-2">
-                    <x-text-input-t class="text-center" wire:model="std_duration.0" type="number" min="1" />
-                    <x-text-input-t class="text-center" wire:model="std_duration.1" type="number" min="1" />
+                    <x-text-input-t class="text-center" placeholder="60" wire:model="std_duration.0" type="number" min="1" />
+                    <x-text-input-t class="text-center" placeholder="60" wire:model="std_duration.1" type="number" min="1" />
                 </div>
             </div>
             @error("std_duration.*")

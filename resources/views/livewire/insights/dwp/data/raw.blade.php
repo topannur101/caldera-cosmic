@@ -212,9 +212,9 @@ new #[Layout("layouts.app")] class extends Component {
                 // Duration greater than 10 and less than 13 seconds
                 $query->whereRaw("TIME_TO_SEC(duration) > 10 AND TIME_TO_SEC(duration) < 13");
                 break;
-            case '13-14':
-                // Duration between 13 and 14 seconds
-                $query->whereRaw("TIME_TO_SEC(duration) BETWEEN 13 AND 14");
+            case '13-15':
+                // Duration between 13 and 15 seconds
+                $query->whereRaw("TIME_TO_SEC(duration) BETWEEN 13 AND 15");
                 break;
             case '>16':
                 // Duration 16 seconds or more
@@ -350,12 +350,15 @@ new #[Layout("layouts.app")] class extends Component {
 
                 $columns = [
                     __("Line"),
-                    __("Cumulative"),
+                    __("Position"),
                     __("Machine"),
                     __("Duration"),
+                    __("Toe/Heel"),
+                    __("Side"),
+                    __("Result"),
+                    __("Result Duration"),
                     __("Created At"),
                 ];
-
                 $callback = function () use ($columns) {
                     $file = fopen("php://output", "w");
                     fputcsv($file, $columns);
@@ -363,11 +366,56 @@ new #[Layout("layouts.app")] class extends Component {
                     $this->getCountsQuery()->chunk(1000, function ($counts) use ($file) {
                         foreach ($counts as $count) {
                             $device = $this->getDeviceForLine($count->line);
+                            $pv = json_decode($count->pv, true)['waveforms'];
+                            $toe = $this->getMedian($pv[0]);
+                            $side = $this->getMedian($pv[1]);
+                            
+                            // Get standards specific to this count's line and machine
+                            $standards = $this->getStandardsForCount($count->line, $count->mechine);
+                            
+                            $resultToe = $this->compareWithStandards($toe, $standards['th']);
+                            $resultSide = $this->compareWithStandards($side, $standards['side']);
+                            $resultToe = $resultToe['is_standard'] == true ? "standard" : "non-standard";
+                            $resultSide = $resultSide['is_standard'] == true ? "standard" : "non-standard";
+                            $finallResult = "standard";
+                            // jika salah satu not standar maka = "non-standard"
+                            if ($resultToe === "non-standard" || $resultSide === "non-standard") {
+                                $finallResult = "non-standard";
+                            }
+                            
+                            // Calculate duration in seconds
+                            $resultFinalDuration = "";
+                            if (!empty($count->duration)) {
+                                try {
+                                    $durationCarbon = Carbon::parse($count->duration);
+                                    $durationSeconds = ($durationCarbon->hour ?? 0) * 3600 + ($durationCarbon->minute ?? 0) * 60 + ($durationCarbon->second ?? 0);
+                                    
+                                    // Categorize based on seconds
+                                    if ($durationSeconds < 10) {
+                                        $resultFinalDuration = "too_early";
+                                    } elseif ($durationSeconds >= 10 && $durationSeconds < 13) {
+                                        $resultFinalDuration = "early";
+                                    } elseif ($durationSeconds >= 13 && $durationSeconds <= 15) {
+                                        $resultFinalDuration = "on_time";
+                                    } elseif ($durationSeconds > 16) {
+                                        $resultFinalDuration = "late";
+                                    } else {
+                                        $resultFinalDuration = "normal";
+                                    }
+                                } catch (\Exception $e) {
+                                    $resultFinalDuration = "unknown";
+                                }
+                            }
+
                             fputcsv($file, [
                                 $count->line,
-                                $count->cumulative,
+                                $count->position,
                                 $count->mechine,
                                 $count->duration,
+                                $toe,
+                                $side,
+                                $finallResult,
+                                $resultFinalDuration,
                                 $count->created_at,
                             ]);
                         }
@@ -538,7 +586,7 @@ new #[Layout("layouts.app")] class extends Component {
                             <option value="">{{ __("All") }}</option>
                             <option value="<10">{{ __("<10") }}</option>
                             <option value="10-13">{{ __("10-13") }}</option>
-                            <option value="13-14">{{ __("13-14") }}</option>
+                            <option value="13-15">{{ __("13-15") }}</option>
                             <option value=">16">{{ __(">16") }}</option>
                     </x-select>
                 </div>

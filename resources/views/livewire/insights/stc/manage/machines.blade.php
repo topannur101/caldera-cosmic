@@ -149,8 +149,7 @@ new #[Layout("layouts.app")] class extends Component {
                                     @endphp
                                     @if ($durationStd && is_array($durationStd))
                                         <div class="text-xs">
-                                            <div><i class="icon-square-minus text-red-600"></i> {{ $minFormatted }}</div>
-                                            <div><i class="icon-square-plus text-green-600"></i> {{ $maxFormatted }}</div>
+                                            <div>{{ $minFormatted }} - {{ $maxFormatted }}</div>
                                         </div>
                                     @else
                                         <span class="text-neutral-400">-</span>

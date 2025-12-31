@@ -381,7 +381,6 @@ new class extends Component {
                         <th>{{ __("Integritas") }}</th>
                         <th>{{ __("Dibuat pada") }}</th>
                         <th>{{ __("Waktu mulai") }}</th>
-                        <th>{{ __("Std Duration")}} </th>
                         <th>{{ __("Durasi") }}</th>
                         <th>{{ __("Latensi") }}</th>
                         <th>{{ __("Operator") }}</th>
@@ -405,28 +404,8 @@ new class extends Component {
                             <td>
                                 @php
                                     $stdDuration = is_array($d_sum->machine_std_duration) ? $d_sum->machine_std_duration : json_decode($d_sum->machine_std_duration, true);
-                                    $stdMin = $stdDuration[0] ?? null;
-                                    $stdMax = $stdDuration[1] ?? null;
-                                    
-                                    if ($stdMin) {
-                                        $stdMinFormatted = $stdMin >= 60 
-                                            ? round($stdMin / 60) . 'm' 
-                                            : $stdMin . 's';
-                                    } else {
-                                        $stdMinFormatted = '-';
-                                    }
-                                    if ($stdMax) {
-                                        $stdMaxFormatted = $stdMax >= 60 
-                                            ? round($stdMax / 60) . 'm' 
-                                            : $stdMax . 's';
-                                    } else {
-                                        $stdMaxFormatted = '-';
-                                    }
-                                @endphp
-                                <p>{{ $stdMinFormatted }} - {{ $stdMaxFormatted }}</p>
-                            </td>
-                            <td>
-                                @php
+                                    $stdMin   = $stdDuration[0] ?? null;
+                                    $stdMax   = $stdDuration[1] ?? null;
                                     $duration = $d_sum->duration();
                                     $durationSeconds = null;
                                     

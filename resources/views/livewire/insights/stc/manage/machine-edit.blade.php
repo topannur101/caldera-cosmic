@@ -56,7 +56,7 @@ new class extends Component {
             $this->at_adjust_strength = is_array($machine->at_adjust_strength) ? $machine->at_adjust_strength : ["upper" => [0, 0, 0, 0, 0, 0, 0, 0], "lower" => [0, 0, 0, 0, 0, 0, 0, 0]];
             $this->section_limits_high = is_array($machine->section_limits_high) ? $machine->section_limits_high : [83, 78, 73, 68, 63, 58, 53, 48];
             $this->section_limits_low = is_array($machine->section_limits_low) ? $machine->section_limits_low : [73, 68, 63, 58, 53, 48, 43, 38];
-            $this->std_duration = json_decode($machine->std_duration, true) ?: [60, 60]; //minutes
+            $this->std_duration = $machine->std_duration ? (is_array($machine->std_duration) ? $machine->std_duration : json_decode($machine->std_duration, true)) : [60, 60];
 
             $this->resetValidation();
         } else {

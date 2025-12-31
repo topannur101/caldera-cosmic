@@ -24,7 +24,7 @@ new #[Layout("layouts.app")] class extends Component {
     public $device_id;
 
     #[Url]
-    public string $line = "G5";
+    public string $line = "";
 
     // Selected machine filter (bound to the view via wire:model)
     #[Url]
@@ -582,6 +582,9 @@ new #[Layout("layouts.app")] class extends Component {
                 <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
                 <x-select wire:model.live="line" wire:change="dispatch('updated')" class="w-full lg:w-32">
                     <option value="g5">G5</option>
+                    <option value="g3">G3</option>
+                    <option value="g2">G2</option>
+
                 </x-select>
             </div>
             <div>
@@ -721,6 +724,7 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
     </div>
     <!-- summary pressure  -->
+    <h1 class="text-xl text-neutral-900 dark:text-neutral-100 font-semibold mb-4 mt-5">Summary Pressure Readings</h1>
     <div class="grid grid-cols-6 gap-2 mt-2">
         <!-- Pressure Stacked Bar Chart -->
          <div class="col-span-4 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
@@ -874,6 +878,13 @@ new #[Layout("layouts.app")] class extends Component {
                                 animations: {
                                     enabled: true,
                                     speed: 350
+                                },
+                                events: {
+                                    dataPointSelection:  function(event, chartContext, config) {
+                                        const categories = ['on-time', 'too-early-13s', 'too-early-10s', 'too-late'];
+                                        const selectedCategory = categories[config.dataPointIndex];
+                                        window.location.href = `/insights/dwp/data?view=raw&category=${selectedCategory}`;
+                                    }
                                 }
                             },
                             labels: labels,
@@ -940,13 +951,16 @@ new #[Layout("layouts.app")] class extends Component {
             </div>
          </div>
     </div>
+    <h1 class="text-xl text-neutral-900 dark:text-neutral-100 font-semibold mb-4 mt-5">Summary Press Time</h1>
+    <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+        <h3 class="font-bold text-4xl text-center">Emergency Pressed : <span class="text-4xl font-bold text-red-600">3000</span></h3>
+    </div>
     <div class="grid grid-cols-6 gap-2 mt-2">
         <!-- Duration Pie Chart - Percentage Distribution -->
         <div class="col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <div
                 x-data="{
                     pieChart: null,
-
                     initOrUpdatePieChart(durationData) {
                         const chartEl = this.$refs.pieChartContainer;
                         if (!chartEl) {
@@ -983,6 +997,14 @@ new #[Layout("layouts.app")] class extends Component {
                                 animations: {
                                     enabled: true,
                                     speed: 350
+                                },
+                                events: {
+                                    dataPointSelection:  function(event, chartContext, config) {
+                                        const categories = ['<10', '10-13', '13-15', '>16'];
+                                        const selectedCategory = categories[config.dataPointIndex];
+                                        const currentLine = '{{ $line }}';
+                                        window.location.href = `/insights/dwp/data?view=raw&presstime=${selectedCategory}&line=${currentLine}`;
+                                    }
                                 }
                             },
                             labels: labels,
@@ -1050,7 +1072,10 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
          <!-- Duration Chart - Stacked Bar Chart -->
         <div class="col-span-4 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-            <div
+        <div class="grid grid-cols-1 mt-4">
+            <h1 class="font-bold text-xl">Press Time By Machine</h1>
+        </div>    
+        <div class="mt-4"
                 x-data="{
                     durationChart: null,
 
@@ -1078,6 +1103,24 @@ new #[Layout("layouts.app")] class extends Component {
                                 animations: {
                                     enabled: true,
                                     speed: 350
+                                },
+                                events:  {
+                                    dataPointSelection: function(event, chartContext, config) {
+                                        const machineIndex = config.dataPointIndex; // Which machine bar was clicked
+                                        const seriesIndex = config.seriesIndex; // Which segment/category was clicked
+                                        
+                                        const machineName = categories[machineIndex];
+                                        const machineNumber = machineName.split(' ')[1];
+                                        
+                                        // Map series index to press time category
+                                        const presstimeCategories = ['<10', '10-13', '13-15', '>16'];
+                                        const presstime = presstimeCategories[seriesIndex];
+
+                                        const currentLine = '{{ $line }}';
+                                        console.log('Current Line:', currentLine);
+                                        // Redirect with both parameters
+                                        window.location.href = `/insights/dwp/data?view=raw&mechine=${machineNumber}&presstime=${presstime}&line=${currentLine}`;
+                                    }
                                 }
                             },
                             plotOptions: {
@@ -1098,9 +1141,6 @@ new #[Layout("layouts.app")] class extends Component {
                             stroke: {
                                 width: 1,
                                 colors: ['#fff']
-                            },
-                            title: {
-                                text: 'Press Time by Machine'
                             },
                             xaxis: {
                                 categories: categories,
