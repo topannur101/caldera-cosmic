@@ -1103,7 +1103,9 @@ new class extends Component {
                                 <div>
                                     <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
                                     <div class="p-2 rounded-md bg-gray-100 dark:bg-neutral-900 font-bold text-lg text-neutral-700 dark:text-neutral-200">
-                                        {{ $machine['output']['left'] ?? 0 }} pairs
+                                        Left : {{ $machine['output']['left'] ?? 0 }} EA
+                                        |
+                                        Right : {{ $machine['output']['right'] ?? 0 }} EA
                                     </div>
                                 </div>
                             </div>

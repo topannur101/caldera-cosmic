@@ -206,6 +206,7 @@ new #[Layout("layouts.app")] class extends Component {
         
         return [
             "counts" => $counts,
+            "emergencyCounts" => $this->getEmergencyPressCount(),
         ];
     }
 
@@ -365,7 +366,6 @@ new #[Layout("layouts.app")] class extends Component {
         // Filter data with duration information
         $durationData = $data->filter(function($record) {
             return !is_null($record->duration) 
-                && $record->position === 'L' 
                 && !is_null($record->mechine);
         });
 
@@ -440,7 +440,6 @@ new #[Layout("layouts.app")] class extends Component {
         // Filter data with pressure information
         $pressureData = $data->filter(function($record) {
             return !is_null($record->pv) 
-                && $record->position === 'L' 
                 && !is_null($record->mechine);
         });
 
@@ -530,6 +529,43 @@ new #[Layout("layouts.app")] class extends Component {
         $this->dispatch('refresh-pressure-summary-chart', [
             'pressureData' => $chartData,
         ]);
+    }
+
+    /** 
+     * Make function for get emergency press count
+     * get data from table ins_dwp_counts where duration < 10
+     * Returns array with counts grouped by machine
+     */
+    public function getEmergencyPressCount(){
+        $start = Carbon::parse($this->start_at);
+        $end = Carbon::parse($this->end_at)->endOfDay();
+
+        $query = InsDwpCount::whereBetween("created_at", [$start, $end])
+            ->where('duration', '<', 10)
+            ->selectRaw('mechine, COUNT(*) as count')
+            ->groupBy('mechine');
+
+        if ($this->line) {
+            $query->where("line", "like", "%" . strtoupper(trim($this->line)) . "%");
+        }
+
+        if (!empty($this->position)) {
+            $query->where('position', $this->position);
+        }
+
+        if (!empty($this->machine)) {
+            $query->where('mechine', $this->machine);
+        }
+
+        $results = $query->get()->pluck('count', 'mechine')->toArray();
+        
+        // Ensure all machines (1-4) are present in the result
+        return [
+            1 => $results[1] ?? 0,
+            2 => $results[2] ?? 0,
+            3 => $results[3] ?? 0,
+            4 => $results[4] ?? 0,
+        ];
     }
 }; ?>
 
@@ -952,8 +988,23 @@ new #[Layout("layouts.app")] class extends Component {
          </div>
     </div>
     <h1 class="text-xl text-neutral-900 dark:text-neutral-100 font-semibold mb-4 mt-5">Summary Press Time</h1>
-    <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-        <h3 class="font-bold text-4xl text-center">Emergency Pressed : <span class="text-4xl font-bold text-red-600">3000</span></h3>
+    <div class="grid grid-cols-4 gap-2">
+        <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <p class="text-neutral-600">Machine 1</p>
+            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[1] }}</span></h3>
+        </div>
+        <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <p class="text-neutral-600">Machine 2</p>
+            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[2] }}</span></h3>
+        </div>
+        <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <p class="text-neutral-600">Machine 3</p>
+            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[3] }}</span></h3>
+        </div>
+        <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <p class="text-neutral-600">Machine 4</p>
+            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[4] }}</span></h3>
+        </div>
     </div>
     <div class="grid grid-cols-6 gap-2 mt-2">
         <!-- Duration Pie Chart - Percentage Distribution -->
