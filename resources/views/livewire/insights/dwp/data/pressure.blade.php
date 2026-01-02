@@ -991,7 +991,7 @@ new #[Layout("layouts.app")] class extends Component {
     <div class="grid grid-cols-4 gap-2">
         <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <p class="text-neutral-600">Machine 1</p>
-            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[1] }}</span></h3>
+            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <br><span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[1] }}</span></h3>
         </div>
         <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <p class="text-neutral-600">Machine 2</p>
@@ -999,11 +999,11 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
         <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <p class="text-neutral-600">Machine 3</p>
-            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[3] }}</span></h3>
+            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <br><span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[3] }}</span></h3>
         </div>
         <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <p class="text-neutral-600">Machine 4</p>
-            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[4] }}</span></h3>
+            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <br><span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[4] }}</span></h3>
         </div>
     </div>
     <div class="grid grid-cols-6 gap-2 mt-2">
