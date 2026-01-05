@@ -32,7 +32,7 @@ new #[Layout("layouts.app")] class extends Component {
 
     // Selected position filter (L for Left, R for Right)
     #[Url]
-    public string $position = "L";
+    public string $position = "";
 
     public array $devices = [];
     public int $perPage = 20;
@@ -620,7 +620,6 @@ new #[Layout("layouts.app")] class extends Component {
                     <option value="g5">G5</option>
                     <option value="g3">G3</option>
                     <option value="g2">G2</option>
-
                 </x-select>
             </div>
             <div>
@@ -917,9 +916,9 @@ new #[Layout("layouts.app")] class extends Component {
                                 },
                                 events: {
                                     dataPointSelection:  function(event, chartContext, config) {
-                                        const categories = ['on-time', 'too-early-13s', 'too-early-10s', 'too-late'];
+                                        const categories = ['outstandar', 'outstandar', 'standard'];
                                         const selectedCategory = categories[config.dataPointIndex];
-                                        window.location.href = `/insights/dwp/data?view=raw&category=${selectedCategory}`;
+                                        window.location.href = `/insights/dwp/data?view=raw&status=${selectedCategory}`;
                                     }
                                 }
                             },
@@ -995,7 +994,7 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
         <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <p class="text-neutral-600">Machine 2</p>
-            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[2] }}</span></h3>
+            <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <br><span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[2] }}</span></h3>
         </div>
         <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
             <p class="text-neutral-600">Machine 3</p>

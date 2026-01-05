@@ -33,6 +33,9 @@ new #[Layout("layouts.app")] class extends Component {
     #[Url]
     public string $presstime = "";
 
+    #[Url]
+    public string $status = "";
+
     public array $devices = [];
     public int $perPage = 20;
     public string $view = "raw";
@@ -266,7 +269,57 @@ new #[Layout("layouts.app")] class extends Component {
     #[On("updated")]
     public function with(): array
     {
-        $counts = $this->getCountsQuery()->paginate($this->perPage);
+        $query = $this->getCountsQuery();
+        
+        // If status filter is applied, we need to filter based on pressure value standard
+        if ($this->status) {
+            $allCounts = $query->get();
+            $filteredCounts = $allCounts->filter(function($count) {
+                $pv = json_decode($count->pv, true);
+                if (!isset($pv['waveforms']) || !isset($pv['timestamps'])) {
+                    return false;
+                }
+                
+                // Use repeatWaveform to match the display calculation
+                $toeHeelArray = $this->repeatWaveform($pv['waveforms'][0] ?? [], $pv['timestamps'] ?? [], (int)($count->duration ?? 0));
+                $sideArray = $this->repeatWaveform($pv['waveforms'][1] ?? [], $pv['timestamps'] ?? [], (int)($count->duration ?? 0));
+                
+                $toe = $toeHeelArray ? $this->getMedian($toeHeelArray) : 0;
+                $side = $sideArray ? $this->getMedian($sideArray) : 0;
+                
+                // Get standards for this specific count's line and machine
+                $standards = $this->getStandardsForCount($count->line, $count->mechine);
+                
+                // Standard: value is within [min, max] range
+                // toe/heel must be between stdTh[0] (min) and stdTh[1] (max)
+                // side must be between stdSide[0] (min) and stdSide[1] (max)
+                $isToeStandard = ($toe >= $standards['th'][0] && $toe <= $standards['th'][1]);
+                $isSideStandard = ($side >= $standards['side'][0] && $side <= $standards['side'][1]);
+                $isStandard = $isToeStandard && $isSideStandard;
+                
+                if ($this->status === 'standard') {
+                    return $isStandard;
+                } else if ($this->status === 'outstandar') {
+                    return !$isStandard;
+                }
+                
+                return true;
+            });
+            
+            // Manual pagination
+            $currentPage = $this->getPage();
+            $items = $filteredCounts->forPage($currentPage, $this->perPage);
+            $counts = new \Illuminate\Pagination\LengthAwarePaginator(
+                $items,
+                $filteredCounts->count(),
+                $this->perPage,
+                $currentPage,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
+        } else {
+            $counts = $query->paginate($this->perPage);
+        }
+        
         return [
             "counts" => $counts,
         ];
@@ -564,7 +617,7 @@ new #[Layout("layouts.app")] class extends Component {
             <div class="grid grid-cols-2 lg:flex gap-3">
                 <div>
                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
-                    <x-select wire:model.live="line" class="w-full lg:w-32">
+                    <x-select wire:model.live="line" class="w-full lg:w-24">
                             <option value=""></option>
                             <option value="a1">A1</option>
                             <option value="g5">G5</option>
@@ -572,7 +625,7 @@ new #[Layout("layouts.app")] class extends Component {
                 </div>
                 <div>
                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Machine") }}</label>
-                    <x-select wire:model.live="mechine" class="w-full lg:w-32">
+                    <x-select wire:model.live="mechine" class="w-full lg:w-24">
                             <option value=""></option>
                             <option value="1">1</option>
                             <option value="2">2</option>
@@ -582,12 +635,20 @@ new #[Layout("layouts.app")] class extends Component {
                 </div>
                 <div>
                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Press Time") }}</label>
-                    <x-select wire:model.live="presstime" class="w-full lg:w-32">
+                    <x-select wire:model.live="presstime" class="w-full lg:w-24">
                             <option value="">{{ __("All") }}</option>
                             <option value="<10">{{ __("<10") }}</option>
                             <option value="10-13">{{ __("10-13") }}</option>
                             <option value="13-15">{{ __("13-15") }}</option>
                             <option value=">16">{{ __(">16") }}</option>
+                    </x-select>
+                </div>
+                <div>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Status Readings") }}</label>
+                    <x-select wire:model.live="status" class="w-full lg:w-24">
+                            <option value="">{{ __("All") }}</option>
+                            <option value="standard">{{ __("Standard") }}</option>
+                            <option value="outstandar">{{ __("Out Of Standard") }}</option>
                     </x-select>
                 </div>
             </div>
