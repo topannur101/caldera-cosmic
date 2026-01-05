@@ -644,7 +644,7 @@ new #[Layout("layouts.app")] class extends Component {
                     </x-select>
                 </div>
                 <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Status Readings") }}</label>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Status") }}</label>
                     <x-select wire:model.live="status" class="w-full lg:w-24">
                             <option value="">{{ __("All") }}</option>
                             <option value="standard">{{ __("Standard") }}</option>
