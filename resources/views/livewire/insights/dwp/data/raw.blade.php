@@ -213,11 +213,11 @@ new #[Layout("layouts.app")] class extends Component {
                 break;
             case '10-13':
                 // Duration greater than 10 and less than 13 seconds
-                $query->whereRaw("TIME_TO_SEC(duration) > 10 AND TIME_TO_SEC(duration) < 13");
+                $query->whereRaw("TIME_TO_SEC(duration) > 9 AND TIME_TO_SEC(duration) < 13");
                 break;
-            case '13-15':
-                // Duration between 13 and 15 seconds
-                $query->whereRaw("TIME_TO_SEC(duration) BETWEEN 13 AND 15");
+            case '13-16':
+                // Duration between 13 and 16 seconds
+                $query->whereRaw("TIME_TO_SEC(duration) BETWEEN 13 AND 16");
                 break;
             case '>16':
                 // Duration 16 seconds or more
@@ -271,7 +271,7 @@ new #[Layout("layouts.app")] class extends Component {
     {
         $query = $this->getCountsQuery();
         
-        // If status filter is applied, we need to filter based on pressure value standard
+        // If status filter is applied, we need to filter based on pressure value ranges
         if ($this->status) {
             $allCounts = $query->get();
             $filteredCounts = $allCounts->filter(function($count) {
@@ -284,26 +284,24 @@ new #[Layout("layouts.app")] class extends Component {
                 $toeHeelArray = $this->repeatWaveform($pv['waveforms'][0] ?? [], $pv['timestamps'] ?? [], (int)($count->duration ?? 0));
                 $sideArray = $this->repeatWaveform($pv['waveforms'][1] ?? [], $pv['timestamps'] ?? [], (int)($count->duration ?? 0));
                 
-                $toe = $toeHeelArray ? $this->getMedian($toeHeelArray) : 0;
-                $side = $sideArray ? $this->getMedian($sideArray) : 0;
+                // Match chart calculation: merge arrays and get median (not max of separate medians)
+                $allPressureValues = array_merge($toeHeelArray, $sideArray);
+                $medianPressure = $this->getMedian($allPressureValues);
                 
-                // Get standards for this specific count's line and machine
-                $standards = $this->getStandardsForCount($count->line, $count->mechine);
-                
-                // Standard: value is within [min, max] range
-                // toe/heel must be between stdTh[0] (min) and stdTh[1] (max)
-                // side must be between stdSide[0] (min) and stdSide[1] (max)
-                $isToeStandard = ($toe >= $standards['th'][0] && $toe <= $standards['th'][1]);
-                $isSideStandard = ($side >= $standards['side'][0] && $side <= $standards['side'][1]);
-                $isStandard = $isToeStandard && $isSideStandard;
-                
-                if ($this->status === 'standard') {
-                    return $isStandard;
-                } else if ($this->status === 'outstandar') {
-                    return !$isStandard;
+                // Filter based on pressure ranges - matching chart categories exactly
+                switch ($this->status) {
+                    case '<20':
+                        return $medianPressure < 20;
+                    case '<30':
+                        // Warning category: >= 20 AND < 30
+                        return $medianPressure >= 20 && $medianPressure < 30;
+                    case '30-45':
+                        return $medianPressure >= 30 && $medianPressure <= 45;
+                    case '>45':
+                        return $medianPressure > 45;
+                    default:
+                        return true;
                 }
-                
-                return true;
             });
             
             // Manual pagination
@@ -443,17 +441,15 @@ new #[Layout("layouts.app")] class extends Component {
                                     $durationCarbon = Carbon::parse($count->duration);
                                     $durationSeconds = ($durationCarbon->hour ?? 0) * 3600 + ($durationCarbon->minute ?? 0) * 60 + ($durationCarbon->second ?? 0);
                                     
-                                    // Categorize based on seconds
+                                    // Categorize based on seconds (4 conditions only)
                                     if ($durationSeconds < 10) {
                                         $resultFinalDuration = "too_early";
                                     } elseif ($durationSeconds >= 10 && $durationSeconds < 13) {
                                         $resultFinalDuration = "early";
-                                    } elseif ($durationSeconds >= 13 && $durationSeconds <= 15) {
+                                    } elseif ($durationSeconds >= 13 && $durationSeconds <= 16) {
                                         $resultFinalDuration = "on_time";
-                                    } elseif ($durationSeconds > 16) {
-                                        $resultFinalDuration = "late";
                                     } else {
-                                        $resultFinalDuration = "normal";
+                                        $resultFinalDuration = "late";
                                     }
                                 } catch (\Exception $e) {
                                     $resultFinalDuration = "unknown";
@@ -639,16 +635,18 @@ new #[Layout("layouts.app")] class extends Component {
                             <option value="">{{ __("All") }}</option>
                             <option value="<10">{{ __("<10") }}</option>
                             <option value="10-13">{{ __("10-13") }}</option>
-                            <option value="13-15">{{ __("13-15") }}</option>
+                            <option value="13-16">{{ __("13-16") }}</option>
                             <option value=">16">{{ __(">16") }}</option>
                     </x-select>
                 </div>
                 <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Status") }}</label>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Pressure") }}</label>
                     <x-select wire:model.live="status" class="w-full lg:w-24">
                             <option value="">{{ __("All") }}</option>
-                            <option value="standard">{{ __("Standard") }}</option>
-                            <option value="outstandar">{{ __("Out Of Standard") }}</option>
+                            <option value="<20">{{ __("<20kg") }}</option>
+                            <option value="<30">{{ __("<30kg") }}</option>
+                            <option value="30-45">{{ __("30-45kg") }}</option>
+                            <option value=">45">{{ __(">45kg") }}</option>
                     </x-select>
                 </div>
             </div>

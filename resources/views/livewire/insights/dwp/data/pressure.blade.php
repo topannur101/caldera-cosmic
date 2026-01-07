@@ -143,6 +143,53 @@ new #[Layout("layouts.app")] class extends Component {
     }
 
     /**
+     * Repeat waveform values based on timestamps and duration
+     * Same logic as raw data filter for consistent calculations
+     */
+    private function repeatWaveform(array $valuesRaw, array $timestampsRaw, int $duration): array {
+        $count = count($valuesRaw);
+        if ($count === 0 || count($timestampsRaw) !== $count) {
+            return [];
+        }
+        // Normalize timestamps to seconds from start
+        $startTs = (int)($timestampsRaw[0] / 1000);
+        $secValueMap = [];
+        $maxSec = 0;
+        for ($i = 0; $i < $count; $i++) {
+            $sec = (int)($timestampsRaw[$i] / 1000) - $startTs;
+            $secValueMap[$sec] = $valuesRaw[$i];
+            if ($sec > $maxSec) $maxSec = $sec;
+        }
+        // Build result array with repeated/held values
+        $result = [];
+        $lastValue = 0;
+        for ($sec = 0; $sec <= $maxSec; $sec++) {
+            if (isset($secValueMap[$sec])) {
+                $lastValue = $secValueMap[$sec];
+            }
+            $result[] = $lastValue;
+        }
+        // add 0 for lasting seconds up to duration
+        for ($sec = $maxSec + 1; $sec < $duration; $sec++) {
+            $result[] = 0;
+        }
+
+        // Ensure result has exactly $duration elements
+        if (count($result) < $duration) {
+            $result = array_pad($result, $duration, 0);
+        } elseif (count($result) > $duration) {
+            $result = array_slice($result, 0, $duration);
+        }
+
+        // Always set the last duration slot to zero so the chart ends at 0
+        if ($duration > 0) {
+            $result[$duration - 1] = 0;
+        }
+
+        return $result;
+    }
+
+    /**
      * Calculates the 5-point summary (min, q1, median, q3, max) for a boxplot.
      */
     private function getBoxplotSummary(array $data): ?array
@@ -567,6 +614,38 @@ new #[Layout("layouts.app")] class extends Component {
             4 => $results[4] ?? 0,
         ];
     }
+
+    /**
+     * Navigate to raw data view with filters
+     */
+    public function navigateToRaw($filters = [])
+    {
+        $params = ['view' => 'raw'];
+        
+        // Add provided filters
+        foreach ($filters as $key => $value) {
+            if (!empty($value)) {
+                // Format dates for datetime-local inputs
+                if ($key === 'start_at') {
+                    // If date only (no time), append T00:00
+                    if (!str_contains($value, 'T')) {
+                        $value = $value . 'T00:00';
+                    }
+                } elseif ($key === 'end_at') {
+                    // If date only (no time), append T23:59
+                    if (!str_contains($value, 'T')) {
+                        $value = $value . 'T23:59';
+                    }
+                }
+                $params[$key] = $value;
+            }
+        }
+        
+        // Build query string
+        $queryString = http_build_query($params);
+        
+        return redirect('/insights/dwp/data?' . $queryString);
+    }
 }; ?>
 
 <div>
@@ -643,7 +722,7 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
     </div>
   </div>
-  <div class="overflow-hidden">
+  <div class="overflow-visible">
     <div class="grid grid-cols-1 gap-2 md:grid-cols-1 md:gap-2">
          <!-- chart section type boxplot -->
         <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
@@ -791,6 +870,27 @@ new #[Layout("layouts.app")] class extends Component {
                                 animations: {
                                     enabled: true,
                                     speed: 350
+                                },
+                                events: {
+                                    dataPointSelection:  function(event, chartContext, config) {
+                                        const machines = ['1', '2', '3', '4'];
+                                        const selectedMachine = machines[config.dataPointIndex];
+                                        const currentLine = '{{ $line }}';
+                                        const currentPosition = '{{ $position }}';
+                                        const status = ['<20', '<30', '30-45', '>45'][config.seriesIndex];
+                                        
+                                        // Use Livewire navigation
+                                        window.dispatchEvent(new CustomEvent('navigate-to-raw', {
+                                            detail: {
+                                                mechine: selectedMachine,
+                                                line: currentLine,
+                                                position: currentPosition,
+                                                start_at: $wire.start_at,
+                                                end_at: $wire.end_at,
+                                                status: status
+                                            }
+                                        }));
+                                    }
                                 }
                             },
                             plotOptions: {
@@ -890,10 +990,9 @@ new #[Layout("layouts.app")] class extends Component {
                         const categoryColors = {};
                         series.forEach(category => {
                             const total = category.data.reduce((sum, val) => sum + val, 0);
-                            if (total > 0) {
-                                categoryTotals[category.name] = total;
-                                categoryColors[category.name] = category.color;
-                            }
+                            // Always include all categories, even if total is 0
+                            categoryTotals[category.name] = total;
+                            categoryColors[category.name] = category.color;
                         });
 
                         const labels = Object.keys(categoryTotals);
@@ -916,9 +1015,17 @@ new #[Layout("layouts.app")] class extends Component {
                                 },
                                 events: {
                                     dataPointSelection:  function(event, chartContext, config) {
-                                        const categories = ['outstandar', 'outstandar', 'standard'];
+                                        const categories = ['<20', '<30', '30-45', '>45'];
                                         const selectedCategory = categories[config.dataPointIndex];
-                                        window.location.href = `/insights/dwp/data?view=raw&status=${selectedCategory}`;
+                                        
+                                        // Use Livewire navigation
+                                        window.dispatchEvent(new CustomEvent('navigate-to-raw', {
+                                            detail: {
+                                                status: selectedCategory,
+                                                start_at: $wire.start_at,
+                                                end_at: $wire.end_at
+                                            }
+                                        }));
                                     }
                                 }
                             },
@@ -987,22 +1094,74 @@ new #[Layout("layouts.app")] class extends Component {
          </div>
     </div>
     <h1 class="text-xl text-neutral-900 dark:text-neutral-100 font-semibold mb-4 mt-5">Summary Press Time</h1>
-    <div class="grid grid-cols-4 gap-2">
-        <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+    <div class="grid grid-cols-4 gap-2 overflow-visible">
+        <div class="relative bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4"
+             x-data="{ showTooltip: false }"
+             @mouseenter="showTooltip = true"
+             @mouseleave="showTooltip = false">
             <p class="text-neutral-600">Machine 1</p>
             <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <br><span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[1] }}</span></h3>
+            <div x-show="showTooltip"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95"
+                 class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 px-3 py-2 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+                Number of emergency presses for Machine 1 (press time < 10s)
+            </div>
         </div>
-        <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+        <div class="relative bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4"
+             x-data="{ showTooltip: false }"
+             @mouseenter="showTooltip = true"
+             @mouseleave="showTooltip = false">
             <p class="text-neutral-600">Machine 2</p>
             <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <br><span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[2] }}</span></h3>
+            <div x-show="showTooltip"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95"
+                 class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 px-3 py-2 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+                Number of emergency presses for Machine 2 (press time < 10s)
+            </div>
         </div>
-        <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+        <div class="relative bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4"
+             x-data="{ showTooltip: false }"
+             @mouseenter="showTooltip = true"
+             @mouseleave="showTooltip = false">
             <p class="text-neutral-600">Machine 3</p>
             <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <br><span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[3] }}</span></h3>
+            <div x-show="showTooltip"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95"
+                 class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 px-3 py-2 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+                Number of emergency presses for Machine 3 (press time < 10s)
+            </div>
         </div>
-        <div class="bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+        <div class="relative bg-neutral-200 dark:bg-neutral-800 shadow sm:rounded-lg p-4"
+             x-data="{ showTooltip: false }"
+             @mouseenter="showTooltip = true"
+             @mouseleave="showTooltip = false">
             <p class="text-neutral-600">Machine 4</p>
             <h3 class="font-bold text-2xl text-neutral-600">Emergency Pressed <br><span class="text-4xl font-bold text-red-600">{{ $emergencyCounts[4] }}</span></h3>
+            <div x-show="showTooltip"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95"
+                 class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 px-3 py-2 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+                Number of emergency presses for Machine 4 (press time < 10s)
+            </div>
         </div>
     </div>
     <div class="grid grid-cols-6 gap-2 mt-2">
@@ -1050,10 +1209,19 @@ new #[Layout("layouts.app")] class extends Component {
                                 },
                                 events: {
                                     dataPointSelection:  function(event, chartContext, config) {
-                                        const categories = ['<10', '10-13', '13-15', '>16'];
+                                        const categories = ['<10', '10-13', '13-16', '>16'];
                                         const selectedCategory = categories[config.dataPointIndex];
                                         const currentLine = '{{ $line }}';
-                                        window.location.href = `/insights/dwp/data?view=raw&presstime=${selectedCategory}&line=${currentLine}`;
+                                        
+                                        // Use Livewire navigation
+                                        window.dispatchEvent(new CustomEvent('navigate-to-raw', {
+                                            detail: {
+                                                presstime: selectedCategory,
+                                                line: currentLine,
+                                                start_at: $wire.start_at,
+                                                end_at: $wire.end_at
+                                            }
+                                        }));
                                     }
                                 }
                             },
@@ -1163,13 +1331,21 @@ new #[Layout("layouts.app")] class extends Component {
                                         const machineNumber = machineName.split(' ')[1];
                                         
                                         // Map series index to press time category
-                                        const presstimeCategories = ['<10', '10-13', '13-15', '>16'];
+                                        const presstimeCategories = ['<10', '10-13', '13-16', '>16'];
                                         const presstime = presstimeCategories[seriesIndex];
 
                                         const currentLine = '{{ $line }}';
-                                        console.log('Current Line:', currentLine);
-                                        // Redirect with both parameters
-                                        window.location.href = `/insights/dwp/data?view=raw&mechine=${machineNumber}&presstime=${presstime}&line=${currentLine}`;
+                                        
+                                        // Use Livewire navigation
+                                        window.dispatchEvent(new CustomEvent('navigate-to-raw', {
+                                            detail: {
+                                                mechine: machineNumber,
+                                                presstime: presstime,
+                                                line: currentLine,
+                                                start_at: $wire.start_at,
+                                                end_at: $wire.end_at
+                                            }
+                                        }));
                                     }
                                 }
                             },
@@ -1251,3 +1427,13 @@ new #[Layout("layouts.app")] class extends Component {
     </div>
   </div>
 </div>
+
+@script
+<script>
+// Global event listener for chart navigation
+window.addEventListener('navigate-to-raw', function(event) {
+    const filters = event.detail;
+    $wire.navigateToRaw(filters);
+});
+</script>
+@endscript

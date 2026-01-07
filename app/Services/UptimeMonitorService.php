@@ -271,7 +271,7 @@ class UptimeMonitorService
             // Calculate time difference between now and last data
             $now = Carbon::now();
             $lastDataTime = Carbon::parse($latestCount->created_at);
-            $minutesGap = $now->diffInMinutes($lastDataTime);
+            $minutesGap = abs($now->diffInMinutes($lastDataTime, false));
             
             // If gap is more than 5 minutes, status is idle
             if ($minutesGap > 5) {

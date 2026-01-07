@@ -84,7 +84,7 @@ class InsDwpTimeChart extends Command
         $endAt = Carbon::now()->endOfDay();
         
         // Working hours (8 AM to 5 PM, skipping 12 PM for rest time)
-        $workingHours = [8, 9, 10, 11, 13, 14, 15, 16, 17];
+        $workingHours = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
         
         // Chart configuration addresses (from HMI config)
         $controlAddress = 7000;  // RW-7000: Control/trigger address
@@ -109,7 +109,7 @@ class InsDwpTimeChart extends Command
             }
 
             // Chart configuration
-            $chartLength = 8; // HMI expects 8 data points (see config)
+            $chartLength = 11; // HMI expects 10 data points (see config)
             
             // Send data point count first (RW-7001 = 9)
             if (!$this->option('dry-run')) {
