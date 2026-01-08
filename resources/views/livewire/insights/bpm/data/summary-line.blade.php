@@ -21,6 +21,9 @@ new class extends Component {
     #[Url]
     public $line = '1';
     
+    #[Url]
+    public $condition = 'all';
+    
     public $lastUpdated;
     public $summaryCards = [];
     public $rankingData = [];
@@ -65,6 +68,12 @@ new class extends Component {
         $this->loadData();
         $this->refreshCharts();
     }
+    
+    public function updatedCondition()
+    {
+        $this->loadData();
+        $this->refreshCharts();
+    }
 
     public function loadData()
     {
@@ -72,16 +81,26 @@ new class extends Component {
         $to = Carbon::parse($this->dateTo)->endOfDay();
 
         // Total Emergency for selected plant and line
-        $totalEmergency = InsBpmCount::whereBetween('created_at', [$from, $to])
+        $query = InsBpmCount::whereBetween('created_at', [$from, $to])
             ->where('plant', $this->plant)
-            ->where('line', $this->line)
-            ->sum('incremental');
+            ->where('line', $this->line);
+        
+        if ($this->condition !== 'all') {
+            $query->where('condition', $this->condition);
+        }
+        
+        $totalEmergency = $query->sum('cumulative');
 
         // Emergency by machine for selected plant and line
-        $emergencyByMachine = InsBpmCount::whereBetween('created_at', [$from, $to])
+        $query = InsBpmCount::whereBetween('created_at', [$from, $to])
             ->where('plant', $this->plant)
-            ->where('line', $this->line)
-            ->select('machine', DB::raw('SUM(incremental) as total'))
+            ->where('line', $this->line);
+        
+        if ($this->condition !== 'all') {
+            $query->where('condition', $this->condition);
+        }
+        
+        $emergencyByMachine = $query->select('machine', DB::raw('SUM(cumulative) as total'))
             ->groupBy('machine')
             ->orderByDesc('total')
             ->get();
@@ -162,13 +181,18 @@ new class extends Component {
     private function loadTrendData($from, $to)
     {
         // Get hourly data
-        $hourlyData = InsBpmCount::whereBetween('created_at', [$from, $to])
+        $query = InsBpmCount::whereBetween('created_at', [$from, $to])
             ->where('plant', $this->plant)
-            ->where('line', $this->line)
-            ->select(
+            ->where('line', $this->line);
+        
+        if ($this->condition !== 'all') {
+            $query->where('condition', $this->condition);
+        }
+        
+        $hourlyData = $query->select(
                 'machine',
                 DB::raw('HOUR(created_at) as hour'),
-                DB::raw('SUM(incremental) as total')
+                DB::raw('SUM(cumulative) as total')
             )
             ->groupBy('machine', 'hour')
             ->orderBy('hour')
@@ -326,6 +350,14 @@ new class extends Component {
                     <option value="H">H</option>
                     <option value="I">I</option>
                     <option value="J">J</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">{{ __('CONDITION') }}</label>
+                <select wire:model.live="condition" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm">
+                    <option value="all">All</option>
+                    <option value="hot">Hot</option>
+                    <option value="cold">Cold</option>
                 </select>
             </div>
         </div>

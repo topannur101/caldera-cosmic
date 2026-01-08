@@ -102,11 +102,11 @@ class InsBpmPoll extends Command
     private function initializeLastValues($devices)
     {
         foreach ($devices as $device) {
-            if (!isset($device->config['list_machine'])) {
+            if (!isset($device->config['list_mechine'])) {
                 continue;
             }
             
-            foreach ($device->config['list_machine'] as $machineConfig) {
+            foreach ($device->config['list_mechine'] as $machineConfig) {
                 $machineName = $machineConfig['name'];
                 
                 // Initialize for Hot condition
@@ -154,7 +154,7 @@ class InsBpmPoll extends Command
     {
         $unit_id = 1; // Standard Modbus unit ID
         $readingsCount = 0;
-        foreach ($device->config['list_machine'] as $machineConfig) {
+        foreach ($device->config['list_mechine'] as $machineConfig) {
             $machineName = $machineConfig['name'];
             $hotAddrs    = $machineConfig['addr_hot'];
             $coldAddrs   = $machineConfig['addr_cold'];
@@ -227,12 +227,21 @@ class InsBpmPoll extends Command
         
         // Step 1: Check if this is the first reading
         if (!isset($this->lastCumulativeValues[$key]) || $this->lastCumulativeValues[$key] === null) {
-            // Step 2: First reading - initialize with current value
+            // Step 2: First reading - save initial value to database
+            InsBpmCount::create([
+                'plant' => $device->name,
+                'line' => $line,
+                'machine' => $machineName,
+                'condition' => $condition,
+                'incremental' => 0,
+                'cumulative' => $currentCumulative,
+            ]);
+            
             $this->lastCumulativeValues[$key] = $currentCumulative;
             if ($this->option('d')) {
-                $this->line("    ✓ Initial reading for {$key} - initialized with {$currentCumulative}");
+                $this->line("    ✓ Initial reading for {$key} - saved with cumulative {$currentCumulative}");
             }
-            return 0;
+            return 1;
         }
 
         // Step 3: Check if value is the same as last reading
@@ -332,5 +341,28 @@ class InsBpmPoll extends Command
 
             $this->comment("Device {$deviceName} stats: {$successRate}% success rate ({$stats['success_count']}/{$total})");
         }
+    }
+
+    // on 11 am get curent count and - 1
+    private function adjustCountsAtElevenAM()
+    {
+        $currentHour = Carbon::now()->hour;
+        if ($currentHour === 11 && $this->lastResetDate !== Carbon::now()->toDateString()) {
+            foreach ($this->lastCumulativeValues as $key => $value) {
+                if ($value !== null && $value > 0) {
+                    $this->lastCumulativeValues[$key] = $value - 1;
+                    if ($this->option('d')) {
+                        $this->line("Adjusted {$key} count down by 1 at 11 AM. New baseline: " . ($value - 1));
+                    }
+                }
+            }
+            $this->lastResetDate = Carbon::now()->toDateString();
+        }
+    }
+
+    private function checkItsElevenAM(): bool
+    {
+        $currentHour = Carbon::now()->hour;
+        return $currentHour === 11;
     }
 }
