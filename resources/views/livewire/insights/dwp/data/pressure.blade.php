@@ -512,12 +512,12 @@ new #[Layout("layouts.app")] class extends Component {
                 continue;
             }
             
-            // Extract waveforms based on format
+            // Extract waveforms based on format - using repeatWaveform for consistency with raw.blade.php
             if (isset($arrayPv['waveforms']) && is_array($arrayPv['waveforms'])) {
-                $waveforms = $arrayPv['waveforms'];
-                $toeHeelArray = $waveforms[0] ?? [];
-                $sideArray = $waveforms[1] ?? [];
+                $toeHeelArray = $this->repeatWaveform($arrayPv['waveforms'][0] ?? [], $arrayPv['timestamps'] ?? [], (int)($record->duration ?? 0));
+                $sideArray = $this->repeatWaveform($arrayPv['waveforms'][1] ?? [], $arrayPv['timestamps'] ?? [], (int)($record->duration ?? 0));
             } elseif (isset($arrayPv[0]) && isset($arrayPv[1])) {
+                // Old format without timestamps - use raw arrays
                 $toeHeelArray = $arrayPv[0];
                 $sideArray = $arrayPv[1];
             } else {
