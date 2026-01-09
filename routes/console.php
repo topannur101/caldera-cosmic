@@ -14,5 +14,10 @@ Schedule::command('app:sync-inv-query')->everyFiveMinutes();
 // Uptime monitoring - check every minute
 Schedule::command('uptime:check')->everyMinute();
 
+// BPM scheduled commands
+// Schedule::command('app:ins-bpm-decrement')->dailyAt('11:00');
+// Schedule::command('app:ins-bpm-reset')->dailyAt('07:00');
+Schedule::command('app:ins-bpm-poll')->everyFifteenMinutes();
+
 // DWP scheduled commands
 Schedule::command('app:ins-dwp-reset')->dailyAt('07:00');

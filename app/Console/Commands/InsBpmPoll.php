@@ -38,6 +38,7 @@ class InsBpmPoll extends Command
 
     // In-memory buffer to track last cumulative values per line and condition
     protected  $lastCumulativeValues = []; // Format: ['M1_Hot' => 123, 'M1_Cold' => 456]
+    protected  $lastReadingDates = []; // Format: ['M1_Hot' => '2026-01-09', 'M1_Cold' => '2026-01-09']
     private    $lastDurationValues = [];
     private    $lastSentDurationValues = []; // Track last sent duration per line
     public int $saveDuration = 0;
@@ -118,11 +119,13 @@ class InsBpmPoll extends Command
                 $key = $machineName . '_Hot';
                 if ($lastHot) {
                     $this->lastCumulativeValues[$key] = $lastHot->cumulative;
+                    $this->lastReadingDates[$key] = $lastHot->created_at->toDateString();
                     if ($this->option('d')) {
-                        $this->line("Initialized {$key} with last cumulative: {$lastHot->cumulative}");
+                        $this->line("Initialized {$key} with last cumulative: {$lastHot->cumulative} from {$lastHot->created_at->toDateString()}");
                     }
                 } else {
                     $this->lastCumulativeValues[$key] = null;
+                    $this->lastReadingDates[$key] = null;
                     if ($this->option('d')) {
                         $this->line("{$key} has no previous data - will skip first reading");
                     }
@@ -137,11 +140,13 @@ class InsBpmPoll extends Command
                 $key = $machineName . '_Cold';
                 if ($lastCold) {
                     $this->lastCumulativeValues[$key] = $lastCold->cumulative;
+                    $this->lastReadingDates[$key] = $lastCold->created_at->toDateString();
                     if ($this->option('d')) {
-                        $this->line("Initialized {$key} with last cumulative: {$lastCold->cumulative}");
+                        $this->line("Initialized {$key} with last cumulative: {$lastCold->cumulative} from {$lastCold->created_at->toDateString()}");
                     }
                 } else {
                     $this->lastCumulativeValues[$key] = null;
+                    $this->lastReadingDates[$key] = null;
                     if ($this->option('d')) {
                         $this->line("{$key} has no previous data - will skip first reading");
                     }
@@ -224,10 +229,11 @@ class InsBpmPoll extends Command
     private function processCondition(InsBpmDevice $device, $line, string $machineName, string $condition, int $currentCumulative): int
     {
         $key = $machineName . '_' . $condition;
+        $today = Carbon::now()->toDateString();
         
-        // Step 1: Check if this is the first reading
+        // Step 1: Check if this is the first reading ever
         if (!isset($this->lastCumulativeValues[$key]) || $this->lastCumulativeValues[$key] === null) {
-            // Step 2: First reading - save initial value to database
+            // Step 2: First reading ever - save initial value to database
             InsBpmCount::create([
                 'plant' => $device->name,
                 'line' => $line,
@@ -238,13 +244,34 @@ class InsBpmPoll extends Command
             ]);
             
             $this->lastCumulativeValues[$key] = $currentCumulative;
+            $this->lastReadingDates[$key] = $today;
             if ($this->option('d')) {
                 $this->line("    ✓ Initial reading for {$key} - saved with cumulative {$currentCumulative}");
             }
             return 1;
         }
+        
+        // Step 2: Check if this is the first reading of a new day
+        if ($this->lastReadingDates[$key] !== $today) {
+            // New day - save first reading of the day
+            InsBpmCount::create([
+                'plant' => $device->name,
+                'line' => $line,
+                'machine' => $machineName,
+                'condition' => $condition,
+                'incremental' => 0,
+                'cumulative' => $currentCumulative,
+            ]);
+            
+            $this->lastCumulativeValues[$key] = $currentCumulative;
+            $this->lastReadingDates[$key] = $today;
+            if ($this->option('d')) {
+                $this->line("    ✓ First reading of new day for {$key} - saved with cumulative {$currentCumulative}");
+            }
+            return 1;
+        }
 
-        // Step 3: Check if value is the same as last reading
+        // Step 3: Check if value is the same as last reading (same day)
         if ($currentCumulative === $this->lastCumulativeValues[$key]) {
             if ($this->option('d')) {
                 $this->line("    → No change for {$key} (still {$currentCumulative}) - skipping save");
@@ -267,8 +294,9 @@ class InsBpmPoll extends Command
                 'cumulative' => $currentCumulative,
             ]);
             
-            // Update last cumulative value
+            // Update last cumulative value and date
             $this->lastCumulativeValues[$key] = $currentCumulative;
+            $this->lastReadingDates[$key] = $today;
             
             if ($this->option('d')) {
                 $this->line("    ✓ Saved {$condition}: increment {$increment}, cumulative {$currentCumulative}");
@@ -280,6 +308,7 @@ class InsBpmPoll extends Command
             }
             // Update baseline for counter resets
             $this->lastCumulativeValues[$key] = $currentCumulative;
+            $this->lastReadingDates[$key] = $today;
             return 0;
         }
     }
