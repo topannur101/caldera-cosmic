@@ -21,3 +21,4 @@ Schedule::command('app:ins-bpm-poll')->everyFifteenMinutes();
 
 // DWP scheduled commands
 Schedule::command('app:ins-dwp-reset')->dailyAt('07:00');
+Schedule::command('app:ins-dwp-time-chart')->everyThirtyMinutes();
