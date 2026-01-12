@@ -291,7 +291,10 @@ new class extends Component {
         }
         
         // Dispatch browser event to trigger chart refresh
-        $this->dispatch('chart-data-updated')->self();
+        $this->dispatch('chart-data-updated', [
+            'labels' => $this->chartLabels,
+            'datasets' => $this->chartDatasets
+        ]);
     }
 
     public function updated($property)
@@ -390,6 +393,7 @@ new class extends Component {
                 x-data="{
                     emergencyChart: null,
                     isDestroying: false,
+                    hasData: true,
 
                     initOrUpdateEmergencyChart(chartData) {
                         // Prevent multiple simultaneous operations
@@ -410,24 +414,25 @@ new class extends Component {
                             return;
                         }
 
-                        // Check if we have data
-                        if (labels.length === 0 || datasets.length === 0) {
-                            return;
-                        }
-
                         // Destroy old chart if exists
                         if (this.emergencyChart) {
                             this.isDestroying = true;
                             try {
-                                if (this.emergencyChart.ctx && this.emergencyChart.canvas) {
-                                    this.emergencyChart.destroy();
-                                }
+                                this.emergencyChart.destroy();
                             } catch (e) {
-                                // Silent fail
+                                console.log('Error destroying chart:', e);
                             }
                             this.emergencyChart = null;
                             this.isDestroying = false;
                         }
+
+                        // Check if we have data
+                        if (labels.length === 0 || datasets.length === 0) {
+                            this.hasData = false;
+                            return;
+                        }
+
+                        this.hasData = true;
 
                         const ctx = canvasEl.getContext('2d');
                         if (!ctx) {
@@ -483,37 +488,38 @@ new class extends Component {
                                 }
                             });
                         } catch (e) {
-                            // Silent fail
+                            console.error('Chart creation error:', e);
+                            this.hasData = false;
                         }
                     }
                 }"
-                wire:ignore
                 x-init="
-                    // Watch for data changes
-                    $watch('$wire.chartLabels', () => {
-                        const labels = $wire.chartLabels || [];
-                        const datasets = $wire.chartDatasets || [];
-                        
-                        if (labels.length > 0 && datasets.length > 0) {
-                            $nextTick(() => {
-                                initOrUpdateEmergencyChart({ labels, datasets });
-                            });
-                        }
-                    });
-                    
-                    // Initial render if data already exists
+                    // Initial render
                     $nextTick(() => {
-                        const labels = $wire.chartLabels || [];
-                        const datasets = $wire.chartDatasets || [];
+                        const labels = @js($this->chartLabels);
+                        const datasets = @js($this->chartDatasets);
                         
-                        if (labels.length > 0 && datasets.length > 0) {
-                            initOrUpdateEmergencyChart({ labels, datasets });
+                        initOrUpdateEmergencyChart({ labels, datasets });
+                    });
+                "
+                @chart-data-updated.window="
+                    $nextTick(() => {
+                        const eventData = $event.detail;
+                        if (eventData) {
+                            initOrUpdateEmergencyChart(eventData);
                         }
                     });
                 "
             >
                 <div wire:ignore style="height: 500px; position: relative;">
-                    <canvas x-ref="emergencyChartCanvas"></canvas>
+                    <canvas x-ref="emergencyChartCanvas" x-show="hasData"></canvas>
+                    <div x-show="!hasData" class="flex flex-col items-center justify-center h-full text-gray-500">
+                        <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <p class="text-lg font-medium">No Data Available</p>
+                        <p class="text-sm text-gray-400 mt-2">Try adjusting your filters or date range</p>
+                    </div>
                 </div>
             </div>
         </div>
