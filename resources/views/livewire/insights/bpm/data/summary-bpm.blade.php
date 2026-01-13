@@ -114,20 +114,22 @@ new class extends Component {
             $query->where('condition', $this->condition);
         }
         
-        $totalEmergency = $query->sum('cumulative');
+        $totalEmergency = $query->select('line', 'machine', 'condition', DB::raw('MAX(cumulative) as max_cumulative'))
+            ->groupBy('line', 'machine', 'condition')
+            ->get()
+            ->sum('max_cumulative');
 
         // Get emergency count per line
-        $query = InsBpmCount::whereBetween('created_at', [$from, $to])
-            ->when($this->plant, fn($q) => $q->where('plant', $this->plant));
-        
-        if ($this->condition !== 'all') {
-            $query->where('condition', $this->condition);
-        }
-        
-        $emergencyPerLine = $query->select('line', DB::raw('SUM(cumulative) as total'))
-            ->groupBy('line')
-            ->orderByDesc('total')
+        $emergencyPerLineRaw = InsBpmCount::whereBetween('created_at', [$from, $to])
+            ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
+            ->when($this->condition !== 'all', fn($q) => $q->where('condition', $this->condition))
+            ->select('line', 'machine', 'condition', DB::raw('MAX(cumulative) as max_cumulative'))
+            ->groupBy('line', 'machine', 'condition')
             ->get();
+        
+        $emergencyPerLine = $emergencyPerLineRaw->groupBy('line')->map(function($items) {
+            return (object) ['line' => $items->first()->line, 'total' => $items->sum('max_cumulative')];
+        })->sortByDesc('total')->values();
 
         // Calculate highest, lowest and average
         $highest = $emergencyPerLine->first();
@@ -179,18 +181,23 @@ new class extends Component {
         $to = Carbon::parse($this->end_at)->endOfDay();
 
         // Get ranking data - grouped by line and machine
-        $query = InsBpmCount::whereBetween('created_at', [$from, $to])
-            ->when($this->plant, fn($q) => $q->where('plant', $this->plant));
-        
-        if ($this->condition !== 'all') {
-            $query->where('condition', $this->condition);
-        }
-        
-        $this->rankingData = $query->select('line', 'machine', DB::raw('SUM(cumulative) as total_counter'))
-            ->groupBy('line', 'machine')
-            ->orderByDesc('total_counter')
-            ->limit(16)
+        $rankingRaw = InsBpmCount::whereBetween('created_at', [$from, $to])
+            ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
+            ->when($this->condition !== 'all', fn($q) => $q->where('condition', $this->condition))
+            ->select('line', 'machine', 'condition', DB::raw('MAX(cumulative) as max_cumulative'))
+            ->groupBy('line', 'machine', 'condition')
             ->get();
+        
+        $this->rankingData = $rankingRaw->groupBy(function($item) {
+            return $item->line . '-' . $item->machine;
+        })->map(function($items) {
+            $first = $items->first();
+            return (object) [
+                'line' => $first->line,
+                'machine' => $first->machine,
+                'total_counter' => $items->sum('max_cumulative')
+            ];
+        })->sortByDesc('total_counter')->take(16)->values();
     }
 
     public function generateEmergencyChart()
@@ -206,7 +213,7 @@ new class extends Component {
                     'line',
                     'machine',
                     'condition',
-                    DB::raw('SUM(cumulative) as total_counter')
+                    DB::raw('MAX(cumulative) as total_counter')
                 )
                 ->groupBy('line', 'machine', 'condition')
                 ->get();
@@ -256,7 +263,7 @@ new class extends Component {
                 ->select(
                     'line',
                     'machine',
-                    DB::raw('SUM(cumulative) as total_counter')
+                    DB::raw('MAX(cumulative) as total_counter')
                 )
                 ->groupBy('line', 'machine')
                 ->orderByDesc('total_counter')
