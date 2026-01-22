@@ -264,7 +264,7 @@ new class extends Component {
                 ->map->first();
 
             // Format labels and extract data
-            $sortedData = $emergencyData->sortByDesc('cumulative')->take(20);
+            $sortedData = $emergencyData->take(20);
             
             $labels = $sortedData->map(function($item) {
                 return $item->line . ' - Mesin ' . $item->machine;
