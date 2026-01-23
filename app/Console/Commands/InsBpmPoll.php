@@ -215,8 +215,6 @@ class InsBpmPoll extends Command
      */
     private function processCondition(InsBpmDevice $device, $line, string $machineName, string $condition, int $currentCumulative): int
     {
-        // Do not force cumulative to 1 if HMI value is 0; let it reflect the real HMI value
-        
         $key = $machineName . '_' . $condition;
         $today = Carbon::now()->toDateString();
         
@@ -228,9 +226,9 @@ class InsBpmPoll extends Command
             ->latest('created_at')
             ->first();
         
-        // Check if cumulative value is same as in database - don't save duplicates
-        if ($latestRecord && $latestRecord->cumulative === $currentCumulative) {
-            // Update memory cache even though we're not saving
+        // CRITICAL CHECK: If cumulative value from HMI is same as latest DB record, don't save
+        if ($latestRecord && (int)$latestRecord->cumulative === (int)$currentCumulative) {
+            // Update memory cache to stay in sync
             $this->lastCumulativeValues[$key] = $currentCumulative;
             $this->lastReadingDates[$key] = $today;
             
@@ -240,21 +238,31 @@ class InsBpmPoll extends Command
             return 0;
         }
         
-        // Check if this is first reading today (not in memory or different day)
-        if (!isset($this->lastCumulativeValues[$key]) || 
-            !isset($this->lastReadingDates[$key]) || 
-            $this->lastReadingDates[$key] !== $today) {  
-            // First reading of the day: if there is a previous DB record, set incremental = currentCumulative - previous cumulative (if positive),
-            // but if there is NO previous DB record, set incremental = 1 only if cumulative > 0, else 0
-            $incremental = 0;
-            if ($latestRecord) {
-                $incremental = $currentCumulative - $latestRecord->cumulative;
-                if ($incremental < 0) {
-                    $incremental = 0;
-                }
-            } else {
-                $incremental = ($currentCumulative > 0) ? 1 : 0;
+        // Initialize memory cache if not set
+        if (!isset($this->lastCumulativeValues[$key])) {
+            $this->lastCumulativeValues[$key] = $latestRecord ? $latestRecord->cumulative : 0;
+            $this->lastReadingDates[$key] = $today;
+        }
+        
+        // Check if value is the same as last reading in memory
+        if ($currentCumulative === $this->lastCumulativeValues[$key]) {
+            if ($this->option('d')) {
+                $this->line("    → No change for {$key} (still {$currentCumulative}) - skipping save");
             }
+            return 0;
+        }
+        
+        // Calculate increment based on previous value
+        $previousCumulative = $latestRecord ? $latestRecord->cumulative : 0;
+        $increment = $currentCumulative - $previousCumulative;
+        
+        // Only save if:
+        // 1. Increment is positive (cumulative increased), OR
+        // 2. This is first record ever and cumulative > 0
+        if ($increment > 0 || (!$latestRecord && $currentCumulative > 0)) {
+            $incremental = ($increment > 0) ? $increment : 1; // First record gets incremental = 1
+            
+            // Save to database
             InsBpmCount::create([
                 'plant' => $device->name,
                 'line' => $line,
@@ -263,51 +271,23 @@ class InsBpmPoll extends Command
                 'incremental' => $incremental,
                 'cumulative' => $currentCumulative,
             ]);
+            
+            // Update memory cache
             $this->lastCumulativeValues[$key] = $currentCumulative;
             $this->lastReadingDates[$key] = $today;
-            if ($this->option('d')) {
-                $this->line("    ✓ First reading today for {$key} - saved with increment {$incremental}, cumulative {$currentCumulative}");
-            }
-            return 1;
-        }
-
-        // Check if value is the same as last reading in memory
-        if ($currentCumulative === $this->lastCumulativeValues[$key]) {
-            if ($this->option('d')) {
-                $this->line("    → No change for {$key} (still {$currentCumulative}) - skipping save");
-            }
-            return 0;
-        }
-
-        // Value is different - calculate increment
-        $increment = $currentCumulative - $this->lastCumulativeValues[$key];
-        
-        // Only save if increment is positive (ignore decreases/resets)
-        if ($increment > 0) {
-            // Save to database
-            InsBpmCount::create([
-                'plant' => $device->name,
-                'line' => $line,
-                'machine' => $machineName,
-                'condition' => $condition,
-                'incremental' => $increment,
-                'cumulative' => $currentCumulative,
-            ]);
-            
-            // Update last cumulative value
-            $this->lastCumulativeValues[$key] = $currentCumulative;
             
             if ($this->option('d')) {
-                $this->line("    ✓ Saved {$condition}: increment {$increment}, cumulative {$currentCumulative}");
+                $this->line("    ✓ Saved {$condition}: increment {$incremental}, cumulative {$currentCumulative}");
             }
             
             return 1;
         } else {
             if ($this->option('d')) {
-                $this->line("    ⚠ Negative increment ({$increment}) for {$key} - possible counter reset, updating baseline");
+                $this->line("    ⚠ Negative or zero increment ({$increment}) for {$key} - skipping save, updating baseline");
             }
-            // Update baseline for counter resets
+            // Update baseline for counter resets or decreases
             $this->lastCumulativeValues[$key] = $currentCumulative;
+            $this->lastReadingDates[$key] = $today;
             return 0;
         }
     }
