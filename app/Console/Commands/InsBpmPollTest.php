@@ -314,15 +314,9 @@ class InsBpmPollTest extends Command
                 "M4_Cold" => $hmiUpdates['M4_Cold'] ?? 0,
         ];
 
-        // ==================== SPIKE FILTERING ====================
-        // Prevent false counter increments (spikes) when HMI panel powers ON
-        // Scenario: HMI panel ON at 7:00, machine starts production at 7:30
-        // Spike: small increment (1-2) at 7:00 due to hardware, not real production
-        // Solution: Compare with previous value (memory or DB), if bump is 1-2, ignore it
-        
         // Check if device recently came online (within spike-prone window)
-        $deviceKey = $device->name . '_' . $device->ip_address;
-        $deviceOnlineTime = $this->deviceOnlineTime[$deviceKey] ?? null;
+        $deviceKey          = $device->name . '_' . $device->ip_address;
+        $deviceOnlineTime   = $this->deviceOnlineTime[$deviceKey] ?? null;
         $minutesSinceOnline = null;
         $inSpikeProneWindow = false;
         $spikeProneWindowMinutes = 60; // Spike filtering more aggressive within first 60 minutes after HMI power ON
@@ -388,13 +382,9 @@ class InsBpmPollTest extends Command
                     
                     // Revert to previous value (spike filtering)
                     $values[$key] = $previousValue;
-                    
-                    // Optional: Log spike event to database for monitoring
-                    // You can create a separate spike_logs table if needed
                 }
             }
         }
-        // ==================== END SPIKE FILTERING ====================
 
         // Write all HMI updates in one call
         if (!empty($hmiUpdates)) {
