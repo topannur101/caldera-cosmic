@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DownloadController;
+use App\Http\Controllers\AutocompleteController;
 use App\Http\Resources\InsRtcMetricResource;
 use App\Http\Resources\InsRtcRecipeResource;
 use App\Models\InsRtcMetric;
@@ -15,6 +16,12 @@ Volt::route('/inventory/help', 'inventory.help')->name('inventory.help');
 
 Volt::route('/announcements/{id}', 'announcements.show')->name('announcements.show');
 
+// Autocomplete routes
+Route::name('autocomplete.')->group(function () {
+    Route::get('/autocomplete/search', [AutocompleteController::class, 'search'])->name('search');
+    Route::get('/autocomplete/rubber-colors', [AutocompleteController::class, 'searchRubberColors'])->name('rubber-colors');
+    Route::get('/autocomplete/rubber-models', [AutocompleteController::class, 'searchRubberModels'])->name('rubber-models');
+});
 // Uptime Monitoring routes
 Volt::route('/uptime', 'uptime.monitor')->name('uptime.monitor');
 
@@ -202,6 +209,8 @@ Route::prefix('insights')->group(function () {
 
         Volt::route('/omv/manage/authorizations', 'insights.omv.manage.auths')->name('manage.auths');
         Volt::route('/omv/manage/recipes', 'insights.omv.manage.recipes')->name('manage.recipes');
+        Volt::route('/omv/manage/colors', 'insights.omv.manage.colors')->name('manage.colors');
+        Volt::route('/omv/manage/models', 'insights.omv.manage.models')->name('manage.models');
         Volt::route('/omv/manage', 'insights.omv.manage.index')->name('manage.index');
         Volt::route('/omv/data', 'insights.omv.data.index')->name('data.index');
         Volt::route('/omv/create', 'insights.omv.create.index')->name('create.index');
