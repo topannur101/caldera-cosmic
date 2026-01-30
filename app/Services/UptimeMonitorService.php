@@ -16,7 +16,8 @@ class UptimeMonitorService
      * Supports both HTTP and Modbus TCP checks
      */
     public function checkProject(
-        string $projectName, 
+        string $projectName,
+        string $projectGroup,
         string $ipAddress, 
         int $timeout = 10,
         string $type = 'http',
@@ -31,7 +32,7 @@ class UptimeMonitorService
         $errorType = null;
 
         try {
-            if ($type === 'dwp') {
+            if ($type === 'modbus' && $projectGroup === 'DWP') {
                 // DWP type: Check connection and data freshness
                 $result    = $this->checkDwpStatus($ipAddress, $timeout, $modbusConfig);
                 $status    = $result['status'];
@@ -39,9 +40,25 @@ class UptimeMonitorService
                 $duration  = $result['duration'];
                 $isTimeout = $result['is_timeout'] ?? false;
                 $errorType = $result['error_type'] ?? null;
-            } elseif ($type === 'modbus') {
+            } elseif ($type === 'modbus' && $projectGroup != 'OMV' && $projectGroup != 'DWP') {
                 // Modbus TCP Connection Test
                 $result    = $this->checkModbusConnection($ipAddress, $timeout, $modbusConfig);
+                $status    = $result['status'];
+                $message   = $result['message'];
+                $duration  = $result['duration'];
+                $isTimeout = $result['is_timeout'] ?? false;
+                $errorType = $result['error_type'] ?? null;
+            } elseif ($type === 'ping' && $projectGroup === 'OMV') {
+                // IP STC type: Check connection and data freshness
+                $result    = $this->checkOmvStatus($ipAddress, $timeout, $modbusConfig);
+                $status    = $result['status'];
+                $message   = $result['message'];
+                $duration  = $result['duration'];
+                $isTimeout = $result['is_timeout'] ?? false;
+                $errorType = $result['error_type'] ?? null;
+            } elseif ($type === 'ping' && $projectGroup === 'LDC') {
+                // LDC type: Check connection and data freshness
+                $result    = $this->checkLdcStatus($ipAddress, $timeout, $modbusConfig);
                 $status    = $result['status'];
                 $message   = $result['message'];
                 $duration  = $result['duration'];
@@ -297,6 +314,81 @@ class UptimeMonitorService
                 'duration' => $connectionResult['duration']
             ];
         }
+    }
+
+    private function checkOmvStatus(string $ipAddress, int $timeout, array $config): array
+    {
+        // CHECK CONNECTION TO OMV SERVER
+        $result = $this->pingHost($ipAddress, 1, $timeout);
+        if ($result['success']) {
+            return [
+                'status' => 'online',
+                'message' => 'OMV server is online',
+                'duration' => $result['time_ms']
+            ];
+        } else {
+            return [
+                'status' => 'offline',
+                'message' => 'OMV server is offline',
+                'duration' => $result['time_ms']
+            ];
+        }
+    }
+
+    private function checkLdcStatus(string $ipAddress, int $timeout, array $config): array
+    {
+        // CHECK CONNECTION TO LDC SERVER
+        $result = $this->pingHost($ipAddress, 1, $timeout);
+        if ($result['success']) {
+            return [
+                'status' => 'online',
+                'message' => 'LDC server is online',
+                'duration' => $result['time_ms']
+            ];
+        } else {
+            return [
+                'status' => 'offline',
+                'message' => 'LDC server is offline',
+                'duration' => $result['time_ms']
+            ];
+        }
+    }
+
+
+    function pingHost(string $host, int $count = 1, int $timeout = 2): array {
+        // Validate host (IP or domain)
+        if (!filter_var($host, FILTER_VALIDATE_IP) && !filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+            return ['success' => false, 'error' => 'Invalid IP address or domain'];
+        }
+    
+        // Detect OS and build command
+        if (stripos(PHP_OS, 'WIN') === 0) {
+            // Windows ping command
+            $cmd = sprintf('ping -n %d -w %d %s', $count, $timeout * 1000, escapeshellarg($host));
+        } else {
+            // Linux/macOS ping command
+            $cmd = sprintf('ping -c %d -W %d %s', $count, $timeout, escapeshellarg($host));
+        }
+    
+        // Execute command and capture output
+        @exec($cmd, $output, $status);
+    
+        // Parse result
+        $result = [
+            'success' => ($status === 0),
+            'output'  => implode("\n", $output),
+            'time_ms' => null
+        ];
+    
+        // Extract response time if available
+        foreach ($output as $line) {
+            if (preg_match('/time[=<]([\d\.]+)\s*ms/i', $line, $matches)) {
+                $result['time_ms'] = (float)$matches[1];
+                break;
+            }
+        }
+    
+        return $result;
     }
 
     /**

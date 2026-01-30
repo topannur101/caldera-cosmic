@@ -24,7 +24,9 @@ Route::name('autocomplete.')->group(function () {
 });
 // Uptime Monitoring routes
 Volt::route('/uptime', 'uptime.monitor')->name('uptime.monitor');
-
+Volt::route('/uptime/dashboard', 'uptime.dashboard')->name('uptime.dashboard');
+Volt::route('/uptime/projects', 'uptime.projects.index')->name('uptime.projects.index');
+Volt::route('/uptime/projects/workhours', 'uptime.projects.workhours')->name('uptime.projects.workhours');  
 // Insights routes
 Route::prefix('insights')->group(function () {
 
