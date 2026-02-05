@@ -24,7 +24,11 @@ new #[Layout("layouts.app")] class extends Component {
     #[Url]
     public string $status = "";
 
+    #[Url(as: 'projects_page')]
+    public int $projectsPage = 1;
+
     public int $perPage = 20;
+    public int $projectsPerPage = 4;
     public array $projects = [];
     public array $statistics = [];
     public array $liveStatus = [];
@@ -66,11 +70,14 @@ new #[Layout("layouts.app")] class extends Component {
 
         $logs = $query->get();
 
+        $totalUptimeHours = $this->getTotalUptimeHours();
+        $totalDowntimeHours = $this->getTotalDowntimeHours();
+
         $this->statistics = [
-            'total' => $logs->count(),
-            'online' => $logs->where('status', 'online')->count(),
+            'total'   => $logs->count(),
+            'online'  => $logs->where('status', 'online')->count(),
             'offline' => $logs->where('status', 'offline')->count(),
-            'idle' => $logs->where('status', 'idle')->count(),
+            'idle'    => $logs->where('status', 'idle')->count(),
             'timeouts' => $logs->where('is_timeout', true)->count(),
             'uptime_percentage' => $logs->count() > 0 
                 ? round(($logs->where('status', 'online')->count() / $logs->count()) * 100, 2) 
@@ -78,7 +85,31 @@ new #[Layout("layouts.app")] class extends Component {
             'avg_duration' => $logs->where('duration', '>', 0)->avg('duration') 
                 ? round($logs->where('duration', '>', 0)->avg('duration')) 
                 : 0,
+            'uptime_hours' => round($totalUptimeHours / 3600, 2),
+            'downtime_hours' => round($totalDowntimeHours / 3600, 2),
         ];
+    }
+
+    // get total uptime hours all projects(per group)
+    private function getTotalUptimeHours()
+    {
+        $allProjects = Project::active()->get();
+        $totalUptimeHours = 0;
+        foreach ($allProjects as $project) {
+            $totalUptimeHours += $this->calculateTotalOnlineDuration($project->ip, Carbon::parse($this->start_at), Carbon::parse($this->end_at));
+        }
+        return $totalUptimeHours;
+    }
+
+    // get total downtime hours all projects(per group)
+    private function getTotalDowntimeHours()
+    {
+        $allProjects = Project::active()->where('project_group', $this->project)->get();
+        $totalDowntimeHours = 0;
+        foreach ($allProjects as $project) {
+            $totalDowntimeHours += $this->calculateTotalOfflineDuration($project->ip, Carbon::parse($this->start_at), Carbon::parse($this->end_at));
+        }
+        return $totalDowntimeHours;
     }
 
     public function loadLiveStatus()
@@ -265,9 +296,29 @@ new #[Layout("layouts.app")] class extends Component {
     public function with(): array
     {
         $logs = $this->getLogsQuery()->paginate($this->perPage);
+        
+        // Paginate liveStatus manually
+        $liveStatusCollection = collect($this->liveStatus);
+        $paginatedStatus = new \Illuminate\Pagination\LengthAwarePaginator(
+            $liveStatusCollection->forPage($this->projectsPage, $this->projectsPerPage),
+            $liveStatusCollection->count(),
+            $this->projectsPerPage,
+            $this->projectsPage,
+            [
+                'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+                'pageName' => 'projects_page'
+            ]
+        );
+        
         return [
             'logs' => $logs,
+            'paginatedLiveStatus' => $paginatedStatus,
         ];
+    }
+    
+    public function updatedProjectsPage()
+    {
+        // This will automatically handle the page change
     }
 
     public function loadMore()
@@ -279,6 +330,7 @@ new #[Layout("layouts.app")] class extends Component {
     {
         $this->loadStatistics();
         $this->loadLiveStatus();
+        $this->dispatch('chart-update');
         $this->js('toast("' . __("Statistik diperbarui") . '", { type: "success" })');
     }
 
@@ -288,6 +340,7 @@ new #[Layout("layouts.app")] class extends Component {
         $this->start_at = Carbon::now()->startOfDay()->format('Y-m-d\TH:i');
         $this->end_at = Carbon::now()->endOfDay()->format('Y-m-d\TH:i');
         $this->loadStatistics();
+        $this->loadLiveStatus();
     }
 
     public function setYesterday()
@@ -295,6 +348,7 @@ new #[Layout("layouts.app")] class extends Component {
         $this->start_at = Carbon::yesterday()->startOfDay()->format('Y-m-d\TH:i');
         $this->end_at = Carbon::yesterday()->endOfDay()->format('Y-m-d\TH:i');
         $this->loadStatistics();
+        $this->loadLiveStatus();
     }
 
     public function setThisWeek()
@@ -302,6 +356,7 @@ new #[Layout("layouts.app")] class extends Component {
         $this->start_at = Carbon::now()->startOfWeek()->format('Y-m-d\TH:i');
         $this->end_at = Carbon::now()->endOfWeek()->format('Y-m-d\TH:i');
         $this->loadStatistics();
+        $this->loadLiveStatus();
     }
 
     public function setLastWeek()
@@ -309,6 +364,7 @@ new #[Layout("layouts.app")] class extends Component {
         $this->start_at = Carbon::now()->subWeek()->startOfWeek()->format('Y-m-d\TH:i');
         $this->end_at = Carbon::now()->subWeek()->endOfWeek()->format('Y-m-d\TH:i');
         $this->loadStatistics();
+        $this->loadLiveStatus();
     }
 
     public function setThisMonth()
@@ -316,6 +372,15 @@ new #[Layout("layouts.app")] class extends Component {
         $this->start_at = Carbon::now()->startOfMonth()->format('Y-m-d\TH:i');
         $this->end_at = Carbon::now()->endOfMonth()->format('Y-m-d\TH:i');
         $this->loadStatistics();
+        $this->loadLiveStatus();
+    }
+
+    public function setLastMonth()
+    {
+        $this->start_at = Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d\TH:i');
+        $this->end_at = Carbon::now()->subMonth()->endOfMonth()->format('Y-m-d\TH:i');
+        $this->loadStatistics();
+        $this->loadLiveStatus();
     }
 
     public function updated($property)
@@ -324,6 +389,8 @@ new #[Layout("layouts.app")] class extends Component {
             $this->loadStatistics();
             $this->loadLiveStatus();
             $this->resetPage();
+            $this->projectsPage = 1; // Reset projects pagination
+            $this->dispatch('chart-update');
         }
     }
 };
@@ -416,17 +483,6 @@ new #[Layout("layouts.app")] class extends Component {
                         @endforeach
                     </select>
                 </div>
-                <div class="flex-1 min-w-[120px]">
-                    <label class="block uppercase text-xs font-small text-neutral-700 dark:text-neutral-300 mb-2">Status</label>
-                    <select wire:model.live="status" 
-                        class="w-full px-3 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-900 text-neutral-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow">
-                        <option value="">All Status</option>
-                        <option value="online">Online</option>
-                        <option value="offline">Offline</option>
-                        <option value="idle">Idle</option>
-                        <option value="timeout">Timeout</option>
-                    </select>
-                </div>
             </div>
 
             <!-- Refresh Button -->
@@ -443,7 +499,7 @@ new #[Layout("layouts.app")] class extends Component {
     <!--  -->
 
     <div class="grid grid-cols-2 gap-4 mt-4">
-        <div class="bg-white dark:bg-neutral-800 rounded-xl p-4 border border-neutral-400 dark:border-neutral-700 shadow">
+        <div class="bg-white dark:bg-neutral-800 rounded-xl p-4 dark:border-neutral-700 shadow">
             <div class="grid grid-cols-4 gap-2">
                 <div class="text-xs text-neutral-500 col-span-1 bg-green-500/10 dark:bg-green-500/20 rounded-lg p-2">
                     <p class="text-xs text-neutral-500">Online</p>
@@ -454,16 +510,298 @@ new #[Layout("layouts.app")] class extends Component {
                     {{ $statistics['offline'] }}
                 </div>
                 <div class="text-xs text-neutral-500 col-span-1 bg-yellow-500/10 dark:bg-yellow-500/20 rounded-lg p-2">
-                    Uptime Rate
+                    <p class="text-xs text-neutral-500">Uptime Rate</p>
+                    <p>{{ round($statistics['online'] / ($statistics['online'] + $statistics['offline']) * 100, 2) }}%</p>
                 </div>
                 <div class="text-xs text-neutral-500 col-span-1 bg-purple-500/10 dark:bg-purple-500/20 rounded-lg p-2">
-                    Downtime Rate
+                    <p class="text-xs text-neutral-500">Downtime Rate</p>
+                    <p>{{ round($statistics['offline'] / ($statistics['online'] + $statistics['offline']) * 100, 2) }}%</p>
                 </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+                <div class="text-xs text-neutral-500 col-span-1 bg-red-500/10 dark:bg-red-500/20 rounded-lg p-2">
+                    <p class="text-xs text-neutral-500">Total Uptime Hours</p>
+                    <p>{{ $statistics['uptime_hours'] }}</p>
+                </div>
+                <div class="text-xs text-neutral-500 col-span-1 bg-green-500/10 dark:bg-green-500/20 rounded-lg p-2">
+                    <p class="text-xs text-neutral-500">Total Downtime Hours</p>
+                    <p>{{ $statistics['downtime_hours'] }}</p>
+                </div>
+            </div>
+            <div class="w-full rounded-lg mt-2 p-4">
+                <h3 class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">Uptime & Downtime Comparison</h3>
+                <div wire:ignore id="uptimeChart"></div>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-neutral-800 rounded-xl p-4 border border-neutral-400 dark:border-neutral-700 shadow">
-            <h1> Halo 2 </h1>
+        <div class="bg-white dark:bg-neutral-800 rounded-xl p-4 dark:border-neutral-700 shadow">
+            <div class="grid grid-cols-2 gap-2">
+                <div class="text-xs text-neutral-500 col-span-1 bg-green-500/10 dark:bg-green-500/20 rounded-lg p-2">
+                    <p class="text-xs text-neutral-500">Shift:</p>
+                    1
+                </div>
+                <div class="text-xs text-neutral-500 col-span-1 bg-red-500/10 dark:bg-red-500/20 rounded-lg p-2">
+                    <p class="text-xs text-neutral-500">Count of day working</p>
+                    10
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+                @foreach($paginatedLiveStatus as $status)
+                    <div class="text-xs bg-green-500/10 dark:bg-green-500/20 rounded-lg p-3">
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-xs text-neutral-500">Project Name</p>
+                                    <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ $status['name'] }}</p>
+                                </div>
+                                <span class="w-3 h-3 rounded-full flex-shrink-0
+                                    {{ $status['status'] === 'online' ? 'bg-green-500' : ($status['status'] === 'offline' ? 'bg-red-500' : 'bg-yellow-500') }}"
+                                    title="{{ ucfirst($status['status']) }}">
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-xs text-neutral-500">IP Address</p>
+                                <p class="text-neutral-800 dark:text-neutral-200">{{ $status['ip'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-neutral-500">Status</p>
+                                <p class="text-neutral-800 dark:text-neutral-200 capitalize">{{ $status['status'] }}</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <p class="text-xs text-neutral-500">Online Duration</p>
+                                    <p class="text-green-600 dark:text-green-400 font-medium">{{ $status['uptime_formatted'] }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-neutral-500">Offline Duration</p>
+                                    <p class="text-red-600 dark:text-red-400 font-medium">{{ $status['downtime_formatted'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            
+            <!-- Pagination -->
+            @if($paginatedLiveStatus->hasPages())
+            <div class="mt-4 flex justify-center items-center gap-2">
+                @if($projectsPage > 1)
+                    <button wire:click="$set('projectsPage', {{ $projectsPage - 1 }})" 
+                        class="px-3 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                        <i class="icon-chevron-left"></i>
+                    </button>
+                @endif
+                
+                <span class="text-sm text-neutral-600 dark:text-neutral-400">
+                    Page {{ $projectsPage }} of {{ $paginatedLiveStatus->lastPage() }}
+                </span>
+                
+                @if($projectsPage < $paginatedLiveStatus->lastPage())
+                    <button wire:click="$set('projectsPage', {{ $projectsPage + 1 }})" 
+                        class="px-3 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                        <i class="icon-chevron-right"></i>
+                    </button>
+                @endif
+            </div>
+            @endif
         </div>  
     </div>
 </div>
+
+@script
+<script>
+    let uptimeChartInstance = null;
+
+    function initUptimeChart() {
+        const chartElement = document.querySelector('#uptimeChart');
+        if (!chartElement) return;
+
+        // Get data from Livewire component
+        const liveStatus = $wire.liveStatus;
+        
+        if (!liveStatus || liveStatus.length === 0) {
+            if (uptimeChartInstance) {
+                uptimeChartInstance.destroy();
+                uptimeChartInstance = null;
+            }
+            return;
+        }
+        
+        // Prepare chart data
+        const categories = liveStatus.map(status => status.name);
+        const uptimePercentages = liveStatus.map(status => {
+            const total = status.uptime_seconds + status.downtime_seconds;
+            return total > 0 ? Math.round((status.uptime_seconds / total) * 100) : 0;
+        });
+        const downtimePercentages = liveStatus.map(status => {
+            const total = status.uptime_seconds + status.downtime_seconds;
+            return total > 0 ? Math.round((status.downtime_seconds / total) * 100) : 0;
+        });
+
+        // Check if dark mode is enabled
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        const textColor = isDarkMode ? '#d4d4d8' : '#3f3f46';
+        const gridColor = isDarkMode ? '#404040' : '#e5e5e5';
+
+        // If chart exists, update data instead of recreating
+        if (uptimeChartInstance) {
+            uptimeChartInstance.updateOptions({
+                xaxis: {
+                    categories: categories
+                },
+                colors: ['#22c55e', '#ef4444']
+            });
+            
+            uptimeChartInstance.updateSeries([
+                {
+                    name: 'Uptime',
+                    data: uptimePercentages
+                },
+                {
+                    name: 'Downtime',
+                    data: downtimePercentages
+                }
+            ]);
+            return;
+        }
+
+        // ApexCharts options
+        const options = {
+            series: [
+                {
+                    name: 'Uptime',
+                    data: uptimePercentages
+                },
+                {
+                    name: 'Downtime',
+                    data: downtimePercentages
+                }
+            ],
+            chart: {
+                type: 'bar',
+                height: 350,
+                stacked: true,
+                stackType: '100%',
+                toolbar: {
+                    show: false
+                },
+                background: 'transparent',
+                foreColor: textColor,
+                animations: {
+                    enabled: true,
+                    speed: 800,
+                    animateGradually: {
+                        enabled: true,
+                        delay: 150
+                    },
+                    dynamicAnimation: {
+                        enabled: true,
+                        speed: 350
+                    }
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    borderRadius: 4,
+                    barHeight: '70%'
+                }
+            },
+            colors: ['#22c55e', '#ef4444'],
+            dataLabels: {
+                enabled: true,
+                formatter: function(val) {
+                    return val.toFixed(0) + '%';
+                },
+                style: {
+                    colors: ['#fff'],
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                }
+            },
+            stroke: {
+                width: 1,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: categories,
+                labels: {
+                    style: {
+                        colors: textColor
+                    },
+                    formatter: function(val) {
+                        return val + '%';
+                    }
+                },
+                axisBorder: {
+                    color: gridColor
+                },
+                axisTicks: {
+                    color: gridColor
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: textColor
+                    }
+                }
+            },
+            grid: {
+                borderColor: gridColor,
+                strokeDashArray: 4,
+                xaxis: {
+                    lines: {
+                        show: true
+                    }
+                },
+                yaxis: {
+                    lines: {
+                        show: false
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center',
+                labels: {
+                    colors: textColor
+                },
+                markers: {
+                    radius: 2
+                }
+            },
+            tooltip: {
+                theme: isDarkMode ? 'dark' : 'light',
+                y: {
+                    formatter: function(val) {
+                        return val + '%';
+                    }
+                }
+            }
+        };
+
+        // Create chart
+        uptimeChartInstance = new ApexCharts(chartElement, options);
+        uptimeChartInstance.render();
+    }
+
+    // Initialize chart on first load
+    $wire.on('chart-update', () => {
+        initUptimeChart();
+    });
+
+    // Initialize on component load
+    initUptimeChart();
+
+    // Watch for Livewire updates
+    Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+        succeed(({ snapshot, effect }) => {
+            // Update chart after Livewire updates
+            setTimeout(() => {
+                initUptimeChart();
+            }, 100);
+        });
+    });
+</script>
+@endscript

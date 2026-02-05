@@ -216,6 +216,7 @@ Route::prefix('insights')->group(function () {
         Volt::route('/omv/manage', 'insights.omv.manage.index')->name('manage.index');
         Volt::route('/omv/data', 'insights.omv.data.index')->name('data.index');
         Volt::route('/omv/create', 'insights.omv.create.index')->name('create.index');
+        Volt::route('/v1/omv/create', 'insights.omv.create.index-new')->name('create.index-new');
         Route::get('/omv', function () {
             if (auth()->check()) {
                 return redirect()->route('insights.omv.create.index');

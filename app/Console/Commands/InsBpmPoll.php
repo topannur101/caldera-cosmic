@@ -81,6 +81,9 @@ class InsBpmPoll extends Command
             }
         }
 
+        // Initialize all machines with zero if no data exists for today
+        $this->initializeTodayRecords($devices);
+
         // forach device, poll once for testing
         foreach ($devices as $device) {
             if ($this->option('v')) {
@@ -97,6 +100,76 @@ class InsBpmPoll extends Command
             } catch (\Throwable $th) {
                 $this->error("✗ Error polling {$device->name}: " . $th->getMessage());
             }
+        }
+    }
+
+    /**
+     * Initialize records with zero for all machines that don't have data for today
+     */
+    private function initializeTodayRecords($devices)
+    {
+        $today = Carbon::today();
+        $initialized = 0;
+        
+        foreach ($devices as $device) {
+            foreach ($device->config['list_mechine'] as $machineConfig) {
+                $machineName = $machineConfig['name'];
+                $line = $machineConfig['line'] ?? $device->line;
+                
+                // Check and initialize Hot condition
+                $hotExists = InsBpmCount::where('plant', $device->name)
+                    ->where('line', strtoupper(trim($line)))
+                    ->where('machine', strtoupper(trim($machineName)))
+                    ->where('condition', 'Hot')
+                    ->whereDate('created_at', $today)
+                    ->exists();
+                
+                if (!$hotExists) {
+                    InsBpmCount::create([
+                        'plant' => $device->name,
+                        'line' => $line,
+                        'machine' => $machineName,
+                        'condition' => 'Hot',
+                        'incremental' => 0,
+                        'cumulative' => 0,
+                    ]);
+                    $initialized++;
+                    
+                    if ($this->option('d')) {
+                        $this->line("  ✓ Initialized {$machineName}_Hot with zero");
+                    }
+                }
+                
+                // Check and initialize Cold condition
+                $coldExists = InsBpmCount::where('plant', $device->name)
+                    ->where('line', strtoupper(trim($line)))
+                    ->where('machine', strtoupper(trim($machineName)))
+                    ->where('condition', 'Cold')
+                    ->whereDate('created_at', $today)
+                    ->exists();
+                
+                if (!$coldExists) {
+                    InsBpmCount::create([
+                        'plant' => $device->name,
+                        'line' => $line,
+                        'machine' => $machineName,
+                        'condition' => 'Cold',
+                        'incremental' => 0,
+                        'cumulative' => 0,
+                    ]);
+                    $initialized++;
+                    
+                    if ($this->option('d')) {
+                        $this->line("  ✓ Initialized {$machineName}_Cold with zero");
+                    }
+                }
+            }
+        }
+        
+        if ($initialized > 0) {
+            $this->info("✓ Initialized {$initialized} machine records with zero for today");
+        } else if ($this->option('v')) {
+            $this->comment("→ All machines already have records for today");
         }
     }
 
@@ -158,17 +231,14 @@ class InsBpmPoll extends Command
             $this->error("    ✗ Device {$device->ip_address} not connected. Skipping update and save.");
             return 0;
         }
-
-        // check condition decrement if < 11 AM decrement condition its 1 and if >=11 AM decrement condition its 2
-        $currentHour = Carbon::now()->hour;
-        $conditionDecrement = ($currentHour < 11) ? 1 : 2;
+        
         $values = [
-                "M1_Hot"  => max(0, ($hmiUpdates['M1_Hot'] ?? 0) - $conditionDecrement),
-                "M1_Cold" => max(0, ($hmiUpdates['M1_Cold'] ?? 0) - $conditionDecrement),
-                "M2_Hot"  => max(0, ($hmiUpdates['M2_Hot'] ?? 0) - $conditionDecrement),
-                "M2_Cold" => max(0, ($hmiUpdates['M2_Cold'] ?? 0) - $conditionDecrement),
-                "M3_Hot"  => max(0, ($hmiUpdates['M3_Hot'] ?? 0) - $conditionDecrement),
-                "M3_Cold" => max(0, ($hmiUpdates['M3_Cold'] ?? 0) - $conditionDecrement),
+                "M1_Hot"  => $hmiUpdates['M1_Hot'] ?? 0,
+                "M1_Cold" => $hmiUpdates['M1_Cold'] ?? 0,
+                "M2_Hot"  => $hmiUpdates['M2_Hot'] ?? 0,
+                "M2_Cold" => $hmiUpdates['M2_Cold'] ?? 0,
+                "M3_Hot"  => $hmiUpdates['M3_Hot'] ?? 0,
+                "M3_Cold" => $hmiUpdates['M3_Cold'] ?? 0,
                 "M4_Hot"  => $hmiUpdates['M4_Hot'] ?? 0,
                 "M4_Cold" => $hmiUpdates['M4_Cold'] ?? 0,
         ];
@@ -218,33 +288,27 @@ class InsBpmPoll extends Command
         $key = $machineName . '_' . $condition;
         $today = Carbon::now()->toDateString();
         
-        // Get latest record from database to compare
-        $latestRecord = InsBpmCount::where('plant', $device->name)
-            ->where('line', strtoupper(trim($line)))
-            ->where('machine', strtoupper(trim($machineName)))
-            ->where('condition', $condition)
-            ->latest('created_at')
-            ->first();
-        
-        // CRITICAL CHECK: If cumulative value from HMI is same as latest DB record, don't save
-        if ($latestRecord && (int)$latestRecord->cumulative === (int)$currentCumulative) {
-            // Update memory cache to stay in sync
-            $this->lastCumulativeValues[$key] = $currentCumulative;
+        // Initialize memory cache from database if not set OR if day has changed (reset daily)
+        $isFirstRecordToday = false;
+        if (!isset($this->lastCumulativeValues[$key]) || $this->lastReadingDates[$key] !== $today) {
+            $latestRecord = InsBpmCount::where('plant', $device->name)
+                ->where('line', strtoupper(trim($line)))
+                ->where('machine', strtoupper(trim($machineName)))
+                ->where('condition', $condition)
+                ->whereDate('created_at', Carbon::today())
+                ->latest('created_at')
+                ->first();
+            
+            $isFirstRecordToday = !$latestRecord;
+            $this->lastCumulativeValues[$key] = $latestRecord ? $latestRecord->cumulative : 0;
             $this->lastReadingDates[$key] = $today;
             
             if ($this->option('d')) {
-                $this->line("    → No change for {$key} - DB cumulative {$latestRecord->cumulative} = HMI {$currentCumulative} - skipping save");
+                $this->line("    → Initialized cache for {$key} with value: {$this->lastCumulativeValues[$key]} (date: {$today})");
             }
-            return 0;
         }
         
-        // Initialize memory cache if not set
-        if (!isset($this->lastCumulativeValues[$key])) {
-            $this->lastCumulativeValues[$key] = $latestRecord ? $latestRecord->cumulative : 0;
-            $this->lastReadingDates[$key] = $today;
-        }
-        
-        // Check if value is the same as last reading in memory
+        // Check if value is the same as last cached reading
         if ($currentCumulative === $this->lastCumulativeValues[$key]) {
             if ($this->option('d')) {
                 $this->line("    → No change for {$key} (still {$currentCumulative}) - skipping save");
@@ -252,15 +316,13 @@ class InsBpmPoll extends Command
             return 0;
         }
         
-        // Calculate increment based on previous value
-        $previousCumulative = $latestRecord ? $latestRecord->cumulative : 0;
+        // Calculate increment based on cached previous value
+        $previousCumulative = $this->lastCumulativeValues[$key];
         $increment = $currentCumulative - $previousCumulative;
         
-        // Only save if:
-        // 1. Increment is positive (cumulative increased), OR
-        // 2. This is first record ever and cumulative > 0
-        if ($increment > 0 || (!$latestRecord && $currentCumulative > 0)) {
-            $incremental = ($increment > 0) ? $increment : 1; // First record gets incremental = 1
+        // Save if: increment is positive OR this is the very first record for today (initialize with 0 or any value)
+        if ($increment > 0 || $isFirstRecordToday) {
+            $incremental = ($increment > 0) ? $increment : 0; // First record gets incremental = 0 for initialization
             
             // Save to database
             InsBpmCount::create([
@@ -277,13 +339,13 @@ class InsBpmPoll extends Command
             $this->lastReadingDates[$key] = $today;
             
             if ($this->option('d')) {
-                $this->line("    ✓ Saved {$condition}: increment {$incremental}, cumulative {$currentCumulative}");
+                $this->line("    ✓ Saved {$condition}: prev={$previousCumulative}, increment={$incremental}, cumulative={$currentCumulative}");
             }
             
             return 1;
         } else {
             if ($this->option('d')) {
-                $this->line("    ⚠ Negative or zero increment ({$increment}) for {$key} - skipping save, updating baseline");
+                $this->line("    ⚠ Negative or zero increment ({$increment}) for {$key} (prev={$previousCumulative}, current={$currentCumulative}) - skipping save, updating baseline");
             }
             // Update baseline for counter resets or decreases
             $this->lastCumulativeValues[$key] = $currentCumulative;
@@ -298,7 +360,7 @@ class InsBpmPoll extends Command
     private function cleanupMemory()
     {
         // Limit the lastCumulativeValues array size by keeping only active lines
-        $activeLines = InsDwpDevice::active()->get()->flatMap(function ($device) {
+        $activeLines = InsBpmDevice::active()->get()->flatMap(function ($device) {
             return $device->getLines();
         })->unique()->toArray();
 
@@ -372,8 +434,7 @@ class InsBpmPoll extends Command
                 Types::toRegister($values["M4_Cold"] ?? 0)
             ];
 
-            // Step 3: Update values based on what changed
-            $counterss = [];
+            // Update values based on what changed
             foreach ($values as $machineKey => $counter) {
                 $valueIndex = array_search($machineKey, array_keys($this->addressWrite));
                 if ($valueIndex !== false) {
@@ -384,8 +445,7 @@ class InsBpmPoll extends Command
                 }
             }
 
-
-            // Step 4: Write all counters to HMI in one operation
+            // Write all counters to HMI in one operation
             $connection = BinaryStreamConnection::getBuilder()
                 ->setHost($device->ip_address)
                 ->setPort($this->modbusPort)
@@ -402,7 +462,7 @@ class InsBpmPoll extends Command
             $connection->close();
 
             if ($this->option('d')) {
-                $this->line("    ✓ Wrote " . count($updates) . " counter(s) to HMI in single operation");
+                $this->line("    ✓ Wrote " . count($values) . " counter(s) to HMI in single operation");
             }
 
             return true;
