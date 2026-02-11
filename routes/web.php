@@ -296,6 +296,9 @@ Route::prefix('insights')->group(function () {
 
     });
 
+    // ============================================//
+    // BPM ROUTES
+    // ============================================//
     Route::name('insights.bpm.')->group(function () {
         Volt::route('/bpm/data', 'insights.bpm.data.index')->name('data.index');
         Volt::route('/bpm/manage/authorizations', 'insights.bpm.manage.auths')->name('manage.auths');
@@ -305,6 +308,16 @@ Route::prefix('insights')->group(function () {
         Route::get('/bpm', function () {
             return redirect()->route('insights.bpm.data.index');
         })->name('index');
+    });
+
+    // ============================================//
+    // PDS ROUTES
+    // ============================================//
+    Route::name('insights.pds.')->group(function () {
+        Volt::route('/pds/data', 'insights.pds.data.index')->name('data.index');
+        Volt::route('/pds/manage/authorizations', 'insights.pds.manage.auths')->name('manage.auths');
+        Volt::route('/pds/manage/devices', 'insights.pds.manage.devices')->name('manage.devices');
+        Volt::route('/pds/manage', 'insights.pds.manage.index')->name('manage.index');
     });
 
     Volt::route('/', 'insights.index')->name('insights');

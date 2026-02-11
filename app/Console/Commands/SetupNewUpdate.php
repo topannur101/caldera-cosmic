@@ -8,6 +8,7 @@ use Database\Seeders\ProjectSeeder;
 use Database\Seeders\ShiftSeeder;
 use App\Models\InsRubberModel;
 use App\Models\InsRubberColor;
+use App\Models\InsPhDosingDevice;
 
 
 class SetupNewUpdate extends Command {
@@ -110,6 +111,15 @@ class SetupNewUpdate extends Command {
         ];
         InsRubberColor::insert($data);
         $this->info('OMV color seeded successfully');
+        $this->info(Artisan::output());
+
+        // pds device seeder
+        $this->info('Seeding pds device...');
+        $data = [
+            ['name' => 'Plant E', 'plant' => 'E', 'ip_address' => '192.168.1.1', 'config' => json_encode([]), 'is_active' => true],
+        ];
+        InsPhDosingDevice::insert($data);
+        $this->info('PDS device seeded successfully');
         $this->info(Artisan::output());
     }
 

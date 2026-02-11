@@ -8,16 +8,19 @@ use Illuminate\Support\Facades\Schedule;
 //     $this->comment(Inspiring::quote());
 // })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command('app:data-cleanup')->daily();
-Schedule::command('app:sync-inv-query')->everyFiveMinutes();
+// Schedule::command('app:data-cleanup')->daily();
+// Schedule::command('app:sync-inv-query')->everyFiveMinutes();
 
-// Uptime monitoring - check every minute
+// // Uptime monitoring - check every minute
 Schedule::command('uptime:check')->everyMinute();
 
-// BPM scheduled commands
-Schedule::command('app:ins-bpm-reset')->dailyAt('06:12');
-Schedule::command('app:ins-bpm-poll')->everyMinute();
+// // BPM scheduled commands
+// Schedule::command('app:ins-bpm-reset')->dailyAt('06:12');
+// Schedule::command('app:ins-bpm-poll')->everyMinute();
 
-// DWP scheduled commands
-Schedule::command('app:ins-dwp-reset')->dailyAt('07:00');
-Schedule::command('app:ins-dwp-time-chart')->everyThirtyMinutes();
+// // DWP scheduled commands
+// Schedule::command('app:ins-dwp-reset')->dailyAt('07:00');
+// Schedule::command('app:ins-dwp-time-chart')->everyThirtyMinutes();
+
+// PH Dossing scheduled commands
+Schedule::command('app:ins-ph-dossing-poll')->everyFiveMinutes();

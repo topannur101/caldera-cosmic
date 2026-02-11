@@ -64,6 +64,32 @@ class UptimeMonitorService
                 $duration  = $result['duration'];
                 $isTimeout = $result['is_timeout'] ?? false;
                 $errorType = $result['error_type'] ?? null;
+            } 
+            elseif ($type === 'http' && $projectGroup === 'RHEOMETER') {
+                // PDS type: Check connection and data freshness
+                $endpoint = 'http://172.70.66.109:5099/get-all-pc-status';
+                // fetch with curl
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $endpoint);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+                $response = curl_exec($ch);
+                curl_close($ch);
+                $data = json_decode($response, true);
+                foreach ($data['results'] as $item) {
+                    if ($item['ip'] === $ipAddress) {
+                        if ($item['status'] === 'online') {
+                            $status = 'online';
+                            $message = 'Rheometer is online';
+                            break;
+                        } else {
+                            $status = 'offline';
+                            $message = 'Rheometer is offline';
+                            break;
+                        }
+                        break;
+                    }
+                }
             } else {
                 // HTTP Connection Test (default)
                 $response = Http::timeout($timeout)->get($ipAddress);

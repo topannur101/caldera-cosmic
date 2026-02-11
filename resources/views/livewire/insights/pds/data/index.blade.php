@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\On;
+use App\Models\InsPhDosingDevice;
 
 new #[Layout("layouts.app")] class extends Component {
     #[Url]
@@ -11,22 +12,22 @@ new #[Layout("layouts.app")] class extends Component {
 
     public array $view_titles = [];
     public array $view_icons = [];
+    public array $plants = [];
 
     public function mount()
     {
         $this->view_titles = [
-            "dashboard" => __("Dashboard BPM"),
+            "dashboard" => __("Dashboard PDS"),
             "raw" => __("Raw Data"),
-            "summary" => __("Summary Emergency (Per Plant)"),
-            "summary-line" => __("Summary Emergency (Per Line)"),
+            "history" => __("History Dosing"),
         ];
 
         $this->view_icons = [
             "dashboard" => "icon-layout-dashboard",
             "raw" => "icon-database",
-            "summary" => "icon-notebook-text",
-            "summary-line" => "icon-chart-line",
+            "history" => "icon-notebook-text",
         ];
+        $this->plants = $this->getDevices();
     }
 
     public function getViewTitle(): string
@@ -42,34 +43,40 @@ new #[Layout("layouts.app")] class extends Component {
     #[On('update-menu')]
     public function updateMenu($view){
         // Condition Menu
-        if ($view === "raw" || $view === "summary" || $view === "summary-line") {
+        if ($view === "raw" || $view === "history") {
             $this->view_titles = [
-                "dashboard" => __("Dashboard BPM"),
+                "dashboard" => __("Dashboard"),
                 "raw" => __("Raw Data"),
-                "summary" => __("Summary Emergency (Per Plant)"),
-                "summary-line" => __("Summary Emergency (Per Line)"),
+                "history" => __("History Dosing"),
             ];
 
             $this->view_icons = [
                 "dashboard" => "icon-layout-dashboard",
                 "raw" => "icon-database",
-                "summary" => "icon-notebook-text",
-                "summary-line" => "icon-chart-line",
+                "history" => "icon-notebook-text",
             ];
         }
+    }
+
+    public function getDevices()
+    {
+        return InsPhDosingDevice::orderBy("name")
+            ->get()
+            ->pluck("name", "id", "plant")
+            ->toArray();
     }
 };
 
 ?>
 
-<x-slot name="title">{{ __("Data - Back Part Molding") }}</x-slot>
+<x-slot name="title">{{ __("Data - pH Dosing") }}</x-slot>
 
 <x-slot name="header">
-    <x-nav-insights-bpm></x-nav-insights-bpm>
+    <x-nav-insights-pds></x-nav-insights-pds>
 </x-slot>
 
 <div id="content" class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 gap-4">
-    <div wire:key="dwp-data-nav" class="flex mb-6">
+    <div wire:key="pds-data-nav" class="flex mb-6">
         <x-dropdown align="left" width="60">
             <x-slot name="trigger">
                 <x-text-button type="button" class="flex gap-2 items-center ml-1">
@@ -96,19 +103,16 @@ new #[Layout("layouts.app")] class extends Component {
         <x-spinner></x-spinner>
     </div>
 
-    <div wire:key="bpm-data-container" wire:loading.class="hidden">
+    <div wire:key="pds-data-container" wire:loading.class="hidden">
         @switch($view)
             @case("dashboard")
-                <livewire:insights.bpm.data.dashboard />
+                <livewire:insights.pds.data.dashboard />
                 @break
-            @case("summary")
-                <livewire:insights.bpm.data.summary-bpm />
+            @case("history")
+                <livewire:insights.pds.data.history />
                 @break
             @case("raw")
-                <livewire:insights.bpm.data.raw />
-                @break
-            @case("summary-line")
-                <livewire:insights.bpm.data.summary-line />
+                <livewire:insights.pds.data.raw />
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">
