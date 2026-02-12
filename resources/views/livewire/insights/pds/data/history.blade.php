@@ -403,6 +403,8 @@ new class extends Component {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mt-2">
             <!-- Left Side: Chart Area -->
             <div class="lg:col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+                
+                <h3 class="text-lg font-semibold text-neutral-700 dark:text-neutral-300 mb-4">{{ __("Daily Trend Chart pH") ." (Five Minutes Interval)" }}</h3>
                 <div 
                     x-data="{ 
                         chartData: @js($chartData),

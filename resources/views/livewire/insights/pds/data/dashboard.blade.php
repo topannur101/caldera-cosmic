@@ -348,6 +348,12 @@ new class extends Component {
         return $chartData;
     }
 
+    public function getTPMCodeMachine()
+    {
+        $dataJson = InsPhDosingDevice::where("id", $this->plant)->first()->config;
+        return $dataJson['tpm_code'] ?? "N/A";
+    }
+
     public function with(): array
     {
         return [
@@ -438,32 +444,45 @@ new class extends Component {
         </div>
 
         <!-- Second Row: TPM Code and Latest Calibration -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-3">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-2 mt-3">
             <!-- TPM Code Machine -->
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-2 text-center">
-                <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">{{ __("TPM Code Machine") }}</p>
-                <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-100">DGR-001</h2>
+                <p class="text-lg font-semibold text-neutral-600 dark:text-neutral-400 mb-3">{{ __("TPM Code Machine") }}</p>
+                <h2 class="text-xl font-bold text-neutral-800 dark:text-neutral-200">{{ $this->getTPMCodeMachine() }}</h2>
             </div>
 
             <!-- Latest Calibration -->
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-2 text-center">
-                <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">{{ __("Latest Calibration") }}</p>
-                <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-100">2026-01-20 07:30:00</h2>
+                <p class="text-lg font-semibold text-neutral-600 dark:text-neutral-400 mb-3">{{ __("Latest Calibration") }}</p>
+                <h2 class="text-xl font-bold text-neutral-800 dark:text-neutral-200">{{ now()->format("Y-m-d H:i:s") }}</h2>
+            </div>
+            <!-- Current PH -->
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-2 text-center">
+                <p class="text-lg font-semibold text-neutral-600 dark:text-neutral-400 mb-3">{{ __("Current pH") }}</p>
+                <div class="@if($this->getCurrentPh( new GetDataViaModbus() ) > 3) bg-red-500 dark:bg-red-700 @elseif($this->getCurrentPh( new GetDataViaModbus() ) < 2) bg-yellow-500 dark:bg-yellow-700 @else bg-green-500 dark:bg-green-700 @endif rounded-lg p-2">
+                    <h2 class="text-3xl font-bold text-white">{{ $this->getCurrentPh( new GetDataViaModbus() ) }}</h2>
+                </div>
+            </div>
+
+            <!-- 1 Hour Ago PH -->
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-2 text-center">
+                <p class="text-lg font-semibold text-neutral-600 dark:text-neutral-400 mb-3">{{ __("1 hour ago pH") }}</p>
+                <h2 class="text-5xl font-bold text-neutral-800 dark:text-neutral-200">{{ $this->getOneHourAgoPh( new GetDataViaModbus() ) }}</h2>
             </div>
         </div>
 
         <!-- Top Row: Three Cards -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mt-2">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-2">
             <!-- Online System Monitoring -->
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-                <h3 class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-4 text-center">{{ __("Online System Monitoring") }}</h3>
-                <div class="flex flex-col items-center">
-                    <div class="w-40 h-40 mb-4">
+                <h3 class="text-lg font-semibold text-neutral-700 dark:text-neutral-300 mb-4">{{ __("Online System Monitoring") }}</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="col-span-1 h-[150px]">
                         <canvas id="onlineChart" wire:ignore></canvas>
                     </div>
                     
                     <!-- Legend -->
-                    <div class="w-full space-y-1">
+                    <div class="col-span-1 flex flex-col gap-y-1 text-left">
                         <div class="flex items-center gap-2">
                             <div class="w-3 h-3 rounded-full bg-green-500"></div>
                             <span class="text-xs text-gray-700 dark:text-gray-300">{{ __("Online") }}</span>
@@ -490,14 +509,14 @@ new class extends Component {
 
             <!-- Total Duration per Status -->
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-                <h3 class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-4 text-center">{{ __("Total Duration per Status") }}</h3>
-                <div class="flex flex-col items-center">
-                    <div class="w-40 h-40 mb-4">
+                <h3 class="text-lg font-semibold text-neutral-700 dark:text-neutral-300 mb-4">{{ __("Total Duration per Status") }}</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="h-[150px]">
                         <canvas id="statusChart" wire:ignore></canvas>
                     </div>
                     
                     <!-- Legend -->
-                    <div class="w-full space-y-1">
+                    <div class="flex flex-col gap-y-1 text-left">
                         <div class="flex items-center gap-2">
                             <div class="w-3 h-3 rounded-full bg-green-500"></div>
                             <span class="text-xs text-gray-700 dark:text-gray-300">{{ __("Normal pH") }}</span>
@@ -521,28 +540,12 @@ new class extends Component {
                     </div>
                 </div>
             </div>
-
-            <!-- Current PH and 1 Hour Ago -->
-            <div class="space-y-3">
-                <!-- Current PH -->
-                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6 text-center">
-                    <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">{{ __("Current PH") }}</p>
-                    <div class="@if($this->getCurrentPh( new GetDataViaModbus() ) > 3) bg-red-500 dark:bg-red-700 @elseif($this->getCurrentPh( new GetDataViaModbus() ) < 2) bg-yellow-500 dark:bg-yellow-700 @else bg-green-500 dark:bg-green-700 @endif rounded-lg py-6">
-                        <h2 class="text-6xl font-bold text-white">{{ $this->getCurrentPh( new GetDataViaModbus() ) }}</h2>
-                    </div>
-                </div>
-
-                <!-- 1 Hour Ago PH -->
-                <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6 text-center">
-                    <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">{{ __("1 hour ago PH") }}</p>
-                    <h2 class="text-5xl font-bold text-neutral-900 dark:text-neutral-100">{{ $this->getOneHourAgoPh( new GetDataViaModbus() ) }}</h2>
-                </div>
-            </div>
         </div>
 
         <!-- Chart Area -->
         <div class="mt-3">
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-neutral-700 dark:text-neutral-300 mb-4">{{ __("Daily Trend Chart pH") ." (One Hour Interval)" }}</h3>
                     <div 
                         x-data="{ 
                             chartData: @js($chartData),

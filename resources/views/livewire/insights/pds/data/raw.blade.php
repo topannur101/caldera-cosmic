@@ -164,6 +164,7 @@ new class extends Component {
                 <thead>
                     <tr class="uppercase text-xs text-center">
                         <th style="text-align: center;">{{ __("Plant") }}</th>
+                        <th style="text-align: center;">{{ __("TPM Code") }}</th>
                         <th style="text-align: center;">{{ __("PH Value") }}</th>
                         <th style="text-align: center;">{{ __("Status") }}</th>
                         <th style="text-align: center;">{{ __("Timestamp") }}</th>
@@ -176,6 +177,7 @@ new class extends Component {
                     @endphp
                         <tr wire:key="count-tr-{{ $count->id }}" class="hover:bg-neutral-50 dark:hover:bg-neutral-700">
                             <td class="text-center">{{ $count->device->plant }}</td>
+                            <td class="text-center">{{ $count->device->config['tpm_code'] ?? "N/A" }}</td>
                             <td class="text-center">
                                 <span class="text-green-600 dark:text-green-400">
                                     <i class="me-1"></i>{{ number_format($phValue['current_ph'], 2) }}
