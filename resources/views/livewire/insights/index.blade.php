@@ -10,6 +10,7 @@ use App\Models\InsLdcHide;
 use App\Models\InsClmRecord;
 use App\Models\InsDwpCount;
 use App\Models\InsBpmCount;
+use App\Models\InsPhDosingCount;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -189,7 +190,7 @@ new #[Layout("layouts.app")] class extends Component {
         $this->ldc_codes_recent = $this->getCachedLdcCodes();
         $this->dwp_lines_recent = $this->getCachedDwpLines();
         $this->bpm_lines_recent = $this->getCachedBpmLines();
-        $this->ph_data_recent = 0;
+        $this->ph_data_recent = $this->getCachedPhData();
         // Get fresh climate data (no caching)
         $this->getLatestClimateData();
     }
@@ -201,6 +202,15 @@ new #[Layout("layouts.app")] class extends Component {
             return InsBpmCount::where("updated_at", ">=", $timeWindow)
                 ->distinct("line")
                 ->count("line");
+        });
+    }
+
+    private function getCachedPhData(): int
+    {
+        return Cache::remember("ph_data_recent", now()->addMinutes(30), function () {
+            $timeWindow = Carbon::now()->subHours(1);
+            return InsPhDosingCount::where("updated_at", ">=", $timeWindow)
+                ->count();
         });
     }
 
@@ -435,11 +445,11 @@ new #[Layout("layouts.app")] class extends Component {
                                     <img src="/ins-pds.svg" class="w-16 h-16 dark:invert fs-5 font-bold" />
                                 </div>
                                 <div class="grow">
-                                    <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Pemantauan pH Dosing") }}</div>
+                                    <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Pemantauan PH Dossing") }}</div>
                                     <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                         <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
                                             <div class="w-2 h-2 {{ $ph_data_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
-                                            <div>{{ __("Data pH") . ": " . ($ph_data_recent > 0 ? $ph_data_recent : __("luring")) }}</div>
+                                            <div>{{ $ph_data_recent > 0 ? $ph_data_recent . " " . __("line ") : __("luring") }}</div>
                                         </div>
                                     </div>
                                 </div>

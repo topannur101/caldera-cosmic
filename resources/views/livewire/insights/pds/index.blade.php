@@ -16,9 +16,9 @@ new #[Layout("layouts.app")] class extends Component {
         <div class="bg-white dark:bg-neutral-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6 text-neutral-900 dark:text-neutral-100">
                 <div class="mb-6">
-                    <h2 class="text-2xl font-semibold">{{ __("Pemantauan dosing PH") }}</h2>
+                    <h2 class="text-2xl font-semibold">{{ __("Pemantauan dossing PH") }}</h2>
                     <p class="text-neutral-600 dark:text-neutral-400 mt-2">
-                        {{ __("Sistem monitoring dosing PH untuk proses assembly") }}
+                        {{ __("Sistem monitoring dossing PH untuk proses assembly") }}
                     </p>
                 </div>
 
