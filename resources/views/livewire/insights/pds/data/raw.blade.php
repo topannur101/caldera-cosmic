@@ -62,6 +62,21 @@ new class extends Component {
             });
         }
 
+        // conditional
+        switch ($this->condition) {
+            case "normal":
+                $query->where("ph_value->current_ph", ">=", 2)->where("ph_value->current_ph", "<=", 3);
+                break;
+            case "high":
+                $query->where("ph_value->current_ph", ">", 3);
+                break;
+            case "low":
+                $query->where("ph_value->current_ph", "<", 2);
+                break;
+            case "all":
+                break;
+        }
+
         return $query->orderBy("created_at", "DESC");
     }
 
@@ -131,6 +146,17 @@ new class extends Component {
                         @foreach($this->getUniquePlants() as $id => $plantOption)
                             <option value="{{$id}}">{{$plantOption}}</option>
                         @endforeach
+                    </x-select>
+                </div>
+
+                <!-- get by status -->
+                <div>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Status") }}</label>
+                    <x-select wire:model.live="condition" class="w-full">
+                        <option value="all">{{ __("Semua") }}</option>
+                        <option value="normal">{{ __("Normal") }}</option>
+                        <option value="high">{{ __("High") }}</option>
+                        <option value="low">{{ __("Low") }}</option>
                     </x-select>
                 </div>
             </div>
