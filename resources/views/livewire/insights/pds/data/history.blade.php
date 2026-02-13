@@ -382,7 +382,13 @@ new class extends Component {
                         'sum' => 0,
                         'count' => 0,
                         'timestamp' => $roundedTimestamp,
-                        'has_dosing' => false
+                        'has_dosing' => false,
+                        'dosing_data' => [
+                            'total_amount' => 0,
+                            'formula_1_amount' => 0,
+                            'formula_2_amount' => 0,
+                            'formula_3_amount' => 0,
+                        ],
                     ];
                 }
                 
@@ -409,12 +415,27 @@ new class extends Component {
                         'sum' => 0,
                         'count' => 0,
                         'timestamp' => $roundedTimestamp,
-                        'has_dosing' => false
+                        'has_dosing' => false,
+                        'dosing_data' => [
+                            'total_amount' => 0,
+                            'formula_1_amount' => 0,
+                            'formula_2_amount' => 0,
+                            'formula_3_amount' => 0,
+                        ],
                     ];
                 }
                 
                 // Mark this interval as having dosing event
                 $fiveMinuteData[$intervalKey]['has_dosing'] = true;
+
+                // Accumulate dosing data from data_dosing JSON
+                $dataDosing = $log->data_dosing;
+                if (is_array($dataDosing)) {
+                    $fiveMinuteData[$intervalKey]['dosing_data']['total_amount'] += (int) ($dataDosing['total_amount'] ?? 0);
+                    $fiveMinuteData[$intervalKey]['dosing_data']['formula_1_amount'] += (int) ($dataDosing['formula_1_amount'] ?? 0);
+                    $fiveMinuteData[$intervalKey]['dosing_data']['formula_2_amount'] += (int) ($dataDosing['formula_2_amount'] ?? 0);
+                    $fiveMinuteData[$intervalKey]['dosing_data']['formula_3_amount'] += (int) ($dataDosing['formula_3_amount'] ?? 0);
+                }
             }
 
             // Return empty chart if no valid data after processing
@@ -427,6 +448,7 @@ new class extends Component {
                 'labels' => [],
                 'phValues' => [],
                 'dosingMarkers' => [],
+                'dosingInfo' => [],
             ];
 
             // Determine if we need to show dates in labels (multi-day range)
@@ -463,8 +485,10 @@ new class extends Component {
                 // Add dosing marker if this interval has dosing event
                 if ($intervalInfo['has_dosing']) {
                     $chartData['dosingMarkers'][] = round($avgPh, 2);
+                    $chartData['dosingInfo'][] = $intervalInfo['dosing_data'] ?? null;
                 } else {
                     $chartData['dosingMarkers'][] = null;
+                    $chartData['dosingInfo'][] = null;
                 }
             }
 
@@ -480,6 +504,7 @@ new class extends Component {
             'labels' => [],
             'phValues' => [],
             'dosingMarkers' => [],
+            'dosingInfo' => [],
         ];
     }
 
@@ -590,12 +615,10 @@ new class extends Component {
                     </div>
                 </div>
             </div>
-            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 mt-2" wire:key="statistics-{{ $start_at }}-{{ $end_at }}-{{ $plant }}">
             <!-- Right Side: Statistics -->
             <!-- Top Row: Amount dossing & Dossing count -->
-                <!-- Amount dossing (gr) -->
                 <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6 text-center">
                     <p class="text-lg font-semibold text-neutral-600 dark:text-neutral-400 mb-2">{{ __("Amount dossing (gr)") }}</p>
                     <h2 class="text-4xl font-bold text-neutral-900 dark:text-neutral-100">{{ $statistics['total_dossing'] }}</h2>
@@ -670,6 +693,7 @@ new class extends Component {
                             const phSeries = chartData.phValues || [];
                             const labels = chartData.labels || [];
                             const dosingMarkers = chartData.dosingMarkers || [];
+                            const dosingInfo = chartData.dosingInfo || [];
                             
                             if (labels.length === 0) {
                                 return;
@@ -766,14 +790,39 @@ new class extends Component {
                                     shared: true,
                                     intersect: false,
                                     theme: isDark ? 'dark' : 'light',
-                                    y: { 
-                                        formatter: function(value) { 
-                                            if (value === null || value === undefined || isNaN(value)) {
-                                                return 'N/A';
-                                            }
-                                            return Number(value).toFixed(2); 
-                                        } 
-                                    }
+                                    y: [
+                                        { 
+                                            formatter: function(value) { 
+                                                if (value === null || value === undefined || isNaN(value)) return 'N/A';
+                                                return Number(value).toFixed(2); 
+                                            } 
+                                        },
+                                        { 
+                                            formatter: function(value) { 
+                                                if (value === null || value === undefined || isNaN(value)) return 'N/A';
+                                                return Number(value).toFixed(2); 
+                                            } 
+                                        },
+                                        { 
+                                            formatter: function(value) { 
+                                                if (value === null || value === undefined || isNaN(value)) return 'N/A';
+                                                return Number(value).toFixed(2); 
+                                            } 
+                                        },
+                                        { 
+                                            title: {
+                                                formatter: function() { return 'Dosing:'; }
+                                            },
+                                            formatter: function(value, { dataPointIndex }) { 
+                                                if (value === null || value === undefined || isNaN(value)) return undefined;
+                                                const info = dosingInfo[dataPointIndex];
+                                                if (info) {
+                                                    return 'Total: ' + info.total_amount + ' gr, F1: ' + info.formula_1_amount + ' gr, F2: ' + info.formula_2_amount + ' gr, F3: ' + info.formula_3_amount + ' gr';
+                                                }
+                                                return Number(value).toFixed(2); 
+                                            } 
+                                        }
+                                    ]
                                 },
                                 theme: { mode: isDark ? 'dark' : 'light' }
                             };
