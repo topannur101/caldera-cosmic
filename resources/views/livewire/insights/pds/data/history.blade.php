@@ -686,7 +686,7 @@ new class extends Component {
                             const stdMinPh = {{ $stdMinPh }};
                             const stdMaxPh = {{ $stdMaxPh }};
                             
-                            const phSeries = chartData.phValues || [];
+                            const phSeries = (chartData.phValues || []).map(v => (v === null || v === undefined || isNaN(v)) ? 0 : parseFloat(v));
                             const labels = chartData.labels || [];
                             const dosingMarkers = chartData.dosingMarkers || [];
                             const dosingInfo = chartData.dosingInfo || [];
@@ -702,12 +702,41 @@ new class extends Component {
                             const textColor = isDark ? '#d4d4d4' : '#525252';
                             const gridColor = isDark ? '#404040' : '#e5e7eb';
                             
+                            // Build point annotations for dosing events
+                            const dosingAnnotations = [];
+                            dosingMarkers.forEach((value, index) => {
+                                if (value !== null && value !== undefined && !isNaN(value) && isFinite(value) && labels[index]) {
+                                    dosingAnnotations.push({
+                                        x: labels[index],
+                                        y: parseFloat(value),
+                                        marker: {
+                                            size: 8,
+                                            fillColor: '#10b981',
+                                            strokeColor: '#fff',
+                                            strokeWidth: 2,
+                                            shape: 'circle'
+                                        },
+                                        label: {
+                                            text: '\u25BC',
+                                            borderColor: 'transparent',
+                                            style: {
+                                                background: 'transparent',
+                                                color: '#10b981',
+                                                fontSize: '14px',
+                                                fontWeight: 'bold',
+                                                padding: { left: 2, right: 2, top: 0, bottom: 0 }
+                                            },
+                                            offsetY: -15
+                                        }
+                                    });
+                                }
+                            });
+                            
                             const options = {
                                 series: [
-                                    { name: 'Nilai pH', data: phSeries, type: 'line' },
-                                    { name: 'Batas Maksimal (pH ' + stdMaxPh + ')', data: maxLimit, type: 'line' },
-                                    { name: 'Batas Minimal (pH ' + stdMinPh + ')', data: minLimit, type: 'line' },
-                                    { name: 'Dosing Event', data: dosingMarkers, type: 'scatter' }
+                                    { name: 'Nilai pH', data: phSeries },
+                                    { name: 'Batas Maksimal (pH ' + stdMaxPh + ')', data: maxLimit },
+                                    { name: 'Batas Minimal (pH ' + stdMinPh + ')', data: minLimit }
                                 ],
                                 chart: {
                                     height: 350,
@@ -719,29 +748,19 @@ new class extends Component {
                                     animations: { enabled: true, easing: 'easeinout', speed: 800 },
                                     background: 'transparent'
                                 },
-                                colors: ['#3b82f6', '#ef4444', '#ef4444', '#10b981'],
-                                stroke: { width: [3, 2, 2, 0], curve: 'smooth', dashArray: [0, 5, 5, 0] },
+                                annotations: {
+                                    points: dosingAnnotations
+                                },
+                                colors: ['#3b82f6', '#ef4444', '#ef4444'],
+                                stroke: { width: [3, 2, 2], curve: 'smooth', dashArray: [0, 5, 5] },
                                 markers: {
-                                    size: [5, 0, 0, 0],
-                                    colors: ['#3b82f6', '#ef4444', '#ef4444', '#10b981'],
+                                    size: [4, 0, 0],
+                                    colors: ['#3b82f6', '#ef4444', '#ef4444'],
                                     strokeColors: '#fff',
                                     strokeWidth: 2,
-                                    hover: { size: [7, 0, 0, 0] }
+                                    hover: { sizeOffset: 3 }
                                 },
-                                dataLabels: {
-                                    enabled: true,
-                                    enabledOnSeries: [3],
-                                    formatter: function(value) {
-                                        return value !== null && value !== undefined ? '▼' : '';
-                                    },
-                                    style: {
-                                        fontSize: '16px',
-                                        fontWeight: 'bold',
-                                        colors: ['#10b981']
-                                    },
-                                    background: { enabled: false },
-                                    offsetY: -5
-                                },
+                                dataLabels: { enabled: false },
                                 xaxis: {
                                     categories: labels,
                                     title: { text: 'Waktu', style: { fontSize: '12px', color: textColor } },
@@ -788,33 +807,25 @@ new class extends Component {
                                     theme: isDark ? 'dark' : 'light',
                                     y: [
                                         { 
-                                            formatter: function(value) { 
-                                                if (value === null || value === undefined || isNaN(value)) return 'N/A';
-                                                return Number(value).toFixed(2); 
-                                            } 
-                                        },
-                                        { 
-                                            formatter: function(value) { 
-                                                if (value === null || value === undefined || isNaN(value)) return 'N/A';
-                                                return Number(value).toFixed(2); 
-                                            } 
-                                        },
-                                        { 
-                                            formatter: function(value) { 
-                                                if (value === null || value === undefined || isNaN(value)) return 'N/A';
-                                                return Number(value).toFixed(2); 
-                                            } 
-                                        },
-                                        { 
-                                            title: {
-                                                formatter: function() { return 'Dosing:'; }
-                                            },
                                             formatter: function(value, { dataPointIndex }) { 
-                                                if (value === null || value === undefined || isNaN(value)) return undefined;
+                                                if (value === null || value === undefined || isNaN(value)) return 'N/A';
+                                                let result = Number(value).toFixed(2);
                                                 const info = dosingInfo[dataPointIndex];
                                                 if (info) {
-                                                    return 'Total: ' + info.total_amount + ' gr, F1: ' + info.formula_1_amount + ' gr, F2: ' + info.formula_2_amount + ' gr, F3: ' + info.formula_3_amount + ' gr';
+                                                    result += ' | Dosing: Total ' + info.total_amount + ' gr, F1: ' + info.formula_1_amount + ' gr, F2: ' + info.formula_2_amount + ' gr, F3: ' + info.formula_3_amount + ' gr';
                                                 }
+                                                return result; 
+                                            } 
+                                        },
+                                        { 
+                                            formatter: function(value) { 
+                                                if (value === null || value === undefined || isNaN(value)) return 'N/A';
+                                                return Number(value).toFixed(2); 
+                                            } 
+                                        },
+                                        { 
+                                            formatter: function(value) { 
+                                                if (value === null || value === undefined || isNaN(value)) return 'N/A';
                                                 return Number(value).toFixed(2); 
                                             } 
                                         }
