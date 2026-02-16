@@ -123,6 +123,12 @@ new class extends Component {
                 return $this->getEmptyStatistics();
             }
 
+            // HMI sends dosing_amount as cumulative, so total = latest record's value
+            $totalDossing = $dataLog->isNotEmpty()
+                ? (is_numeric($dataLog->last()->dosing_amount) ? (float) $dataLog->last()->dosing_amount : 0)
+                : 0;
+            $dossingCount = $dataLog->count();
+
             // Group data by 5-minute intervals
             $fiveMinuteStats = [];
             
@@ -159,7 +165,7 @@ new class extends Component {
                         'ph_count' => 0,
                         'ph_max' => 0,
                         'ph_min' => PHP_FLOAT_MAX,
-                        'dosing_amounts' => [],
+                        'latest_dosing' => 0,
                         'dosing_count' => 0,
                     ];
                 }
@@ -198,14 +204,14 @@ new class extends Component {
                         'ph_count' => 0,
                         'ph_max' => 0,
                         'ph_min' => PHP_FLOAT_MAX,
-                        'dosing_amounts' => [],
+                        'latest_dosing' => 0,
                         'dosing_count' => 0,
                     ];
                 }
                 
-                // Safely get dosing amount
+                // HMI sends cumulative dosing, keep latest (newest) value per interval
                 $dosingAmount = is_numeric($log->dosing_amount) ? (float) $log->dosing_amount : 0;
-                $fiveMinuteStats[$intervalKey]['dosing_amounts'][] = $dosingAmount;
+                $fiveMinuteStats[$intervalKey]['latest_dosing'] = $dosingAmount;
                 $fiveMinuteStats[$intervalKey]['dosing_count']++;
             }
             
@@ -216,8 +222,6 @@ new class extends Component {
             
             // Calculate statistics for each interval and overall
             $intervalStats = [];
-            $totalDossing = 0;
-            $dossingCount = 0;
             $highestPh = 0;
             $lowestPh = PHP_FLOAT_MAX;
             
@@ -229,16 +233,8 @@ new class extends Component {
                     ? $data['ph_sum'] / $data['ph_count'] 
                     : 0;
                 
-                $intervalDosing = !empty($data['dosing_amounts']) 
-                    ? array_sum($data['dosing_amounts']) 
-                    : 0;
-                
                 $maxPhInInterval = $data['ph_max'];
                 $minPhInInterval = $data['ph_min'] !== PHP_FLOAT_MAX ? $data['ph_min'] : 0;
-                
-                // Track overall statistics
-                $totalDossing += $intervalDosing;
-                $dossingCount += $data['dosing_count'];
                 
                 // Track highest and lowest AVERAGE pH (to match chart display)
                 if ($data['ph_count'] > 0) {
@@ -258,7 +254,7 @@ new class extends Component {
                     'avg_ph' => round($avgPh, 2),
                     'max_ph' => round($maxPhInInterval, 2),
                     'min_ph' => round($minPhInInterval, 2),
-                    'total_dosing' => $intervalDosing,
+                    'total_dosing' => $data['latest_dosing'],
                     'dosing_count' => $data['dosing_count'],
                 ];
             }
@@ -647,7 +643,7 @@ new class extends Component {
             <!-- Left Side: Chart Area -->
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
                 
-                <h3 class="text-lg text-center font-semibold text-neutral-700 dark:text-neutral-300 mb-4">{{ __("Daily Trend Chart pH") ." (5 Minutes Interval)" }}</h3>
+                <h3 class="text-lg text-center font-semibold text-neutral-700 dark:text-neutral-300 mb-4">{{ __("Trend Chart pH") ." (5 Minutes Interval)" }}</h3>
                 
                 @if(empty($chartData['labels']) || count($chartData['labels']) === 0)
                     <div class="flex items-center justify-center" style="height: 350px;">
