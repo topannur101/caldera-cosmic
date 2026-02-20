@@ -46,9 +46,7 @@ class InsPhDossingReset extends Command
             if ($this->option('v')) {
                 $this->comment("→ Resetting {$device->name} ({$device->ip_address})");
             }
-
             try {
-
                 $this->bruteForceReset($device);
                 $successCount++;
             } catch (\Throwable $th) {
