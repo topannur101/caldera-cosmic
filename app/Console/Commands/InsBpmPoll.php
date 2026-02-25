@@ -4,62 +4,55 @@ namespace App\Console\Commands;
 
 use App\Models\InsBpmDevice;
 use App\Models\InsBpmCount;
+use App\Models\UptimeLog;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
+use ModbusTcpClient\Composer\Write\WriteCoilsBuilder;
 use ModbusTcpClient\Network\NonBlockingClient;
-use ModbusTcpClient\Network\BinaryStreamConnection;
-use ModbusTcpClient\Packet\ModbusFunction\WriteMultipleRegistersRequest;
-use ModbusTcpClient\Packet\ModbusFunction\WriteSingleCoilRequest;
-use ModbusTcpClient\Packet\ModbusFunction\WriteSingleRegisterRequest;
-use ModbusTcpClient\Packet\ResponseFactory;
-use ModbusTcpClient\Utils\Types;
 
 class InsBpmPoll extends Command
 {
     // Configuration variables
-    protected $pollIntervalSeconds = 1;
-    protected $modbusTimeoutSeconds = 2;
-    protected $modbusPort = 503;
-    public $addressWrite  = [
-        'M1_Hot'   => 10,
-        'M1_Cold'  => 11,
-        'M2_Hot'   => 12,
-        'M2_Cold'  => 13,
-        'M3_Hot'   => 14,
-        'M3_Cold'  => 15,
-        'M4_Hot'   => 16,
-        'M4_Cold'  => 17,
-    ];
+    private const POLL_INTERVAL_SECONDS = 1;
+    private const MODBUS_TIMEOUT_SECONDS = 2;
+    private const MODBUS_PORT = 503;
+    private const MODBUS_UNIT_ID = 1;
+    private const RESET_FLAG_CACHE_TTL_DAYS = 2;
+    
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:ins-bpm-poll {--v : Verbose output} {--d : Debug output}';
+    protected $signature = 'app:ins-bpm-poll {--v : Verbose output} {--d : Debug output} {--dry-test : Run simulation without reset write and DB insert}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Poll BPM (Deep-Well Alarm Constraint Time) counter data from Modbus servers and track incremental counts';
+    protected $description = 'Poll BPM (Back part mold emergency stop) counter data from Modbus servers and track incremental counts';
 
-    // In-memory buffer to track last cumulative values per line and condition
-    protected  $lastCumulativeValues = []; // Format: ['M1_Hot' => 123, 'M1_Cold' => 456]
-    protected  $lastReadingDates     = []; // Format: ['M1_Hot' => '2026-01-09', 'M1_Cold' => '2026-01-09']
-    private    $lastDurationValues   = [];
-    private    $lastSentDurationValues = []; // Track last sent duration per line
-    public int $saveDuration = 0;
-
-    // Memory optimization counters
-    protected $pollCycleCount = 0;
-    protected $memoryCleanupInterval = 1000; // Clean memory every 1000 cycles
-
-    // Statistics tracking
-    protected $deviceStats = [];
-    protected $totalReadings = 0;
-    protected $totalErrors = 0;
+    /**
+     * Read a Modbus counter value from the device
+     */
+    private function readModbusCounter(string $ipAddress, int $address, string $counterName): int
+    {
+        $request = ReadRegistersBuilder::newReadInputRegisters(
+            "tcp://{$ipAddress}:" . self::MODBUS_PORT,
+            self::MODBUS_UNIT_ID
+        )
+        ->int16($address, $counterName)
+        ->build();
+        
+        $response = (new NonBlockingClient(['readTimeoutSec' => self::MODBUS_TIMEOUT_SECONDS]))
+            ->sendRequests($request)
+            ->getData();
+        
+        return abs($response[$counterName]);
+    }
 
     /**
      * Execute the console command.
@@ -73,6 +66,9 @@ class InsBpmPoll extends Command
             return 1;
         }
         $this->info('✓ InsBpmPoll started - monitoring ' . count($devices) . ' devices');
+        if ($this->isDryTest()) {
+            $this->warn('⚑ DRY TEST mode enabled: reset and DB writes are simulated');
+        }
         if ($this->option('v')) {
             $this->comment('Devices:');
             foreach ($devices as $device) {
@@ -81,16 +77,13 @@ class InsBpmPoll extends Command
             }
         }
 
-        // Initialize all machines with zero if no data exists for today
-        $this->initializeTodayRecords($devices);
-
-        // forach device, poll once for testing
+        // For each device, poll once for testing
         foreach ($devices as $device) {
             if ($this->option('v')) {
                 $this->comment("→ Polling {$device->name} ({$device->ip_address})");
             }
-
             try {
+                $this->handleFirstOnlineDailyReset($device);
                 $readings = $this->pollDevice($device);
                 if ($readings > 0) {
                     $this->info("✓ Polling {$device->name} completed - {$readings} new readings saved");
@@ -103,373 +96,201 @@ class InsBpmPoll extends Command
         }
     }
 
-    /**
-     * Initialize records with zero for all machines that don't have data for today
-     */
-    private function initializeTodayRecords($devices)
+    private function pollDevice(InsBpmDevice $device): int
     {
-        $today = Carbon::today();
-        $initialized = 0;
-        
-        foreach ($devices as $device) {
-            foreach ($device->config['list_mechine'] as $machineConfig) {
-                $machineName = $machineConfig['name'];
-                $line = $machineConfig['line'] ?? $device->line;
-                
-                // Check and initialize Hot condition
-                $hotExists = InsBpmCount::where('plant', $device->name)
-                    ->where('line', strtoupper(trim($line)))
-                    ->where('machine', strtoupper(trim($machineName)))
-                    ->where('condition', 'Hot')
-                    ->whereDate('created_at', $today)
-                    ->exists();
-                
-                if (!$hotExists) {
-                    InsBpmCount::create([
-                        'plant' => $device->name,
-                        'line' => $line,
-                        'machine' => $machineName,
-                        'condition' => 'Hot',
-                        'incremental' => 0,
-                        'cumulative' => 0,
-                    ]);
-                    $initialized++;
-                    
-                    if ($this->option('d')) {
-                        $this->line("  ✓ Initialized {$machineName}_Hot with zero");
-                    }
-                }
-                
-                // Check and initialize Cold condition
-                $coldExists = InsBpmCount::where('plant', $device->name)
-                    ->where('line', strtoupper(trim($line)))
-                    ->where('machine', strtoupper(trim($machineName)))
-                    ->where('condition', 'Cold')
-                    ->whereDate('created_at', $today)
-                    ->exists();
-                
-                if (!$coldExists) {
-                    InsBpmCount::create([
-                        'plant' => $device->name,
-                        'line' => $line,
-                        'machine' => $machineName,
-                        'condition' => 'Cold',
-                        'incremental' => 0,
-                        'cumulative' => 0,
-                    ]);
-                    $initialized++;
-                    
-                    if ($this->option('d')) {
-                        $this->line("  ✓ Initialized {$machineName}_Cold with zero");
-                    }
-                }
-            }
-        }
-        
-        if ($initialized > 0) {
-            $this->info("✓ Initialized {$initialized} machine records with zero for today");
-        } else if ($this->option('v')) {
-            $this->comment("→ All machines already have records for today");
-        }
-    }
-
-    private function pollDevice(InsBpmDevice $device)
-    {
-        $unit_id = 1; // Standard Modbus unit ID
         $readingsCount = 0;
-        $hmiUpdates = []; // Track HMI updates: ['M1_Hot' => 2, 'M1_Cold' => 3, ...]
         foreach ($device->config['list_mechine'] as $machineConfig) {
-            $machineName = $machineConfig['name'];
-            $hotAddrs    = $machineConfig['addr_hot'];
-            $coldAddrs   = $machineConfig['addr_cold'];
-            $line        = $machineConfig['line'] ?? $device->line;
-            
-            if ($this->option('d')) {
-                $this->line("  Polling machine {$machineName} at addresses hot: {$hotAddrs}, cold: {$coldAddrs}");
-            }
-
             try {
-                // REQUEST DATA COUNTER HOT
-                $requestConditionHot = ReadRegistersBuilder::newReadInputRegisters(
-                        'tcp://' . $device->ip_address . ':' . $this->modbusPort,
-                        $unit_id)
-                        ->int16($hotAddrs, 'counter_hot') // Counter value at hot
-                        ->build();
-                // Execute Modbus request
-                $responseConditionHot = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))
-                    ->sendRequests($requestConditionHot)->getData();
-                $counterHot = abs($responseConditionHot['counter_hot']); // Make absolute to ensure positive values
-
-                // REQUEST DATA COUNTER COLD
-                $requestConditionCold = ReadRegistersBuilder::newReadInputRegisters(
-                    'tcp://' . $device->ip_address . ':' . $this->modbusPort,
-                    $unit_id)
-                    ->int16($coldAddrs, 'counter_cold') // Counter value at cold
-                    ->build();
-                // Execute Modbus request
-                $responseConditionCold = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))
-                    ->sendRequests($requestConditionCold)->getData();
-                $counterCold = abs($responseConditionCold['counter_cold']); // Make absolute to ensure positive values
-                
-                if ($this->option('d')) {
-                    $this->line("    Read values - Hot: {$counterHot}, Cold: {$counterCold}");
-                }
-                
-                // Process HOT condition
-                $hmiUpdates["M{$machineName}_Hot"] = $counterHot;
-                
-                // Process COLD condition
-                $hmiUpdates["M{$machineName}_Cold"] = $counterCold;
+                $readings = $this->pollMachine($device, $machineConfig);
+                $readingsCount++;
             } catch (\Exception $e) {
-                $this->error("    ✗ Error reading machine {$machineName}: " . $e->getMessage() . " at line " . $e->getLine());
-                continue;
+                $this->error("    ✗ Error reading machine {$machineConfig['name']}: {$e->getMessage()} at line {$e->getLine()}");
             }
-        }
-
-        // Cek koneksi device sebelum lanjut
-        if (!$this->isDeviceConnected($device->ip_address, $this->modbusPort)) {
-            $this->error("    ✗ Device {$device->ip_address} not connected. Skipping update and save.");
-            return 0;
-        }
-        
-        $values = [
-                "M1_Hot"  => $hmiUpdates['M1_Hot'] ?? 0,
-                "M1_Cold" => $hmiUpdates['M1_Cold'] ?? 0,
-                "M2_Hot"  => $hmiUpdates['M2_Hot'] ?? 0,
-                "M2_Cold" => $hmiUpdates['M2_Cold'] ?? 0,
-                "M3_Hot"  => $hmiUpdates['M3_Hot'] ?? 0,
-                "M3_Cold" => $hmiUpdates['M3_Cold'] ?? 0,
-                "M4_Hot"  => $hmiUpdates['M4_Hot'] ?? 0,
-                "M4_Cold" => $hmiUpdates['M4_Cold'] ?? 0,
-        ];
-
-        // Write all HMI updates in one call
-        if (!empty($hmiUpdates)) {
-            $this->pushToHmi($device, $values);
-        }
-
-        // now save readings to database
-        foreach ($device->config['list_mechine'] as $machineConfig) {
-            $machineName = $machineConfig['name'];
-            $line        = $device->line;
-            // Process HOT condition
-            $newReadings = $this->processCondition($device, $line, $machineName, 'Hot', $values["M{$machineName}_Hot"] ?? 0);
-            $readingsCount += $newReadings;
-
-            // Process COLD condition
-            $newReadings = $this->processCondition($device, $line, $machineName, 'Cold', $values["M{$machineName}_Cold"] ?? 0);
-            $readingsCount += $newReadings;
         }
 
         return $readingsCount;
     }
 
-    // Check if device is connected
-    private function isDeviceConnected($ip, $port, $timeout = 1)
+    /**
+     * Reset panel once per day when device is online for the first time today.
+     */
+    private function handleFirstOnlineDailyReset(InsBpmDevice $device): void
     {
-        $connected = false;
-        try {
-            $fp = @fsockopen($ip, $port, $errno, $errstr, $timeout);
-            if ($fp) {
-                fclose($fp);
-                $connected = true;
-            }
-        } catch (\Exception $e) {
-            $connected = false;
+        $resetAddr = $device->config['addr_reset'] ?? null;
+        if ($resetAddr === null) {
+            $this->debugLog("  → Skip reset {$device->name}: no addr_reset in config");
+            return;
         }
-        return $connected;
+
+        $latestLog = UptimeLog::where('ip_address', $device->ip_address)
+            ->latest('checked_at')
+            ->first();
+
+        if (!$latestLog || $latestLog->status !== 'online') {
+            $this->debugLog("  → Skip reset {$device->name}: latest uptime status is not online");
+            return;
+        }
+
+        $firstOnlineToday = UptimeLog::where('ip_address', $device->ip_address)
+            ->where('status', 'online')
+            ->whereDate('checked_at', Carbon::today())
+            ->orderBy('checked_at')
+            ->first();
+
+        if (!$firstOnlineToday) {
+            $this->debugLog("  → Skip reset {$device->name}: no online log found for today");
+            return;
+        }
+
+        $cacheKey = $this->dailyResetCacheKey($device);
+        if (Cache::has($cacheKey)) {
+            $this->debugLog("  → Skip reset {$device->name}: already reset for first online today");
+            return;
+        }
+
+        if ($this->isDryTest()) {
+            $this->info("⚑ [DRY TEST] Reset would be sent to {$device->name} (first online today)");
+            return;
+        }
+
+        $request = WriteCoilsBuilder::newWriteMultipleCoils(
+            "tcp://{$device->ip_address}:" . self::MODBUS_PORT,
+            self::MODBUS_UNIT_ID,
+            1
+        )
+        ->coil((int) $resetAddr, 1)
+        ->build();
+
+        (new NonBlockingClient(['readTimeoutSec' => self::MODBUS_TIMEOUT_SECONDS]))
+            ->sendRequests($request);
+
+        Cache::put($cacheKey, true, now()->addDays(self::RESET_FLAG_CACHE_TTL_DAYS));
+        $this->info("✓ Reset sent to {$device->name} (first online today)");
     }
-    
+
+    private function dailyResetCacheKey(InsBpmDevice $device): string
+    {
+        $date = Carbon::today()->format('Ymd');
+        return "ins_bpm_first_online_reset_{$device->ip_address}_{$date}";
+    }
+
+    private function isDryTest(): bool
+    {
+        return (bool) $this->option('dry-test');
+    }
+
+    /**
+     * Poll a single machine for Hot and Cold counter values
+     */
+    private function pollMachine(InsBpmDevice $device, array $machineConfig): void
+    {
+        $machineName = $machineConfig['name'];
+        $hotAddress  = $machineConfig['addr_hot'];
+        $coldAddress = $machineConfig['addr_cold'];
+        $line = $machineConfig['line'] ?? $device->line;
+        $this->debugLog("  Polling machine {$machineName} at addresses hot: {$hotAddress}, cold: {$coldAddress}");
+        
+        // Read counter values from Modbus
+        $counterHot = $this->readModbusCounter($device->ip_address, $hotAddress, 'counter_hot');
+        $counterCold = $this->readModbusCounter($device->ip_address, $coldAddress, 'counter_cold');
+        $this->debugLog("    Read values - Hot: {$counterHot}, Cold: {$counterCold}");
+        // Process and save to database
+        $this->processCondition($device, $line, $machineName, 'Hot', $counterHot);
+        $this->processCondition($device, $line, $machineName, 'Cold', $counterCold);
+    }
+
+    /**
+     * Normalize line name for consistent storage
+     */
+    private function normalizeName(string $name): string
+    {
+        return strtoupper(trim($name));
+    }
+
+    /**
+     * Log debug message if debug mode is enabled
+     */
+    private function debugLog(string $message): void
+    {
+        if ($this->option('d')) {
+            $this->line($message);
+        }
+    }
+
+    /**
+     * Get the latest counter record from database for today
+     */
+    private function getLatestRecord(InsBpmDevice $device, string $line, string $machineName, string $condition): ?InsBpmCount
+    {
+        return InsBpmCount::where('plant', $device->name)
+            ->where('line', $this->normalizeName($line))
+            ->where('machine', $this->normalizeName($machineName))
+            ->where('condition', $condition)
+            ->whereDate('created_at', Carbon::today())
+            ->latest('created_at')
+            ->first();
+    }
+
+    /**
+     * Save counter reading to database
+     */
+    private function saveCounterReading(
+        InsBpmDevice $device,
+        string $line,
+        string $machineName,
+        string $condition,
+        int $incremental,
+        int $cumulative
+    ): void {
+        InsBpmCount::create([
+            'plant' => $device->name,
+            'line' => $line,
+            'machine' => $machineName,
+            'condition' => $condition,
+            'incremental' => $incremental,
+            'cumulative' => $cumulative,
+        ]);
+    }
+
     /**
      * Process a single condition (Hot or Cold) and save if changed
      */
     private function processCondition(InsBpmDevice $device, $line, string $machineName, string $condition, int $currentCumulative): int
     {
-        $key = $machineName . '_' . $condition;
-        $today = Carbon::now()->toDateString();
+        $key = "{$machineName}_{$condition}";
         
-        // Initialize memory cache from database if not set OR if day has changed (reset daily)
-        $isFirstRecordToday = false;
-        if (!isset($this->lastCumulativeValues[$key]) || $this->lastReadingDates[$key] !== $today) {
-            $latestRecord = InsBpmCount::where('plant', $device->name)
-                ->where('line', strtoupper(trim($line)))
-                ->where('machine', strtoupper(trim($machineName)))
-                ->where('condition', $condition)
-                ->whereDate('created_at', Carbon::today())
-                ->latest('created_at')
-                ->first();
-            
-            $isFirstRecordToday = !$latestRecord;
-            $this->lastCumulativeValues[$key] = $latestRecord ? $latestRecord->cumulative : 0;
-            $this->lastReadingDates[$key] = $today;
-            
-            if ($this->option('d')) {
-                $this->line("    → Initialized cache for {$key} with value: {$this->lastCumulativeValues[$key]} (date: {$today})");
-            }
-        }
+        // Get latest record from database to compare
+        $latestRecord = $this->getLatestRecord($device, $line, $machineName, $condition);
         
-        // Check if value is the same as last cached reading
-        if ($currentCumulative === $this->lastCumulativeValues[$key]) {
-            if ($this->option('d')) {
-                $this->line("    → No change for {$key} (still {$currentCumulative}) - skipping save");
-            }
+        // If cumulative value from HMI is same as latest DB record, don't save
+        if ($latestRecord && (int)$latestRecord->cumulative === (int)$currentCumulative) {
+            $this->debugLog("    → No change for {$key} - DB cumulative {$latestRecord->cumulative} = HMI {$currentCumulative} - skipping save");
             return 0;
         }
         
-        // Calculate increment based on cached previous value
-        $previousCumulative = $this->lastCumulativeValues[$key];
+        // Calculate increment based on previous value
+        $previousCumulative = $latestRecord ? $latestRecord->cumulative : 0;
         $increment = $currentCumulative - $previousCumulative;
         
-        // Save if: increment is positive OR this is the very first record for today (initialize with 0 or any value)
-        if ($increment > 0 || $isFirstRecordToday) {
+        // Save if: increment is positive OR this is the very first record (initialize with 0 or any value)
+        if ($increment > 0 || !$latestRecord) {
             $incremental = ($increment > 0) ? $increment : 0; // First record gets incremental = 0 for initialization
-            
-            // Save to database
-            InsBpmCount::create([
-                'plant' => $device->name,
-                'line' => $line,
-                'machine' => $machineName,
-                'condition' => $condition,
-                'incremental' => $incremental,
-                'cumulative' => $currentCumulative,
-            ]);
-            
-            // Update memory cache
-            $this->lastCumulativeValues[$key] = $currentCumulative;
-            $this->lastReadingDates[$key] = $today;
-            
-            if ($this->option('d')) {
-                $this->line("    ✓ Saved {$condition}: prev={$previousCumulative}, increment={$incremental}, cumulative={$currentCumulative}");
+
+            if ($this->isDryTest()) {
+                $this->info("⚑ [DRY TEST] {$device->name} {$line} {$machineName} {$condition} would save: inc {$incremental}, cum {$currentCumulative}");
+                return 1;
             }
+
+            $this->saveCounterReading($device, $line, $machineName, $condition, $incremental, $currentCumulative);
+            $this->debugLog("    ✓ Saved {$condition}: increment {$incremental}, cumulative {$currentCumulative}");
             
             return 1;
-        } else {
-            if ($this->option('d')) {
-                $this->line("    ⚠ Negative or zero increment ({$increment}) for {$key} (prev={$previousCumulative}, current={$currentCumulative}) - skipping save, updating baseline");
-            }
-            // Update baseline for counter resets or decreases
-            $this->lastCumulativeValues[$key] = $currentCumulative;
-            $this->lastReadingDates[$key] = $today;
-            return 0;
         }
-    }
-
-    /**
-     * Clean up memory by removing old entries and forcing garbage collection
-     */
-    private function cleanupMemory()
-    {
-        // Limit the lastCumulativeValues array size by keeping only active lines
-        $activeLines = InsBpmDevice::active()->get()->flatMap(function ($device) {
-            return $device->getLines();
-        })->unique()->toArray();
-
-        // Remove entries for lines that are no longer active
-        $this->lastCumulativeValues = array_intersect_key(
-            $this->lastCumulativeValues,
-            array_flip($activeLines)
-        );
-
-        // Force garbage collection
-        if (function_exists('gc_collect_cycles')) {
-            gc_collect_cycles();
-        }
-
-        if ($this->option('d')) {
-            $memoryUsage = memory_get_usage(true);
-            $this->line("Memory cleanup performed. Current usage: " . number_format($memoryUsage / 1024 / 1024, 2) . " MB");
-        }
-    }
-
-    /**
-     * Update device statistics
-     */
-    private function updateDeviceStats(string $deviceName, bool $success)
-    {
-        if (!isset($this->deviceStats[$deviceName])) {
-            $this->deviceStats[$deviceName] = [
-                'success_count' => 0,
-                'error_count' => 0,
-                'last_success' => null,
-                'last_error' => null,
-            ];
-        }
-
-        if ($success) {
-            $this->deviceStats[$deviceName]['success_count']++;
-            $this->deviceStats[$deviceName]['last_success'] = now();
-        } else {
-            $this->deviceStats[$deviceName]['error_count']++;
-            $this->deviceStats[$deviceName]['last_error'] = now();
-        }
-
-        // Display periodic stats every 100 cycles in verbose mode
-        if ($this->option('v') && $this->pollCycleCount % 100 === 0) {
-            $stats = $this->deviceStats[$deviceName];
-            $total = $stats['success_count'] + $stats['error_count'];
-            $successRate = $total > 0 ? round(($stats['success_count'] / $total) * 100, 1) : 0;
-
-            $this->comment("Device {$deviceName} stats: {$successRate}% success rate ({$stats['success_count']}/{$total})");
-        }
-    }
-
-    // push to HMI
-    private function pushToHmi(InsBpmDevice $device, array $values)
-    {
-        if (empty($values)) {
-            return false;
-        }
-
-        $unit_id = 1; // Standard Modbus unit ID
         
-        try {
-            $valToSend = [
-                Types::toRegister($values["M1_Hot"] ?? 0),
-                Types::toRegister($values["M1_Cold"] ?? 0),
-                Types::toRegister($values["M2_Hot"] ?? 0),
-                Types::toRegister($values["M2_Cold"] ?? 0),
-                Types::toRegister($values["M3_Hot"] ?? 0),
-                Types::toRegister($values["M3_Cold"] ?? 0),
-                Types::toRegister($values["M4_Hot"] ?? 0),
-                Types::toRegister($values["M4_Cold"] ?? 0)
-            ];
-
-            // Update values based on what changed
-            foreach ($values as $machineKey => $counter) {
-                $valueIndex = array_search($machineKey, array_keys($this->addressWrite));
-                if ($valueIndex !== false) {
-                    $valToSend[$valueIndex] = Types::toRegister($counter ?? 0);
-                    if ($this->option('d')) {
-                        $this->line("      Updated {$machineKey} = " . ($counter ?? 0));
-                    }
-                }
-            }
-
-            // Write all counters to HMI in one operation
-            $connection = BinaryStreamConnection::getBuilder()
-                ->setHost($device->ip_address)
-                ->setPort($this->modbusPort)
-                ->build();
-            
-            $packet = new WriteMultipleRegistersRequest(
-                10, // Starting address
-                $valToSend, // Array of 8 values
-                $unit_id
-            );
-            
-            $connection->connect();
-            $connection->send($packet);
-            $connection->close();
-
-            if ($this->option('d')) {
-                $this->line("    ✓ Wrote " . count($values) . " counter(s) to HMI in single operation");
-            }
-
-            return true;
-
-        } catch (\Exception $e) {
-            $this->error("    ✗ Error writing to HMI {$device->ip_address}: " . $e->getMessage());
-            return false;
-        }
+        // Handle negative or zero increment (counter reset or decrease)
+        $this->debugLog("    ⚠ Negative or zero increment ({$increment}) for {$key} - skipping save");
+        
+        return 0;
     }
+
 }

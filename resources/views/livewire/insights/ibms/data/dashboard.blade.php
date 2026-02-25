@@ -121,7 +121,7 @@ new class extends Component {
     <!-- Top Metrics -->
     <div class="grid grid-cols-4 gap-4 mb-8 mt-2">
         <div class="col-span-1">
-            <div class="w-full h-[200px] bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
+            <div class="w-full h-[600px] bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
                 <h1 class="text-xl font-bold text-gray-800 dark:text-white mb-6">Online System Monitoring</h1>
                 <div id="onlineSystemMonitoringChart" class="h-[260px]"></div>
             </div>
@@ -201,7 +201,7 @@ new class extends Component {
                             <span class="text-base font-semibold ${isDarkMode ? 'text-neutral-100' : 'text-gray-700'}">${item.label}</span>
                         </div>
                         <div class="text-right">
-                            <p class="text-2xl font-bold leading-none" style="color: ${item.color}">${item.value}%</p>
+                            <p class="text-xl font-bold leading-none" style="color: ${item.color}">${item.value}%</p>
                             <p class="text-sm ${isDarkMode ? 'text-neutral-300' : 'text-gray-500'}">${formatDuration(item.duration)}</p>
                         </div>
                     </div>
