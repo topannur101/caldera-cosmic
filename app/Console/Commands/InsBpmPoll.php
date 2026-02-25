@@ -167,8 +167,10 @@ class InsBpmPoll extends Command
         ->build();
 
         try {
-            (new NonBlockingClient(['readTimeoutSec' => self::MODBUS_TIMEOUT_SECONDS]))
-                ->sendRequests($request);
+            for ($i = 0; $i < 3; $i++) {
+                (new NonBlockingClient(['readTimeoutSec' => self::MODBUS_TIMEOUT_SECONDS]))
+                    ->sendRequests($request);
+            }
         } catch (\Throwable $th) {
             Cache::put(
                 $resetFailedCacheKey,
