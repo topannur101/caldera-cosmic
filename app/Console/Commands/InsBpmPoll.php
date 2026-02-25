@@ -142,10 +142,15 @@ class InsBpmPoll extends Command
             return;
         }
 
-        $cacheKey = $this->dailyResetCacheKey($device);
-        if (Cache::has($cacheKey)) {
+        $resetSuccessCacheKey = $this->dailyResetSuccessCacheKey($device);
+        if (Cache::has($resetSuccessCacheKey)) {
             $this->debugLog("  → Skip reset {$device->name}: already reset for first online today");
             return;
+        }
+
+        $resetFailedCacheKey = $this->dailyResetFailedCacheKey($device);
+        if (Cache::has($resetFailedCacheKey)) {
+            $this->debugLog("  → Previous reset attempt failed for {$device->name}, retrying");
         }
 
         if ($this->isDryTest()) {
@@ -161,17 +166,33 @@ class InsBpmPoll extends Command
         ->coil((int) $resetAddr, 1)
         ->build();
 
-        (new NonBlockingClient(['readTimeoutSec' => self::MODBUS_TIMEOUT_SECONDS]))
-            ->sendRequests($request);
+        try {
+            (new NonBlockingClient(['readTimeoutSec' => self::MODBUS_TIMEOUT_SECONDS]))
+                ->sendRequests($request);
+        } catch (\Throwable $th) {
+            Cache::put(
+                $resetFailedCacheKey,
+                ['failed_at' => now()->toDateTimeString(), 'error' => $th->getMessage()],
+                now()->addDays(self::RESET_FLAG_CACHE_TTL_DAYS)
+            );
+            throw $th;
+        }
 
-        Cache::put($cacheKey, true, now()->addDays(self::RESET_FLAG_CACHE_TTL_DAYS));
+        Cache::forget($resetFailedCacheKey);
+        Cache::put($resetSuccessCacheKey, true, now()->addDays(self::RESET_FLAG_CACHE_TTL_DAYS));
         $this->info("✓ Reset sent to {$device->name} (first online today)");
     }
 
-    private function dailyResetCacheKey(InsBpmDevice $device): string
+    private function dailyResetSuccessCacheKey(InsBpmDevice $device): string
     {
         $date = Carbon::today()->format('Ymd');
-        return "ins_bpm_first_online_reset_{$device->ip_address}_{$date}";
+        return "ins_bpm_first_online_reset_success_{$device->ip_address}_{$date}";
+    }
+
+    private function dailyResetFailedCacheKey(InsBpmDevice $device): string
+    {
+        $date = Carbon::today()->format('Ymd');
+        return "ins_bpm_first_online_reset_failed_{$device->ip_address}_{$date}";
     }
 
     private function isDryTest(): bool
