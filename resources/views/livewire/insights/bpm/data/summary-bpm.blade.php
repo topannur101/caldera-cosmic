@@ -5,9 +5,18 @@ use App\Models\InsBpmCount;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Livewire\Attributes\Url;
-
+use App\Traits\HasDateRangeFilter;
 
 new class extends Component {
+    use HasDateRangeFilter {
+        setToday as traitSetToday;
+        setYesterday as traitSetYesterday;
+        setThisWeek as traitSetThisWeek;
+        setLastWeek as traitSetLastWeek;
+        setThisMonth as traitSetThisMonth;
+        setLastMonth as traitSetLastMonth;
+    }
+    
     public $view = "summary";
     
     #[Url]
@@ -52,62 +61,15 @@ new class extends Component {
             'lastUpdated' => $this->lastUpdated,
         ];
     }
-    
-    public function setToday()
-    {
-        $this->start_at = now()->format('Y-m-d');
-        $this->end_at = now()->format('Y-m-d');
-        $this->loadData();
-        $this->generateEmergencyChart();
-    }
-
-    public function setYesterday()
-    {
-        $this->start_at = now()->subDay()->format('Y-m-d');
-        $this->end_at = now()->subDay()->format('Y-m-d');
-        $this->loadData();
-        $this->generateEmergencyChart();
-    }
-
-    public function setThisWeek()
-    {
-        $this->start_at = now()->startOfWeek()->format('Y-m-d');
-        $this->end_at = now()->endOfWeek()->format('Y-m-d');
-        $this->loadData();
-        $this->generateEmergencyChart();
-    }
-
-    public function setLastWeek()
-    {
-        $this->start_at = now()->subWeek()->startOfWeek()->format('Y-m-d');
-        $this->end_at = now()->subWeek()->endOfWeek()->format('Y-m-d');
-        $this->loadData();
-        $this->generateEmergencyChart();
-    }
-
-    public function setThisMonth()
-    {
-        $this->start_at = now()->startOfMonth()->format('Y-m-d');
-        $this->end_at = now()->endOfMonth()->format('Y-m-d');
-        $this->loadData();
-        $this->generateEmergencyChart();
-    }
-
-    public function setLastMonth()
-    {
-        $this->start_at = now()->subMonth()->startOfMonth()->format('Y-m-d');
-        $this->end_at = now()->subMonth()->endOfMonth()->format('Y-m-d');
-        $this->loadData();
-        $this->generateEmergencyChart();
-    }
 
     public function loadData()
     {
         $from = Carbon::parse($this->start_at)->startOfDay();
         $to = Carbon::parse($this->end_at)->endOfDay();
 
-        // Get all records and find latest for each line-machine-condition
+        // Get all records with cumulative > 0 and find latest for each line-machine-condition
         $allRecords = InsBpmCount::whereBetween('created_at', [$from, $to])
+            ->where('cumulative', '>', 0)
             ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
             ->when($this->condition !== 'all', fn($q) => $q->where('condition', $this->condition))
             ->orderBy('created_at', 'desc')
@@ -127,7 +89,7 @@ new class extends Component {
 
         // Calculate highest, lowest and average
         $highest = $emergencyPerLine->first();
-        $lowest = $emergencyPerLine->last();
+        $lowest  = $emergencyPerLine->last();
         $average = $emergencyPerLine->count() > 0 
             ? round($emergencyPerLine->avg('total')) 
             : 0;
@@ -174,8 +136,9 @@ new class extends Component {
         $from = Carbon::parse($this->start_at)->startOfDay();
         $to = Carbon::parse($this->end_at)->endOfDay();
 
-        // Get all records and find latest for each line-machine-condition
+        // Get all records with cumulative > 0 and find latest for each line-machine-condition
         $allRecords = InsBpmCount::whereBetween('created_at', [$from, $to])
+            ->where('cumulative', '>', 0)
             ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
             ->when($this->condition !== 'all', fn($q) => $q->where('condition', $this->condition))
             ->orderBy('created_at', 'desc')
@@ -207,8 +170,9 @@ new class extends Component {
         $to = Carbon::parse($this->end_at)->endOfDay();
 
         if ($this->condition === 'all') {
-            // Load Emergency Counter data with hot/cold breakdown
+            // Load Emergency Counter data with hot/cold breakdown, ignoring zero cumulative
             $emergencyData = InsBpmCount::whereBetween('created_at', [$from, $to])
+                ->where('cumulative', '>', 0)
                 ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
                 ->orderBy('created_at', 'desc')
                 ->get()
@@ -258,8 +222,9 @@ new class extends Component {
                 ]
             ];
         } else {
-            // Load Emergency Counter data for specific condition
+            // Load Emergency Counter data for specific condition, ignoring zero cumulative
             $emergencyData = InsBpmCount::whereBetween('created_at', [$from, $to])
+                ->where('cumulative', '>', 0)
                 ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
                 ->where('condition', $this->condition)
                 ->orderBy('created_at', 'desc')
@@ -301,18 +266,73 @@ new class extends Component {
         }
         
         // Dispatch browser event to trigger chart refresh
-        $this->dispatch('chart-data-updated', [
-            'labels' => $this->chartLabels,
-            'datasets' => $this->chartDatasets
-        ]);
+        $this->dispatch('chart-data-updated', labels: $this->chartLabels, datasets: $this->chartDatasets);
     }
 
-    public function updated($property)
+    public function updatedStartAt()
     {
-        if (in_array($property, ['start_at', 'end_at', 'plant', 'condition'])) {
-            $this->loadData();
-            $this->generateEmergencyChart();
-        }
+        $this->loadData();
+        $this->generateEmergencyChart();
+    }
+
+    public function updatedEndAt()
+    {
+        $this->loadData();
+        $this->generateEmergencyChart();
+    }
+
+    public function updatedPlant()
+    {
+        $this->loadData();
+        $this->generateEmergencyChart();
+    }
+
+    public function updatedCondition()
+    {
+        $this->loadData();
+        $this->generateEmergencyChart();
+    }
+
+    public function setToday()
+    {
+        $this->traitSetToday();
+        $this->loadData();
+        $this->generateEmergencyChart();
+    }
+
+    public function setYesterday()
+    {
+        $this->traitSetYesterday();
+        $this->loadData();
+        $this->generateEmergencyChart();
+    }
+
+    public function setThisWeek()
+    {
+        $this->traitSetThisWeek();
+        $this->loadData();
+        $this->generateEmergencyChart();
+    }
+
+    public function setLastWeek()
+    {
+        $this->traitSetLastWeek();
+        $this->loadData();
+        $this->generateEmergencyChart();
+    }
+
+    public function setThisMonth()
+    {
+        $this->traitSetThisMonth();
+        $this->loadData();
+        $this->generateEmergencyChart();
+    }
+
+    public function setLastMonth()
+    {
+        $this->traitSetLastMonth();
+        $this->loadData();
+        $this->generateEmergencyChart();
     }
 }; ?>
 
@@ -386,6 +406,9 @@ new class extends Component {
                 </select>
             </div>
         </div>
+        <div wire:loading wire:target="start_at,end_at,plant,condition,setToday,setYesterday,setThisWeek,setLastWeek,setThisMonth,setLastMonth" class="rela inset-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('Loading...') }}</span>
+        </div>
         <div class="text-sm text-gray-600 dark:text-gray-400">
             <div>{{ __('Last Updated') }}</div>
             <div class="font-semibold">{{ $lastUpdated }}</div>
@@ -394,177 +417,123 @@ new class extends Component {
 
     {{-- Main Content Grid --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Left Column: Emergency Counter Chart --}}
+        {{-- Left Column: Emergency Counter Chart - wire:ignore wraps entire block so Alpine persists across Livewire updates --}}
         <div class="lg:col-span-2 bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold">Emergency Counter</h2>
             </div>
-            <div
-                x-data="{
-                    emergencyChart: null,
-                    isDestroying: false,
-                    hasData: true,
-                    initTimeout: null,
+            <div wire:ignore>
+                <div
+                    x-data="{
+                        emergencyChart: null,
+                        initTimeout: null,
 
-                    destroyChart() {
-                        if (this.isDestroying) return;
-                        
-                        this.isDestroying = true;
-                        
-                        // Clear any pending initialization
-                        if (this.initTimeout) {
-                            clearTimeout(this.initTimeout);
-                            this.initTimeout = null;
-                        }
-                        
-                        const canvasEl = this.$refs.emergencyChartCanvas;
-                        if (canvasEl) {
-                            const existingChart = Chart.getChart(canvasEl);
-                            if (existingChart) {
-                                try {
-                                    existingChart.destroy();
-                                } catch (e) {
-                                    console.log('Error destroying chart:', e);
+                        destroyChart() {
+                            if (this.initTimeout) {
+                                clearTimeout(this.initTimeout);
+                                this.initTimeout = null;
+                            }
+                            const canvasEl = this.$refs.emergencyChartCanvas;
+                            if (canvasEl) {
+                                const existingChart = Chart.getChart(canvasEl);
+                                if (existingChart) {
+                                    try {
+                                        existingChart.destroy();
+                                    } catch (e) {
+                                        console.log('Error destroying chart:', e);
+                                    }
                                 }
                             }
-                        }
-                        
-                        this.emergencyChart = null;
-                        this.isDestroying = false;
-                    },
+                            this.emergencyChart = null;
+                        },
 
-                    initOrUpdateEmergencyChart(chartData) {
-                        // Clear any pending initialization
-                        if (this.initTimeout) {
-                            clearTimeout(this.initTimeout);
-                            this.initTimeout = null;
-                        }
+                        initOrUpdateEmergencyChart(chartData) {
+                            if (this.initTimeout) {
+                                clearTimeout(this.initTimeout);
+                                this.initTimeout = null;
+                            }
 
-                        // Prevent operations during destruction
-                        if (this.isDestroying) {
-                            return;
-                        }
+                            const canvasEl = this.$refs.emergencyChartCanvas;
+                            if (!canvasEl || typeof Chart === 'undefined') return;
 
-                        const canvasEl = this.$refs.emergencyChartCanvas;
-                        if (!canvasEl) {
-                            return;
-                        }
+                            const labels = chartData?.labels || [];
+                            const datasets = chartData?.datasets || [];
 
-                        const labels = chartData?.labels || [];
-                        const datasets = chartData?.datasets || [];
+                            if (labels.length === 0 || datasets.length === 0) {
+                                this.$refs.chartContainer?.classList.add('hidden');
+                                this.$refs.emptyState?.classList.remove('hidden');
+                                this.destroyChart();
+                                return;
+                            }
 
-                        // Check if Chart.js is loaded
-                        if (typeof Chart === 'undefined') {
-                            return;
-                        }
-
-                        // Check if we have data
-                        if (labels.length === 0 || datasets.length === 0) {
-                            this.hasData = false;
+                            this.$refs.chartContainer?.classList.remove('hidden');
+                            this.$refs.emptyState?.classList.add('hidden');
                             this.destroyChart();
-                            return;
-                        }
 
-                        this.hasData = true;
-
-                        // Destroy existing chart
-                        this.destroyChart();
-
-                        // Wait a bit to ensure clean state before creating new chart
-                        this.initTimeout = setTimeout(() => {
-                            if (!this.hasData || this.isDestroying) {
-                                return;
-                            }
-
-                            const ctx = canvasEl?.getContext('2d');
-                            if (!ctx) {
-                                return;
-                            }
-                            
-                            try {
-                                this.emergencyChart = new Chart(ctx, {
-                                    type: 'bar',
-                                    data: {
-                                        labels: labels,
-                                        datasets: datasets
-                                    },
-                                    options: {
-                                        indexAxis: 'y',
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        animation: {
-                                            duration: 300
-                                        },
-                                        plugins: {
-                                            legend: {
-                                                display: datasets.length > 1,
-                                                position: 'top'
-                                            },
-                                            tooltip: {
-                                                callbacks: {
-                                                    label: function(context) {
-                                                        return context.dataset.label + ': ' + context.parsed.x + ' counts';
+                            this.initTimeout = setTimeout(() => {
+                                this.initTimeout = null;
+                                const ctx = canvasEl.getContext('2d');
+                                if (!ctx) return;
+                                try {
+                                    this.emergencyChart = new Chart(ctx, {
+                                        type: 'bar',
+                                        data: { labels, datasets },
+                                        options: {
+                                            indexAxis: 'y',
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            animation: { duration: 300 },
+                                            plugins: {
+                                                legend: { display: datasets.length > 1, position: 'top' },
+                                                tooltip: {
+                                                    callbacks: {
+                                                        label: (ctx) => ctx.dataset.label + ': ' + ctx.parsed.x + ' counts'
                                                     }
-                                                }
-                                            },
-                                            datalabels: {
-                                                display: false
-                                            }
-                                        },
-                                        scales: {
-                                            x: {
-                                                stacked: datasets.length > 1,
-                                                beginAtZero: true,
-                                                title: {
-                                                    display: true,
-                                                    text: 'Counter'
                                                 },
-                                                ticks: {
-                                                    stepSize: 1,
-                                                    callback: function(value) {
-                                                        if (Number.isInteger(value)) {
-                                                            return value.toLocaleString();
-                                                        }
-                                                        return '';
-                                                    }
-                                                }
+                                                datalabels: { display: false }
                                             },
-                                            y: {
-                                                stacked: datasets.length > 1,
-                                                title: {
-                                                    display: true,
-                                                    text: 'Line - Machine'
+                                            scales: {
+                                                x: {
+                                                    stacked: datasets.length > 1,
+                                                    beginAtZero: true,
+                                                    title: { display: true, text: 'Counter' },
+                                                    ticks: {
+                                                        stepSize: 1,
+                                                        callback: (v) => Number.isInteger(v) ? v.toLocaleString() : ''
+                                                    }
+                                                },
+                                                y: {
+                                                    stacked: datasets.length > 1,
+                                                    title: { display: true, text: 'Line - Machine' }
                                                 }
                                             }
                                         }
-                                    }
-                                });
-                            } catch (e) {
-                                console.error('Chart creation error:', e);
-                                this.hasData = false;
-                            }
-                        }, 50);
-                    }
-                }"
-                x-init="
-                    // Initial render with delay
-                    setTimeout(() => {
-                        const labels = @js($this->chartLabels);
-                        const datasets = @js($this->chartDatasets);
-                        
-                        initOrUpdateEmergencyChart({ labels, datasets });
-                    }, 100);
-                "
-                @chart-data-updated.window="
-                    const eventData = $event.detail;
-                    if (eventData) {
-                        initOrUpdateEmergencyChart(eventData);
-                    }
-                "
-            >
-                <div wire:ignore style="height: 500px; position: relative;">
-                    <canvas x-ref="emergencyChartCanvas" x-show="hasData"></canvas>
-                    <div x-show="!hasData" class="flex flex-col items-center justify-center h-full text-gray-500">
+                                    });
+                                } catch (e) {
+                                    console.error('Chart creation error:', e);
+                                }
+                            }, 50);
+                        }
+                    }"
+                    x-init="
+                        $nextTick(() => {
+                            initOrUpdateEmergencyChart({
+                                labels: @js($this->chartLabels),
+                                datasets: @js($this->chartDatasets)
+                            });
+                        });
+                    "
+                    @chart-data-updated.window="
+                        const chartData = Array.isArray($event.detail) ? $event.detail[0] : $event.detail;
+                        if (chartData && (chartData.labels !== undefined || chartData.datasets?.length)) {
+                            initOrUpdateEmergencyChart(chartData);
+                        }
+                    "
+                >
+                    <div x-ref="chartContainer" style="height: 500px; position: relative;">
+                        <canvas x-ref="emergencyChartCanvas" style="display: block;"></canvas>
+                    </div>
+                    <div x-ref="emptyState" class="hidden flex flex-col items-center justify-center text-gray-500" style="height: 500px;">
                         <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>

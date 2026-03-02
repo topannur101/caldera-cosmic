@@ -132,8 +132,9 @@ new class extends Component {
         $from = Carbon::parse($this->start_at)->startOfDay();
         $to = Carbon::parse($this->end_at)->endOfDay();
 
-        // Get all records and find latest for each machine-condition
+        // Get all records with cumulative > 0 and find latest for each machine-condition
         $allRecords = InsBpmCount::whereBetween('created_at', [$from, $to])
+            ->where('cumulative', '>', 0)
             ->where('plant', $this->plant)
             ->where('line', $this->line)
             ->when($this->condition !== 'all', fn($q) => $q->where('condition', $this->condition))
@@ -266,8 +267,9 @@ new class extends Component {
 
     private function loadTrendData($from, $to)
     {
-        // Get all hourly data
+        // Get all hourly data with cumulative > 0
         $allHourlyRecords = InsBpmCount::whereBetween('created_at', [$from, $to])
+            ->where('cumulative', '>', 0)
             ->where('plant', $this->plant)
             ->where('line', $this->line)
             ->when($this->condition !== 'all', fn($q) => $q->where('condition', $this->condition))
@@ -513,6 +515,9 @@ new class extends Component {
                     <option value="cold">Cold</option>
                 </select>
             </div>
+        </div>
+        <div wire:loading wire:target="start_at,end_at,plant,condition,setToday,setYesterday,setThisWeek,setLastWeek,setThisMonth,setLastMonth" class="inset-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('Loading...') }}</span>
         </div>
         <div class="text-sm text-gray-600 dark:text-gray-400">
             <div>{{ __('Last Updated') }}</div>

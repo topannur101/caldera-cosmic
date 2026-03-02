@@ -59,11 +59,15 @@ new class extends Component {
         return $service->getEmergencyDataByMachine($this->plant, $this->line, $date);
     }
 
-    private function loadPowerData(InsBpmDevice $device, Carbon $date): array
+    private function loadPowerData(?InsBpmDevice $device, Carbon $date): array
     {
+        if (!$device) {
+            return [];
+        }
         $service = app(BpmPowerService::class);
         return $service->getPowerDataByMachine($device, $date);
     }
+
     private function loadOnlineStats(Carbon $date): array
     {
         $device = $this->getActiveDevice();
@@ -72,8 +76,13 @@ new class extends Component {
             return $this->getEmptyOnlineStats();
         }
         
-        // $projectName = $this->getProjectNameByIp($device->ip_address);
-        $project = Project::where('ip', $device->ip_address)->first()->toArray();
+        $project     = Project::where('ip', $device->ip_address)->first();
+        if (!$project) {
+            return $this->getEmptyOnlineStats();
+        }else {
+            $project = $project->toArray();
+        }
+        
         $projectName = $project['name'];
         if (!$projectName) {
             return $this->getEmptyOnlineStats();
@@ -204,6 +213,11 @@ new class extends Component {
                 'borderWidth' => 1,
             ]]
         ];
+    }
+
+    private function getLineByDevice(InsBpmDevice $device): ?string
+    {
+        return $device->line;
     }
 }; ?>
 
