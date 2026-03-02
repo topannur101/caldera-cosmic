@@ -13,6 +13,8 @@ use ModbusTcpClient\Utils\Types;
 
 class InsPhDossingReset extends Command
 {
+    private const MOMENTARY_PULSE_MS = 200;
+
     /**
      * The name and signature of the console command.
      *
@@ -25,7 +27,7 @@ class InsPhDossingReset extends Command
      *
      * @var string
      */
-    protected $description = 'Send reset signal to all PH Dossing devices (writes 1 to reset addresses)';
+    protected $description = 'Send reset pulse to all PH Dossing devices (writes 1 then 0 to reset addresses)';
 
 
     public function handle()
@@ -62,26 +64,37 @@ class InsPhDossingReset extends Command
     }
 
     /**
-     * Reset a single device by writing 1 to all reset addresses
+     * Reset a single device by writing a momentary pulse (1 then 0)
      */
     private function resetDevice(InsPhDosingDevice $device)
     {
         $unit_id = 1; // Standard Modbus unit ID
         $resetAddr = 13;
         try {
-            // Build Modbus coils
-            $request = WriteCoilsBuilder::newWriteMultipleCoils(
+            $client = new NonBlockingClient(['readTimeoutSec' => 2]);
+
+            $requestOn = WriteCoilsBuilder::newWriteMultipleCoils(
                 'tcp://' . $device->ip_address . ':503', 
                 $unit_id,
                 1
             )
-            ->coil($resetAddr,1) // <-- Write a single 'true' (1) value
+            ->coil($resetAddr, 1)
             ->build();
+            $client->sendRequests($requestOn);
 
-            // Execute Modbus write request
-            $response = (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($request);
+            usleep(self::MOMENTARY_PULSE_MS * 1000);
+
+            $requestOff = WriteCoilsBuilder::newWriteMultipleCoils(
+                'tcp://' . $device->ip_address . ':503',
+                $unit_id,
+                1
+            )
+            ->coil($resetAddr, 0)
+            ->build();
+            $client->sendRequests($requestOff);
+
             if ($this->option('v')) {
-                $this->info("  ✓ Reset signal sent to line {$device->line} at address {$resetAddr}");
+                $this->info("  ✓ Reset pulse sent to line {$device->line} at address {$resetAddr}");
             }
 
         } catch (\Exception $e) {
@@ -107,11 +120,22 @@ class InsPhDossingReset extends Command
                 ->coil($resetAddr, 1)
                 ->build();
 
-                (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($request);
+                $client = new NonBlockingClient(['readTimeoutSec' => 2]);
+                $client->sendRequests($request);
+                usleep(self::MOMENTARY_PULSE_MS * 1000);
+
+                $requestOff = WriteCoilsBuilder::newWriteMultipleCoils(
+                    'tcp://' . $device->ip_address . ':503',
+                    $unit_id,
+                    1
+                )
+                ->coil($resetAddr, 0)
+                ->build();
+                $client->sendRequests($requestOff);
                 $successCount++;
 
                 if ($this->option('d')) {
-                    $this->info("    ✓ Brute reset {$i}/{$attempts} sent to line {$device->line}");
+                    $this->info("    ✓ Brute reset pulse {$i}/{$attempts} sent to line {$device->line}");
                 }
             } catch (\Exception $e) {
                 $lastException = $e;

@@ -11,12 +11,12 @@ class InvCeCirc extends Model
 
     public function inv_ce_stock()
     {
-        return $this->belongsTo(InvCeStock::class);
+        return $this->belongsTo(InvCeStock::class, 'inv_ce_stock_id');
     }
 
     public function inv_ce_auth()
     {
-        return $this->belongsTo(InvCeAuth::class);
+        return $this->belongsTo(InvCeAuth::class, 'inv_ce_auth_id');
     }
 
     public function inv_ce_return()

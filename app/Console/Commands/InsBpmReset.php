@@ -10,11 +10,13 @@ use ModbusTcpClient\Network\BinaryStreamConnection;
 use ModbusTcpClient\Composer\Write\WriteCoilsBuilder;
 use ModbusTcpClient\Packet\ModbusFunction\WriteMultipleRegistersRequest;
 use ModbusTcpClient\Utils\Types;
+use App\Models\InsBpmCount;
 
 class InsBpmReset extends Command
 {
     private const MAX_RETRIES = 3;
     private const RETRY_DELAY_MS = 500;
+    private const MOMENTARY_PULSE_MS = 200;
 
     /**
      * The name and signature of the console command.
@@ -28,7 +30,7 @@ class InsBpmReset extends Command
      *
      * @var string
      */
-    protected $description = 'Send reset signal to all BPM devices (writes 1 to reset addresses)';
+    protected $description = 'Send reset pulse to all BPM devices (writes 1 then 0 to reset addresses)';
 
     /**
      * Execute the console command.
@@ -54,6 +56,7 @@ class InsBpmReset extends Command
 
             try {
                 $this->resetDevice($device);
+                $this->deleteTodayBpmCounts();
                 $successCount++;
             } catch (\Throwable $th) {
                 $this->error("✗ Error resetting {$device->name} ({$device->ip_address}): " . $th->getMessage() . " on line " . $th->getLine());
@@ -94,15 +97,19 @@ class InsBpmReset extends Command
     }
 
     /**
-     * Reset a single device by writing 1 to all reset addresses
+     * Reset a single device by writing a momentary pulse (1 then 0)
      */
     private function resetDevice(InsBpmDevice $device)
     {
         $unit_id = 1; // Standard Modbus unit ID
         $resetAddr = $device->config['addr_reset'] ?? null;
 
+        if ($resetAddr === null) {
+            throw new \RuntimeException("Reset address is not configured for {$device->name}");
+        }
+
         $this->retry(function () use ($device, $unit_id, $resetAddr) {
-            $request = WriteCoilsBuilder::newWriteMultipleCoils(
+            $requestOn = WriteCoilsBuilder::newWriteMultipleCoils(
                 'tcp://' . $device->ip_address . ':503',
                 $unit_id,
                 1
@@ -110,11 +117,57 @@ class InsBpmReset extends Command
             ->coil($resetAddr, 1)
             ->build();
 
-            (new NonBlockingClient(['readTimeoutSec' => 2]))->sendRequests($request);
+            $client = new NonBlockingClient(['readTimeoutSec' => 2]);
+            $client->sendRequests($requestOn);
+
+            // Simulate HMI momentary button: write back to false after a short pulse.
+            usleep(self::MOMENTARY_PULSE_MS * 1000);
+
+            $requestOff = WriteCoilsBuilder::newWriteMultipleCoils(
+                'tcp://' . $device->ip_address . ':503',
+                $unit_id,
+                1
+            )
+            ->coil($resetAddr, 0)
+            ->build();
+
+            $client->sendRequests($requestOff);
         }, "Reset {$device->name} line {$device->line} addr {$resetAddr}");
 
         if ($this->option('v')) {
-            $this->info("  ✓ Reset signal sent to line {$device->line} at address {$resetAddr}");
+            $this->info("  ✓ Reset pulse sent to line {$device->line} at address {$resetAddr}");
+        }
+    }
+
+    /**
+     * Delete data on database for today's BPM counts (before reset)
+     */
+    private function deleteTodayBpmCounts()
+    {
+        if ($this->option('v')) {
+            $this->info("  → Deleting today's BPM counts");
+        }
+        try {
+            $data = InsBpmCount::where('created_at', '>=', now()->startOfDay())->get();
+            if ($data->isEmpty()) {
+                if ($this->option('v')) {
+                    $this->info("  ✓ No today's BPM counts found");
+                }
+                return;
+            }
+
+            $data->each(function ($item) {
+                $item->delete();
+            });
+
+            if ($this->option('v')) {
+                $this->info("  ✓ Today's BPM counts deleted");
+            }
+        } catch (\Throwable $th) {
+            if ($this->option('v')) {
+                $this->error("  ✗ Error deleting today's BPM counts: " . $th->getMessage());
+            }
+            throw $th;
         }
     }
 }

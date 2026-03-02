@@ -11,6 +11,11 @@ class InvCeVendor extends Model
 
     public function chemicals()
     {
-        return $this->hasMany(InvCeChemical::class);
+        return $this->hasMany(InvCeChemical::class, 'inv_ce_vendor_id');
+    }
+
+    public function inv_ce_chemicals()
+    {
+        return $this->chemicals();
     }
 }

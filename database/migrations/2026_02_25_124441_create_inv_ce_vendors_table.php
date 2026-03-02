@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('inv_ce_vendors', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->boolean('is_active')->default(false);
             $table->timestamps();
+
+            $table->index('is_active');
         });
     }
 

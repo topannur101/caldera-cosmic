@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('inv_ce_stock', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('inv_ce_chemical_id')->constrained();
+            $table->foreignId('inv_ce_chemical_id')->constrained('inv_ce_chemicals');
             $table->integer('quantity')->default(0);
             $table->decimal('unit_size', 15, 2);
-            $table->decimal('unit_uom', 15, 2);
+            $table->string('unit_uom');
             $table->decimal('lot_number', 15, 2);
+            $table->decimal('unit_price', 15, 2)->default(0);
             $table->date('expiry_date');
             $table->json('planning_area');
             $table->enum('status', ['pending', 'approved', 'rejected', 'returned', 'expired']);

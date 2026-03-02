@@ -23,15 +23,14 @@ new class extends Component {
             $this->totalBatches = 60;
             $this->averageBatchTime = 15;
             $this->chartData = [
-                ['machine' => 'Machine 1', 'too_early' => 100, 'to_early' => 150, 'on_time' => 2133, 'too_late' => 52, 'total' => 2435],
-                ['machine' => 'Machine 2', 'too_early' => 80, 'to_early' => 120, 'on_time' => 1738, 'too_late' => 137, 'total' => 2075],
-                ['machine' => 'Machine 3', 'too_early' => 95, 'to_early' => 140, 'on_time' => 2126, 'too_late' => 0, 'total' => 2361],
+                ['machine' => 'Machine 1 & 2', 'too_early' => 250, 'on_time' => 2133, 'too_late' => 52, 'total' => 2435],
+                ['machine' => 'Machine 3 & 4', 'too_early' => 200, 'on_time' => 1738, 'too_late' => 137, 'total' => 2075],
+                ['machine' => 'Machine 5 & 6', 'too_early' => 235, 'on_time' => 2126, 'too_late' => 0, 'total' => 2361],
             ];
             $this->pieChartData = [
-                ['label' => 'Too early (1%)', 'value' => 1, 'color' => '#ef4444'],
-                ['label' => 'Too early (+1%)', 'value' => 1, 'color' => '#eab308'],
-                ['label' => 'On time (13-15s)', 'value' => 91.9, 'color' => '#22c55e'],
-                ['label' => 'Too Late (> 15s)', 'value' => 1, 'color' => '#f97316'],
+                ['label' => 'Too Early (<15 minutes)', 'value' => 10, 'color' => '#ef4444'],
+                ['label' => 'On Time (15 minutes)', 'value' => 87.9, 'color' => '#22c55e'],
+                ['label' => 'Too Late (>15 minutes)', 'value' => 2.1, 'color' => '#f59e0b'],
             ];
         } else {
             $this->totalBatches = $records->count();
@@ -57,10 +56,9 @@ new class extends Component {
 
                 return [
                     'machine' => 'Machine ' . $key,
-                    'too_early' => (int) $statusCounts->get('too_early', 0),
-                    'to_early' => (int) $statusCounts->get('to_early', 0),
+                    'too_early' => (int) $statusCounts->get('too_early', 0) + (int) $statusCounts->get('to_early', 0),
                     'on_time' => (int) $statusCounts->get('on_time', 0),
-                    'too_late' => (int) $statusCounts->get('to_late', 0),
+                    'too_late' => (int) $statusCounts->get('to_late', 0) + (int) $statusCounts->get('too_late', 0),
                     'total' => $group->count(),
                 ];
             })->values()->toArray();
@@ -71,21 +69,18 @@ new class extends Component {
                 return data_get($item, 'data.status');
             });
 
-            $tooEarlyCount = (int) $statusCounts->get('too_early', 0);
-            $toEarlyCount = (int) $statusCounts->get('to_early', 0);
+            $tooEarlyCount = (int) $statusCounts->get('too_early', 0) + (int) $statusCounts->get('to_early', 0);
             $onTimeCount = (int) $statusCounts->get('on_time', 0);
-            $toLateCount = (int) $statusCounts->get('to_late', 0);
+            $toLateCount = (int) $statusCounts->get('to_late', 0) + (int) $statusCounts->get('too_late', 0);
 
             $tooEarlyPct = ($tooEarlyCount / $total) * 100;
-            $toEarlyPct = ($toEarlyCount / $total) * 100;
             $onTimePct = ($onTimeCount / $total) * 100;
             $toLatePct = ($toLateCount / $total) * 100;
 
             $this->pieChartData = [
-                ['label' => 'Too early (1%)', 'value' => round($tooEarlyPct, 1), 'color' => '#ef4444'],
-                ['label' => 'Too early (+1%)', 'value' => round($toEarlyPct, 1), 'color' => '#eab308'],
-                ['label' => 'On time (13-15s)', 'value' => round($onTimePct, 1), 'color' => '#22c55e'],
-                ['label' => 'Too Late (> 15s)', 'value' => round($toLatePct, 1), 'color' => '#f97316'],
+                ['label' => 'Too Early (<15 minutes)', 'value' => round($tooEarlyPct, 1), 'color' => '#ef4444'],
+                ['label' => 'On Time (15 minutes)', 'value' => round($onTimePct, 1), 'color' => '#22c55e'],
+                ['label' => 'Too Late (>15 minutes)', 'value' => round($toLatePct, 1), 'color' => '#f59e0b'],
             ];
         }
     }
@@ -119,28 +114,28 @@ new class extends Component {
         </div>
     </div>
     <!-- Top Metrics -->
-    <div class="grid grid-cols-4 gap-4 mb-8 mt-2">
-        <div class="col-span-1">
-            <div class="w-full h-[600px] bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
+    <div class="grid grid-cols-6 gap-4 mb-8 mt-2">
+        <div class="col-span-2">
+            <div class="w-full bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
                 <h1 class="text-xl font-bold text-gray-800 dark:text-white mb-6">Online System Monitoring</h1>
-                <div id="onlineSystemMonitoringChart" class="h-[260px]"></div>
+                <div id="onlineSystemMonitoringChart"></div>
             </div>
         </div>
-        <div class="col-span-3">
+        <div class="col-span-4">
              <!-- Bar Chart Section -->
             <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-6 mb-4">
-                <h2 class="text-xl font-bold text-neutral-800 dark:text-white mb-6">Total Batch Permachine</h2>
+                <h2 class="text-xl font-bold text-neutral-800 dark:text-white mb-6">Total Batch per Machine</h2>
                 <div id="batchApexChart"></div>
             </div>
 
             <!-- Donut Chart Section -->
             <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6">Batch Composition per Machine</h2>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6">Evaluation Percentage</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     @foreach ($chartData as $index => $machine)
                         <div class="text-center">
                             <div id="machinePieChart-{{ $index }}" class="h-[200px]"></div>
-                            <p class="text-gray-800 dark:text-white text-3xl font-bold leading-tight">{{ $machine['machine'] }}</p>
+                            <p class="text-gray-800 dark:text-white text-xl font-bold leading-tight">{{ $machine['machine'] }}</p>
                         </div>
                     @endforeach
                 </div>
@@ -155,7 +150,7 @@ new class extends Component {
     const isDarkMode = document.documentElement.classList.contains('dark');
     const textColor = isDarkMode ? '#e6edf3' : '#0f172a';
 
-    const ibmsChartColors = ['#ef4444', '#eab308', '#22c55e', '#f97316'];
+    const ibmsChartColors = ['#ef4444', '#22c55e', '#f59e0b'];
     const monitoringColors = ['#4ade80', '#9ca3af', '#f59e0b'];
     function formatDuration(totalSeconds) {
         const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
@@ -269,10 +264,9 @@ new class extends Component {
         }
 
         const series = [
-            { name: 'Too early (< 1%)', data: chartData.map(d => d.too_early) },
-            { name: 'Too early (+1%)', data: chartData.map(d => d.to_early) },
-            { name: 'On time (13-15s)', data: chartData.map(d => d.on_time) },
-            { name: 'Too Late (> 15s)', data: chartData.map(d => d.too_late) },
+            { name: 'Too Early (<15 minutes)', data: chartData.map(d => d.too_early) },
+            { name: 'On Time (15 minutes)', data: chartData.map(d => d.on_time) },
+            { name: 'Too Late (>15 minutes)', data: chartData.map(d => d.too_late) },
         ];
 
         const options = {
@@ -354,7 +348,6 @@ new class extends Component {
 
             const series = [
                 Number(machine.too_early) || 0,
-                Number(machine.to_early) || 0,
                 Number(machine.on_time) || 0,
                 Number(machine.too_late) || 0,
             ];
@@ -374,7 +367,7 @@ new class extends Component {
                     toolbar: { show: false },
                     foreColor: textColor
                 },
-                labels: ['Too early (< 1%)', 'Too early (+1%)', 'On time (13-15s)', 'Too Late (> 15s)'],
+                labels: ['Too Early (<15 minutes)', 'On Time (15 minutes)', 'Too Late (>15 minutes)'],
                 colors: ibmsChartColors,
                 legend: { show: false },
                 stroke: { width: 0 },

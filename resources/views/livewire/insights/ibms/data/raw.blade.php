@@ -175,7 +175,7 @@ new class extends Component {
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div class="grid grid-cols-3 gap-3">
                 <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Shift") }}</label>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Group") }}</label>
                     <x-select wire:model.live="shift" class="w-full">
                         <option value="">{{ __("Semua") }}</option>
                         <option value="A">A</option>
@@ -193,9 +193,19 @@ new class extends Component {
                         <option value="3">3</option>
                     </x-select>
                 </div>
+
+                <div>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Status") }}</label>
+                    <x-select wire:model.live="status" class="w-full">
+                        <option value="">{{ __("Semua") }}</option>
+                        <option value="too_early">Too Early</option>
+                        <option value="on_time">On Time</option>
+                        <option value="too_late">Too Late</option>
+                    </x-select>
+                </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="grow flex justify-between gap-x-2 items-center">
+            <div class="grow flex justify-end gap-x-2 items-center">
                 <div class="flex gap-x-2">
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
@@ -217,7 +227,7 @@ new class extends Component {
             <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                 <thead>
                     <tr class="uppercase text-xs text-center">
-                        <th style="text-align: center;">{{ __("Shift") }}</th>
+                        <th style="text-align: center;">{{ __("Group") }}</th>
                         <th style="text-align: center;">{{ __("Machine") }}</th>
                         <th style="text-align: center;">{{ __("Duration") }}</th>
                         <th style="text-align: center;">{{ __("Status") }}</th>

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('photo')->nullable();
             $table->integer('location_id')->nullable();
             $table->integer('area_id')->nullable();
+            $table->boolean('status_bom')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

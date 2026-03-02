@@ -45,7 +45,7 @@ new #[Layout("layouts.app")] class extends Component {
     public function mount()
     {
         if (!$this->start_at || !$this->end_at) {
-            $this->setThisWeek();
+            $this->setToday();
         }
 
         // Cache device list - this rarely changes
