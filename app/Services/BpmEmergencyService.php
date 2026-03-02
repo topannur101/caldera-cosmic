@@ -14,10 +14,16 @@ class BpmEmergencyService
         $to = $date->copy()->endOfDay();
         
         $records = InsBpmCount::whereBetween('created_at', [$from, $to])
-            ->where('plant', $plant)
-            ->where('line', $line)
             ->orderBy('created_at', 'desc')
             ->get();
+
+        if (!empty($line)) {
+            $records = $records->where('line', $line);
+        }
+
+        if (!empty($plant)) {
+            $records = $records->where('plant', $plant);
+        }
         
         $latestRecords = $this->getLatestRecordsByMachineCondition($records);
         
