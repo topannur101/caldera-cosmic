@@ -607,24 +607,6 @@ new class extends Component {
             </div>
         </div>
     </div>
-
-    {{-- Line Chart: Incremental Emergency Counter (6 AM - 5 PM) --}}
-    <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
-        <div class="mb-4">
-            <h2 class="text-lg font-semibold">{{ __('Incremental Emergency Counter (6 AM - 5 PM)') }}</h2>
-        </div>
-        <div class="h-96">
-            <canvas id="trendChart" wire:ignore></canvas>
-        </div>
-        <div class="mt-4 flex justify-center gap-6">
-            @foreach($trendChartData['datasets'] ?? [] as $dataset)
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-0.5" style="background-color: {{ $dataset['borderColor'] }}"></div>
-                <span class="text-sm">{{ $dataset['label'] }}</span>
-            </div>
-            @endforeach
-        </div>
-    </div>
 </div>
 
 @script

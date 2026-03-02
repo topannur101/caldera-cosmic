@@ -1,13 +1,13 @@
 <?php
 
-use Livewire\Volt\Component;
 use App\Models\InsBpmCount;
-use Illuminate\Support\Facades\DB;
+use App\Traits\HasDateRangeFilter;
 use Carbon\Carbon;
 use Livewire\Attributes\Url;
-use App\Traits\HasDateRangeFilter;
+use Livewire\Volt\Component;
 
-new class extends Component {
+new class extends Component
+{
     use HasDateRangeFilter {
         setToday as traitSetToday;
         setYesterday as traitSetYesterday;
@@ -16,48 +16,50 @@ new class extends Component {
         setThisMonth as traitSetThisMonth;
         setLastMonth as traitSetLastMonth;
     }
-    
-    public $view = "summary";
-    
+
+    public $view = 'summary';
+
     #[Url]
     public $start_at;
-    
+
     #[Url]
     public $end_at;
-    
-    #[Url]
-    public $plant = 'G';
-    
+
     #[Url]
     public $condition = 'all';
 
     public $lastUpdated;
+
     public $summaryCards = [];
-    public $rankingData = [];
+
+    public $dailyData = [];
+
     public $chartLabels = [];
+
     public $chartData = [];
+
     public $chartDatasets = [];
 
     public function mount()
     {
         // update menu
-        $this->dispatch("update-menu", $this->view);
-        
+        $this->dispatch('update-menu', $this->view);
+
         // Set default dates if not set
         if (! $this->start_at || ! $this->end_at) {
             $this->setToday();
         }
-        
+
         // Load initial data
         $this->loadData();
         $this->generateEmergencyChart();
     }
-    
+
     public function with(): array
     {
         return [
             'summaryCards' => $this->summaryCards,
-            'rankingData' => $this->rankingData,
+            'dailyData' => $this->dailyData,
             'lastUpdated' => $this->lastUpdated,
         ];
     }
@@ -67,101 +69,109 @@ new class extends Component {
         $from = Carbon::parse($this->start_at)->startOfDay();
         $to = Carbon::parse($this->end_at)->endOfDay();
 
-        // Get all records with cumulative > 0 and find latest for each line-machine-condition
+        // Get all records with cumulative > 0
         $allRecords = InsBpmCount::whereBetween('created_at', [$from, $to])
             ->where('cumulative', '>', 0)
-            ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
-            ->when($this->condition !== 'all', fn($q) => $q->where('condition', $this->condition))
+            ->when($this->condition !== 'all', fn ($q) => $q->where('condition', $this->condition))
             ->orderBy('created_at', 'desc')
             ->get();
-        
-        $latestRecords = $allRecords->groupBy(function($item) {
-            return $item->line . '-' . $item->machine . '-' . $item->condition;
-        })->map->first();
-        
-        // Calculate total emergency across all lines
-        $totalEmergency = $latestRecords->sum('cumulative');
 
-        // Get emergency count per line
-        $emergencyPerLine = $latestRecords->groupBy('line')->map(function($items) {
-            return (object) ['line' => $items->first()->line, 'total' => $items->sum('cumulative')];
-        })->sortByDesc('total')->values();
+        // Group by day and plant to get daily cumulative per plant (use max, not sum)
+        $dailyByPlant = $allRecords->groupBy(function ($item) {
+            return $item->created_at->format('Y-m-d').'-'.$item->plant;
+        })->map(function ($items, $key) {
+            $parts = explode('-', $key);
+            $date = $parts[0].'-'.$parts[1].'-'.$parts[2];
+            $plant = $parts[3];
 
-        // Calculate highest, lowest and average
-        $highest = $emergencyPerLine->first();
-        $lowest  = $emergencyPerLine->last();
-        $average = $emergencyPerLine->count() > 0 
-            ? round($emergencyPerLine->avg('total')) 
-            : 0;
+            return (object) [
+                'date' => $date,
+                'plant' => $plant,
+                'total' => $items->max('cumulative'),
+                'hot' => $items->where('condition', 'hot')->max('cumulative') ?? 0,
+                'cold' => $items->where('condition', 'cold')->max('cumulative') ?? 0,
+            ];
+        });
+
+        // Get all unique plants
+        $plants = $allRecords->pluck('plant')->unique()->sort()->values();
+
+        // Get all unique dates in range
+        $dateRange = Carbon::parse($from)->toPeriod(Carbon::parse($to));
+
+        // Build matrix: dates as rows, plants as columns
+        $this->dailyData = [];
+        foreach ($dateRange as $date) {
+            $dateStr = $date->format('Y-m-d');
+            $row = [
+                'date' => $dateStr,
+                'display_date' => $date->format('d M'),
+                'day_name' => $date->format('D'),
+            ];
+
+            $rowTotal = 0;
+            foreach ($plants as $plant) {
+                $key = $dateStr.'-'.$plant;
+                $data = $dailyByPlant->get($key);
+                $row['plant_'.$plant] = $data ? $data->total : 0;
+                $rowTotal += $data ? $data->total : 0;
+            }
+            $row['total'] = $rowTotal;
+            $this->dailyData[] = $row;
+        }
+
+        // Calculate summary cards
+        $totalEmergency = $allRecords->sum('cumulative');
+
+        // Find day with highest emergency
+        $dailyTotals = collect($this->dailyData)->pluck('total', 'date');
+        $highestDate = $dailyTotals->sortDesc()->keys()->first();
+        $highestValue = $dailyTotals->max();
+
+        // Find day with lowest emergency (excluding zero days if range > 1)
+        $lowestDate = $dailyTotals->sortBy(fn ($v) => $v)->keys()->first();
+        $lowestValue = $dailyTotals->min();
+
+        // Average per day
+        $average = $dailyTotals->count() > 0 ? round($dailyTotals->avg()) : 0;
+
+        // Get top plant
+        $plantTotals = $allRecords->groupBy('plant')->map(fn ($items) => $items->sum('cumulative'))->sortDesc();
+        $topPlant = $plantTotals->keys()->first();
+        $topPlantValue = $plantTotals->first();
 
         $this->summaryCards = [
             [
                 'label' => 'Total Emergency',
-                'sublabel' => 'Semua Line',
+                'sublabel' => $from->format('d M').' - '.$to->format('d M'),
                 'value' => $totalEmergency,
                 'color' => 'red',
-                'icon' => 'emergency'
+                'icon' => 'emergency',
             ],
             [
                 'label' => 'Tertinggi',
-                'sublabel' => $highest ? $highest->line : '-',
-                'value' => $highest ? $highest->total : 0,
+                'sublabel' => $highestDate ? Carbon::parse($highestDate)->format('d M') : '-',
+                'value' => $highestValue,
                 'color' => 'orange',
-                'icon' => 'trending-up'
+                'icon' => 'trending-up',
             ],
             [
                 'label' => 'Rata-rata',
-                'sublabel' => 'Per Line',
+                'sublabel' => 'Per Hari',
                 'value' => $average,
                 'color' => 'blue',
-                'icon' => 'calendar'
+                'icon' => 'calendar',
             ],
             [
                 'label' => 'Terendah',
-                'sublabel' => $lowest ? $lowest->line : '-',
-                'value' => $lowest ? $lowest->total : 0,
+                'sublabel' => $lowestDate ? Carbon::parse($lowestDate)->format('d M') : '-',
+                'value' => $lowestValue,
                 'color' => 'green',
-                'icon' => 'clock'
+                'icon' => 'clock',
             ],
         ];
 
-        // Load ranking data
-        $this->loadRankingData();
-
         $this->lastUpdated = now()->format('n/j/Y, H:i.s');
-    }
-
-    public function loadRankingData()
-    {
-        $from = Carbon::parse($this->start_at)->startOfDay();
-        $to = Carbon::parse($this->end_at)->endOfDay();
-
-        // Get all records with cumulative > 0 and find latest for each line-machine-condition
-        $allRecords = InsBpmCount::whereBetween('created_at', [$from, $to])
-            ->where('cumulative', '>', 0)
-            ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
-            ->when($this->condition !== 'all', fn($q) => $q->where('condition', $this->condition))
-            ->orderBy('created_at', 'desc')
-            ->get();
-        
-        $latestRecords = $allRecords->groupBy(function($item) {
-            return $item->line . '-' . $item->machine . '-' . $item->condition;
-        })->map->first();
-
-        // Get all detail data - show all line-machine combinations
-        $this->rankingData = $latestRecords->groupBy(function($item) {
-            return $item->line . '-' . $item->machine;
-        })->map(function($items) {
-            $first = $items->first();
-            return (object) [
-                'line' => $this->plant . $first->line,
-                'machine' => $first->machine,
-                'total_counter' => $items->sum('cumulative')
-            ];
-        })->sortBy(function($item) {
-            // Sort by line then machine naturally
-            return $item->line . '-' . str_pad($item->machine, 3, '0', STR_PAD_LEFT);
-        })->values();
     }
 
     public function generateEmergencyChart()
@@ -169,103 +179,62 @@ new class extends Component {
         $from = Carbon::parse($this->start_at)->startOfDay();
         $to = Carbon::parse($this->end_at)->endOfDay();
 
+        // Get all records with cumulative > 0
+        $allRecords = InsBpmCount::whereBetween('created_at', [$from, $to])
+            ->where('cumulative', '>', 0)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Group by plant and condition (use max cumulative for each plant)
+        $plantTotals = $allRecords->groupBy('plant')->map(function ($items) {
+            return (object) [
+                'total' => $items->max('cumulative'),
+                'hot' => $items->where('condition', 'hot')->max('cumulative') ?? 0,
+                'cold' => $items->where('condition', 'cold')->max('cumulative') ?? 0,
+            ];
+        })->sortBy(fn ($item, $key) => $key);
+
+        $labels = $plantTotals->keys()->toArray();
+
         if ($this->condition === 'all') {
-            // Load Emergency Counter data with hot/cold breakdown, ignoring zero cumulative
-            $emergencyData = InsBpmCount::whereBetween('created_at', [$from, $to])
-                ->where('cumulative', '>', 0)
-                ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->groupBy(function($item) {
-                    return $item->line . '-' . $item->machine . '-' . $item->condition;
-                })
-                ->map->first();
-            
-            // Get unique line-machine combinations and calculate totals
-            $lineMachines = $emergencyData->groupBy(function($item) {
-                return $item->line . '-' . $item->machine;
-            })->map(function($items, $key) {
-                $parts = explode('-', $key);
-                return [
-                    'line' => $this->plant . $parts[0],
-                    'machine' => $parts[1],
-                    'total' => $items->sum('cumulative'),
-                    'hot' => $items->where('condition', 'hot')->sum('cumulative'),
-                    'cold' => $items->where('condition', 'cold')->sum('cumulative'),
-                ];
-            })->sortBy(function($item) {
-                // Sort by line then machine naturally
-                return $item['line'] . '-' . str_pad($item['machine'], 3, '0', STR_PAD_LEFT);
-            })->values();
-            
-            // Format labels
-            $labels = $lineMachines->map(function($item) {
-                return $item['line'] . ' - Mesin ' . $item['machine'];
-            })->toArray();
-            
-            // Store in component properties
             $this->chartLabels = $labels;
             $this->chartDatasets = [
                 [
                     'label' => 'Hot',
-                    'data' => $lineMachines->pluck('hot')->map(fn($v) => (int) $v)->toArray(),
+                    'data' => $plantTotals->pluck('hot')->map(fn ($v) => (int) $v)->toArray(),
                     'backgroundColor' => 'rgba(239, 68, 68, 0.8)',
                     'borderColor' => 'rgba(239, 68, 68, 1)',
                     'borderWidth' => 1,
                 ],
                 [
                     'label' => 'Cold',
-                    'data' => $lineMachines->pluck('cold')->map(fn($v) => (int) $v)->toArray(),
+                    'data' => $plantTotals->pluck('cold')->map(fn ($v) => (int) $v)->toArray(),
                     'backgroundColor' => 'rgba(59, 130, 246, 0.8)',
                     'borderColor' => 'rgba(59, 130, 246, 1)',
                     'borderWidth' => 1,
-                ]
+                ],
             ];
         } else {
-            // Load Emergency Counter data for specific condition, ignoring zero cumulative
-            $emergencyData = InsBpmCount::whereBetween('created_at', [$from, $to])
-                ->where('cumulative', '>', 0)
-                ->when($this->plant, fn($q) => $q->where('plant', $this->plant))
-                ->where('condition', $this->condition)
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->groupBy(function($item) {
-                    return $item->line . '-' . $item->machine;
-                })
-                ->map->first();
+            $data = $this->condition === 'hot'
+                ? $plantTotals->pluck('hot')->map(fn ($v) => (int) $v)->toArray()
+                : $plantTotals->pluck('cold')->map(fn ($v) => (int) $v)->toArray();
 
-            // Format labels and extract data - keep all machines
-            $sortedData = $emergencyData->sortBy(function($item) {
-                return $item->line . '-' . str_pad($item->machine, 3, '0', STR_PAD_LEFT);
-            });
-            
-            $labels = $sortedData->map(function($item) {
-                return $this->plant . $item->line . ' - Mesin ' . $item->machine;
-            })->values()->toArray();
-            
-            $data = $sortedData->pluck('cumulative')->map(function($value) {
-                return (int) $value;
-            })->values()->toArray();
-
-            // Determine color based on condition
-            $conditionColor = $this->condition === 'hot' 
+            $color = $this->condition === 'hot'
                 ? ['bg' => 'rgba(239, 68, 68, 0.8)', 'border' => 'rgba(239, 68, 68, 1)']
                 : ['bg' => 'rgba(59, 130, 246, 0.8)', 'border' => 'rgba(59, 130, 246, 1)'];
-            
-            // Store in component properties
+
             $this->chartLabels = $labels;
             $this->chartDatasets = [
                 [
                     'label' => ucfirst($this->condition),
                     'data' => $data,
-                    'backgroundColor' => $conditionColor['bg'],
-                    'borderColor' => $conditionColor['border'],
+                    'backgroundColor' => $color['bg'],
+                    'borderColor' => $color['border'],
                     'borderWidth' => 1,
-                ]
+                ],
             ];
         }
-        
-        // Dispatch browser event to trigger chart refresh
+
         $this->dispatch('chart-data-updated', labels: $this->chartLabels, datasets: $this->chartDatasets);
     }
 
@@ -276,12 +245,6 @@ new class extends Component {
     }
 
     public function updatedEndAt()
-    {
-        $this->loadData();
-        $this->generateEmergencyChart();
-    }
-
-    public function updatedPlant()
     {
         $this->loadData();
         $this->generateEmergencyChart();
@@ -382,22 +345,6 @@ new class extends Component {
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <div>
-                <label class="block text-sm font-medium mb-2">{{ __('PLANT') }}</label>
-                <select wire:model.live="plant" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm">
-                    <option value="">All</option>
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
-                    <option value="D">D</option>
-                    <option value="E">E</option>
-                    <option value="F">F</option>
-                    <option value="G">G</option>
-                    <option value="H">H</option>
-                    <option value="I">I</option>
-                    <option value="J">J</option>
-                </select>
-            </div>
-            <div>
                 <label class="block text-sm font-medium mb-2">{{ __('CONDITION') }}</label>
                 <select wire:model.live="condition" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm">
                     <option value="all">All</option>
@@ -406,7 +353,7 @@ new class extends Component {
                 </select>
             </div>
         </div>
-        <div wire:loading wire:target="start_at,end_at,plant,condition,setToday,setYesterday,setThisWeek,setLastWeek,setThisMonth,setLastMonth" class="rela inset-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
+        <div wire:loading wire:target="start_at,end_at,condition,setToday,setYesterday,setThisWeek,setLastWeek,setThisMonth,setLastMonth" class="rela inset-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
             <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('Loading...') }}</span>
         </div>
         <div class="text-sm text-gray-600 dark:text-gray-400">
@@ -494,7 +441,7 @@ new class extends Component {
                                             },
                                             scales: {
                                                 x: {
-                                                    stacked: datasets.length > 1,
+                                                    stacked: true,
                                                     beginAtZero: true,
                                                     title: { display: true, text: 'Counter' },
                                                     ticks: {
@@ -503,8 +450,8 @@ new class extends Component {
                                                     }
                                                 },
                                                 y: {
-                                                    stacked: datasets.length > 1,
-                                                    title: { display: true, text: 'Line - Machine' }
+                                                    stacked: true,
+                                                    title: { display: true, text: 'Plant' }
                                                 }
                                             }
                                         }
@@ -580,32 +527,44 @@ new class extends Component {
                 @endforeach
             </div>
 
-            {{-- Detail Table --}}
+            {{-- Daily Summary Table --}}
             <div class="bg-white dark:bg-neutral-800 rounded-lg shadow">
                 <div class="p-4 border-b border-neutral-200 dark:border-neutral-700">
-                    <h2 class="font-semibold">Emergency Counter Detail</h2>
+                    <h2 class="font-semibold">Daily Emergency Counter by Plant</h2>
                 </div>
                 <div class="overflow-auto max-h-96">
+                    @php
+                        $plants = collect($dailyData)->flatMap(fn($row) => collect($row)->keys()->filter(fn($k) => str_starts_with($k, 'plant_'))->map(fn($k) => str_replace('plant_', '', $k)))->unique()->sort()->values();
+                    @endphp
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50 dark:bg-neutral-700 sticky top-0">
                             <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">NO</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">LINE</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">MESIN</th>
-                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300">COUNTER</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">DATE</th>
+                                @foreach($plants as $plant)
+                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300">Plant {{ $plant }}</th>
+                                @endforeach
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300">TOTAL</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
-                            @forelse($rankingData as $index => $item)
+                            @forelse($dailyData as $index => $row)
                             <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700">
-                                <td class="px-4 py-2">{{ $index + 1 }}</td>
-                                <td class="px-4 py-2 font-medium">{{ $item->line }}</td>
-                                <td class="px-4 py-2">{{ $item->machine }}</td>
-                                <td class="px-4 py-2 text-right font-semibold text-red-600">{{ number_format($item->total_counter) }}</td>
+                                <td class="px-3 py-2 font-medium whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span>{{ $row['display_date'] }}</span>
+                                        <span class="text-xs text-gray-400">{{ $row['day_name'] }}</span>
+                                    </div>
+                                </td>
+                                @foreach($plants as $plant)
+                                <td class="px-3 py-2 text-center {{ ($row['plant_' . $plant] ?? 0) > 0 ? 'text-red-600 font-semibold' : 'text-gray-400' }}">
+                                    {{ number_format($row['plant_' . $plant] ?? 0) }}
+                                </td>
+                                @endforeach
+                                <td class="px-3 py-2 text-right font-bold text-red-600">{{ number_format($row['total']) }}</td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="{{ $plants->count() + 2 }}" class="px-4 py-8 text-center text-gray-500">
                                     <div class="flex flex-col items-center justify-center">
                                         <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
