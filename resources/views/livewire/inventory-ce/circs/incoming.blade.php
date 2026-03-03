@@ -248,7 +248,7 @@ new #[Layout("layouts.app")] class extends Component {
             <div><span class="opacity-70">RFID: {{ $auth['rf_code'] ?? '-' }}</span></div>
             <div><span class="opacity-70">Nama: {{ $auth['name'] ?? '-' }}</span></div>
             <div><span class="opacity-70">Emp ID: {{ $auth['emp_id'] ?? '-' }}</span></div>
-            <div><span class="opacity-70">Active: {{ $auth['is_active'] === 1 ? 'Yes' : 'No' }}</span></div>
+            <div><span class="opacity-70">Active: {{ $auth['is_active'] ?? 0 === 1 ? 'Yes' : 'No' }}</span></div>
             <div><span class="opacity-70">Area: {{ $auth['area'] ?? '-' }}</span></div>
             <div><span class="opacity-70">Resource Type: {{ $auth['resource_type'] ?? '-' }}</span></div>
             <div><span class="opacity-70">Resource ID: {{ $auth['resource_id'] ?? '-' }}</span></div>
