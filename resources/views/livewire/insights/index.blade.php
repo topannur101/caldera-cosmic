@@ -355,6 +355,49 @@ new #[Layout("layouts.app")] class extends Component {
                         </a>
                     </div>
                 </div>
+
+                <div>
+                    <div x-data="{ open: true }" id="accordion-collapse" data-accordion="collapse" class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
+                        <h2 id="accordion-collapse-heading-1 bg-white">
+                            <button type="button" class="bg-white flex items-center justify-between w-full p-4 font-medium text-left text-neutral-900 bg-neutral-100 hover:bg-neutral-200 focus:ring-4 focus:ring-neutral-200 dark:focus:ring-neutral-800 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700" data-accordion-target="#accordion-collapse-body-1" aria-expanded="true" aria-controls="accordion-collapse-body-1" @click="open = !open">
+                                {{ __("Ce Room Digital") }}
+                                <span class="ml-2 text-neutral-500 dark:text-neutral-400"><i :class="open ? 'icon-chevron-up' : 'icon-chevron-down'"></i></span>
+                            </button>
+                        </h2>
+                        <div id="accordion-collapse-body-1" class="hidden" :class="{ 'hidden': !open }" aria-labelledby="accordion-collapse-heading-1">
+                            <a href="{{ route('insights.ce.inventory.index') }}" class="block">
+                                <div class="flex items-center">
+                                    <div class="px-6 py-3">
+                                        <img src="/ins-ce.svg" class="w-12 h-12 dark:invert" />
+                                    </div>
+                                    <div class="grow">
+                                        <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Chemical Inventory") }}</div>
+                                    </div>
+                                    <div class="px-6 py-3 text-lg">
+                                        <i class="icon-chevron-right"></i>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div id="accordion-collapse-body-2" class="hidden" :class="{ 'hidden': !open }" aria-labelledby="accordion-collapse-heading-2">
+                            <div id="accordion-collapse-body-1" class="hidden" :class="{ 'hidden': !open }" aria-labelledby="accordion-collapse-heading-1">
+                                <a href="{{ route('insights.ce.mixing.index') }}" class="block">
+                                    <div class="flex items-center">
+                                        <div class="px-6 py-3">
+                                            <img src="/ins-ce.svg" class="w-12 h-12 dark:invert" />
+                                        </div>
+                                        <div class="grow">
+                                            <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Mixing Chemical Monitoring") }}</div>
+                                        </div>
+                                        <div class="px-6 py-3 text-lg">
+                                            <i class="icon-chevron-right"></i>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>                  
+                </div>
             </div>
             <div class="flex flex-col gap-6">
                 <div>

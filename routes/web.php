@@ -330,7 +330,22 @@ Route::prefix('insights')->group(function () {
         Route::get('/ibms', function () {
             return redirect()->route('insights.ibms.data.index');
         })->name('index');
-    });   
+    });
+
+    
+    // ===========================================//
+    // CE Room Digital ROUTES
+    // ===========================================//
+    Route::name('insights.ce.')->group(function () {
+        // CHEMICAL MIXING MONITORING
+        Volt::route('/ce/mixing', 'insights.ce.mixing.index')->name('mixing.index');
+        Volt::route('ce/mixing/create', 'insights.ce.mixing.create')->name('mixing.create');
+        Volt::route('ce/mixing/raw', 'insights.ce.mixing.raw')->name('mixing.raw');
+        // CHEMICAL INVENTORY
+        Volt::route('/ce/inventory', 'insights.ce.inventory.index')->name('inventory.index');
+        Volt::route('/ce/inventory/chemicals', 'insights.ce.inventory.chemicals')->name('inventory.chemicals');
+        Volt::route('/ce/inventory/circulations', 'insights.ce.inventory.calculations')->name('inventory.calculations');
+    });
 
     Volt::route('/', 'insights.index')->name('insights');
 });
@@ -411,51 +426,6 @@ Route::middleware('auth')->group(function () {
             Volt::route('/manage/auths', 'inventory.manage.auths')->name('auths');
             Volt::route('/manage/areas', 'inventory.manage.areas')->name('areas');
             Volt::route('/manage/currs', 'inventory.manage.currs')->name('currs');
-        });
-    });
-
-    // inventory-ce routes
-    Route::prefix('inventory-ce')->group(function () {
-        Route::name('inventory-ce.chemicals.')->group(function () {
-            Volt::route('/chemicals', 'inventory-ce.chemicals.index')->name('index');
-            Volt::route('/chemicals/create', 'inventory-ce.chemicals.create')->name('create');
-            Volt::route('/chemicals/edit', 'inventory-ce.chemicals.edit')->name('edit');
-            Volt::route('/chemicals/delete', 'inventory-ce.chemicals.delete')->name('delete');
-            Volt::route('/chemicals/show', 'inventory-ce.chemicals.show')->name('show');
-            Volt::route('/chemicals/bulk-operation', 'inventory-ce.chemicals.bulk-operation')->name('bulk-operation');
-            Volt::route('/chemicals/bulk-operation/create', 'inventory-ce.chemicals.bulk-operation.create')->name('bulk-operation.create');
-            Volt::route('/chemicals/bulk-operation/edit', 'inventory-ce.chemicals.bulk-operation.edit')->name('bulk-operation.edit');
-            Volt::route('/chemicals/bulk-operation/delete', 'inventory-ce.chemicals.bulk-operation.delete')->name('bulk-operation.delete');
-        });
-        Route::name('inventory-ce.circs.')->group(function () {
-            Volt::route('/circs', 'inventory-ce.circs.index')->name('index');
-            Volt::route('/circs/incoming', 'inventory-ce.circs.incoming')->name('incoming');
-            Volt::route('/circs/outgoing', 'inventory-ce.circs.outgoing')->name('outgoing');
-            Volt::route('/circs/create', 'inventory-ce.circs.create')->name('create');
-            Volt::route('/circs/edit', 'inventory-ce.circs.edit')->name('edit');
-            Volt::route('/circs/delete', 'inventory-ce.circs.delete')->name('delete');
-            Volt::route('/circs/show', 'inventory-ce.circs.show')->name('show');
-            Volt::route('/circs/bulk-operation', 'inventory-ce.circs.bulk-operation')->name('bulk-operation');
-            Volt::route('/circs/bulk-operation/create', 'inventory-ce.circs.bulk-operation.create')->name('bulk-operation.create');
-            Volt::route('/circs/bulk-operation/edit', 'inventory-ce.circs.bulk-operation.edit')->name('bulk-operation.edit');
-            Volt::route('/circs/bulk-operation/delete', 'inventory-ce.circs.bulk-operation.delete')->name('bulk-operation.delete');
-        });
-        Route::name('inventory-ce.monitoring.')->group(function () {
-            Volt::route('/monitoring', 'inventory-ce.monitoring.index')->name('index');
-            Volt::route('/monitoring/create', 'inventory-ce.monitoring.create')->name('create');
-            Volt::route('/monitoring/edit', 'inventory-ce.monitoring.edit')->name('edit');
-            Volt::route('/monitoring/delete', 'inventory-ce.monitoring.delete')->name('delete');
-            Volt::route('/monitoring/show', 'inventory-ce.monitoring.show')->name('show');
-            Volt::route('/monitoring/bulk-operation', 'inventory-ce.monitoring.bulk-operation')->name('bulk-operation');
-            Volt::route('/monitoring/bulk-operation/create', 'inventory-ce.monitoring.bulk-operation.create')->name('bulk-operation.create');
-            Volt::route('/monitoring/bulk-operation/edit', 'inventory-ce.monitoring.bulk-operation.edit')->name('bulk-operation.edit');
-            Volt::route('/monitoring/bulk-operation/delete', 'inventory-ce.monitoring.bulk-operation.delete')->name('bulk-operation.delete');
-        });
-        Route::name('inventory-ce.manage.')->group(function () {
-            Volt::route('/manage', 'inventory-ce.manage.index')->name('index');
-            Volt::route('/manage/auths', 'inventory-ce.manage.auths')->name('auths');
-            Volt::route('/manage/areas', 'inventory-ce.manage.areas')->name('areas');
-            Volt::route('/manage/currs', 'inventory-ce.manage.currs')->name('currs');
         });
     });
 
