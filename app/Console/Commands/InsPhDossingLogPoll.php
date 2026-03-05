@@ -25,7 +25,7 @@ class InsPhDossingLogPoll extends Command
         // Read Input Register (04)
         'current_ph'            => 0,
         '1_hours_ago_ph'        => 10,
-        'amount'                => 107,
+        'amount'                => 905,
         
         // Read Holding Register (03)
         'dosing_count'          => 0,
@@ -37,9 +37,9 @@ class InsPhDossingLogPoll extends Command
         'setting_ph_high_max'   => 4,
         'setting_ph_middle_min' => 3,
         'setting_ph_middle_max' => 5,
-        'setting_formula_1_amount'     => 101,
-        'setting_formula_2_amount'     => 103,
-        'setting_formula_3_amount'     => 105,
+        'setting_formula_1_amount' => 101,
+        'setting_formula_2_amount' => 103,
+        'setting_formula_3_amount' => 105,
         
         // Coils
         'reset'                 => 13,
@@ -156,15 +156,15 @@ class InsPhDossingLogPoll extends Command
             $dosing_amount = (int) $dosing_amount;
 
             // get formula dossing_amount from HMI
-            $formula_1_amount = $this->readInputFunction($device, $this->addressWrite['setting_formula_1_amount'], 'setting_formula_1_amount');
-            $formula_2_amount = $this->readInputFunction($device, $this->addressWrite['setting_formula_2_amount'], 'setting_formula_2_amount');
-            $formula_3_amount = $this->readInputFunction($device, $this->addressWrite['setting_formula_3_amount'], 'setting_formula_3_amount');
+            $formula_1_amount = $this->readInputFunction($device, $this->addressWrite['setting_formula_1_amount'], 'setting_formula_1_amount') ?? 0;
+            $formula_2_amount = $this->readInputFunction($device, $this->addressWrite['setting_formula_2_amount'], 'setting_formula_2_amount') ?? 0;
+            $formula_3_amount = $this->readInputFunction($device, $this->addressWrite['setting_formula_3_amount'], 'setting_formula_3_amount') ?? 0;
 
             $data_dosing = [
                 'formula_1_amount' => (int) $formula_1_amount,
                 'formula_2_amount' => (int) $formula_2_amount,
                 'formula_3_amount' => (int) $formula_3_amount,
-                'total_amount' => $formula_1_amount + $formula_2_amount + $formula_3_amount,
+                'total_amount' => ($formula_1_amount ?? 0) + ($formula_2_amount ?? 0) + ($formula_3_amount ?? 0),
             ];
 
             // Get the last dosing_amount from database for this device
@@ -204,6 +204,17 @@ class InsPhDossingLogPoll extends Command
     {
         $unit_id = 1;
         $request = ReadRegistersBuilder::newReadInputRegisters('tcp://'.$device->ip_address.':503', $unit_id)
+            ->int16($address, $name)
+            ->build();
+        $response = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))
+            ->sendRequests($request)->getData();
+        return $response[$name];
+    }
+
+    private function readHoldingFunction(InsPhDosingDevice $device, $address, $name)
+    {
+        $unit_id = 1;
+        $request = ReadRegistersBuilder::newReadHoldingRegisters('tcp://'.$device->ip_address.':503', $unit_id)
             ->int16($address, $name)
             ->build();
         $response = (new NonBlockingClient(['readTimeoutSec' => $this->modbusTimeoutSeconds]))
