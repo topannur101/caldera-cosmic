@@ -12,11 +12,9 @@ class extends Component {};
 
 <x-slot name="title">{{ __('Inventaris CE') }}</x-slot>
 
-@if (Auth::user()->id ?? false)
-   <x-slot name="header">
-      <x-nav-inventory-ce></x-nav-inventory-ce>
-   </x-slot>
-@endif
+<x-slot name="header">
+   <x-nav-inventory-ce></x-nav-inventory-ce>
+</x-slot>
 
 <div class="relative">
    <section class="px-2 pt-16 md:px-0">

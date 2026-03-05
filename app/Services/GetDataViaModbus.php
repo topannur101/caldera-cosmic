@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use ModbusTcpClient\Composer\Read\ReadCoilsBuilder;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
 use ModbusTcpClient\Network\NonBlockingClient;
 use ModbusTcpClient\Network\BinaryStreamConnection;
 use ModbusTcpClient\Packet\ModbusFunction\WriteMultipleRegistersRequest;
 use ModbusTcpClient\Packet\ModbusFunction\WriteSingleCoilRequest;
 use ModbusTcpClient\Packet\ModbusFunction\WriteSingleRegisterRequest;
+use ModbusTcpClient\Packet\ModbusFunction\ReadCoilsRequest;
 use ModbusTcpClient\Packet\ResponseFactory;
 use ModbusTcpClient\Utils\Types;
 
@@ -39,5 +41,20 @@ class GetDataViaModbus
             ->sendRequests($request)
             ->getData();
         return $response[$name];
+    }
+
+    public function getDataReadCoils($ip_address, $port, $unit_id = 1, $address, $name)
+    {
+        try {
+            $request = ReadCoilsBuilder::newReadCoils("tcp://{$ip_address}:{$port}", $unit_id)
+                ->coil($address, $name)
+                ->build();
+            $response = (new NonBlockingClient(['readTimeoutSec' => $this->timeout]))
+                ->sendRequests($request)
+                ->getData();
+            return $response[$name];
+        } catch (\Throwable $th) {
+            return null;
+        }
     }
 }

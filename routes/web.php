@@ -344,7 +344,10 @@ Route::prefix('insights')->group(function () {
         // CHEMICAL INVENTORY
         Volt::route('/ce/inventory', 'insights.ce.inventory.index')->name('inventory.index');
         Volt::route('/ce/inventory/chemicals', 'insights.ce.inventory.chemicals')->name('inventory.chemicals');
-        Volt::route('/ce/inventory/circulations', 'insights.ce.inventory.calculations')->name('inventory.calculations');
+        Volt::route('/ce/inventory/circs/in', 'insights.ce.inventory.circs.incoming')->name('inventory.circs.incoming');
+        Volt::route('/ce/inventory/circs/out', 'insights.ce.inventory.circs.outgoing')->name('inventory.circs.outgoing');
+        // MANAGEMENT
+        Volt::route('/ce/manage', 'insights.ce.manage.index')->name('manage.index');
     });
 
     Volt::route('/', 'insights.index')->name('insights');

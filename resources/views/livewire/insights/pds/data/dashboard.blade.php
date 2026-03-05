@@ -43,6 +43,7 @@ new class extends Component {
     public $view = "raw";
     public $onlineStats = [];
     public string $lastPhStatus = '';
+    public bool $statusEmergency = false;
     
     public function mount()
     {
@@ -59,6 +60,7 @@ new class extends Component {
         $this->stdMinPh = $this->getStdMinPh();
         $this->stdMaxPh = $this->getStdMaxPh();
         $this->checkOneHourAgoPhToast(true);
+        $this->statusEmergency = $this->getStatusEmergency(app(GetDataViaModbus::class))->first() ?? false;
     }
 
     public function updatedStartAt()
@@ -765,6 +767,15 @@ new class extends Component {
         }
     }
 
+    public function getStatusEmergency(GetDataViaModbus $service){
+        try{
+            $data = $service->getDataReadCoils($this->ip_address, 503, 1, 9, 'status_dosing');
+            return $data ? collect($data) : collect();
+        } catch (\Exception $e) {
+            return collect();
+        }
+    }
+
 }; ?>
 
 <div wire:poll.20s="refreshCharts">
@@ -787,6 +798,11 @@ new class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <!-- emergency status -->
+            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-2 text-center">
+                <p class="text-lg text-neutral-600 dark:text-neutral-400 mb-3">{{ __("Emergency Status") }}</p>
+                <h2 class="text-xl font-bold text-neutral-800 dark:text-neutral-200">{{ $this->statusEmergency ? 'Active' : 'Inactive' }}</h2>
+            </div>
         </div>
 
         <!-- Second Row: TPM Code and Latest Calibration -->

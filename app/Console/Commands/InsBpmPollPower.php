@@ -93,7 +93,7 @@ class InsBpmPollPower extends Command
     private function pollDevice(InsBpmDevice $device): int
     {
         $readingsCount = 0;
-        foreach ($device->config['list_mechine'] as $machineConfig) {
+        foreach ($device->config['list_machine'] as $machineConfig) {
             try {
                 $this->pollMachine($device, $machineConfig);
                 $readingsCount++;
@@ -134,57 +134,51 @@ class InsBpmPollPower extends Command
     }
 
     /**
-     * Get the latest power record from database for this device and machine
+     * Get today's latest power record from database for this device and machine
      */
-    private function getLatestRecord(InsBpmDevice $device, string $machineName): ?InsBpmPower
+    private function getTodayRecord(InsBpmDevice $device, string $machineName): ?InsBpmPower
     {
         return InsBpmPower::where('device_id', $device->id)
             ->where('machine', $machineName)
+            ->whereDate('created_at', today())
             ->latest('created_at')
             ->first();
     }
 
     /**
-     * Process power counter from PLC and save if changed
+     * Process power counter from PLC and save if different from today's last
      */
     private function processPowerCounter(InsBpmDevice $device, string $machineName, int $currentPower): int
     {
-        $latestRecord = $this->getLatestRecord($device, $machineName);
+        $todayRecord = $this->getTodayRecord($device, $machineName);
 
-        // First record ever - initialize with current power value
-        if (!$latestRecord) {
+        // No record today - create first entry
+        if (!$todayRecord) {
             InsBpmPower::create([
                 'device_id'   => $device->id,
                 'machine'     => $machineName,
-                'condition'   => 'on',  // Default condition
-                'incremental' => 0,
+                'condition'   => 'on',
+                'incremental' => $currentPower,
                 'cumulative'  => $currentPower,
             ]);
-            $this->debugLog("    ✓ Initialized {$machineName}: cumulative {$currentPower}");
+            $this->debugLog("    ✓ Initialized {$machineName}: value {$currentPower}");
             return 1;
         }
 
-        $increment = $currentPower - $latestRecord->cumulative;
-
-        // Save only if increment is positive (counter increased)
-        if ($increment > 0) {
+        // Value differs from today's last record - save new
+        if ($currentPower !== $todayRecord->cumulative) {
             InsBpmPower::create([
                 'device_id'   => $device->id,
                 'machine'     => $machineName,
-                'condition'   => 'on',  // Default condition
-                'incremental' => $increment,
+                'condition'   => 'on',
+                'incremental' => $currentPower - $todayRecord->cumulative,
                 'cumulative'  => $currentPower,
             ]);
-            $this->debugLog("    ✓ Saved {$machineName}: increment {$increment}, cumulative {$currentPower}");
+            $this->debugLog("    ✓ Saved {$machineName}: {$currentPower} (was {$todayRecord->cumulative})");
             return 1;
         }
 
-        // Handle negative or zero increment (counter reset or no change)
-        if ($increment < 0) {
-            $this->debugLog("    ⚠ Negative increment ({$increment}) for {$machineName} - possible PLC reset, skipping save");
-        } else {
-            $this->debugLog("    → No change for {$machineName} (still {$currentPower})");
-        }
+        $this->debugLog("    → No change for {$machineName} (still {$currentPower})");
         return 0;
     }
 }
