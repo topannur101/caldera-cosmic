@@ -1,17 +1,20 @@
 <?php
 
-use App\Models\InvCeChemical;
 use App\Models\InvCeAuth;
+use App\Models\InvCeChemical;
 use Illuminate\Support\Facades\Cookie;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
-use Livewire\WithPagination;
 
 new #[Layout('layouts.app')]
-class extends Component {
+class extends Component
+{
     public string $cookieKey = 'invce_mixing_auth';
+
     public string $model = '';
+
     public string $recipe = '';
+
     public string $area = '';
 
     // RFID Auth
@@ -25,86 +28,197 @@ class extends Component {
         'resource_type' => '',
         'resource_id' => 0,
     ];
+
     public bool $isAuthenticated = false;
+
     public string $rfidError = '';
 
-    // Chemical A
-    public string $item_code_a = '';
-    public string $chemical_name_a = '';
-    public string $lot_number_a = '';
-    public string $exp_date_a = '';
-    public string $weight_target_a = '';
-    public string $weight_actual_a = '';
+    // Device / Micon
+    public string $device_name = '';
 
-    // Chemical B
-    public string $item_code_b = '';
-    public string $chemical_name_b = '';
-    public string $lot_number_b = '';
-    public string $exp_date_b = '';
-    public string $weight_target_b = '';
-    public string $weight_actual_b = '';
-    public string $percentage = '';
+    // Left Head - Chemical A
+    public string $item_code_left_a = '';
+
+    public string $chemical_name_left_a = '';
+
+    public string $lot_number_left_a = '';
+
+    public string $exp_date_left_a = '';
+
+    public string $weight_target_left_a = '';
+
+    public string $weight_actual_left_a = '';
+
+    // Left Head - Chemical B
+    public string $item_code_left_b = '';
+
+    public string $chemical_name_left_b = '';
+
+    public string $lot_number_left_b = '';
+
+    public string $exp_date_left_b = '';
+
+    public string $weight_target_left_b = '';
+
+    public string $weight_actual_left_b = '';
+
+    public string $percentage_left = '';
+
+    // Right Head - Chemical A
+    public string $item_code_right_a = '';
+
+    public string $chemical_name_right_a = '';
+
+    public string $lot_number_right_a = '';
+
+    public string $exp_date_right_a = '';
+
+    public string $weight_target_right_a = '';
+
+    public string $weight_actual_right_a = '';
+
+    // Right Head - Chemical B
+    public string $item_code_right_b = '';
+
+    public string $chemical_name_right_b = '';
+
+    public string $lot_number_right_b = '';
+
+    public string $exp_date_right_b = '';
+
+    public string $weight_target_right_b = '';
+
+    public string $weight_actual_right_b = '';
+
+    public string $percentage_right = '';
 
     // Autocomplete
-    public array $chemicalOptionsA = [];
-    public array $chemicalOptionsB = [];
-    public bool $showOptionsA = false;
-    public bool $showOptionsB = false;
+    public array $chemicalOptionsLeftA = [];
 
-    public function searchChemicalA(string $value)
+    public array $chemicalOptionsLeftB = [];
+
+    public array $chemicalOptionsRightA = [];
+
+    public array $chemicalOptionsRightB = [];
+
+    public bool $showOptionsLeftA = false;
+
+    public bool $showOptionsLeftB = false;
+
+    public bool $showOptionsRightA = false;
+
+    public bool $showOptionsRightB = false;
+
+    public function searchChemicalLeftA(string $value)
     {
         if (strlen($value) >= 2) {
-            $this->chemicalOptionsA = InvCeChemical::where('item_code', 'like', '%' . $value . '%')
+            $this->chemicalOptionsLeftA = InvCeChemical::where('item_code', 'like', '%'.$value.'%')
                 ->where('is_active', true)
                 ->limit(10)
                 ->get(['id', 'item_code', 'name'])
                 ->toArray();
-            $this->showOptionsA = count($this->chemicalOptionsA) > 0;
+            $this->showOptionsLeftA = count($this->chemicalOptionsLeftA) > 0;
         } else {
-            $this->chemicalOptionsA = [];
-            $this->showOptionsA = false;
+            $this->chemicalOptionsLeftA = [];
+            $this->showOptionsLeftA = false;
         }
     }
 
-    public function searchChemicalB(string $value)
+    public function searchChemicalLeftB(string $value)
     {
         if (strlen($value) >= 2) {
-            $this->chemicalOptionsB = InvCeChemical::where('item_code', 'like', '%' . $value . '%')
+            $this->chemicalOptionsLeftB = InvCeChemical::where('item_code', 'like', '%'.$value.'%')
                 ->where('is_active', true)
                 ->limit(10)
                 ->get(['id', 'item_code', 'name'])
                 ->toArray();
-            $this->showOptionsB = count($this->chemicalOptionsB) > 0;
+            $this->showOptionsLeftB = count($this->chemicalOptionsLeftB) > 0;
         } else {
-            $this->chemicalOptionsB = [];
-            $this->showOptionsB = false;
+            $this->chemicalOptionsLeftB = [];
+            $this->showOptionsLeftB = false;
         }
     }
 
-    public function selectChemicalA(string $itemCode, string $name)
+    public function searchChemicalRightA(string $value)
     {
-        $this->item_code_a = $itemCode;
-        $this->chemical_name_a = $name;
-        $this->showOptionsA = false;
-        $this->chemicalOptionsA = [];
+        if (strlen($value) >= 2) {
+            $this->chemicalOptionsRightA = InvCeChemical::where('item_code', 'like', '%'.$value.'%')
+                ->where('is_active', true)
+                ->limit(10)
+                ->get(['id', 'item_code', 'name'])
+                ->toArray();
+            $this->showOptionsRightA = count($this->chemicalOptionsRightA) > 0;
+        } else {
+            $this->chemicalOptionsRightA = [];
+            $this->showOptionsRightA = false;
+        }
     }
 
-    public function selectChemicalB(string $itemCode, string $name)
+    public function searchChemicalRightB(string $value)
     {
-        $this->item_code_b = $itemCode;
-        $this->chemical_name_b = $name;
-        $this->showOptionsB = false;
-        $this->chemicalOptionsB = [];
+        if (strlen($value) >= 2) {
+            $this->chemicalOptionsRightB = InvCeChemical::where('item_code', 'like', '%'.$value.'%')
+                ->where('is_active', true)
+                ->limit(10)
+                ->get(['id', 'item_code', 'name'])
+                ->toArray();
+            $this->showOptionsRightB = count($this->chemicalOptionsRightB) > 0;
+        } else {
+            $this->chemicalOptionsRightB = [];
+            $this->showOptionsRightB = false;
+        }
     }
 
-    public function closeOptionsA()
+    public function selectChemicalLeftA(string $itemCode, string $name)
     {
-        $this->showOptionsA = false;
+        $this->item_code_left_a = $itemCode;
+        $this->chemical_name_left_a = $name;
+        $this->showOptionsLeftA = false;
+        $this->chemicalOptionsLeftA = [];
     }
 
-    public function closeOptionsB()
+    public function selectChemicalLeftB(string $itemCode, string $name)
     {
-        $this->showOptionsB = false;
+        $this->item_code_left_b = $itemCode;
+        $this->chemical_name_left_b = $name;
+        $this->showOptionsLeftB = false;
+        $this->chemicalOptionsLeftB = [];
+    }
+
+    public function selectChemicalRightA(string $itemCode, string $name)
+    {
+        $this->item_code_right_a = $itemCode;
+        $this->chemical_name_right_a = $name;
+        $this->showOptionsRightA = false;
+        $this->chemicalOptionsRightA = [];
+    }
+
+    public function selectChemicalRightB(string $itemCode, string $name)
+    {
+        $this->item_code_right_b = $itemCode;
+        $this->chemical_name_right_b = $name;
+        $this->showOptionsRightB = false;
+        $this->chemicalOptionsRightB = [];
+    }
+
+    public function closeOptionsLeftA()
+    {
+        $this->showOptionsLeftA = false;
+    }
+
+    public function closeOptionsLeftB()
+    {
+        $this->showOptionsLeftB = false;
+    }
+
+    public function closeOptionsRightA()
+    {
+        $this->showOptionsRightA = false;
+    }
+
+    public function closeOptionsRightB()
+    {
+        $this->showOptionsRightB = false;
     }
 
     public function searchTTCode(string $code): void
@@ -116,6 +230,7 @@ class extends Component {
             Cookie::queue(Cookie::forget($this->cookieKey));
             $this->auth = ['status' => '', 'rf_code' => '', 'name' => '', 'emp_id' => '', 'is_active' => 0, 'area' => '', 'resource_type' => '', 'resource_id' => 0];
             $this->isAuthenticated = false;
+
             return;
         }
 
@@ -128,25 +243,25 @@ class extends Component {
 
         if ($authUser) {
             $this->auth = [
-                'status'        => 'found',
-                'rf_code'       => $authRfid->rf_code,
-                'name'          => $authUser->name,
-                'emp_id'        => $authUser->emp_id,
-                'is_active'     => (int) ($authUser->is_active ?? 0),
-                'area'          => $authRfid->area,
+                'status' => 'found',
+                'rf_code' => $authRfid->rf_code,
+                'name' => $authUser->name,
+                'emp_id' => $authUser->emp_id,
+                'is_active' => (int) ($authUser->is_active ?? 0),
+                'area' => $authRfid->area,
                 'resource_type' => $authRfid->resource_type,
-                'resource_id'   => $authRfid->resource_id,
+                'resource_id' => $authRfid->resource_id,
             ];
             $this->isAuthenticated = true;
             Cookie::queue($this->cookieKey, json_encode($this->auth), 60 * 24);
         } else {
             $this->auth = [
-                'status'   => 'not_found',
-                'rf_code'  => $code,
-                'name'     => '',
-                'emp_id'   => '',
+                'status' => 'not_found',
+                'rf_code' => $code,
+                'name' => '',
+                'emp_id' => '',
                 'is_active' => 0,
-                'area'     => '',
+                'area' => '',
                 'resource_type' => '',
                 'resource_id' => 0,
             ];
@@ -157,39 +272,117 @@ class extends Component {
     }
 
     // resret form
-    public function resetForm(){
+    public function resetForm()
+    {
         $this->model = '';
         $this->recipe = '';
         $this->area = '';
+        $this->device_name = '';
 
-        // Chemical A
-        $this->item_code_a = '';
-        $this->chemical_name_a = '';
-        $this->lot_number_a = '';
-        $this->exp_date_a = '';
-        $this->weight_target_a = '';
-        $this->weight_actual_a = '';
+        // Left Head - Chemical A
+        $this->item_code_left_a = '';
+        $this->chemical_name_left_a = '';
+        $this->lot_number_left_a = '';
+        $this->exp_date_left_a = '';
+        $this->weight_target_left_a = '';
+        $this->weight_actual_left_a = '';
 
-        // Chemical B
-        $this->item_code_b = '';
-        $this->chemical_name_b = '';
-        $this->lot_number_b = '';
-        $this->exp_date_b = '';
-        $this->weight_target_b = '';
-        $this->weight_actual_b = '';
+        // Left Head - Chemical B
+        $this->item_code_left_b = '';
+        $this->chemical_name_left_b = '';
+        $this->lot_number_left_b = '';
+        $this->exp_date_left_b = '';
+        $this->weight_target_left_b = '';
+        $this->weight_actual_left_b = '';
+
+        $this->percentage_left = '';
+
+        // Right Head - Chemical A
+        $this->item_code_right_a = '';
+        $this->chemical_name_right_a = '';
+        $this->lot_number_right_a = '';
+        $this->exp_date_right_a = '';
+        $this->weight_target_right_a = '';
+        $this->weight_actual_right_a = '';
+
+        // Right Head - Chemical B
+        $this->item_code_right_b = '';
+        $this->chemical_name_right_b = '';
+        $this->lot_number_right_b = '';
+        $this->exp_date_right_b = '';
+        $this->weight_target_right_b = '';
+        $this->weight_actual_right_b = '';
+
+        $this->percentage_right = '';
 
         // Autocomplete
-        $this->chemicalOptionsA = [];
-        $this->chemicalOptionsB = [];
-        $this->showOptionsA = false;
-        $this->showOptionsB = false;
+        $this->chemicalOptionsLeftA = [];
+        $this->chemicalOptionsLeftB = [];
+        $this->chemicalOptionsRightA = [];
+        $this->chemicalOptionsRightB = [];
+        $this->showOptionsLeftA = false;
+        $this->showOptionsLeftB = false;
+        $this->showOptionsRightA = false;
+        $this->showOptionsRightB = false;
     }
 
     public function submitForm(): void
     {
-        if (!$this->isAuthenticated) {
-            dd('Unauthorized');
+        if (! $this->isAuthenticated) {
+            return;
         }
+
+        // Store form data in session for process-timer page
+        session([
+            'mixing_data' => [
+                'model' => $this->model,
+                'recipe' => $this->recipe,
+                'area' => $this->area,
+                'device_name' => $this->device_name,
+                'operator' => $this->auth['name'],
+                'left' => [
+                    'chemical_a' => [
+                        'item_code' => $this->item_code_left_a,
+                        'chemical_name' => $this->chemical_name_left_a,
+                        'lot_number' => $this->lot_number_left_a,
+                        'exp_date' => $this->exp_date_left_a,
+                        'weight_target' => $this->weight_target_left_a,
+                        'weight_actual' => $this->weight_actual_left_a,
+                    ],
+                    'chemical_b' => [
+                        'item_code' => $this->item_code_left_b,
+                        'chemical_name' => $this->chemical_name_left_b,
+                        'lot_number' => $this->lot_number_left_b,
+                        'exp_date' => $this->exp_date_left_b,
+                        'weight_target' => $this->weight_target_left_b,
+                        'weight_actual' => $this->weight_actual_left_b,
+                    ],
+                    'percentage' => $this->percentage_left,
+                ],
+                'right' => [
+                    'chemical_a' => [
+                        'item_code' => $this->item_code_right_a,
+                        'chemical_name' => $this->chemical_name_right_a,
+                        'lot_number' => $this->lot_number_right_a,
+                        'exp_date' => $this->exp_date_right_a,
+                        'weight_target' => $this->weight_target_right_a,
+                        'weight_actual' => $this->weight_actual_right_a,
+                    ],
+                    'chemical_b' => [
+                        'item_code' => $this->item_code_right_b,
+                        'chemical_name' => $this->chemical_name_right_b,
+                        'lot_number' => $this->lot_number_right_b,
+                        'exp_date' => $this->exp_date_right_b,
+                        'weight_target' => $this->weight_target_right_b,
+                        'weight_actual' => $this->weight_actual_right_b,
+                    ],
+                    'percentage' => $this->percentage_right,
+                ],
+                'started_at' => now()->toISOString(),
+            ],
+        ]);
+
+        $this->redirect(route('insights.ce.mixing.process-timer'), navigate: true);
     }
 };
 
@@ -419,25 +612,30 @@ class extends Component {
 
     <!-- form -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <!-- Chemical A -->
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-            <div class="text-lg font-semibold mb-4">{{ __("Chemical A") }}</div>
-            <div class="grid gap-4">
+        <!-- Left Head -->
+        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 border-l-4 border-l-blue-500">
+            <div class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded">{{ __("LEFT HEAD") }}</span>
+            </div>
+            
+            <!-- Left Head - Chemical A -->
+            <div class="mb-6 pb-6 border-b border-neutral-200 dark:border-neutral-700">
+                <div class="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-3">{{ __("Chemical A") }}</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="relative">
-                        <label for="item_code_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Item Code") }}</label>
-                        <input type="text" id="item_code_a"
+                        <label for="item_code_left_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Item Code") }}</label>
+                        <input type="text" id="item_code_left_a"
                             placeholder="{{ __('Type to search...') }}" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="item_code_a"
-                            wire:input="searchChemicalA($event.target.value)"
+                            wire:model="item_code_left_a"
+                            wire:input="searchChemicalLeftA($event.target.value)"
                             autocomplete="off">
-                        @if($showOptionsA)
+                        @if($showOptionsLeftA)
                         <div class="absolute z-10 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
-                            @foreach($chemicalOptionsA as $chemical)
+                            @foreach($chemicalOptionsLeftA as $chemical)
                             <button type="button"
                                 class="w-full text-left px-4 py-2 hover:bg-caldy-500 hover:text-white text-neutral-800 dark:text-neutral-200 dark:hover:bg-caldy-500"
-                                wire:click="selectChemicalA('{{ $chemical['item_code'] }}', '{{ $chemical['name'] }}')">
+                                wire:click="selectChemicalLeftA('{{ $chemical['item_code'] }}', '{{ $chemical['name'] }}')">
                                 <div class="font-medium">{{ $chemical['item_code'] }}</div>
                                 <div class="text-sm text-neutral-500 dark:text-neutral-400">{{ $chemical['name'] }}</div>
                             </button>
@@ -446,57 +644,127 @@ class extends Component {
                         @endif
                     </div>
                     <div>
-                        <label for="chemical_name_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Chemical Name") }}</label>
-                        <input type="text" id="chemical_name_a" 
+                        <label for="chemical_name_left_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Chemical Name") }}</label>
+                        <input type="text" id="chemical_name_left_a" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                        wire:model="chemical_name_a" readonly>
+                        wire:model="chemical_name_left_a" readonly>
                     </div>
                     <div>
-                        <label for="lot_number_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Lot Number") }}</label>
-                        <input type="text" id="lot_number_a" 
+                        <label for="lot_number_left_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Lot Number") }}</label>
+                        <input type="text" id="lot_number_left_a" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="lot_number_a">
+                            wire:model="lot_number_left_a">
                     </div>
                     <div>
-                        <label for="exp_date_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Exp Date") }}</label>
-                        <input type="date" id="exp_date_a" 
+                        <label for="exp_date_left_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Exp Date") }}</label>
+                        <input type="date" id="exp_date_left_a" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="exp_date_a">
+                            wire:model="exp_date_left_a">
                     </div>
                     <div>
-                        <label for="weight_target_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (kg)") }}</label>
-                        <input type="number" step="0.01" id="weight_target_a" 
+                        <label for="weight_target_left_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (kg)") }}</label>
+                        <input type="number" step="0.01" id="weight_target_left_a" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="weight_target_a">
+                            wire:model="weight_target_left_a">
                     </div>
                     <div>
-                        <label for="weight_actual_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (kg)") }}</label>
-                        <input type="number" step="0.01" id="weight_actual_a" 
+                        <label for="weight_actual_left_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (kg)") }}</label>
+                        <input type="number" step="0.01" id="weight_actual_left_a" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="weight_actual_a">
+                            wire:model="weight_actual_left_a">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Left Head - Chemical B -->
+            <div>
+                <div class="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-3">{{ __("Chemical B") }}</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label for="item_code_left_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Item Code") }}</label>
+                        <input type="text" id="item_code_left_b"
+                            placeholder="{{ __('Type to search...') }}" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="item_code_left_b"
+                            wire:input="searchChemicalLeftB($event.target.value)"
+                            autocomplete="off">
+                        @if($showOptionsLeftB)
+                        <div class="absolute z-10 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                            @foreach($chemicalOptionsLeftB as $chemical)
+                            <button type="button"
+                                class="w-full text-left px-4 py-2 hover:bg-caldy-500 hover:text-white text-neutral-800 dark:text-neutral-200 dark:hover:bg-caldy-500"
+                                wire:click="selectChemicalLeftB('{{ $chemical['item_code'] }}', '{{ $chemical['name'] }}')">
+                                <div class="font-medium">{{ $chemical['item_code'] }}</div>
+                                <div class="text-sm text-neutral-500 dark:text-neutral-400">{{ $chemical['name'] }}</div>
+                            </button>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+                    <div>
+                        <label for="chemical_name_left_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Chemical Name") }}</label>
+                        <input type="text" id="chemical_name_left_b" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        wire:model="chemical_name_left_b" readonly>
+                    </div>
+                    <div>
+                        <label for="lot_number_left_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Lot Number") }}</label>
+                        <input type="text" id="lot_number_left_b" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="lot_number_left_b">
+                    </div>
+                    <div>
+                        <label for="exp_date_left_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Exp Date") }}</label>
+                        <input type="date" id="exp_date_left_b" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="exp_date_left_b">
+                    </div>
+                    <div>
+                        <label for="weight_target_left_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (kg)") }}</label>
+                        <input type="number" step="0.01" id="weight_target_left_b" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="weight_target_left_b">
+                    </div>
+                    <div>
+                        <label for="weight_actual_left_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (kg)") }}</label>
+                        <input type="number" step="0.01" id="weight_actual_left_b" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="weight_actual_left_b">
+                    </div>
+                    <div>
+                        <label for="percentage_left" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Percentage (%)") }}</label>
+                        <input type="number" step="0.01" id="percentage_left" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="percentage_left">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Chemical B -->
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
-            <div class="text-lg font-semibold mb-4">{{ __("Chemical B") }}</div>
-            <div class="grid gap-4">
+        <!-- Right Head -->
+        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 border-l-4 border-l-green-500">
+            <div class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 text-xs font-semibold rounded">{{ __("RIGHT HEAD") }}</span>
+            </div>
+            
+            <!-- Right Head - Chemical A -->
+            <div class="mb-6 pb-6 border-b border-neutral-200 dark:border-neutral-700">
+                <div class="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-3">{{ __("Chemical A") }}</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="relative">
-                        <label for="item_code_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Item Code") }}</label>
-                        <input type="text" id="item_code_b" 
+                        <label for="item_code_right_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Item Code") }}</label>
+                        <input type="text" id="item_code_right_a"
+                            placeholder="{{ __('Type to search...') }}" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="item_code_b"
-                            wire:input="searchChemicalB($event.target.value)"
+                            wire:model="item_code_right_a"
+                            wire:input="searchChemicalRightA($event.target.value)"
                             autocomplete="off">
-                        @if($showOptionsB)
+                        @if($showOptionsRightA)
                         <div class="absolute z-10 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
-                            @foreach($chemicalOptionsB as $chemical)
+                            @foreach($chemicalOptionsRightA as $chemical)
                             <button type="button"
                                 class="w-full text-left px-4 py-2 hover:bg-caldy-500 hover:text-white text-neutral-800 dark:text-neutral-200 dark:hover:bg-caldy-500"
-                                wire:click="selectChemicalB('{{ $chemical['item_code'] }}', '{{ $chemical['name'] }}')">
+                                wire:click="selectChemicalRightA('{{ $chemical['item_code'] }}', '{{ $chemical['name'] }}')">
                                 <div class="font-medium">{{ $chemical['item_code'] }}</div>
                                 <div class="text-sm text-neutral-500 dark:text-neutral-400">{{ $chemical['name'] }}</div>
                             </button>
@@ -505,41 +773,98 @@ class extends Component {
                         @endif
                     </div>
                     <div>
-                        <label for="chemical_name_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Chemical Name") }}</label>
-                        <input type="text" id="chemical_name_b" 
+                        <label for="chemical_name_right_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Chemical Name") }}</label>
+                        <input type="text" id="chemical_name_right_a" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="chemical_name_b" readonly>
+                        wire:model="chemical_name_right_a" readonly>
                     </div>
                     <div>
-                        <label for="lot_number_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Lot Number") }}</label>
-                        <input type="text" id="lot_number_b" 
+                        <label for="lot_number_right_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Lot Number") }}</label>
+                        <input type="text" id="lot_number_right_a" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="lot_number_b">
+                            wire:model="lot_number_right_a">
                     </div>
                     <div>
-                        <label for="exp_date_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Exp Date") }}</label>
-                        <input type="date" id="exp_date_b" 
+                        <label for="exp_date_right_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Exp Date") }}</label>
+                        <input type="date" id="exp_date_right_a" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="exp_date_b">
+                            wire:model="exp_date_right_a">
                     </div>
                     <div>
-                        <label for="weight_target_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (kg)") }}</label>
-                        <input type="number" step="0.01" id="weight_target_b" 
+                        <label for="weight_target_right_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (kg)") }}</label>
+                        <input type="number" step="0.01" id="weight_target_right_a" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="weight_target_b">
+                            wire:model="weight_target_right_a">
                     </div>
                     <div>
-                        <label for="weight_actual_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (kg)") }}</label>
-                        <input type="number" step="0.01" id="weight_actual_b" 
+                        <label for="weight_actual_right_a" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (kg)") }}</label>
+                        <input type="number" step="0.01" id="weight_actual_right_a" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="weight_actual_b">
+                            wire:model="weight_actual_right_a">
                     </div>
-                    <!-- percentage -->
-                    <div>
-                        <label for="percentage" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Percentage (%)") }}</label>
-                        <input type="number" step="0.01" id="percentage" 
+                </div>
+            </div>
+
+            <!-- Right Head - Chemical B -->
+            <div>
+                <div class="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-3">{{ __("Chemical B") }}</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label for="item_code_right_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Item Code") }}</label>
+                        <input type="text" id="item_code_right_b"
+                            placeholder="{{ __('Type to search...') }}" 
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="percentage">
+                            wire:model="item_code_right_b"
+                            wire:input="searchChemicalRightB($event.target.value)"
+                            autocomplete="off">
+                        @if($showOptionsRightB)
+                        <div class="absolute z-10 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                            @foreach($chemicalOptionsRightB as $chemical)
+                            <button type="button"
+                                class="w-full text-left px-4 py-2 hover:bg-caldy-500 hover:text-white text-neutral-800 dark:text-neutral-200 dark:hover:bg-caldy-500"
+                                wire:click="selectChemicalRightB('{{ $chemical['item_code'] }}', '{{ $chemical['name'] }}')">
+                                <div class="font-medium">{{ $chemical['item_code'] }}</div>
+                                <div class="text-sm text-neutral-500 dark:text-neutral-400">{{ $chemical['name'] }}</div>
+                            </button>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+                    <div>
+                        <label for="chemical_name_right_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Chemical Name") }}</label>
+                        <input type="text" id="chemical_name_right_b" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        wire:model="chemical_name_right_b" readonly>
+                    </div>
+                    <div>
+                        <label for="lot_number_right_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Lot Number") }}</label>
+                        <input type="text" id="lot_number_right_b" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="lot_number_right_b">
+                    </div>
+                    <div>
+                        <label for="exp_date_right_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Exp Date") }}</label>
+                        <input type="date" id="exp_date_right_b" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="exp_date_right_b">
+                    </div>
+                    <div>
+                        <label for="weight_target_right_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (kg)") }}</label>
+                        <input type="number" step="0.01" id="weight_target_right_b" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="weight_target_right_b">
+                    </div>
+                    <div>
+                        <label for="weight_actual_right_b" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (kg)") }}</label>
+                        <input type="number" step="0.01" id="weight_actual_right_b" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="weight_actual_right_b">
+                    </div>
+                    <div>
+                        <label for="percentage_right" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Percentage (%)") }}</label>
+                        <input type="number" step="0.01" id="percentage_right" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                            wire:model="percentage_right">
                     </div>
                 </div>
             </div>

@@ -43,7 +43,9 @@ new class extends Component {
     public $view = "raw";
     public $onlineStats = [];
     public string $lastPhStatus = '';
-    public bool $statusEmergency = false;
+    public $statusEmergency = 0;
+    public bool $statusAuto = false;
+    public $oneHourAgoPh = "-";
     
     public function mount()
     {
@@ -60,7 +62,10 @@ new class extends Component {
         $this->stdMinPh = $this->getStdMinPh();
         $this->stdMaxPh = $this->getStdMaxPh();
         $this->checkOneHourAgoPhToast(true);
-        $this->statusEmergency = $this->getStatusEmergency(app(GetDataViaModbus::class))->first() ?? false;
+        $this->statusEmergency = $this->getStatusEmergency(app(GetDataViaModbus::class));
+        // get one hour ph
+        $this->oneHourAgoPh = $this->getOneHourAgoPh(app(GetDataViaModbus::class));
+        $this->statusAuto = $this->getStatusAuto(app(GetDataViaModbus::class)) ?? false;
     }
 
     public function updatedStartAt()
@@ -533,7 +538,7 @@ new class extends Component {
                 return "-";
             }
             $this->ip_address = $device->ip_address;
-            $data = $service->getDataReadInputRegisters($this->ip_address, 503, 1, 10, '1_hours_ago_ph');
+            $data = $service->getDataReadHoldingRegisters($this->ip_address, 503, 1, 10, '1_hours_ago_ph');
             if (!$data || $data == 0) {
                 return "-";
             }
@@ -769,8 +774,15 @@ new class extends Component {
 
     public function getStatusEmergency(GetDataViaModbus $service){
         try{
-            $data = $service->getDataReadCoils($this->ip_address, 503, 1, 9, 'status_dosing');
-            return $data ? collect($data) : collect();
+            return $data = $service->getDataReadInputRegisters('172.70.88.199', 503, 1, 887, 'emergency_status');
+        } catch (\Exception $e) {
+            return $e;
+        }
+    }
+
+    public function getStatusAuto(GetDataViaModbus $service){
+        try{
+            return $data = $service->getDataReadCoils($this->ip_address, 503, 1, 0, 'auto_status');
         } catch (\Exception $e) {
             return collect();
         }
@@ -786,7 +798,7 @@ new class extends Component {
                  <h1>{{ now()->format("Y-m-d H:i:s") }}</h1>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="grid grid-cols-3 gap-3 items-center">
+            <div class="grid grid-cols-1 gap-3 items-center">
                 
                 <div class="col-span-1 text-left">
                     <label class="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">{{ __("Plant") }}</label>
@@ -799,9 +811,35 @@ new class extends Component {
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <!-- emergency status -->
-            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-2 text-center">
-                <p class="text-lg text-neutral-600 dark:text-neutral-400 mb-3">{{ __("Emergency Status") }}</p>
-                <h2 class="text-xl font-bold text-neutral-800 dark:text-neutral-200">{{ $this->statusEmergency ? 'Active' : 'Inactive' }}</h2>
+            <div class="flex flex-col items-center justify-center px-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusEmergency ? 'border-red-400 bg-red-50 dark:bg-red-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
+                    <span class="relative flex h-3 w-3">
+                        @if($this->statusEmergency)
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        @endif
+                        <span class="relative inline-flex rounded-full h-3 w-3 {{ $this->statusEmergency ? 'bg-red-500' : 'bg-neutral-400' }}"></span>
+                    </span>
+                    <div class="flex flex-col leading-tight">
+                        <span class="text-xs font-semibold uppercase tracking-wide {{ $this->statusEmergency ? 'text-red-600 dark:text-red-400' : 'text-neutral-500 dark:text-neutral-400' }}">Emergency</span>
+                        <span class="text-xs font-medium {{ $this->statusEmergency ? 'text-red-500 dark:text-red-300' : 'text-neutral-400 dark:text-neutral-500' }}">{{ $this->statusEmergency ? __('Active') : __('Inactive') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- auto status -->
+            <div class="flex flex-col items-center justify-center px-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusAuto ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
+                    <span class="relative flex h-3 w-3">
+                        @if($this->statusAuto)
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        @endif
+                        <span class="relative inline-flex rounded-full h-3 w-3 {{ $this->statusAuto ? 'bg-green-500' : 'bg-neutral-400' }}"></span>
+                    </span>
+                    <div class="flex flex-col leading-tight">
+                        <span class="text-xs font-semibold uppercase tracking-wide {{ $this->statusAuto ? 'text-green-600 dark:text-green-400' : 'text-neutral-500 dark:text-neutral-400' }}">Auto</span>
+                        <span class="text-xs font-medium {{ $this->statusAuto ? 'text-green-500 dark:text-green-300' : 'text-neutral-400 dark:text-neutral-500' }}">{{ $this->statusAuto ? __('Active') : __('Inactive') }}</span>
+                    </div>
+                </div>
             </div>
         </div>
 
