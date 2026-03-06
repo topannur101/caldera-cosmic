@@ -811,7 +811,7 @@ new class extends Component {
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
             <!-- emergency status -->
-            <div class="flex flex-col items-center justify-center px-3">
+            <div class="flex flex-col items-center justify-center">
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusEmergency ? 'border-red-400 bg-red-50 dark:bg-red-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
                     <span class="relative flex h-3 w-3">
                         @if($this->statusEmergency)
@@ -827,7 +827,7 @@ new class extends Component {
             </div>
 
             <!-- auto status -->
-            <div class="flex flex-col items-center justify-center px-3">
+            <div class="flex flex-col items-center justify-center">
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusAuto ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
                     <span class="relative flex h-3 w-3">
                         @if($this->statusAuto)
