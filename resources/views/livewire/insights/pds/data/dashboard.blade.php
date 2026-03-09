@@ -45,6 +45,7 @@ new class extends Component {
     public string $lastPhStatus = '';
     public $statusEmergency = 0;
     public bool $statusAuto = false;
+    public bool $deviceConnected = true;
     public $oneHourAgoPh = "-";
     
     public function mount()
@@ -61,6 +62,7 @@ new class extends Component {
         $this->loadOnlineStats();
         $this->stdMinPh = $this->getStdMinPh();
         $this->stdMaxPh = $this->getStdMaxPh();
+        $this->checkDeviceConnection(true);
         $this->checkOneHourAgoPhToast(true);
         $this->statusEmergency = $this->getStatusEmergency(app(GetDataViaModbus::class));
         // get one hour ph
@@ -96,6 +98,7 @@ new class extends Component {
             
             $this->dispatch('refresh-online-chart', onlineData: $this->prepareOnlineChartData());
             $this->dispatch('refresh-status-chart', statusData: $this->prepareStatusChartData());
+            $this->checkDeviceConnection();
             $this->checkOneHourAgoPhToast();
         } catch (\Exception $e) {
             \Log::warning('Error refreshing charts: ' . $e->getMessage());
@@ -105,6 +108,44 @@ new class extends Component {
     public function statsByStatus()
     {
         return $this->getStatsByStatus();
+    }
+
+    public function checkDeviceConnection(bool $forceShow = false): void
+    {
+        try {
+            $device = InsPhDosingDevice::where('id', $this->plant)->first();
+            if (!$device || !$device->ip_address) {
+                return;
+            }
+
+            $service = app(GetDataViaModbus::class);
+            $result = $service->getDataReadInputRegisters($device->ip_address, 503, 1, 0, 'connection_check');
+            $isConnected = $result !== null;
+
+            if ($isConnected !== $this->deviceConnected || $forceShow) {
+                $this->deviceConnected = $isConnected;
+
+                if (!$isConnected) {
+                    $icon = '<svg class="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM11.9996 7C12.5519 7 12.9996 7.44772 12.9996 8V12C12.9996 12.5523 12.5519 13 11.9996 13C11.4474 13 10.9996 12.5523 10.9996 12V8C10.9996 7.44772 11.4474 7 11.9996 7ZM12.001 14.99C11.4488 14.9892 11.0004 15.4363 10.9997 15.9886L10.9996 15.9986C10.9989 16.5509 11.446 16.9992 11.9982 17C12.5505 17.0008 12.9989 16.5537 12.9996 16.0014L12.9996 15.9914C13.0004 15.4391 12.5533 14.9908 12.001 14.99Z"/></svg>';
+                    $html = '<div class="p-5 bg-red-100 dark:bg-red-950 border border-red-400 dark:border-red-700 rounded-lg" style="min-width: 340px;">'
+                        . '<div class="flex items-start gap-4">'
+                        . '<div class="flex-shrink-0 mt-0.5">' . $icon . '</div>'
+                        . '<div class="flex-1">'
+                        . '<p class="text-lg font-bold leading-tight text-red-700 dark:text-red-300">' . __('Device Not Connected') . '</p>'
+                        . '<p class="mt-2 text-sm text-neutral-600 dark:text-neutral-300">'
+                        . __('Unable to reach device at') . ' <span class="font-semibold">' . $device->ip_address . '</span>.'
+                        . '<br><span class="text-xs opacity-75">' . __('Plant') . ': ' . ($device->plant ?? $device->id) . '</span>'
+                        . '</p>'
+                        . '</div>'
+                        . '</div>'
+                        . '</div>';
+
+                    $this->js("toast('', { html: `" . $html . "`, position: 'top-center' })");
+                }
+            }
+        } catch (\Exception $e) {
+            // silently fail
+        }
     }
 
     public function checkOneHourAgoPhToast(bool $forceShow = false): void
@@ -774,17 +815,17 @@ new class extends Component {
 
     public function getStatusEmergency(GetDataViaModbus $service){
         try{
-            return $data = $service->getDataReadInputRegisters('172.70.88.199', 503, 1, 887, 'emergency_status');
+            return $service->getDataReadInputRegisters('172.70.88.199', 503, 1, 887, 'emergency_status') ?? 0;
         } catch (\Exception $e) {
-            return $e;
+            return 0;
         }
     }
 
     public function getStatusAuto(GetDataViaModbus $service){
         try{
-            return $data = $service->getDataReadCoils($this->ip_address, 503, 1, 0, 'auto_status');
+            return (bool) $service->getDataReadCoils($this->ip_address, 503, 1, 0, 'auto_status');
         } catch (\Exception $e) {
-            return collect();
+            return false;
         }
     }
 

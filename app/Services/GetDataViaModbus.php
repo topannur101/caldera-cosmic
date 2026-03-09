@@ -28,7 +28,7 @@ class GetDataViaModbus
                 ->getData();
             return $response[$name];
         } catch (\Throwable $th) {
-            return $th;
+            return null;
         }
     }
 
