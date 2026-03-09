@@ -84,7 +84,6 @@ new #[Layout("layouts.app")] class extends Component {
 
     public function mount()
     {
-        $this->areas = Auth::user()->auth_inv_areas();
 
         if (! $this->ignore_params) {
             $chemicalsParams = session("inv_ce_chemicals_params", []);
@@ -206,7 +205,7 @@ new #[Layout("layouts.app")] class extends Component {
     {
         session()->forget("inv_ce_chemicals_params");
         session()->forget("inv_ce_areas_params");
-        $this->redirect(route("inventory-ce.chemicals.index"), navigate: true);
+        $this->redirect(route("insights.ce.chemicals.index"), navigate: true);
     }
 
     public function loadMore()
@@ -364,7 +363,7 @@ new #[Layout("layouts.app")] class extends Component {
                             <x-text-button><i class="icon-ellipsis"></i></x-text-button>
                         </x-slot>
                         <x-slot name="content">
-                            <x-dropdown-link href="{{ route('inventory-ce.chemicals.create') }}" wire:navigate>
+                            <x-dropdown-link href="{{ route('insights.ce.inventory.chemicals.create') }}" wire:navigate>
                                 <i class="icon-plus me-2"></i>
                                 {{ __("Barang baru") }}
                             </x-dropdown-link>
@@ -373,11 +372,6 @@ new #[Layout("layouts.app")] class extends Component {
                                 <i class="icon-chart-line me-2"></i>
                                 {{ __("Ringkasan barang") }}
                             </x-dropdown-link>
-                           
-                            <x-dropdown-link href="{{ route('inventory.items.bulk-operation.index') }}" wire:navigate>
-                                <i class="icon-blank me-2"></i>
-                                {{ __("Operasi massal barang") }}
-                            </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
             
                             <x-dropdown-link href="#" wire:click.prevent="resetQuery">
@@ -385,11 +379,6 @@ new #[Layout("layouts.app")] class extends Component {
                                 {{ __("Reset") }}
                             </x-dropdown-link>
                             <hr class="border-neutral-300 dark:border-neutral-600" />
-                           
-                            <x-dropdown-link href="#" x-on:click.prevent="$dispatch('open-modal', 'download')">
-                                <i class="icon-download me-2"></i>
-                                {{ __("Unduh sebagai...") }}
-                            </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
                 </div>
@@ -448,7 +437,7 @@ new #[Layout("layouts.app")] class extends Component {
                     <div wire:key="grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mt-6 px-3 sm:px-0">
                         @foreach ($inv_ce_stocks as $inv_ce_stock)
                             <x-inv-card-grid
-                                :url="route('inventory-ce.chemicals.show', ['id' => $inv_ce_stock->inv_ce_chemical_id, 'stock_id' => $inv_ce_stock->id ])"
+                                :url="route('insights.ce.inventory.chemicals.show', ['id' => $inv_ce_stock->inv_ce_chemical_id, 'stock_id' => $inv_ce_stock->id ])"
                                 :name="$inv_ce_stock->inv_ce_chemical->name"
                                 :desc="$inv_ce_stock->inv_ce_chemical->desc"
                                 :code="$inv_ce_stock->inv_ce_chemical->item_code"
@@ -503,7 +492,7 @@ new #[Layout("layouts.app")] class extends Component {
                                         </div>
                                     </td>
                                     <td class="max-w-40 truncate font-bold">
-                                        <x-link href="{{ route('inventory-ce.chemicals.show', [ 'id' => $inv_ce_stock->inv_ce_chemical_id, 'stock_id' => $inv_ce_stock->id ]) }}" wire:navigate>
+                                        <x-link href="{{ route('insights.ce.inventory.chemicals.show', [ 'id' => $inv_ce_stock->inv_ce_chemical_id, 'stock_id' => $inv_ce_stock->id ]) }}" wire:navigate>
                                             {{ $inv_ce_stock->inv_ce_chemical->name }}
                                         </x-link>
                                     </td>
@@ -514,9 +503,9 @@ new #[Layout("layouts.app")] class extends Component {
                                     </td>
                                     <td class="w-[1%]">-</td>
                                     <td class="@if($inv_ce_stock->qty_min > 0 && $inv_ce_stock->qty < $inv_ce_stock->qty_min) text-red-500 @elseif($inv_ce_stock->qty_max > 0 && $inv_ce_stock->qty > $inv_ce_stock->qty_max) text-yellow-500 @endif">{{ $inv_ce_stock->qty . " " . $inv_ce_stock->uom }}</td>
-                                    <td>{{ $inv_ce_stock->inv_ce_chemical->inv_ce_vendor->name . " " . $inv_ce_stock->unit_price }}</td>
+                                    <td>{{ $inv_ce_stock->inv_ce_chemical->inv_ce_vendor->name ?? '-' . " " . $inv_ce_stock->unit_price }}</td>
                                     <td>{{ $inv_ce_stock->amount_main }}</td>
-                                    <td class="w-[1%]">{{ $inv_ce_stock->inv_ce_chemical->inv_ce_area->name }}</td>
+                                    <td class="w-[1%]">{{ $inv_ce_stock->inv_ce_chemical->inv_ce_area->name ?? '-' }}</td>
                                 </tr>
                             @endforeach
                         </table>
@@ -527,11 +516,11 @@ new #[Layout("layouts.app")] class extends Component {
                     <div wire:key="content" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2 mt-6">
                         @foreach ($inv_ce_stocks as $inv_ce_stock)
                             <x-inv-card-content
-                                :url="route('inventory-ce.chemicals.show', ['id' => $inv_ce_stock->inv_ce_chemical_id, 'stock_id' => $inv_ce_stock->id])"
-                                :name="$inv_ce_stock->inv_ce_chemical->name"
+                                :url="route('insights.ce.inventory.chemicals.show', ['id' => $inv_ce_stock->inv_ce_chemical_id, 'stock_id' => $inv_ce_stock->id])"
+                                :name="$inv_ce_stock->inv_ce_chemical->name ?? '-'"
                                 :desc="$inv_ce_stock->inv_ce_chemical->desc"
                                 :code="$inv_ce_stock->inv_ce_chemical->item_code"
-                                :curr="$inv_ce_stock->inv_ce_chemical->inv_ce_vendor->name"
+                                :curr="$inv_ce_stock->inv_ce_chemical->inv_ce_vendor->name ?? '-'"
                                 :price="$inv_ce_stock->unit_price"
                                 :uom="$inv_ce_stock->uom"
                                 :loc="$inv_ce_stock->inv_ce_chemical->inv_ce_location_id ? ($inv_ce_stock->inv_ce_chemical->inv_ce_location->parent . '-' . $inv_ce_stock->inv_ce_chemical->inv_ce_location->bin ) : null"

@@ -28,4 +28,20 @@ class InvCeChemical extends Model
     {
         return $this->hasMany(InvCeStock::class, 'inv_ce_chemical_id');
     }
+
+    /**
+     * Recipes where this chemical is the base component (A).
+     */
+    public function recipes_as_chemical()
+    {
+        return $this->hasMany(InvCeRecipe::class, 'chemical_id');
+    }
+
+    /**
+     * Recipes where this chemical is the hardener (B).
+     */
+    public function recipes_as_hardener()
+    {
+        return $this->hasMany(InvCeRecipe::class, 'hardener_id');
+    }
 }

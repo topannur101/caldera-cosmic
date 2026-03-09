@@ -1,15 +1,35 @@
 <?php
 
 use App\Models\InvCeArea;
+use App\Models\InvCeAuth;
 use App\Models\InvCeChemical;
 use App\Models\InvCeLocation;
 use App\Models\InvCeStock;
 use App\Models\InvCeVendor;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
 new #[Layout("layouts.app")] class extends Component {
+    public string $cookieKey = 'invce_chemical_create_auth';
+
+    // RFID Auth
+    public array $auth = [
+        'status' => '',
+        'rf_code' => '',
+        'name' => '',
+        'emp_id' => '',
+        'is_active' => 0,
+        'area' => '',
+        'resource_type' => '',
+        'resource_id' => 0,
+    ];
+
+    public bool $isAuthenticated = false;
+
+    public string $rfidError = '';
+
     public string $item_code = "";
 
     public string $name = "";
@@ -47,6 +67,56 @@ new #[Layout("layouts.app")] class extends Component {
     public array $locations = [];
 
     public array $areas = [];
+
+    public function searchTTCode(string $code): void
+    {
+        $code = trim($code);
+        $this->rfidError = '';
+
+        if ($code === '') {
+            Cookie::queue(Cookie::forget($this->cookieKey));
+            $this->auth = ['status' => '', 'rf_code' => '', 'name' => '', 'emp_id' => '', 'is_active' => 0, 'area' => '', 'resource_type' => '', 'resource_id' => 0];
+            $this->isAuthenticated = false;
+
+            return;
+        }
+
+        $authRfid = InvCeAuth::query()
+            ->with('user')
+            ->where('rf_code', $code)
+            ->first();
+
+        $authUser = $authRfid?->user;
+
+        if ($authUser) {
+            $this->auth = [
+                'status' => 'found',
+                'rf_code' => $authRfid->rf_code,
+                'name' => $authUser->name,
+                'emp_id' => $authUser->emp_id,
+                'is_active' => (int) ($authUser->is_active ?? 0),
+                'area' => $authRfid->area,
+                'resource_type' => $authRfid->resource_type,
+                'resource_id' => $authRfid->resource_id,
+            ];
+            $this->isAuthenticated = true;
+            Cookie::queue($this->cookieKey, json_encode($this->auth), 60 * 24);
+        } else {
+            $this->auth = [
+                'status' => 'not_found',
+                'rf_code' => $code,
+                'name' => '',
+                'emp_id' => '',
+                'is_active' => 0,
+                'area' => '',
+                'resource_type' => '',
+                'resource_id' => 0,
+            ];
+            $this->isAuthenticated = false;
+            $this->rfidError = 'RFID tidak terdaftar';
+            Cookie::queue($this->cookieKey, json_encode($this->auth), 60 * 24);
+        }
+    }
 
     public function mount()
     {
@@ -111,6 +181,10 @@ new #[Layout("layouts.app")] class extends Component {
 
     public function save()
     {
+        if (! $this->isAuthenticated) {
+            return;
+        }
+
         $validated = $this->validate();
         $planningArea = $this->parsePlanningArea($validated["planning_area"]);
 
@@ -146,7 +220,7 @@ new #[Layout("layouts.app")] class extends Component {
             ]);
         });
 
-        return $this->redirect(route("inventory-ce.chemicals.index"), navigate: true);
+        return $this->redirect(route("insights.ce.inventory.chemicals.index"), navigate: true);
     }
 }; ?>
 
@@ -157,18 +231,191 @@ new #[Layout("layouts.app")] class extends Component {
 </x-slot>
 
 <div class="py-12 max-w-4xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200">
+    <!-- RFID Status Alert -->
+    @if($rfidError)
+    <div class="mb-4 px-4 sm:px-0 p-4 border rounded bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200">
+        {{ $rfidError }}
+    </div>
+    @endif
+
+    <div
+        x-data="{
+            auth: null,
+            initFromCookie() {
+                try {
+                    const raw = document.cookie
+                        .split('; ')
+                        .find(r => r.startsWith('{{ $cookieKey }}='))
+                        ?.split('=').slice(1).join('=');
+                    if (raw) this.auth = JSON.parse(decodeURIComponent(raw));
+                } catch (_) {}
+            },
+        }"
+        x-init="initFromCookie()"
+        x-on:rfid-result.window="auth = $event.detail"
+        class="px-4 sm:px-0 mb-4"
+    >
+        <template x-if="auth && auth.status === 'found'">
+            <div class="p-4 border rounded bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200">
+                RFID <span class="font-mono" x-text="auth.rf_code"></span> - <span x-text="auth.name"></span> (Authorized)
+            </div>
+        </template>
+        <template x-if="auth && auth.status === 'not_found'">
+            <div class="p-4 border rounded bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200">
+                RFID <span class="font-mono" x-text="auth.rf_code"></span> - Tidak terdaftar
+            </div>
+        </template>
+        <template x-if="!auth || auth.status === ''">
+            <div class="p-4 border rounded bg-yellow-50 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200">
+                {{ __("Tap ID Card untuk autentikasi") }}
+            </div>
+        </template>
+    </div>
+
+    <div
+        wire:ignore
+        x-data="{
+            storageKey: 'invce_chemical_create_last_rfid',
+            url: @js(config('rfid.ws_url')),
+            ws: null,
+            connected: false,
+            error: '',
+            lastRawMessage: '',
+            code: '',
+            lastProcessedCode: '',
+            lastProcessedAt: 0,
+            wireDebounceTimer: null,
+            reconnectAttempt: 0,
+            reconnectTimer: null,
+
+            loadSavedCode() {
+                try {
+                    const saved = localStorage.getItem(this.storageKey);
+                    if (saved) {
+                        this.code = String(saved).trim();
+                        if (typeof $wire !== 'undefined') $wire.searchTTCode(this.code);
+                    }
+                } catch (_) {}
+            },
+
+            saveCode(code) {
+                try { localStorage.setItem(this.storageKey, code); } catch (_) {}
+            },
+
+            connect() {
+                if (!this.url) {
+                    this.setDisconnected('RFID_WS_URL is empty');
+                    return;
+                }
+                if (window.location?.protocol === 'https:' && this.url.startsWith('ws://')) {
+                    this.setDisconnected('Page is HTTPS, WebSocket must be WSS');
+                    return;
+                }
+                try {
+                    this.ws = new WebSocket(this.url);
+                } catch (e) {
+                    this.setDisconnected(e?.message ?? 'Failed to create WebSocket');
+                    this.scheduleReconnect();
+                    return;
+                }
+
+                this.ws.onopen = () => {
+                    this.reconnectAttempt = 0;
+                    this.connected = true;
+                    this.error = '';
+                };
+
+                this.ws.onmessage = (event) => {
+                    const raw = typeof event?.data === 'string' ? event.data : '';
+                    this.lastRawMessage = raw;
+                    let payload = raw;
+                    if (raw && (raw.startsWith('{') || raw.startsWith('['))) {
+                        try { payload = JSON.parse(raw); } catch (_) {}
+                    }
+                    let code = '';
+                    if (typeof payload === 'string') {
+                        code = payload;
+                    } else if (payload && typeof payload === 'object') {
+                        code = payload.data ?? payload.code ?? payload.tag ?? payload.uid ?? '';
+                        if (code === '' && typeof payload.message === 'string') code = payload.message;
+                    }
+                    code = String(code ?? '').replace(/[\x00-\x1F\x7F]/g, '').trim();
+                    if (code !== '') {
+                        const now = Date.now();
+                        if (code === this.lastProcessedCode && (now - this.lastProcessedAt) < 800) return;
+                        this.lastProcessedCode = code;
+                        this.lastProcessedAt = now;
+                        this.code = code;
+                        this.saveCode(code);
+                        try {
+                            if (typeof $wire !== 'undefined') {
+                                if (this.wireDebounceTimer) clearTimeout(this.wireDebounceTimer);
+                                this.wireDebounceTimer = setTimeout(() => {
+                                    $wire.searchTTCode(code);
+                                }, 150);
+                            }
+                        } catch (_) {}
+                    }
+                };
+
+                this.ws.onerror = () => {
+                    this.setDisconnected('WebSocket error');
+                };
+
+                this.ws.onclose = (evt) => {
+                    const reason = evt?.reason ? `Disconnected: ${evt.reason}` : 'Disconnected';
+                    this.setDisconnected(reason);
+                    this.scheduleReconnect();
+                };
+            },
+
+            setDisconnected(message) {
+                this.connected = false;
+                if (message) this.error = String(message);
+            },
+
+            scheduleReconnect() {
+                if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+                const delay = Math.min(10000, 1000 * Math.pow(2, this.reconnectAttempt++));
+                this.reconnectTimer = setTimeout(() => this.connect(), delay);
+            },
+        }"
+        x-init="connect(); loadSavedCode()"
+        class="px-4 sm:px-0 mb-6"
+    >
+        <div class="flex items-center gap-2 text-sm">
+            <span>RFID:</span>
+            <span :class="connected ? 'text-green-500' : 'text-red-500'" x-text="connected ? 'Connected' : 'Not connected'"></span>
+            <span class="text-xs opacity-70" x-show="url">(<span x-text="url"></span>)</span>
+            <span x-show="error" class="text-red-500 text-xs" x-text="error"></span>
+        </div>
+    </div>
+
     <div class="px-4 sm:px-0 mb-8 grid grid-cols-1 gap-y-4">
         <div
             class="flex items-center justify-between gap-x-4 p-4 text-sm text-neutral-800 border border-neutral-300 rounded-lg bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-600"
             role="alert"
         >
-            <div>{{ __("Klik simpan jika sudah selesai melengkapi informasi bahan kimia") }}</div>
+            <div>
+                {{ __("Klik simpan jika sudah selesai melengkapi informasi bahan kimia") }}
+                @if(!$isAuthenticated)
+                    <span class="ml-2 text-red-500 text-xs">{{ __("(Tap ID Card untuk autentikasi)") }}</span>
+                @endif
+            </div>
+
+            <!-- login as user -->
+             @if($isAuthenticated)
+                <div class="flex items-center gap-x-2 text-xs">
+                    <span class="text-neutral-500">{{ __("Login sebagai") }}</span>
+                    <span class="text-neutral-800 dark:text-neutral-300">{{ $auth['name'] ?? "-" }}</span>
+                </div>
+            @endif
             <div>
                 <div wire:loading>
                     <x-primary-button type="button" disabled><i class="icon-save mr-2"></i>{{ __("Simpan") }}</x-primary-button>
                 </div>
                 <div wire:loading.remove>
-                    <x-primary-button type="submit" form="ce-chemical-create-form"><i class="icon-save mr-2"></i>{{ __("Simpan") }}</x-primary-button>
+                    <x-primary-button type="submit" form="ce-chemical-create-form" :disabled="!$isAuthenticated"><i class="icon-save mr-2"></i>{{ __("Simpan") }}</x-primary-button>
                 </div>
             </div>
         </div>

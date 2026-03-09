@@ -8,7 +8,7 @@
            </h2>
        </div>
        <div class="space-x-8 -my-px ml-10 flex">
-            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.inventory.chemicals') }}" :active="request()->is('insight/ce/chemicals*')" wire:navigate>
+            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.inventory.chemicals.index') }}" :active="request()->is('insight/ce/chemicals*')" wire:navigate>
                 <i class="icon-box text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Kimia ') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.inventory.circs.incoming') }}" :active="request()->is('insight/ce/circs/incoming*')" wire:navigate>

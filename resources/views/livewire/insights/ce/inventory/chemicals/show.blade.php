@@ -99,18 +99,18 @@ new #[Layout("layouts.app")] class extends Component {
         <div class="text-center w-80 py-20 mx-auto">
             <i class="icon-ghost block text-5xl mb-6 text-neutral-400 dark:text-neutral-600"></i>
             <div class="text-neutral-500 mb-6">{{ __("Data bahan kimia tidak ditemukan.") }}</div>
-            <x-link href="{{ route('inventory-ce.chemicals.index') }}" wire:navigate>
+            <x-link href="{{ route('insights.ce.inventory.chemicals.index') }}" wire:navigate>
                 <i class="icon-arrow-left mr-2"></i>{{ __("Kembali ke daftar") }}
             </x-link>
         </div>
     @else
         <div class="mb-6 flex items-center justify-between gap-4">
-            <x-link href="{{ route('inventory-ce.chemicals.index') }}" wire:navigate>
+            <x-link href="{{ route('insights.ce.inventory.chemicals.index') }}" wire:navigate>
                 <i class="icon-arrow-left mr-2"></i>{{ __("Kembali") }}
             </x-link>
             <div class="flex items-center gap-3">
                 <x-link
-                    href="{{ route('inventory-ce.chemicals.edit', ['id' => $chemical['id'] ?? 0, 'stock_id' => $stock['id'] ?? 0]) }}"
+                    href="{{ route('insights.ce.inventory.chemicals.edit', ['id' => $chemical['id'] ?? 0, 'stock_id' => $stock['id'] ?? 0]) }}"
                     wire:navigate
                 >
                     <i class="icon-pencil mr-2"></i>{{ __("Edit") }}

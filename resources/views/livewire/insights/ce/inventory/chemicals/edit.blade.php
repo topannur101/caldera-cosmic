@@ -200,7 +200,7 @@ new #[Layout("layouts.app")] class extends Component {
         });
 
         return $this->redirect(
-            route("inventory-ce.chemicals.show", ["id" => $this->id, "stock_id" => $this->selected_stock_id]),
+            route("insights.ce.inventory.chemicals.show", ["id" => $this->id, "stock_id" => $this->selected_stock_id]),
             navigate: true
         );
     }
@@ -229,7 +229,7 @@ new #[Layout("layouts.app")] class extends Component {
             >
                 <div>{{ __("Perbarui data bahan kimia, lalu klik simpan.") }}</div>
                 <div class="flex items-center gap-2">
-                    <x-link href="{{ route('inventory-ce.chemicals.show', ['id' => $id, 'stock_id' => $selected_stock_id]) }}" wire:navigate>
+                    <x-link href="{{ route('insights.ce.inventory.chemicals.show', ['id' => $id, 'stock_id' => $selected_stock_id]) }}" wire:navigate>
                         <i class="icon-arrow-left mr-2"></i>{{ __("Kembali") }}
                     </x-link>
                     <div wire:loading>

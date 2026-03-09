@@ -12,7 +12,6 @@ use Livewire\Volt\Volt;
 
 Volt::route('/', 'home')->name('home');
 Volt::route('/inventory', 'inventory.index')->name('inventory');
-Volt::route('/inventory-ce', 'inventory-ce.index')->name('inventory-ce');
 Volt::route('/inventory/help', 'inventory.help')->name('inventory.help');
 
 Volt::route('/announcements/{id}', 'announcements.show')->name('announcements.show');
@@ -344,7 +343,10 @@ Route::prefix('insights')->group(function () {
         Volt::route('ce/mixing/raw', 'insights.ce.mixing.raw')->name('mixing.raw');
         // CHEMICAL INVENTORY
         Volt::route('/ce/inventory', 'insights.ce.inventory.index')->name('inventory.index');
-        Volt::route('/ce/inventory/chemicals', 'insights.ce.inventory.chemicals')->name('inventory.chemicals');
+        Volt::route('/ce/inventory/chemicals', 'insights.ce.inventory.chemicals.index')->name('inventory.chemicals.index');
+        Volt::route('/ce/inventory/chemicals/create', 'insights.ce.inventory.chemicals.create')->name('inventory.chemicals.create');
+        Volt::route('/ce/inventory/chemicals/{id}', 'insights.ce.inventory.chemicals.show')->name('inventory.chemicals.show');
+        Volt::route('/ce/inventory/chemicals/{id}/edit', 'insights.ce.inventory.chemicals.edit')->name('inventory.chemicals.edit');
         Volt::route('/ce/inventory/circs/in', 'insights.ce.inventory.circs.incoming')->name('inventory.circs.incoming');
         Volt::route('/ce/inventory/circs/out', 'insights.ce.inventory.circs.outgoing')->name('inventory.circs.outgoing');
         // MANAGEMENT
