@@ -357,7 +357,7 @@ class extends Component
             wire:ignore
             x-data="{
                 storageKey: 'invce_mixing_last_rfid',
-                url: @js(config('rfid.ws_url')),
+                url: @js(config('rfid.ws_url_rfid')),
                 ws: null,
                 connected: false,
                 error: '',
