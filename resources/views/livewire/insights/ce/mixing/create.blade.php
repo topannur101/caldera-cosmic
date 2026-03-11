@@ -2,6 +2,7 @@
 
 use App\Models\InvCeAuth;
 use App\Models\InvCeRecipe;
+use App\Models\InvCeStock;
 use Illuminate\Support\Facades\Cookie;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -41,58 +42,44 @@ class extends Component
 
     // Left Head - Chemical A
     public string $item_code_left_a = '';
-
     public string $chemical_name_left_a = '';
-
+    public array  $lot_numbers_left_a = [];
+    public string $stock_id_left_a = '';
     public string $lot_number_left_a = '';
-
     public string $exp_date_left_a = '';
-
     public string $weight_target_left_a = '';
-
     public string $weight_actual_left_a = '';
 
     // Left Head - Chemical B
     public string $item_code_left_b = '';
-
     public string $chemical_name_left_b = '';
-
+    public array  $lot_numbers_left_b = [];
+    public string $stock_id_left_b = '';
     public string $lot_number_left_b = '';
-
     public string $exp_date_left_b = '';
-
     public string $weight_target_left_b = '';
-
     public string $weight_actual_left_b = '';
-
     public string $percentage_left = '';
 
     // Right Head - Chemical A
     public string $item_code_right_a = '';
-
     public string $chemical_name_right_a = '';
-
+    public array  $lot_numbers_right_a = [];
+    public string $stock_id_right_a = '';
     public string $lot_number_right_a = '';
-
     public string $exp_date_right_a = '';
-
     public string $weight_target_right_a = '';
-
     public string $weight_actual_right_a = '';
 
     // Right Head - Chemical B
     public string $item_code_right_b = '';
-
     public string $chemical_name_right_b = '';
-
+    public array  $lot_numbers_right_b = [];
+    public string $stock_id_right_b = '';
     public string $lot_number_right_b = '';
-
     public string $exp_date_right_b = '';
-
     public string $weight_target_right_b = '';
-
     public string $weight_actual_right_b = '';
-
     public string $percentage_right = '';
 
     public function mount(): void
@@ -115,6 +102,9 @@ class extends Component
                 'hardener_ratio'  => $r->hardener_ratio,
                 'output_code'     => $r->output_code,
                 'potlife'         => $r->potlife,
+                'target_weight'   => $r->additional_settings['target_weight'] ?? null,
+                'up_dev'          => $r->additional_settings['up_dev'] ?? null,
+                'low_dev'         => $r->additional_settings['low_dev'] ?? null,
             ])
             ->toArray();
     }
@@ -140,6 +130,23 @@ class extends Component
         $this->item_code_left_b   = $recipe['hardener_code'];
         $this->chemical_name_left_b = $recipe['hardener_name'];
         $this->percentage_left    = (string) $recipe['hardener_ratio'];
+
+        if (isset($recipe['target_weight']) && $recipe['target_weight'] !== null) {
+            $ratio = (float) $recipe['hardener_ratio'] / 100;
+            $wB = round((float) $recipe['target_weight'] * $ratio, 2);
+            $wA = round((float) $recipe['target_weight'] - $wB, 2);
+            $this->weight_target_left_a = (string) $wA;
+            $this->weight_target_left_b = (string) $wB;
+        }
+
+        $this->lot_numbers_left_a = $this->getLotNumbersByItemCode($recipe['chemical_code']);
+        $this->lot_numbers_left_b = $this->getLotNumbersByItemCode($recipe['hardener_code']);
+        $this->stock_id_left_a    = '';
+        $this->stock_id_left_b    = '';
+        $this->lot_number_left_a  = '';
+        $this->lot_number_left_b  = '';
+        $this->exp_date_left_a    = '';
+        $this->exp_date_left_b    = '';
     }
 
     public function updatedRecipeIdRight(?int $value): void
@@ -163,6 +170,23 @@ class extends Component
         $this->item_code_right_b   = $recipe['hardener_code'];
         $this->chemical_name_right_b = $recipe['hardener_name'];
         $this->percentage_right    = (string) $recipe['hardener_ratio'];
+
+        if (isset($recipe['target_weight']) && $recipe['target_weight'] !== null) {
+            $ratio = (float) $recipe['hardener_ratio'] / 100;
+            $wB = round((float) $recipe['target_weight'] * $ratio, 2);
+            $wA = round((float) $recipe['target_weight'] - $wB, 2);
+            $this->weight_target_right_a = (string) $wA;
+            $this->weight_target_right_b = (string) $wB;
+        }
+
+        $this->lot_numbers_right_a = $this->getLotNumbersByItemCode($recipe['chemical_code']);
+        $this->lot_numbers_right_b = $this->getLotNumbersByItemCode($recipe['hardener_code']);
+        $this->stock_id_right_a    = '';
+        $this->stock_id_right_b    = '';
+        $this->lot_number_right_a  = '';
+        $this->lot_number_right_b  = '';
+        $this->exp_date_right_a    = '';
+        $this->exp_date_right_b    = '';
     }
 
     private function clearChemicalFieldsLeft(): void
@@ -170,6 +194,10 @@ class extends Component
         $this->item_code_left_a = $this->chemical_name_left_a = '';
         $this->item_code_left_b = $this->chemical_name_left_b = '';
         $this->percentage_left  = '';
+        $this->lot_numbers_left_a = $this->lot_numbers_left_b = [];
+        $this->stock_id_left_a = $this->stock_id_left_b = '';
+        $this->lot_number_left_a = $this->lot_number_left_b = '';
+        $this->exp_date_left_a = $this->exp_date_left_b = '';
     }
 
     private function clearChemicalFieldsRight(): void
@@ -177,6 +205,63 @@ class extends Component
         $this->item_code_right_a = $this->chemical_name_right_a = '';
         $this->item_code_right_b = $this->chemical_name_right_b = '';
         $this->percentage_right  = '';
+        $this->lot_numbers_right_a = $this->lot_numbers_right_b = [];
+        $this->stock_id_right_a = $this->stock_id_right_b = '';
+        $this->lot_number_right_a = $this->lot_number_right_b = '';
+        $this->exp_date_right_a = $this->exp_date_right_b = '';
+    }
+
+    /**
+     * Get lot numbers with expiry dates for a given item_code via a single join query.
+     * Returns array of ['lot_number' => ..., 'expiry_date' => ...].
+     */
+    private function getLotNumbersByItemCode(string $item_code): array
+    {
+        if ($item_code === '') {
+            return [];
+        }
+
+        return InvCeStock::query()
+            ->join('inv_ce_chemicals', 'inv_ce_stock.inv_ce_chemical_id', '=', 'inv_ce_chemicals.id')
+            ->where('inv_ce_chemicals.item_code', $item_code)
+            ->where('inv_ce_stock.quantity', '>', 0)
+            ->orderBy('inv_ce_stock.expiry_date')
+            ->select('inv_ce_stock.id', 'inv_ce_stock.lot_number', 'inv_ce_stock.expiry_date')
+            ->get()
+            ->map(fn($s) => [
+                'id'          => (string) $s->id,
+                'lot_number'  => $s->lot_number,
+                'expiry_date' => $s->expiry_date ? \Carbon\Carbon::parse($s->expiry_date)->format('Y-m-d') : '',
+            ])
+            ->toArray();
+    }
+
+    public function updatedStockIdLeftA(string $value): void
+    {
+        $found = collect($this->lot_numbers_left_a)->firstWhere('id', $value);
+        $this->lot_number_left_a = $found['lot_number'] ?? '';
+        $this->exp_date_left_a   = $found['expiry_date'] ?? '';
+    }
+
+    public function updatedStockIdLeftB(string $value): void
+    {
+        $found = collect($this->lot_numbers_left_b)->firstWhere('id', $value);
+        $this->lot_number_left_b = $found['lot_number'] ?? '';
+        $this->exp_date_left_b   = $found['expiry_date'] ?? '';
+    }
+
+    public function updatedStockIdRightA(string $value): void
+    {
+        $found = collect($this->lot_numbers_right_a)->firstWhere('id', $value);
+        $this->lot_number_right_a = $found['lot_number'] ?? '';
+        $this->exp_date_right_a   = $found['expiry_date'] ?? '';
+    }
+
+    public function updatedStockIdRightB(string $value): void
+    {
+        $found = collect($this->lot_numbers_right_b)->firstWhere('id', $value);
+        $this->lot_number_right_b = $found['lot_number'] ?? '';
+        $this->exp_date_right_b   = $found['expiry_date'] ?? '';
     }
 
     public function searchTTCode(string $code): void
@@ -308,6 +393,7 @@ class extends Component
 
         $this->redirect(route('insights.ce.mixing.process-timer'), navigate: true);
     }
+
 };
 
 ?>
@@ -557,17 +643,28 @@ class extends Component
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Lot Number") }}</label>
-                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="lot_number_left_a">
+                        <select wire:model.live="stock_id_left_a"
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500">
+                            @if (count($lot_numbers_left_a) > 0)
+                                <option value="">{{ __("— Select lot —") }}</option>
+                                @foreach ($lot_numbers_left_a as $lot)
+                                    <option value="{{ $lot['id'] }}">{{ $lot['lot_number'] }} (exp: {{ $lot['expiry_date'] }})</option>
+                                @endforeach
+                            @else
+                                <option value="">{{ __("— Select lot —") }}</option>
+                                <option value="" disabled>{{ __("No available stock") }}</option>
+                            @endif
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Exp Date") }}</label>
-                        <input type="date" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input type="date" readonly
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-200 cursor-not-allowed"
                             wire:model="exp_date_left_a">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (g)") }}</label>
-                        <input type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input type="number" readonly step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
                             wire:model="weight_target_left_a">
                     </div>
                     <div>
@@ -596,17 +693,23 @@ class extends Component
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Lot Number") }}</label>
-                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="lot_number_left_b">
+                        <select wire:model.live="stock_id_left_b"
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500">
+                            <option value="">{{ __("— Select lot —") }}</option>
+                            @foreach ($lot_numbers_left_b as $lot)
+                                <option value="{{ $lot['id'] }}">{{ $lot['lot_number'] }} (exp: {{ $lot['expiry_date'] }})</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Exp Date") }}</label>
-                        <input type="date" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input type="date" readonly
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-200 cursor-not-allowed"
                             wire:model="exp_date_left_b">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (g)") }}</label>
-                        <input type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input type="number" readonly step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
                             wire:model="weight_target_left_b">
                     </div>
                     <div>
@@ -664,6 +767,20 @@ class extends Component
                     <span class="font-mono font-medium">{{ $selectedRecipeRight['output_code'] }}</span>
                     <span class="block text-xs text-neutral-500">Potlife: {{ $selectedRecipeRight['potlife'] }} hr</span>
                 </div>
+                @if(!empty($selectedRecipeRight['target_weight']))
+                <div>
+                    <span class="block uppercase text-xs text-neutral-500 mb-1">{{ __("Target Weight") }}</span>
+                    <span class="font-semibold">{{ $selectedRecipeRight['target_weight'] }} g</span>
+                </div>
+                @endif
+                @if(!empty($selectedRecipeRight['up_dev']) || !empty($selectedRecipeRight['low_dev']))
+                <div>
+                    <span class="block uppercase text-xs text-neutral-500 mb-1">{{ __("Tolerance") }}</span>
+                    <span class="text-xs">
+                        +{{ $selectedRecipeRight['up_dev'] ?? 0 }}g / -{{ $selectedRecipeRight['low_dev'] ?? 0 }}g
+                    </span>
+                </div>
+                @endif
             </div>
             @endif
 
@@ -685,12 +802,18 @@ class extends Component
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Lot Number") }}</label>
-                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="lot_number_right_a">
+                        <select wire:model.live="stock_id_right_a"
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500">
+                            <option value="">{{ __("— Select lot —") }}</option>
+                            @foreach ($lot_numbers_right_a as $lot)
+                                <option value="{{ $lot['id'] }}">{{ $lot['lot_number'] }} (exp: {{ $lot['expiry_date'] }})</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Exp Date") }}</label>
-                        <input type="date" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input type="date" readonly
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-200 cursor-not-allowed"
                             wire:model="exp_date_right_a">
                     </div>
                     <div>
@@ -724,17 +847,23 @@ class extends Component
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Lot Number") }}</label>
-                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
-                            wire:model="lot_number_right_b">
+                        <select wire:model.live="stock_id_right_b"
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500">
+                            <option value="">{{ __("— Select lot —") }}</option>
+                            @foreach ($lot_numbers_right_b as $lot)
+                                <option value="{{ $lot['id'] }}">{{ $lot['lot_number'] }} (exp: {{ $lot['expiry_date'] }})</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Exp Date") }}</label>
-                        <input type="date" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input type="date" readonly
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-200 cursor-not-allowed"
                             wire:model="exp_date_right_b">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (g)") }}</label>
-                        <input type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input type="number" readonly step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
                             wire:model="weight_target_right_b">
                     </div>
                     <div>

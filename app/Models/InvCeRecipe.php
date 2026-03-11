@@ -18,12 +18,14 @@ class InvCeRecipe extends Model
         'output_code',
         'potlife',
         'is_active',
+        'additional_settings',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'hardener_ratio' => 'float',
-        'potlife' => 'float',
+        'is_active'           => 'boolean',
+        'hardener_ratio'      => 'float',
+        'potlife'             => 'float',
+        'additional_settings' => 'array',
     ];
 
     /**

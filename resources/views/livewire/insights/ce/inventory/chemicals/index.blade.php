@@ -158,8 +158,8 @@ new #[Layout("layouts.app")] class extends Component {
         session(["inv_ce_chemicals_params" => $inv_items_params]);
         session(["inv_ce_areas_params" => $inv_areas_params]);
 
-        $inv_ce_stocks_query = new InvCeQuery([
-            "type" => "stocks",
+        $inv_ce_chemicals_query = new InvCeQuery([
+            "type" => "chemicals",
             "search" => $inv_items_params["q"],
             "name" => $inv_items_params["name"],
             "desc" => $inv_items_params["desc"],
@@ -177,11 +177,7 @@ new #[Layout("layouts.app")] class extends Component {
         ]);
 
         return [
-            "inv_ce_stocks" => $inv_ce_stocks_query->build()->paginate($this->perPage),
-            "inv_ce_chemicals_count" => $inv_ce_stocks_query
-                ->build()
-                ->distinct("inv_ce_chemical_id")
-                ->count("inv_ce_chemical_id"),
+            "inv_ce_chemicals" => $inv_ce_chemicals_query->build()->paginate($this->perPage),
         ];
     }
 
@@ -249,7 +245,7 @@ new #[Layout("layouts.app")] class extends Component {
         if ($property == "uom") {
             $hint = trim($this->uom);
             if ($hint) {
-                $hints = InvCeStock::where("uom", "LIKE", "%" . $hint . "%")
+                $hints = InvCeChemical::where("uom", "LIKE", "%" . $hint . "%")
                     ->where("is_active", true)
                     ->distinct()
                     ->orderBy("uom")
@@ -388,7 +384,7 @@ new #[Layout("layouts.app")] class extends Component {
 
     <div class="h-auto sm:h-12">
         <div class="flex items-center flex-col gap-y-6 sm:flex-row justify-between w-full h-full px-8">
-            <div class="text-center sm:text-left">{{ $inv_ce_chemicals_count . " " . __("barang") . ", " . $inv_ce_stocks->total() . " " . __("unit stok") }}</div>
+            <div class="text-center sm:text-left">{{ $inv_ce_chemicals->total() . " " . __("barang") }}</div>
             <div class="grow flex flex-col sm:flex-row gap-3 items-center justify-center sm:justify-end">
                 <x-select wire:model.live="sort">
                     <option value="updated">{{ __("Diperbarui") }}</option>
@@ -413,7 +409,7 @@ new #[Layout("layouts.app")] class extends Component {
         </div>
     </div>
     <div class="w-full px-1">
-        @if (! $inv_ce_stocks->count())
+        @if (! $inv_ce_chemicals->count())
             @if (count($area_ids))
                 <div wire:key="no-match" class="py-20">
                     <div class="text-center text-neutral-300 dark:text-neutral-700 text-5xl mb-3">
@@ -435,18 +431,19 @@ new #[Layout("layouts.app")] class extends Component {
             @switch($view)
                 @case("grid")
                     <div wire:key="grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mt-6 px-3 sm:px-0">
-                        @foreach ($inv_ce_stocks as $inv_ce_stock)
+                        @foreach ($inv_ce_chemicals as $chemical)
+                            @php $totalQty = $chemical->inv_ce_stocks->sum('quantity'); @endphp
                             <x-inv-card-grid
-                                :url="route('insights.ce.inventory.chemicals.show', ['id' => $inv_ce_stock->inv_ce_chemical_id, 'stock_id' => $inv_ce_stock->id ])"
-                                :name="$inv_ce_stock->inv_ce_chemical->name"
-                                :desc="$inv_ce_stock->inv_ce_chemical->desc"
-                                :code="$inv_ce_stock->inv_ce_chemical->item_code"
-                                :uom="$inv_ce_stock->uom"
-                                :loc="$inv_ce_stock->inv_ce_chemical->inv_ce_location_id ? ($inv_ce_stock->inv_ce_chemical->inv_ce_location->parent . '-' . $inv_ce_stock->inv_ce_chemical->inv_ce_location->bin ) : null"
-                                :qty="$inv_ce_stock->qty"
-                                :qty_min="$inv_ce_stock->qty_min"
-                                :qty_max="$inv_ce_stock->qty_max"
-                                :photo="$inv_ce_stock->inv_ce_chemical->photo"
+                                :url="route('insights.ce.inventory.chemicals.show', ['id' => $chemical->id])"
+                                :name="$chemical->name"
+                                :desc="$chemical->category_chemical"
+                                :code="$chemical->item_code"
+                                :uom="$chemical->uom"
+                                :loc="$chemical->location_id ? ($chemical->inv_ce_location->parent . '-' . $chemical->inv_ce_location->bin) : null"
+                                :qty="$totalQty"
+                                :qty_min="null"
+                                :qty_max="null"
+                                :photo="$chemical->photo"
                             ></x-inv-card-grid>
                         @endforeach
                     </div>
@@ -459,17 +456,21 @@ new #[Layout("layouts.app")] class extends Component {
                                 <th>{{ __("ID") }}</th>
                                 <th></th>
                                 <th>{{ __("Nama") }}</th>
-                                <th>{{ __("Deskripsi") }}</th>
+                                <th>{{ __("Kategori") }}</th>
                                 <th>{{ __("Kode") }}</th>
                                 <th><i class="icon-map-pin"></i></th>
-                                <th><i class="icon-tag"></i></th>
-                                <th>{{ __("Qty") }}</th>
-                                <th>{{ __("Harga") }}</th>
+                                <th>{{ __("Stok") }}</th>
+                                <th>{{ __("Total Qty") }}</th>
+                                <th>{{ __("Vendor") }}</th>
                                 <th><i class="icon-house"></i></th>
                             </tr>
-                            @foreach ($inv_ce_stocks as $inv_ce_stock)
+                            @foreach ($inv_ce_chemicals as $chemical)
+                                @php
+                                    $totalQty = $chemical->inv_ce_stocks->sum('quantity');
+                                    $stockCount = $chemical->inv_ce_stocks->count();
+                                @endphp
                                 <tr class="text-nowrap">
-                                    <td class="w-[1%]">{{ $inv_ce_stock->inv_ce_chemical->id }}</td>
+                                    <td class="w-[1%]">{{ $chemical->id }}</td>
                                     <td class="w-[1%]">
                                         <div class="rounded-sm overflow-hidden relative flex w-12 h-4 bg-neutral-200 dark:bg-neutral-700">
                                             <div class="m-auto">
@@ -483,30 +484,46 @@ new #[Layout("layouts.app")] class extends Component {
                                                     />
                                                 </svg>
                                             </div>
-                                            @if ($inv_ce_stock->inv_ce_chemical->photo)
+                                            @if ($chemical->photo)
                                                 <img
                                                     class="absolute w-full h-full object-cover dark:brightness-75 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                                                    src="{{ "/storage/inv-ce-chemicals/" . $inv_ce_stock->inv_ce_chemical->photo }}"
+                                                    src="{{ "/storage/inv-ce-chemicals/" . $chemical->photo }}"
                                                 />
                                             @endif
                                         </div>
                                     </td>
                                     <td class="max-w-40 truncate font-bold">
-                                        <x-link href="{{ route('insights.ce.inventory.chemicals.show', [ 'id' => $inv_ce_stock->inv_ce_chemical_id, 'stock_id' => $inv_ce_stock->id ]) }}" wire:navigate>
-                                            {{ $inv_ce_stock->inv_ce_chemical->name }}
+                                        <x-link href="{{ route('insights.ce.inventory.chemicals.show', ['id' => $chemical->id]) }}" wire:navigate>
+                                            {{ $chemical->name }}
                                         </x-link>
                                     </td>
-                                    <td class="max-w-40 truncate">{{ $inv_ce_stock->inv_ce_chemical->desc }}</td>
-                                    <td>{{ $inv_ce_stock->inv_ce_chemical->item_code ?? "-" }}</td>
+                                    <td class="max-w-40 truncate">{{ $chemical->category_chemical ?? "-" }}</td>
+                                    <td>{{ $chemical->item_code ?? "-" }}</td>
                                     <td class="w-[1%]">
-                                        {{ $inv_ce_stock->inv_ce_chemical->inv_ce_location_id ? $inv_ce_stock->inv_ce_chemical->inv_ce_location->parent . "-" . $inv_ce_stock->inv_ce_chemical->inv_ce_location->bin : "-" }}
+                                        {{ $chemical->location_id ? $chemical->inv_ce_location->parent . "-" . $chemical->inv_ce_location->bin : "-" }}
                                     </td>
-                                    <td class="w-[1%]">-</td>
-                                    <td class="@if($inv_ce_stock->qty_min > 0 && $inv_ce_stock->qty < $inv_ce_stock->qty_min) text-red-500 @elseif($inv_ce_stock->qty_max > 0 && $inv_ce_stock->qty > $inv_ce_stock->qty_max) text-yellow-500 @endif">{{ $inv_ce_stock->qty . " " . $inv_ce_stock->uom }}</td>
-                                    <td>{{ $inv_ce_stock->inv_ce_chemical->inv_ce_vendor->name ?? '-' . " " . $inv_ce_stock->unit_price }}</td>
-                                    <td>{{ $inv_ce_stock->amount_main }}</td>
-                                    <td class="w-[1%]">{{ $inv_ce_stock->inv_ce_chemical->inv_ce_area->name ?? '-' }}</td>
+                                    <td class="w-[1%] text-center">{{ $stockCount }}</td>
+                                    <td>{{ $totalQty . " " . $chemical->uom }}</td>
+                                    <td>{{ $chemical->inv_ce_vendor->name ?? '-' }}</td>
+                                    <td class="w-[1%]">{{ $chemical->inv_ce_area->name ?? '-' }}</td>
                                 </tr>
+                                @if ($stockCount > 0)
+                                    @foreach ($chemical->inv_ce_stocks as $stock)
+                                        <tr class="text-nowrap text-xs text-neutral-400 dark:text-neutral-600 bg-neutral-50 dark:bg-neutral-900">
+                                            <td></td>
+                                            <td></td>
+                                            <td colspan="4" class="pl-6 italic">
+                                                {{ __("Lot") }}: {{ $stock->lot_number ?? "-" }}
+                                                @if($stock->expiry_date) · {{ __("Exp") }}: {{ $stock->expiry_date }} @endif
+                                                @if($stock->remarks) · {{ $stock->remarks }} @endif
+                                            </td>
+                                            <td class="w-[1%] text-center">{{ $stock->id }}</td>
+                                            <td>{{ $stock->quantity . " " . $stock->unit_uom }}</td>
+                                            <td>{{ $stock->unit_price ?? '-' }}</td>
+                                            <td>{{ $stock->status ?? '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                @endif
                             @endforeach
                         </table>
                     </div>
@@ -514,35 +531,86 @@ new #[Layout("layouts.app")] class extends Component {
                     @break
                 @default
                     <div wire:key="content" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2 mt-6">
-                        @foreach ($inv_ce_stocks as $inv_ce_stock)
-                            <x-inv-card-content
-                                :url="route('insights.ce.inventory.chemicals.show', ['id' => $inv_ce_stock->inv_ce_chemical_id, 'stock_id' => $inv_ce_stock->id])"
-                                :name="$inv_ce_stock->inv_ce_chemical->name ?? '-'"
-                                :desc="$inv_ce_stock->inv_ce_chemical->desc"
-                                :code="$inv_ce_stock->inv_ce_chemical->item_code"
-                                :curr="$inv_ce_stock->inv_ce_chemical->inv_ce_vendor->name ?? '-'"
-                                :price="$inv_ce_stock->unit_price"
-                                :uom="$inv_ce_stock->uom"
-                                :loc="$inv_ce_stock->inv_ce_chemical->inv_ce_location_id ? ($inv_ce_stock->inv_ce_chemical->inv_ce_location->parent . '-' . $inv_ce_stock->inv_ce_chemical->inv_ce_location->bin ) : null"
-                                :tags="null"
-                                :qty="$inv_ce_stock->qty"
-                                :qty_min="$inv_ce_stock->qty_min"
-                                :qty_max="$inv_ce_stock->qty_max"
-                                :photo="$inv_ce_stock->inv_ce_chemical->photo"
-                            ></x-inv-card-content>
+                        @foreach ($inv_ce_chemicals as $chemical)
+                            @php
+                                $totalQty = $chemical->inv_ce_stocks->sum('quantity');
+                                $stockCount = $chemical->inv_ce_stocks->count();
+                                $firstStock = $chemical->inv_ce_stocks->first();
+                            @endphp
+                            <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg overflow-hidden">
+                                <a href="{{ route('insights.ce.inventory.chemicals.show', ['id' => $chemical->id]) }}" wire:navigate class="block">
+                                    <div class="flex gap-3 p-4">
+                                        <div class="flex-shrink-0 w-16 h-16 rounded bg-neutral-100 dark:bg-neutral-700 overflow-hidden relative flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="block w-8 h-8 fill-current text-neutral-800 dark:text-neutral-200 opacity-20" viewBox="0 0 38.777 39.793">
+                                                <path d="M19.396.011a1.058 1.058 0 0 0-.297.087L6.506 5.885a1.058 1.058 0 0 0 .885 1.924l12.14-5.581 15.25 7.328-15.242 6.895L1.49 8.42A1.058 1.058 0 0 0 0 9.386v20.717a1.058 1.058 0 0 0 .609.957l18.381 8.633a1.058 1.058 0 0 0 .897 0l18.279-8.529a1.058 1.058 0 0 0 .611-.959V9.793a1.058 1.058 0 0 0-.599-.953L20 .105a1.058 1.058 0 0 0-.604-.095zM2.117 11.016l16.994 7.562a1.058 1.058 0 0 0 .867-.002l16.682-7.547v18.502L20.6 37.026V22.893a1.059 1.059 0 1 0-2.117 0v14.224L2.117 29.432z"/>
+                                            </svg>
+                                            @if ($chemical->photo)
+                                                <img class="absolute inset-0 w-full h-full object-cover dark:brightness-75" src="{{ "/storage/inv-ce-chemicals/" . $chemical->photo }}" />
+                                            @endif
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="font-bold truncate text-neutral-800 dark:text-neutral-200">{{ $chemical->name }}</div>
+                                            @if($chemical->category_chemical)
+                                                <div class="text-sm text-neutral-500 truncate">{{ $chemical->category_chemical }}</div>
+                                            @endif
+                                            <div class="flex gap-3 mt-1 text-xs text-neutral-400 dark:text-neutral-600">
+                                                @if($chemical->item_code)
+                                                    <span>{{ $chemical->item_code }}</span>
+                                                @endif
+                                                @if($chemical->location_id)
+                                                    <span><i class="icon-map-pin"></i> {{ $chemical->inv_ce_location->parent . "-" . $chemical->inv_ce_location->bin }}</span>
+                                                @endif
+                                                @if($chemical->inv_ce_vendor)
+                                                    <span>{{ $chemical->inv_ce_vendor->name }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0 text-right">
+                                            <div class="text-lg font-bold text-neutral-800 dark:text-neutral-200">{{ $totalQty }}</div>
+                                            <div class="text-xs text-neutral-500">{{ $chemical->uom }}</div>
+                                            @if($stockCount > 1)
+                                                <div class="text-xs text-neutral-400 dark:text-neutral-600 mt-1">{{ $stockCount . " " . __("stok") }}</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </a>
+                                @if ($stockCount > 0)
+                                    <div class="border-t border-neutral-100 dark:border-neutral-700 divide-y divide-neutral-100 dark:divide-neutral-700">
+                                        @foreach ($chemical->inv_ce_stocks as $stock)
+                                            <div class="flex items-center gap-2 px-4 py-2 text-xs text-neutral-500 dark:text-neutral-400">
+                                                <div class="flex-1 min-w-0 flex items-center gap-2">
+                                                    @if($stock->lot_number)
+                                                        <span class="font-mono bg-neutral-100 dark:bg-neutral-700 px-1 rounded">{{ $stock->lot_number }}</span>
+                                                    @endif
+                                                    @if($stock->expiry_date)
+                                                        <span class="text-neutral-400 dark:text-neutral-600"><i class="icon-calendar"></i> {{ $stock->expiry_date }}</span>
+                                                    @endif
+                                                    @if($stock->planning_area)
+                                                        <span>{{ $stock->planning_area }}</span>
+                                                    @endif
+                                                    @if($stock->status)
+                                                        <span class="px-1 rounded bg-neutral-100 dark:bg-neutral-700">{{ $stock->status }}</span>
+                                                    @endif
+                                                </div>
+                                                <div class="flex-shrink-0 font-semibold">{{ $stock->quantity . " " . $stock->unit_uom }}</div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
                         @endforeach
                     </div>
             @endswitch
             <div wire:key="observer" class="flex items-center relative h-16">
-                @if (! $inv_ce_stocks->isEmpty())
-                    @if ($inv_ce_stocks->hasMorePages())
+                @if (! $inv_ce_chemicals->isEmpty())
+                    @if ($inv_ce_chemicals->hasMorePages())
                         <div
                             wire:key="more"
                             x-data="{
                             observe() {
-                                const observer = new IntersectionObserver((inv_ce_stocks) => {
-                                    inv_ce_stocks.forEach(inv_ce_stock => {
-                                        if (inv_ce_stock.isIntersecting) {
+                                const observer = new IntersectionObserver((entries) => {
+                                    entries.forEach(entry => {
+                                        if (entry.isIntersecting) {
                                             @this.loadMore()
                                         }
                                     })

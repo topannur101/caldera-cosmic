@@ -6,7 +6,7 @@
                     <i class="icon-arrow-left"></i>
                 </x-link>
                 <div>
-                    <span class="hidden sm:inline">{{ __('Chemical Mixing Monitoring') }}</span>
+                    <span class="hidden sm:inline">{{ __('Chemical Inventory') }}</span>
                     <span class="sm:hidden inline">{{ __('CE Mixing') }}</span>
                 </div>
             </h2>
@@ -14,13 +14,10 @@
         <div class="space-x-8 -my-px ml-10 flex">
             <!-- data -->
             <x-nav-link class="text-sm px-1 uppercase" href="/insights/ce/mixing/create" :active="request()->routeIs('insights.ce.mixing.create')" wire:navigate>
-                <i class="icon-plus text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Create') }}</span>
+                <i class="icon-database text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Create') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.mixing.index') }}" :active="request()->routeIs('insights.ce.mixing.index')" wire:navigate>
-                <i class="icon-database text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
-            </x-nav-link>
-            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.mixing.manage.index') }}" :active="request()->routeIs('insights.ce.mixing.manage.index')" wire:navigate>
-                <i class="icon-settings text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Kelola') }}</span>
+            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.mixing.raw') }}" :active="request()->routeIs('insights.ce.mixing.raw')" wire:navigate>
+                <i class="icon-settings text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>
             </x-nav-link>
         </div>
     </div>

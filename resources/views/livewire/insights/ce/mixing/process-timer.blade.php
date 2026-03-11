@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\InvCeChemical;
+use App\Models\InvCeMixingLog;
 use App\Models\InvCeStock;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -17,9 +18,63 @@ class extends Component {
     public array $completedStockLeft = [];
     public array $completedStockRight = [];
 
+    public bool $failedLeft = false;
+    public bool $failedRight = false;
+
     public function mount(): void
     {
         $this->mixingData = session('mixing_data', []);
+    }
+
+    private function createMixingLog(array $recipe, string $status, string $notes = ''): void
+    {
+        try {
+            InvCeMixingLog::create([
+                'recipe_id'    => $recipe['id'] ?? 0,
+                'user_id'      => auth()->id() ?? 0,
+                'batch_number' => 'MIX-' . date('YmdHis') . '-' . strtoupper(substr(md5(uniqid()), 0, 6)),
+                'duration'     => gmdate('H:i:s', $this->durationSeconds),
+                'notes'        => $notes,
+                'status'       => $status,
+            ]);
+        } catch (\Exception $e) {
+            // fail silently — log creation should not block the main flow
+        }
+    }
+
+    private function decreaseInputStock(string $itemCode, string $lotNumber, float $weightUsed): array
+    {
+        if ($itemCode === '' || $weightUsed <= 0) {
+            return [];
+        }
+
+        $stock = InvCeStock::query()
+            ->join('inv_ce_chemicals', 'inv_ce_stock.inv_ce_chemical_id', '=', 'inv_ce_chemicals.id')
+            ->where('inv_ce_chemicals.item_code', $itemCode)
+            ->when($lotNumber !== '', fn($q) => $q->where('inv_ce_stock.lot_number', $lotNumber))
+            ->orderBy('inv_ce_stock.expiry_date')
+            ->select('inv_ce_stock.*')
+            ->first();
+
+        if (!$stock) {
+            return ['warning' => "Stock not found for item_code={$itemCode} lot={$lotNumber}"];
+        }
+
+        $before = (float) $stock->quantity;
+        $after  = max(0, $before - $weightUsed);
+        $stock->quantity = $after;
+        if ($after <= 0) {
+            $stock->status = 'empty';
+        }
+        $stock->save();
+
+        return [
+            'item_code'  => $itemCode,
+            'lot_number' => $lotNumber,
+            'before'     => $before,
+            'used'       => $weightUsed,
+            'after'      => $after,
+        ];
     }
 
     private function saveHeadStock(array $recipe, array $head, string $side): array
@@ -44,12 +99,25 @@ class extends Component {
 
         if ($totalWeight <= 0) return ['error' => 'Weight is zero, nothing to save.'];
 
+        // Decrease input chemical stocks
+        $decreaseA = $this->decreaseInputStock(
+            $head['chemical_a']['item_code'] ?? '',
+            $head['chemical_a']['lot_number'] ?? '',
+            $weightA
+        );
+        $decreaseB = $this->decreaseInputStock(
+            $head['chemical_b']['item_code'] ?? '',
+            $head['chemical_b']['lot_number'] ?? '',
+            $weightB
+        );
+
         $lotNumber = trim($head['chemical_a']['lot_number'] ?? '');
         $potlife   = (float) ($recipe['potlife'] ?? 0);
         $expDate   = $potlife > 0
             ? now()->addHours($potlife)->toDateTimeString()
             : now()->addYear()->toDateTimeString();
 
+        // Create output stock (increase)
         $stock = InvCeStock::create([
             'inv_ce_chemical_id' => $chemical->id,
             'quantity'           => $totalWeight,
@@ -69,6 +137,8 @@ class extends Component {
             'quantity'    => $totalWeight,
             'uom'         => $chemical->uom ?? 'kg',
             'stock_id'    => $stock->id,
+            'decrease_a'  => $decreaseA,
+            'decrease_b'  => $decreaseB,
         ];
     }
 
@@ -83,6 +153,8 @@ class extends Component {
         if (isset($result['error'])) { $this->completeErrorLeft = $result['error']; return; }
         $this->completedStockLeft = $result;
         $this->completedLeft = true;
+        $this->createMixingLog($this->mixingData['recipe_left'], 'completed',
+            'Left head completed. Output stock #' . ($result['stock_id'] ?? ''));
         if ($this->completedLeft && $this->completedRight) session()->forget('mixing_data');
     }
 
@@ -97,7 +169,37 @@ class extends Component {
         if (isset($result['error'])) { $this->completeErrorRight = $result['error']; return; }
         $this->completedStockRight = $result;
         $this->completedRight = true;
+        $this->createMixingLog($this->mixingData['recipe_right'], 'completed',
+            'Right head completed. Output stock #' . ($result['stock_id'] ?? ''));
         if ($this->completedLeft && $this->completedRight) session()->forget('mixing_data');
+    }
+
+    public function failMixingLeft(): void
+    {
+        if ($this->failedLeft || $this->completedLeft) return;
+        $this->failedLeft = true;
+        if (!empty($this->mixingData['recipe_left'])) {
+            $this->createMixingLog($this->mixingData['recipe_left'], 'failed', 'Left head — Emergency Stop triggered.');
+        }
+    }
+
+    public function failMixingRight(): void
+    {
+        if ($this->failedRight || $this->completedRight) return;
+        $this->failedRight = true;
+        if (!empty($this->mixingData['recipe_right'])) {
+            $this->createMixingLog($this->mixingData['recipe_right'], 'failed', 'Right head — Emergency Stop triggered.');
+        }
+    }
+
+    public function resetFailLeft(): void
+    {
+        $this->failedLeft = false;
+    }
+
+    public function resetFailRight(): void
+    {
+        $this->failedRight = false;
     }
 }; ?>
 
@@ -115,12 +217,14 @@ class extends Component {
         leftRunning: false,
         leftFinished: false,
         leftInterval: null,
+        emAFailed: false,
 
         // RIGHT HEAD timer
         rightElapsed: 0,
         rightRunning: false,
         rightFinished: false,
         rightInterval: null,
+        emBFailed: false,
 
         // Computed LEFT
         get leftRemaining() { return Math.max(0, this.duration - this.leftElapsed); },
@@ -205,10 +309,21 @@ class extends Component {
             // LEFT head driven by A
             if (this.miconA.st !== null) {
                 if (this.miconA.em === 1) {
-                    // emergency: stop timer
+                    // emergency: stop, reset progress to 0, log as failed (once)
                     this.leftRunning = false;
-                    if (this.leftInterval) clearInterval(this.leftInterval);
+                    this.leftFinished = false;
+                    this.leftElapsed = 0;
+                    if (this.leftInterval) { clearInterval(this.leftInterval); this.leftInterval = null; }
+                    if (!this.emAFailed) {
+                        this.emAFailed = true;
+                        $wire.failMixingLeft();
+                    }
                 } else if (this.miconA.st === 1 && !this.leftRunning && !this.leftFinished) {
+                    // new start signal — reset emergency flag and server failed state
+                    if (this.emAFailed) {
+                        this.emAFailed = false;
+                        $wire.call('resetFailLeft');
+                    }
                     this.startLeft();
                 } else if (this.miconA.ti === 1 && !this.leftFinished) {
                     this.leftFinished = true;
@@ -219,9 +334,20 @@ class extends Component {
             // RIGHT head driven by B
             if (this.miconB.st !== null) {
                 if (this.miconB.em === 1) {
+                    // emergency: stop, reset progress to 0, log as failed (once)
                     this.rightRunning = false;
-                    if (this.rightInterval) clearInterval(this.rightInterval);
+                    this.rightFinished = false;
+                    this.rightElapsed = 0;
+                    if (this.rightInterval) { clearInterval(this.rightInterval); this.rightInterval = null; }
+                    if (!this.emBFailed) {
+                        this.emBFailed = true;
+                        $wire.failMixingRight();
+                    }
                 } else if (this.miconB.st === 1 && !this.rightRunning && !this.rightFinished) {
+                    if (this.emBFailed) {
+                        this.emBFailed = false;
+                        $wire.call('resetFailRight');
+                    }
                     this.startRight();
                 } else if (this.miconB.ti === 1 && !this.rightFinished) {
                     this.rightFinished = true;
@@ -289,228 +415,305 @@ class extends Component {
     </div>
 
     <!-- Per Head Progress -->
+    @php
+        $left  = $mixingData['left']  ?? [];
+        $right = $mixingData['right'] ?? [];
+    @endphp
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-        <!-- LEFT HEAD -->
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 border-l-4 border-l-blue-500">
-            <div class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <span class="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded">{{ __('LEFT HEAD') }}</span>
+        {{-- ═══════════════════════ LEFT HEAD ═══════════════════════ --}}
+        <div
+            x-data="{ open: false }"
+            class="bg-white dark:bg-neutral-800 shadow sm:rounded-xl overflow-hidden"
+            :class="miconA.em === 1 ? 'ring-2 ring-red-500' : ''"
+        >
+            {{-- Header banner --}}
+            <div class="flex items-center gap-3 px-5 py-3"
+                 :class="leftFinished ? 'bg-green-500' : (miconA.em === 1 ? 'bg-red-500' : 'bg-blue-500')">
+                <span class="text-white font-bold text-sm tracking-widest uppercase">{{ __('Left') }}</span>
                 @if(!empty($mixingData['recipe_left']))
-                    <span class="text-xs text-neutral-500 font-mono">→ {{ $mixingData['recipe_left']['output_code'] ?? '' }}</span>
+                    <span class="ml-1 text-white/80 font-mono text-xs">→ {{ $mixingData['recipe_left']['output_code'] ?? '' }}</span>
                 @endif
+                <span class="ml-auto text-white/70 text-xs" x-show="miconA.em === 1">🚨 {{ __('Emergency Stop') }}</span>
+                <span class="ml-auto text-white/70 text-xs" x-show="miconA.st === null || (miconA.st === 0 && miconA.ti === 0 && miconA.em === 0)">
+                    <svg class="inline animate-spin h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    {{ __('Waiting...') }}
+                </span>
+                <span class="ml-auto text-white font-bold text-xs" x-show="leftFinished && !{{ $completedLeft ? 'false' : 'false' }}">✓ {{ __('Done') }}</span>
             </div>
 
-            <!-- Emergency alert left -->
-            <div x-show="miconA.em === 1" class="mb-3 px-3 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded text-sm font-semibold">
-                🚨 {{ __('Emergency Stop!') }}
-            </div>
-
-            <!-- Waiting indicator left -->
-            <div x-show="miconA.st === null || (miconA.st === 0 && miconA.ti === 0 && miconA.em === 0)" class="mb-3 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
-                {{ __('Waiting for micon signal...') }}
-            </div>
-
-            <!-- Progress Bar LEFT -->
-            <div class="mb-4">
-                <div class="flex justify-between text-xs text-neutral-500 mb-1">
-                    <span>{{ __('Progress') }}</span>
-                    <span x-text="Math.round(leftProgress) + '%'"></span>
+            {{-- Progress + timer --}}
+            <div class="px-5 pt-4 pb-2">
+                <div class="flex items-end justify-between mb-1">
+                    <span class="text-3xl font-bold tabular-nums" x-text="leftTimeDisplay"
+                          :class="leftFinished ? 'text-green-500' : (miconA.em === 1 ? 'text-red-500' : 'text-blue-500')"></span>
+                    <span class="text-sm text-neutral-400 mb-1" x-text="Math.round(leftProgress) + '%'"></span>
                 </div>
-                <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-4 overflow-hidden">
-                    <div
-                        class="h-4 rounded-full transition-all duration-1000"
-                        :class="leftFinished ? 'bg-green-500' : (miconA.em === 1 ? 'bg-red-500' : 'bg-blue-500')"
-                        :style="'width:' + leftProgress + '%'"
-                    ></div>
-                </div>
-                <div class="mt-1 text-xs text-neutral-500 text-right" x-text="leftTimeDisplay + ' remaining'"></div>
-            </div>
-
-            @php $left = $mixingData['left'] ?? []; @endphp
-
-            <!-- Chemical A -->
-            <div class="mb-4 pb-4 border-b border-neutral-200 dark:border-neutral-700">
-                <div class="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Chemical A') }}</div>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <div class="text-neutral-500">{{ __('Item Code') }}</div>
-                    <div class="font-medium">{{ $left['chemical_a']['item_code'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Name') }}</div>
-                    <div class="font-medium">{{ $left['chemical_a']['chemical_name'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Lot No.') }}</div>
-                    <div class="font-medium">{{ $left['chemical_a']['lot_number'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Exp Date') }}</div>
-                    <div class="font-medium">{{ $left['chemical_a']['exp_date'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Weight Target') }}</div>
-                    <div class="font-medium">{{ $left['chemical_a']['weight_target'] ?? '-' }} kg</div>
-                    <div class="text-neutral-500">{{ __('Weight Actual') }}</div>
-                    <div class="font-medium">{{ $left['chemical_a']['weight_actual'] ?? '-' }} kg</div>
+                <div class="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2 overflow-hidden">
+                    <div class="h-2 rounded-full transition-all duration-1000"
+                         :class="leftFinished ? 'bg-green-500' : (miconA.em === 1 ? 'bg-red-500' : 'bg-blue-500')"
+                         :style="'width:' + leftProgress + '%'"></div>
                 </div>
             </div>
 
-            <!-- Chemical B -->
-            <div>
-                <div class="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Chemical B') }}</div>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <div class="text-neutral-500">{{ __('Item Code') }}</div>
-                    <div class="font-medium">{{ $left['chemical_b']['item_code'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Name') }}</div>
-                    <div class="font-medium">{{ $left['chemical_b']['chemical_name'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Lot No.') }}</div>
-                    <div class="font-medium">{{ $left['chemical_b']['lot_number'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Exp Date') }}</div>
-                    <div class="font-medium">{{ $left['chemical_b']['exp_date'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Weight Target') }}</div>
-                    <div class="font-medium">{{ $left['chemical_b']['weight_target'] ?? '-' }} kg</div>
-                    <div class="text-neutral-500">{{ __('Weight Actual') }}</div>
-                    <div class="font-medium">{{ $left['chemical_b']['weight_actual'] ?? '-' }} kg</div>
-                    <div class="text-neutral-500">{{ __('Percentage') }}</div>
-                    <div class="font-medium">{{ $left['percentage'] ?? '-' }} %</div>
+            {{-- Chemical summary row (always visible) + click to expand --}}
+            <button type="button" @click="open = !open"
+                    class="w-full flex items-center justify-between px-5 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors text-left">
+                <div class="flex gap-4 text-sm">
+                    <div>
+                        <div class="text-xs text-neutral-400 uppercase tracking-wide">A</div>
+                        <div class="font-semibold text-neutral-700 dark:text-neutral-200 truncate max-w-[120px]">{{ $left['chemical_a']['chemical_name'] ?? '-' }}</div>
+                        <div class="text-xs text-neutral-500">{{ $left['chemical_a']['weight_actual'] ?? '-' }} kg</div>
+                    </div>
+                    <div class="self-center text-neutral-300 dark:text-neutral-600 font-bold">+</div>
+                    <div>
+                        <div class="text-xs text-neutral-400 uppercase tracking-wide">B</div>
+                        <div class="font-semibold text-neutral-700 dark:text-neutral-200 truncate max-w-[120px]">{{ $left['chemical_b']['chemical_name'] ?? '-' }}</div>
+                        <div class="text-xs text-neutral-500">{{ $left['chemical_b']['weight_actual'] ?? '-' }} kg · {{ $left['percentage'] ?? '-' }}%</div>
+                    </div>
+                </div>
+                <i class="icon-chevron-down text-neutral-400 transition-transform" :class="open && 'rotate-180'"></i>
+            </button>
+
+            {{-- Expandable detail --}}
+            <div x-show="open" x-collapse class="border-t border-neutral-100 dark:border-neutral-700 px-5 py-4 space-y-4 text-sm">
+                {{-- Chemical A --}}
+                <div>
+                    <div class="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-2">{{ __('Chemical A') }}</div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                        <span class="text-neutral-500">{{ __('Lot No.') }}</span><span class="font-mono">{{ $left['chemical_a']['lot_number'] ?? '-' }}</span>
+                        <span class="text-neutral-500">{{ __('Exp Date') }}</span><span>{{ $left['chemical_a']['exp_date'] ?? '-' }}</span>
+                        <span class="text-neutral-500">{{ __('Target') }}</span><span>{{ $left['chemical_a']['weight_target'] ?? '-' }} kg</span>
+                        <span class="text-neutral-500">{{ __('Actual') }}</span><span class="font-semibold">{{ $left['chemical_a']['weight_actual'] ?? '-' }} kg</span>
+                    </div>
+                </div>
+                {{-- Chemical B --}}
+                <div>
+                    <div class="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-2">{{ __('Chemical B') }}</div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                        <span class="text-neutral-500">{{ __('Lot No.') }}</span><span class="font-mono">{{ $left['chemical_b']['lot_number'] ?? '-' }}</span>
+                        <span class="text-neutral-500">{{ __('Exp Date') }}</span><span>{{ $left['chemical_b']['exp_date'] ?? '-' }}</span>
+                        <span class="text-neutral-500">{{ __('Target') }}</span><span>{{ $left['chemical_b']['weight_target'] ?? '-' }} kg</span>
+                        <span class="text-neutral-500">{{ __('Actual') }}</span><span class="font-semibold">{{ $left['chemical_b']['weight_actual'] ?? '-' }} kg</span>
+                        <span class="text-neutral-500">{{ __('Ratio B') }}</span><span>{{ $left['percentage'] ?? '-' }} %</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- LEFT HEAD: finished notification + save button -->
-            <div x-show="leftFinished" x-transition class="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-                <div class="mb-2 text-sm font-semibold text-green-600 dark:text-green-400">✅ {{ __('Timer complete!') }}</div>
-                @if(!$completedLeft)
-                @if($completeErrorLeft)
-                <div class="mb-2 text-sm text-red-600 dark:text-red-400">{{ $completeErrorLeft }}</div>
-                @endif
-                <button
-                    wire:click="completeMixingLeft"
-                    wire:loading.attr="disabled"
-                    class="px-4 py-2 bg-caldy-600 hover:bg-caldy-700 text-white font-semibold rounded-md text-sm flex items-center gap-2"
-                >
-                    <span wire:loading.remove wire:target="completeMixingLeft">{{ __('Save Stock & Complete') }}</span>
-                    <span wire:loading wire:target="completeMixingLeft">{{ __('Saving...') }}</span>
-                </button>
+            {{-- Failed (Emergency) banner --}}
+            @if($failedLeft)
+            <div class="border-t border-red-200 dark:border-red-700 px-5 py-4 bg-red-50 dark:bg-red-900/30 flex items-center gap-3">
+                <span class="text-2xl">🚨</span>
+                <div>
+                    <div class="font-semibold text-red-700 dark:text-red-300">{{ __('Emergency Stop — Mixing Failed') }}</div>
+                    <div class="text-xs text-red-500 dark:text-red-400 mt-0.5">{{ __('This mixing has been logged as failed.') }}</div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Footer: action / result --}}
+            <div x-show="leftFinished" x-transition class="border-t border-neutral-100 dark:border-neutral-700 px-5 py-4">
+                @if(!$completedLeft && !$failedLeft)
+                    @if($completeErrorLeft)
+                        <p class="mb-3 text-sm text-red-600 dark:text-red-400">{{ $completeErrorLeft }}</p>
+                    @endif
+                    <button
+                        wire:click="completeMixingLeft"
+                        wire:loading.attr="disabled"
+                        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold rounded-lg text-sm transition-colors"
+                    >
+                        <i wire:loading.remove wire:target="completeMixingLeft" class="icon-check"></i>
+                        <span wire:loading.remove wire:target="completeMixingLeft">{{ __('Save & Complete') }}</span>
+                        <span wire:loading wire:target="completeMixingLeft" class="flex items-center gap-2">
+                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            {{ __('Saving...') }}
+                        </span>
+                    </button>
                 @else
-                <div class="p-3 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded text-sm">
-                    <span class="font-mono font-medium text-green-700 dark:text-green-300">{{ $completedStockLeft['output_code'] ?? '' }}</span>
-                    <span class="block text-xs text-neutral-500">{{ $completedStockLeft['name'] ?? '' }} · Stock #{{ $completedStockLeft['stock_id'] ?? '' }}</span>
-                    <span class="block text-xs font-semibold">{{ $completedStockLeft['quantity'] ?? '' }} {{ $completedStockLeft['uom'] ?? '' }}</span>
-                </div>
-                @if($completedLeft && $completedRight)
-                <a href="{{ route('insights.ce.mixing.create') }}" wire:navigate
-                    class="mt-2 inline-block px-4 py-2 rounded-md bg-caldy-500 hover:bg-caldy-600 text-white font-medium text-sm">
-                    {{ __('New Mixing') }}
-                </a>
-                @endif
+                    <div class="space-y-2">
+                        {{-- Output --}}
+                        <div class="flex items-center justify-between rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 px-3 py-2">
+                            <div>
+                                <div class="text-xs text-green-600 dark:text-green-400 font-semibold uppercase tracking-wide">{{ __('Output created') }}</div>
+                                <div class="font-mono font-bold text-green-700 dark:text-green-300">{{ $completedStockLeft['output_code'] ?? '' }}</div>
+                                <div class="text-xs text-neutral-500">{{ __('Stock') }} #{{ $completedStockLeft['stock_id'] ?? '' }}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-green-600 dark:text-green-400">+{{ $completedStockLeft['quantity'] ?? '' }}</div>
+                                <div class="text-xs text-neutral-500">{{ $completedStockLeft['uom'] ?? '' }}</div>
+                            </div>
+                        </div>
+                        {{-- Consumed inputs --}}
+                        @foreach([($completedStockLeft['decrease_a'] ?? null), ($completedStockLeft['decrease_b'] ?? null)] as $d)
+                            @if(!empty($d) && !isset($d['warning']))
+                                <div class="flex items-center justify-between rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 px-3 py-2">
+                                    <div>
+                                        <div class="text-xs text-red-500 font-semibold uppercase tracking-wide">{{ __('Consumed') }}</div>
+                                        <div class="font-mono font-medium text-neutral-700 dark:text-neutral-300">{{ $d['item_code'] ?? '' }}</div>
+                                        @if(!empty($d['lot_number'])) <div class="text-xs text-neutral-400">{{ __('Lot') }}: {{ $d['lot_number'] }}</div> @endif
+                                    </div>
+                                    <div class="text-right text-sm">
+                                        <div class="text-red-500 font-bold">−{{ $d['used'] ?? '' }}</div>
+                                        <div class="text-xs text-neutral-400">{{ $d['before'] ?? '' }} → {{ $d['after'] ?? '' }}</div>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                        @if($completedLeft && $completedRight)
+                            <a href="{{ route('insights.ce.mixing.create') }}" wire:navigate
+                               class="mt-1 flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg bg-caldy-500 hover:bg-caldy-600 text-white font-medium text-sm">
+                                <i class="icon-plus"></i> {{ __('New Mixing') }}
+                            </a>
+                        @endif
+                    </div>
                 @endif
             </div>
         </div>
 
-        <!-- RIGHT HEAD -->
-        <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4 border-l-4 border-l-green-500">
-            <div class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <span class="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 text-xs font-semibold rounded">{{ __('RIGHT HEAD') }}</span>
+        {{-- ═══════════════════════ RIGHT HEAD ═══════════════════════ --}}
+        <div
+            x-data="{ open: false }"
+            class="bg-white dark:bg-neutral-800 shadow sm:rounded-xl overflow-hidden"
+            :class="miconB.em === 1 ? 'ring-2 ring-red-500' : ''"
+        >
+            {{-- Header banner --}}
+            <div class="flex items-center gap-3 px-5 py-3"
+                 :class="rightFinished ? 'bg-green-500' : (miconB.em === 1 ? 'bg-red-500' : 'bg-emerald-500')">
+                <span class="text-white font-bold text-sm tracking-widest uppercase">{{ __('Right') }}</span>
                 @if(!empty($mixingData['recipe_right']))
-                    <span class="text-xs text-neutral-500 font-mono">→ {{ $mixingData['recipe_right']['output_code'] ?? '' }}</span>
+                    <span class="ml-1 text-white/80 font-mono text-xs">→ {{ $mixingData['recipe_right']['output_code'] ?? '' }}</span>
                 @endif
+                <span class="ml-auto text-white/70 text-xs" x-show="miconB.em === 1">🚨 {{ __('Emergency Stop') }}</span>
+                <span class="ml-auto text-white/70 text-xs" x-show="miconB.st === null || (miconB.st === 0 && miconB.ti === 0 && miconB.em === 0)">
+                    <svg class="inline animate-spin h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    {{ __('Waiting...') }}
+                </span>
             </div>
 
-            <!-- Emergency alert right -->
-            <div x-show="miconB.em === 1" class="mb-3 px-3 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded text-sm font-semibold">
-                🚨 {{ __('Emergency Stop!') }}
-            </div>
-
-            <!-- Waiting indicator right -->
-            <div x-show="miconB.st === null || (miconB.st === 0 && miconB.ti === 0 && miconB.em === 0)" class="mb-3 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
-                {{ __('Waiting for micon signal...') }}
-            </div>
-
-            <!-- Progress Bar RIGHT -->
-            <div class="mb-4">
-                <div class="flex justify-between text-xs text-neutral-500 mb-1">
-                    <span>{{ __('Progress') }}</span>
-                    <span x-text="Math.round(rightProgress) + '%'"></span>
+            {{-- Progress + timer --}}
+            <div class="px-5 pt-4 pb-2">
+                <div class="flex items-end justify-between mb-1">
+                    <span class="text-3xl font-bold tabular-nums" x-text="rightTimeDisplay"
+                          :class="rightFinished ? 'text-green-500' : (miconB.em === 1 ? 'text-red-500' : 'text-emerald-500')"></span>
+                    <span class="text-sm text-neutral-400 mb-1" x-text="Math.round(rightProgress) + '%'"></span>
                 </div>
-                <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-4 overflow-hidden">
-                    <div
-                        class="h-4 rounded-full transition-all duration-1000"
-                        :class="rightFinished ? 'bg-green-500' : (miconB.em === 1 ? 'bg-red-500' : 'bg-emerald-500')"
-                        :style="'width:' + rightProgress + '%'"
-                    ></div>
-                </div>
-                <div class="mt-1 text-xs text-neutral-500 text-right" x-text="rightTimeDisplay + ' remaining'"></div>
-            </div>
-
-            @php $right = $mixingData['right'] ?? []; @endphp
-
-            <!-- Chemical A -->
-            <div class="mb-4 pb-4 border-b border-neutral-200 dark:border-neutral-700">
-                <div class="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Chemical A') }}</div>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <div class="text-neutral-500">{{ __('Item Code') }}</div>
-                    <div class="font-medium">{{ $right['chemical_a']['item_code'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Name') }}</div>
-                    <div class="font-medium">{{ $right['chemical_a']['chemical_name'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Lot No.') }}</div>
-                    <div class="font-medium">{{ $right['chemical_a']['lot_number'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Exp Date') }}</div>
-                    <div class="font-medium">{{ $right['chemical_a']['exp_date'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Weight Target') }}</div>
-                    <div class="font-medium">{{ $right['chemical_a']['weight_target'] ?? '-' }} kg</div>
-                    <div class="text-neutral-500">{{ __('Weight Actual') }}</div>
-                    <div class="font-medium">{{ $right['chemical_a']['weight_actual'] ?? '-' }} kg</div>
+                <div class="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2 overflow-hidden">
+                    <div class="h-2 rounded-full transition-all duration-1000"
+                         :class="rightFinished ? 'bg-green-500' : (miconB.em === 1 ? 'bg-red-500' : 'bg-emerald-500')"
+                         :style="'width:' + rightProgress + '%'"></div>
                 </div>
             </div>
 
-            <!-- Chemical B -->
-            <div>
-                <div class="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">{{ __('Chemical B') }}</div>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <div class="text-neutral-500">{{ __('Item Code') }}</div>
-                    <div class="font-medium">{{ $right['chemical_b']['item_code'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Name') }}</div>
-                    <div class="font-medium">{{ $right['chemical_b']['chemical_name'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Lot No.') }}</div>
-                    <div class="font-medium">{{ $right['chemical_b']['lot_number'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Exp Date') }}</div>
-                    <div class="font-medium">{{ $right['chemical_b']['exp_date'] ?? '-' }}</div>
-                    <div class="text-neutral-500">{{ __('Weight Target') }}</div>
-                    <div class="font-medium">{{ $right['chemical_b']['weight_target'] ?? '-' }} kg</div>
-                    <div class="text-neutral-500">{{ __('Weight Actual') }}</div>
-                    <div class="font-medium">{{ $right['chemical_b']['weight_actual'] ?? '-' }} kg</div>
-                    <div class="text-neutral-500">{{ __('Percentage') }}</div>
-                    <div class="font-medium">{{ $right['percentage'] ?? '-' }} %</div>
+            {{-- Chemical summary row (always visible) + click to expand --}}
+            <button type="button" @click="open = !open"
+                    class="w-full flex items-center justify-between px-5 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors text-left">
+                <div class="flex gap-4 text-sm">
+                    <div>
+                        <div class="text-xs text-neutral-400 uppercase tracking-wide">A</div>
+                        <div class="font-semibold text-neutral-700 dark:text-neutral-200 truncate max-w-[120px]">{{ $right['chemical_a']['chemical_name'] ?? '-' }}</div>
+                        <div class="text-xs text-neutral-500">{{ $right['chemical_a']['weight_actual'] ?? '-' }} kg</div>
+                    </div>
+                    <div class="self-center text-neutral-300 dark:text-neutral-600 font-bold">+</div>
+                    <div>
+                        <div class="text-xs text-neutral-400 uppercase tracking-wide">B</div>
+                        <div class="font-semibold text-neutral-700 dark:text-neutral-200 truncate max-w-[120px]">{{ $right['chemical_b']['chemical_name'] ?? '-' }}</div>
+                        <div class="text-xs text-neutral-500">{{ $right['chemical_b']['weight_actual'] ?? '-' }} kg · {{ $right['percentage'] ?? '-' }}%</div>
+                    </div>
+                </div>
+                <i class="icon-chevron-down text-neutral-400 transition-transform" :class="open && 'rotate-180'"></i>
+            </button>
+
+            {{-- Expandable detail --}}
+            <div x-show="open" x-collapse class="border-t border-neutral-100 dark:border-neutral-700 px-5 py-4 space-y-4 text-sm">
+                {{-- Chemical A --}}
+                <div>
+                    <div class="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-2">{{ __('Chemical A') }}</div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                        <span class="text-neutral-500">{{ __('Lot No.') }}</span><span class="font-mono">{{ $right['chemical_a']['lot_number'] ?? '-' }}</span>
+                        <span class="text-neutral-500">{{ __('Exp Date') }}</span><span>{{ $right['chemical_a']['exp_date'] ?? '-' }}</span>
+                        <span class="text-neutral-500">{{ __('Target') }}</span><span>{{ $right['chemical_a']['weight_target'] ?? '-' }} kg</span>
+                        <span class="text-neutral-500">{{ __('Actual') }}</span><span class="font-semibold">{{ $right['chemical_a']['weight_actual'] ?? '-' }} kg</span>
+                    </div>
+                </div>
+                {{-- Chemical B --}}
+                <div>
+                    <div class="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-2">{{ __('Chemical B') }}</div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                        <span class="text-neutral-500">{{ __('Lot No.') }}</span><span class="font-mono">{{ $right['chemical_b']['lot_number'] ?? '-' }}</span>
+                        <span class="text-neutral-500">{{ __('Exp Date') }}</span><span>{{ $right['chemical_b']['exp_date'] ?? '-' }}</span>
+                        <span class="text-neutral-500">{{ __('Target') }}</span><span>{{ $right['chemical_b']['weight_target'] ?? '-' }} kg</span>
+                        <span class="text-neutral-500">{{ __('Actual') }}</span><span class="font-semibold">{{ $right['chemical_b']['weight_actual'] ?? '-' }} kg</span>
+                        <span class="text-neutral-500">{{ __('Ratio B') }}</span><span>{{ $right['percentage'] ?? '-' }} %</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- RIGHT HEAD: finished notification + save button -->
-            <div x-show="rightFinished" x-transition class="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-                <div class="mb-2 text-sm font-semibold text-green-600 dark:text-green-400">✅ {{ __('Timer complete!') }}</div>
-                @if(!$completedRight)
-                @if($completeErrorRight)
-                <div class="mb-2 text-sm text-red-600 dark:text-red-400">{{ $completeErrorRight }}</div>
-                @endif
-                <button
-                    wire:click="completeMixingRight"
-                    wire:loading.attr="disabled"
-                    class="px-4 py-2 bg-caldy-600 hover:bg-caldy-700 text-white font-semibold rounded-md text-sm flex items-center gap-2"
-                >
-                    <span wire:loading.remove wire:target="completeMixingRight">{{ __('Save Stock & Complete') }}</span>
-                    <span wire:loading wire:target="completeMixingRight">{{ __('Saving...') }}</span>
-                </button>
+            {{-- Failed (Emergency) banner --}}
+            @if($failedRight)
+            <div class="border-t border-red-200 dark:border-red-700 px-5 py-4 bg-red-50 dark:bg-red-900/30 flex items-center gap-3">
+                <span class="text-2xl">🚨</span>
+                <div>
+                    <div class="font-semibold text-red-700 dark:text-red-300">{{ __('Emergency Stop — Mixing Failed') }}</div>
+                    <div class="text-xs text-red-500 dark:text-red-400 mt-0.5">{{ __('This mixing has been logged as failed.') }}</div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Footer: action / result --}}
+            <div x-show="rightFinished" x-transition class="border-t border-neutral-100 dark:border-neutral-700 px-5 py-4">
+                @if(!$completedRight && !$failedRight)
+                    @if($completeErrorRight)
+                        <p class="mb-3 text-sm text-red-600 dark:text-red-400">{{ $completeErrorRight }}</p>
+                    @endif
+                    <button
+                        wire:click="completeMixingRight"
+                        wire:loading.attr="disabled"
+                        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold rounded-lg text-sm transition-colors"
+                    >
+                        <i wire:loading.remove wire:target="completeMixingRight" class="icon-check"></i>
+                        <span wire:loading.remove wire:target="completeMixingRight">{{ __('Save & Complete') }}</span>
+                        <span wire:loading wire:target="completeMixingRight" class="flex items-center gap-2">
+                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            {{ __('Saving...') }}
+                        </span>
+                    </button>
                 @else
-                <div class="p-3 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded text-sm">
-                    <span class="font-mono font-medium text-green-700 dark:text-green-300">{{ $completedStockRight['output_code'] ?? '' }}</span>
-                    <span class="block text-xs text-neutral-500">{{ $completedStockRight['name'] ?? '' }} · Stock #{{ $completedStockRight['stock_id'] ?? '' }}</span>
-                    <span class="block text-xs font-semibold">{{ $completedStockRight['quantity'] ?? '' }} {{ $completedStockRight['uom'] ?? '' }}</span>
-                </div>
-                @if($completedLeft && $completedRight)
-                <a href="{{ route('insights.ce.mixing.create') }}" wire:navigate
-                    class="mt-2 inline-block px-4 py-2 rounded-md bg-caldy-500 hover:bg-caldy-600 text-white font-medium text-sm">
-                    {{ __('New Mixing') }}
-                </a>
-                @endif
+                    <div class="space-y-2">
+                        {{-- Output --}}
+                        <div class="flex items-center justify-between rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 px-3 py-2">
+                            <div>
+                                <div class="text-xs text-green-600 dark:text-green-400 font-semibold uppercase tracking-wide">{{ __('Output created') }}</div>
+                                <div class="font-mono font-bold text-green-700 dark:text-green-300">{{ $completedStockRight['output_code'] ?? '' }}</div>
+                                <div class="text-xs text-neutral-500">{{ __('Stock') }} #{{ $completedStockRight['stock_id'] ?? '' }}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-green-600 dark:text-green-400">+{{ $completedStockRight['quantity'] ?? '' }}</div>
+                                <div class="text-xs text-neutral-500">{{ $completedStockRight['uom'] ?? '' }}</div>
+                            </div>
+                        </div>
+                        {{-- Consumed inputs --}}
+                        @foreach([($completedStockRight['decrease_a'] ?? null), ($completedStockRight['decrease_b'] ?? null)] as $d)
+                            @if(!empty($d) && !isset($d['warning']))
+                                <div class="flex items-center justify-between rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 px-3 py-2">
+                                    <div>
+                                        <div class="text-xs text-red-500 font-semibold uppercase tracking-wide">{{ __('Consumed') }}</div>
+                                        <div class="font-mono font-medium text-neutral-700 dark:text-neutral-300">{{ $d['item_code'] ?? '' }}</div>
+                                        @if(!empty($d['lot_number'])) <div class="text-xs text-neutral-400">{{ __('Lot') }}: {{ $d['lot_number'] }}</div> @endif
+                                    </div>
+                                    <div class="text-right text-sm">
+                                        <div class="text-red-500 font-bold">−{{ $d['used'] ?? '' }}</div>
+                                        <div class="text-xs text-neutral-400">{{ $d['before'] ?? '' }} → {{ $d['after'] ?? '' }}</div>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                        @if($completedLeft && $completedRight)
+                            <a href="{{ route('insights.ce.mixing.create') }}" wire:navigate
+                               class="mt-1 flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg bg-caldy-500 hover:bg-caldy-600 text-white font-medium text-sm">
+                                <i class="icon-plus"></i> {{ __('New Mixing') }}
+                            </a>
+                        @endif
+                    </div>
                 @endif
             </div>
         </div>

@@ -331,7 +331,6 @@ Route::prefix('insights')->group(function () {
         })->name('index');
     });
 
-    
     // ===========================================//
     // CE Room Digital ROUTES
     // ===========================================//
@@ -349,10 +348,16 @@ Route::prefix('insights')->group(function () {
         Volt::route('/ce/inventory/chemicals/{id}/edit', 'insights.ce.inventory.chemicals.edit')->name('inventory.chemicals.edit');
         Volt::route('/ce/inventory/circs/in', 'insights.ce.inventory.circs.incoming')->name('inventory.circs.incoming');
         Volt::route('/ce/inventory/circs/out', 'insights.ce.inventory.circs.outgoing')->name('inventory.circs.outgoing');
-        // MANAGEMENT
+        // MANAGEMENT INV
         Volt::route('/ce/manage', 'insights.ce.manage.index')->name('manage.index');
+        //MANAGEMENT CE MIXING
+        Volt::route('/ce/mixing/manage', 'insights.ce.mixing.manage.index')->name('mixing.manage.index');
+        Volt::route('/ce/mixing/manage/recipes', 'insights.ce.mixing.manage.recipes')->name('mixing.manage.recipes');
     });
 
+    // ===========================================//
+    // DEFAULT ROUTES
+    // ===========================================//
     Volt::route('/', 'insights.index')->name('insights');
 });
 

@@ -65,7 +65,7 @@ class InvCeQuery
     {
         $query = InvCeChemical::with([
             'inv_ce_location',
-            'inv_ce_stock',
+            'inv_ce_stocks',
             'inv_ce_area',
             'inv_ce_vendor',
         ]);
