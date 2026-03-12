@@ -175,6 +175,7 @@ new #[Layout("layouts.app")] class extends Component {
                     __("Durasi"),
                     __("Mulai"),
                     __("Kualitas"),
+                    __("Koreksi")
                 ];
 
                 $callback = function () use ($columns) {
@@ -207,6 +208,8 @@ new #[Layout("layouts.app")] class extends Component {
                                 $this->calculateDuration($metric->data),
                                 $this->getStartedAt($metric->data),
                                 $metric->t_mae <= 1.0 ? __("Lulus") : __("Gagal"),
+                                // koreksi
+                                $metric->is_auto ? __("Auto") : __("Manual"),
                             ]);
                         }
                     });
