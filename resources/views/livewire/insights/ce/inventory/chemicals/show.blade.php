@@ -19,6 +19,8 @@ new #[Layout("layouts.app")] class extends Component {
 
     public array $stock = [];
 
+    public array $stocks = [];
+
     public array $planning_areas = [];
 
     public function mount(): void
@@ -85,6 +87,20 @@ new #[Layout("layouts.app")] class extends Component {
                 ? array_values(array_filter($planningArea, fn($value) => filled($value)))
                 : [];
         }
+
+        // Store all stocks for the list
+        $this->stocks = $chemical->inv_ce_stocks->map(fn($s) => [
+            "id" => $s->id,
+            "quantity" => $s->quantity,
+            "unit_size" => $s->unit_size,
+            "unit_uom" => $s->unit_uom,
+            "lot_number" => $s->lot_number,
+            "expiry_date" => $s->expiry_date
+                ? Carbon::parse($s->expiry_date)->format("d M Y")
+                : null,
+            "status" => $s->status,
+            "updated_at" => $s->updated_at?->diffForHumans(),
+        ])->toArray();
     }
 }; ?>
 
@@ -179,7 +195,49 @@ new #[Layout("layouts.app")] class extends Component {
 
                 <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-6">
                     <div class="flex items-center justify-between">
-                        <div class="text-xs uppercase text-neutral-500">{{ __("Unit stok") }}</div>
+                        <div class="text-xs uppercase text-neutral-500">{{ __("Daftar unit stok") }}</div>
+                        <div class="text-xs text-neutral-500">{{ count($stocks) }} {{ __("item") }}</div>
+                    </div>
+
+                    @if (empty($stocks))
+                        <div class="py-8 text-neutral-500">{{ __("Belum ada data unit stok.") }}</div>
+                    @else
+                        <div class="mt-4 space-y-2">
+                            @foreach ($stocks as $item)
+                                <a
+                                    href="{{ route('insights.ce.inventory.chemicals.show', ['id' => $chemical['id'], 'stock_id' => $item['id']]) }}"
+                                    wire:navigate
+                                    class="block p-3 rounded-lg border transition-all {{ ($stock['id'] ?? 0) == $item['id'] ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600' }}"
+                                >
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="text-sm font-medium">
+                                                #{{ $item['id'] }}
+                                            </div>
+                                            <div class="text-xs text-neutral-500">
+                                                {{ $item['quantity'] . ' ' . ($chemical['uom'] ?? '') }} · {{ $item['lot_number'] ?: '-' }}
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            @if ($item['expiry_date'])
+                                                <span class="text-xs px-2 py-1 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                                                    {{ $item['expiry_date'] }}
+                                                </span>
+                                            @endif
+                                            <span class="text-xs px-2 py-1 rounded {{ $item['status'] === 'available' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300' }}">
+                                                {{ ucfirst($item['status'] ?? '-') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs uppercase text-neutral-500">{{ __("Detail unit stok") }}</div>
                         @if (! empty($stock))
                             <div class="text-xs text-neutral-500">#{{ $stock["id"] }}</div>
                         @endif

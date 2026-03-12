@@ -22,7 +22,8 @@ class InvCeMixingLog extends Model
      */
     public function recipe()
     {
-        return $this->belongsTo(InvCeRecipe::class, 'recipe_id');
+        // get the recipe with chemical and hardener details
+        return $this->belongsTo(InvCeRecipe::class, 'recipe_id')->with(['chemical', 'hardener']);
     }
 
     /**

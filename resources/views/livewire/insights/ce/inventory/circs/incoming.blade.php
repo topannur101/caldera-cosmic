@@ -10,6 +10,7 @@ use App\Models\InvCeAuth;
 
 new #[Layout("layouts.app")] class extends Component {
     public string $cookieKey = 'invce_incoming_auth';
+    public array $circs = [];
     public array $auth = [
         'status' => '',
         'rf_code' => '',
@@ -69,17 +70,26 @@ new #[Layout("layouts.app")] class extends Component {
         Cookie::queue($this->cookieKey, json_encode($payload), 60 * 24);
         $this->dispatch('rfid-result', ...$payload);
     }
+
+    public function apply(): void
+    {
+        // Process the circs data
+        // This is where you'd handle the circulation data
+    }
 }; ?>
 
-<div>
-    <h1>Halaman Incoming Chemical</h1>
-    <h1>Masuk Sebagai : <span x-text="auth && auth.status === 'found' ? auth.name : 'Guest'"></span></h1>
+<x-slot name="title">{{ __("Cari") . " — " . __("Inventaris") }}</x-slot>
 
+<x-slot name="header">
+    <x-nav-inventory-ce></x-nav-inventory-ce>
+</x-slot>
+
+<div class="py-5 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 gap-4">
     <div
         wire:ignore
         x-data="{
             storageKey: 'invce_last_rfid_code',
-            url: @js(config('rfid.ws_url')),
+            url: @js(config('rfid.ws_url_rfid')),
             ws: null,
             connected: false,
             error: '',
@@ -240,19 +250,124 @@ new #[Layout("layouts.app")] class extends Component {
                 RFID <span class="font-mono" x-text="auth.rf_code"></span> tidak terdaftar.
             </div>
         </template>
+
+        <div x-data="editorData()" x-init="editorInit()">
+            <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="icon-arrow-right-left mr-3"></i>{{ __('Sirkulasi saja') }}</h1>
+            <div class="flex gap-x-2">
+               <div class="px-2 my-auto">
+                  <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
+               </div>
+               <div class="btn-group">
+                  <x-secondary-button type="button" x-on:click="editorDownload"><i class="icon-download"></i></x-secondary-button>
+                  <x-secondary-button type="button" x-on:click="editorReset"><i class="icon-rotate-cw"></i></x-secondary-button>
+               </div>
+               <x-secondary-button type="button" x-on:click="$dispatch('open-modal', 'guide')">{{ __('Panduan') }}</x-secondary-button>
+               <x-secondary-button type="button" x-on:click="editorApply">
+                  <div class="relative">
+                     <span wire:loading.class="opacity-0" wire:target="apply"><i class="icon-circle-check mr-2"></i>{{ __('Terapkan') }}</span>
+                     <x-spinner wire:loading.class.remove="hidden" wire:target="apply" class="hidden sm mono"></x-spinner>                
+                  </div>                
+               </x-secondary-button>
+            </div>
+            </div>
+         <div class="bg-white dark:bg-neutral-800 shadow rounded-lg text-sm" id="editor-table" wire:ignore></div>
+      </div>
     </div>
 
-    <div class="p-4 border rounded bg-white">
-        <div class="font-semibold text-lg">Data Auth</div>
-        <div class="mt-2 grid gap-1 text-sm">
-            <div><span class="opacity-70">RFID: {{ $auth['rf_code'] ?? '-' }}</span></div>
-            <div><span class="opacity-70">Nama: {{ $auth['name'] ?? '-' }}</span></div>
-            <div><span class="opacity-70">Emp ID: {{ $auth['emp_id'] ?? '-' }}</span></div>
-            <div><span class="opacity-70">Active: {{ $auth['is_active'] ?? 0 === 1 ? 'Yes' : 'No' }}</span></div>
-            <div><span class="opacity-70">Area: {{ $auth['area'] ?? '-' }}</span></div>
-            <div><span class="opacity-70">Resource Type: {{ $auth['resource_type'] ?? '-' }}</span></div>
-            <div><span class="opacity-70">Resource ID: {{ $auth['resource_id'] ?? '-' }}</span></div>
-            <div><span class="opacity-70">Saved At: {{ $auth['saved_at'] ?? '-' }}</span></div>
-        </div>
-    </div>
 </div>
+
+@script
+<script type="module">   
+   Alpine.data('editorData', () => ({
+         table: null,
+         circs: @entangle('circs'),
+         circsDefault: null,
+         rowCount: 0,            
+         
+         editorInit() {
+            const columns = [
+               { title: 'item_id', field: 'item_id', width: 80 }, 
+               { title: 'item_code', field: 'item_code', width: 110 }, 
+               { title: 'curr', field: 'curr', width: 80},
+               { title: 'qty_relative', field: 'qty_relative', width: 100 },
+               { title: 'uom', field: 'uom', width: 80 },
+               { title: 'remarks', field: 'remarks', width: 200 }, 
+            ];
+            
+            this.circsDefault = this.circsDefault ? this.circsDefault : this.circs,
+
+            // Initialize Tabulator
+            this.table = new Tabulator("#editor-table", {
+               
+               data: this.circsDefault,
+               layout: "fitColumns",
+               columns: columns,
+               height: "calc(100vh - 19rem)",
+
+               //configure clipboard to allow copy and paste of range format data
+               clipboard: true,
+               clipboardCopyStyled:false,
+               clipboardCopyConfig:{
+                  rowHeaders:false,
+                  columnHeaders:false,
+               },
+               clipboardCopyRowRange:"range",
+               clipboardPasteParser:"range",
+               clipboardPasteAction:"replace",
+
+               rowHeader:{resizable: false, frozen: true, width:40, hozAlign:"center", formatter: "rownum", cssClass:"range-header-col", editor:false},
+               columnDefaults:{
+                  headerSort:false,
+                  headerHozAlign:"center",
+                  resizable:"header",
+                  editor: "input"
+               }
+            });      
+            
+            this.table.on("dataLoaded", (data) => {
+
+               if (data.length > 100) {
+                  $dispatch('open-modal', 'warning');
+               }
+
+               // Check if the last row exists and is empty (all properties are empty strings)
+               if (data.length > 0) {
+                  const lastRow = data[data.length - 1];
+                  const isLastRowEmpty = Object.values(lastRow).every(value => value === "");
+
+                  // If the last row is empty, remove it
+                  if (isLastRowEmpty) {
+                     data.pop(); // Remove the last row from the data array
+                     this.table.setData(data);
+                  }
+               }
+
+               this.rowCount = data.length; // Update the row count
+            });
+
+            this.table.on("dataChanged", (data) => {             
+               this.rowCount = data.length; // Update the row count
+            });
+            
+            document.addEventListener('editor-reset', event => {
+               this.table.destroy();
+               this.editorInit();
+            });
+         },
+         
+         editorApply() {
+            this.circs = this.table.getData();
+            $wire.apply();
+         },
+
+         editorReset() {
+            Livewire.navigate("{{ route('inventory.circs.bulk-operation.index') }}");
+         },
+
+         editorDownload() {
+            this.table.download("csv", "bulk_operation_circulations.csv"); 
+         },
+   }));
+</script>
+@endscript

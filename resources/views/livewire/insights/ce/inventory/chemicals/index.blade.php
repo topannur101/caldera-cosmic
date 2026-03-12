@@ -507,23 +507,7 @@ new #[Layout("layouts.app")] class extends Component {
                                     <td>{{ $chemical->inv_ce_vendor->name ?? '-' }}</td>
                                     <td class="w-[1%]">{{ $chemical->inv_ce_area->name ?? '-' }}</td>
                                 </tr>
-                                @if ($stockCount > 0)
-                                    @foreach ($chemical->inv_ce_stocks as $stock)
-                                        <tr class="text-nowrap text-xs text-neutral-400 dark:text-neutral-600 bg-neutral-50 dark:bg-neutral-900">
-                                            <td></td>
-                                            <td></td>
-                                            <td colspan="4" class="pl-6 italic">
-                                                {{ __("Lot") }}: {{ $stock->lot_number ?? "-" }}
-                                                @if($stock->expiry_date) · {{ __("Exp") }}: {{ $stock->expiry_date }} @endif
-                                                @if($stock->remarks) · {{ $stock->remarks }} @endif
-                                            </td>
-                                            <td class="w-[1%] text-center">{{ $stock->id }}</td>
-                                            <td>{{ $stock->quantity . " " . $stock->unit_uom }}</td>
-                                            <td>{{ $stock->unit_price ?? '-' }}</td>
-                                            <td>{{ $stock->status ?? '-' }}</td>
-                                        </tr>
-                                    @endforeach
-                                @endif
+
                             @endforeach
                         </table>
                     </div>
@@ -574,29 +558,6 @@ new #[Layout("layouts.app")] class extends Component {
                                         </div>
                                     </div>
                                 </a>
-                                @if ($stockCount > 0)
-                                    <div class="border-t border-neutral-100 dark:border-neutral-700 divide-y divide-neutral-100 dark:divide-neutral-700">
-                                        @foreach ($chemical->inv_ce_stocks as $stock)
-                                            <div class="flex items-center gap-2 px-4 py-2 text-xs text-neutral-500 dark:text-neutral-400">
-                                                <div class="flex-1 min-w-0 flex items-center gap-2">
-                                                    @if($stock->lot_number)
-                                                        <span class="font-mono bg-neutral-100 dark:bg-neutral-700 px-1 rounded">{{ $stock->lot_number }}</span>
-                                                    @endif
-                                                    @if($stock->expiry_date)
-                                                        <span class="text-neutral-400 dark:text-neutral-600"><i class="icon-calendar"></i> {{ $stock->expiry_date }}</span>
-                                                    @endif
-                                                    @if($stock->planning_area)
-                                                        <span>{{ $stock->planning_area }}</span>
-                                                    @endif
-                                                    @if($stock->status)
-                                                        <span class="px-1 rounded bg-neutral-100 dark:bg-neutral-700">{{ $stock->status }}</span>
-                                                    @endif
-                                                </div>
-                                                <div class="flex-shrink-0 font-semibold">{{ $stock->quantity . " " . $stock->unit_uom }}</div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
                             </div>
                         @endforeach
                     </div>

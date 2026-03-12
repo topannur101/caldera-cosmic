@@ -11,10 +11,10 @@
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.inventory.chemicals.index') }}" :active="request()->is('insight/ce/chemicals*')" wire:navigate>
                 <i class="icon-box text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Kimia ') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.inventory.circs.incoming') }}" :active="request()->is('insight/ce/circs/incoming*')" wire:navigate>
+            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.inventory.circs.incoming') }}" :active="request()->is('insight/ce/circs/in')" wire:navigate>
                 <i class="icon-folder-input text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Barang masuk ') }}</span>
             </x-nav-link>
-            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.inventory.circs.outgoing') }}" :active="request()->is('insight/ce/circs/outgoing*')" wire:navigate>
+            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.inventory.circs.outgoing') }}" :active="request()->is('insight/ce/circs/out')" wire:navigate>
                 <i class="icon-folder-output text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Barang keluar ') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.manage.index') }}" :active="request()->is('insight/ce/manage*')" wire:navigate>
