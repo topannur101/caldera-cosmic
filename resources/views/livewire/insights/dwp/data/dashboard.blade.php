@@ -65,6 +65,21 @@ new class extends Component {
         $this->totalOutStandart = $dataReads['not_standard_count'] ?? 0;
     }
 
+    private function getMedian(array $array)
+    {
+        if (empty($array)) return 0;
+        // Filter out non-numeric values
+        $numericArray = array_filter($array, 'is_numeric');
+        if (empty($numericArray)) return 0;
+
+        sort($numericArray);
+        $count = count($numericArray);
+        $middle = floor(($count - 1) / 2);
+        $median = ($count % 2) ? $numericArray[$middle] : ($numericArray[$middle] + $numericArray[$middle + 1]) / 2;
+
+        return round($median, 2);
+    }
+
     private function getDataLine($line=null)
     {
         $this->ipAddress = InsDwpDevice::whereJsonContains('config', [['line' => strtoupper($line)]])
@@ -320,6 +335,57 @@ new class extends Component {
         ];
     }
 
+    /**
+     * Repeat waveform values based on timestamps and duration
+     * Same logic as pressure.blade.php for consistent calculations
+     */
+    private function repeatWaveform(array $valuesRaw, array $timestampsRaw, int $duration): array {
+        $count = count($valuesRaw);
+        if ($count === 0 || count($timestampsRaw) !== $count) {
+            return [];
+        }
+        // Normalize timestamps to seconds from start
+        $startTs = (int)($timestampsRaw[0] / 1000);
+        $secValueMap = [];
+        $maxSec = 0;
+        for ($i = 0; $i < $count; $i++) {
+            $sec = (int)($timestampsRaw[$i] / 1000) - $startTs;
+            $secValueMap[$sec] = $valuesRaw[$i];
+            if ($sec > $maxSec) $maxSec = $sec;
+        }
+        // Build result array with repeated/held values
+        $result = [];
+        $lastValue = 0;
+        for ($sec = 0; $sec <= $maxSec; $sec++) {
+            if (isset($secValueMap[$sec])) {
+                $lastValue = $secValueMap[$sec];
+            }
+            $result[] = $lastValue;
+        }
+        // add 0 for lasting seconds up to duration
+        for ($sec = $maxSec + 1; $sec < $duration; $sec++) {
+            $result[] = 0;
+        }
+
+        // Ensure result has exactly $duration elements
+        if (count($result) < $duration) {
+            $result = array_pad($result, $duration, 0);
+        } elseif (count($result) > $duration) {
+            $result = array_slice($result, 0, $duration);
+        }
+
+        // Always set the last duration slot to zero so the chart ends at 0
+        if ($duration > 0) {
+            $result[$duration - 1] = 0;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get pressure reading stats - uses pv field to determine standard/not standard
+     * Matching pressure.blade.php generatePressureSummaryChart() logic
+     */
     public function getPressureReadingStats()
     {
         $machineConfigs = $this->getDataMachines($this->line);
@@ -333,38 +399,77 @@ new class extends Component {
             ];
         }
 
-        // Use std_error boolean array for much faster quality checking
         $query = InsDwpCount::whereIn('mechine', $machineNames)
-            ->select('std_error');
+            ->whereNotNull('pv')
+            ->select('pv', 'duration');
 
         if ($this->start_at && $this->end_at) {
             $start = Carbon::parse($this->start_at);
             $end = Carbon::parse($this->end_at)->endOfDay();
             $query->whereBetween('created_at', [$start, $end]);
         }
-
-        $standardCount = 0;
-        $notStandardCount = 0;
-
-        // Process records efficiently using boolean quality indicators
+        
+        // Count categories based on pressure reading values - matching pressure.blade.php logic
+        // Categories: Out Standard (<20), Warning (20-29), In Standard (30-45), High Pressure (>45)
+        $outStandardCount = 0;
+        $warningCount = 0;
+        $inStandardCount = 0;
+        $highPressureCount = 0;
+        
         foreach ($query->cursor() as $record) {
-            $stdError = json_decode($record->std_error, true);
+            // Parse the PV data
+            $arrayPv = is_string($record->pv) ? json_decode($record->pv, true) : $record->pv;
+            
+            if (!is_array($arrayPv)) {
+                continue;
+            }
+            
+            // Extract waveforms based on format - using repeatWaveform for consistency with pressure.blade.php
+            if (isset($arrayPv['waveforms']) && is_array($arrayPv['waveforms'])) {
+                $toeHeelArray = $this->repeatWaveform($arrayPv['waveforms'][0] ?? [], $arrayPv['timestamps'] ?? [], (int)($record->duration ?? 0));
+                $sideArray = $this->repeatWaveform($arrayPv['waveforms'][1] ?? [], $arrayPv['timestamps'] ?? [], (int)($record->duration ?? 0));
+            } elseif (isset($arrayPv[0]) && isset($arrayPv[1])) {
+                // Legacy format: direct array access
+                $toeHeelArray = $arrayPv[0];
+                $sideArray = $arrayPv[1];
+            } else {
+                continue;
+            }
 
-            if (is_array($stdError) && isset($stdError[0][0]) && isset($stdError[1][0])) {
-                // Both sensors good = standard
-                if ($stdError[0][0] == 1 && $stdError[1][0] == 1) {
-                    $standardCount++;
-                } else {
-                    // Any sensor bad = not standard
-                    $notStandardCount++;
-                }
+            // Skip if no data
+            if (empty($toeHeelArray) && empty($sideArray)) {
+                continue;
+            }
+
+            // Calculate median pressure for this record - matching pressure.blade.php generatePressureSummaryChart()
+            $allPressureValues = array_merge($toeHeelArray, $sideArray);
+            $medianPressure = $this->getMedian($allPressureValues);
+
+            // Categorize based on pressure value - matching pressure.blade.php generatePressureSummaryChart()
+            if ($medianPressure < 20) {
+                $outStandardCount++;
+            } elseif ($medianPressure < 30) {
+                $warningCount++;
+            } elseif ($medianPressure <= 45) {
+                $inStandardCount++;
+            } else {
+                $highPressureCount++;
             }
         }
-
+        
+        // Calculate total standard (In Standard) and not standard (all other categories)
+        $standardCount = $inStandardCount;
+        $notStandardCount = $outStandardCount + $warningCount + $highPressureCount;
+        
         return [
-            'total_count' => $standardCount + $notStandardCount,
+            'total_count' => $outStandardCount + $warningCount + $inStandardCount + $highPressureCount,
             'standard_count' => $standardCount,
             'not_standard_count' => $notStandardCount,
+            // Additional breakdown for debugging/display
+            'out_standard_count' => $outStandardCount,
+            'warning_count' => $warningCount,
+            'in_standard_count' => $inStandardCount,
+            'high_pressure_count' => $highPressureCount,
         ];
     }
 
