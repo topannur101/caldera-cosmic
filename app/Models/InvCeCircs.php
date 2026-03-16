@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class InvCeCirc extends Model
+class InvCeCircs extends Model
 {
     protected $table = 'inv_ce_circs';
     protected $fillable = ['inv_ce_stock_id', 'inv_ce_auth_id', 'actual_area', 'issued_quantity', 'type_circ', 'remarks'];

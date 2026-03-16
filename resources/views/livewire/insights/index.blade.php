@@ -368,7 +368,7 @@ new #[Layout("layouts.app")] class extends Component {
                             <a href="{{ route('insights.ce.inventory.index') }}" class="block">
                                 <div class="flex items-center">
                                     <div class="px-6 py-3">
-                                        <img src="/ins-ce.svg" class="w-12 h-12 dark:invert" />
+                                        <img src="/inv-chemical.svg" class="font-bold fs-5 w-12 h-12 text-neutral-900 dark:invert" />
                                     </div>
                                     <div class="grow">
                                         <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Chemical Inventory") }}</div>

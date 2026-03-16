@@ -6,11 +6,26 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use App\Models\User;
 use App\Models\InvCeAuth;
+use App\Models\InvCeCircs;
 
 
 new #[Layout("layouts.app")] class extends Component {
     public string $cookieKey = 'invce_incoming_auth';
-    public array $circs = [];
+    public array $circs = [
+        [
+           'inv_ce_chemical_id' => 0,
+           'chemical_code'      => '',
+           'quantity'           => 0,
+           'unit_size'          => 0,
+           'unit_uom'           => '',
+           'lot_number'         => '',
+           'unit_price'         => 0,
+           'expiry_date'        => '',
+           'planning_area'      => '',
+           'status'             => 'active',
+           'remarks'            => ''
+        ]
+    ];
     public array $auth = [
         'status' => '',
         'rf_code' => '',
@@ -74,11 +89,26 @@ new #[Layout("layouts.app")] class extends Component {
     public function apply(): void
     {
         // Process the circs data
-        // This is where you'd handle the circulation data
+        $circs = $this->circs;
+
+        // Process the auth data
+        $auth = $this->auth;
+
+        // Process the data
+        $data = [
+            'circs' => $circs,
+            'auth' => $auth,
+        ];
+
+        // Save the data to the database
+        $circ = InvCeCircs::create($data);
+
+        // Redirect to the show page
+        $this->redirectRoute('insights.ce.inventory.circs.show', ['circ' => $circ->id]);
     }
 }; ?>
 
-<x-slot name="title">{{ __("Cari") . " — " . __("Inventaris") }}</x-slot>
+<x-slot name="title">{{ __("Tambah Stok") . " — " . __("Inventaris CE") }}</x-slot>
 
 <x-slot name="header">
     <x-nav-inventory-ce></x-nav-inventory-ce>
@@ -253,7 +283,7 @@ new #[Layout("layouts.app")] class extends Component {
 
         <div x-data="editorData()" x-init="editorInit()">
             <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6 mb-8">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="icon-arrow-right-left mr-3"></i>{{ __('Sirkulasi saja') }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100"><i class="icon-plus mr-3"></i>{{ __('Tambah stok') }}</h1>
             <div class="flex gap-x-2">
                <div class="px-2 my-auto">
                   <span x-text="rowCount"></span><span class="">{{ ' ' . __('baris') }}</span>
@@ -287,15 +317,20 @@ new #[Layout("layouts.app")] class extends Component {
          
          editorInit() {
             const columns = [
-               { title: 'item_id', field: 'item_id', width: 80 }, 
-               { title: 'item_code', field: 'item_code', width: 110 }, 
-               { title: 'curr', field: 'curr', width: 80},
-               { title: 'qty_relative', field: 'qty_relative', width: 100 },
-               { title: 'uom', field: 'uom', width: 80 },
-               { title: 'remarks', field: 'remarks', width: 200 }, 
+               { title: 'chemical_id', field: 'inv_ce_chemical_id', width: 90 },
+               { title: 'chemical_code', field: 'chemical_code', width: 120 },
+               { title: 'quantity', field: 'quantity', width: 90 },
+               { title: 'unit_size', field: 'unit_size', width: 90 },
+               { title: 'unit_uom', field: 'unit_uom', width: 80 },
+               { title: 'lot_number', field: 'lot_number', width: 120 },
+               { title: 'unit_price', field: 'unit_price', width: 90 },
+               { title: 'expiry_date', field: 'expiry_date', width: 100 },
+               { title: 'planning_area', field: 'planning_area', width: 120 },
+               { title: 'status', field: 'status', width: 80 },
+               { title: 'remarks', field: 'remarks', width: 200 },
             ];
             
-            this.circsDefault = this.circsDefault ? this.circsDefault : this.circs,
+            this.circsDefault = this.circsDefault ? this.circsDefault : JSON.parse(JSON.stringify(this.circs));
 
             // Initialize Tabulator
             this.table = new Tabulator("#editor-table", {
@@ -304,6 +339,15 @@ new #[Layout("layouts.app")] class extends Component {
                layout: "fitColumns",
                columns: columns,
                height: "calc(100vh - 19rem)",
+
+               //enable range selection
+               selectableRange: 1,
+               selectableRangeColumns: true,
+               selectableRangeRows: true,
+               selectableRangeClearCells: true,
+
+               //change edit trigger mode to make cell navigation smoother
+               editTriggerEvent:"dblclick",
 
                //configure clipboard to allow copy and paste of range format data
                clipboard: true,
@@ -357,16 +401,17 @@ new #[Layout("layouts.app")] class extends Component {
          },
          
          editorApply() {
-            this.circs = this.table.getData();
+            const tableData = this.table.getData();
+             this.circs = JSON.parse(JSON.stringify(tableData));
             $wire.apply();
          },
 
          editorReset() {
-            Livewire.navigate("{{ route('inventory.circs.bulk-operation.index') }}");
+            Livewire.navigate("{{ route('insights.ce.inventory.circs.incoming') }}");
          },
 
          editorDownload() {
-            this.table.download("csv", "bulk_operation_circulations.csv"); 
+            this.table.download("csv", "bulk_add_stocks.csv"); 
          },
    }));
 </script>
