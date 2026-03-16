@@ -68,7 +68,7 @@ class InvCeQuery
             'inv_ce_stocks',
             'inv_ce_area',
             'inv_ce_vendor',
-        ]);
+        ])->where('category_chemical', 'single');
 
         $this->applyFilters($query);
         $this->applySorting($query);
