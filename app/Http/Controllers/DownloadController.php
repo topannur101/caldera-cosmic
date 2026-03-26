@@ -9,6 +9,7 @@ use App\Models\InsStcDLog;
 use App\Models\InvArea;
 use App\Models\InvCirc;
 use App\Models\InvItem;
+use App\Services\InsPpmExcelImportService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -933,5 +934,24 @@ class DownloadController extends Controller
             'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
             'Expires' => '0',
         ]);
+    }
+
+    /**
+     * Download PPM Process Import Template
+     */
+    public function insPpmProcessTemplate()
+    {
+        $service = new InsPpmExcelImportService();
+        $spreadsheet = $service->generateTemplate();
+        
+        $filename = 'ppm-process-import-template-' . date('Y-m-d') . '.xlsx';
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
+        exit;
     }
 }
