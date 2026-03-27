@@ -8,6 +8,7 @@ use App\Models\InsRtcMetric;
 use App\Models\InsRtcRecipe;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;  // ← TAMBAHAN: Import Cache
+use PhpMqtt\Client\MqttClient;
 use Livewire\Volt\Volt;
 
 Volt::route('/', 'home')->name('home');
@@ -356,6 +357,16 @@ Route::prefix('insights')->group(function () {
     });
 
     // ===========================================//
+    // PPM ROUTES
+    // ===========================================//
+    Route::name('insights.ppm.')->group(function () {
+        Volt::route('/ppm', 'insights.ppm.data.index')->name('data.index');
+        Volt::route('/ppm/data', 'insights.ppm.data.index')->name('data.index');
+        Volt::route('/ppm/manage', 'insights.ppm.manage.index')->name('manage.index');
+        Volt::route('/ppm/manage/processes', 'insights.ppm.manage.processes')->name('manage.processes');
+    });
+
+    // ===========================================//
     // DEFAULT ROUTES
     // ===========================================//
     Volt::route('/', 'insights.index')->name('insights');
@@ -372,6 +383,7 @@ Route::name('download.')->group(function () {
     Route::get('/download/ins-rtc-metrics', [DownloadController::class, 'insRtcMetrics'])->name('ins-rtc-metrics');
     Route::get('/download/ins-rtc-clumps', [DownloadController::class, 'insRtcClumps'])->name('ins-rtc-clumps');
     Route::get('/download/ins-ldc-hides', [DownloadController::class, 'insLdcHides'])->name('ins-ldc-hides');
+    Route::get('/download/ins-ppm-process-template', [DownloadController::class, 'insPpmProcessTemplate'])->name('ins-ppm-process-template');
 });
 
 // All routes that needs to be authenticated
