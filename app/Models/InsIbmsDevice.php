@@ -19,4 +19,8 @@ class InsIbmsDevice extends Model
         'config' => 'array',
         'is_active' => 'boolean',
     ];
+
+
+    // Scope to get only active devices
+    public function scopeActive($query){return $query->where('is_active', true);}
 }
