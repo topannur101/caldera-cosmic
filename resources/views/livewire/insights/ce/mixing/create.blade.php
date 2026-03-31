@@ -335,6 +335,16 @@ class extends Component
         $this->clearChemicalFieldsRight();
     }
 
+    public function setAllActualWeights(float|string $weight): void
+    {
+        $value = number_format((float) $weight, 2, '.', '');
+
+        $this->weight_actual_left_a = $value;
+        $this->weight_actual_left_b = $value;
+        $this->weight_actual_right_a = $value;
+        $this->weight_actual_right_b = $value;
+    }
+
     public function submitForm(): void
     {
         if (! $this->isAuthenticated) {
@@ -404,157 +414,266 @@ class extends Component
 
 <div class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200 gap-4">
     <div class="p-0 sm:p-1 mb-6">
-        <!-- RFID Status Alert -->
-        @if($rfidError)
-        <div class="mb-4 p-4 border rounded bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200">
-            {{ $rfidError }}
-        </div>
-        @endif
-
-        <div
-            x-data="{
-                auth: null,
-                initFromCookie() {
-                    try {
-                        const raw = document.cookie
-                            .split('; ')
-                            .find(r => r.startsWith('{{ $cookieKey }}='))
-                            ?.split('=').slice(1).join('=');
-                        if (raw) this.auth = JSON.parse(decodeURIComponent(raw));
-                    } catch (_) {}
-                },
-            }"
-            x-init="initFromCookie()"
-            @rfid-result.window="auth = $event.detail"
-        >
-            <template x-if="auth && auth.status === 'found'">
-                <div class="mb-4 p-4 border rounded bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200">
-                    RFID <span class="font-mono" x-text="auth.rf_code"></span> - <span x-text="auth.name"></span> (Authorized)
-                </div>
-            </template>
-            <template x-if="auth && auth.status === 'not_found'">
-                <div class="mb-4 p-4 border rounded bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200">
-                    RFID <span class="font-mono" x-text="auth.rf_code"></span> - Tidak terdaftar
-                </div>
-            </template>
-        </div>
-
-        <div
-            wire:ignore
-            x-data="{
-                storageKey: 'invce_mixing_last_rfid',
-                url: @js(config('rfid.ws_url_rfid')),
-                ws: null,
-                connected: false,
-                error: '',
-                lastRawMessage: '',
-                code: '',
-                lastProcessedCode: '',
-                lastProcessedAt: 0,
-                wireDebounceTimer: null,
-                reconnectAttempt: 0,
-                reconnectTimer: null,
-
-                loadSavedCode() {
-                    try {
-                        const saved = localStorage.getItem(this.storageKey);
-                        if (saved) {
-                            this.code = String(saved).trim();
-                            if (typeof $wire !== 'undefined') $wire.searchTTCode(this.code);
-                        }
-                    } catch (_) {}
-                },
-
-                saveCode(code) {
-                    try { localStorage.setItem(this.storageKey, code); } catch (_) {}
-                },
-
-                connect() {
-                    if (!this.url) {
-                        this.setDisconnected('RFID_WS_URL is empty');
-                        return;
-                    }
-                    if (window.location?.protocol === 'https:' && this.url.startsWith('ws://')) {
-                        this.setDisconnected('Page is HTTPS, WebSocket must be WSS');
-                        return;
-                    }
-                    try {
-                        this.ws = new WebSocket(this.url);
-                    } catch (e) {
-                        this.setDisconnected(e?.message ?? 'Failed to create WebSocket');
-                        this.scheduleReconnect();
-                        return;
-                    }
-
-                    this.ws.onopen = () => {
-                        this.reconnectAttempt = 0;
-                        this.connected = true;
-                        this.error = '';
-                    };
-
-                    this.ws.onmessage = (event) => {
-                        const raw = typeof event?.data === 'string' ? event.data : '';
-                        this.lastRawMessage = raw;
-                        let payload = raw;
-                        if (raw && (raw.startsWith('{') || raw.startsWith('['))) {
-                            try { payload = JSON.parse(raw); } catch (_) {}
-                        }
-                        let code = '';
-                        if (typeof payload === 'string') {
-                            code = payload;
-                        } else if (payload && typeof payload === 'object') {
-                            code = payload.data ?? payload.code ?? payload.tag ?? payload.uid ?? '';
-                            if (code === '' && typeof payload.message === 'string') code = payload.message;
-                        }
-                        code = String(code ?? '').replace(/[\x00-\x1F\x7F]/g, '').trim();
-                        if (code !== '') {
-                            const now = Date.now();
-                            if (code === this.lastProcessedCode && (now - this.lastProcessedAt) < 800) return;
-                            this.lastProcessedCode = code;
-                            this.lastProcessedAt = now;
-                            this.code = code;
-                            this.saveCode(code);
+        <div class="bg-white dark:bg-neutral-800 shadow rounded-lg p-4 mb-4">
+            <div class="flex flex-wrap items-center gap-3 text-sm">
+                <div
+                    x-data="{
+                        auth: null,
+                        initFromCookie() {
                             try {
-                                if (typeof $wire !== 'undefined') {
-                                    if (this.wireDebounceTimer) clearTimeout(this.wireDebounceTimer);
-                                    this.wireDebounceTimer = setTimeout(() => {
-                                        $wire.searchTTCode(code);
-                                    }, 150);
+                                const raw = document.cookie
+                                    .split('; ')
+                                    .find(r => r.startsWith('{{ $cookieKey }}='))
+                                    ?.split('=').slice(1).join('=');
+                                if (raw) this.auth = JSON.parse(decodeURIComponent(raw));
+                            } catch (_) {}
+                        },
+                    }"
+                    x-init="initFromCookie()"
+                    @rfid-result.window="auth = $event.detail"
+                    class="flex items-center gap-2"
+                >
+                    <span class="text-neutral-500">RFID Auth:</span>
+                    <span
+                        class="font-medium"
+                        :class="{
+                            'text-green-600 dark:text-green-400': auth && auth.status === 'found',
+                            'text-red-600 dark:text-red-400': auth && auth.status === 'not_found',
+                            'text-neutral-500': !auth || !auth.status,
+                        }"
+                        x-text="auth && auth.status === 'found'
+                            ? `${auth.name} (${auth.rf_code})`
+                            : auth && auth.status === 'not_found'
+                                ? `RFID ${auth.rf_code} not registered`
+                                : 'Waiting card'"
+                    ></span>
+                </div>
+
+                <span class="hidden sm:inline text-neutral-300 dark:text-neutral-600">|</span>
+
+                <div
+                    wire:ignore
+                    x-data="{
+                        storageKey: 'invce_mixing_last_rfid',
+                        url: @js(config('rfid.ws_url_rfid')),
+                        ws: null,
+                        connected: false,
+                        error: '',
+                        lastRawMessage: '',
+                        code: '',
+                        lastProcessedCode: '',
+                        lastProcessedAt: 0,
+                        wireDebounceTimer: null,
+                        reconnectAttempt: 0,
+                        reconnectTimer: null,
+
+                        loadSavedCode() {
+                            try {
+                                const saved = localStorage.getItem(this.storageKey);
+                                if (saved) {
+                                    this.code = String(saved).trim();
+                                    if (typeof $wire !== 'undefined') $wire.searchTTCode(this.code);
                                 }
                             } catch (_) {}
-                        }
-                    };
+                        },
 
-                    this.ws.onerror = () => {
-                        this.setDisconnected('WebSocket error');
-                    };
+                        saveCode(code) {
+                            try { localStorage.setItem(this.storageKey, code); } catch (_) {}
+                        },
 
-                    this.ws.onclose = (evt) => {
-                        const reason = evt?.reason ? `Disconnected: ${evt.reason}` : 'Disconnected';
-                        this.setDisconnected(reason);
-                        this.scheduleReconnect();
-                    };
-                },
+                        connect() {
+                            if (!this.url) {
+                                this.setDisconnected('RFID_WS_URL is empty');
+                                return;
+                            }
+                            if (window.location?.protocol === 'https:' && this.url.startsWith('ws://')) {
+                                this.setDisconnected('Page is HTTPS, WebSocket must be WSS');
+                                return;
+                            }
+                            try {
+                                this.ws = new WebSocket(this.url);
+                            } catch (e) {
+                                this.setDisconnected(e?.message ?? 'Failed to create WebSocket');
+                                this.scheduleReconnect();
+                                return;
+                            }
 
-                setDisconnected(message) {
-                    this.connected = false;
-                    if (message) this.error = String(message);
-                },
+                            this.ws.onopen = () => {
+                                this.reconnectAttempt = 0;
+                                this.connected = true;
+                                this.error = '';
+                            };
 
-                scheduleReconnect() {
-                    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-                    const delay = Math.min(10000, 1000 * Math.pow(2, this.reconnectAttempt++));
-                    this.reconnectTimer = setTimeout(() => this.connect(), delay);
-                },
-            }"
-            x-init="connect(); $watch('code', value => { if(value) loadSavedCode() })"
-            class="mb-4"
-        >
-            <div class="flex items-center gap-2 text-sm">
-                <span>RFID:</span>
-                <span :class="connected ? 'text-green-500' : 'text-red-500'" x-text="connected ? 'Connected' : 'Not connected'"></span>
-                <span class="text-xs opacity-70" x-show="url">(<span x-text="url"></span>)</span>
-                <span x-show="error" class="text-red-500 text-xs" x-text="error"></span>
+                            this.ws.onmessage = (event) => {
+                                const raw = typeof event?.data === 'string' ? event.data : '';
+                                this.lastRawMessage = raw;
+                                let payload = raw;
+                                if (raw && (raw.startsWith('{') || raw.startsWith('['))) {
+                                    try { payload = JSON.parse(raw); } catch (_) {}
+                                }
+                                let code = '';
+                                if (typeof payload === 'string') {
+                                    code = payload;
+                                } else if (payload && typeof payload === 'object') {
+                                    code = payload.data ?? payload.code ?? payload.tag ?? payload.uid ?? '';
+                                    if (code === '' && typeof payload.message === 'string') code = payload.message;
+                                }
+                                code = String(code ?? '').replace(/[\x00-\x1F\x7F]/g, '').trim();
+                                if (code !== '') {
+                                    const now = Date.now();
+                                    if (code === this.lastProcessedCode && (now - this.lastProcessedAt) < 800) return;
+                                    this.lastProcessedCode = code;
+                                    this.lastProcessedAt = now;
+                                    this.code = code;
+                                    this.saveCode(code);
+                                    try {
+                                        if (typeof $wire !== 'undefined') {
+                                            if (this.wireDebounceTimer) clearTimeout(this.wireDebounceTimer);
+                                            this.wireDebounceTimer = setTimeout(() => {
+                                                $wire.searchTTCode(code);
+                                            }, 150);
+                                        }
+                                    } catch (_) {}
+                                }
+                            };
+
+                            this.ws.onerror = () => {
+                                this.setDisconnected('WebSocket error');
+                            };
+
+                            this.ws.onclose = (evt) => {
+                                const reason = evt?.reason ? `Disconnected: ${evt.reason}` : 'Disconnected';
+                                this.setDisconnected(reason);
+                                this.scheduleReconnect();
+                            };
+                        },
+
+                        setDisconnected(message) {
+                            this.connected = false;
+                            if (message) this.error = String(message);
+                        },
+
+                        scheduleReconnect() {
+                            if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+                            const delay = Math.min(10000, 1000 * Math.pow(2, this.reconnectAttempt++));
+                            this.reconnectTimer = setTimeout(() => this.connect(), delay);
+                        },
+                    }"
+                    x-init="connect(); $watch('code', value => { if(value) loadSavedCode() })"
+                    class="flex items-center gap-2"
+                >
+                    <span class="text-neutral-500">RFID WS:</span>
+                    <span :class="connected ? 'text-green-500 font-medium' : 'text-red-500 font-medium'" x-text="connected ? 'Connected' : 'Disconnected'"></span>
+                </div>
+
+                <span class="hidden sm:inline text-neutral-300 dark:text-neutral-600">|</span>
+
+                <div
+                    wire:ignore
+                    x-data="{
+                        url: 'ws://127.0.0.1:8767/',
+                        ws: null,
+                        connected: false,
+                        error: '',
+                        reconnectAttempt: 0,
+                        reconnectTimer: null,
+
+                        setConnected() {
+                            this.connected = true;
+                            this.error = '';
+                            this.reconnectAttempt = 0;
+                        },
+
+                        setDisconnected(message) {
+                            this.connected = false;
+                            if (message) this.error = String(message);
+                        },
+
+                        syncWeightField(field, value) {
+                            if (typeof $wire !== 'undefined') {
+                                $wire.set(field, value);
+                            }
+
+                            const input = document.getElementById(field);
+                            if (input) {
+                                input.value = value;
+                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                        },
+
+                        showWeightOnForm(berat) {
+                            if (!Number.isNaN(berat)) {
+                                const value = Number(berat).toFixed(2);
+
+                                this.syncWeightField('weight_actual_left_a', value);
+                                this.syncWeightField('weight_actual_left_b', value);
+                                this.syncWeightField('weight_actual_right_a', value);
+                                this.syncWeightField('weight_actual_right_b', value);
+                            }
+                        },
+
+                        handleWeightMessage(raw) {
+                            const idMatch = raw.match(/\[ID:(\d+)\]/);
+                            const beratMatch = raw.match(/Berat:\s*([\d.]+)/);
+
+                            if (idMatch && beratMatch && idMatch[1] === '2') {
+                                this.showWeightOnForm(parseFloat(beratMatch[1]));
+                            }
+                        },
+
+                        connect() {
+                            if (!this.url) {
+                                this.setDisconnected('Weight WS URL is empty');
+                                return;
+                            }
+                            if (window.location?.protocol === 'https:' && this.url.startsWith('ws://')) {
+                                this.setDisconnected('Page is HTTPS, WebSocket must be WSS');
+                                return;
+                            }
+                            try {
+                                this.ws = new WebSocket(this.url);
+                            } catch (e) {
+                                this.setDisconnected(e?.message ?? 'Failed to create WebSocket');
+                                this.scheduleReconnect();
+                                return;
+                            }
+
+                            this.ws.onopen = () => {
+                                this.setConnected();
+                            };
+
+                            this.ws.onmessage = (event) => {
+                                const raw = typeof event?.data === 'string' ? event.data : '';
+                                this.handleWeightMessage(raw);
+                            };
+
+                            this.ws.onerror = () => {
+                                this.setDisconnected('WebSocket error');
+                            };
+
+                            this.ws.onclose = (evt) => {
+                                const reason = evt?.reason ? `Disconnected: ${evt.reason}` : 'Disconnected';
+                                this.setDisconnected(reason);
+                                this.scheduleReconnect();
+                            };
+                        },
+
+                        scheduleReconnect() {
+                            if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+                            const delay = Math.min(10000, 1000 * Math.pow(2, this.reconnectAttempt++));
+                            this.reconnectTimer = setTimeout(() => this.connect(), delay);
+                        },
+                    }"
+                    x-init="connect()"
+                    class="flex items-center gap-2"
+                >
+                    <span class="text-neutral-500">Weight WS:</span>
+                    <span :class="connected ? 'text-green-500 font-medium' : 'text-red-500 font-medium'" x-text="connected ? 'Connected' : 'Disconnected'"></span>
+                </div>
+
+                @if($rfidError)
+                    <span class="text-red-500 text-xs">{{ $rfidError }}</span>
+                @endif
             </div>
         </div>
 
@@ -669,7 +788,7 @@ class extends Component
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (g)") }}</label>
-                        <input type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input id="weight_actual_left_a" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
                             wire:model="weight_actual_left_a">
                     </div>
                 </div>
@@ -714,7 +833,7 @@ class extends Component
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (g)") }}</label>
-                        <input type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input id="weight_actual_left_b" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
                             wire:model="weight_actual_left_b">
                     </div>
                     <div>
@@ -823,7 +942,7 @@ class extends Component
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (g)") }}</label>
-                        <input type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input id="weight_actual_right_a" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
                             wire:model="weight_actual_right_a">
                     </div>
                 </div>
@@ -868,7 +987,7 @@ class extends Component
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (g)") }}</label>
-                        <input type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
+                        <input id="weight_actual_right_b" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500"
                             wire:model="weight_actual_right_b">
                     </div>
                     <div>
