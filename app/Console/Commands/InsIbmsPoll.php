@@ -6,14 +6,8 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use ModbusTcpClient\Composer\Read\ReadRegistersBuilder;
 use ModbusTcpClient\Network\NonBlockingClient;
-use ModbusTcpClient\Network\BinaryStreamConnection;
-use ModbusTcpClient\Packet\ModbusFunction\WriteMultipleRegistersRequest;
-use ModbusTcpClient\Packet\ModbusFunction\WriteSingleCoilRequest;
-use ModbusTcpClient\Packet\ModbusFunction\WriteSingleRegisterRequest;
-use ModbusTcpClient\Packet\ResponseFactory;
 use App\Models\InsIbmsDevice;
 use App\Models\InsIbmsCount;
-use ModbusTcpClient\Utils\Types;
 
 class InsIbmsPoll extends Command
 {
@@ -96,7 +90,6 @@ class InsIbmsPoll extends Command
                 if ($this->option('v')) {
                     $this->comment("→ Polling {$device->name} ({$device->ip_address})");
                 }
-
                 try {
                     $readings = $this->pollDevice($config);
                     $cycleReadings += $readings;
@@ -153,10 +146,11 @@ class InsIbmsPoll extends Command
         
         try {
             $batchCount = $this->readBatchCount($config);
-
+            $group      = $this->readInputFunction($config, 998, 'group'); // Example of reading a group identifier if needed
+            $shiftGroup = $this->getShiftGroup($group);
             foreach ($config['list_machine'] as $machine) {
                 $machineName = $machine['name'] ?? 'unknown_machine';
-                $machineKey = $deviceKey . '|' . $machineName;
+                $machineKey  = $deviceKey . '|' . $machineName;
 
                 if (!isset($machine['addr_timer'])) {
                     if ($this->option('d')) {
@@ -165,7 +159,8 @@ class InsIbmsPoll extends Command
                     continue;
                 }
 
-                $duration = (int) $this->readInputFunction($config, $machine["addr_timer"], "duration");
+                $durationAddress = (int) $machine['addr_timer'];
+                $duration = (int) $this->readInputFunction($config, $durationAddress, "duration");
 
                 if (isset($machine['addr_std_timer']) || isset($config['addr_std_timer'])) {
                     $stdAddr = $machine['addr_std_timer'] ?? $config['addr_std_timer'];
@@ -174,7 +169,7 @@ class InsIbmsPoll extends Command
                     $stdDurationRaw = 100;
                 }
 
-                $stdDuration = $this->hmiToTotalMinutes($stdDurationRaw) / 60;
+                $stdDuration = (int) ($this->hmiToTotalMinutes($stdDurationRaw) / 60);
                 $previousDuration = $this->lastDurationValues[$machineKey] ?? null;
 
                 $isDurationCounting = $previousDuration !== null && $duration > $previousDuration;
@@ -188,7 +183,7 @@ class InsIbmsPoll extends Command
                 }
 
                 if ($isDurationStopped && $wasCountingBefore) {
-                    $this->saveBatchCount($config, $machine, $duration, $batchCount, $stdDuration);
+                    $this->saveBatchCount($config, $machine, $duration, $batchCount, $stdDuration, $shiftGroup);
                     $readingsCount++;
                     $this->durationWasCounting[$machineKey] = false;
 
@@ -207,19 +202,30 @@ class InsIbmsPoll extends Command
         return $readingsCount;
     }
 
-    private function saveBatchCount(array $config, array $machine, int $durationRaw, ?int $batchCount, float $stdDuration): void
+    private function getShiftGroup($group){
+        return match ($group) {
+            65 => 'A',
+            66 => 'B',
+            67 => 'C',
+            19540 => 'TL',
+            default => 'Unknown',
+        };
+    }
+
+    private function saveBatchCount(array $config, array $machine, int $durationRaw, ?int $batchCount, float $stdDuration, string $shiftGroup): void
     {
         $durationSeconds = $this->normalizeDurationToSeconds($durationRaw, $machine, $config);
         $durationTime = $this->formatSecondsToTime($durationSeconds);
         $status = $this->resolveBatchStatus($durationSeconds, $machine, $config, $stdDuration);
-        $shift = $machine['shift'] ?? ($config['shift'] ?? data_get($config, 'plant'));
 
         $data = [
             'name' => (string) ($machine['name'] ?? 'unknown_machine'),
             'status' => $status,
             'duration_raw' => $durationRaw,
             'duration_seconds' => $durationSeconds,
+            'duration_minutes' => round($durationSeconds / 60, 2),
             'ip_address' => $config['ip_address'] ?? null,
+            'std_duration' => $stdDuration,
         ];
 
         if ($batchCount !== null) {
@@ -227,7 +233,7 @@ class InsIbmsPoll extends Command
         }
 
         InsIbmsCount::create([
-            'shift' => $shift ? (string) $shift : "A",
+            'shift' => $shiftGroup ?? "A",
             'duration' => $durationTime,
             'data' => $data,
         ]);
@@ -295,7 +301,11 @@ class InsIbmsPoll extends Command
             return 'on_time';
         }
 
-        return 'too_late';
+        if ($durationMinutes > $standardMinutes) {
+            return 'on_time';
+        }
+
+        return 'unknown'; // Default to 'unknown' for durations longer than standard
     }
     
     // READ INPUT FUNCTION
@@ -405,4 +415,5 @@ class InsIbmsPoll extends Command
             $this->comment("Device {$deviceName} stats: {$successRate}% success rate ({$stats['success_count']}/{$total})");
         }
     }
+
 }

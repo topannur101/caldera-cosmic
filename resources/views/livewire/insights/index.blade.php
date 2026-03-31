@@ -11,6 +11,7 @@ use App\Models\InsClmRecord;
 use App\Models\InsDwpCount;
 use App\Models\InsBpmCount;
 use App\Models\InsPhDosingCount;
+use App\Models\InsIbmsCount;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -28,6 +29,7 @@ new #[Layout("layouts.app")] class extends Component {
     public int $dwp_lines_recent = 0;
     public int $bpm_lines_recent = 0;
     public int $ph_data_recent = 0;
+    public int $ibms_lines_recent = 0;
     // Climate data properties
     public float|null $temperature_latest = null;
     public float|null $humidity_latest = null;
@@ -180,6 +182,16 @@ new #[Layout("layouts.app")] class extends Component {
         }
     }
 
+    private function getCachedIbmsLines(): int
+    {
+        return Cache::remember("ibms_lines_recent", now()->addMinutes(10), function () {
+            $timeWindow = Carbon::now()->subMinutes(1);
+            return InsIbmsCount::where("updated_at", ">=", $timeWindow)
+                ->distinct("shift")
+                ->count("shift");
+        });
+    }
+
     public function calculateMetrics()
     {
         $this->stc_machines_count = $this->getCachedStcMCount();
@@ -191,6 +203,7 @@ new #[Layout("layouts.app")] class extends Component {
         $this->dwp_lines_recent = $this->getCachedDwpLines();
         $this->bpm_lines_recent = $this->getCachedBpmLines();
         $this->ph_data_recent = $this->getCachedPhData();
+        $this->ibms_lines_recent = $this->getCachedIbmsLines();
         // Get fresh climate data (no caching)
         $this->getLatestClimateData();
     }
@@ -228,6 +241,7 @@ new #[Layout("layouts.app")] class extends Component {
         Cache::forget("bpm_lines_recent");
         Cache::forget("climate_data_ip");
         Cache::forget("ph_data_recent");
+        Cache::forget("ibms_lines_recent");
         $this->isLoading = true;
         $this->loadMetrics();
     }
@@ -355,8 +369,8 @@ new #[Layout("layouts.app")] class extends Component {
                         </a>
                     </div>
                 </div>
-
-                <div>
+                <!-- ce room not able to show the menu -->
+                <!-- <div>
                     <div x-data="{ open: true }" id="accordion-collapse" data-accordion="collapse" class="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-lg divide-y divide-neutral-200 dark:text-white dark:divide-neutral-700">
                         <h2 id="accordion-collapse-heading-1 bg-white">
                             <button type="button" class="bg-white flex items-center justify-between w-full p-4 font-medium text-left text-neutral-900 bg-neutral-100 hover:bg-neutral-200 focus:ring-4 focus:ring-neutral-200 dark:focus:ring-neutral-800 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700" data-accordion-target="#accordion-collapse-body-1" aria-expanded="true" aria-controls="accordion-collapse-body-1" @click="open = !open">
@@ -397,7 +411,7 @@ new #[Layout("layouts.app")] class extends Component {
                             </div>
                         </div>
                     </div>                  
-                </div>
+                </div> -->
             </div>
             <div class="flex flex-col gap-6">
                 <div>
@@ -463,7 +477,8 @@ new #[Layout("layouts.app")] class extends Component {
                                     <div class="text-lg font-medium text-neutral-900 dark:text-neutral-100">{{ __("Pemantauan IP Blending") }}</div>
                                     <div class="flex flex-col gap-y-2 text-neutral-600 dark:text-neutral-400">
                                         <div class="flex items-center gap-x-2 text-xs uppercase text-neutral-500">
-                                            <div>System under construction</div>
+                                            <div class="w-2 h-2 {{ $ibms_lines_recent > 0 ? "bg-green-500" : "bg-red-500" }} rounded-full"></div>
+                                            <div>{{ $ibms_lines_recent > 0 ? $ibms_lines_recent . " " . __("line ") : __("luring") }}</div>
                                         </div>
                                     </div>
                                 </div>

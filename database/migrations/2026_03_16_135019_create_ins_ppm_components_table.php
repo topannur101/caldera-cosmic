@@ -15,13 +15,6 @@ return new class extends Migration
             $table->id();
             $table->integer('product_id');
             $table->string('part_name')->nullable();
-            $table->string('base_part_name')->nullable();
-            $table->string('description')->nullable();
-            $table->string('material_number')->nullable();
-            $table->string('mcs_number')->nullable();
-            $table->string('vendor_type')->nullable();
-            $table->string('hera_hardness')->nullable();
-            $table->json('size_distribution')->nullable();
             $table->timestamps();
         });
     }

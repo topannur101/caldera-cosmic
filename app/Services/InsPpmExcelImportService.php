@@ -170,14 +170,19 @@ class InsPpmExcelImportService
         $highestColumn = $sheet->getHighestColumn();
         $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
 
-        // Check if this is the new flat template format
-        // New format has "Product Code *" in row 2, column B
+        // Check if this is the new/flat template format
         $isNewFormat = false;
         for ($row = 1; $row <= min(10, $highestRow); $row++) {
-            for ($col = 1; $col <= min(5, $highestColumnIndex); $col++) {
+            for ($col = 1; $col <= min(6, $highestColumnIndex); $col++) {
                 $cellValue = $this->getCellValue($this->getCell($sheet, $col, $row));
-                if (strpos($cellValue ?? '', 'Product Code *') !== false || 
-                    strpos($cellValue ?? '', 'Part Name *') !== false) {
+                $normalized = strtoupper(trim((string) $cellValue));
+
+                if (
+                    strpos($normalized, 'PRODUCT INFORMATION') !== false ||
+                    strpos($normalized, 'PROCESS STEPS') !== false ||
+                    strpos($normalized, 'PRODUCT CODE') !== false ||
+                    strpos($normalized, 'PART NAME') !== false
+                ) {
                     $isNewFormat = true;
                     break 2;
                 }
@@ -340,24 +345,34 @@ class InsPpmExcelImportService
 
         // Parse product data
         if ($productHeaderRow) {
-            $productData = $this->parseRowAsArray($sheet, $productHeaderRow, [
-                'no' => 'A',
-                'product_code' => 'B',
-                'dev_style' => 'C',
-                'color_way' => 'D',
-                'production_date' => 'E',
-            ]);
-            
             // Find first data row
             for ($row = $productHeaderRow + 1; $row <= $highestRow; $row++) {
                 $productCode = $this->getCellValue($this->getCell($sheet, 2, $row));
                 if (!empty(trim($productCode))) {
+                    $partName = $this->getCellValue($this->getCell($sheet, 4, $row));
+
                     $result['product'] = [
                         'product_code' => $productCode,
                         'dev_style' => $this->getCellValue($this->getCell($sheet, 3, $row)) ?? '',
-                        'color_way' => $this->getCellValue($this->getCell($sheet, 4, $row)) ?? '',
-                        'production_date' => $this->parseDate($this->getCellValue($this->getCell($sheet, 5, $row))),
+                        'color_way' => '',
+                        'production_date' => null,
                     ];
+
+                    // For compact template, part name is provided in PRODUCT INFORMATION row.
+                    if (!empty(trim((string) $partName))) {
+                        $result['components'][] = [
+                            'part_name' => $partName,
+                            'base_part_name' => '',
+                            'description' => '',
+                            'material_number' => '',
+                            'material_name' => '',
+                            'mcs_number' => '',
+                            'vendor_type' => '',
+                            'hera_hardness' => '',
+                            'processes' => [],
+                        ];
+                    }
+
                     break;
                 }
             }
@@ -385,7 +400,7 @@ class InsPpmExcelImportService
             }
         }
 
-        // Parse process steps
+        // Parse process steps for component section template
         if ($processHeaderRow && !empty($result['components'])) {
             for ($row = $processHeaderRow + 1; $row <= $highestRow; $row++) {
                 $stepNumber = $this->getCellValue($this->getCell($sheet, 2, $row));
@@ -408,6 +423,50 @@ class InsPpmExcelImportService
                     ];
                     $result['components'][0]['processes'][] = $process;
                 }
+            }
+        }
+
+        // If there is PROCESS STEPS but no component section exists, build one from PRODUCT INFORMATION's part name
+        if ($processHeaderRow && empty($result['components'])) {
+            $fallbackPartName = null;
+            if ($productHeaderRow) {
+                $fallbackPartName = $this->getCellValue($this->getCell($sheet, 4, $productHeaderRow + 1));
+            }
+
+            $result['components'][] = [
+                'part_name' => !empty(trim((string) $fallbackPartName)) ? $fallbackPartName : 'Default Part',
+                'base_part_name' => '',
+                'description' => '',
+                'material_number' => '',
+                'material_name' => '',
+                'mcs_number' => '',
+                'vendor_type' => '',
+                'hera_hardness' => '',
+                'processes' => [],
+            ];
+
+            for ($row = $processHeaderRow + 1; $row <= $highestRow; $row++) {
+                $stepNumber = $this->getCellValue($this->getCell($sheet, 2, $row));
+                $processType = $this->getCellValue($this->getCell($sheet, 3, $row));
+
+                if (empty(trim((string) $stepNumber)) && empty(trim((string) $processType))) {
+                    continue;
+                }
+
+                $result['components'][0]['processes'][] = [
+                    'step_number' => $stepNumber ?? count($result['components'][0]['processes']) + 1,
+                    'process_type' => $processType ?? '',
+                    'operation' => $this->getCellValue($this->getCell($sheet, 4, $row)) ?? '',
+                    'color_code' => $this->getCellValue($this->getCell($sheet, 5, $row)) ?? '',
+                    'chemical' => $this->getCellValue($this->getCell($sheet, 6, $row)) ?? '',
+                    'hardener_code' => $this->getCellValue($this->getCell($sheet, 7, $row)) ?? '',
+                    'temperature_c' => $this->getCellValue($this->getCell($sheet, 8, $row)) ?? '',
+                    'wipes_count' => $this->getCellValue($this->getCell($sheet, 9, $row)) ?? '',
+                    'rounds_count' => $this->getCellValue($this->getCell($sheet, 10, $row)) ?? '',
+                    'duration' => $this->getCellValue($this->getCell($sheet, 11, $row)) ?? '',
+                    'mesh_number' => $this->getCellValue($this->getCell($sheet, 12, $row)) ?? '',
+                    'method' => '',
+                ];
             }
         }
 
@@ -646,92 +705,57 @@ class InsPpmExcelImportService
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Process Template');
-        
+
+        $lastCol = 'L'; // A-L = 12 columns
+
         // Set column widths
         $sheet->getColumnDimension('A')->setWidth(5);
-        $sheet->getColumnDimension('B')->setWidth(20);
-        $sheet->getColumnDimension('C')->setWidth(20);
+        $sheet->getColumnDimension('B')->setWidth(18);
+        $sheet->getColumnDimension('C')->setWidth(36);
         $sheet->getColumnDimension('D')->setWidth(20);
-        $sheet->getColumnDimension('E')->setWidth(15);
-        $sheet->getColumnDimension('F')->setWidth(20);
-        $sheet->getColumnDimension('G')->setWidth(20);
-        $sheet->getColumnDimension('H')->setWidth(20);
-        $sheet->getColumnDimension('I')->setWidth(20);
-        $sheet->getColumnDimension('J')->setWidth(20);
-        $sheet->getColumnDimension('K')->setWidth(15);
-        $sheet->getColumnDimension('L')->setWidth(15);
-        $sheet->getColumnDimension('M')->setWidth(15);
-        $sheet->getColumnDimension('N')->setWidth(15);
-        $sheet->getColumnDimension('O')->setWidth(15);
-        $sheet->getColumnDimension('P')->setWidth(15);
-        $sheet->getColumnDimension('Q')->setWidth(20);
-        $sheet->getColumnDimension('R')->setWidth(20);
+        $sheet->getColumnDimension('E')->setWidth(14);
+        $sheet->getColumnDimension('F')->setWidth(18);
+        $sheet->getColumnDimension('G')->setWidth(18);
+        $sheet->getColumnDimension('H')->setWidth(18);
+        $sheet->getColumnDimension('I')->setWidth(14);
+        $sheet->getColumnDimension('J')->setWidth(14);
+        $sheet->getColumnDimension('K')->setWidth(14);
+        $sheet->getColumnDimension('L')->setWidth(14);
 
-        // ===== PRODUCT SECTION =====
+        // ===== PRODUCT INFORMATION =====
         $sheet->setCellValue('A1', 'PRODUCT INFORMATION');
         $sheet->getStyle('A1')->getFont()->setBold(true);
-        $sheet->getStyle('A1')->getFont()->setSize(14);
-        $sheet->mergeCells('A1:R1');
-        
+        $sheet->getStyle('A1')->getFont()->setSize(12);
+        $sheet->mergeCells('A1:' . $lastCol . '1');
+
         // Product headers (Row 2)
-        $productHeaders = ['A' => 'No.', 'B' => 'Product Code *', 'C' => 'Dev Style *', 'D' => 'Color Way *', 'E' => 'Production Date *'];
+        $productHeaders = [
+            'A' => 'No.',
+            'B' => 'Product Code',
+            'C' => 'Dev Style',
+            'D' => 'Part Name',
+        ];
         foreach ($productHeaders as $col => $header) {
             $sheet->setCellValue($col . '2', $header);
             $sheet->getStyle($col . '2')->getFont()->setBold(true);
             $sheet->getStyle($col . '2')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-            $sheet->getStyle($col . '2')->getFill()->getStartColor()->setRGB('E0E0E0');
+            $sheet->getStyle($col . '2')->getFill()->getStartColor()->setRGB('D9D9D9');
         }
-        
-        // Sample product data (Row 3)
+
+        // Sample product data (Row 3) — red to indicate example data
         $sheet->setCellValue('A3', '1');
-        $sheet->setCellValue('B3', 'PC-001');
-        $sheet->setCellValue('C3', 'STYLE-2024-001');
-        $sheet->setCellValue('D3', 'RED/BLACK');
-        $sheet->setCellValue('E3', '2024-01-15');
-        
-        // ===== COMPONENT SECTION =====
-        $sheet->setCellValue('A5', 'COMPONENT INFORMATION');
+        $sheet->setCellValue('B3', 'IX1194-500');
+        $sheet->setCellValue('C3', 'W AIR ZOOM PEGASUS 42 TB - IX1194');
+        $sheet->setCellValue('D3', 'SWOOSH MEDIAL 1');
+        $sheet->getStyle('B3:D3')->getFont()->getColor()->setRGB('FF0000');
+
+        // ===== PROCESS STEPS =====
+        $sheet->setCellValue('A5', 'PROCESS STEPS');
         $sheet->getStyle('A5')->getFont()->setBold(true);
-        $sheet->getStyle('A5')->getFont()->setSize(14);
-        $sheet->mergeCells('A5:R5');
-        
-        // Component headers (Row 6)
-        $componentHeaders = [
-            'A' => 'No.',
-            'B' => 'Part Name *',
-            'C' => 'Base Part Name',
-            'D' => 'Description',
-            'E' => 'Material Number',
-            'F' => 'Material Name',
-            'G' => 'MCS Number',
-            'H' => 'Vendor Type',
-            'I' => 'Hera Hardness'
-        ];
-        foreach ($componentHeaders as $col => $header) {
-            $sheet->setCellValue($col . '6', $header);
-            $sheet->getStyle($col . '6')->getFont()->setBold(true);
-            $sheet->getStyle($col . '6')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-            $sheet->getStyle($col . '6')->getFill()->getStartColor()->setRGB('E0E0E0');
-        }
-        
-        // Sample component data (Row 7)
-        $sheet->setCellValue('A7', '1');
-        $sheet->setCellValue('B7', 'Upper');
-        $sheet->setCellValue('C7', 'BASE-UPPER');
-        $sheet->setCellValue('D7', 'Main upper part of the shoe');
-        $sheet->setCellValue('E7', 'MAT-001');
-        $sheet->setCellValue('F7', 'Synthetic Leather');
-        $sheet->setCellValue('G7', 'MCS-001');
-        $sheet->setCellValue('H7', 'Internal');
-        $sheet->setCellValue('I7', ' Shore A');
-        
-        // ===== PROCESS STEPS SECTION =====
-        $sheet->setCellValue('A9', 'PROCESS STEPS');
-        $sheet->getStyle('A9')->getFont()->setBold(true);
-        $sheet->getStyle('A9')->getFont()->setSize(14);
-        $sheet->mergeCells('A9:R9');
-        
-        // Process step headers (Row 10)
+        $sheet->getStyle('A5')->getFont()->setSize(12);
+        $sheet->mergeCells('A5:' . $lastCol . '5');
+
+        // Process step headers (Row 6)
         $processHeaders = [
             'A' => 'No.',
             'B' => 'Step #',
@@ -745,70 +769,54 @@ class InsPpmExcelImportService
             'J' => 'Rounds Count',
             'K' => 'Duration',
             'L' => 'Mesh Number',
-            'M' => 'Method'
         ];
         foreach ($processHeaders as $col => $header) {
-            $sheet->setCellValue($col . '10', $header);
-            $sheet->getStyle($col . '10')->getFont()->setBold(true);
-            $sheet->getStyle($col . '10')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-            $sheet->getStyle($col . '10')->getFill()->getStartColor()->setRGB('E0E0E0');
+            $sheet->setCellValue($col . '6', $header);
+            $sheet->getStyle($col . '6')->getFont()->setBold(true);
+            $sheet->getStyle($col . '6')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+            $sheet->getStyle($col . '6')->getFill()->getStartColor()->setRGB('D9D9D9');
         }
-        
-        // Sample process steps (Rows 11-15)
+
+        // Sample process steps matching real-world example (Rows 7-16) — red to indicate example data
         $sampleSteps = [
-            ['step_number' => '1', 'process_type' => 'CLEANER', 'operation' => 'CLEANING COLOR/CODE', 'color_code' => 'CLEAR', 'chemical' => 'NO. 29 [SB]', 'hardener_code' => 'N/A', 'temperature_c' => '25', 'wipes_count' => '1', 'rounds_count' => '2', 'duration' => '4m-5m', 'mesh_number' => '200', 'method' => 'MANUAL'],
-            ['step_number' => '2', 'process_type' => 'PRIMER', 'operation' => 'PRIMING', 'color_code' => 'CLEAR', 'chemical' => 'P-001', 'hardener_code' => 'H-001', 'temperature_c' => '25', 'wipes_count' => '', 'rounds_count' => '', 'duration' => '10m', 'mesh_number' => '', 'method' => 'SPRAY'],
-            ['step_number' => '3', 'process_type' => 'BASE COAT', 'operation' => 'APPLYING BASE', 'color_code' => 'RED', 'chemical' => 'BC-001', 'hardener_code' => 'H-002', 'temperature_c' => '25', 'wipes_count' => '', 'rounds_count' => '2', 'duration' => '15m', 'mesh_number' => '100', 'method' => 'SPRAY'],
-            ['step_number' => '4', 'process_type' => 'TOP COAT', 'operation' => 'APPLYING TOP COAT', 'color_code' => 'CLEAR', 'chemical' => 'TC-001', 'hardener_code' => 'H-003', 'temperature_c' => '30', 'wipes_count' => '', 'rounds_count' => '3', 'duration' => '20m', 'mesh_number' => '150', 'method' => 'SPRAY'],
+            [1,  1,  'CLEANER',              'CLEANING',  'CLEAR', 'NO. 29 [SB]', 'N/A', 'R/T or NIR', '',  2,  '4m-5m',   ''],
+            [2,  2,  'PRIMER',               'PRIMING',   'CLEAR', 'P-001',       'N/A', 'R/T or NIR', '',  4,  '10m-15m', '200'],
+            [3,  3,  'MAIN',                 '',          '',      'A 4%',        '',    'R/T or NIR', '',  8,  '10m-15m', '200'],
+            [4,  4,  'MAIN',                 '',          '',      'A 4%',        '',    'R/T or NIR', '',  2,  '10m-15m', '200'],
+            [5,  5,  'MAIN',                 '',          '',      'A 4%',        '',    'R/T or NIR', '',  2,  '10m-15m', '200'],
+            [6,  6,  'TAKE OUT MATERIAL',    'TAKE OUT',  '',      '',            '',    '',           '',  '',  '',       ''],
+            [7,  7,  'INSPECTION',           '',          '',      '',            '',    '',           '',  '',  '',       ''],
+            [8,  8,  'AGING TIME',           'TAKEOUT',   '',      '',            '',    '',           '',  '',  '4 hours',''],
+            [9,  9,  'PACKING',              '',          '',      '',            '',    '',           '',  '',  '',       ''],
+            [10, 10, 'MOVE TO NEXT PROCESS', '',          '',      '',            '',    '',           '',  '',  '',       ''],
         ];
-        
-        $row = 11;
-        foreach ($sampleSteps as $index => $step) {
-            $sheet->setCellValue('A' . $row, $index + 1);
-            $sheet->setCellValue('B' . $row, $step['step_number']);
-            $sheet->setCellValue('C' . $row, $step['process_type']);
-            $sheet->setCellValue('D' . $row, $step['operation']);
-            $sheet->setCellValue('E' . $row, $step['color_code']);
-            $sheet->setCellValue('F' . $row, $step['chemical']);
-            $sheet->setCellValue('G' . $row, $step['hardener_code']);
-            $sheet->setCellValue('H' . $row, $step['temperature_c']);
-            $sheet->setCellValue('I' . $row, $step['wipes_count']);
-            $sheet->setCellValue('J' . $row, $step['rounds_count']);
-            $sheet->setCellValue('K' . $row, $step['duration']);
-            $sheet->setCellValue('L' . $row, $step['mesh_number']);
-            $sheet->setCellValue('M' . $row, $step['method']);
+
+        $row = 7;
+        foreach ($sampleSteps as $step) {
+            [$no, $stepNum, $processType, $operation, $colorCode, $chemical, $hardener, $temp, $wipes, $rounds, $duration, $mesh] = $step;
+            $sheet->setCellValue('A' . $row, $no);
+            $sheet->setCellValue('B' . $row, $stepNum);
+            $sheet->setCellValue('C' . $row, $processType);
+            $sheet->setCellValue('D' . $row, $operation);
+            $sheet->setCellValue('E' . $row, $colorCode);
+            $sheet->setCellValue('F' . $row, $chemical);
+            $sheet->setCellValue('G' . $row, $hardener);
+            $sheet->setCellValue('H' . $row, $temp);
+            $sheet->setCellValue('I' . $row, $wipes);
+            $sheet->setCellValue('J' . $row, $rounds);
+            $sheet->setCellValue('K' . $row, $duration);
+            $sheet->setCellValue('L' . $row, $mesh);
+            // Style non-empty cells red (example data indicator)
+            $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->getFont()->getColor()->setRGB('FF0000');
             $row++;
         }
-        
-        // Add more empty rows for user to fill
-        for ($i = 0; $i < 10; $i++) {
-            $sheet->setCellValue('A' . $row, $row - 10);
+
+        // Add empty rows for user input
+        for ($i = 1; $i <= 10; $i++) {
+            $sheet->setCellValue('A' . $row, $row - 6);
             $row++;
         }
-        
-        // ===== INSTRUCTIONS =====
-        $instructions = [
-            '',
-            'INSTRUCTIONS:',
-            '1. Fill in the Product Information section (rows 2-3). Product Code, Dev Style, Color Way, and Production Date are required.',
-            '2. Fill in the Component Information section (rows 6-7). Part Name is required.',
-            '3. Fill in the Process Steps section starting from row 11. Add more rows as needed.',
-            '4. For Process Steps, Step # and Process Type are required.',
-            '5. Date format: YYYY-MM-DD (e.g., 2024-01-15)',
-            '6. Keep the header rows (1, 2, 5, 6, 9, 10) unchanged.',
-            '7. Save the file as .xlsx format before importing.'
-        ];
-        
-        $row += 2;
-        foreach ($instructions as $instruction) {
-            $sheet->setCellValue('A' . $row, $instruction);
-            if (strpos($instruction, 'INSTRUCTIONS:') !== false) {
-                $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-            }
-            $sheet->mergeCells('A' . $row . ':R' . $row);
-            $row++;
-        }
-        
+
         return $spreadsheet;
     }
 

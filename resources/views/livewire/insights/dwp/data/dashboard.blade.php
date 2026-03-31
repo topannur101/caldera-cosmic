@@ -242,19 +242,17 @@ new class extends Component {
             $nonZeroValues = array_filter($allPeaks, fn($v) => is_numeric($v) && $v > 0);
             $averagePressure = !empty($nonZeroValues) ? round(array_sum($nonZeroValues) / count($nonZeroValues)) : 0;
 
-            // Get average press time from enhanced PV data
-            $avgPressTime = 0;
-            $pressTimeCount = 0;
+            // Get average press time using median to avoid outlier skew (e.g. stuck/timeout records)
+            $pressTimes = [];
             if (isset($recentRecords[$machineName])) {
                 foreach ($recentRecords[$machineName] as $record) {
                     // Only count valid duration values (greater than 0)
                     if (isset($record->duration) && is_numeric($record->duration) && $record->duration > 0) {
-                        $avgPressTime += $record->duration;
-                        $pressTimeCount++;
+                        $pressTimes[] = (float) $record->duration;
                     }
                 }
             }
-            $avgPressTime = $pressTimeCount > 0 ? round($avgPressTime / $pressTimeCount, 0) : 16;
+            $avgPressTime = !empty($pressTimes) ? (int) round($this->getMedian($pressTimes)) : 16;
 
             $statuses = [
                 'leftToeHeel'  => $this->getStatus($leftData['toeHeel']),
@@ -1335,9 +1333,9 @@ new class extends Component {
                                 <div>
                                     <h2 class="text-md text-neutral-600 dark:text-neutral-400">Output</h2>
                                     <div class="p-2 rounded-md bg-gray-100 dark:bg-neutral-900 font-bold text-lg text-neutral-700 dark:text-neutral-200">
-                                        Left : {{ $machine['output']['left'] ?? 0 }} EA
+                                        L: {{ $machine['output']['left'] ?? 0 }} EA
                                         |
-                                        Right : {{ $machine['output']['right'] ?? 0 }} EA
+                                        R: {{ $machine['output']['right'] ?? 0 }} EA
                                     </div>
                                 </div>
                             </div>

@@ -14,14 +14,6 @@ class InsPpmComponent extends Model
     protected $fillable = [
         'product_id',
         'part_name',
-        'base_part_name',
-        'description',
-        'material_number',
-        'material_name',
-        'mcs_number',
-        'vendor_type',
-        'hera_hardness',
-        'size_distribution',
     ];
 
     protected $casts = [

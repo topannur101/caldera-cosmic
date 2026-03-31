@@ -19,13 +19,16 @@ new class extends Component {
     public $shift = "";
 
     #[Url]
+    public $status = "";
+
+    #[Url]
     public string $start_at = "";
 
     #[Url]
     public string $end_at = "";
 
     #[Url]
-    public int $machine_id = 0;
+    public string $machine_id = "1&2";
 
     public int $perPage = 10;
 
@@ -107,6 +110,10 @@ new class extends Component {
             $query->where("shift", $this->shift);
         }
 
+        if ($this->status) {
+            $query->where("data->status", $this->status);
+        }
+
         // where data->name = machine_id
         if ($this->machine_id) {
             $query->where("data->name", (string) $this->machine_id);
@@ -181,6 +188,7 @@ new class extends Component {
                         <option value="A">A</option>
                         <option value="B">B</option>
                         <option value="C">C</option>
+                        <option value="TL">GL/TL</option>
                     </x-select>
                 </div>
 
@@ -188,9 +196,9 @@ new class extends Component {
                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Machine") }}</label>
                     <x-select wire:model.live="machine_id" class="w-full">
                         <option value="0">{{ __("Semua") }}</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
+                        <option value="1&2">1&2</option>
+                        <option value="3&4">3&4</option>
+                        <option value="5&6">5&6</option>
                     </x-select>
                 </div>
 

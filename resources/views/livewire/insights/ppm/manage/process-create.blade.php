@@ -10,18 +10,9 @@ new class extends Component {
     // Product fields
     public string $product_code = "";
     public string $dev_style = "";
-    public string $color_way = "";
-    public string $production_date = "";
     
     // Component fields
     public string $part_name = "";
-    public string $base_part_name = "";
-    public string $description = "";
-    public string $material_number = "";
-    public string $material_name = "";
-    public string $mcs_number = "";
-    public string $vendor_type = "";
-    public string $hera_hardness = "";
     
     // Process Steps
     public $processSteps = [];
@@ -99,7 +90,6 @@ new class extends Component {
             'rounds_count' => '',
             'duration' => '',
             'mesh_number' => '',
-            'method' => '',
         ];
     }
 
@@ -122,21 +112,12 @@ new class extends Component {
         } else {
             $rules['product_code'] = ['required', 'string', 'max:50', Rule::unique('ins_ppm_products', 'product_code')];
             $rules['dev_style'] = ['required', 'string', 'max:100'];
-            $rules['color_way'] = ['required', 'string', 'max:100'];
-            $rules['production_date'] = ['required', 'date'];
         }
 
         if ($this->useExistingComponent) {
             $rules['selectedComponentId'] = ['required', 'integer'];
         } else {
             $rules['part_name'] = ['required', 'string', 'max:100'];
-            $rules['base_part_name'] = ['nullable', 'string', 'max:100'];
-            $rules['description'] = ['nullable', 'string'];
-            $rules['material_number'] = ['nullable', 'string', 'max:50'];
-            $rules['material_name'] = ['nullable', 'string', 'max:100'];
-            $rules['mcs_number'] = ['nullable', 'string', 'max:50'];
-            $rules['vendor_type'] = ['nullable', 'string', 'max:50'];
-            $rules['hera_hardness'] = ['nullable', 'string', 'max:20'];
         }
 
         return $rules;
@@ -154,8 +135,6 @@ new class extends Component {
             $product = InsPpmProduct::create([
                 'product_code' => trim($this->product_code),
                 'dev_style' => trim($this->dev_style),
-                'color_way' => trim($this->color_way),
-                'production_date' => $this->production_date,
             ]);
         }
 
@@ -167,13 +146,6 @@ new class extends Component {
             $component = InsPpmComponent::create([
                 'product_id' => $product->id,
                 'part_name' => trim($this->part_name),
-                'base_part_name' => trim($this->base_part_name ?? ''),
-                'description' => trim($this->description ?? ''),
-                'material_number' => trim($this->material_number ?? ''),
-                'material_name' => trim($this->material_name ?? ''),
-                'mcs_number' => trim($this->mcs_number ?? ''),
-                'vendor_type' => trim($this->vendor_type ?? ''),
-                'hera_hardness' => trim($this->hera_hardness ?? ''),
             ]);
         }
 
@@ -192,7 +164,6 @@ new class extends Component {
                     'rounds_count' => !empty($step['rounds_count']) ? (int)$step['rounds_count'] : null,
                     'duration' => trim($step['duration'] ?? ''),
                     'mesh_number' => trim($step['mesh_number'] ?? ''),
-                    'method' => trim($step['method'] ?? ''),
                 ];
             }, $this->processSteps),
         ];
@@ -213,9 +184,8 @@ new class extends Component {
     public function customReset()
     {
         $this->reset([
-            'product_code', 'dev_style', 'color_way', 'production_date',
-            'part_name', 'base_part_name', 'description', 'material_number',
-            'material_name', 'mcs_number', 'vendor_type', 'hera_hardness',
+            'product_code', 'dev_style',
+            'part_name',
             'selectedProductId', 'selectedComponentId'
         ]);
         $this->useExistingProduct = false;
@@ -267,14 +237,6 @@ new class extends Component {
                         <label for="dev-style" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Dev Style") }} *</label>
                         <x-text-input id="dev-style" wire:model="dev_style" type="text" />
                     </div>
-                    <div>
-                        <label for="color-way" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Color Way") }} *</label>
-                        <x-text-input id="color-way" wire:model="color_way" type="text" />
-                    </div>
-                    <div>
-                        <label for="production-date" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Production Date") }} *</label>
-                        <x-text-input id="production-date" wire:model="production_date" type="date" />
-                    </div>
                 </div>
             @endif
         </div>
@@ -303,10 +265,6 @@ new class extends Component {
                     <div>
                         <label for="part-name" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Part Name") }} *</label>
                         <x-text-input id="part-name" wire:model="part_name" type="text" />
-                    </div>
-                    <div>
-                        <label for="material-number" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Material Number") }}</label>
-                        <x-text-input id="material-number" wire:model="material_number" type="text" />
                     </div>
                 </div>
             @endif
@@ -377,10 +335,6 @@ new class extends Component {
                             <div>
                                 <label class="block px-2 mb-1 uppercase text-xs text-neutral-500">{{ __("Mesh Number") }}</label>
                                 <x-text-input wire:model="processSteps.{{ $index }}.mesh_number" type="text" placeholder="200" />
-                            </div>
-                            <div>
-                                <label class="block px-2 mb-1 uppercase text-xs text-neutral-500">{{ __("Method") }}</label>
-                                <x-text-input wire:model="processSteps.{{ $index }}.method" type="text" placeholder="MANUAL" />
                             </div>
                         </div>
                     </div>

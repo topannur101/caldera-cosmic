@@ -8,6 +8,9 @@ new class extends Component {
     public $averageBatchTime = 0;
     public $chartData = [];
     public $pieChartData = [];
+    public $batchNotStandard = 0;
+    public $batchStandard = 0;
+    public $hasData = false;
 
     public function mount()
     {
@@ -16,23 +19,21 @@ new class extends Component {
 
     public function loadData()
     {
-        $records = InsIbmsCount::latest()->limit(100)->get();
+        $records = InsIbmsCount::whereDate('created_at', now()->toDateString())
+            ->orderBy('data->name')
+            ->latest()
+            ->get();
 
         if ($records->isEmpty()) {
-            // Use dummy data if no records exist
-            $this->totalBatches = 60;
-            $this->averageBatchTime = 15;
-            $this->chartData = [
-                ['machine' => 'Machine 1 & 2', 'too_early' => 250, 'on_time' => 2133, 'too_late' => 52, 'total' => 2435],
-                ['machine' => 'Machine 3 & 4', 'too_early' => 200, 'on_time' => 1738, 'too_late' => 137, 'total' => 2075],
-                ['machine' => 'Machine 5 & 6', 'too_early' => 235, 'on_time' => 2126, 'too_late' => 0, 'total' => 2361],
-            ];
-            $this->pieChartData = [
-                ['label' => 'Too Early (<15 minutes)', 'value' => 10, 'color' => '#ef4444'],
-                ['label' => 'On Time (15 minutes)', 'value' => 87.9, 'color' => '#22c55e'],
-                ['label' => 'Too Late (>15 minutes)', 'value' => 2.1, 'color' => '#f59e0b'],
-            ];
+            $this->hasData = false;
+            $this->totalBatches = 0;
+            $this->averageBatchTime = 0;
+            $this->batchNotStandard = 0;
+            $this->batchStandard = 0;
+            $this->chartData = [];
+            $this->pieChartData = [];
         } else {
+            $this->hasData = true;
             $this->totalBatches = $records->count();
             
             $totalDurationMinutes = 0;
@@ -63,6 +64,9 @@ new class extends Component {
                 ];
             })->values()->toArray();
 
+            $this->batchNotStandard = $records->whereIn('data.status', ['too_early', 'to_early', 'to_late', 'too_late'])->count();
+            $this->batchStandard = $records->where('data.status', 'on_time')->count();
+
             // Calculate pie chart percentages
             $total = $records->count();
             $statusCounts = $records->countBy(function ($item) {
@@ -78,9 +82,9 @@ new class extends Component {
             $toLatePct = ($toLateCount / $total) * 100;
 
             $this->pieChartData = [
-                ['label' => 'Too Early (<15 minutes)', 'value' => round($tooEarlyPct, 1), 'color' => '#ef4444'],
-                ['label' => 'On Time (15 minutes)', 'value' => round($onTimePct, 1), 'color' => '#22c55e'],
-                ['label' => 'Too Late (>15 minutes)', 'value' => round($toLatePct, 1), 'color' => '#f59e0b'],
+                ['label' => 'Too Early (<20 minutes)', 'value' => round($tooEarlyPct, 1), 'color' => '#ef4444'],
+                ['label' => 'On Time (20 minutes)', 'value' => round($onTimePct, 1), 'color' => '#22c55e'],
+                ['label' => 'Too Late (>20 minutes)', 'value' => round($toLatePct, 1), 'color' => '#f59e0b'],
             ];
         }
     }
@@ -114,38 +118,63 @@ new class extends Component {
         </div>
     </div>
     <!-- Top Metrics -->
-    <div class="grid grid-cols-6 gap-4 mb-8 mt-2">
-        <div class="col-span-2">
-            <div class="w-full bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
-                <h1 class="text-xl font-bold text-gray-800 dark:text-white mb-6">Online System Monitoring</h1>
-                <div id="onlineSystemMonitoringChart"></div>
-            </div>
-        </div>
-        <div class="col-span-4">
+    <div class="grid grid-cols gap-4 mb-2">
+        <div>
              <!-- Bar Chart Section -->
             <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-6 mb-4">
                 <h2 class="text-xl font-bold text-neutral-800 dark:text-white mb-6">Total Batch per Machine</h2>
-                <div id="batchApexChart"></div>
+                @if ($hasData)
+                    <div id="batchApexChart"></div>
+                @else
+                    <div class="h-[350px] flex items-center justify-center text-gray-500 dark:text-white">No Data Available</div>
+                @endif
             </div>
-
-            <!-- Donut Chart Section -->
-            <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6">Evaluation Percentage</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        </div>
+    </div>
+    <div class="grid grid-cols-6 gap-4 mb-8">
+        <div class="col-span-2">
+            <div class="w-full bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
+                <h1 class="text-center text-xl font-bold text-gray-800 dark:text-white mb-6">Online System Monitoring</h1>
+                @if ($hasData)
+                    <div id="onlineSystemMonitoringChart"></div>
+                @else
+                    <div class="h-[370px] flex items-center justify-center text-gray-500 dark:text-white">No Data Available</div>
+                @endif
+            </div>
+        </div>
+        <!-- Donut Chart Section -->
+        <div class="col-span-4 bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
+            <h2 class="text-center text-xl font-bold text-gray-800 dark:text-white mb-6">Evaluation Percentage</h2>
+            @if ($hasData)
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-4">
                     @foreach ($chartData as $index => $machine)
-                        <div class="text-center">
-                            <div id="machinePieChart-{{ $index }}" class="h-[200px]"></div>
-                            <p class="text-gray-800 dark:text-white text-xl font-bold leading-tight">{{ $machine['machine'] }}</p>
+                        <div class="text-center mt-3">
+                            <div class="text-center mt-3">
+                                <p class="text-gray-800 dark:text-white text-xl font-bold leading-tight mb-5">{{ $machine['machine'] }}</p>
+                                <div id="machinePieChart-{{ $index }}" class="h-[200px]"></div>
+                            </div>
+                            <!-- detail standard or not standard -->
+                            <div class="text-gray-500 dark:text-white text-sm mt-2 gap-2 flex flex-col items-center mt-4">
+                                <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                    <p>Too Early: {{ $machine['too_early'] }} batches</p>
+                                </div>
+                                <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <p>On Time: {{ $machine['on_time'] }} batches</p>
+                                </div>
+                            </div>
                         </div>
                     @endforeach
                 </div>
-            </div>
+            @else
+                <div class="h-[370px] flex items-center justify-center text-gray-500 dark:text-white">No Data Available</div>
+            @endif
         </div>
     </div>
 </div>
 
 @script
 <script>
+    const hasData = @json($hasData);
     const chartData = {!! json_encode($chartData) !!};
     const isDarkMode = document.documentElement.classList.contains('dark');
     const textColor = isDarkMode ? '#e6edf3' : '#0f172a';
@@ -264,9 +293,9 @@ new class extends Component {
         }
 
         const series = [
-            { name: 'Too Early (<15 minutes)', data: chartData.map(d => d.too_early) },
-            { name: 'On Time (15 minutes)', data: chartData.map(d => d.on_time) },
-            { name: 'Too Late (>15 minutes)', data: chartData.map(d => d.too_late) },
+            { name: 'Too Early (<20 minutes)', data: chartData.map(d => d.too_early) },
+            { name: 'On Time (20 minutes)', data: chartData.map(d => d.on_time) },
+            { name: 'Too Late (>20 minutes)', data: chartData.map(d => d.too_late) },
         ];
 
         const options = {
@@ -405,6 +434,10 @@ new class extends Component {
     }
 
     function renderAllCharts() {
+        if (!hasData) {
+            return;
+        }
+
         renderOnlineSystemMonitoringChart();
         renderBatchChart();
         renderMachinePieCharts();

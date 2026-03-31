@@ -14,12 +14,9 @@ new class extends Component {
     // Product fields
     public string $product_code = "";
     public string $dev_style = "";
-    public string $color_way = "";
-    public string $production_date = "";
     
     // Component fields
     public string $part_name = "";
-    public string $material_number = "";
     
     // Process Steps
     public $processSteps = [];
@@ -29,10 +26,7 @@ new class extends Component {
         return [
             'product_code' => ['required', 'string', 'max:50', Rule::unique('ins_ppm_products', 'product_code')->ignore($this->productId)],
             'dev_style' => ['required', 'string', 'max:100'],
-            'color_way' => ['required', 'string', 'max:100'],
-            'production_date' => ['required', 'date'],
             'part_name' => ['required', 'string', 'max:100'],
-            'material_number' => ['nullable', 'string', 'max:50'],
         ];
     }
 
@@ -49,12 +43,9 @@ new class extends Component {
             // Load product data
             $this->product_code = $product->product_code;
             $this->dev_style = $product->dev_style;
-            $this->color_way = $product->color_way;
-            $this->production_date = $product->production_date?->format('Y-m-d') ?? '';
 
             // Load component data
             $this->part_name = $component->part_name;
-            $this->material_number = $component->material_number ?? '';
 
             // Load process steps
             $processes = $component->processes;
@@ -154,14 +145,11 @@ new class extends Component {
             $product->update([
                 'product_code' => trim($validated['product_code']),
                 'dev_style' => trim($validated['dev_style']),
-                'color_way' => trim($validated['color_way']),
-                'production_date' => $validated['production_date'],
             ]);
 
             // Update component
             $component->update([
                 'part_name' => trim($validated['part_name']),
-                'material_number' => trim($validated['material_number'] ?? ''),
             ]);
 
             // Build process steps JSON
@@ -249,14 +237,6 @@ new class extends Component {
                     <label for="dev-style-edit" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Dev Style") }} *</label>
                     <x-text-input id="dev-style-edit" wire:model="dev_style" type="text" />
                 </div>
-                <div>
-                    <label for="color-way-edit" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Color Way") }} *</label>
-                    <x-text-input id="color-way-edit" wire:model="color_way" type="text" />
-                </div>
-                <div>
-                    <label for="production-date-edit" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Production Date") }} *</label>
-                    <x-text-input id="production-date-edit" wire:model="production_date" type="date" />
-                </div>
             </div>
         </div>
 
@@ -267,10 +247,6 @@ new class extends Component {
                 <div>
                     <label for="part-name-edit" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Part Name") }} *</label>
                     <x-text-input id="part-name-edit" wire:model="part_name" type="text" />
-                </div>
-                <div>
-                    <label for="material-number-edit" class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Material Number") }}</label>
-                    <x-text-input id="material-number-edit" wire:model="material_number" type="text" />
                 </div>
             </div>
         </div>
@@ -340,10 +316,6 @@ new class extends Component {
                             <div>
                                 <label class="block px-2 mb-1 uppercase text-xs text-neutral-500">{{ __("Mesh Number") }}</label>
                                 <x-text-input wire:model="processSteps.{{ $index }}.mesh_number" type="text" placeholder="200" />
-                            </div>
-                            <div>
-                                <label class="block px-2 mb-1 uppercase text-xs text-neutral-500">{{ __("Method") }}</label>
-                                <x-text-input wire:model="processSteps.{{ $index }}.method" type="text" placeholder="MANUAL" />
                             </div>
                         </div>
                     </div>

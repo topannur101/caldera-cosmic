@@ -14,8 +14,6 @@ class InsPpmProduct extends Model
     protected $fillable = [
         'dev_style',
         'product_code',
-        'color_way',
-        'production_date',
     ];
 
     protected $casts = [

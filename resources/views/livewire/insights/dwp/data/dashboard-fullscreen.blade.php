@@ -228,19 +228,17 @@ new #[Layout("layouts.app")] class extends Component {
             $nonZeroValues = array_filter($allPeaks, fn($v) => is_numeric($v) && $v > 0);
             $averagePressure = !empty($nonZeroValues) ? round(array_sum($nonZeroValues) / count($nonZeroValues)) : 0;
 
-            // Get average press time from enhanced PV data
-            $avgPressTime = 0;
-            $pressTimeCount = 0;
+            // Get average press time using median to avoid outlier skew (e.g. stuck/timeout records)
+            $pressTimes = [];
             if (isset($recentRecords[$machineName])) {
                 foreach ($recentRecords[$machineName] as $record) {
                     // Only count valid duration values (greater than 0)
                     if (isset($record->duration) && is_numeric($record->duration) && $record->duration > 0) {
-                        $avgPressTime += $record->duration;
-                        $pressTimeCount++;
+                        $pressTimes[] = (float) $record->duration;
                     }
                 }
             }
-            $avgPressTime = $pressTimeCount > 0 ? round($avgPressTime / $pressTimeCount, 0) : 16;
+            $avgPressTime = !empty($pressTimes) ? (int) round($this->getMedian($pressTimes)) : 16;
 
             $statuses = [
                 'leftToeHeel'  => $this->getStatus($leftData['toeHeel']),

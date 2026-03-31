@@ -49,7 +49,7 @@ new #[Layout("layouts.app")] class extends Component {
         @endif
 
         <div class="flex flex-col sm:flex-row gap-y-6 justify-between px-6">
-            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __("Proses Komponen") }}</h1>
+            <h1 class="text-2xl text-neutral-900 dark:text-neutral-100">{{ __("Kelola Proses Komponen") }}</h1>
             <div class="flex justify-end gap-x-2">
                 <x-secondary-button type="button" x-on:click.prevent="$dispatch('open-modal', 'process-import')">
                     <i class="icon-file mr-1"></i> {{ __("Import") }}
@@ -65,8 +65,6 @@ new #[Layout("layouts.app")] class extends Component {
                         <tr>
                             <th>{{ __("Product Code") }}</th>
                             <th>{{ __("Dev Style") }}</th>
-                            <th>{{ __("Color Way") }}</th>
-                            <th>{{ __("Production Date") }}</th>
                             <th>{{ __("Component") }}</th>
                             <th>{{ __("Processes") }}</th>
                         </tr>
@@ -85,12 +83,6 @@ new #[Layout("layouts.app")] class extends Component {
                                     </td>
                                     <td>
                                         {{ $product->dev_style }}
-                                    </td>
-                                    <td>
-                                        {{ $product->color_way }}
-                                    </td>
-                                    <td>
-                                        {{ $product->production_date?->format('d/m/Y') }}
                                     </td>
                                     <td>
                                         {{ $component->part_name }}
