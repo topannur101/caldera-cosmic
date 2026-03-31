@@ -340,6 +340,7 @@ Route::prefix('insights')->group(function () {
         Volt::route('/ce/mixing', 'insights.ce.mixing.index')->name('mixing.index');
         Volt::route('ce/mixing/create', 'insights.ce.mixing.create')->name('mixing.create');
         Volt::route('ce/mixing/process-timer', 'insights.ce.mixing.process-timer')->name('mixing.process-timer');
+        Volt::route('ce/mixing/new', 'insights.ce.mixing.new')->name('mixing.new');
         Volt::route('ce/mixing/raw', 'insights.ce.mixing.raw')->name('mixing.raw');
         // CHEMICAL INVENTORY
         Volt::route('/ce/inventory', 'insights.ce.inventory.index')->name('inventory.index');
