@@ -13,11 +13,8 @@
         </div>
         <div class="space-x-8 -my-px ml-10 flex">
             <!-- data -->
-            <x-nav-link class="text-sm px-1 uppercase" href="/insights/ce/mixing/create" :active="request()->routeIs('insights.ce.mixing.create')" wire:navigate>
-                <i class="icon-plus text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Create') }}</span>
-            </x-nav-link>
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.mixing.new') }}" :active="request()->routeIs('insights.ce.mixing.new')" wire:navigate>
-                <i class="icon-play text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('New') }}</span>
+                <i class="icon-plus text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Create') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.ce.mixing.index') }}" :active="request()->routeIs('insights.ce.mixing.index')" wire:navigate>
                 <i class="icon-database text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Data') }}</span>

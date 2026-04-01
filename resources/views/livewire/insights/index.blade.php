@@ -185,7 +185,7 @@ new #[Layout("layouts.app")] class extends Component {
     private function getCachedIbmsLines(): int
     {
         return Cache::remember("ibms_lines_recent", now()->addMinutes(10), function () {
-            $timeWindow = Carbon::now()->subMinutes(1);
+            $timeWindow = Carbon::now()->subHours(4);
             return InsIbmsCount::where("updated_at", ">=", $timeWindow)
                 ->distinct("shift")
                 ->count("shift");

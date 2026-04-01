@@ -84,7 +84,8 @@ class extends Component
     public bool $leftStarted = false;
     public bool $rightStarted = false;
 
-    public int $durationSeconds = 30;
+    public int $durationSeconds = 600;
+    public int $durationMinutes = 10;
 
     public bool $completedLeft = false;
     public bool $completedRight = false;
@@ -121,6 +122,14 @@ class extends Component
                 'low_dev'         => $r->additional_settings['low_dev'] ?? null,
             ])
             ->toArray();
+
+        // convert minutes to seconds for timer
+        $this->durationSeconds = $this->durationMinutes * 60;
+    }
+
+    public function updatedDurationMinutes(int $value): void
+    {
+        $this->durationSeconds = $value * 60;
     }
 
     // ──── Recipe selection handlers ────
@@ -146,7 +155,7 @@ class extends Component
         if (isset($recipe['target_weight']) && $recipe['target_weight'] !== null) {
             $ratio = (float) $recipe['hardener_ratio'] / 100;
             $wB = round((float) $recipe['target_weight'] * $ratio, 2);
-            $wA = round((float) $recipe['target_weight'] - $wB, 2);
+            $wA = round((float) $recipe['target_weight'], 2);
             $this->weight_target_left_a = (string) $wA;
             $this->weight_target_left_b = (string) $wB;
         }
@@ -179,7 +188,7 @@ class extends Component
         if (isset($recipe['target_weight']) && $recipe['target_weight'] !== null) {
             $ratio = (float) $recipe['hardener_ratio'] / 100;
             $wB = round((float) $recipe['target_weight'] * $ratio, 2);
-            $wA = round((float) $recipe['target_weight'] - $wB, 2);
+            $wA = round((float) $recipe['target_weight'], 2);
             $this->weight_target_right_a = (string) $wA;
             $this->weight_target_right_b = (string) $wB;
         }
@@ -305,17 +314,38 @@ class extends Component
         }
     }
 
+    // ──── Set weight from scale ────
+
+    public function setWeight(string $field, string $value): void
+    {
+        $allowed = [
+            'weight_actual_left_a',
+            'weight_actual_left_b',
+            'weight_actual_right_a',
+            'weight_actual_right_b',
+        ];
+
+        if (!in_array($field, $allowed, true)) return;
+
+        $sanitized = (string) round(abs((float) $value), 2);
+        $this->{$field} = $sanitized;
+    }
+
     // ──── Start per-head (locks form, enters timer phase) ────
 
     public function startLeft(): void
     {
         if (!$this->isAuthenticated || !$this->recipe_id_left) return;
+        if ($this->stock_id_left_a === '' || $this->stock_id_left_b === '') return;
+        if ($this->weight_actual_left_a === '' || $this->weight_actual_left_b === '') return;
         $this->leftStarted = true;
     }
 
     public function startRight(): void
     {
         if (!$this->isAuthenticated || !$this->recipe_id_right) return;
+        if ($this->stock_id_right_a === '' || $this->stock_id_right_b === '') return;
+        if ($this->weight_actual_right_a === '' || $this->weight_actual_right_b === '') return;
         $this->rightStarted = true;
     }
 
@@ -527,6 +557,7 @@ class extends Component
         $this->recipe_id_left = null;
         $this->selectedRecipeLeft = [];
         $this->clearChemicalFieldsLeft();
+        $this->dispatch('resetLeftDone');
     }
 
     public function resetRight(): void
@@ -539,6 +570,7 @@ class extends Component
         $this->recipe_id_right = null;
         $this->selectedRecipeRight = [];
         $this->clearChemicalFieldsRight();
+        $this->dispatch('resetRightDone');
     }
 };
 
@@ -553,11 +585,25 @@ class extends Component
     x-data="{
         duration: @js($durationSeconds),
 
+        // Scale weight
+        latestScaleWeight: '0.00',
+        lockedFields: { weight_actual_left_a: false, weight_actual_left_b: false, weight_actual_right_a: false, weight_actual_right_b: false },
+
+        setWeight(field) {
+            this.lockedFields[field] = true;
+            $wire.setWeight(field, this.latestScaleWeight);
+        },
+
+        unlockWeight(field) {
+            this.lockedFields[field] = false;
+        },
+
         // LEFT HEAD timer
         leftElapsed: 0,
         leftRunning: false,
         leftFinished: false,
         leftInterval: null,
+        leftWaiting: false,
         emAFailed: false,
 
         // RIGHT HEAD timer
@@ -565,6 +611,7 @@ class extends Component
         rightRunning: false,
         rightFinished: false,
         rightInterval: null,
+        rightWaiting: false,
         emBFailed: false,
 
         // Computed LEFT
@@ -613,16 +660,22 @@ class extends Component
             }, 1000);
         },
 
-        // Start head: lock form + start timer
+        // Start head: lock form + wait for micon response
         confirmStartLeft() {
             $wire.startLeft().then(() => {
-                this.startLeftTimer();
+                this.leftWaiting = true;
+                if (this.ws && this.wsConnected) {
+                    this.ws.send('A:START');
+                }
             });
         },
 
         confirmStartRight() {
             $wire.startRight().then(() => {
-                this.startRightTimer();
+                this.rightWaiting = true;
+                if (this.ws && this.wsConnected) {
+                    this.ws.send('B:START');
+                }
             });
         },
 
@@ -659,9 +712,10 @@ class extends Component
         },
 
         reactToMicon() {
-            // LEFT head driven by A
-            if (this.miconA.st !== null) {
+            // LEFT head driven by A — only react if left head is actually started
+            if (this.miconA.st !== null && $wire.leftStarted) {
                 if (this.miconA.em === 1) {
+                    this.leftWaiting = false;
                     this.leftRunning = false;
                     this.leftFinished = false;
                     this.leftElapsed = 0;
@@ -675,16 +729,21 @@ class extends Component
                         this.emAFailed = false;
                         $wire.call('resetFailLeft');
                     }
-                    this.confirmStartLeft();
+                    if (this.leftWaiting) {
+                        this.leftWaiting = false;
+                        this.startLeftTimer();
+                    }
                 } else if (this.miconA.ti === 1 && !this.leftFinished) {
                     this.leftFinished = true;
                     this.leftRunning = false;
+                    this.leftWaiting = false;
                     if (this.leftInterval) clearInterval(this.leftInterval);
                 }
             }
-            // RIGHT head driven by B
-            if (this.miconB.st !== null) {
+            // RIGHT head driven by B — only react if right head is actually started
+            if (this.miconB.st !== null && $wire.rightStarted) {
                 if (this.miconB.em === 1) {
+                    this.rightWaiting = false;
                     this.rightRunning = false;
                     this.rightFinished = false;
                     this.rightElapsed = 0;
@@ -698,13 +757,35 @@ class extends Component
                         this.emBFailed = false;
                         $wire.call('resetFailRight');
                     }
-                    this.confirmStartRight();
+                    if (this.rightWaiting) {
+                        this.rightWaiting = false;
+                        this.startRightTimer();
+                    }
                 } else if (this.miconB.ti === 1 && !this.rightFinished) {
                     this.rightFinished = true;
                     this.rightRunning = false;
+                    this.rightWaiting = false;
                     if (this.rightInterval) clearInterval(this.rightInterval);
                 }
             }
+        },
+
+        resetLeftTimer() {
+            this.leftElapsed = 0;
+            this.leftRunning = false;
+            this.leftFinished = false;
+            this.leftWaiting = false;
+            this.emAFailed = false;
+            if (this.leftInterval) { clearInterval(this.leftInterval); this.leftInterval = null; }
+        },
+
+        resetRightTimer() {
+            this.rightElapsed = 0;
+            this.rightRunning = false;
+            this.rightFinished = false;
+            this.rightWaiting = false;
+            this.emBFailed = false;
+            if (this.rightInterval) { clearInterval(this.rightInterval); this.rightInterval = null; }
         },
 
         wsConnect() {
@@ -729,7 +810,9 @@ class extends Component
             this.reconnectTimer = setTimeout(() => this.wsConnect(), delay);
         },
     }"
-    x-init="wsConnect()"
+    x-init="wsConnect(); window.addEventListener('scale-weight', e => { latestScaleWeight = e.detail; });
+        Livewire.on('resetLeftDone', () => { resetLeftTimer(); });
+        Livewire.on('resetRightDone', () => { resetRightTimer(); });"
 >
     {{-- ═══════════════════════════════════════════════════════════════ --}}
     {{-- TOP BAR: RFID + WebSocket status                              --}}
@@ -880,27 +963,14 @@ class extends Component
                     setConnected() { this.connected = true; this.error = ''; this.reconnectAttempt = 0; },
                     setDisconnected(message) { this.connected = false; if (message) this.error = String(message); },
 
-                    syncWeightField(field, value) {
-                        if (typeof $wire !== 'undefined') $wire.set(field, value);
-                        const input = document.getElementById(field);
-                        if (input) { input.value = value; input.dispatchEvent(new Event('input', { bubbles: true })); }
-                    },
-
-                    showWeightOnForm(berat) {
-                        if (!Number.isNaN(berat)) {
-                            const value = Number(berat).toFixed(2);
-                            this.syncWeightField('weight_actual_left_a', value);
-                            this.syncWeightField('weight_actual_left_b', value);
-                            this.syncWeightField('weight_actual_right_a', value);
-                            this.syncWeightField('weight_actual_right_b', value);
-                        }
-                    },
-
                     handleWeightMessage(raw) {
                         const idMatch = raw.match(/\[ID:(\d+)\]/);
                         const beratMatch = raw.match(/Berat:\s*([\d.]+)/);
-                        if (idMatch && beratMatch && idMatch[1] === '2') {
-                            this.showWeightOnForm(parseFloat(beratMatch[1]));
+                        if (idMatch && beratMatch && idMatch[1] === '1') {
+                            const w = parseFloat(beratMatch[1]);
+                            if (!Number.isNaN(w)) {
+                                window.dispatchEvent(new CustomEvent('scale-weight', { detail: Number(w).toFixed(3) }));
+                            }
                         }
                     },
 
@@ -970,6 +1040,16 @@ class extends Component
             @else
                 <span class="px-3 py-1 bg-neutral-100 dark:bg-neutral-700 rounded-md text-red-500">{{ __("Tap ID Card") }}</span>
             @endif
+        </div>
+        
+        <!-- timer setting -->
+        <div>
+            <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Mixing Time (min)") }}</label>
+            <select wire:model.live="durationMinutes" x-on:change="duration = $wire.durationSeconds" class="w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500">
+                @foreach ([1,5,10,15,20,25,30,45,60] as $min)
+                    <option value="{{ $min }}">{{ $min }}</option>
+                @endforeach
+            </select>
         </div>
     </div>
 
@@ -1064,12 +1144,27 @@ class extends Component
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (g)") }}</label>
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (kg)") }}</label>
                                 <input type="number" readonly step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-200 cursor-not-allowed" wire:model="weight_target_left_a">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (g)") }}</label>
-                                <input id="weight_actual_left_a" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500" wire:model="weight_actual_left_a">
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (kg)") }}</label>
+                                <div class="mt-1 flex items-center gap-2">
+                                    <input id="weight_actual_left_a" type="number" step="0.01" readonly
+                                        class="block w-full rounded-md border-gray-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200"
+                                        :class="lockedFields.weight_actual_left_a ? 'bg-green-50 dark:bg-green-900/30 border-green-400 dark:border-green-600 font-semibold' : 'bg-white dark:bg-neutral-700'"
+                                        :value="lockedFields.weight_actual_left_a ? $wire.weight_actual_left_a : latestScaleWeight"
+                                        wire:model="weight_actual_left_a">
+                                </div>
+                                <div class="mt-2 flex gap-2">
+                                    <button type="button" x-show="!lockedFields.weight_actual_left_a" @click="setWeight('weight_actual_left_a')" class="px-3 py-1 text-sm rounded bg-caldy-500 hover:bg-caldy-600 text-white cursor-pointer">
+                                        {{ __('Set Weight') }}
+                                    </button>
+                                    <button type="button" x-show="lockedFields.weight_actual_left_a" @click="unlockWeight('weight_actual_left_a')" class="px-3 py-1 text-sm rounded bg-amber-500 hover:bg-amber-600 text-white cursor-pointer">
+                                        {{ __('Unlock') }}
+                                    </button>
+                                    <span class="self-center text-xs text-neutral-400" x-text="'Scale: ' + latestScaleWeight + ' g'"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1092,24 +1187,75 @@ class extends Component
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (g)") }}</label>
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (kg)") }}</label>
                                 <input type="number" readonly step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-200 cursor-not-allowed" wire:model="weight_target_left_b">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (g)") }}</label>
-                                <input id="weight_actual_left_b" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500" wire:model="weight_actual_left_b">
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (kg)") }}</label>
+                                <div class="mt-1 flex items-center gap-2">
+                                    <input id="weight_actual_left_b" type="number" step="0.01" readonly
+                                        class="block w-full rounded-md border-gray-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200"
+                                        :class="lockedFields.weight_actual_left_b ? 'bg-green-50 dark:bg-green-900/30 border-green-400 dark:border-green-600 font-semibold' : 'bg-white dark:bg-neutral-700'"
+                                        :value="lockedFields.weight_actual_left_b ? $wire.weight_actual_left_b : latestScaleWeight"
+                                        wire:model="weight_actual_left_b">
+                                </div>
+                                <div class="mt-2 flex gap-2">
+                                    <button type="button" x-show="!lockedFields.weight_actual_left_b" @click="setWeight('weight_actual_left_b')" class="px-3 py-1 text-sm rounded bg-caldy-500 hover:bg-caldy-600 text-white cursor-pointer">
+                                        {{ __('Set Weight') }}
+                                    </button>
+                                    <button type="button" x-show="lockedFields.weight_actual_left_b" @click="unlockWeight('weight_actual_left_b')" class="px-3 py-1 text-sm rounded bg-amber-500 hover:bg-amber-600 text-white cursor-pointer">
+                                        {{ __('Unlock') }}
+                                    </button>
+                                    <span class="self-center text-xs text-neutral-400" x-text="'Scale: ' + latestScaleWeight + ' g'"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Weight validation alerts --}}
+                    {{-- Validation alerts --}}
                     @php
                         $leftWeightErrors = [];
-                        if ($weight_target_left_a !== '' && $weight_actual_left_a !== '' && (float) $weight_actual_left_a < (float) $weight_target_left_a) {
-                            $leftWeightErrors[] = __('Chemical A: Actual weight (:actual g) is below target (:target g)', ['actual' => $weight_actual_left_a, 'target' => $weight_target_left_a]);
+                        $leftUpDev = (float) ($selectedRecipeLeft['up_dev'] ?? 0);
+                        $leftLowDev = (float) ($selectedRecipeLeft['low_dev'] ?? 0);
+
+                        // Lot number required
+                        if ($stock_id_left_a === '') {
+                            $leftWeightErrors[] = __('Chemical A: Lot number is required');
                         }
-                        if ($weight_target_left_b !== '' && $weight_actual_left_b !== '' && (float) $weight_actual_left_b < (float) $weight_target_left_b) {
-                            $leftWeightErrors[] = __('Chemical B: Actual weight (:actual g) is below target (:target g)', ['actual' => $weight_actual_left_b, 'target' => $weight_target_left_b]);
+                        if ($stock_id_left_b === '') {
+                            $leftWeightErrors[] = __('Chemical B: Lot number is required');
+                        }
+
+                        // Weight actual required
+                        if ($weight_actual_left_a === '') {
+                            $leftWeightErrors[] = __('Chemical A: Weight actual is required');
+                        }
+                        if ($weight_actual_left_b === '') {
+                            $leftWeightErrors[] = __('Chemical B: Weight actual is required');
+                        }
+
+                        // Weight deviation check
+                        if ($weight_target_left_a !== '' && $weight_actual_left_a !== '') {
+                            $targetA = (float) $weight_target_left_a;
+                            $actualA = (float) $weight_actual_left_a;
+                            $lowerA = $targetA - $leftLowDev;
+                            $upperA = $targetA + $leftUpDev;
+                            if ($actualA < $lowerA) {
+                                $leftWeightErrors[] = __('Chemical A: Actual weight (:actual g) is below lower limit (:lower g)', ['actual' => $weight_actual_left_a, 'lower' => round($lowerA, 2)]);
+                            } elseif ($actualA > $upperA) {
+                                $leftWeightErrors[] = __('Chemical A: Actual weight (:actual g) exceeds upper limit (:upper g)', ['actual' => $weight_actual_left_a, 'upper' => round($upperA, 2)]);
+                            }
+                        }
+                        if ($weight_target_left_b !== '' && $weight_actual_left_b !== '') {
+                            $targetB = (float) $weight_target_left_b;
+                            $actualB = (float) $weight_actual_left_b;
+                            $lowerB = $targetB - $leftLowDev;
+                            $upperB = $targetB + $leftUpDev;
+                            if ($actualB < $lowerB) {
+                                $leftWeightErrors[] = __('Chemical B: Actual weight (:actual g) is below lower limit (:lower g)', ['actual' => $weight_actual_left_b, 'lower' => round($lowerB, 2)]);
+                            } elseif ($actualB > $upperB) {
+                                $leftWeightErrors[] = __('Chemical B: Actual weight (:actual g) exceeds upper limit (:upper g)', ['actual' => $weight_actual_left_b, 'upper' => round($upperB, 2)]);
+                            }
                         }
                         $leftWeightValid = empty($leftWeightErrors);
                         $leftCanStart = $isAuthenticated && $recipe_id_left && $leftWeightValid;
@@ -1119,11 +1265,12 @@ class extends Component
                     <div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-sm space-y-1">
                         <div class="flex items-center gap-2 font-semibold">
                             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
-                            {{ __('Weight below target') }}
+                            {{ __('Weight out of tolerance') }}
                         </div>
                         @foreach($leftWeightErrors as $err)
                             <div class="ml-6 text-xs">{{ $err }}</div>
                         @endforeach
+                        <div class="ml-6 text-xs text-neutral-500">{{ __('Tolerance: -:low / +:up', ['low' => $leftLowDev, 'up' => $leftUpDev]) }}</div>
                     </div>
                     @endif
 
@@ -1144,8 +1291,16 @@ class extends Component
             @else
                 {{-- ──── TIMER / RESULT PHASE ──── --}}
                 <div x-data="{ detailOpen: false }">
+                    {{-- Waiting for micon --}}
+                    <div x-show="leftWaiting && !leftRunning && !leftFinished" x-transition class="px-5 pt-4 pb-2">
+                        <div class="flex items-center gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300">
+                            <svg class="animate-spin h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span class="font-semibold text-sm">{{ __('Waiting for micon response...') }}</span>
+                        </div>
+                    </div>
+
                     {{-- Progress + timer --}}
-                    <div class="px-5 pt-4 pb-2">
+                    <div class="px-5 pt-4 pb-2" x-show="!leftWaiting || leftRunning || leftFinished">
                         <div class="flex items-end justify-between mb-1">
                             <span class="text-3xl font-bold tabular-nums" x-text="leftTimeDisplay"
                                   :class="leftFinished || @js($completedLeft) ? 'text-green-500' : (miconA.em === 1 ? 'text-red-500' : 'text-blue-500')"></span>
@@ -1346,12 +1501,27 @@ class extends Component
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (g)") }}</label>
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (kg)") }}</label>
                                 <input type="number" readonly step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-200 cursor-not-allowed" wire:model="weight_target_right_a">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (g)") }}</label>
-                                <input id="weight_actual_right_a" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500" wire:model="weight_actual_right_a">
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (kg)") }}</label>
+                                <div class="mt-1 flex items-center gap-2">
+                                    <input id="weight_actual_right_a" type="number" step="0.01" readonly
+                                        class="block w-full rounded-md border-gray-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200"
+                                        :class="lockedFields.weight_actual_right_a ? 'bg-green-50 dark:bg-green-900/30 border-green-400 dark:border-green-600 font-semibold' : 'bg-white dark:bg-neutral-700'"
+                                        :value="lockedFields.weight_actual_right_a ? $wire.weight_actual_right_a : latestScaleWeight"
+                                        wire:model="weight_actual_right_a">
+                                </div>
+                                <div class="mt-2 flex gap-2">
+                                    <button type="button" x-show="!lockedFields.weight_actual_right_a" @click="setWeight('weight_actual_right_a')" class="px-3 py-1 text-sm rounded bg-caldy-500 hover:bg-caldy-600 text-white cursor-pointer">
+                                        {{ __('Set Weight') }}
+                                    </button>
+                                    <button type="button" x-show="lockedFields.weight_actual_right_a" @click="unlockWeight('weight_actual_right_a')" class="px-3 py-1 text-sm rounded bg-amber-500 hover:bg-amber-600 text-white cursor-pointer">
+                                        {{ __('Unlock') }}
+                                    </button>
+                                    <span class="self-center text-xs text-neutral-400" x-text="'Scale: ' + latestScaleWeight + ' g'"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1374,24 +1544,75 @@ class extends Component
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (g)") }}</label>
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Target (kg)") }}</label>
                                 <input type="number" readonly step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-200 cursor-not-allowed" wire:model="weight_target_right_b">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (g)") }}</label>
-                                <input id="weight_actual_right_b" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500" wire:model="weight_actual_right_b">
+                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __("Weight Actual (kg)") }}</label>
+                                <div class="mt-1 flex items-center gap-2">
+                                    <input id="weight_actual_right_b" type="number" step="0.01" readonly
+                                        class="block w-full rounded-md border-gray-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200"
+                                        :class="lockedFields.weight_actual_right_b ? 'bg-green-50 dark:bg-green-900/30 border-green-400 dark:border-green-600 font-semibold' : 'bg-white dark:bg-neutral-700'"
+                                        :value="lockedFields.weight_actual_right_b ? $wire.weight_actual_right_b : latestScaleWeight"
+                                        wire:model="weight_actual_right_b">
+                                </div>
+                                <div class="mt-2 flex gap-2">
+                                    <button type="button" x-show="!lockedFields.weight_actual_right_b" @click="setWeight('weight_actual_right_b')" class="px-3 py-1 text-sm rounded bg-caldy-500 hover:bg-caldy-600 text-white cursor-pointer">
+                                        {{ __('Set Weight') }}
+                                    </button>
+                                    <button type="button" x-show="lockedFields.weight_actual_right_b" @click="unlockWeight('weight_actual_right_b')" class="px-3 py-1 text-sm rounded bg-amber-500 hover:bg-amber-600 text-white cursor-pointer">
+                                        {{ __('Unlock') }}
+                                    </button>
+                                    <span class="self-center text-xs text-neutral-400" x-text="'Scale: ' + latestScaleWeight + ' g'"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Weight validation alerts --}}
+                    {{-- Validation alerts --}}
                     @php
                         $rightWeightErrors = [];
-                        if ($weight_target_right_a !== '' && $weight_actual_right_a !== '' && (float) $weight_actual_right_a < (float) $weight_target_right_a) {
-                            $rightWeightErrors[] = __('Chemical A: Actual weight (:actual g) is below target (:target g)', ['actual' => $weight_actual_right_a, 'target' => $weight_target_right_a]);
+                        $rightUpDev = (float) ($selectedRecipeRight['up_dev'] ?? 0);
+                        $rightLowDev = (float) ($selectedRecipeRight['low_dev'] ?? 0);
+
+                        // Lot number required
+                        if ($stock_id_right_a === '') {
+                            $rightWeightErrors[] = __('Chemical A: Lot number is required');
                         }
-                        if ($weight_target_right_b !== '' && $weight_actual_right_b !== '' && (float) $weight_actual_right_b < (float) $weight_target_right_b) {
-                            $rightWeightErrors[] = __('Chemical B: Actual weight (:actual g) is below target (:target g)', ['actual' => $weight_actual_right_b, 'target' => $weight_target_right_b]);
+                        if ($stock_id_right_b === '') {
+                            $rightWeightErrors[] = __('Chemical B: Lot number is required');
+                        }
+
+                        // Weight actual required
+                        if ($weight_actual_right_a === '') {
+                            $rightWeightErrors[] = __('Chemical A: Weight actual is required');
+                        }
+                        if ($weight_actual_right_b === '') {
+                            $rightWeightErrors[] = __('Chemical B: Weight actual is required');
+                        }
+
+                        // Weight deviation check
+                        if ($weight_target_right_a !== '' && $weight_actual_right_a !== '') {
+                            $targetA = (float) $weight_target_right_a;
+                            $actualA = (float) $weight_actual_right_a;
+                            $lowerA = $targetA - $rightLowDev;
+                            $upperA = $targetA + $rightUpDev;
+                            if ($actualA < $lowerA) {
+                                $rightWeightErrors[] = __('Chemical A: Actual weight (:actual g) is below lower limit (:lower g)', ['actual' => $weight_actual_right_a, 'lower' => round($lowerA, 2)]);
+                            } elseif ($actualA > $upperA) {
+                                $rightWeightErrors[] = __('Chemical A: Actual weight (:actual g) exceeds upper limit (:upper g)', ['actual' => $weight_actual_right_a, 'upper' => round($upperA, 2)]);
+                            }
+                        }
+                        if ($weight_target_right_b !== '' && $weight_actual_right_b !== '') {
+                            $targetB = (float) $weight_target_right_b;
+                            $actualB = (float) $weight_actual_right_b;
+                            $lowerB = $targetB - $rightLowDev;
+                            $upperB = $targetB + $rightUpDev;
+                            if ($actualB < $lowerB) {
+                                $rightWeightErrors[] = __('Chemical B: Actual weight (:actual g) is below lower limit (:lower g)', ['actual' => $weight_actual_right_b, 'lower' => round($lowerB, 2)]);
+                            } elseif ($actualB > $upperB) {
+                                $rightWeightErrors[] = __('Chemical B: Actual weight (:actual g) exceeds upper limit (:upper g)', ['actual' => $weight_actual_right_b, 'upper' => round($upperB, 2)]);
+                            }
                         }
                         $rightWeightValid = empty($rightWeightErrors);
                         $rightCanStart = $isAuthenticated && $recipe_id_right && $rightWeightValid;
@@ -1401,11 +1622,12 @@ class extends Component
                     <div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-sm space-y-1">
                         <div class="flex items-center gap-2 font-semibold">
                             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
-                            {{ __('Weight below target') }}
+                            {{ __('Weight out of tolerance') }}
                         </div>
                         @foreach($rightWeightErrors as $err)
                             <div class="ml-6 text-xs">{{ $err }}</div>
                         @endforeach
+                        <div class="ml-6 text-xs text-neutral-500">{{ __('Tolerance: -:low / +:up', ['low' => $rightLowDev, 'up' => $rightUpDev]) }}</div>
                     </div>
                     @endif
 
@@ -1426,8 +1648,16 @@ class extends Component
             @else
                 {{-- ──── TIMER / RESULT PHASE ──── --}}
                 <div x-data="{ detailOpen: false }">
+                    {{-- Waiting for micon --}}
+                    <div x-show="rightWaiting && !rightRunning && !rightFinished" x-transition class="px-5 pt-4 pb-2">
+                        <div class="flex items-center gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300">
+                            <svg class="animate-spin h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span class="font-semibold text-sm">{{ __('Waiting for micon response...') }}</span>
+                        </div>
+                    </div>
+
                     {{-- Progress + timer --}}
-                    <div class="px-5 pt-4 pb-2">
+                    <div class="px-5 pt-4 pb-2" x-show="!rightWaiting || rightRunning || rightFinished">
                         <div class="flex items-end justify-between mb-1">
                             <span class="text-3xl font-bold tabular-nums" x-text="rightTimeDisplay"
                                   :class="rightFinished || @js($completedRight) ? 'text-green-500' : (miconB.em === 1 ? 'text-red-500' : 'text-emerald-500')"></span>

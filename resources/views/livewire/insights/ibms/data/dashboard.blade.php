@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Models\InsIbmsCount;
+use App\Models\InsIbmsDevice;
 
 new class extends Component {
     public $totalBatches = 0;
@@ -19,56 +20,63 @@ new class extends Component {
 
     public function loadData()
     {
+        // Get all machine names from active devices config
+        $allMachineNames = InsIbmsDevice::active()->get()
+            ->flatMap(function ($device) {
+                $machines = data_get($device->config, 'list_machine', []);
+                return collect($machines)->pluck('name')->filter();
+            })
+            ->unique()
+            ->sort()
+            ->values();
+
         $records = InsIbmsCount::whereDate('created_at', now()->toDateString())
             ->orderBy('data->name')
             ->latest()
             ->get();
 
-        if ($records->isEmpty()) {
-            $this->hasData = false;
-            $this->totalBatches = 0;
-            $this->averageBatchTime = 0;
-            $this->batchNotStandard = 0;
-            $this->batchStandard = 0;
-            $this->chartData = [];
-            $this->pieChartData = [];
-        } else {
-            $this->hasData = true;
-            $this->totalBatches = $records->count();
-            
-            $totalDurationMinutes = 0;
-            foreach ($records as $record) {
-                if ($record->duration) {
-                    $parts = explode(':', $record->duration);
-                    $totalDurationMinutes += ($parts[0] ?? 0) * 60 + ($parts[1] ?? 0);
-                }
-            }
-            $this->averageBatchTime = $records->count() > 0 ? round($totalDurationMinutes / $records->count()) : 0;
+        $this->totalBatches = $records->count();
 
-            // Group by machine (using shift or name from data)
-            $grouped = $records->groupBy(function ($item) {
-                return $item->data['name'] ?? 'Unknown';
+        $totalDurationMinutes = 0;
+        foreach ($records as $record) {
+            if ($record->duration) {
+                $parts = explode(':', $record->duration);
+                $totalDurationMinutes += ($parts[0] ?? 0) * 60 + ($parts[1] ?? 0);
+            }
+        }
+        $this->averageBatchTime = $records->count() > 0 ? round($totalDurationMinutes / $records->count()) : 0;
+
+        // Group records by machine name
+        $grouped = $records->groupBy(function ($item) {
+            return $item->data['name'] ?? 'Unknown';
+        });
+
+        // Build chart data for all machines (from config), filling zeros for machines without data
+        $machineNames = $allMachineNames->isNotEmpty() ? $allMachineNames : $grouped->keys()->sort()->values();
+
+        $this->chartData = $machineNames->map(function ($name) use ($grouped) {
+            $group = $grouped->get($name, collect());
+            $statusCounts = $group->countBy(function ($item) {
+                return data_get($item, 'data.status');
             });
 
-            $this->chartData = $grouped->map(function ($group, $key) {
-                $statusCounts = $group->countBy(function ($item) {
-                    return data_get($item, 'data.status');
-                });
+            return [
+                'machine' => 'Machine ' . $name,
+                'too_early' => (int) $statusCounts->get('too_early', 0) + (int) $statusCounts->get('to_early', 0),
+                'on_time' => (int) $statusCounts->get('on_time', 0),
+                'too_late' => (int) $statusCounts->get('to_late', 0) + (int) $statusCounts->get('too_late', 0),
+                'total' => $group->count(),
+            ];
+        })->values()->toArray();
 
-                return [
-                    'machine' => 'Machine ' . $key,
-                    'too_early' => (int) $statusCounts->get('too_early', 0) + (int) $statusCounts->get('to_early', 0),
-                    'on_time' => (int) $statusCounts->get('on_time', 0),
-                    'too_late' => (int) $statusCounts->get('to_late', 0) + (int) $statusCounts->get('too_late', 0),
-                    'total' => $group->count(),
-                ];
-            })->values()->toArray();
+        $this->hasData = count($this->chartData) > 0;
 
-            $this->batchNotStandard = $records->whereIn('data.status', ['too_early', 'to_early', 'to_late', 'too_late'])->count();
-            $this->batchStandard = $records->where('data.status', 'on_time')->count();
+        $this->batchNotStandard = $records->whereIn('data.status', ['too_early', 'to_early', 'to_late', 'too_late'])->count();
+        $this->batchStandard = $records->where('data.status', 'on_time')->count();
 
-            // Calculate pie chart percentages
-            $total = $records->count();
+        // Calculate pie chart percentages
+        $total = $records->count();
+        if ($total > 0) {
             $statusCounts = $records->countBy(function ($item) {
                 return data_get($item, 'data.status');
             });
@@ -84,8 +92,9 @@ new class extends Component {
             $this->pieChartData = [
                 ['label' => 'Too Early (<20 minutes)', 'value' => round($tooEarlyPct, 1), 'color' => '#ef4444'],
                 ['label' => 'On Time (20 minutes)', 'value' => round($onTimePct, 1), 'color' => '#22c55e'],
-                ['label' => 'Too Late (>20 minutes)', 'value' => round($toLatePct, 1), 'color' => '#f59e0b'],
             ];
+        } else {
+            $this->pieChartData = [];
         }
     }
 }; ?>
@@ -295,7 +304,6 @@ new class extends Component {
         const series = [
             { name: 'Too Early (<20 minutes)', data: chartData.map(d => d.too_early) },
             { name: 'On Time (20 minutes)', data: chartData.map(d => d.on_time) },
-            { name: 'Too Late (>20 minutes)', data: chartData.map(d => d.too_late) },
         ];
 
         const options = {
@@ -396,7 +404,7 @@ new class extends Component {
                     toolbar: { show: false },
                     foreColor: textColor
                 },
-                labels: ['Too Early (<15 minutes)', 'On Time (15 minutes)', 'Too Late (>15 minutes)'],
+                labels: ['Too Early (<15 minutes)', 'On Time (15 minutes)'],
                 colors: ibmsChartColors,
                 legend: { show: false },
                 stroke: { width: 0 },
