@@ -589,13 +589,63 @@ class extends Component
         latestScaleWeight: '0.00',
         lockedFields: { weight_actual_left_a: false, weight_actual_left_b: false, weight_actual_right_a: false, weight_actual_right_b: false },
 
+        // Auto-lock on stable
+        stableThresholdSec: 10,
+        stableLastWeight: null,
+        stableSince: null,
+        stableTimer: null,
+        stableCountdown: 0,
+        stableTargetField: null,
+
         setWeight(field) {
             this.lockedFields[field] = true;
             $wire.setWeight(field, this.latestScaleWeight);
+            this.clearStableTimer();
         },
 
         unlockWeight(field) {
             this.lockedFields[field] = false;
+            this.clearStableTimer();
+        },
+
+        getNextUnlockedField() {
+            const fields = ['weight_actual_left_a', 'weight_actual_left_b', 'weight_actual_right_a', 'weight_actual_right_b'];
+            return fields.find(f => !this.lockedFields[f]) || null;
+        },
+
+        clearStableTimer() {
+            if (this.stableTimer) { clearInterval(this.stableTimer); this.stableTimer = null; }
+            this.stableCountdown = 0;
+            this.stableTargetField = null;
+            this.stableSince = null;
+        },
+
+        onScaleWeight(weight) {
+            this.latestScaleWeight = weight;
+            const targetField = this.getNextUnlockedField();
+
+            if (!targetField) {
+                this.clearStableTimer();
+                return;
+            }
+
+            if (weight !== this.stableLastWeight || targetField !== this.stableTargetField) {
+                this.stableLastWeight = weight;
+                this.clearStableTimer();
+                const w = parseFloat(weight);
+                if (isNaN(w) || w <= 0) return;
+                this.stableSince = Date.now();
+                this.stableTargetField = targetField;
+                this.stableCountdown = this.stableThresholdSec;
+                this.stableTimer = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - this.stableSince) / 1000);
+                    this.stableCountdown = Math.max(0, this.stableThresholdSec - elapsed);
+                    if (this.stableCountdown <= 0) {
+                        this.setWeight(this.stableTargetField);
+                        this.clearStableTimer();
+                    }
+                }, 1000);
+            }
         },
 
         // LEFT HEAD timer
@@ -810,9 +860,9 @@ class extends Component
             this.reconnectTimer = setTimeout(() => this.wsConnect(), delay);
         },
     }"
-    x-init="wsConnect(); window.addEventListener('scale-weight', e => { latestScaleWeight = e.detail; });
-        Livewire.on('resetLeftDone', () => { resetLeftTimer(); });
-        Livewire.on('resetRightDone', () => { resetRightTimer(); });"
+    x-init="wsConnect(); window.addEventListener('scale-weight', e => { onScaleWeight(e.detail); });
+        Livewire.on('resetLeftDone', () => { resetLeftTimer(); clearStableTimer(); });
+        Livewire.on('resetRightDone', () => { resetRightTimer(); clearStableTimer(); });"
 >
     {{-- ═══════════════════════════════════════════════════════════════ --}}
     {{-- TOP BAR: RFID + WebSocket status                              --}}
@@ -1164,6 +1214,7 @@ class extends Component
                                         {{ __('Unlock') }}
                                     </button>
                                     <span class="self-center text-xs text-neutral-400" x-text="'Scale: ' + latestScaleWeight + ' g'"></span>
+                                    <span x-show="stableTargetField === 'weight_actual_left_a' && stableCountdown > 0" x-transition class="self-center text-xs font-semibold text-blue-500" x-text="'⏱ ' + stableCountdown + 's'"></span>
                                 </div>
                             </div>
                         </div>
@@ -1207,6 +1258,7 @@ class extends Component
                                         {{ __('Unlock') }}
                                     </button>
                                     <span class="self-center text-xs text-neutral-400" x-text="'Scale: ' + latestScaleWeight + ' g'"></span>
+                                    <span x-show="stableTargetField === 'weight_actual_left_b' && stableCountdown > 0" x-transition class="self-center text-xs font-semibold text-blue-500" x-text="'⏱ ' + stableCountdown + 's'"></span>
                                 </div>
                             </div>
                         </div>
@@ -1521,6 +1573,7 @@ class extends Component
                                         {{ __('Unlock') }}
                                     </button>
                                     <span class="self-center text-xs text-neutral-400" x-text="'Scale: ' + latestScaleWeight + ' g'"></span>
+                                    <span x-show="stableTargetField === 'weight_actual_right_a' && stableCountdown > 0" x-transition class="self-center text-xs font-semibold text-blue-500" x-text="'⏱ ' + stableCountdown + 's'"></span>
                                 </div>
                             </div>
                         </div>
@@ -1564,6 +1617,7 @@ class extends Component
                                         {{ __('Unlock') }}
                                     </button>
                                     <span class="self-center text-xs text-neutral-400" x-text="'Scale: ' + latestScaleWeight + ' g'"></span>
+                                    <span x-show="stableTargetField === 'weight_actual_right_b' && stableCountdown > 0" x-transition class="self-center text-xs font-semibold text-blue-500" x-text="'⏱ ' + stableCountdown + 's'"></span>
                                 </div>
                             </div>
                         </div>
