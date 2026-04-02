@@ -586,7 +586,7 @@ class extends Component
         duration: @js($durationSeconds),
 
         // Scale weight
-        latestScaleWeight: '0.00',
+        latestScaleWeight: '0.000',
         lockedFields: { weight_actual_left_a: false, weight_actual_left_b: false, weight_actual_right_a: false, weight_actual_right_b: false },
 
         // Auto-lock on stable
@@ -1016,7 +1016,7 @@ class extends Component
                     handleWeightMessage(raw) {
                         const idMatch = raw.match(/\[ID:(\d+)\]/);
                         const beratMatch = raw.match(/Berat:\s*([\d.]+)/);
-                        if (idMatch && beratMatch && idMatch[1] === '1') {
+                        if (idMatch && beratMatch && idMatch[1] === '1') { //id_weight
                             const w = parseFloat(beratMatch[1]);
                             if (!Number.isNaN(w)) {
                                 window.dispatchEvent(new CustomEvent('scale-weight', { detail: Number(w).toFixed(3) }));
