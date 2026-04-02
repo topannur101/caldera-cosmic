@@ -404,7 +404,7 @@ new class extends Component {
                     toolbar: { show: false },
                     foreColor: textColor
                 },
-                labels: ['Too Early (<15 minutes)', 'On Time (15 minutes)'],
+                labels: ['Too Early (<20 minutes)', 'On Time (20 minutes)'],
                 colors: ibmsChartColors,
                 legend: { show: false },
                 stroke: { width: 0 },
