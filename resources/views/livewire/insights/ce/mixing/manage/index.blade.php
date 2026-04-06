@@ -31,6 +31,22 @@ new #[Layout("layouts.app")] class extends Component {};
                     </div>
                 </div>
             </x-card-link>
+
+            <!-- device -->
+             <x-card-link href="{{ route('insights.ce.mixing.manage.devices') }}" wire:navigate>
+                <div class="flex px-8">
+                    <div>
+                        <div class="flex pr-5 h-full text-neutral-600 dark:text-neutral-400">
+                            <div class="m-auto"><i class="icon-monitor-smartphone"></i></div>
+                        </div>
+                    </div>
+                    <div class="grow truncate py-4">
+                        <div class="truncate text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __("Kelola perangkat mixing") }}
+                        </div>
+                    </div>
+                </div>
+            </x-card-link>
         </div>
     </div>
 </div>

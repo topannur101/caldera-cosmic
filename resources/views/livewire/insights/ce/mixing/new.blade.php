@@ -2,6 +2,7 @@
 
 use App\Models\InvCeAuth;
 use App\Models\InvCeChemical;
+use App\Models\InvCeMixingDevice;
 use App\Models\InvCeMixingLog;
 use App\Models\InvCeRecipe;
 use App\Models\InvCeStock;
@@ -13,6 +14,9 @@ new #[Layout('layouts.app')]
 class extends Component
 {
     public string $cookieKey = 'invce_mixing_auth';
+    public array $deviceConfig = [];
+    public string $wsUrlRfid = '';
+    public string $wsUrlMicon = '';
 
     // Recipe selection
     public array $recipes = [];
@@ -125,11 +129,56 @@ class extends Component
 
         // convert minutes to seconds for timer
         $this->durationSeconds = $this->durationMinutes * 60;
+        $this->loadDeviceConfig();
     }
 
     public function updatedDurationMinutes(int $value): void
     {
         $this->durationSeconds = $value * 60;
+    }
+
+    private function loadDeviceConfig(): void
+    {
+        $device = InvCeMixingDevice::query()
+            ->orderBy('node_id')
+            ->orderBy('id')
+            ->first();
+
+        $this->deviceConfig = is_array($device?->config) ? $device->config : [];
+
+        $this->wsUrlRfid = $this->buildWsUrl(
+            $this->deviceConfig['ws_host_rfid'] ?? null,
+            $this->deviceConfig['ws_port_rfid'] ?? null,
+            (string) config('rfid.ws_url_rfid')
+        );
+
+        $this->wsUrlMicon = $this->buildWsUrl(
+            $this->deviceConfig['ws_host_micon'] ?? null,
+            $this->deviceConfig['ws_port_micon'] ?? null,
+            (string) config('rfid.ws_url_node_1')
+        );
+    }
+
+    private function buildWsUrl(?string $host, mixed $port = null, string $fallback = ''): string
+    {
+        $host = trim((string) $host);
+        $port = trim((string) $port);
+
+        if ($host === '') {
+            return $fallback;
+        }
+
+        if (str_starts_with($host, 'ws://') || str_starts_with($host, 'wss://')) {
+            if ($port !== '' && ! preg_match('/:\d+(\/|$)/', $host)) {
+                return rtrim($host, '/') . ':' . $port . '/';
+            }
+
+            return $host;
+        }
+
+        $scheme = request()->isSecure() ? 'wss' : 'ws';
+
+        return $scheme . '://' . $host . ($port !== '' ? ':' . $port : '') . '/';
     }
 
     // ──── Recipe selection handlers ────
@@ -153,11 +202,12 @@ class extends Component
         $this->percentage_left      = (string) $recipe['hardener_ratio'];
 
         if (isset($recipe['target_weight']) && $recipe['target_weight'] !== null) {
+            $totalTarget = (float) $recipe['target_weight'];
             $ratio = (float) $recipe['hardener_ratio'] / 100;
-            $wB = round((float) $recipe['target_weight'] * $ratio, 2);
-            $wA = round((float) $recipe['target_weight'], 2);
-            $this->weight_target_left_a = (string) $wA;
-            $this->weight_target_left_b = (string) $wB;
+            $wB = round($totalTarget * $ratio, 2);
+            $wA = round($totalTarget - $wB, 2);
+            $this->weight_target_left_a = (string) max($wA, 0);
+            $this->weight_target_left_b = (string) (max($wB, 0) + (float) $this->weight_target_left_a);
         }
 
         $this->lot_numbers_left_a = $this->getLotNumbersByItemCode($recipe['chemical_code']);
@@ -186,11 +236,12 @@ class extends Component
         $this->percentage_right      = (string) $recipe['hardener_ratio'];
 
         if (isset($recipe['target_weight']) && $recipe['target_weight'] !== null) {
+            $totalTarget = (float) $recipe['target_weight'];
             $ratio = (float) $recipe['hardener_ratio'] / 100;
-            $wB = round((float) $recipe['target_weight'] * $ratio, 2);
-            $wA = round((float) $recipe['target_weight'], 2);
-            $this->weight_target_right_a = (string) $wA;
-            $this->weight_target_right_b = (string) $wB;
+            $wB = round($totalTarget * $ratio, 2);
+            $wA = round($totalTarget - $wB, 2);
+            $this->weight_target_right_a = (string) max($wA, 0);
+            $this->weight_target_right_b = (string) (max($wB, 0) + (float) $this->weight_target_right_a);
         }
 
         $this->lot_numbers_right_a = $this->getLotNumbersByItemCode($recipe['chemical_code']);
@@ -583,7 +634,7 @@ class extends Component
 <div
     class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8 text-neutral-800 dark:text-neutral-200"
     x-data="{
-        duration: @js($durationSeconds),
+        duration: $wire.entangle('durationSeconds'),
 
         // Scale weight
         latestScaleWeight: '0.000',
@@ -729,13 +780,14 @@ class extends Component
             });
         },
 
-        // WebSocket (micon)
-        wsUrl: @js(config('rfid.ws_url_node_1')),
+        // WebSocket (micon + weight)
+        wsUrl: @js($wsUrlMicon),
         ws: null,
         wsConnected: false,
         wsError: '',
         reconnectAttempt: 0,
         reconnectTimer: null,
+        isConnecting: false,
         lastRaw: '',
 
         // Parsed micon states
@@ -749,8 +801,13 @@ class extends Component
             this.lastRaw = raw;
             const idM = raw.match(/\[ID:(\d+)\]/);
             if (idM) this.miconId = parseInt(idM[1]);
-            const wM = raw.match(/W:\s*([\d.]+)/);
-            if (wM) this.miconWeight = parseFloat(wM[1]);
+            const wM = raw.match(/(?:W|Berat):\s*([\d.]+)/i);
+            if (wM) {
+                this.miconWeight = parseFloat(wM[1]);
+                if (!Number.isNaN(this.miconWeight)) {
+                    window.dispatchEvent(new CustomEvent('scale-weight', { detail: Number(this.miconWeight).toFixed(3) }));
+                }
+            }
 
             const aM = raw.match(/A:\[St:(\d+)\s+Ti:(\d+)\s+Em:(\d+)\s+Mode:(\d+)\]/);
             if (aM) this.miconA = { st: parseInt(aM[1]), ti: parseInt(aM[2]), em: parseInt(aM[3]), mode: parseInt(aM[4]) };
@@ -838,16 +895,57 @@ class extends Component
             if (this.rightInterval) { clearInterval(this.rightInterval); this.rightInterval = null; }
         },
 
-        wsConnect() {
-            if (!this.wsUrl) { this.wsError = 'NODE_1_WS_URL is not configured'; return; }
-            try { this.ws = new WebSocket(this.wsUrl); } catch(e) {
-                this.wsError = e?.message ?? 'Failed to connect';
-                this.scheduleReconnect(); return;
+        clearReconnectTimer() {
+            if (this.reconnectTimer) {
+                clearTimeout(this.reconnectTimer);
+                this.reconnectTimer = null;
             }
-            this.ws.onopen = () => { this.wsConnected = true; this.wsError = ''; this.reconnectAttempt = 0; };
+        },
+
+        wsConnect(force = false) {
+            if (!this.wsUrl) { this.wsError = 'Micon WebSocket URL is not configured'; return; }
+
+            if (this.isConnecting) {
+                return;
+            }
+
+            if (this.ws) {
+                if (this.ws.readyState === WebSocket.OPEN) {
+                    this.wsConnected = true;
+                    if (!force) {
+                        return;
+                    }
+                    return;
+                }
+
+                if (this.ws.readyState === WebSocket.CONNECTING) {
+                    return;
+                }
+            }
+
+            this.clearReconnectTimer();
+            this.isConnecting = true;
+
+            try {
+                this.ws = new WebSocket(this.wsUrl);
+            } catch(e) {
+                this.isConnecting = false;
+                this.wsError = e?.message ?? 'Failed to connect';
+                this.scheduleReconnect();
+                return;
+            }
+
+            this.ws.onopen = () => {
+                this.isConnecting = false;
+                this.wsConnected = true;
+                this.wsError = '';
+                this.reconnectAttempt = 0;
+                this.clearReconnectTimer();
+            };
             this.ws.onmessage = (evt) => { this.parseMicon(typeof evt.data === 'string' ? evt.data.trim() : ''); };
             this.ws.onerror = () => { this.wsError = 'WebSocket error'; this.wsConnected = false; };
             this.ws.onclose = (evt) => {
+                this.isConnecting = false;
                 this.wsConnected = false;
                 this.wsError = evt?.reason ? 'Disconnected: ' + evt.reason : 'Disconnected';
                 this.scheduleReconnect();
@@ -855,14 +953,19 @@ class extends Component
         },
 
         scheduleReconnect() {
-            if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+            if (this.reconnectTimer || this.isConnecting) return;
             const delay = Math.min(10000, 1000 * Math.pow(2, this.reconnectAttempt++));
-            this.reconnectTimer = setTimeout(() => this.wsConnect(), delay);
+            this.reconnectTimer = setTimeout(() => {
+                this.reconnectTimer = null;
+                this.wsConnect(true);
+            }, delay);
         },
     }"
-    x-init="wsConnect(); window.addEventListener('scale-weight', e => { onScaleWeight(e.detail); });
+    x-init="wsConnect();
         Livewire.on('resetLeftDone', () => { resetLeftTimer(); clearStableTimer(); });
         Livewire.on('resetRightDone', () => { resetRightTimer(); clearStableTimer(); });"
+    x-on:online.window="wsConnect(true)"
+    x-on:scale-weight.window="onScaleWeight($event.detail)"
 >
     {{-- ═══════════════════════════════════════════════════════════════ --}}
     {{-- TOP BAR: RFID + WebSocket status                              --}}
@@ -910,7 +1013,7 @@ class extends Component
                 wire:ignore
                 x-data="{
                     storageKey: 'invce_mixing_last_rfid',
-                    url: @js(config('rfid.ws_url_rfid')),
+                    url: @js($wsUrlRfid),
                     ws: null,
                     connected: false,
                     error: '',
@@ -937,15 +1040,30 @@ class extends Component
                     },
 
                     connect() {
-                        if (!this.url) { this.setDisconnected('RFID_WS_URL is empty'); return; }
+                        if (!this.url) { this.setDisconnected('RFID WebSocket URL is empty'); return; }
                         if (window.location?.protocol === 'https:' && this.url.startsWith('ws://')) {
                             this.setDisconnected('Page is HTTPS, WebSocket must be WSS'); return;
+                        }
+                        if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+                            return;
+                        }
+                        if (this.reconnectTimer) {
+                            clearTimeout(this.reconnectTimer);
+                            this.reconnectTimer = null;
                         }
                         try { this.ws = new WebSocket(this.url); } catch (e) {
                             this.setDisconnected(e?.message ?? 'Failed to create WebSocket');
                             this.scheduleReconnect(); return;
                         }
-                        this.ws.onopen = () => { this.reconnectAttempt = 0; this.connected = true; this.error = ''; };
+                        this.ws.onopen = () => {
+                            this.reconnectAttempt = 0;
+                            this.connected = true;
+                            this.error = '';
+                            if (this.reconnectTimer) {
+                                clearTimeout(this.reconnectTimer);
+                                this.reconnectTimer = null;
+                            }
+                        };
                         this.ws.onmessage = (event) => {
                             const raw = typeof event?.data === 'string' ? event.data : '';
                             this.lastRawMessage = raw;
@@ -985,12 +1103,15 @@ class extends Component
                     },
                     setDisconnected(message) { this.connected = false; if (message) this.error = String(message); },
                     scheduleReconnect() {
-                        if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+                        if (this.reconnectTimer || (this.ws && this.ws.readyState === WebSocket.CONNECTING)) return;
                         const delay = Math.min(10000, 1000 * Math.pow(2, this.reconnectAttempt++));
-                        this.reconnectTimer = setTimeout(() => this.connect(), delay);
+                        this.reconnectTimer = setTimeout(() => {
+                            this.reconnectTimer = null;
+                            this.connect();
+                        }, delay);
                     },
                 }"
-                x-init="connect(); $watch('code', value => { if(value) loadSavedCode() })"
+                x-init="loadSavedCode(); connect(); window.addEventListener('online', () => connect())"
                 class="flex items-center gap-2"
             >
                 <span class="text-neutral-500">RFID WS:</span>
@@ -999,63 +1120,13 @@ class extends Component
 
             <span class="hidden sm:inline text-neutral-300 dark:text-neutral-600">|</span>
 
-            {{-- Weight Websocket --}}
-            <div
-                wire:ignore
-                x-data="{
-                    url: 'ws://127.0.0.1:8767/',
-                    ws: null,
-                    connected: false,
-                    error: '',
-                    reconnectAttempt: 0,
-                    reconnectTimer: null,
-
-                    setConnected() { this.connected = true; this.error = ''; this.reconnectAttempt = 0; },
-                    setDisconnected(message) { this.connected = false; if (message) this.error = String(message); },
-
-                    handleWeightMessage(raw) {
-                        const idMatch = raw.match(/\[ID:(\d+)\]/);
-                        const beratMatch = raw.match(/Berat:\s*([\d.]+)/);
-                        if (idMatch && beratMatch && idMatch[1] === '1') { //id_weight
-                            const w = parseFloat(beratMatch[1]);
-                            if (!Number.isNaN(w)) {
-                                window.dispatchEvent(new CustomEvent('scale-weight', { detail: Number(w).toFixed(3) }));
-                            }
-                        }
-                    },
-
-                    connect() {
-                        if (!this.url) { this.setDisconnected('Weight WS URL is empty'); return; }
-                        if (window.location?.protocol === 'https:' && this.url.startsWith('ws://')) {
-                            this.setDisconnected('Page is HTTPS, WebSocket must be WSS'); return;
-                        }
-                        try { this.ws = new WebSocket(this.url); } catch (e) {
-                            this.setDisconnected(e?.message ?? 'Failed to create WebSocket');
-                            this.scheduleReconnect(); return;
-                        }
-                        this.ws.onopen = () => { this.setConnected(); };
-                        this.ws.onmessage = (event) => {
-                            const raw = typeof event?.data === 'string' ? event.data : '';
-                            this.handleWeightMessage(raw);
-                        };
-                        this.ws.onerror = () => { this.setDisconnected('WebSocket error'); };
-                        this.ws.onclose = (evt) => {
-                            const reason = evt?.reason ? `Disconnected: ${evt.reason}` : 'Disconnected';
-                            this.setDisconnected(reason);
-                            this.scheduleReconnect();
-                        };
-                    },
-                    scheduleReconnect() {
-                        if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-                        const delay = Math.min(10000, 1000 * Math.pow(2, this.reconnectAttempt++));
-                        this.reconnectTimer = setTimeout(() => this.connect(), delay);
-                    },
-                }"
-                x-init="connect()"
-                class="flex items-center gap-2"
-            >
-                <span class="text-neutral-500">Weight WS:</span>
-                <span :class="connected ? 'text-green-500 font-medium' : 'text-red-500 font-medium'" x-text="connected ? 'Connected' : 'Disconnected'"></span>
+            {{-- Scale from micon WebSocket --}}
+            <div class="flex items-center gap-2">
+                <span class="text-neutral-500">Scale:</span>
+                <span
+                    :class="wsConnected ? 'text-green-500 font-medium' : 'text-red-500 font-medium'"
+                    x-text="wsConnected ? ((miconWeight !== null ? Number(miconWeight).toFixed(3) : latestScaleWeight) + ' g') : 'Disconnected'"
+                ></span>
             </div>
 
             <span class="hidden sm:inline text-neutral-300 dark:text-neutral-600">|</span>
@@ -1095,7 +1166,7 @@ class extends Component
         <!-- timer setting -->
         <div>
             <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Mixing Time (min)") }}</label>
-            <select wire:model.live="durationMinutes" x-on:change="duration = $wire.durationSeconds" class="w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500">
+            <select wire:model.change="durationMinutes" class="w-full rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 focus:ring-caldy-500 focus:border-caldy-500">
                 @foreach ([1,5,10,15,20,25,30,45,60] as $min)
                     <option value="{{ $min }}">{{ $min }}</option>
                 @endforeach

@@ -355,6 +355,7 @@ Route::prefix('insights')->group(function () {
         //MANAGEMENT CE MIXING
         Volt::route('/ce/mixing/manage', 'insights.ce.mixing.manage.index')->name('mixing.manage.index');
         Volt::route('/ce/mixing/manage/recipes', 'insights.ce.mixing.manage.recipes')->name('mixing.manage.recipes');
+        Volt::route('/ce/mixing/manage/devices', 'insights.ce.mixing.manage.devices')->name('mixing.manage.devices');
     });
 
     // ===========================================//
