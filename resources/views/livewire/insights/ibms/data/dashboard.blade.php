@@ -3,6 +3,11 @@
 use Livewire\Volt\Component;
 use App\Models\InsIbmsCount;
 use App\Models\InsIbmsDevice;
+use App\Models\Project;
+use App\Services\DurationFormatterService;
+use App\Services\UptimeCalculatorService;
+use App\Services\WorkingHoursService;
+use Carbon\Carbon;
 
 new class extends Component {
     public $totalBatches = 0;
@@ -12,6 +17,7 @@ new class extends Component {
     public $batchNotStandard = 0;
     public $batchStandard = 0;
     public $hasData = false;
+    public $onlineStats = [];
 
     public function mount()
     {
@@ -31,6 +37,7 @@ new class extends Component {
             ->values();
 
         $records = InsIbmsCount::whereDate('created_at', now()->toDateString())
+            ->where('duration', '>=', '00:00:20') // Filter out records with duration less than 20 seconds
             ->orderBy('data->name')
             ->latest()
             ->get();
@@ -96,6 +103,60 @@ new class extends Component {
         } else {
             $this->pieChartData = [];
         }
+
+        $this->onlineStats = $this->loadOnlineStats(now());
+    }
+
+    private function loadOnlineStats(Carbon $date): array
+    {
+        $device = InsIbmsDevice::active()->first();
+
+        if (!$device) {
+            return $this->getEmptyOnlineStats();
+        }
+
+        $project = Project::where('ip', $device->ip_address)->first();
+        if (!$project) {
+            return $this->getEmptyOnlineStats();
+        }
+
+        $workingHoursService = app(WorkingHoursService::class);
+        $workingHours = $workingHoursService->getProjectWorkingHours($project->id);
+
+        if (!empty($workingHours)) {
+            $start = $date->copy()->setTime(Carbon::parse($workingHours[0]['start_time'])->hour, Carbon::parse($workingHours[0]['start_time'])->minute);
+            $end = $date->copy()->setTime(Carbon::parse($workingHours[0]['end_time'])->hour, Carbon::parse($workingHours[0]['end_time'])->minute);
+        } else {
+            $defaultHours = config('bpm.working_hours');
+            $start = $date->copy()->setTime($defaultHours['start'], 0);
+            $end = $date->copy()->setTime($defaultHours['end'], 0);
+        }
+
+        $calculator = app(UptimeCalculatorService::class);
+        $stats = $calculator->calculateStats($project->name, $start, $end);
+
+        $formatter = app(DurationFormatterService::class);
+
+        return [
+            'online_percentage' => $stats['online_percentage'],
+            'offline_percentage' => $stats['offline_percentage'],
+            'timeout_percentage' => $stats['timeout_percentage'],
+            'online_time' => $formatter->format($stats['online_duration']),
+            'offline_time' => $formatter->format($stats['offline_duration']),
+            'timeout_time' => $formatter->format($stats['timeout_duration']),
+        ];
+    }
+
+    private function getEmptyOnlineStats(): array
+    {
+        return [
+            'online_percentage' => 0,
+            'offline_percentage' => 0,
+            'timeout_percentage' => 0,
+            'online_time' => '0 seconds',
+            'offline_time' => '0 seconds',
+            'timeout_time' => '0 seconds',
+        ];
     }
 }; ?>
 
@@ -144,11 +205,39 @@ new class extends Component {
         <div class="col-span-2">
             <div class="w-full bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
                 <h1 class="text-center text-xl font-bold text-gray-800 dark:text-white mb-6">Online System Monitoring</h1>
-                @if ($hasData)
-                    <div id="onlineSystemMonitoringChart"></div>
-                @else
-                    <div class="h-[370px] flex items-center justify-center text-gray-500 dark:text-white">No Data Available</div>
-                @endif
+                <div id="onlineSystemMonitoringChart" class="h-[190px] mb-3"></div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded-full bg-green-500"></div>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Online</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-green-600 dark:text-green-400">{{ $onlineStats['online_percentage'] ?? 0 }}%</div>
+                            <div class="text-xs text-gray-500">{{ $onlineStats['online_time'] ?? '0 seconds' }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900/20 rounded">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded-full bg-gray-400"></div>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Offline</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-gray-600 dark:text-gray-400">{{ $onlineStats['offline_percentage'] ?? 0 }}%</div>
+                            <div class="text-xs text-gray-500">{{ $onlineStats['offline_time'] ?? '0 seconds' }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-orange-50 dark:bg-orange-900/20 rounded">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded-full bg-orange-500"></div>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Timeout (RTO)</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-orange-600 dark:text-orange-400">{{ $onlineStats['timeout_percentage'] ?? 0 }}%</div>
+                            <div class="text-xs text-gray-500">{{ $onlineStats['timeout_time'] ?? '0 seconds' }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <!-- Donut Chart Section -->
@@ -185,27 +274,12 @@ new class extends Component {
 <script>
     const hasData = @json($hasData);
     const chartData = {!! json_encode($chartData) !!};
+    const onlineStats = @json($onlineStats);
     const isDarkMode = document.documentElement.classList.contains('dark');
     const textColor = isDarkMode ? '#e6edf3' : '#0f172a';
 
     const ibmsChartColors = ['#ef4444', '#22c55e', '#f59e0b'];
     const monitoringColors = ['#4ade80', '#9ca3af', '#f59e0b'];
-    function formatDuration(totalSeconds) {
-        const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
-        const hours = Math.floor(safeSeconds / 3600);
-        const minutes = Math.floor((safeSeconds % 3600) / 60);
-        const seconds = safeSeconds % 60;
-
-        if (hours > 0) {
-            return `${hours} hours ${minutes} minutes ${seconds} seconds`;
-        }
-
-        if (minutes > 0) {
-            return `${minutes} minutes ${seconds} seconds`;
-        }
-
-        return `${seconds} seconds`;
-    }
 
     function renderOnlineSystemMonitoringChart() {
         if (typeof ApexCharts === 'undefined') {
@@ -216,39 +290,29 @@ new class extends Component {
         if (!container) {
             return;
         }
-
-        // Keep values aligned with reference card design.
         const monitoringSeries = [
-            { label: 'Online', value: 95.85, duration: 7 * 3600 + 58 * 60 + 47, color: monitoringColors[0] },
-            { label: 'Offline', value: 0, duration: 0, color: monitoringColors[1] },
-            { label: 'Timeout (RTO)', value: 4.15, duration: 20 * 60 + 45, color: monitoringColors[2] },
+            {
+                label: 'Online',
+                value: Number(onlineStats.online_percentage) || 0,
+                durationLabel: onlineStats.online_time || '0 seconds',
+                color: monitoringColors[0]
+            },
+            {
+                label: 'Offline',
+                value: Number(onlineStats.offline_percentage) || 0,
+                durationLabel: onlineStats.offline_time || '0 seconds',
+                color: monitoringColors[1]
+            },
+            {
+                label: 'Timeout (RTO)',
+                value: Number(onlineStats.timeout_percentage) || 0,
+                durationLabel: onlineStats.timeout_time || '0 seconds',
+                color: monitoringColors[2]
+            },
         ];
 
-        container.innerHTML = `
-            <div class="h-[190px]" id="onlineSystemMonitoringDonut"></div>
-            <div class="space-y-3 mt-1">
-                ${monitoringSeries.map((item) => `
-                    <div class="${isDarkMode ? 'bg-neutral-700/30' : 'bg-gray-100'} rounded-md px-3 py-2 flex items-center justify-between">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <span class="w-4 h-4 rounded-full shrink-0" style="background-color: ${item.color}"></span>
-                            <span class="text-base font-semibold ${isDarkMode ? 'text-neutral-100' : 'text-gray-700'}">${item.label}</span>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xl font-bold leading-none" style="color: ${item.color}">${item.value}%</p>
-                            <p class="text-sm ${isDarkMode ? 'text-neutral-300' : 'text-gray-500'}">${formatDuration(item.duration)}</p>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-
-        const donutContainer = container.querySelector('#onlineSystemMonitoringDonut');
-        if (!donutContainer) {
-            return;
-        }
-
-        if (donutContainer._apexChart) {
-            donutContainer._apexChart.destroy();
+        if (container._apexChart) {
+            container._apexChart.destroy();
         }
 
         const donutOptions = {
@@ -276,14 +340,14 @@ new class extends Component {
             tooltip: {
                 y: {
                     formatter: function (value, { seriesIndex }) {
-                        return value.toFixed(2) + '% - ' + formatDuration(monitoringSeries[seriesIndex].duration);
+                        return value.toFixed(2) + '% - ' + monitoringSeries[seriesIndex].durationLabel;
                     }
                 }
             }
         };
 
-        donutContainer._apexChart = new ApexCharts(donutContainer, donutOptions);
-        donutContainer._apexChart.render();
+        container._apexChart = new ApexCharts(container, donutOptions);
+        container._apexChart.render();
     }
 
 
@@ -442,11 +506,12 @@ new class extends Component {
     }
 
     function renderAllCharts() {
+        renderOnlineSystemMonitoringChart();
+
         if (!hasData) {
             return;
         }
 
-        renderOnlineSystemMonitoringChart();
         renderBatchChart();
         renderMachinePieCharts();
     }

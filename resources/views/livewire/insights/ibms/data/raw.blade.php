@@ -28,7 +28,7 @@ new class extends Component {
     public string $end_at = "";
 
     #[Url]
-    public string $machine_id = "1&2";
+    public string $machine_id = '0';
 
     public int $perPage = 10;
 
@@ -106,6 +106,9 @@ new class extends Component {
     {
         $query = InsIbmsCount::query();
 
+        // filter noice data with duration < 20 seconds
+        $query->where("duration", ">=", 20);
+
         if ($this->shift) {
             $query->where("shift", $this->shift);
         }
@@ -115,7 +118,7 @@ new class extends Component {
         }
 
         // where data->name = machine_id
-        if ($this->machine_id) {
+        if ($this->machine_id !== '0' && $this->machine_id !== 'all' && $this->machine_id !== '') {
             $query->where("data->name", (string) $this->machine_id);
         }
         
@@ -123,7 +126,38 @@ new class extends Component {
             ->orderBy("created_at", "desc");
     }
 
-     public function loadMore()
+    public function updatedShift(): void
+    {
+        $this->resetPaginationState();
+    }
+
+    public function updatedStatus(): void
+    {
+        $this->resetPaginationState();
+    }
+
+    public function updatedMachineId(): void
+    {
+        $this->resetPaginationState();
+    }
+
+    public function updatedStartAt(): void
+    {
+        $this->resetPaginationState();
+    }
+
+    public function updatedEndAt(): void
+    {
+        $this->resetPaginationState();
+    }
+
+    private function resetPaginationState(): void
+    {
+        $this->perPage = 10;
+        $this->resetPage();
+    }
+
+    public function loadMore()
     {
         $this->perPage += 10;
     }
@@ -213,6 +247,12 @@ new class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <!-- total entry -->
+            <div class="text-center text-sm text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+               <p class="flex items-center">
+                    {{ __("Total:") }} {{ $counts->total() }}
+               </p> 
+            </div>
             <div class="grow flex justify-end gap-x-2 items-center">
                 <div class="flex gap-x-2">
                     <x-dropdown align="right" width="48">

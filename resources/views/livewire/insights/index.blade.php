@@ -12,6 +12,7 @@ use App\Models\InsDwpCount;
 use App\Models\InsBpmCount;
 use App\Models\InsPhDosingCount;
 use App\Models\InsIbmsCount;
+use App\Models\InsIbmsDevice;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -185,10 +186,8 @@ new #[Layout("layouts.app")] class extends Component {
     private function getCachedIbmsLines(): int
     {
         return Cache::remember("ibms_lines_recent", now()->addMinutes(10), function () {
-            $timeWindow = Carbon::now()->subHours(4);
-            return InsIbmsCount::where("updated_at", ">=", $timeWindow)
-                ->distinct("shift")
-                ->count("shift");
+            return InsIbmsDevice::distinct("name")
+                ->count("name");
         });
     }
 
