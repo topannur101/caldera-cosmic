@@ -46,10 +46,7 @@ new class extends Component {
 
         $totalDurationMinutes = 0;
         foreach ($records as $record) {
-            if ($record->duration) {
-                $parts = explode(':', $record->duration);
-                $totalDurationMinutes += ($parts[0] ?? 0) * 60 + ($parts[1] ?? 0);
-            }
+            $totalDurationMinutes += $this->durationToMinutes($record->duration);
         }
         $this->averageBatchTime = $records->count() > 0 ? round($totalDurationMinutes / $records->count()) : 0;
 
@@ -63,15 +60,17 @@ new class extends Component {
 
         $this->chartData = $machineNames->map(function ($name) use ($grouped) {
             $group = $grouped->get($name, collect());
-            $statusCounts = $group->countBy(function ($item) {
-                return data_get($item, 'data.status');
+            $durationCounts = $group->countBy(function ($item) {
+                return $this->getDurationCategory($item->duration);
             });
 
             return [
                 'machine' => 'Machine ' . $name,
-                'too_early' => (int) $statusCounts->get('too_early', 0) + (int) $statusCounts->get('to_early', 0),
-                'on_time' => (int) $statusCounts->get('on_time', 0),
-                'too_late' => (int) $statusCounts->get('to_late', 0) + (int) $statusCounts->get('too_late', 0),
+                'lt_5' => (int) $durationCounts->get('lt_5', 0),
+                'min_5_10' => (int) $durationCounts->get('min_5_10', 0),
+                'min_11_15' => (int) $durationCounts->get('min_11_15', 0),
+                'min_15_20' => (int) $durationCounts->get('min_15_20', 0),
+                'gt_20' => (int) $durationCounts->get('gt_20', 0),
                 'total' => $group->count(),
             ];
         })->values()->toArray();
@@ -84,27 +83,66 @@ new class extends Component {
         // Calculate pie chart percentages
         $total = $records->count();
         if ($total > 0) {
-            $statusCounts = $records->countBy(function ($item) {
-                return data_get($item, 'data.status');
+            $durationCounts = $records->countBy(function ($item) {
+                return $this->getDurationCategory($item->duration);
             });
 
-            $tooEarlyCount = (int) $statusCounts->get('too_early', 0) + (int) $statusCounts->get('to_early', 0);
-            $onTimeCount = (int) $statusCounts->get('on_time', 0);
-            $toLateCount = (int) $statusCounts->get('to_late', 0) + (int) $statusCounts->get('too_late', 0);
-
-            $tooEarlyPct = ($tooEarlyCount / $total) * 100;
-            $onTimePct = ($onTimeCount / $total) * 100;
-            $toLatePct = ($toLateCount / $total) * 100;
-
             $this->pieChartData = [
-                ['label' => 'Too Early (<20 minutes)', 'value' => round($tooEarlyPct, 1), 'color' => '#ef4444'],
-                ['label' => 'On Time (20 minutes)', 'value' => round($onTimePct, 1), 'color' => '#22c55e'],
+                ['label' => '< 5 minutes', 'value' => round(((int) $durationCounts->get('lt_5', 0) / $total) * 100, 1), 'color' => '#ef4444'],
+                ['label' => '5 - 10 minutes', 'value' => round(((int) $durationCounts->get('min_5_10', 0) / $total) * 100, 1), 'color' => '#f97316'],
+                ['label' => '11 - 15 minutes', 'value' => round(((int) $durationCounts->get('min_11_15', 0) / $total) * 100, 1), 'color' => '#facc15'],
+                ['label' => '15 - 20 minutes', 'value' => round(((int) $durationCounts->get('min_15_20', 0) / $total) * 100, 1), 'color' => '#22c55e'],
+                ['label' => '> 20 minutes', 'value' => round(((int) $durationCounts->get('gt_20', 0) / $total) * 100, 1), 'color' => '#3b82f6'],
             ];
         } else {
             $this->pieChartData = [];
         }
 
         $this->onlineStats = $this->loadOnlineStats(now());
+    }
+
+    private function durationToMinutes(?string $duration): float
+    {
+        if (!$duration) {
+            return 0;
+        }
+
+        $parts = array_map('intval', explode(':', $duration));
+
+        if (count($parts) === 3) {
+            [$hours, $minutes, $seconds] = $parts;
+            return ($hours * 60) + $minutes + ($seconds / 60);
+        }
+
+        if (count($parts) === 2) {
+            [$minutes, $seconds] = $parts;
+            return $minutes + ($seconds / 60);
+        }
+
+        return (float) ($parts[0] ?? 0);
+    }
+
+    private function getDurationCategory(?string $duration): string
+    {
+        $minutes = $this->durationToMinutes($duration);
+
+        if ($minutes < 5) {
+            return 'lt_5';
+        }
+
+        if ($minutes <= 10) {
+            return 'min_5_10';
+        }
+
+        if ($minutes <= 15) {
+            return 'min_11_15';
+        }
+
+        if ($minutes <= 20) {
+            return 'min_15_20';
+        }
+
+        return 'gt_20';
     }
 
     private function loadOnlineStats(Carbon $date): array
@@ -242,22 +280,31 @@ new class extends Component {
         </div>
         <!-- Donut Chart Section -->
         <div class="col-span-4 bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
-            <h2 class="text-center text-xl font-bold text-gray-800 dark:text-white mb-6">Evaluation Percentage</h2>
+            <h2 class="text-center text-xl font-bold text-gray-800 dark:text-white">Evaluation Percentage</h2>
             @if ($hasData)
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-2">
                     @foreach ($chartData as $index => $machine)
                         <div class="text-center mt-3">
-                            <div class="text-center mt-3">
-                                <p class="text-gray-800 dark:text-white text-xl font-bold leading-tight mb-5">{{ $machine['machine'] }}</p>
+                            <div class="text-center">
+                                <p class="text-gray-800 dark:text-white text-xl font-bold leading-tight">{{ $machine['machine'] }}</p>
                                 <div id="machinePieChart-{{ $index }}" class="h-[200px]"></div>
                             </div>
                             <!-- detail standard or not standard -->
-                            <div class="text-gray-500 dark:text-white text-sm mt-2 gap-2 flex flex-col items-center mt-4">
+                            <div class="text-gray-500 dark:text-white text-sm mt-2 gap-2 flex flex-col items-center">
                                 <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                    <p>Too Early: {{ $machine['too_early'] }} batches</p>
+                                    <p>&lt; 5 min: {{ $machine['lt_5'] }} batches</p>
+                                </div>
+                                <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                    <p>5 - 10 min: {{ $machine['min_5_10'] }} batches</p>
+                                </div>
+                                <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                    <p>11 - 15 min: {{ $machine['min_11_15'] }} batches</p>
                                 </div>
                                 <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    <p>On Time: {{ $machine['on_time'] }} batches</p>
+                                    <p>15 - 20 min: {{ $machine['min_15_20'] }} batches</p>
+                                </div>
+                                <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    <p>&gt; 20 min: {{ $machine['gt_20'] }} batches</p>
                                 </div>
                             </div>
                         </div>
@@ -278,7 +325,7 @@ new class extends Component {
     const isDarkMode = document.documentElement.classList.contains('dark');
     const textColor = isDarkMode ? '#e6edf3' : '#0f172a';
 
-    const ibmsChartColors = ['#ef4444', '#22c55e', '#f59e0b'];
+    const ibmsChartColors = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6'];
     const monitoringColors = ['#4ade80', '#9ca3af', '#f59e0b'];
 
     function renderOnlineSystemMonitoringChart() {
@@ -366,8 +413,11 @@ new class extends Component {
         }
 
         const series = [
-            { name: 'Too Early (<20 minutes)', data: chartData.map(d => d.too_early) },
-            { name: 'On Time (20 minutes)', data: chartData.map(d => d.on_time) },
+            { name: '< 5 minutes', data: chartData.map(d => d.lt_5) },
+            { name: '5 - 10 minutes', data: chartData.map(d => d.min_5_10) },
+            { name: '11 - 15 minutes', data: chartData.map(d => d.min_11_15) },
+            { name: '15 - 20 minutes', data: chartData.map(d => d.min_15_20) },
+            { name: '> 20 minutes', data: chartData.map(d => d.gt_20) },
         ];
 
         const options = {
@@ -448,9 +498,11 @@ new class extends Component {
             }
 
             const series = [
-                Number(machine.too_early) || 0,
-                Number(machine.on_time) || 0,
-                Number(machine.too_late) || 0,
+                Number(machine.lt_5) || 0,
+                Number(machine.min_5_10) || 0,
+                Number(machine.min_11_15) || 0,
+                Number(machine.min_15_20) || 0,
+                Number(machine.gt_20) || 0,
             ];
 
             const total = series.reduce((sum, value) => sum + value, 0);
@@ -468,7 +520,7 @@ new class extends Component {
                     toolbar: { show: false },
                     foreColor: textColor
                 },
-                labels: ['Too Early (<20 minutes)', 'On Time (20 minutes)'],
+                labels: ['< 5 minutes', '5 - 10 minutes', '11 - 15 minutes', '15 - 20 minutes', '> 20 minutes'],
                 colors: ibmsChartColors,
                 legend: { show: false },
                 stroke: { width: 0 },
