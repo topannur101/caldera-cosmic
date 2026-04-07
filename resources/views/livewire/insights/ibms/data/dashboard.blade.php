@@ -69,7 +69,7 @@ new class extends Component {
                 'lt_5' => (int) $durationCounts->get('lt_5', 0),
                 'min_5_10' => (int) $durationCounts->get('min_5_10', 0),
                 'min_11_15' => (int) $durationCounts->get('min_11_15', 0),
-                'min_15_20' => (int) $durationCounts->get('min_15_20', 0),
+                'min_16_20' => (int) $durationCounts->get('min_16_20', 0),
                 'gt_20' => (int) $durationCounts->get('gt_20', 0),
                 'total' => $group->count(),
             ];
@@ -91,7 +91,7 @@ new class extends Component {
                 ['label' => '< 5 minutes', 'value' => round(((int) $durationCounts->get('lt_5', 0) / $total) * 100, 1), 'color' => '#ef4444'],
                 ['label' => '5 - 10 minutes', 'value' => round(((int) $durationCounts->get('min_5_10', 0) / $total) * 100, 1), 'color' => '#f97316'],
                 ['label' => '11 - 15 minutes', 'value' => round(((int) $durationCounts->get('min_11_15', 0) / $total) * 100, 1), 'color' => '#facc15'],
-                ['label' => '15 - 20 minutes', 'value' => round(((int) $durationCounts->get('min_15_20', 0) / $total) * 100, 1), 'color' => '#22c55e'],
+                ['label' => '16 - 20 minutes', 'value' => round(((int) $durationCounts->get('min_16_20', 0) / $total) * 100, 1), 'color' => '#22c55e'],
                 ['label' => '> 20 minutes', 'value' => round(((int) $durationCounts->get('gt_20', 0) / $total) * 100, 1), 'color' => '#3b82f6'],
             ];
         } else {
@@ -139,7 +139,7 @@ new class extends Component {
         }
 
         if ($minutes <= 20) {
-            return 'min_15_20';
+            return 'min_16_20';
         }
 
         return 'gt_20';
@@ -301,7 +301,7 @@ new class extends Component {
                                     <p>11 - 15 min: {{ $machine['min_11_15'] }} batches</p>
                                 </div>
                                 <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    <p>15 - 20 min: {{ $machine['min_15_20'] }} batches</p>
+                                    <p>16 - 20 min: {{ $machine['min_16_20'] }} batches</p>
                                 </div>
                                 <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                                     <p>&gt; 20 min: {{ $machine['gt_20'] }} batches</p>
@@ -416,7 +416,7 @@ new class extends Component {
             { name: '< 5 minutes', data: chartData.map(d => d.lt_5) },
             { name: '5 - 10 minutes', data: chartData.map(d => d.min_5_10) },
             { name: '11 - 15 minutes', data: chartData.map(d => d.min_11_15) },
-            { name: '15 - 20 minutes', data: chartData.map(d => d.min_15_20) },
+            { name: '16 - 20 minutes', data: chartData.map(d => d.min_16_20) },
             { name: '> 20 minutes', data: chartData.map(d => d.gt_20) },
         ];
 
