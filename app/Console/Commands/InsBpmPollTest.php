@@ -91,16 +91,53 @@ class InsBpmPollTest extends Command
     private function pollDevice(InsBpmDevice $device): int
     {
         $readingsCount = 0;
-        foreach ($device->config['list_mechine'] as $machineConfig) {
+        $machineConfigs = $this->getMachineConfigs($device);
+
+        if (empty($machineConfigs)) {
+            $this->error("✗ No machine configuration found for {$device->name}");
+            return 0;
+        }
+
+        $this->initializeTodayDataForAllMachines($device, $machineConfigs);
+
+        foreach ($machineConfigs as $machineConfig) {
             try {
-                $readings = $this->pollMachine($device, $machineConfig);
+                $this->pollMachine($device, $machineConfig);
                 $readingsCount++;
             } catch (\Exception $e) {
-                $this->error("    ✗ Error reading machine {$machineConfig['name']}: {$e->getMessage()} at line {$e->getLine()}");
+                $machineName = $machineConfig['name'] ?? 'unknown';
+                $this->error("    ✗ Error reading machine {$machineName}: {$e->getMessage()} at line {$e->getLine()}");
             }
         }
 
         return $readingsCount;
+    }
+
+    /**
+     * Get machine config list from device.
+     */
+    private function getMachineConfigs(InsBpmDevice $device): array
+    {
+        $machineConfigs = $device->config['list_machine'] ?? $device->config['list_mechine'] ?? [];
+
+        return is_array($machineConfigs) ? $machineConfigs : [];
+    }
+
+    /**
+     * Initialize today's zero data for all machines and conditions.
+     */
+    private function initializeTodayDataForAllMachines(InsBpmDevice $device, array $machineConfigs): void
+    {
+        foreach ($machineConfigs as $machineConfig) {
+            $machineName = $machineConfig['name'] ?? null;
+            if (!$machineName) {
+                continue;
+            }
+
+            $line = $machineConfig['line'] ?? $device->line;
+            $this->ensureInitialZeroRecord($device, $line, $machineName, 'Hot');
+            $this->ensureInitialZeroRecord($device, $line, $machineName, 'Cold');
+        }
     }
 
     /**
@@ -156,6 +193,27 @@ class InsBpmPollTest extends Command
     }
 
     /**
+     * Ensure today's first record starts from zero.
+     */
+    private function ensureInitialZeroRecord(
+        InsBpmDevice $device,
+        string $line,
+        string $machineName,
+        string $condition
+    ): ?InsBpmCount {
+        $latestRecord = $this->getLatestRecord($device, $line, $machineName, $condition);
+
+        if ($latestRecord) {
+            return $latestRecord;
+        }
+
+        $this->debugLog("    → No data today for {$machineName}_{$condition} - creating initial zero");
+        $this->saveCounterReading($device, $line, $machineName, $condition, 0, 0);
+
+        return $this->getLatestRecord($device, $line, $machineName, $condition);
+    }
+
+    /**
      * Save counter reading to database
      */
     private function saveCounterReading(
@@ -183,11 +241,11 @@ class InsBpmPollTest extends Command
     {
         $key = "{$machineName}_{$condition}";
         
-        // Get latest record from database to compare
-        $latestRecord = $this->getLatestRecord($device, $line, $machineName, $condition);
-        
+        // Check today's data first and initialize with zero when empty
+        $latestRecord = $this->ensureInitialZeroRecord($device, $line, $machineName, $condition);
+
         // If cumulative value from HMI is same as latest DB record, don't save
-        if ($latestRecord && (int)$latestRecord->cumulative === (int)$currentCumulative) {
+        if ($latestRecord && (int) $latestRecord->cumulative === (int) $currentCumulative) {
             $this->debugLog("    → No change for {$key} - DB cumulative {$latestRecord->cumulative} = HMI {$currentCumulative} - skipping save");
             return 0;
         }
