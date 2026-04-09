@@ -88,17 +88,35 @@ new class extends Component {
     {
         if ($type === "counts") {
             $filename = "ibms_counts_" . Carbon::now()->format("Ymd_His") . ".csv";
-            $data     = InsIbmsCount::whereBetween("created_at", [Carbon::parse($this->start_at)->startOfDay(), Carbon::parse($this->end_at)->endOfDay()])
-                ->get();
+            $data = InsIbmsCount::whereBetween("created_at", [
+                Carbon::parse($this->start_at)->startOfDay(),
+                Carbon::parse($this->end_at)->endOfDay(),
+            ])->get();
 
-            $csvData = "ID,Shift,Duration,Data,Created At\n";
-            foreach ($data as $item) {
-                $csvData .= "{$item->id},{$item->shift},{$item->duration},\"{$item->data}\",{$item->created_at}\n";
-            }
+            return response()->streamDownload(function () use ($data) {
+                $file = fopen('php://output', 'w');
 
-            return response()->streamDownload(function() use ($csvData) {
-                echo $csvData;
-            }, $filename);
+                // UTF-8 BOM for better Excel compatibility
+                fwrite($file, "\xEF\xBB\xBF");
+
+                fputcsv($file, ['ID', 'Shift', 'Duration', 'Machine', 'Status', 'Created At']);
+
+                foreach ($data as $item) {
+
+                    fputcsv($file, [
+                        $item->id,
+                        $item->shift,
+                        $item->duration,
+                        data_get($item->data, 'name', 'N/A'),
+                        data_get($item->data, 'status', 'unknown'),
+                        optional($item->created_at)->format('Y-m-d H:i:s'),
+                    ]);
+                }
+
+                fclose($file);
+            }, $filename, [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+            ]);
         }
     }
 
@@ -106,8 +124,8 @@ new class extends Component {
     {
         $query = InsIbmsCount::query();
 
-        // filter noice data with duration < 20 seconds
-        $query->where("duration", ">=", 20);
+        // filter noice data with duration < 60 seconds
+        $query->where('duration', '>=', '00:01:00'); // Filter out records with duration less than 1 minute
 
         if ($this->shift) {
             $query->where("shift", $this->shift);

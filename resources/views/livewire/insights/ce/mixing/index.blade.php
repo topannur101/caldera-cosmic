@@ -84,7 +84,7 @@ new #[Layout("layouts.app")] class extends Component {
         <div class="mt-5 mb-6 flex gap-2 items-center">
             <span class="icon-database text-2xl"></span>
             <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
-                {{ __("Raw Data") }}
+                {{ __("History Mixing Process") }}
             </h1>
         </div>
         <div class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">

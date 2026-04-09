@@ -7,6 +7,8 @@ use App\Models\InsRubberBatch;
 use App\Models\InvTag;
 use App\Models\User;
 use App\Models\InsCtcRecipe;
+use App\Models\InsPpmProduct;
+use App\Models\InsPpmComponent;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -563,4 +565,113 @@ Route::post('/api/loadcell-data', function (Request $request) {
             'message' => 'Failed to process loadcell data: ' . $e->getMessage()
         ], 500);
     }
+});
+
+// ENDPOINT 6: Get Data Model
+Route::get('/ppm/models', function () {
+    // get all
+    $models = InsPpmProduct::orderBy('created_at', 'desc')->get()->map(function ($product) {
+        return [
+            'id' => $product->id,
+            'dev_style' => $product->dev_style,
+            'product_code' => $product->product_code,
+            'production_date' => $product->production_date ? $product->production_date->toDateString() : null,
+        ];
+    });
+
+    
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $models
+    ]);
+});
+
+// GET LIST PART NAME
+Route::get('/ppm/part-names', function () {
+    $partNames = InsPpmComponent::whereNotNull('part_name')
+        ->distinct()
+        ->orderBy('part_name')
+        ->pluck('part_name')
+        ->values()
+        ->toArray();
+    return response()->json([
+        'status' => 'success',
+        'data' => $partNames
+    ]);
+});
+
+//GET COMPONENTS & PROCESSES BY PRODUCT ID
+Route::get('/ppm/product-details/{productId}', function ($productId) {
+    $product = InsPpmProduct::with(['components.processes'])->find($productId);
+
+    if (! $product) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Product not found',
+        ], 404);
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'data' => [
+            'id' => $product->id,
+            'dev_style' => $product->dev_style,
+            'product_code' => $product->product_code,
+            'production_date' => $product->production_date ? $product->production_date->toDateString() : null,
+            'components' => $product->components->map(function ($component) {
+                return [
+                    'id' => $component->id,
+                    'part_name' => $component->part_name,
+                    'processes' => $component->processes
+                        ->sortBy(function ($process) {
+                            $processData = $process->process_data ?? [];
+
+                            if (isset($processData['step'])) {
+                                return (int) $processData['step'];
+                            }
+
+                            if (isset($processData['step_number'])) {
+                                return (int) $processData['step_number'];
+                            }
+
+                            $firstStep = collect($processData['process_steps'] ?? [])
+                                ->sortBy(fn ($step) => (int) ($step['step_number'] ?? PHP_INT_MAX))
+                                ->first();
+
+                            return (int) ($firstStep['step_number'] ?? PHP_INT_MAX);
+                        })
+                        ->map(function ($process) {
+                            $processData = $process->process_data ?? [];
+
+                            if (isset($processData['process_steps']) && is_array($processData['process_steps'])) {
+                                $processData['process_steps'] = collect($processData['process_steps'])
+                                    ->sortBy(fn ($step) => (int) ($step['step_number'] ?? PHP_INT_MAX))
+                                    ->values()
+                                    ->all();
+                            }
+
+                            return [
+                                'id' => $process->id,
+                                'process_data' => $processData,
+                            ];
+                        })->values(),
+                ];
+            })->values(),
+        ],
+    ]);
+});
+
+// GET PRODUCT STYLE (PRODUCTCODE)
+Route::get('/ppm/product-styles', function () {
+    $productStyles = InsPpmProduct::whereNotNull('product_code')
+        ->distinct()
+        ->orderBy('product_code')
+        ->pluck('product_code')
+        ->values()
+        ->toArray();
+    return response()->json([
+        'status' => 'success',
+        'data' => $productStyles
+    ]);
 });

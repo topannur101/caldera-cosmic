@@ -37,7 +37,7 @@ new class extends Component {
             ->values();
 
         $records = InsIbmsCount::whereDate('created_at', now()->toDateString())
-            ->where('duration', '>=', '00:00:20') // Filter out records with duration less than 20 seconds
+            ->where('duration', '>=', '00:01:00') // Filter out records with duration less than 1 minute
             ->orderBy('data->name')
             ->latest()
             ->get();
@@ -239,11 +239,11 @@ new class extends Component {
             </div>
         </div>
     </div>
-    <div class="grid grid-cols-6 gap-4 mb-8">
-        <div class="col-span-2">
-            <div class="w-full bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 mb-8">
+        <div class="xl:col-span-3">
+            <div class="w-full bg-white dark:bg-neutral-800 rounded-2xl shadow-sm p-6 border border-slate-200/70 dark:border-neutral-700">
                 <h1 class="text-center text-xl font-bold text-gray-800 dark:text-white mb-6">Online System Monitoring</h1>
-                <div id="onlineSystemMonitoringChart" class="h-[190px] mb-3"></div>
+                <div id="onlineSystemMonitoringChart" class="h-[200px] mb-3"></div>
                 <div class="space-y-2">
                     <div class="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded">
                         <div class="flex items-center gap-2">
@@ -279,39 +279,63 @@ new class extends Component {
             </div>
         </div>
         <!-- Donut Chart Section -->
-        <div class="col-span-4 bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
-            <h2 class="text-center text-xl font-bold text-gray-800 dark:text-white">Evaluation Percentage</h2>
+        <div class="xl:col-span-9 overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+            <div class="flex flex-col gap-4 border-b border-slate-200/70 px-2 py-2 dark:border-neutral-700 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 class="mt-1 text-xl font-bold text-slate-800 dark:text-white">Evaluation Percentage</h2>
+                </div>
+            </div>
+
             @if ($hasData)
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-2">
+                <div class="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 2xl:grid-cols-3">
                     @foreach ($chartData as $index => $machine)
-                        <div class="text-center mt-3">
-                            <div class="text-center">
-                                <p class="text-gray-800 dark:text-white text-xl font-bold leading-tight">{{ $machine['machine'] }}</p>
-                                <div id="machinePieChart-{{ $index }}" class="h-[200px]"></div>
+                        <div class="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900/40">
+                            <div class="mb-4 flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="text-lg font-semibold text-slate-800 dark:text-white">{{ $machine['machine'] }}</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-300">Distribution by cycle duration</p>
+                                </div>
+                                <span class="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
+                                    {{ $machine['total'] }} batches
+                                </span>
                             </div>
-                            <!-- detail standard or not standard -->
-                            <div class="text-gray-500 dark:text-white text-sm mt-2 gap-2 flex flex-col items-center">
-                                <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                    <p>&lt; 5 min: {{ $machine['lt_5'] }} batches</p>
+
+                            <div class="rounded-2xl p-2 dark:bg-neutral-800/80">
+                                <div id="machinePieChart-{{ $index }}" class="h-[120px]"></div>
+                            </div>
+
+                            <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                <div class="flex items-center justify-between rounded-xl bg-red-50 px-3 py-2 text-red-700 dark:bg-red-900/20 dark:text-red-200">
+                                    <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>&lt; 5 min</span>
+                                    <span class="text-xs font-semibold">{{ $machine['lt_5'] }}</span>
                                 </div>
-                                <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                    <p>5 - 10 min: {{ $machine['min_5_10'] }} batches</p>
+                                <div class="flex items-center justify-between rounded-xl bg-orange-50 px-3 py-2 text-orange-700 dark:bg-orange-900/20 dark:text-orange-200">
+                                    <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-orange-500"></span>5 - 10 min</span>
+                                    <span class="text-xs font-semibold">{{ $machine['min_5_10'] }}</span>
                                 </div>
-                                <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                    <p>11 - 15 min: {{ $machine['min_11_15'] }} batches</p>
+                                <div class="flex items-center justify-between rounded-xl bg-yellow-50 px-3 py-2 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-200">
+                                    <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-yellow-400"></span>11 - 15 min</span>
+                                    <span class="text-xs font-semibold">{{ $machine['min_11_15'] }}</span>
                                 </div>
-                                <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    <p>16 - 20 min: {{ $machine['min_16_20'] }} batches</p>
+                                <div class="flex items-center justify-between rounded-xl bg-green-50 px-3 py-2 text-green-700 dark:bg-green-900/20 dark:text-green-200">
+                                    <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>16 - 20 min</span>
+                                    <span class="text-xs font-semibold">{{ $machine['min_16_20'] }}</span>
                                 </div>
-                                <div class="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                    <p>&gt; 20 min: {{ $machine['gt_20'] }} batches</p>
+                                <div class="flex items-center justify-between rounded-xl bg-blue-50 px-3 py-2 text-blue-700 dark:bg-blue-900/20 dark:text-blue-200 sm:col-span-2">
+                                    <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>&gt; 20 min</span>
+                                    <span class="text-xs font-semibold">{{ $machine['gt_20'] }}</span>
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
             @else
-                <div class="h-[370px] flex items-center justify-center text-gray-500 dark:text-white">No Data Available</div>
+                <div class="flex h-[370px] items-center justify-center px-6 text-center text-gray-500 dark:text-white">
+                    <div>
+                        <p class="text-base font-semibold text-slate-700 dark:text-slate-200">No data available yet</p>
+                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">This section will update automatically once batch records are collected.</p>
+                    </div>
+                </div>
             @endif
         </div>
     </div>
@@ -376,7 +400,7 @@ new class extends Component {
             colors: monitoringSeries.map((item) => item.color),
             legend: { show: false },
             stroke: { width: 0 },
-            dataLabels: { enabled: false },
+            dataLabels: { enabled: true },
             plotOptions: {
                 pie: {
                     donut: {
@@ -396,7 +420,6 @@ new class extends Component {
         container._apexChart = new ApexCharts(container, donutOptions);
         container._apexChart.render();
     }
-
 
     function renderBatchChart() {
         if (typeof ApexCharts === 'undefined') {
@@ -501,12 +524,13 @@ new class extends Component {
                 Number(machine.lt_5) || 0,
                 Number(machine.min_5_10) || 0,
                 Number(machine.min_11_15) || 0,
-                Number(machine.min_15_20) || 0,
+                Number(machine.min_16_20) || 0,
                 Number(machine.gt_20) || 0,
             ];
 
             const total = series.reduce((sum, value) => sum + value, 0);
             if (total <= 0) {
+                container.innerHTML = '<div class="flex h-full items-center justify-center text-sm font-medium text-slate-500 dark:text-slate-400">No batch data</div>';
                 return;
             }
 
@@ -514,32 +538,53 @@ new class extends Component {
                 series,
                 chart: {
                     type: 'donut',
-                    height: 200,
+                    height: 350,
                     background: 'transparent',
                     animations: { enabled: true, speed: 350 },
                     toolbar: { show: false },
                     foreColor: textColor
                 },
-                labels: ['< 5 minutes', '5 - 10 minutes', '11 - 15 minutes', '15 - 20 minutes', '> 20 minutes'],
+                labels: ['< 5 minutes', '5 - 10 minutes', '11 - 15 minutes', '16 - 20 minutes', '> 20 minutes'],
                 colors: ibmsChartColors,
                 legend: { show: false },
-                stroke: { width: 0 },
+                stroke: { width: 4, colors: [isDarkMode ? '#1f2937' : '#ffffff'] },
+                states: {
+                    hover: {
+                        filter: {
+                            type: 'lighten',
+                            value: 0.06
+                        }
+                    }
+                },
                 plotOptions: {
                     pie: {
+                        expandOnClick: false,
                         donut: {
-                            size: '58%'
+                            size: '70%',
+                            labels: {
+                                show: true,
+                                name: {
+                                    show: true,
+                                    offsetY: 16,
+                                    fontSize: '12px',
+                                    color: isDarkMode ? '#cbd5e1' : '#64748b'
+                                },
+                                value: {
+                                    show: true,
+                                    offsetY: -12,
+                                    fontSize: '20px',
+                                    fontWeight: 700,
+                                    color: textColor,
+                                    formatter: function (val) {
+                                        return Number(val).toFixed(1) + '%';
+                                    }
+                                },
+                            }
                         }
                     }
                 },
                 dataLabels: {
                     enabled: true,
-                    style: {
-                        colors: ['#ffffff'],
-                        fontWeight: 700
-                    },
-                    formatter: function (val) {
-                        return val >= 3 ? val.toFixed(1) + '%' : Math.round(val) + '%';
-                    },
                     dropShadow: { enabled: false }
                 },
                 tooltip: {
