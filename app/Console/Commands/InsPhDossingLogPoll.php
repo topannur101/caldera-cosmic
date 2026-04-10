@@ -25,7 +25,7 @@ class InsPhDossingLogPoll extends Command
         // Read Input Register (04)
         'current_ph'            => 0,
         '1_hours_ago_ph'        => 10,
-        'amount'                => 905,
+        'amount'                => 107,
         
         // Read Holding Register (03)
         'dosing_count'          => 0,

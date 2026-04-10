@@ -44,6 +44,7 @@ new class extends Component {
     public $onlineStats = [];
     public string $lastPhStatus = '';
     public $statusEmergency = 0;
+    public $statusClogging = false;
     public bool $statusAuto = false;
     public bool $deviceConnected = true;
     public $oneHourAgoPh = "-";
@@ -65,6 +66,7 @@ new class extends Component {
         $this->checkDeviceConnection(true);
         $this->checkOneHourAgoPhToast(true);
         $this->statusEmergency = $this->getStatusEmergency(app(GetDataViaModbus::class));
+        $this->statusClogging = $this->getStatusClogging(app(GetDataViaModbus::class));
         // get one hour ph
         $this->oneHourAgoPh = $this->getOneHourAgoPh(app(GetDataViaModbus::class));
         $this->statusAuto = $this->getStatusAuto(app(GetDataViaModbus::class)) ?? false;
@@ -607,7 +609,7 @@ new class extends Component {
         }
     }
     
-    function getUniquePlants()
+    public function getUniquePlants()
     {
         try {
             return InsPhDosingDevice::orderBy("plant")
@@ -829,6 +831,14 @@ new class extends Component {
         }
     }
 
+    public function getStatusClogging(GetDataViaModbus $service){
+        try{
+            return (bool) $service->getDataReadHoldingRegisters($this->ip_address, 503, 1, 110, 'clogging_status');
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
 }; ?>
 
 <div wire:poll.20s="refreshCharts">
@@ -851,6 +861,22 @@ new class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <!-- auto status -->
+            <div class="flex flex-col items-center justify-center">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusAuto ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
+                    <span class="relative flex h-3 w-3">
+                        @if($this->statusAuto)
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        @endif
+                        <span class="relative inline-flex rounded-full h-3 w-3 {{ $this->statusAuto ? 'bg-green-500' : 'bg-neutral-400' }}"></span>
+                    </span>
+                    <div class="flex flex-col leading-tight">
+                        <span class="text-xs font-semibold uppercase tracking-wide {{ $this->statusAuto ? 'text-green-600 dark:text-green-400' : 'text-neutral-500 dark:text-neutral-400' }}">Auto</span>
+                        <span class="text-xs font-medium {{ $this->statusAuto ? 'text-green-500 dark:text-green-300' : 'text-neutral-400 dark:text-neutral-500' }}">{{ $this->statusAuto ? __('Active') : __('Inactive') }}</span>
+                    </div>
+                </div>
+            </div>
+            
             <!-- emergency status -->
             <div class="flex flex-col items-center justify-center">
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusEmergency ? 'border-red-400 bg-red-50 dark:bg-red-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
@@ -867,18 +893,18 @@ new class extends Component {
                 </div>
             </div>
 
-            <!-- auto status -->
-            <div class="flex flex-col items-center justify-center">
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusAuto ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
+            <!-- clogging status -->
+             <div class="flex flex-col items-center justify-center">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusClogging ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
                     <span class="relative flex h-3 w-3">
-                        @if($this->statusAuto)
+                        @if($this->statusClogging)
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                         @endif
-                        <span class="relative inline-flex rounded-full h-3 w-3 {{ $this->statusAuto ? 'bg-green-500' : 'bg-neutral-400' }}"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 {{ $this->statusClogging ? 'bg-green-500' : 'bg-neutral-400' }}"></span>
                     </span>
                     <div class="flex flex-col leading-tight">
-                        <span class="text-xs font-semibold uppercase tracking-wide {{ $this->statusAuto ? 'text-green-600 dark:text-green-400' : 'text-neutral-500 dark:text-neutral-400' }}">Auto</span>
-                        <span class="text-xs font-medium {{ $this->statusAuto ? 'text-green-500 dark:text-green-300' : 'text-neutral-400 dark:text-neutral-500' }}">{{ $this->statusAuto ? __('Active') : __('Inactive') }}</span>
+                        <span class="text-xs font-semibold uppercase tracking-wide {{ $this->statusClogging ? 'text-green-600 dark:text-green-400' : 'text-neutral-500 dark:text-neutral-400' }}">Clogging Status</span>
+                        <span class="text-xs font-medium {{ $this->statusClogging ? 'text-green-500 dark:text-green-300' : 'text-neutral-400 dark:text-neutral-500' }}">{{ $this->statusClogging ? __('Active') : __('Inactive') }}</span>
                     </div>
                 </div>
             </div>

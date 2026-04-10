@@ -147,13 +147,16 @@ new class extends Component {
 
     private function loadOnlineStats(Carbon $date): array
     {
-        $device = InsIbmsDevice::active()->first();
+        $activeIps = InsIbmsDevice::active()
+            ->pluck('ip_address')
+            ->filter()
+            ->values();
 
-        if (!$device) {
+        if ($activeIps->isEmpty()) {
             return $this->getEmptyOnlineStats();
         }
 
-        $project = Project::where('ip', $device->ip_address)->first();
+        $project = Project::whereIn('ip', $activeIps)->first();
         if (!$project) {
             return $this->getEmptyOnlineStats();
         }
@@ -162,12 +165,19 @@ new class extends Component {
         $workingHours = $workingHoursService->getProjectWorkingHours($project->id);
 
         if (!empty($workingHours)) {
-            $start = $date->copy()->setTime(Carbon::parse($workingHours[0]['start_time'])->hour, Carbon::parse($workingHours[0]['start_time'])->minute);
-            $end = $date->copy()->setTime(Carbon::parse($workingHours[0]['end_time'])->hour, Carbon::parse($workingHours[0]['end_time'])->minute);
+            $startTime = Carbon::parse($workingHours[0]['start_time']);
+            $endTime = Carbon::parse($workingHours[0]['end_time']);
+
+            $start = $date->copy()->setTime($startTime->hour, $startTime->minute, $startTime->second);
+            $end = $date->copy()->setTime($endTime->hour, $endTime->minute, $endTime->second);
         } else {
             $defaultHours = config('bpm.working_hours');
-            $start = $date->copy()->setTime($defaultHours['start'], 0);
-            $end = $date->copy()->setTime($defaultHours['end'], 0);
+            $start = $date->copy()->setTime((int) $defaultHours['start'], 0);
+            $end = $date->copy()->setTime((int) $defaultHours['end'], 0);
+        }
+
+        if ($end->lessThanOrEqualTo($start)) {
+            $end->addDay();
         }
 
         $calculator = app(UptimeCalculatorService::class);
@@ -176,13 +186,24 @@ new class extends Component {
         $formatter = app(DurationFormatterService::class);
 
         return [
-            'online_percentage' => $stats['online_percentage'],
-            'offline_percentage' => $stats['offline_percentage'],
-            'timeout_percentage' => $stats['timeout_percentage'],
-            'online_time' => $formatter->format($stats['online_duration']),
-            'offline_time' => $formatter->format($stats['offline_duration']),
-            'timeout_time' => $formatter->format($stats['timeout_duration']),
+            'online_percentage' => $this->sanitizeChartValue($stats['online_percentage'] ?? 0),
+            'offline_percentage' => $this->sanitizeChartValue($stats['offline_percentage'] ?? 0),
+            'timeout_percentage' => $this->sanitizeChartValue($stats['timeout_percentage'] ?? 0),
+            'online_time' => $formatter->format($stats['online_duration'] ?? 0),
+            'offline_time' => $formatter->format($stats['offline_duration'] ?? 0),
+            'timeout_time' => $formatter->format($stats['timeout_duration'] ?? 0),
         ];
+    }
+
+    private function sanitizeChartValue($value): float
+    {
+        if ($value === null || !is_numeric($value)) {
+            return 0;
+        }
+
+        $float = (float) $value;
+
+        return is_finite($float) ? round($float, 2) : 0;
     }
 
     private function getEmptyOnlineStats(): array
@@ -343,176 +364,73 @@ new class extends Component {
 
 @script
 <script>
-    const hasData = @json($hasData);
-    const chartData = {!! json_encode($chartData) !!};
-    const onlineStats = @json($onlineStats);
-    const isDarkMode = document.documentElement.classList.contains('dark');
-    const textColor = isDarkMode ? '#e6edf3' : '#0f172a';
+    (() => {
+        const hasData = @js($hasData);
+        const chartData = @js($chartData);
+        const onlineStats = @js($onlineStats);
+        const ibmsChartColors = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6'];
+        const monitoringColors = ['#4ade80', '#9ca3af', '#f59e0b'];
 
-    const ibmsChartColors = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6'];
-    const monitoringColors = ['#4ade80', '#9ca3af', '#f59e0b'];
+        const getThemeConfig = () => {
+            const isDarkMode = document.documentElement.classList.contains('dark');
 
-    function renderOnlineSystemMonitoringChart() {
-        if (typeof ApexCharts === 'undefined') {
-            return;
-        }
-
-        const container = document.querySelector('#onlineSystemMonitoringChart');
-        if (!container) {
-            return;
-        }
-        const monitoringSeries = [
-            {
-                label: 'Online',
-                value: Number(onlineStats.online_percentage) || 0,
-                durationLabel: onlineStats.online_time || '0 seconds',
-                color: monitoringColors[0]
-            },
-            {
-                label: 'Offline',
-                value: Number(onlineStats.offline_percentage) || 0,
-                durationLabel: onlineStats.offline_time || '0 seconds',
-                color: monitoringColors[1]
-            },
-            {
-                label: 'Timeout (RTO)',
-                value: Number(onlineStats.timeout_percentage) || 0,
-                durationLabel: onlineStats.timeout_time || '0 seconds',
-                color: monitoringColors[2]
-            },
-        ];
-
-        if (container._apexChart) {
-            container._apexChart.destroy();
-        }
-
-        const donutOptions = {
-            series: monitoringSeries.map((item) => item.value),
-            chart: {
-                type: 'donut',
-                height: 190,
-                background: 'transparent',
-                toolbar: { show: false },
-                animations: { enabled: true, speed: 350 },
-                foreColor: textColor
-            },
-            labels: monitoringSeries.map((item) => item.label),
-            colors: monitoringSeries.map((item) => item.color),
-            legend: { show: false },
-            stroke: { width: 0 },
-            dataLabels: { enabled: true },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '58%'
-                    }
-                }
-            },
-            tooltip: {
-                y: {
-                    formatter: function (value, { seriesIndex }) {
-                        return value.toFixed(2) + '% - ' + monitoringSeries[seriesIndex].durationLabel;
-                    }
-                }
-            }
+            return {
+                isDarkMode,
+                textColor: isDarkMode ? '#e6edf3' : '#0f172a',
+                gridColor: isDarkMode ? '#374151' : '#e5e7eb',
+                strokeColor: isDarkMode ? '#1f2937' : '#ffffff',
+                mutedTextColor: isDarkMode ? '#cbd5e1' : '#64748b',
+            };
         };
 
-        container._apexChart = new ApexCharts(container, donutOptions);
-        container._apexChart.render();
-    }
-
-    function renderBatchChart() {
-        if (typeof ApexCharts === 'undefined') {
-            return;
-        }
-
-        const container = document.querySelector('#batchApexChart');
-        if (!container) {
-            return;
-        }
-
-        if (container._apexChart) {
-            container._apexChart.destroy();
-        }
-
-        const series = [
-            { name: '< 5 minutes', data: chartData.map(d => d.lt_5) },
-            { name: '5 - 10 minutes', data: chartData.map(d => d.min_5_10) },
-            { name: '11 - 15 minutes', data: chartData.map(d => d.min_11_15) },
-            { name: '16 - 20 minutes', data: chartData.map(d => d.min_16_20) },
-            { name: '> 20 minutes', data: chartData.map(d => d.gt_20) },
-        ];
-
-        const options = {
-            series,
-            chart: {
-                type: 'bar',
-                height: 350,
-                stacked: true,
-                background: 'transparent',
-                toolbar: { show: false },
-                animations: { enabled: true, speed: 350 },
-                fontFamily: 'inherit',
-                foreColor: textColor
-            },
-            theme: {
-                mode: isDarkMode ? 'dark' : 'light'
-            },
-            grid: {
-                borderColor: isDarkMode ? '#374151' : '#e5e7eb'
-            },
-            legend: {
-                labels: {
-                    colors: textColor
-                },
-                position: 'top',
-                horizontalAlign: 'left'
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: true,
-                    barHeight: '60%',
-                    dataLabels: {
-                        total: {
-                            enabled: true,
-                            style: { fontSize: '13px', fontWeight: 900 }
-                        }
-                    }
-                }
-            },
-            dataLabels: {
-                enabled: true,
-                style: { colors: ['#ffffff'] },
-                formatter: function (val) { return val > 0 ? val : ''; }
-            },
-            stroke: { width: 1, colors: ['#fff'] },
-            xaxis: {
-                categories: chartData.map(d => d.machine),
-                title: { text: 'Batch Count', style: { color: textColor } },
-                labels: { style: { colors: textColor } }
-            },
-            yaxis: {
-                title: { text: 'Machine', style: { color: textColor } },
-                labels: { style: { colors: textColor } }
-            },
-            tooltip: {
-                y: { formatter: function (val) { return val + ' batches'; } }
-            },
-            colors: ibmsChartColors
-        };
-
-        container._apexChart = new ApexCharts(container, options);
-        container._apexChart.render();
-    }
-
-    function renderMachinePieCharts() {
-        if (typeof ApexCharts === 'undefined') {
-            return;
-        }
-
-        chartData.forEach((machine, index) => {
-            const container = document.querySelector('#machinePieChart-' + index);
+        const showEmptyState = (container, message) => {
             if (!container) {
+                return;
+            }
+
+            if (container._apexChart) {
+                container._apexChart.destroy();
+                container._apexChart = null;
+            }
+
+            container.innerHTML = `<div class="flex h-full items-center justify-center text-sm font-medium text-slate-500 dark:text-slate-400">${message}</div>`;
+        };
+
+        function renderOnlineSystemMonitoringChart() {
+            if (typeof ApexCharts === 'undefined') {
+                return;
+            }
+
+            const container = document.querySelector('#onlineSystemMonitoringChart');
+            if (!container) {
+                return;
+            }
+
+            const { textColor } = getThemeConfig();
+            const monitoringSeries = [
+                {
+                    label: 'Online',
+                    value: Number(onlineStats.online_percentage) || 0,
+                    durationLabel: onlineStats.online_time || '0 seconds',
+                    color: monitoringColors[0]
+                },
+                {
+                    label: 'Offline',
+                    value: Number(onlineStats.offline_percentage) || 0,
+                    durationLabel: onlineStats.offline_time || '0 seconds',
+                    color: monitoringColors[1]
+                },
+                {
+                    label: 'Timeout (RTO)',
+                    value: Number(onlineStats.timeout_percentage) || 0,
+                    durationLabel: onlineStats.timeout_time || '0 seconds',
+                    color: monitoringColors[2]
+                },
+            ];
+
+            const total = monitoringSeries.reduce((sum, item) => sum + item.value, 0);
+            if (total <= 0) {
+                showEmptyState(container, 'No monitoring data');
                 return;
             }
 
@@ -520,105 +438,255 @@ new class extends Component {
                 container._apexChart.destroy();
             }
 
-            const series = [
-                Number(machine.lt_5) || 0,
-                Number(machine.min_5_10) || 0,
-                Number(machine.min_11_15) || 0,
-                Number(machine.min_16_20) || 0,
-                Number(machine.gt_20) || 0,
-            ];
+            container.innerHTML = '';
 
-            const total = series.reduce((sum, value) => sum + value, 0);
-            if (total <= 0) {
-                container.innerHTML = '<div class="flex h-full items-center justify-center text-sm font-medium text-slate-500 dark:text-slate-400">No batch data</div>';
+            const donutOptions = {
+                series: monitoringSeries.map((item) => item.value),
+                chart: {
+                    type: 'donut',
+                    height: 190,
+                    background: 'transparent',
+                    toolbar: { show: false },
+                    animations: { enabled: true, speed: 350 },
+                    foreColor: textColor
+                },
+                labels: monitoringSeries.map((item) => item.label),
+                colors: monitoringSeries.map((item) => item.color),
+                legend: { show: false },
+                stroke: { width: 0 },
+                dataLabels: { enabled: true },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '58%'
+                        }
+                    }
+                },
+                tooltip: {
+                    y: {
+                        formatter: function (value, { seriesIndex }) {
+                            return value.toFixed(2) + '% - ' + monitoringSeries[seriesIndex].durationLabel;
+                        }
+                    }
+                }
+            };
+
+            container._apexChart = new ApexCharts(container, donutOptions);
+            container._apexChart.render();
+        }
+
+        function renderBatchChart() {
+            if (typeof ApexCharts === 'undefined') {
                 return;
             }
+
+            const container = document.querySelector('#batchApexChart');
+            if (!container) {
+                return;
+            }
+
+            const { isDarkMode, textColor, gridColor } = getThemeConfig();
+
+            if (container._apexChart) {
+                container._apexChart.destroy();
+            }
+
+            container.innerHTML = '';
+
+            const series = [
+                { name: '< 5 minutes', data: chartData.map((d) => Number(d.lt_5) || 0) },
+                { name: '5 - 10 minutes', data: chartData.map((d) => Number(d.min_5_10) || 0) },
+                { name: '11 - 15 minutes', data: chartData.map((d) => Number(d.min_11_15) || 0) },
+                { name: '16 - 20 minutes', data: chartData.map((d) => Number(d.min_16_20) || 0) },
+                { name: '> 20 minutes', data: chartData.map((d) => Number(d.gt_20) || 0) },
+            ];
 
             const options = {
                 series,
                 chart: {
-                    type: 'donut',
+                    type: 'bar',
                     height: 350,
+                    stacked: true,
                     background: 'transparent',
-                    animations: { enabled: true, speed: 350 },
                     toolbar: { show: false },
+                    animations: { enabled: true, speed: 350 },
+                    fontFamily: 'inherit',
                     foreColor: textColor
                 },
-                labels: ['< 5 minutes', '5 - 10 minutes', '11 - 15 minutes', '16 - 20 minutes', '> 20 minutes'],
-                colors: ibmsChartColors,
-                legend: { show: false },
-                stroke: { width: 4, colors: [isDarkMode ? '#1f2937' : '#ffffff'] },
-                states: {
-                    hover: {
-                        filter: {
-                            type: 'lighten',
-                            value: 0.06
-                        }
-                    }
+                theme: {
+                    mode: isDarkMode ? 'dark' : 'light'
+                },
+                grid: {
+                    borderColor: gridColor
+                },
+                legend: {
+                    labels: {
+                        colors: textColor
+                    },
+                    position: 'top',
+                    horizontalAlign: 'left'
                 },
                 plotOptions: {
-                    pie: {
-                        expandOnClick: false,
-                        donut: {
-                            size: '70%',
-                            labels: {
-                                show: true,
-                                name: {
-                                    show: true,
-                                    offsetY: 16,
-                                    fontSize: '12px',
-                                    color: isDarkMode ? '#cbd5e1' : '#64748b'
-                                },
-                                value: {
-                                    show: true,
-                                    offsetY: -12,
-                                    fontSize: '20px',
-                                    fontWeight: 700,
-                                    color: textColor,
-                                    formatter: function (val) {
-                                        return Number(val).toFixed(1) + '%';
-                                    }
-                                },
+                    bar: {
+                        horizontal: true,
+                        barHeight: '60%',
+                        dataLabels: {
+                            total: {
+                                enabled: true,
+                                style: { fontSize: '13px', fontWeight: 900 }
                             }
                         }
                     }
                 },
                 dataLabels: {
                     enabled: true,
-                    dropShadow: { enabled: false }
+                    style: { colors: ['#ffffff'] },
+                    formatter: function (val) { return val > 0 ? val : ''; }
+                },
+                stroke: { width: 1, colors: ['#ffffff'] },
+                xaxis: {
+                    categories: chartData.map((d) => d.machine),
+                    title: { text: 'Batch Count', style: { color: textColor } },
+                    labels: { style: { colors: textColor } }
+                },
+                yaxis: {
+                    title: { text: 'Machine', style: { color: textColor } },
+                    labels: { style: { colors: textColor } }
                 },
                 tooltip: {
-                    y: {
-                        formatter: function (value) {
-                            const percent = total ? (value / total) * 100 : 0;
-                            return value + ' batches (' + percent.toFixed(1) + '%)';
-                        }
-                    }
-                }
+                    y: { formatter: function (val) { return val + ' batches'; } }
+                },
+                colors: ibmsChartColors
             };
 
             container._apexChart = new ApexCharts(container, options);
             container._apexChart.render();
-        });
-    }
-
-    function renderAllCharts() {
-        renderOnlineSystemMonitoringChart();
-
-        if (!hasData) {
-            return;
         }
 
-        renderBatchChart();
-        renderMachinePieCharts();
-    }
+        function renderMachinePieCharts() {
+            if (typeof ApexCharts === 'undefined') {
+                return;
+            }
 
-    function ensureApexChartsAndRender() {
-        if (typeof ApexCharts !== 'undefined') {
-            renderAllCharts();
+            const { isDarkMode, textColor, strokeColor, mutedTextColor } = getThemeConfig();
+
+            chartData.forEach((machine, index) => {
+                const container = document.querySelector('#machinePieChart-' + index);
+                if (!container) {
+                    return;
+                }
+
+                if (container._apexChart) {
+                    container._apexChart.destroy();
+                }
+
+                const series = [
+                    Number(machine.lt_5) || 0,
+                    Number(machine.min_5_10) || 0,
+                    Number(machine.min_11_15) || 0,
+                    Number(machine.min_16_20) || 0,
+                    Number(machine.gt_20) || 0,
+                ];
+
+                const total = series.reduce((sum, value) => sum + value, 0);
+                if (total <= 0) {
+                    showEmptyState(container, 'No batch data');
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                const options = {
+                    series,
+                    chart: {
+                        type: 'donut',
+                        height: 350,
+                        background: 'transparent',
+                        animations: { enabled: true, speed: 350 },
+                        toolbar: { show: false },
+                        foreColor: textColor
+                    },
+                    labels: ['< 5 minutes', '5 - 10 minutes', '11 - 15 minutes', '16 - 20 minutes', '> 20 minutes'],
+                    colors: ibmsChartColors,
+                    legend: { show: false },
+                    stroke: { width: 4, colors: [strokeColor] },
+                    states: {
+                        hover: {
+                            filter: {
+                                type: 'lighten',
+                                value: 0.06
+                            }
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                            expandOnClick: false,
+                            donut: {
+                                size: '70%',
+                                labels: {
+                                    show: true,
+                                    name: {
+                                        show: true,
+                                        offsetY: 16,
+                                        fontSize: '12px',
+                                        color: mutedTextColor
+                                    },
+                                    value: {
+                                        show: true,
+                                        offsetY: -12,
+                                        fontSize: '20px',
+                                        fontWeight: 700,
+                                        color: textColor,
+                                        formatter: function (val) {
+                                            return Number(val).toFixed(1) + '%';
+                                        }
+                                    },
+                                }
+                            }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        dropShadow: { enabled: false }
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function (value) {
+                                const percent = total ? (value / total) * 100 : 0;
+                                return value + ' batches (' + percent.toFixed(1) + '%)';
+                            }
+                        }
+                    }
+                };
+
+                container._apexChart = new ApexCharts(container, options);
+                container._apexChart.render();
+            });
         }
-    }
 
-    ensureApexChartsAndRender();
+        function renderAllCharts() {
+            renderOnlineSystemMonitoringChart();
+
+            if (!hasData) {
+                return;
+            }
+
+            renderBatchChart();
+            renderMachinePieCharts();
+        }
+
+        function ensureApexChartsAndRender(retries = 20) {
+            if (typeof ApexCharts !== 'undefined') {
+                window.requestAnimationFrame(renderAllCharts);
+                return;
+            }
+
+            if (retries > 0) {
+                window.setTimeout(() => ensureApexChartsAndRender(retries - 1), 150);
+            }
+        }
+
+        ensureApexChartsAndRender();
+    })();
 </script>
 @endscript

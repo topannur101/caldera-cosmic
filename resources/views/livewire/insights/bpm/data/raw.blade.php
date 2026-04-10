@@ -66,6 +66,40 @@ new class extends Component {
         $this->perPage += 10;
     }
 
+    public function download($type)
+    {
+        if ($type !== "counts") {
+            return null;
+        }
+
+        $filename = "bpm_counts_" . Carbon::now()->format("Ymd_His") . ".csv";
+        $data = $this->getCountsQuery()->get();
+
+        return response()->streamDownload(function () use ($data) {
+            $file = fopen('php://output', 'w');
+
+            // UTF-8 BOM for better Excel compatibility
+            fwrite($file, "\xEF\xBB\xBF");
+
+            fputcsv($file, ['ID', 'Line', 'Machine', 'Condition', 'Cumulative', 'Created At']);
+
+            foreach ($data as $item) {
+                fputcsv($file, [
+                    $item->id,
+                    $item->line,
+                    $item->machine,
+                    $item->condition,
+                    $item->cumulative,
+                    optional($item->created_at)->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($file);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     private function getUniqueLines()
     {
         return InsBpmCount::distinct()->pluck('line')->sort()->toArray();
@@ -152,7 +186,7 @@ new class extends Component {
                 <div>
                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Condition") }}</label>
                     <x-select wire:model.live="condition" class="w-full">
-                        <option value="">{{ __("Semua") }}</option>
+                        <option value="all">{{ __("Semua") }}</option>
                         <option value="hot">{{ __("Hot") }}</option>
                         <option value="cold">{{ __("Cold") }}</option>
                     </x-select>
