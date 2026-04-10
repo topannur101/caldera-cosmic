@@ -876,7 +876,7 @@ new class extends Component {
                     </div>
                 </div>
             </div>
-            
+
             <!-- emergency status -->
             <div class="flex flex-col items-center justify-center">
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusEmergency ? 'border-red-400 bg-red-50 dark:bg-red-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
@@ -895,16 +895,16 @@ new class extends Component {
 
             <!-- clogging status -->
              <div class="flex flex-col items-center justify-center">
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusClogging ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border {{ $this->statusClogging ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/20' : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700/40' }}">
                     <span class="relative flex h-3 w-3">
                         @if($this->statusClogging)
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                         @endif
-                        <span class="relative inline-flex rounded-full h-3 w-3 {{ $this->statusClogging ? 'bg-green-500' : 'bg-neutral-400' }}"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 {{ $this->statusClogging ? 'bg-purple-500' : 'bg-neutral-400' }}"></span>
                     </span>
                     <div class="flex flex-col leading-tight">
-                        <span class="text-xs font-semibold uppercase tracking-wide {{ $this->statusClogging ? 'text-green-600 dark:text-green-400' : 'text-neutral-500 dark:text-neutral-400' }}">Clogging Status</span>
-                        <span class="text-xs font-medium {{ $this->statusClogging ? 'text-green-500 dark:text-green-300' : 'text-neutral-400 dark:text-neutral-500' }}">{{ $this->statusClogging ? __('Active') : __('Inactive') }}</span>
+                        <span class="text-xs font-semibold uppercase tracking-wide {{ $this->statusClogging ? 'text-purple-600 dark:text-purple-400' : 'text-neutral-500 dark:text-neutral-400' }}">Clogging Status</span>
+                        <span class="text-xs font-medium {{ $this->statusClogging ? 'text-purple-500 dark:text-purple-300' : 'text-neutral-400 dark:text-neutral-500' }}">{{ $this->statusClogging ? __('Active') : __('Inactive') }}</span>
                     </div>
                 </div>
             </div>
