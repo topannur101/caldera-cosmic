@@ -210,7 +210,7 @@ new #[Layout("layouts.app")] class extends Component {
     private function getCachedBpmLines(): int
     {
         return Cache::remember("bpm_lines_recent", now()->addMinutes(30), function () {
-            $timeWindow = Carbon::now()->subHours(7);
+            $timeWindow = Carbon::now()->subHours(12);
             return InsBpmCount::where("updated_at", ">=", $timeWindow)
                 ->distinct("line")
                 ->count("line");

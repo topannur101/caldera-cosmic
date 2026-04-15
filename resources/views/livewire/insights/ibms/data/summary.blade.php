@@ -7,9 +7,14 @@ use App\Models\Project;
 use App\Services\DurationFormatterService;
 use App\Services\UptimeCalculatorService;
 use App\Services\WorkingHoursService;
+use App\Traits\HasDateRangeFilter;
 use Carbon\Carbon;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
+use Livewire\WithPagination;
 
 new class extends Component {
+    use WithPagination, HasDateRangeFilter;
     public $totalBatches = 0;
     public $averageBatchTime = 0;
     public $chartData = [];
@@ -18,10 +23,87 @@ new class extends Component {
     public $batchStandard = 0;
     public $hasData = false;
     public $onlineStats = [];
+    public $shift;
+    public $machine_id;
+    public $status;
+    public $perPage = 10;
+    
+    #[Url]
+    public $start_at, $end_at;
+    
 
     public function mount()
     {
+        // set default date range its today
+        $this->start_at = Carbon::today()->toDateString();
+        $this->end_at = Carbon::today()->toDateString();
         $this->loadData();
+    }
+
+    public function updatedStartAt(): void
+    {
+        $this->handleFilterChange();
+    }
+
+    public function updatedEndAt(): void
+    {
+        $this->handleFilterChange();
+    }
+
+    public function updatedShift(): void
+    {
+        $this->handleFilterChange();
+    }
+
+    public function updatedMachineId(): void
+    {
+        $this->handleFilterChange();
+    }
+
+    public function updatedStatus(): void
+    {
+        $this->handleFilterChange();
+    }
+
+    #[On('update')]
+    public function onDateRangePresetUpdated(): void
+    {
+        $this->handleFilterChange();
+    }
+
+    private function handleFilterChange(): void
+    {
+        $this->resetPage();
+        $this->loadData();
+    }
+
+    private function buildCountsQuery()
+    {
+        $query = InsIbmsCount::query()
+            ->where('duration', '>=', '00:01:00')
+            ->orderBy('data->name');
+
+        if ($this->start_at) {
+            $query->whereDate('created_at', '>=', $this->start_at);
+        }
+
+        if ($this->end_at) {
+            $query->whereDate('created_at', '<=', $this->end_at);
+        }
+
+        if ($this->shift) {
+            $query->where('data->shift', $this->shift);
+        }
+
+        if ($this->machine_id) {
+            $query->where('data->name', $this->machine_id);
+        }
+
+        if ($this->status) {
+            $query->where('data->status', $this->status);
+        }
+
+        return $query;
     }
 
     public function loadData()
@@ -36,11 +118,7 @@ new class extends Component {
             ->sort()
             ->values();
 
-        $records = InsIbmsCount::whereDate('created_at', now()->toDateString())
-            ->where('duration', '>=', '00:01:00') // Filter out records with duration less than 1 minute
-            ->orderBy('data->name')
-            ->latest()
-            ->get();
+        $records = $this->buildCountsQuery()->get();
 
         $this->totalBatches = $records->count();
 
@@ -99,6 +177,16 @@ new class extends Component {
         }
 
         $this->onlineStats = $this->loadOnlineStats(now());
+        $this->dispatchChartPayload();
+    }
+
+    private function dispatchChartPayload(): void
+    {
+        $this->dispatch('ibms-summary-data-updated',
+            hasData: (bool) $this->hasData,
+            chartData: $this->chartData,
+            onlineStats: $this->onlineStats,
+        );
     }
 
     private function durationToMinutes(?string $duration): float
@@ -214,9 +302,114 @@ new class extends Component {
             'timeout_time' => '0 seconds',
         ];
     }
+
+    private function getCountsQuery()
+    {
+        return $this->buildCountsQuery();
+    }
+
+    public function with(): array
+    {
+        return [
+            'counts' => $this->getCountsQuery()->paginate($this->perPage),
+        ];
+    }
 }; ?>
 <div>
-    <div class="p-6 min-h-screen" wire:init="loadData" wire:poll.40s="loadData">
+    <!-- filter secction -->
+    <div class="mb-6">
+        <div class="flex flex-col lg:flex-row gap-3 w-full bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-4">
+            <div>
+                <div class="flex mb-2 text-xs text-neutral-500">
+                    <div class="flex">
+                        <x-dropdown align="left" width="48">
+                            <x-slot name="trigger">
+                                <x-text-button class="uppercase ml-3">
+                                    {{ __("Rentang") }}
+                                    <i class="icon-chevron-down ms-1"></i>
+                                </x-text-button>
+                            </x-slot>
+                            <x-slot name="content">
+                                <x-dropdown-link href="#" wire:click.prevent="setToday">
+                                    {{ __("Hari ini") }}
+                                </x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setYesterday">
+                                    {{ __("Kemarin") }}
+                                </x-dropdown-link>
+                                <hr class="border-neutral-300 dark:border-neutral-600" />
+                                <x-dropdown-link href="#" wire:click.prevent="setThisWeek">
+                                    {{ __("Minggu ini") }}
+                                </x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setLastWeek">
+                                    {{ __("Minggu lalu") }}
+                                </x-dropdown-link>
+                                <hr class="border-neutral-300 dark:border-neutral-600" />
+                                <x-dropdown-link href="#" wire:click.prevent="setThisMonth">
+                                    {{ __("Bulan ini") }}
+                                </x-dropdown-link>
+                                <x-dropdown-link href="#" wire:click.prevent="setLastMonth">
+                                    {{ __("Bulan lalu") }}
+                                </x-dropdown-link>
+                            </x-slot>
+                        </x-dropdown>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <x-text-input wire:model.live="start_at" type="date" class="w-40" />
+                    <x-text-input wire:model.live="end_at" type="date" class="w-40" />
+                </div>
+            </div>
+            <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Group") }}</label>
+                    <x-select wire:model.live="shift" class="w-full">
+                        <option value="">{{ __("Semua") }}</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="TL">GL/TL</option>
+                    </x-select>
+                </div>
+
+                <div>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Machine") }}</label>
+                    <x-select wire:model.live="machine_id" class="w-full">
+                        <option value="">{{ __("Semua") }}</option>
+                        <option value="1&2">1&2</option>
+                        <option value="3&4">3&4</option>
+                        <option value="5&6">5&6</option>
+                    </x-select>
+                </div>
+
+                <div>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Status") }}</label>
+                    <x-select wire:model.live="status" class="w-full">
+                        <option value="">{{ __("Semua") }}</option>
+                        <option value="too_early">Too Early</option>
+                        <option value="on_time">On Time</option>
+                        <option value="too_late">Too Late</option>
+                    </x-select>
+                </div>
+            </div>
+            <div class="grow flex justify-end gap-x-2 items-center">
+                <div class="flex gap-x-2">
+                    <x-dropdown align="right" width="48">
+                        <x-slot name="trigger">
+                            <x-text-button><i class="icon-ellipsis-vertical"></i></x-text-button>
+                        </x-slot>
+                        <x-slot name="content">
+                            <x-dropdown-link href="#" wire:click.prevent="download('counts')">
+                                <i class="icon-download me-2"></i>
+                                {{ __("CSV Data") }}
+                            </x-dropdown-link>
+                        </x-slot>
+                    </x-dropdown>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="min-h-screen" wire:init="loadData">
         <div class="grid grid-cols-4 gap-4 mb-4">
             <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-8">
                 <h3 class="text-gray-600 dark:text-white text-lg font-semibold mb-4">Total Batch</h3>
@@ -363,9 +556,9 @@ new class extends Component {
 @script
 <script>
     (() => {
-        const hasData = @js($hasData);
-        const chartData = @js($chartData);
-        const onlineStats = @js($onlineStats);
+        let hasData = @js($hasData);
+        let chartData = @js($chartData);
+        let onlineStats = @js($onlineStats);
         const ibmsChartColors = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6'];
         const monitoringColors = ['#4ade80', '#9ca3af', '#f59e0b'];
 
@@ -683,6 +876,22 @@ new class extends Component {
                 window.setTimeout(() => ensureApexChartsAndRender(retries - 1), 150);
             }
         }
+
+        const onSummaryDataUpdated = (event) => {
+            const payload = event.detail || {};
+
+            hasData = Boolean(payload.hasData);
+            chartData = Array.isArray(payload.chartData) ? payload.chartData : [];
+            onlineStats = payload.onlineStats && typeof payload.onlineStats === 'object' ? payload.onlineStats : {};
+
+            ensureApexChartsAndRender();
+        };
+
+        if (window.__ibmsSummaryDataUpdatedListener) {
+            window.removeEventListener('ibms-summary-data-updated', window.__ibmsSummaryDataUpdatedListener);
+        }
+        window.__ibmsSummaryDataUpdatedListener = onSummaryDataUpdated;
+        window.addEventListener('ibms-summary-data-updated', onSummaryDataUpdated);
 
         ensureApexChartsAndRender();
     })();

@@ -19,11 +19,13 @@ new #[Layout("layouts.app")] class extends Component {
         $this->view_titles = [
             "dashboard" => __("Dashboard"),
             "raw" => __("Raw Data"),
+            "summary" => __("Summary"),
         ];
 
         $this->view_icons = [
             "dashboard" => "icon-layout-dashboard",
             "raw" => "icon-database",
+            "summary" => "icon-layout-dashboard",
         ];
         $this->plants = $this->getDevices();
     }
@@ -45,11 +47,13 @@ new #[Layout("layouts.app")] class extends Component {
             $this->view_titles = [
                 "dashboard" => __("Dashboard"),
                 "raw" => __("Raw Data"),
+                "summary" => __("Summary"),
             ];
 
             $this->view_icons = [
                 "dashboard" => "icon-layout-dashboard",
                 "raw" => "icon-database",
+                "summary" => "icon-layout-dashboard",
             ];
         }
     }
@@ -106,6 +110,9 @@ new #[Layout("layouts.app")] class extends Component {
                 @break
             @case("raw")
                 <livewire:insights.ibms.data.raw />
+                @break
+            @case("summary")
+                <livewire:insights.ibms.data.summary />
                 @break
             @default
                 <div wire:key="no-view" class="w-full py-20">

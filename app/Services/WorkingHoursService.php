@@ -10,6 +10,79 @@ use Carbon\Carbon;
 class WorkingHoursService
 {
     /**
+     * Resolve the active working window for a project at a reference time.
+     *
+     * Handles shifts that cross midnight by also checking the previous-day window.
+     */
+    public function resolveProjectWorkingWindow(int $projectId, ?Carbon $reference = null): ?array
+    {
+        $workingHours = $this->getProjectWorkingHours($projectId);
+
+        if (empty($workingHours)) {
+            return null;
+        }
+
+        $reference = ($reference ?? now())->copy();
+
+        foreach ($workingHours as $workingHour) {
+            $startTime = (string) ($workingHour['start_time'] ?? '');
+            $endTime = (string) ($workingHour['end_time'] ?? '');
+
+            if ($startTime === '' || $endTime === '') {
+                continue;
+            }
+
+            $window = $this->buildShiftWindow($reference, $startTime, $endTime, false);
+            if ($this->isInsideWindow($reference, $window['start'], $window['end'])) {
+                return $window;
+            }
+
+            $previousDayWindow = $this->buildShiftWindow($reference, $startTime, $endTime, true);
+            if ($this->isInsideWindow($reference, $previousDayWindow['start'], $previousDayWindow['end'])) {
+                return $previousDayWindow;
+            }
+        }
+
+        $first = $workingHours[0];
+        $startTime = (string) ($first['start_time'] ?? '');
+        $endTime = (string) ($first['end_time'] ?? '');
+
+        if ($startTime === '' || $endTime === '') {
+            return null;
+        }
+
+        return $this->buildShiftWindow($reference, $startTime, $endTime, false);
+    }
+
+    private function buildShiftWindow(Carbon $reference, string $startTime, string $endTime, bool $usePreviousDay): array
+    {
+        $startAt = Carbon::parse($startTime);
+        $endAt = Carbon::parse($endTime);
+
+        $start = $reference->copy()->setTime($startAt->hour, $startAt->minute, $startAt->second);
+        $end = $reference->copy()->setTime($endAt->hour, $endAt->minute, $endAt->second);
+
+        if ($end->lessThanOrEqualTo($start)) {
+            $end->addDay();
+        }
+
+        if ($usePreviousDay) {
+            $start->subDay();
+            $end->subDay();
+        }
+
+        return [
+            'start' => $start,
+            'end' => $end,
+        ];
+    }
+
+    private function isInsideWindow(Carbon $reference, Carbon $start, Carbon $end): bool
+    {
+        return $reference->greaterThanOrEqualTo($start) && $reference->lessThan($end);
+    }
+
+    /**
      * Check if a project is currently working
      */
     public function isProjectWorking(int $projectId, ?Carbon $dateTime = null): bool

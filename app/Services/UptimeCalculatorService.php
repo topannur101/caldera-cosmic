@@ -12,15 +12,26 @@ class UptimeCalculatorService
     
     public function calculateStats(string $projectName, Carbon $start, Carbon $end): array
     {
-        $logs = $this->getLogs($projectName, $start, $end);
-        
-        if ($logs->isEmpty()) {
+        $windowStart = $start->copy();
+        $windowEnd = Carbon::now()->min($end);
+
+        if ($windowEnd->lessThanOrEqualTo($windowStart)) {
             return $this->getEmptyStats();
         }
-        
-        $onlineDuration  = $this->calculateOnlineDuration($logs, $end);
-        $offlineDuration = $this->calculateOfflineDuration($logs, $end);
-        $timeoutDuration = $this->calculateTimeoutDuration($logs, $end);
+
+        $previousLog = $this->getLastLogBeforeOrAtStart($projectName, $windowStart);
+        $windowLogs = $this->getLogsWithinWindow($projectName, $windowStart, $windowEnd);
+
+        if ($previousLog === null && $windowLogs->isEmpty()) {
+            return $this->getEmptyStats();
+        }
+
+        $timeline = $this->buildTimeline($windowStart, $windowLogs, $previousLog);
+        $durations = $this->calculateDurationsFromTimeline($timeline, $windowEnd);
+
+        $onlineDuration = $durations['online'];
+        $offlineDuration = $durations['offline'];
+        $timeoutDuration = $durations['timeout'];
         
         $totalDuration = $onlineDuration + $offlineDuration + $timeoutDuration;
         
@@ -33,100 +44,113 @@ class UptimeCalculatorService
             'timeout_percentage' => $this->calculatePercentage($timeoutDuration, $totalDuration),
         ];
     }
-    
-    private function getLogs(string $projectName, Carbon $start, Carbon $end): Collection
+
+    private function getLastLogBeforeOrAtStart(string $projectName, Carbon $start): ?UptimeLog
     {
         return UptimeLog::where('project_name', $projectName)
-            ->whereBetween('checked_at', [$start, $end])
+            ->where('checked_at', '<=', $start)
+            ->orderBy('checked_at', 'desc')
+            ->first();
+    }
+
+    private function getLogsWithinWindow(string $projectName, Carbon $start, Carbon $end): Collection
+    {
+        return UptimeLog::where('project_name', $projectName)
+            ->where('checked_at', '>', $start)
+            ->where('checked_at', '<=', $end)
             ->orderBy('checked_at', 'asc')
             ->get();
     }
-    
-    private function calculateOnlineDuration(Collection $logs, Carbon $end): int
+
+    private function buildTimeline(Carbon $windowStart, Collection $windowLogs, ?UptimeLog $previousLog): Collection
     {
-        $totalSeconds = 0;
-        $onlineStartTime = null;
-        
-        foreach ($logs as $log) {
-            if ($log->status === 'online') {
-                $onlineStartTime ??= $log->checked_at;
-            } elseif ($onlineStartTime !== null) {
-                $totalSeconds += $onlineStartTime->diffInSeconds($log->checked_at);
-                $onlineStartTime = null;
+        $timeline = collect();
+
+        if ($previousLog !== null) {
+            $timeline->push([
+                'checked_at' => $windowStart->copy(),
+                'status' => $previousLog->status,
+            ]);
+        }
+
+        foreach ($windowLogs as $log) {
+            $timeline->push([
+                'checked_at' => $log->checked_at->copy(),
+                'status' => $log->status,
+            ]);
+        }
+
+        return $timeline->sortBy('checked_at')->values();
+    }
+
+    private function calculateDurationsFromTimeline(Collection $timeline, Carbon $windowEnd): array
+    {
+        $durations = [
+            'online' => 0,
+            'offline' => 0,
+            'timeout' => 0,
+        ];
+
+        $currentStatus = null;
+        $segmentStart = null;
+
+        foreach ($timeline as $point) {
+            $pointTime = $point['checked_at'];
+            $pointStatus = (string) ($point['status'] ?? '');
+
+            if ($pointTime->greaterThan($windowEnd)) {
+                break;
             }
-        }
-        
-        if ($onlineStartTime !== null) {
-            $totalSeconds += $onlineStartTime->diffInSeconds(Carbon::now()->min($end));
-        }
-        
-        return $totalSeconds;
-    }
-    
-    private function calculateOfflineDuration(Collection $logs, Carbon $end): int
-    {
-        // Only count offline periods >= 5 minutes (true offline)
-        return $this->calculateStatusDuration($logs, 'offline', $end, self::TIMEOUT_THRESHOLD_SECONDS, true);
-    }
-    
-    private function calculateTimeoutDuration(Collection $logs, Carbon $end): int
-    {
-        // Only count offline periods < 5 minutes (RTO)
-        return $this->calculateStatusDuration($logs, 'offline', $end, self::TIMEOUT_THRESHOLD_SECONDS, false);
-    }
-    
-    private function calculateStatusDuration(
-        Collection $logs, 
-        string $status, 
-        Carbon $end, 
-        ?int $threshold = null,
-        ?bool $countAboveThreshold = null
-    ): int {
-        $totalSeconds = 0;
-        $count = $logs->count();
-        
-        for ($i = 0; $i < $count; $i++) {
-            if ($logs[$i]->status !== $status) {
+
+            if ($currentStatus === null) {
+                $currentStatus = $pointStatus;
+                $segmentStart = $pointTime->copy();
                 continue;
             }
-            
-            $startTime = $logs[$i]->checked_at;
-            $endTime = $this->findNextDifferentStatus($logs, $i, $status) 
-                ?? Carbon::now()->min($end);
-            
-            $duration = $startTime->diffInSeconds($endTime);
-            
-            // Determine if we should count this duration based on threshold
-            if ($threshold === null) {
-                $totalSeconds += $duration;
-            } elseif ($countAboveThreshold === true && $duration >= $threshold) {
-                // Count only durations >= threshold (true offline)
-                $totalSeconds += $duration;
-            } elseif ($countAboveThreshold === false && $duration < $threshold) {
-                // Count only durations < threshold (RTO)
-                $totalSeconds += $duration;
+
+            if ($pointTime->lessThanOrEqualTo($segmentStart)) {
+                if ($pointStatus !== $currentStatus) {
+                    $currentStatus = $pointStatus;
+                }
+                continue;
             }
-            
-            // Skip consecutive logs with same status
-            while ($i + 1 < $count && $logs[$i + 1]->status === $status) {
-                $i++;
+
+            if ($pointStatus === $currentStatus) {
+                continue;
             }
+
+            $segmentDuration = $segmentStart->diffInSeconds($pointTime);
+            $this->addSegmentDuration($durations, $currentStatus, $segmentDuration);
+
+            $currentStatus = $pointStatus;
+            $segmentStart = $pointTime->copy();
         }
-        
-        return $totalSeconds;
+
+        if ($currentStatus !== null && $segmentStart !== null && $windowEnd->greaterThan($segmentStart)) {
+            $segmentDuration = $segmentStart->diffInSeconds($windowEnd);
+            $this->addSegmentDuration($durations, $currentStatus, $segmentDuration);
+        }
+
+        return $durations;
     }
-    
-    private function findNextDifferentStatus(Collection $logs, int $currentIndex, string $status): ?Carbon
+
+    private function addSegmentDuration(array &$durations, string $status, int $duration): void
     {
-        $count = $logs->count();
-        
-        for ($j = $currentIndex + 1; $j < $count; $j++) {
-            if ($logs[$j]->status !== $status) {
-                return $logs[$j]->checked_at;
-            }
+        if ($duration <= 0) {
+            return;
         }
-        
-        return null;
+
+        if ($status === 'online') {
+            $durations['online'] += $duration;
+            return;
+        }
+
+        if ($duration >= self::TIMEOUT_THRESHOLD_SECONDS) {
+            $durations['offline'] += $duration;
+            return;
+        }
+
+        $durations['timeout'] += $duration;
     }
     
     private function calculatePercentage(int $part, int $total): float
