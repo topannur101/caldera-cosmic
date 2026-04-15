@@ -88,10 +88,7 @@ new class extends Component {
     {
         if ($type === "counts") {
             $filename = "ibms_counts_" . Carbon::now()->format("Ymd_His") . ".csv";
-            $data = InsIbmsCount::whereBetween("created_at", [
-                Carbon::parse($this->start_at)->startOfDay(),
-                Carbon::parse($this->end_at)->endOfDay(),
-            ])->get();
+            $data = $this->getCountsQuery()->where('duration' , '>=', '00:01:00')->get();
 
             return response()->streamDownload(function () use ($data) {
                 $file = fopen('php://output', 'w');
