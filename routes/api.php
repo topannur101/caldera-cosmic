@@ -589,10 +589,12 @@ Route::get('/ppm/models', function () {
 
 // GET LIST PART NAME with PRODUCT ID (for dropdown filter)
 Route::get('/ppm/part-names', function () {
-    $partNames = InsPpmComponent::whereHas('product', function ($query) {
-    })
-    ->values()
-    ->toArray();
+    $partNames = InsPpmComponent::query()
+        ->whereHas('product')
+        ->selectRaw('part_name as name_part, product_id')
+        ->orderBy('part_name')
+        ->get()
+        ->toArray();
 
     return response()->json([
         'status' => 'success',

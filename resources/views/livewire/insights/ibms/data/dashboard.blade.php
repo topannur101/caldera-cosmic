@@ -210,35 +210,35 @@ new class extends Component {
     }
 }; ?>
 <div>
-    <div class="p-6 min-h-screen" wire:init="loadData" wire:poll.40s="loadData">
-        <div class="grid grid-cols-4 gap-4 mb-4">
-            <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-8">
+    <div class="min-h-screen p-4 sm:p-6" wire:init="loadData" wire:poll.40s="loadData">
+        <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-lg bg-white p-5 shadow dark:bg-neutral-800 sm:p-8">
                 <h3 class="text-gray-600 dark:text-white text-lg font-semibold mb-4">Total Batch</h3>
-                <p class="text-5xl font-bold text-green-600 dark:text-white">{{ $totalBatches }}</p>
+                <p class="text-4xl font-bold text-green-600 dark:text-white sm:text-5xl">{{ $totalBatches }}</p>
                 <p class="text-gray-500 dark:text-white text-sm mt-2">batch</p>
             </div>
     
             <!-- Average Batch Time -->
-            <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-8">
+            <div class="rounded-lg bg-white p-5 shadow dark:bg-neutral-800 sm:p-8">
                 <h3 class="text-gray-600 dark:text-white text-lg font-semibold mb-4">Average Batch Time</h3>
-                <p class="text-5xl font-bold text-green-600 dark:text-white">{{ $averageBatchTime }}</p>
+                <p class="text-4xl font-bold text-green-600 dark:text-white sm:text-5xl">{{ $averageBatchTime }}</p>
                 <p class="text-gray-500 dark:text-white text-sm mt-2">minutes / batch</p>
             </div>
     
-            <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-8">
+            <div class="rounded-lg bg-white p-5 shadow dark:bg-neutral-800 sm:p-8">
                 <h3 class="text-gray-600 dark:text-white text-lg font-semibold mb-4">Batch Not Standard</h3>
-                <p class="text-5xl font-bold text-red-600 dark:text-white">{{ $batchNotStandard ?? 0 }}</p>
+                <p class="text-4xl font-bold text-red-600 dark:text-white sm:text-5xl">{{ $batchNotStandard ?? 0 }}</p>
                 <p class="text-gray-500 dark:text-white text-sm mt-2">batch</p>
             </div>
     
-            <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-8">
+            <div class="rounded-lg bg-white p-5 shadow dark:bg-neutral-800 sm:p-8">
                 <h3 class="text-gray-600 dark:text-white text-lg font-semibold mb-4">Batch Standard</h3>
-                <p class="text-5xl font-bold text-green-600 dark:text-white">{{ $batchStandard ?? 0 }}</p>
+                <p class="text-4xl font-bold text-green-600 dark:text-white sm:text-5xl">{{ $batchStandard ?? 0 }}</p>
                 <p class="text-gray-500 dark:text-white text-sm mt-2">batch</p>
             </div>
         </div>
         <!-- Top Metrics -->
-        <div class="grid grid-cols gap-4 mb-2">
+        <div class="mb-2 grid grid-cols-1 gap-4">
             <div>
                  <!-- Bar Chart Section -->
                 <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-6 mb-4">
@@ -251,8 +251,8 @@ new class extends Component {
                 </div>
             </div>
         </div>
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 mb-8">
-            <div class="xl:col-span-3">
+        <div class="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-12">
+            <div class="lg:col-span-4 xl:col-span-3">
                 <div class="w-full bg-white dark:bg-neutral-800 rounded-2xl shadow-sm p-6 border border-slate-200/70 dark:border-neutral-700">
                     <h1 class="text-center text-xl font-bold text-gray-800 dark:text-white mb-6">Online System Monitoring</h1>
                     <div id="onlineSystemMonitoringChart" class="h-[200px] mb-3" wire:ignore></div>
@@ -291,7 +291,7 @@ new class extends Component {
                 </div>
             </div>
             <!-- Donut Chart Section -->
-            <div class="xl:col-span-9 overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+            <div class="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800 lg:col-span-8 xl:col-span-9">
                 <div class="flex flex-col gap-4 border-b border-slate-200/70 px-2 py-2 dark:border-neutral-700 md:flex-row md:items-center md:justify-between">
                     <div>
                         <h2 class="mt-1 text-xl font-bold text-slate-800 dark:text-white">Evaluation Percentage</h2>

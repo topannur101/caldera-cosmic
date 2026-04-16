@@ -23,8 +23,11 @@ new class extends Component {
     public $batchStandard = 0;
     public $hasData = false;
     public $onlineStats = [];
+    #[Url]
     public $shift;
+    #[Url]
     public $machine_id;
+    #[Url]
     public $status;
     public $perPage = 10;
     
@@ -92,7 +95,7 @@ new class extends Component {
         }
 
         if ($this->shift) {
-            $query->where('data->shift', $this->shift);
+            $query->where('shift', $this->shift);
         }
 
         if ($this->machine_id) {
@@ -112,7 +115,6 @@ new class extends Component {
                 $query->where('data->status', $this->status);
             }
         }
-
         return $query;
     }
 
@@ -184,7 +186,7 @@ new class extends Component {
             $this->pieChartData = [];
         }
 
-        $this->onlineStats = $this->loadOnlineStats(now());
+        $this->onlineStats = $this->loadOnlineStats($this->start_at, $this->end_at);
         $this->dispatchChartPayload();
     }
 
@@ -237,50 +239,85 @@ new class extends Component {
         return 'gt_20';
     }
 
-    private function loadOnlineStats(Carbon $date): array
+    private function loadOnlineStats(?string $startDateInput = null, ?string $endDateInput = null): array
     {
+        $startDate = $startDateInput ? Carbon::parse($startDateInput)->startOfDay() : now()->startOfDay();
+        $endDate = $endDateInput ? Carbon::parse($endDateInput)->startOfDay() : $startDate->copy();
+
+        if ($endDate->lessThan($startDate)) {
+            [$startDate, $endDate] = [$endDate, $startDate];
+        }
+
+        $periodLabel = $startDate->isSameDay($endDate)
+            ? $startDate->format('d M Y')
+            : $startDate->format('d M Y').' - '.$endDate->format('d M Y');
+
+        $dayCount = $startDate->diffInDays($endDate) + 1;
+
         $activeIps = InsIbmsDevice::active()
             ->pluck('ip_address')
             ->filter()
             ->values();
 
         if ($activeIps->isEmpty()) {
-            return $this->getEmptyOnlineStats();
+            return $this->getEmptyOnlineStats($periodLabel, $dayCount);
         }
 
         $project = Project::whereIn('ip', $activeIps)->first();
         if (!$project) {
-            return $this->getEmptyOnlineStats();
+            return $this->getEmptyOnlineStats($periodLabel, $dayCount);
         }
+
+        $totalOnlineDuration = 0;
+        $totalOfflineDuration = 0;
+        $totalTimeoutDuration = 0;
 
         $workingHoursService = app(WorkingHoursService::class);
-        $workingWindow = $workingHoursService->resolveProjectWorkingWindow($project->id, $date);
-
-        if (!empty($workingWindow)) {
-            $start = $workingWindow['start'];
-            $end = $workingWindow['end'];
-        } else {
-            $defaultHours = config('bpm.working_hours');
-            $start = $date->copy()->setTime((int) $defaultHours['start'], 0);
-            $end = $date->copy()->setTime((int) $defaultHours['end'], 0);
-        }
-
-        if ($end->lessThanOrEqualTo($start)) {
-            $end->addDay();
-        }
-
         $calculator = app(UptimeCalculatorService::class);
-        $stats = $calculator->calculateStats($project->name, $start, $end);
+
+        $cursor = $startDate->copy();
+        while ($cursor->lessThanOrEqualTo($endDate)) {
+            $workingWindow = $workingHoursService->resolveProjectWorkingWindow($project->id, $cursor);
+
+            if (!empty($workingWindow)) {
+                $start = $workingWindow['start'];
+                $end = $workingWindow['end'];
+            } else {
+                $defaultHours = config('bpm.working_hours');
+                $start = $cursor->copy()->setTime((int) $defaultHours['start'], 0);
+                $end = $cursor->copy()->setTime((int) $defaultHours['end'], 0);
+            }
+
+            if ($end->lessThanOrEqualTo($start)) {
+                $end->addDay();
+            }
+
+            $stats = $calculator->calculateStats($project->name, $start, $end);
+
+            $totalOnlineDuration += (float) ($stats['online_duration'] ?? 0);
+            $totalOfflineDuration += (float) ($stats['offline_duration'] ?? 0);
+            $totalTimeoutDuration += (float) ($stats['timeout_duration'] ?? 0);
+
+            $cursor->addDay();
+        }
+
+        $totalDuration = $totalOnlineDuration + $totalOfflineDuration + $totalTimeoutDuration;
+
+        $onlinePercentage = $totalDuration > 0 ? ($totalOnlineDuration / $totalDuration) * 100 : 0;
+        $offlinePercentage = $totalDuration > 0 ? ($totalOfflineDuration / $totalDuration) * 100 : 0;
+        $timeoutPercentage = $totalDuration > 0 ? ($totalTimeoutDuration / $totalDuration) * 100 : 0;
 
         $formatter = app(DurationFormatterService::class);
 
         return [
-            'online_percentage' => $this->sanitizeChartValue($stats['online_percentage'] ?? 0),
-            'offline_percentage' => $this->sanitizeChartValue($stats['offline_percentage'] ?? 0),
-            'timeout_percentage' => $this->sanitizeChartValue($stats['timeout_percentage'] ?? 0),
-            'online_time' => $formatter->format($stats['online_duration'] ?? 0),
-            'offline_time' => $formatter->format($stats['offline_duration'] ?? 0),
-            'timeout_time' => $formatter->format($stats['timeout_duration'] ?? 0),
+            'online_percentage' => $this->sanitizeChartValue($onlinePercentage),
+            'offline_percentage' => $this->sanitizeChartValue($offlinePercentage),
+            'timeout_percentage' => $this->sanitizeChartValue($timeoutPercentage),
+            'online_time' => $formatter->format($totalOnlineDuration),
+            'offline_time' => $formatter->format($totalOfflineDuration),
+            'timeout_time' => $formatter->format($totalTimeoutDuration),
+            'period_label' => $periodLabel,
+            'day_count' => $dayCount,
         ];
     }
 
@@ -295,7 +332,7 @@ new class extends Component {
         return is_finite($float) ? round($float, 2) : 0;
     }
 
-    private function getEmptyOnlineStats(): array
+    private function getEmptyOnlineStats(?string $periodLabel = null, ?int $dayCount = null): array
     {
         return [
             'online_percentage' => 0,
@@ -304,6 +341,8 @@ new class extends Component {
             'online_time' => '0 seconds',
             'offline_time' => '0 seconds',
             'timeout_time' => '0 seconds',
+            'period_label' => $periodLabel,
+            'day_count' => $dayCount,
         ];
     }
 
@@ -455,47 +494,9 @@ new class extends Component {
                 </div>
             </div>
         </div>
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 mb-8">
-            <div class="xl:col-span-3">
-                <div class="w-full bg-white dark:bg-neutral-800 rounded-2xl shadow-sm p-6 border border-slate-200/70 dark:border-neutral-700">
-                    <h1 class="text-center text-xl font-bold text-gray-800 dark:text-white mb-6">Online System Monitoring</h1>
-                    <div id="onlineSystemMonitoringChart" class="h-[200px] mb-3" wire:ignore></div>
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded">
-                            <div class="flex items-center gap-2">
-                                <div class="w-4 h-4 rounded-full bg-green-500"></div>
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Online</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-semibold text-green-600 dark:text-green-400">{{ $onlineStats['online_percentage'] ?? 0 }}%</div>
-                                <div class="text-xs text-gray-500">{{ $onlineStats['online_time'] ?? '0 seconds' }}</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900/20 rounded">
-                            <div class="flex items-center gap-2">
-                                <div class="w-4 h-4 rounded-full bg-gray-400"></div>
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Offline</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-semibold text-gray-600 dark:text-gray-400">{{ $onlineStats['offline_percentage'] ?? 0 }}%</div>
-                                <div class="text-xs text-gray-500">{{ $onlineStats['offline_time'] ?? '0 seconds' }}</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between p-2 bg-orange-50 dark:bg-orange-900/20 rounded">
-                            <div class="flex items-center gap-2">
-                                <div class="w-4 h-4 rounded-full bg-orange-500"></div>
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Timeout (RTO)</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-semibold text-orange-600 dark:text-orange-400">{{ $onlineStats['timeout_percentage'] ?? 0 }}%</div>
-                                <div class="text-xs text-gray-500">{{ $onlineStats['timeout_time'] ?? '0 seconds' }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="grid gap-4 mb-8">
             <!-- Donut Chart Section -->
-            <div class="xl:col-span-9 overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+            <div class="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
                 <div class="flex flex-col gap-4 border-b border-slate-200/70 px-2 py-2 dark:border-neutral-700 md:flex-row md:items-center md:justify-between">
                     <div>
                         <h2 class="mt-1 text-xl font-bold text-slate-800 dark:text-white">Evaluation Percentage</h2>
@@ -546,6 +547,55 @@ new class extends Component {
                         </div>
                     </div>
                 @endif
+            </div>
+        </div>
+
+        <div class="grid gap-4 mb-8">
+            <div>
+                <div class="w-full bg-white dark:bg-neutral-800 rounded-2xl shadow-sm p-6 border border-slate-200/70 dark:border-neutral-700">
+                    <h1 class="text-center text-xl font-bold text-gray-800 dark:text-white mb-6">Online System Monitoring</h1>
+                    @if (!empty($onlineStats['period_label']))
+                        <p class="mb-3 text-center text-xs text-slate-500 dark:text-slate-400">
+                            Period: {{ $onlineStats['period_label'] }}
+                            @if (!empty($onlineStats['day_count']) && (int) $onlineStats['day_count'] > 1)
+                                ({{ $onlineStats['day_count'] }} days)
+                            @endif
+                        </p>
+                    @endif
+                    <div id="onlineSystemMonitoringChart" class="h-[200px] mb-3" wire:ignore></div>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded">
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 rounded-full bg-green-500"></div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Online</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-green-600 dark:text-green-400">{{ $onlineStats['online_percentage'] ?? 0 }}%</div>
+                                <div class="text-xs text-gray-500">{{ $onlineStats['online_time'] ?? '0 seconds' }}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900/20 rounded">
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 rounded-full bg-gray-400"></div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Offline</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-gray-600 dark:text-gray-400">{{ $onlineStats['offline_percentage'] ?? 0 }}%</div>
+                                <div class="text-xs text-gray-500">{{ $onlineStats['offline_time'] ?? '0 seconds' }}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-2 bg-orange-50 dark:bg-orange-900/20 rounded">
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 rounded-full bg-orange-500"></div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Timeout (RTO)</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-orange-600 dark:text-orange-400">{{ $onlineStats['timeout_percentage'] ?? 0 }}%</div>
+                                <div class="text-xs text-gray-500">{{ $onlineStats['timeout_time'] ?? '0 seconds' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -629,38 +679,77 @@ new class extends Component {
 
             container.innerHTML = '';
 
-            const donutOptions = {
-                series: monitoringSeries.map((item) => item.value),
+            const barOptions = {
+                series: [
+                    {
+                        name: 'Percentage',
+                        data: monitoringSeries.map((item) => item.value)
+                    }
+                ],
                 chart: {
-                    type: 'donut',
-                    height: 190,
+                    type: 'bar',
+                    height: 220,
                     background: 'transparent',
                     toolbar: { show: false },
                     animations: { enabled: true, speed: 350 },
                     foreColor: textColor
                 },
-                labels: monitoringSeries.map((item) => item.label),
-                colors: monitoringSeries.map((item) => item.color),
-                legend: { show: false },
-                stroke: { width: 0 },
-                dataLabels: { enabled: true },
                 plotOptions: {
-                    pie: {
-                        donut: {
-                            size: '58%'
+                    bar: {
+                        horizontal: true,
+                        borderRadius: 6,
+                        distributed: true,
+                        barHeight: '55%'
+                    }
+                },
+                dataLabels: {
+                    enabled: true,
+                    formatter: function (value) {
+                        return value.toFixed(1) + '%';
+                    },
+                    style: {
+                        colors: ['#ffffff']
+                    }
+                },
+                xaxis: {
+                    categories: monitoringSeries.map((item) => item.label),
+                    max: 100,
+                    labels: {
+                        formatter: function (value) {
+                            return Number(value).toFixed(0) + '%';
                         }
                     }
                 },
-                tooltip: {
-                    y: {
-                        formatter: function (value, { seriesIndex }) {
-                            return value.toFixed(2) + '% - ' + monitoringSeries[seriesIndex].durationLabel;
+                yaxis: {
+                    labels: {
+                        style: {
+                            fontSize: '12px'
                         }
+                    }
+                },
+                legend: { show: false },
+                grid: {
+                    borderColor: '#e5e7eb',
+                    strokeDashArray: 4,
+                },
+                colors: monitoringSeries.map((item) => item.color),
+                tooltip: {
+                    custom: function ({ dataPointIndex }) {
+                        const item = monitoringSeries[dataPointIndex];
+                        if (!item) {
+                            return '';
+                        }
+
+                        return '<div class="px-2 py-1 text-xs">'
+                            + '<div class="font-semibold">' + item.label + '</div>'
+                            + '<div>' + item.value.toFixed(2) + '%</div>'
+                            + '<div>' + item.durationLabel + '</div>'
+                            + '</div>';
                     }
                 }
             };
 
-            container._apexChart = new ApexCharts(container, donutOptions);
+            container._apexChart = new ApexCharts(container, barOptions);
             container._apexChart.render();
         }
 
