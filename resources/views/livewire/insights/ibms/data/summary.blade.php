@@ -100,7 +100,17 @@ new class extends Component {
         }
 
         if ($this->status) {
-            $query->where('data->status', $this->status);
+            if ($this->status === 'le_10') {
+                $query->where('duration', '<=', '00:10:59');
+            } elseif ($this->status === 'min_11_19') {
+                $query->whereBetween('duration', ['00:11:00', '00:19:59']);
+            } elseif ($this->status === 'exact_20') {
+                $query->whereBetween('duration', ['00:20:00', '00:20:59']);
+            } elseif ($this->status === 'gt_20') {
+                $query->where('duration', '>', '00:20:59');
+            } else {
+                $query->where('data->status', $this->status);
+            }
         }
 
         return $query;
@@ -377,12 +387,13 @@ new class extends Component {
                 </div>
 
                 <div>
-                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Status") }}</label>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Duration") }}</label>
                     <x-select wire:model.live="status" class="w-full">
                         <option value="">{{ __("Semua") }}</option>
-                        <option value="too_early">Too Early</option>
-                        <option value="on_time">On Time</option>
-                        <option value="too_late">Too Late</option>
+                        <option value="le_10">&lt;= 10 min</option>
+                        <option value="min_11_19">11 - 19 min</option>
+                        <option value="exact_20">20 min</option>
+                        <option value="gt_20">&gt; 20 min</option>
                     </x-select>
                 </div>
             </div>
@@ -500,9 +511,6 @@ new class extends Component {
                                         <p class="text-lg font-semibold text-slate-800 dark:text-white">{{ $machine['machine'] }}</p>
                                         <p class="text-xs text-slate-500 dark:text-slate-300">Distribution by cycle duration</p>
                                     </div>
-                                    <span class="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
-                                        {{ $machine['total'] }} batches
-                                    </span>
                                 </div>
     
                                 <div class="rounded-2xl p-2 dark:bg-neutral-800/80">
@@ -675,7 +683,7 @@ new class extends Component {
             container.innerHTML = '';
 
             const series = [
-                { name: '<= 10 minutes', data: chartData.map((d) => Number(d.le_10) || 0) },
+                { name: '≤ 10 minutes', data: chartData.map((d) => Number(d.le_10) || 0) },
                 { name: '11 - 19 minutes', data: chartData.map((d) => Number(d.min_11_19) || 0) },
                 { name: '20 minutes', data: chartData.map((d) => Number(d.exact_20) || 0) },
                 { name: '> 20 minutes', data: chartData.map((d) => Number(d.gt_20) || 0) },

@@ -484,7 +484,7 @@ new class extends Component {
             container.innerHTML = '';
 
             const series = [
-                { name: '<= 10 minutes', data: chartData.map((d) => Number(d.le_10) || 0) },
+                { name: '≤ 10 minutes', data: chartData.map((d) => Number(d.le_10) || 0) },
                 { name: '11 - 19 minutes', data: chartData.map((d) => Number(d.min_11_19) || 0) },
                 { name: '20 minutes', data: chartData.map((d) => Number(d.exact_20) || 0) },
                 { name: '> 20 minutes', data: chartData.map((d) => Number(d.gt_20) || 0) },
