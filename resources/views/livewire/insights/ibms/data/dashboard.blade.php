@@ -66,10 +66,9 @@ new class extends Component {
 
             return [
                 'machine' => 'Machine ' . $name,
-                'lt_5' => (int) $durationCounts->get('lt_5', 0),
-                'min_5_10' => (int) $durationCounts->get('min_5_10', 0),
-                'min_11_15' => (int) $durationCounts->get('min_11_15', 0),
-                'min_16_20' => (int) $durationCounts->get('min_16_20', 0),
+                'le_10' => (int) $durationCounts->get('le_10', 0),
+                'min_11_19' => (int) $durationCounts->get('min_11_19', 0),
+                'exact_20' => (int) $durationCounts->get('exact_20', 0),
                 'gt_20' => (int) $durationCounts->get('gt_20', 0),
                 'total' => $group->count(),
             ];
@@ -88,10 +87,9 @@ new class extends Component {
             });
 
             $this->pieChartData = [
-                ['label' => '< 5 minutes', 'value' => round(((int) $durationCounts->get('lt_5', 0) / $total) * 100, 1), 'color' => '#ef4444'],
-                ['label' => '5 - 10 minutes', 'value' => round(((int) $durationCounts->get('min_5_10', 0) / $total) * 100, 1), 'color' => '#f97316'],
-                ['label' => '11 - 15 minutes', 'value' => round(((int) $durationCounts->get('min_11_15', 0) / $total) * 100, 1), 'color' => '#facc15'],
-                ['label' => '16 - 20 minutes', 'value' => round(((int) $durationCounts->get('min_16_20', 0) / $total) * 100, 1), 'color' => '#22c55e'],
+                ['label' => '<= 10 minutes', 'value' => round(((int) $durationCounts->get('le_10', 0) / $total) * 100, 1), 'color' => '#ef4444'],
+                ['label' => '11 - 19 minutes', 'value' => round(((int) $durationCounts->get('min_11_19', 0) / $total) * 100, 1), 'color' => '#facc15'],
+                ['label' => '20 minutes', 'value' => round(((int) $durationCounts->get('exact_20', 0) / $total) * 100, 1), 'color' => '#22c55e'],
                 ['label' => '> 20 minutes', 'value' => round(((int) $durationCounts->get('gt_20', 0) / $total) * 100, 1), 'color' => '#3b82f6'],
             ];
         } else {
@@ -124,22 +122,18 @@ new class extends Component {
 
     private function getDurationCategory(?string $duration): string
     {
-        $minutes = $this->durationToMinutes($duration);
-
-        if ($minutes < 5) {
-            return 'lt_5';
-        }
+        $minutes = (int) floor($this->durationToMinutes($duration));
 
         if ($minutes <= 10) {
-            return 'min_5_10';
+            return 'le_10';
         }
 
-        if ($minutes <= 15) {
-            return 'min_11_15';
+        if ($minutes <= 19) {
+            return 'min_11_19';
         }
 
-        if ($minutes <= 20) {
-            return 'min_16_20';
+        if ($minutes === 20) {
+            return 'exact_20';
         }
 
         return 'gt_20';
@@ -250,7 +244,7 @@ new class extends Component {
                 <div class="bg-white dark:bg-neutral-800 rounded-lg shadow p-6 mb-4">
                     <h2 class="text-xl font-bold text-neutral-800 dark:text-white mb-6">Total Batch per Machine</h2>
                     @if ($hasData)
-                        <div id="batchApexChart"></div>
+                        <div id="batchApexChart" wire:ignore></div>
                     @else
                         <div class="h-[350px] flex items-center justify-center text-gray-500 dark:text-white">No Data Available</div>
                     @endif
@@ -261,7 +255,7 @@ new class extends Component {
             <div class="xl:col-span-3">
                 <div class="w-full bg-white dark:bg-neutral-800 rounded-2xl shadow-sm p-6 border border-slate-200/70 dark:border-neutral-700">
                     <h1 class="text-center text-xl font-bold text-gray-800 dark:text-white mb-6">Online System Monitoring</h1>
-                    <div id="onlineSystemMonitoringChart" class="h-[200px] mb-3"></div>
+                    <div id="onlineSystemMonitoringChart" class="h-[200px] mb-3" wire:ignore></div>
                     <div class="space-y-2">
                         <div class="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded">
                             <div class="flex items-center gap-2">
@@ -313,33 +307,26 @@ new class extends Component {
                                         <p class="text-lg font-semibold text-slate-800 dark:text-white">{{ $machine['machine'] }}</p>
                                         <p class="text-xs text-slate-500 dark:text-slate-300">Distribution by cycle duration</p>
                                     </div>
-                                    <span class="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
-                                        {{ $machine['total'] }} batches
-                                    </span>
                                 </div>
     
                                 <div class="rounded-2xl p-2 dark:bg-neutral-800/80">
-                                    <div id="machinePieChart-{{ $index }}" class="h-[120px]"></div>
+                                    <div id="machinePieChart-{{ $index }}" class="h-[120px]" wire:ignore></div>
                                 </div>
     
                                 <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                                     <div class="flex items-center justify-between rounded-xl bg-red-50 px-3 py-2 text-red-700 dark:bg-red-900/20 dark:text-red-200">
-                                        <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>&lt; 5 min</span>
-                                        <span class="text-xs font-semibold">{{ $machine['lt_5'] }}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between rounded-xl bg-orange-50 px-3 py-2 text-orange-700 dark:bg-orange-900/20 dark:text-orange-200">
-                                        <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-orange-500"></span>5 - 10 min</span>
-                                        <span class="text-xs font-semibold">{{ $machine['min_5_10'] }}</span>
+                                        <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>&le; 10 min</span>
+                                        <span class="text-xs font-semibold">{{ $machine['le_10'] }}</span>
                                     </div>
                                     <div class="flex items-center justify-between rounded-xl bg-yellow-50 px-3 py-2 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-200">
-                                        <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-yellow-400"></span>11 - 15 min</span>
-                                        <span class="text-xs font-semibold">{{ $machine['min_11_15'] }}</span>
+                                        <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-yellow-400"></span>11 - 19 min</span>
+                                        <span class="text-xs font-semibold">{{ $machine['min_11_19'] }}</span>
                                     </div>
                                     <div class="flex items-center justify-between rounded-xl bg-green-50 px-3 py-2 text-green-700 dark:bg-green-900/20 dark:text-green-200">
-                                        <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>16 - 20 min</span>
-                                        <span class="text-xs font-semibold">{{ $machine['min_16_20'] }}</span>
+                                        <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>20 min</span>
+                                        <span class="text-xs font-semibold">{{ $machine['exact_20'] }}</span>
                                     </div>
-                                    <div class="flex items-center justify-between rounded-xl bg-blue-50 px-3 py-2 text-blue-700 dark:bg-blue-900/20 dark:text-blue-200 sm:col-span-2">
+                                    <div class="flex items-center justify-between rounded-xl bg-blue-50 px-3 py-2 text-blue-700 dark:bg-blue-900/20 dark:text-blue-200">
                                         <span class="flex items-center gap-2 text-xs font-medium"><span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>&gt; 20 min</span>
                                         <span class="text-xs font-semibold">{{ $machine['gt_20'] }}</span>
                                     </div>
@@ -366,8 +353,13 @@ new class extends Component {
         const hasData = @js($hasData);
         const chartData = @js($chartData);
         const onlineStats = @js($onlineStats);
-        const ibmsChartColors = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6'];
+        const ibmsChartColors = ['#ef4444', '#facc15', '#22c55e', '#3b82f6'];
         const monitoringColors = ['#4ade80', '#9ca3af', '#f59e0b'];
+        const componentRoot = document.currentScript?.closest('[wire\\:id]') || document;
+
+        const findInComponent = (selector) => {
+            return componentRoot.querySelector(selector);
+        };
 
         const getThemeConfig = () => {
             const isDarkMode = document.documentElement.classList.contains('dark');
@@ -399,7 +391,7 @@ new class extends Component {
                 return;
             }
 
-            const container = document.querySelector('#onlineSystemMonitoringChart');
+            const container = findInComponent('#onlineSystemMonitoringChart');
             if (!container) {
                 return;
             }
@@ -478,7 +470,7 @@ new class extends Component {
                 return;
             }
 
-            const container = document.querySelector('#batchApexChart');
+            const container = findInComponent('#batchApexChart');
             if (!container) {
                 return;
             }
@@ -492,12 +484,20 @@ new class extends Component {
             container.innerHTML = '';
 
             const series = [
-                { name: '< 5 minutes', data: chartData.map((d) => Number(d.lt_5) || 0) },
-                { name: '5 - 10 minutes', data: chartData.map((d) => Number(d.min_5_10) || 0) },
-                { name: '11 - 15 minutes', data: chartData.map((d) => Number(d.min_11_15) || 0) },
-                { name: '16 - 20 minutes', data: chartData.map((d) => Number(d.min_16_20) || 0) },
+                { name: '<= 10 minutes', data: chartData.map((d) => Number(d.le_10) || 0) },
+                { name: '11 - 19 minutes', data: chartData.map((d) => Number(d.min_11_19) || 0) },
+                { name: '20 minutes', data: chartData.map((d) => Number(d.exact_20) || 0) },
                 { name: '> 20 minutes', data: chartData.map((d) => Number(d.gt_20) || 0) },
             ];
+
+            const totalBars = series.reduce((sum, item) => {
+                return sum + item.data.reduce((inner, val) => inner + val, 0);
+            }, 0);
+
+            if (totalBars <= 0) {
+                showEmptyState(container, 'No batch data');
+                return;
+            }
 
             const options = {
                 series,
@@ -569,7 +569,7 @@ new class extends Component {
             const { isDarkMode, textColor, strokeColor, mutedTextColor } = getThemeConfig();
 
             chartData.forEach((machine, index) => {
-                const container = document.querySelector('#machinePieChart-' + index);
+                const container = findInComponent('#machinePieChart-' + index);
                 if (!container) {
                     return;
                 }
@@ -579,10 +579,9 @@ new class extends Component {
                 }
 
                 const series = [
-                    Number(machine.lt_5) || 0,
-                    Number(machine.min_5_10) || 0,
-                    Number(machine.min_11_15) || 0,
-                    Number(machine.min_16_20) || 0,
+                    Number(machine.le_10) || 0,
+                    Number(machine.min_11_19) || 0,
+                    Number(machine.exact_20) || 0,
                     Number(machine.gt_20) || 0,
                 ];
 
@@ -604,7 +603,7 @@ new class extends Component {
                         toolbar: { show: false },
                         foreColor: textColor
                     },
-                    labels: ['< 5 minutes', '5 - 10 minutes', '11 - 15 minutes', '16 - 20 minutes', '> 20 minutes'],
+                    labels: ['<= 10 minutes', '11 - 19 minutes', '20 minutes', '> 20 minutes'],
                     colors: ibmsChartColors,
                     legend: { show: false },
                     stroke: { width: 4, colors: [strokeColor] },
@@ -663,14 +662,27 @@ new class extends Component {
         }
 
         function renderAllCharts() {
-            renderOnlineSystemMonitoringChart();
+            try {
+                renderOnlineSystemMonitoringChart();
+            } catch (error) {
+                console.error('Failed to render online monitoring chart', error);
+            }
 
             if (!hasData) {
                 return;
             }
 
-            renderBatchChart();
-            renderMachinePieCharts();
+            try {
+                renderBatchChart();
+            } catch (error) {
+                console.error('Failed to render batch chart', error);
+            }
+
+            try {
+                renderMachinePieCharts();
+            } catch (error) {
+                console.error('Failed to render machine pie charts', error);
+            }
         }
 
         function ensureApexChartsAndRender(retries = 20) {
