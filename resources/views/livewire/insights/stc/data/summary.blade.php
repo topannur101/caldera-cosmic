@@ -56,7 +56,7 @@ new class extends Component {
         foreach ($machines as $key => $machine) {
             $upper_d_sum = InsStcDSum::where("position", "upper")
                 ->where("ins_stc_machine_id", $machine["id"])
-                ->where("created_at", ">=", Carbon::now()->subHours(5))
+                ->where("created_at", ">=", Carbon::now()->subHours(8))
                 ->latest("created_at")
                 ->first();
 
