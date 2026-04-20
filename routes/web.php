@@ -348,8 +348,7 @@ Route::prefix('insights')->group(function () {
         Volt::route('/ce/inventory/chemicals/create', 'insights.ce.inventory.chemicals.create')->name('inventory.chemicals.create');
         Volt::route('/ce/inventory/chemicals/{id}', 'insights.ce.inventory.chemicals.show')->name('inventory.chemicals.show');
         Volt::route('/ce/inventory/chemicals/{id}/edit', 'insights.ce.inventory.chemicals.edit')->name('inventory.chemicals.edit');
-        Volt::route('/ce/inventory/circs/incoming', 'insights.ce.inventory.circs.incoming')->name('inventory.circs.incoming');
-        Volt::route('/ce/inventory/circs/outgoing', 'insights.ce.inventory.circs.outgoing')->name('inventory.circs.outgoing');
+        Volt::route('/ce/inventory/circs', 'insights.ce.inventory.circs.index')->name('inventory.circs.index');
         // MANAGEMENT INV
         Volt::route('/ce/manage', 'insights.ce.manage.index')->name('manage.index');
         //MANAGEMENT CE MIXING
