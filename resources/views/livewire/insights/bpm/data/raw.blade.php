@@ -22,6 +22,9 @@ new class extends Component {
     public string $line = "";
 
     #[Url]
+    public string $plant = "";
+
+    #[Url]
     public string $machine = "";
 
     #[Url]
@@ -45,6 +48,10 @@ new class extends Component {
         $end = Carbon::parse($this->end_at)->endOfDay();
 
         $query = InsBpmCount::whereBetween("created_at", [$start, $end])->where("cumulative", ">", 0);
+
+        if ($this->plant) {
+            $query->where("plant", "like", "%" . strtoupper(trim($this->plant)) . "%");
+        }
 
         if ($this->line) {
             $query->where("line", "like", "%" . strtoupper(trim($this->line)) . "%");
@@ -103,6 +110,11 @@ new class extends Component {
     private function getUniqueLines()
     {
         return InsBpmCount::distinct()->pluck('line')->sort()->toArray();
+    }
+
+    private function getUniquePlants()
+    {
+        return InsBpmCount::distinct()->pluck('plant')->sort()->toArray();
     }
 
     private function getUniqueMachines()
@@ -164,13 +176,22 @@ new class extends Component {
                 </div>
             </div>
             <div class="border-l border-neutral-300 dark:border-neutral-700 mx-2"></div>
-            <div class="grid grid-cols-3 gap-3">
+            <div class="grid grid-cols-6 gap-3">
                 <div>
                     <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Line") }}</label>
                     <x-select wire:model.live="line" class="w-full">
                         <option value="">{{ __("Semua") }}</option>
                         @foreach($this->getUniqueLines() as $lineOption)
                             <option value="{{$lineOption}}">{{$lineOption}}</option>
+                        @endforeach
+                    </x-select>
+                </div>
+                <div>
+                    <label class="block px-3 mb-2 uppercase text-xs text-neutral-500">{{ __("Plant") }}</label>
+                    <x-select wire:model.live="plant" class="w-full">
+                        <option value="">{{ __("Semua") }}</option>
+                        @foreach($this->getUniquePlants() as $plantOption)
+                            <option value="{{$plantOption}}">{{$plantOption}}</option>
                         @endforeach
                     </x-select>
                 </div>
@@ -238,6 +259,7 @@ new class extends Component {
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg table">
                 <table class="table table-sm text-sm table-truncate text-neutral-600 dark:text-neutral-400">
                     <tr class="uppercase text-xs">
+                        <th>{{ __("Plant") }}</th>
                         <th>{{ __("Line") }}</th>
                         <th>{{ __("Machine") }}</th>
                         <th>{{ __("Condition") }}</th>
@@ -246,6 +268,7 @@ new class extends Component {
                     </tr>
                     @foreach ($counts as $count)
                         <tr wire:key="count-tr-{{ $count->id }}" class="hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                            <td>{{ $count->plant }}</td>
                             <td>{{ $count->line }}</td>
                             <td>{{ $count->machine }}</td>
                             <td>

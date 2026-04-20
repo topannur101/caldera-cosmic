@@ -581,7 +581,7 @@ new class extends Component {
                 return "-";
             }
             $this->ip_address = $device->ip_address;
-            $data = $service->getDataReadHoldingRegisters($this->ip_address, 503, 1, 10, '1_hours_ago_ph');
+            $data = $service->getDataReadInputRegisters($this->ip_address, 503, 1, 10, '1_hours_ago_ph');
             if (!$data || $data == 0) {
                 return "-";
             }
@@ -838,7 +838,6 @@ new class extends Component {
             return false;
         }
     }
-
 }; ?>
 
 <div wire:poll.20s="refreshCharts">
