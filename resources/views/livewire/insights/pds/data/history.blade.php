@@ -97,7 +97,7 @@ new class extends Component {
             $chartData = $this->getChartData();
             
             // Only dispatch if we have valid chart data
-            if (!empty($chartData) && !empty($chartData['labels']) && !empty($chartData['phValues'])) {
+            if (!empty($chartData) && !empty($chartData['timestamps']) && !empty($chartData['phValues'])) {
                 $this->dispatch('chart-data-updated', chartData: $chartData);
             }
         } catch (\Exception $e) {
@@ -396,13 +396,6 @@ new class extends Component {
                         'sum' => 0,
                         'count' => 0,
                         'timestamp' => $roundedTimestamp,
-                        'has_dosing' => false,
-                        'dosing_data' => [
-                            'total_amount' => 0,
-                            'formula_1_amount' => 0,
-                            'formula_2_amount' => 0,
-                            'formula_3_amount' => 0,
-                        ],
                     ];
                 }
                 
@@ -414,45 +407,22 @@ new class extends Component {
                 }
             }
 
-            // Process dosing events and mark intervals
+            // Collect dosing events using real timestamps so markers match log rows
+            $dosingEvents = [];
             foreach ($dosingLogs as $log) {
                 $timestamp = Carbon::parse($log->created_at);
-                
-                // Round to nearest 5-minute interval
-                $minute = $timestamp->minute;
-                $roundedMinute = floor($minute / 5) * 5;
-                $roundedTimestamp = $timestamp->copy()->second(0)->minute($roundedMinute);
-                
-                // Create 5-minute interval key
-                $intervalKey = $roundedTimestamp->format('Y-m-d H:i:00');
-                
-                // Initialize interval if not exists (dosing event without pH reading in this window)
-                if (!isset($fiveMinuteData[$intervalKey])) {
-                    $fiveMinuteData[$intervalKey] = [
-                        'sum' => 0,
-                        'count' => 0,
-                        'timestamp' => $roundedTimestamp,
-                        'has_dosing' => false,
-                        'dosing_data' => [
-                            'total_amount' => 0,
-                            'formula_1_amount' => 0,
-                            'formula_2_amount' => 0,
-                            'formula_3_amount' => 0,
-                        ],
-                    ];
-                }
-                
-                // Mark this interval as having dosing event
-                $fiveMinuteData[$intervalKey]['has_dosing'] = true;
-
-                // Accumulate dosing data from data_dosing JSON
                 $dataDosing = $log->data_dosing;
-                if (is_array($dataDosing)) {
-                    $fiveMinuteData[$intervalKey]['dosing_data']['total_amount'] += (int) ($dataDosing['total_amount'] ?? 0);
-                    $fiveMinuteData[$intervalKey]['dosing_data']['formula_1_amount'] += (int) ($dataDosing['formula_1_amount'] ?? 0);
-                    $fiveMinuteData[$intervalKey]['dosing_data']['formula_2_amount'] += (int) ($dataDosing['formula_2_amount'] ?? 0);
-                    $fiveMinuteData[$intervalKey]['dosing_data']['formula_3_amount'] += (int) ($dataDosing['formula_3_amount'] ?? 0);
-                }
+
+                $dosingEvents[] = [
+                    'timestamp' => $timestamp->getTimestamp() * 1000,
+                    'label' => $timestamp->format('d/m H:i:s'),
+                    'dosing_data' => is_array($dataDosing) ? [
+                        'total_amount' => (int) ($dataDosing['total_amount'] ?? 0),
+                        'formula_1_amount' => (int) ($dataDosing['formula_1_amount'] ?? 0),
+                        'formula_2_amount' => (int) ($dataDosing['formula_2_amount'] ?? 0),
+                        'formula_3_amount' => (int) ($dataDosing['formula_3_amount'] ?? 0),
+                    ] : null,
+                ];
             }
 
             // Return empty chart if no valid data after processing
@@ -462,21 +432,13 @@ new class extends Component {
 
             // Calculate averages and prepare chart data
             $chartData = [
-                'labels' => [],
+                'timestamps' => [],
                 'phValues' => [],
-                'dosingMarkers' => [],
-                'dosingInfo' => [],
+                'dosingEvents' => $dosingEvents,
             ];
-
-            // Determine if we need to show dates in labels (multi-day range)
-            $startDate = Carbon::parse($this->start_at);
-            $endDate = Carbon::parse($this->end_at);
-            $showDate = $startDate->diffInDays($endDate) > 0;
 
             // Sort by interval key and build final arrays
             ksort($fiveMinuteData);
-            
-            $lastKnownPh = null;
             
             foreach ($fiveMinuteData as $intervalKey => $intervalInfo) {
                 $hasPh = $intervalInfo['count'] > 0;
@@ -493,26 +455,9 @@ new class extends Component {
                 if (!is_finite($avgPh) || is_nan($avgPh)) {
                     continue; // Skip intervals with invalid pH
                 }
-                
-                $lastKnownPh = round($avgPh, 2);
-                
-                // Format label based on date range
-                if ($showDate) {
-                    $chartData['labels'][] = $intervalInfo['timestamp']->format('d/m H:i');
-                } else {
-                    $chartData['labels'][] = $intervalInfo['timestamp']->format('H:i');
-                }
-                
+
+                $chartData['timestamps'][] = $intervalInfo['timestamp']->getTimestamp() * 1000;
                 $chartData['phValues'][] = round($avgPh, 2);
-                
-                // Add dosing marker if this interval has dosing event
-                if ($intervalInfo['has_dosing']) {
-                    $chartData['dosingMarkers'][] = round($avgPh, 2);
-                    $chartData['dosingInfo'][] = $intervalInfo['dosing_data'] ?? null;
-                } else {
-                    $chartData['dosingMarkers'][] = null;
-                    $chartData['dosingInfo'][] = null;
-                }
             }
 
             return $chartData;
@@ -524,10 +469,9 @@ new class extends Component {
     private function getEmptyChartData(): array
     {
         return [
-            'labels' => [],
+            'timestamps' => [],
             'phValues' => [],
-            'dosingMarkers' => [],
-            'dosingInfo' => [],
+            'dosingEvents' => [],
         ];
     }
 
@@ -667,12 +611,12 @@ new class extends Component {
                 </div>
         </div>
         <div class="mt-2">
-            <!-- Left Side: Chart Area -->
+            <!-- Chart Area -->
             <div class="bg-white dark:bg-neutral-800 shadow sm:rounded-lg p-6">
                 
                 <h3 class="text-lg text-center font-semibold text-neutral-700 dark:text-neutral-300 mb-4">{{ __("Trend Chart pH") ." (5 Minutes Interval)" }}</h3>
                 
-                @if(empty($chartData['labels']) || count($chartData['labels']) === 0)
+                @if(empty($chartData['timestamps']) || count($chartData['timestamps']) === 0)
                     <div class="flex items-center justify-center" style="height: 350px;">
                         <p class="text-neutral-500 dark:text-neutral-400 text-lg">{{ __("No data available for selected filters") }}</p>
                     </div>
@@ -771,46 +715,36 @@ new class extends Component {
                                 const stdMaxPh = {{ is_numeric($stdMaxPh) && is_finite($stdMaxPh) ? $stdMaxPh : 3 }};
                                 
                                 // Validate and synchronize all arrays - filter invalid entries across all arrays
+                                const rawTimestamps = chartData.timestamps || [];
                                 const rawPhValues = chartData.phValues || [];
-                                const rawLabels = chartData.labels || [];
-                                const rawDosingMarkers = chartData.dosingMarkers || [];
-                                const rawDosingInfo = chartData.dosingInfo || [];
+                                const dosingEvents = chartData.dosingEvents || [];
                                 
                                 // Build synchronized arrays by filtering out invalid pH values
                                 const phSeries = [];
-                                const labels = [];
-                                const dosingMarkers = [];
-                                const dosingInfo = [];
                                 
                                 for (let i = 0; i < rawPhValues.length; i++) {
                                     const phValue = rawPhValues[i];
+                                    const ts = rawTimestamps[i];
                                     
                                     // Only include if pH value is valid
                                     if (phValue !== null && 
                                         phValue !== undefined && 
                                         typeof phValue === 'number' &&
-                                        isFinite(phValue) && 
-                                        !isNaN(phValue)) {
+                                        isFinite(phValue) &&
+                                        !isNaN(phValue) &&
+                                        ts !== null &&
+                                        isFinite(ts)) {
                                         
                                         const parsedPh = parseFloat(phValue);
                                         if (isFinite(parsedPh) && !isNaN(parsedPh)) {
-                                            phSeries.push(parsedPh);
-                                            labels.push(rawLabels[i] || '');
-                                            dosingMarkers.push(rawDosingMarkers[i]);
-                                            dosingInfo.push(rawDosingInfo[i]);
+                                            phSeries.push({ x: ts, y: parsedPh });
                                         }
                                     }
                                 }
                                 
                                 // Ensure we have valid data
-                                if (labels.length === 0 || phSeries.length === 0) {
+                                if (phSeries.length === 0) {
                                     console.warn('No valid data to display after filtering');
-                                    return;
-                                }
-                                
-                                // Verify arrays are synchronized
-                                if (phSeries.length !== labels.length) {
-                                    console.error('Data array mismatch:', { phSeries: phSeries.length, labels: labels.length });
                                     return;
                                 }
                                 
@@ -818,60 +752,44 @@ new class extends Component {
                                 const safeStdMaxPh = (typeof stdMaxPh === 'number' && isFinite(stdMaxPh) && !isNaN(stdMaxPh)) ? stdMaxPh : 3;
                                 const safeStdMinPh = (typeof stdMinPh === 'number' && isFinite(stdMinPh) && !isNaN(stdMinPh)) ? stdMinPh : 2;
                                 
-                                const maxLimit = Array(labels.length).fill(safeStdMaxPh);
-                                const minLimit = Array(labels.length).fill(safeStdMinPh);
+                                const maxLimit = phSeries.map(p => ({ x: p.x, y: safeStdMaxPh }));
+                                const minLimit = phSeries.map(p => ({ x: p.x, y: safeStdMinPh }));
                                 
                                 const isDark = document.documentElement.classList.contains('dark');
                                 const textColor = isDark ? '#d4d4d4' : '#525252';
                                 const gridColor = isDark ? '#404040' : '#e5e7eb';
                                 
-                                // Build point annotations for dosing events
-                                const dosingAnnotations = [];
-                                dosingMarkers.forEach((value, index) => {
-                                    // Strict validation to prevent NaN in annotations
-                                    if (value !== null && 
-                                        value !== undefined && 
-                                        typeof value === 'number' &&
-                                        isFinite(value) && 
-                                        !isNaN(value) && 
-                                        labels[index]) {
-                                        try {
-                                            const yValue = parseFloat(value);
-                                            if (isFinite(yValue) && !isNaN(yValue)) {
-                                                dosingAnnotations.push({
-                                                    x: labels[index],
-                                                    y: yValue,
-                                                    marker: {
-                                                        size: 8,
-                                                        fillColor: '#10b981',
-                                                        strokeColor: '#fff',
-                                                        strokeWidth: 2,
-                                                        shape: 'circle'
-                                                    },
-                                                    label: {
-                                                        text: '\u25BC',
-                                                        borderColor: 'transparent',
-                                                        style: {
-                                                            background: 'transparent',
-                                                            color: '#10b981',
-                                                            fontSize: '14px',
-                                                            fontWeight: 'bold',
-                                                            padding: { left: 2, right: 2, top: 0, bottom: 0 }
-                                                        },
-                                                        offsetY: -15
-                                                    }
-                                                });
-                                            }
-                                        } catch(e) {
-                                            console.warn('Error adding dosing annotation:', e);
-                                        }
+                                // Build xaxis annotations for dosing events at real timestamps
+                                const dosingXAnnotations = [];
+                                dosingEvents.forEach(event => {
+                                    if (!event || !event.timestamp || !isFinite(event.timestamp)) return;
+                                    let labelText = '\u25BC ' + (event.label || 'Dosing');
+                                    if (event.dosing_data) {
+                                        labelText += ' (T:' + event.dosing_data.total_amount + 'gr)';
                                     }
+                                    dosingXAnnotations.push({
+                                        x: event.timestamp,
+                                        borderColor: '#10b981',
+                                        strokeDashArray: 4,
+                                        label: {
+                                            text: labelText,
+                                            borderColor: '#10b981',
+                                            style: {
+                                                background: '#10b981',
+                                                color: '#fff',
+                                                fontSize: '10px',
+                                                padding: { left: 4, right: 4, top: 2, bottom: 2 }
+                                            },
+                                            orientation: 'horizontal',
+                                            position: 'top'
+                                        }
+                                    });
                                 });
                                 
                                 // Final validation: ensure no NaN in any series
-                                const hasNaN = phSeries.some(v => !isFinite(v) || isNaN(v)) ||
-                                               maxLimit.some(v => !isFinite(v) || isNaN(v)) ||
-                                               minLimit.some(v => !isFinite(v) || isNaN(v));
+                                const hasNaN = phSeries.some(v => !isFinite(v.y) || isNaN(v.y)) ||
+                                               maxLimit.some(v => !isFinite(v.y) || isNaN(v.y)) ||
+                                               minLimit.some(v => !isFinite(v.y) || isNaN(v.y));
                                 
                                 if (hasNaN) {
                                     console.error('NaN detected in series data, aborting chart render', {
@@ -902,7 +820,7 @@ new class extends Component {
                                     background: 'transparent'
                                 },
                                 annotations: {
-                                    points: dosingAnnotations
+                                    xaxis: dosingXAnnotations
                                 },
                                 colors: ['#3b82f6', '#ef4444', '#ef4444'],
                                 stroke: { width: [3, 2, 2], curve: phSeries.length < 3 ? 'straight' : 'smooth', dashArray: [0, 5, 5] },
@@ -915,12 +833,10 @@ new class extends Component {
                                 },
                                 dataLabels: { enabled: false },
                                 xaxis: {
-                                    categories: labels,
+                                    type: 'datetime',
                                     title: { text: 'Waktu', style: { fontSize: '12px', color: textColor } },
                                     labels: {
-                                        style: { colors: textColor, fontSize: '11px' },
-                                        rotate: labels.length > 50 ? -45 : 0,
-                                        rotateAlways: false
+                                        style: { colors: textColor, fontSize: '11px' }
                                     },
                                     axisBorder: { color: gridColor },
                                     axisTicks: { color: gridColor }
@@ -960,14 +876,9 @@ new class extends Component {
                                     theme: isDark ? 'dark' : 'light',
                                     y: [
                                         { 
-                                            formatter: function(value, { dataPointIndex }) { 
+                                            formatter: function(value) { 
                                                 if (value === null || value === undefined || isNaN(value)) return 'N/A';
-                                                let result = Number(value).toFixed(2);
-                                                const info = dosingInfo[dataPointIndex];
-                                                if (info) {
-                                                    result += ' | Dosing: Total ' + info.total_amount + ' gr, F1: ' + info.formula_1_amount + ' gr, F2: ' + info.formula_2_amount + ' gr, F3: ' + info.formula_3_amount + ' gr';
-                                                }
-                                                return result; 
+                                                return Number(value).toFixed(2); 
                                             } 
                                         },
                                         { 
