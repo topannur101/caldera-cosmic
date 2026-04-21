@@ -12,7 +12,7 @@
             </h2>
         </div>
         <div class="space-x-8 -my-px ml-10 flex">
-            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.omv.create.index') }}" :active="request()->routeIs('insights.omv.create.index')" wire:navigate>
+            <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.omv.create.index-new') }}" :active="request()->routeIs('insights.omv.create.index-new')" wire:navigate>
                 <i class="icon-pencil text-sm"></i><span class="ms-3 hidden lg:inline">{{ __('Buat') }}</span>
             </x-nav-link>
             <x-nav-link class="text-sm px-1 uppercase" href="{{ route('insights.omv.data.index') }}" :active="request()->routeIs('insights.omv.data.index')" wire:navigate>

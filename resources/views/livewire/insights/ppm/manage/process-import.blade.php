@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Services\InsPpmExcelImportService;
+use App\Services\HtmlToArrayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Livewire\WithFileUploads;
@@ -17,7 +18,7 @@ new class extends Component {
     public function rules()
     {
         return [
-            'importFile' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+            'importFile' => ['required', 'file', 'mimes:xlsx,xls,csv,html,htm', 'max:10240'],
         ];
     }
 
@@ -35,13 +36,40 @@ new class extends Component {
             
             // Get full path
             $fullPath = storage_path('app/' . $path);
-            
-            // Use the import service
-            $service = new InsPpmExcelImportService();
-            $importResult = $service->import($fullPath);
-            
+
+            $extension = strtolower((string) $this->importFile->getClientOriginalExtension());
+
+            if (in_array($extension, ['html', 'htm'])) {
+                $service = new HtmlToArrayService();
+                $htmlResult = $service->extract($fullPath);
+
+                $importResult = [
+                    'success' => $htmlResult['success'],
+                    'message' => $htmlResult['success']
+                        ? 'HTML import successful: ' . $htmlResult['total_rows'] . ' row(s) extracted.'
+                        : ($htmlResult['message'] ?? 'HTML import failed.'),
+                    'summary' => [
+                        'products_created' => 0,
+                        'products_updated' => 0,
+                        'components_created' => 0,
+                        'components_updated' => 0,
+                        'processes_created' => 0,
+                        'processes_updated' => 0,
+                        'errors' => $htmlResult['errors'] ?? [],
+                        'html_rows' => $htmlResult['total_rows'] ?? 0,
+                        'html_columns' => count($htmlResult['headers'] ?? []),
+                    ],
+                ];
+            } else {
+                // Use existing Excel import service.
+                $service = new InsPpmExcelImportService();
+                $importResult = $service->import($fullPath);
+            }
+
             // Delete the temp file
-            unlink($fullPath);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
 
             if ($importResult['success']) {
                 $this->result = $importResult;
@@ -100,13 +128,13 @@ new class extends Component {
         <!-- File Upload -->
         <div class="mt-4">
             <label for="import-file" class="block px-3 mb-2 uppercase text-xs text-neutral-500">
-                {{ __("Pilih File Excel") }} *
+                {{ __("Pilih File (Excel / HTML)") }} *
             </label>
             <input 
                 type="file" 
                 id="import-file" 
                 wire:model="importFile" 
-                accept=".xlsx,.xls,.csv"
+                accept=".xlsx,.xls,.csv,.html,.htm"
                 class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
             >
             @error('importFile')
@@ -142,6 +170,10 @@ new class extends Component {
             <div class="mt-4 p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
                 <h4 class="text-sm font-medium text-green-800 dark:text-green-200">{{ __("Import Successful") }}:</h4>
                 <ul class="mt-2 list-disc list-inside text-sm text-green-700 dark:text-green-300">
+                    @if (isset($result['summary']['html_rows']))
+                        <li>{{ __("HTML Rows Extracted") }}: {{ $result['summary']['html_rows'] }}</li>
+                        <li>{{ __("HTML Columns") }}: {{ $result['summary']['html_columns'] }}</li>
+                    @endif
                     <li>{{ __("Products Created") }}: {{ $result['summary']['products_created'] }}</li>
                     <li>{{ __("Products Updated") }}: {{ $result['summary']['products_updated'] }}</li>
                     <li>{{ __("Components Created") }}: {{ $result['summary']['components_created'] }}</li>
